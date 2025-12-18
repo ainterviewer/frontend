@@ -1,6 +1,8 @@
 # Stage 1: Build
 FROM oven/bun:1.1.20 AS builder
 
+LABEL org.opencontainers.image.source="https://github.com/gaardhus/ainterviewer-frontend"
+
 WORKDIR /app
 
 # Copy package files and lockfile
