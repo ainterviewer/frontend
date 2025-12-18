@@ -36,6 +36,8 @@ RUN bun install --production --frozen-lockfile
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
+# The URL of the backend API (used for server-side requests)
+ENV API_URL=http://localhost:8666
 
 # ORIGIN is required by SvelteKit adapter-node for CSRF protection
 # If you run this behind a proxy, set this to your public URL
