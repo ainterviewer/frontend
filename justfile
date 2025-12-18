@@ -13,9 +13,8 @@ release VERSION:
     just publish
 
 # Bump version and publish (e.g., just bump patch)
-bump TYPE:
+bump TYPE: && publish
     npm version {{ TYPE }} --no-git-tag-version
-    just publish
 
 # Internal task to sync, commit, tag, and push
 publish:
