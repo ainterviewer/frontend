@@ -24,7 +24,7 @@ publish:
     # Sync lockfiles
     bun install
 
-    git add package.json bun.lock package-lock.json
+    git add package.json bun.lock
     git commit -m "Release v${VERSION}"
     git tag -a "v${VERSION}" -m "Release v${VERSION}"
     git push --follow-tags
