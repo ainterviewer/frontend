@@ -1,0 +1,261 @@
+html,
+body {
+  height: 100%;
+}
+
+#interview-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+#chat-container {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-grow: 1; /* The content area will grow and take up remaining space */
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+}
+
+#messages {
+  width: 90%;
+  min-width: 500px;
+  max-width: 700px;
+  min-height: 300px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.system-message {
+  text-align: center;
+  margin-bottom: 15px;
+  user-select: none;
+}
+
+#chat-container form {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+textarea {
+  resize: none;
+  width: 40%;
+  min-width: 350px;
+  max-width: 500px;
+  min-height: 80px;
+  max-height: 8rem;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  font-size: 15px !important;
+}
+textarea:focus {
+  outline: none;
+  border-color: #66afe9;
+  box-shadow: 0 0 5px rgba(102, 175, 233, 0.5);
+}
+
+#send-message {
+  margin-left: 5px;
+  margin-top: 15px;
+  padding: 7px 12px;
+  border-radius: 5px;
+  border: none;
+  background-color: var(--blue);
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 14px;
+}
+#send-message:hover {
+  background-color: #0056b3;
+}
+#send-message:active {
+  background-color: #004085;
+}
+#send-message:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.small-button {
+  background-size: 80%;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 30px;
+  height: 30px;
+  margin-right: 5px;
+  transition: background-color 0.3s ease;
+  padding: 0px;
+}
+
+.small-button:disabled {
+  background-color: #cccccc;
+  background-blend-mode: soft-light;
+  color: #666666;
+  cursor: not-allowed;
+}
+.small-button:hover {
+  background-color: #f8f9fa;
+}
+
+#image-preview {
+  margin-left: 5px;
+}
+#image-preview:before {
+  display: none;
+}
+
+#remove-image {
+  background-image: url("/static/assets/cross-icon.svg");
+  background-size: 80%;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 15px;
+  height: 15px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  cursor: pointer;
+  background-color: #808080db;
+  display: none;
+}
+
+.send-tooltip {
+  margin-left: 5px;
+  padding: 5px 0px;
+  font-size: 12px;
+  text-align: center;
+  color: darkgray;
+}
+
+.typing-indicator {
+  height: 20px;
+  margin-top: 10px;
+  padding: 0 50px;
+}
+
+.dot {
+  float: left;
+  width: 6px;
+  height: 6px;
+  margin: 0 3px;
+  background-color: #4b4f58;
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: typing 1.5s infinite ease-in-out;
+}
+
+input[type="range"] {
+  accent-color: var(--pink);
+}
+
+@keyframes typing {
+  0%,
+  40%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  20% {
+    transform: translateY(-7px);
+    opacity: 1;
+  }
+}
+
+.dot:nth-child(1) {
+  animation-delay: 0s;
+}
+.dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  html,
+  body {
+    font-size: 15px;
+  }
+
+  h1 {
+    margin-top: 10px !important;
+    margin-bottom: 25px !important;
+  }
+
+  #messages {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0px 10px;
+    box-sizing: border-box;
+  }
+
+  #chat-container {
+    margin-bottom: 10px !important;
+  }
+  #chat-container form {
+    padding: 0px 10px 0px 15px;
+    box-sizing: border-box;
+  }
+
+  interview-message {
+    padding: 0px 10px;
+  }
+
+  interview-message::part(feedback-toggle) {
+    right: 10px;
+    left: unset;
+    top: calc(50%);
+  }
+
+  textarea {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  button {
+    margin-top: 0px;
+  }
+
+  .send-tooltip {
+    display: none;
+  }
+  .typing-indicator {
+    padding: 0 10px;
+  }
+
+  /* The Modal (background) */
+  .modal {
+    padding-top: 50px; /* Location of the box */
+  }
+
+  /* Modal Content */
+  .modal-content {
+    padding-top: 20px !important;
+    width: 65% !important;
+  }
+}
+
+@media print {
+  #chat-container {
+    overflow-y: unset !important;
+  }
+
+  #messages {
+    overflow-y: unset !important;
+  }
+
+  interview-message {
+    /* break-inside: avoid; */
+  }
+}

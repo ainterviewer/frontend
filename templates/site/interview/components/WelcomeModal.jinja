@@ -1,0 +1,37 @@
+{#def 
+  welcome: dict[str, str], 
+  interview_id: str
+#}
+<div id="welcome-modal"
+     class="modal"
+     style="display: {% if welcome.display_modal %}block{% else %}none{% endif %}">
+    <div class="modal-content">
+        <h2 class="modal-title">{{ welcome.title }}</h2>
+        <div class="modal-video">
+            {% if welcome.video_file_name %}
+                <video controls style="max-width:100%">
+                    <source src="/static/assets/videos/{{ welcome.video_file_name }}" />
+                </video>
+            {% endif %}
+        </div>
+        <div class="modal-text" style="white-space: pre-wrap;">{{ welcome.text | safe }}</div>
+        {% if welcome.with_id %}
+            <div class="key-container">
+                <hr />
+                {{ welcome.section_before_id | safe }}
+                <div class="interview-key"
+                     style="display: flex;
+                            width: fit-content;
+                            padding: 6px;
+                            margin: 6px 0px">
+                    <code style="display:inline-block;margin-right:8px">{{ interview_id }}</code>
+                    <i class="fa-solid fa-fingerprint" style="align-self:center"></i>
+                </div>
+                {{ welcome.section_after_id | safe }}
+            </div>
+        {% endif %}
+        <div style="margin-top: 2rem">
+            <button class="start-welcome" onclick="startInterview(event)">Start</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>AInterviewer</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+    <link rel="stylesheet" href="/static/css/guide.css" />
+    <script src="/static/js/table.js" defer></script>
+    {% include 'shared/head.html' %}
+    <style>
+      #dashboard tbody tr {
+        cursor: pointer;
+      }
+      #dashboard tbody tr:hover {
+        background-color: #f5f5f5;
+      }
+    </style>
+    {% include 'shared/shoelace.html' %}
+    <script src="/static/components/modal-form.js"></script>
+    <script>
+      function rotateButton(button) {
+        var currentRotation = parseInt(
+          button.getAttribute("data-rotation-angle"),
+          10,
+        );
+        var newRotation = currentRotation + 360;
+        button.style.transform = "rotate(" + newRotation + "deg)";
+        button.setAttribute("data-rotation-angle", newRotation);
+      }
+    </script>
+  </head>
+  <body>
+    {% include 'shared/header.html' %} {% include 'shared/sidebar_sub.html' %}
+    <main>
+      <div style="max-width: 80%">
+        <div style="display: flex; align-items: end">
+          <h2 class="underline-simple">Tests</h2>
+          <div class="btn-container">
+            <div class="btn-item">
+              <button
+                id="create-test"
+                class="action-btn"
+                onclick="document.querySelector('modal-form').open()"
+                title="Create new test"
+              >
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+            <div class="btn-item">
+              <button
+                class="action-btn"
+                data-rotation-angle="0"
+                onclick="rotateButton(this);getTestSetups()"
+                title="Refresh tests"
+              >
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+            </div>
+            <div class="btn-item">
+              <button
+                class="action-btn"
+                onclick="downloadSelectedTests()"
+                title="Download selected tests"
+              >
+                <i class="fa-solid fa-download"></i>
+              </button>
+            </div>
+            <div class="btn-item">
+              <button
+                class="action-btn"
+                onclick="deleteSelectedTests()"
+                title="Delete selected tests"
+              >
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <table id="dashboard">
+          <colgroup>
+            <col style="width: 50px" />
+            <col style="width: 120px" />
+            <col style="width: 200px" />
+            <col style="width: 120px" />
+            <col style="width: 120px" />
+            <col style="width: 120px" />
+            <col style="width: 70px" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th></th>
+              <th class="sort" onclick="sortTable(1)">ID</th>
+              <th class="sort" onclick="sortTable(2)">Name</th>
+              <th class="sort" onclick="sortTable(3)">Type</th>
+              <th class="sort" onclick="sortTable(4)">Created</th>
+              <th class="sort" onclick="sortTable(5)">Updated</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </main>
+    <modal-form title="Create New Test" entity="Test">
+      <div slot="modal-form-group" class="modal-form-group">
+        <label for="test-name">Test title</label>
+        <input type="text" id="test-name" name="test-name" />
+      </div>
+      <div slot="modal-form-group" class="modal-form-group">
+        <fieldset required>
+          <legend>Test type</legend>
+          <label>
+            <input type="radio" name="test-type" value="shuffled_ai" />
+            Shuffled AI Respondents
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="test-type"
+              value="fixed_respondents"
+              disabled
+            />
+            Fixed AI Respondents
+          </label>
+          <label>
+            <input type="radio" name="test-type" value="fixed_answers" />
+            Fixed answers
+          </label>
+        </fieldset>
+      </div>
+    </modal-form>
+    <script>
+      const project_id = Cookies.get("project_id");
+
+      async function getTestSetups() {
+        return fetch(`/api/projects/${project_id}/tests`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Failed to fetch tests");
+            } else {
+              return response.json();
+            }
+          })
+          .then((data) => {
+            if (data && data.length > 0) {
+              updateTable(data);
+              return;
+            } else {
+              document.querySelector("#dashboard tbody").innerHTML = "";
+            }
+          });
+      }
+
+      function updateTable(data) {
+        const header = document.querySelector("#dashboard thead tr");
+        const sortIndex = Array.from(header.children).findIndex((e) => {
+          return (
+            e.classList.contains("sort-asc") ||
+            e.classList.contains("sort-desc")
+          );
+        });
+
+        const table = document.querySelector("#dashboard tbody");
+        table.innerHTML = ""; // Clear existing rows
+
+        data.forEach((test) => {
+          const row = table.insertRow();
+          row.id = test.id;
+
+          row.classList.add("hover");
+          row.role = "button";
+          row.onclick = (e) => {
+            // Check if the click target is within the dropdown or its children
+            if (e.target.closest("sl-dropdown, sl-button, sl-menu-item")) {
+              return; // Do nothing if clicked on dropdown or its children
+            }
+
+            // Otherwise, proceed with the row click action
+            Cookies.set("test_id", test.id);
+            Cookies.set("test_type", test.type);
+            window.location = `/dashboard/projects/tests/setup`;
+          };
+
+          switch (test.type) {
+            case "shuffled_ai":
+              row_icon = "fa-solid fa-robot";
+              break;
+            case "fixed_respondents":
+              row_icon = "fa-solid fa-user-pen";
+              break;
+            case "fixed_answers":
+              row_icon = "fa-solid fa-file-pen";
+              break;
+          }
+          const cells = [
+            {
+              content: `<i class="${row_icon}"></i>`,
+            },
+            { content: test.id, class: "uuid" },
+            { content: test.name },
+            { content: test.type.replace("_", " ") },
+            {
+              content: new Date(test.created_at).toLocaleString("en-GB", {
+                hour12: false,
+              }),
+            },
+            {
+              content: test.last_updated
+                ? new Date(test.last_updated).toLocaleString("en-GB", {
+                    hour12: false,
+                  })
+                : "N/A",
+            },
+            {
+              content: `
+                      <sl-dropdown>
+                        <sl-button slot="trigger"><i class="fa-solid fa-ellipsis-vertical"></i></sl-button>
+                        <sl-menu>
+                          <sl-menu-item onclick="downloadTest(this)">
+                            <i class="fa-solid fa-download" style="margin-right:5px"></i>
+                            Download
+                          </sl-menu-item>
+                          <sl-menu-item class="delete" onclick="deleteTest(this)">
+                            <i class="fa-solid fa-trash-can" style="margin-right:5px"></i>
+                            Delete
+                          </sl-menu-item>
+                        </sl-menu>
+                      </sl-dropdown>
+                    `,
+            },
+          ];
+
+          cells.forEach((cell) => {
+            const newCell = row.insertCell();
+            newCell.innerHTML = cell.content;
+            if (cell.class) {
+              newCell.classList.add(cell.class);
+            }
+          });
+
+          row.addEventListener("click", function (event) {
+            if (
+              event.target.tagName.startsWith("SL-") |
+              (event.target.tagName == "I")
+            ) {
+              return;
+            } else if (event.target.type !== "checkbox") {
+              const checkbox = this.querySelector(".test-checkbox");
+              checkbox.checked = !checkbox.checked;
+            }
+            resetSelectAll();
+          });
+        });
+
+        function resetSelectAll() {
+          const selectAllCheckbox = document.querySelector("#select-all");
+          const allCheckboxes = document.querySelectorAll(".test-checkbox");
+          const allChecked = Array.from(allCheckboxes).every(
+            (cb) => cb.checked,
+          );
+          selectAllCheckbox.checked = allChecked;
+        }
+        if (sortIndex >= 0) {
+          sortTable(sortIndex);
+        }
+      }
+
+      function toggleAllCheckboxes(checked) {
+        document.querySelectorAll(".test-checkbox").forEach((checkbox) => {
+          checkbox.checked = checked;
+        });
+      }
+
+      function _downloadTests(test_ids, format) {
+        const url = `/api/projects/${project_id}/tests/download`;
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            test_ids: test_ids,
+            format: format,
+          }),
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
+            console.log(blob);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `tests_${project_id}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          });
+      }
+
+      function downloadTest(element) {
+        const test_id = element.closest("tr").id;
+        _downloadTests([test_id], "csv");
+      }
+
+      function downloadSelectedTests() {
+        test_ids = Array.from(
+          document.querySelectorAll(".test-checkbox:checked"),
+        ).map((cb) => cb.value);
+        _downloadTests(test_ids, "xlsx");
+      }
+
+      function _deleteTests(test_ids) {
+        fetch(`/api/projects/${project_id}/tests`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ test_ids: test_ids }),
+        }).then(() => {
+          getTestSetups();
+        });
+      }
+
+      function deleteTest(element) {
+        if (window.confirm("Are you sure you want to delete this test?")) {
+          const test_id = element.closest("tr").id;
+          _deleteTests([test_id]);
+        }
+      }
+
+      function deleteSelectedTests() {
+        const test_ids = Array.from(
+          document.querySelectorAll(".test-checkbox:checked"),
+        ).map((cb) => cb.value);
+
+        if (
+          window.confirm(
+            `Are you sure you want to delete the selected ${test_ids.length} test${
+              test_ids.length > 1 ? "s" : ""
+            }?\n\nThis action cannot be undone.`,
+          ) == true
+        ) {
+          _deleteTests(test_ids);
+        }
+      }
+
+      function createTestSetup(data) {
+        fetch(`/api/projects/${project_id}/tests`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: data["test-name"],
+            type: data["test-type"],
+            project_id: project_id,
+          }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Failed to create test");
+            } else {
+              return response.json();
+            }
+          })
+          .then((data) => {
+            console.log(data);
+            Cookies.set("test_id", data.id);
+            Cookies.set("test_type", data.type);
+            window.location = `/dashboard/projects/tests/setup`;
+          });
+      }
+
+      document.addEventListener("modal-form-submit", (e) => {
+        console.log(e.detail);
+        createTestSetup(e.detail);
+      });
+
+      // Initialize the page
+      getTestSetups().then(() => {
+        sortTable(4); // Sort by created date initially
+      });
+    </script>
+  </body>
+</html>
+.then((data

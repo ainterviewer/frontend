@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>AInterviewer</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+    <script src="/static/js/table.js" defer></script>
+    {% include 'shared/head.html' %} {% include 'shared/shoelace.html' %}
+    <style>
+      #dashboard tbody tr {
+        cursor: pointer;
+      }
+      #dashboard tbody tr:hover {
+        background-color: #f5f5f5;
+      }
+      
+      /* Pagination Styles */
+      #pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        padding: 10px 0;
+        font-size: 14px;
+      }
+
+      .pagination-info {
+        color: #555;
+      }
+
+      .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .page-btn {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        color: #333;
+        cursor: pointer;
+        min-width: 32px;
+        height: 32px;
+        padding: 0 8px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+
+      .page-btn:hover:not([disabled]) {
+        background-color: #f0f0f0;
+        border-color: #ccc;
+      }
+
+      .page-btn.active {
+        background-color: #1a73e8;
+        color: white;
+        border-color: #1a73e8;
+      }
+
+      .page-btn[disabled] {
+        color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .page-ellipsis {
+        padding: 0 8px;
+      }
+
+      .items-per-page {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .items-per-page select {
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        background-color: #fff;
+        cursor: pointer;
+      }
+
+      /* Loading state */
+      .loading-indicator {
+        display: none;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .loading-indicator.active {
+        display: block;
+      }
+
+      /* Sorting styles */
+      .sort {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+      }
+
+      .sort:hover {
+        background-color: #f8f9fa;
+      }
+
+      .sort::after {
+        content: '';
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        opacity: 0.3;
+      }
+
+      .sort.sort-asc::after {
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-bottom: 6px solid #333;
+        opacity: 1;
+      }
+
+      .sort.sort-desc::after {
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 6px solid #333;
+        opacity: 1;
+      }
+
+      .sort:not(.sort-asc):not(.sort-desc)::after {
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-bottom: 6px solid #ccc;
+      }
+    </style>
+    <script>
+      function rotateButton(button) {
+        var currentRotation = parseInt(
+          button.getAttribute("data-rotation-angle"),
+          10,
+        );
+        var newRotation = currentRotation + 360;
+        button.style.transform = "rotate(" + newRotation + "deg)";
+        button.setAttribute("data-rotation-angle", newRotation);
+      }
+    </script>
+  </head>
+  <body>
+    {% include 'shared/header.html' %} {% include 'shared/sidebar_sub.html' %}
+    <main>
+      <div style="max-width: 80%">
+        <div style="display: flex; align-items: end">
+          <h2 class="underline-simple">Interviews</h2>
+          <div class="btn-container">
+            <div class="btn-item">
+              <button
+                class="action-btn"
+                data-rotation-angle="0"
+                onclick="rotateButton(this);getInterviews(currentPage, itemsPerPage)"
+                title="Refresh interviews"
+              >
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+            </div>
+            <div class="btn-item">
+              <button
+                class="action-btn"
+                onclick="downloadSelectedInterviews()"
+                title="Download selected interviews"
+              >
+                <i class="fa-solid fa-download"></i>
+              </button>
+            </div>
+            <div class="btn-item">
+              <button
+                class="action-btn"
+                onclick="deleteSelectedInterviews()"
+                title="Delete selected interviews"
+              >
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <table id="dashboard">
+          <colgroup>
+            <col style="width: 50px" />
+            <col style="width: 120px" />
+            <col style="width: 120px" />
+            <col style="width: 120px" />
+            <col style="width: 110px" />
+            <col style="width: 100px" />
+            <col style="width: 120px" />
+            <col style="width: 100px" />
+            <col style="width: 110px" />
+            <col style="width: 70px" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="sort">
+                <input
+                  type="checkbox"
+                  id="select-all"
+                  onchange="toggleAllCheckboxes(this.checked)"
+                />
+              </th>
+              <th class="sort" data-column="id" onclick="handleSort('id')">ID</th>
+              <th class="sort" data-column="created_at" onclick="handleSort('created_at')">Created</th>
+              <th class="sort" data-column="last_updated" onclick="handleSort('last_updated')">Updated</th>
+              <th class="sort" data-column="n_messages" onclick="handleSort('n_messages')">Messages</th>
+              <th class="sort" data-column="interviewer" onclick="handleSort('interviewer')">Interviewer</th>
+              <th class="sort" data-column="is_synthetic" onclick="handleSort('is_synthetic')">Synthetic</th>
+              <th class="sort" data-column="is_complete" onclick="handleSort('is_complete')">Status</th>
+              <th></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <!-- Pagination container -->
+        <div id="pagination-container"></div>
+
+        <!-- Loading indicator -->
+        <div id="loading-indicator" class="loading-indicator">
+          <i class="fa-solid fa-spinner fa-spin"></i> Loading interviews...
+        </div>
+      </div>
+    </main>
+    <script>
+      // Pagination variables
+      let currentPage = 1;
+      let itemsPerPage = 20;
+      let totalItems = 0;
+      let totalPages = 0;
+
+      // Sorting variables
+      let currentSortColumn = 'created_at';
+      let currentSortOrder = 'desc';
+
+      // Get the current URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const project_id = Cookies.get("project_id");
+
+      async function getInterviews(page = 1, limit = itemsPerPage) {
+        // Show loading indicator
+        document.getElementById("loading-indicator").classList.add("active");
+        
+        const offset = (page - 1) * limit;
+        const sortingParams = new URLSearchParams({
+          column: currentSortColumn,
+          order: currentSortOrder
+        });
+        
+        return fetch(`/api/projects/${project_id}/interviews?offset=${offset}&limit=${limit}&${sortingParams}`)
+          .then((response) => response.json())
+          .then((data) => {
+            // Hide loading indicator
+            document.getElementById("loading-indicator").classList.remove("active");
+            
+            if (data && data.items.length > 0) {
+              // Update total items and calculate total pages
+              totalItems = data.total;
+              totalPages = Math.ceil(totalItems / limit);
+              
+              // Update the table with data
+              updateTable(data.items);
+              
+              // Update pagination display
+              updatePagination();
+              return;
+            } else {
+              document.querySelector("#dashboard tbody").innerHTML = "";
+              // Update pagination for empty state
+              totalItems = 0;
+              totalPages = 0;
+              updatePagination();
+            }
+          })
+          .catch(error => {
+            console.error("Error fetching interviews:", error);
+            document.getElementById("loading-indicator").classList.remove("active");
+          });
+      }
+
+      function handleSort(column) {
+        // If clicking the same column, toggle the order
+        if (currentSortColumn === column) {
+          currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+          // If clicking a different column, set it as the new sort column with default 'desc' order
+          currentSortColumn = column;
+          currentSortOrder = 'desc';
+        }
+        
+        // Update visual indicators
+        updateSortIndicators();
+        
+        // Reset to first page when sorting changes
+        currentPage = 1;
+        
+        // Fetch data with new sorting
+        getInterviews(currentPage, itemsPerPage);
+      }
+
+      function updateSortIndicators() {
+        // Remove all existing sort classes
+        document.querySelectorAll('.sort').forEach(th => {
+          th.classList.remove('sort-asc', 'sort-desc');
+        });
+        
+        // Add the appropriate class to the current sort column
+        const currentSortTh = document.querySelector(`[data-column="${currentSortColumn}"]`);
+        if (currentSortTh) {
+          currentSortTh.classList.add(`sort-${currentSortOrder}`);
+        }
+      }
+
+      function updatePagination() {
+        const paginationContainer = document.getElementById('pagination-container');
+        
+        if (totalItems === 0) {
+          paginationContainer.innerHTML = '<span>No interviews found</span>';
+          return;
+        }
+        
+        let paginationHTML = `
+          <div class="pagination-info">
+            Showing ${Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to ${Math.min(currentPage * itemsPerPage, totalItems)} of ${totalItems} interviews
+          </div>
+          <div class="pagination-controls">
+        `;
+        
+        // Previous button
+        paginationHTML += `
+          <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+        `;
+        
+        // Page numbers
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        // Adjust if we're near the end
+        if (endPage - startPage + 1 < maxVisiblePages && startPage > 1) {
+          startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+        
+        // First page button (if not in range)
+        if (startPage > 1) {
+          paginationHTML += `
+            <button class="page-btn" onclick="changePage(1)">1</button>
+            ${startPage > 2 ? '<span class="page-ellipsis">...</span>' : ''}
+          `;
+        }
+        
+        // Page buttons
+        for (let i = startPage; i <= endPage; i++) {
+          paginationHTML += `
+            <button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">
+              ${i}
+            </button>
+          `;
+        }
+        
+        // Last page button (if not in range)
+        if (endPage < totalPages) {
+          paginationHTML += `
+            ${endPage < totalPages - 1 ? '<span class="page-ellipsis">...</span>' : ''}
+            <button class="page-btn" onclick="changePage(${totalPages})">${totalPages}</button>
+          `;
+        }
+        
+        // Next button
+        paginationHTML += `
+          <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        `;
+
+        // Page size selector
+        paginationHTML += `
+          </div>
+          <div class="items-per-page">
+            <label for="items-per-page-select">Items per page:</label>
+            <select id="items-per-page-select" onchange="changeItemsPerPage(this.value)">
+              <option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10</option>
+              <option value="20" ${itemsPerPage === 20 ? 'selected' : ''}>20</option>
+              <option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50</option>
+              <option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100</option>
+            </select>
+          </div>
+        `;
+        
+        paginationContainer.innerHTML = paginationHTML;
+      }
+
+      function changePage(page) {
+        if (page < 1 || page > totalPages || page === currentPage) {
+          return;
+        }
+        
+        currentPage = page;
+        getInterviews(currentPage, itemsPerPage);
+      }
+
+      function changeItemsPerPage(value) {
+        const newItemsPerPage = parseInt(value);
+        if (newItemsPerPage !== itemsPerPage) {
+          itemsPerPage = newItemsPerPage;
+          currentPage = 1; // Reset to first page when changing items per page
+          getInterviews(currentPage, itemsPerPage);
+        }
+      }
+
+      function connectToInterview(element) {
+        window.alert("Not implemented");
+        // const interview_id = element.closest("tr").id;
+        // const url = `/ws/connect/${project_id}/${interview_id}`;
+        // window.open(url, "_blank").focus();
+      }
+
+      function _downloadInterviews(interview_ids, format) {
+        const url = `/api/projects/${project_id}/interviews/messages`;
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            interview_ids: interview_ids,
+            format: format,
+          }),
+        })
+          .then((response) => response.blob())
+          .then((blob) => {
+            console.log(blob);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `interview_${project_id}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          });
+      }
+
+      function downloadInterview(element) {
+        const interview_id = element.closest("tr").id;
+        _downloadInterviews([interview_id], "csv");
+      }
+
+      function downloadSelectedInterviews() {
+        interview_ids = Array.from(
+          document.querySelectorAll(".interview-checkbox:checked"),
+        ).map((cb) => cb.value);
+        _downloadInterviews(interview_ids, "xlsx");
+      }
+
+      function _deleteInterviews(interview_ids) {
+        fetch(`/api/projects/${project_id}/interviews`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ interview_ids: interview_ids }),
+        }).then(() => {
+          getInterviews(currentPage, itemsPerPage);
+        });
+      }
+
+      function deleteInterview(element) {
+        if (window.confirm("Are you sure you want to delete this interview?")) {
+          const interview_id = element.closest("tr").id;
+          _deleteInterviews([interview_id]);
+        }
+      }
+
+      function deleteSelectedInterviews() {
+        const interview_ids = Array.from(
+          document.querySelectorAll(".interview-checkbox:checked"),
+        ).map((cb) => cb.value);
+
+        if (
+          window.confirm(
+            `Are you sure you want to delete the selected ${interview_ids.length} interview${interview_ids.length > 1 ? "s" : ""}?\n\nThis action cannot be undone.`,
+          ) == true
+        ) {
+          _deleteInterviews(interview_ids);
+        } else {
+        }
+      }
+
+      function viewInterview(element) {
+        const interview_id = element.closest("tr").id;
+        window
+          .open(
+            `/dashboard/projects/interviews/${interview_id}`,
+            "_blank",
+          )
+          .focus();
+      }
+
+      function updateTable(data) {
+        const table = document.querySelector("#dashboard tbody");
+        table.innerHTML = ""; // Clear existing rows
+
+        data.forEach((interview) => {
+          const row = table.insertRow();
+          row.id = interview.id;
+          const cells = [
+            {
+              content: `<input type="checkbox" name="interview" class="interview-checkbox" value="${interview.id}">`,
+            },
+            { content: interview.id, class: "uuid" },
+            {
+              content: new Date(interview.created_at).toLocaleString(
+                "en-GB",
+                { hour12: false },
+              ),
+            },
+            {
+              content: interview.last_updated
+                ? new Date(interview.last_updated).toLocaleString("en-GB", {
+                    hour12: false,
+                  })
+                : "N/A",
+            },
+            { content: interview.n_messages },
+            { content: interview.interviewer },
+            { content: interview.is_synthetic ? "Yes" : "No" },
+            {
+              content: createStatusHTML(
+                interview.is_complete,
+                interview.is_active,
+              ),
+            },
+            {
+              content:
+                !interview.is_complete && interview.is_active
+                  ? '<button onclick="connectToInterview(this)">Join</button>'
+                  : "",
+            },
+            {
+              content: `
+                      <sl-dropdown>
+                        <sl-button slot="trigger"><i class="fa-solid fa-ellipsis-vertical"></i></sl-button>
+                        <sl-menu>
+                          <sl-menu-item onclick="viewInterview(this)">
+                            <i class="fa-solid fa-eye" style="margin-right:5px"></i>
+                            View
+                          </sl-menu-item>
+                          <sl-menu-item onclick="downloadInterview(this)">
+                            <i class="fa-solid fa-download" style="margin-right:5px"></i>
+                            Download
+                          </sl-menu-item>
+                          <sl-menu-item class="delete" onclick="deleteInterview(this)">
+                            <i class="fa-solid fa-trash-can" style="margin-right:5px"></i>
+                            Delete
+                          </sl-menu-item>
+                        </sl-menu>
+                      </sl-dropdown>
+      `,
+            },
+          ];
+
+          cells.forEach((cell) => {
+            const newCell = row.insertCell();
+            newCell.innerHTML = cell.content;
+            if (cell.class) {
+              newCell.classList.add(cell.class);
+            }
+          });
+
+          row.addEventListener("click", function (event) {
+            if (
+              event.target.tagName.startsWith("SL-") |
+              (event.target.tagName == "I")
+            ) {
+              return;
+            } else if (event.target.type !== "checkbox") {
+              const checkbox = this.querySelector(".interview-checkbox");
+              checkbox.checked = !checkbox.checked;
+            }
+            resetSelectAll();
+          });
+        });
+
+        function resetSelectAll() {
+          const selectAllCheckbox = document.querySelector("#select-all");
+          const allCheckboxes = document.querySelectorAll(
+            ".interview-checkbox",
+          );
+          const allChecked = Array.from(allCheckboxes).every(
+            (cb) => cb.checked,
+          );
+          selectAllCheckbox.checked = allChecked;
+        }
+      }
+
+      function toggleAllCheckboxes(checked) {
+        document
+          .querySelectorAll(".interview-checkbox")
+          .forEach((checkbox) => {
+            checkbox.checked = checked;
+          });
+      }
+
+      function createStatusHTML(isComplete, isActive) {
+        let status = isComplete ? "Complete" : isActive ? "Active" : "Inactive";
+        return `<span class="status ${status.toLowerCase()}">${status}</span>`;
+      }
+
+      // Initialize the page
+      document.addEventListener('DOMContentLoaded', function() {
+        // Set initial sort indicator
+        updateSortIndicators();
+        
+        getInterviews().then(() => {
+        });
+      });
+    </script>
+  </body>
+</html>

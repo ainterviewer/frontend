@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>AInterviewer</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <!-- 3rd party resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Slab"
+      rel="stylesheet"
+    />
+    <style>
+      h3 {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1 class="underline underline-red" title="{{ error_message }}">
+        An error occured
+      </h1>
+      <br />
+      <h3>We're not quite sure what went wrong.</h3>
+      <p style="width: fit-content; margin: auto">
+        You can go back and try again, or contact us on
+        <a href="mailto:support@ainterviewer.dk">support@ainterviewer.dk</a> if
+        the error persists.
+      </p>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,425 @@
+<script lang="ts">
+	import { page } from '$app/state';
+	import { Default as Api } from '$lib/api/sdk.gen';
+	import { onMount } from 'svelte';
+	import Pagination from './Pagination.svelte';
+	import SortableHeader from './SortableHeader.svelte';
+
+	// State
+	let interviews = $state<any[]>([]);
+	let loading = $state(false);
+	let totalItems = $state(0);
+	let currentPage = $state(1);
+	let itemsPerPage = $state(20);
+	let sortColumn = $state('created_at');
+	let sortOrder = $state<'asc' | 'desc'>('desc');
+	let selectedInterviews = $state(new Set<string>());
+	let activeDropdown = $state<string | null>(null);
+	let error = $state<string | null>(null);
+
+	const project_id = $derived(page.params.project_id as string);
+	const totalPages = $derived(Math.ceil(totalItems / itemsPerPage));
+	const allSelected = $derived(
+		interviews.length > 0 && interviews.every((i) => selectedInterviews.has(i.id))
+	);
+	const isIndeterminate = $derived(
+		interviews.some((i) => selectedInterviews.has(i.id)) && !allSelected
+	);
+
+	const columns = [
+		{ key: 'id', label: 'ID' },
+		{ key: 'created_at', label: 'Created' },
+		{ key: 'last_updated', label: 'Updated' },
+		{ key: 'n_messages', label: 'Messages' },
+		{ key: 'interviewer', label: 'Interviewer' },
+		{ key: 'is_synthetic', label: 'Synthetic' },
+		{ key: 'is_complete', label: 'Status' }
+	];
+
+	async function loadInterviews() {
+		loading = true;
+		error = null;
+		try {
+			const offset = (currentPage - 1) * itemsPerPage;
+			const response = await Api.getInterviews({
+				path: { project_id },
+				query: {
+					offset,
+					limit: itemsPerPage,
+					column: sortColumn,
+					order: sortOrder
+				}
+			});
+
+			const data = response.data as any;
+			if (data) {
+				interviews = data.items || [];
+				totalItems = data.total || 0;
+			} else {
+				interviews = [];
+				totalItems = 0;
+			}
+		} catch (e) {
+			console.error('Error fetching interviews:', e);
+			error = 'Failed to load interviews';
+			interviews = [];
+			totalItems = 0;
+		} finally {
+			loading = false;
+		}
+	}
+
+	function handleSort(column: string) {
+		if (sortColumn === column) {
+			sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+		} else {
+			sortColumn = column;
+			sortOrder = 'desc';
+		}
+		currentPage = 1;
+		loadInterviews();
+	}
+
+	function handlePageChange(newPage: number) {
+		if (newPage < 1 || newPage > totalPages) return;
+		currentPage = newPage;
+		loadInterviews();
+	}
+
+	function handleLimitChange(event: Event) {
+		const select = event.target as HTMLSelectElement;
+		itemsPerPage = parseInt(select.value);
+		currentPage = 1;
+		loadInterviews();
+	}
+
+	function toggleSelection(id: string) {
+		if (selectedInterviews.has(id)) {
+			selectedInterviews.delete(id);
+		} else {
+			selectedInterviews.add(id);
+		}
+	}
+
+	function toggleSelectAll(event: Event) {
+		const checkbox = event.target as HTMLInputElement;
+		if (checkbox.checked) {
+			interviews.forEach((i) => selectedInterviews.add(i.id));
+		} else {
+			interviews.forEach((i) => selectedInterviews.delete(i.id));
+		}
+	}
+
+	async function handleDeleteSelected() {
+		if (
+			!confirm(
+				`Are you sure you want to delete the selected ${selectedInterviews.size} interview(s)? This action cannot be undone.`
+			)
+		)
+			return;
+
+		try {
+			await Api.deleteInterviews({
+				path: { project_id },
+				body: { interview_ids: Array.from(selectedInterviews) }
+			});
+			selectedInterviews.clear();
+			loadInterviews();
+		} catch (e) {
+			console.error('Error deleting interviews:', e);
+			alert('Failed to delete interviews');
+		}
+	}
+
+	async function handleDownloadSelected() {
+		try {
+			const ids = Array.from(selectedInterviews);
+			downloadFile(ids, 'xlsx');
+		} catch (e) {
+			console.error('Error downloading interviews:', e);
+			alert('Failed to download interviews');
+		}
+	}
+
+	function downloadFile(ids: string[], format: 'csv' | 'xlsx') {
+		fetch(`/api/projects/${project_id}/interviews/messages`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				interview_ids: ids,
+				format: format
+			})
+		})
+			.then((response) => response.blob())
+			.then((blob) => {
+				const url = window.URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = `interview_${project_id}.${format}`;
+				document.body.appendChild(a);
+				a.click();
+				window.URL.revokeObjectURL(url);
+				document.body.removeChild(a);
+			})
+			.catch(console.error);
+	}
+
+	function handleSingleAction(action: 'view' | 'download' | 'delete', id: string) {
+		activeDropdown = null;
+		if (action === 'view') {
+			window.open(`/dashboard/projects/interviews/${id}`, '_blank')?.focus();
+		} else if (action === 'download') {
+			downloadFile([id], 'csv');
+		} else if (action === 'delete') {
+			if (confirm('Are you sure you want to delete this interview?')) {
+				Api.deleteInterviews({
+					path: { project_id },
+					body: { interview_ids: [id] }
+				}).then(() => loadInterviews());
+			}
+		}
+	}
+
+	function handleConnect(id: string) {
+		alert('Not implemented');
+	}
+
+	function toggleDropdown(id: string) {
+		if (activeDropdown === id) {
+			activeDropdown = null;
+		} else {
+			activeDropdown = id;
+		}
+	}
+
+	function handleWindowClick(event: MouseEvent) {
+		const target = event.target as HTMLElement;
+		if (!target.closest('.dropdown-container')) {
+			activeDropdown = null;
+		}
+	}
+
+	function formatDate(dateStr: string) {
+		if (!dateStr) return 'N/A';
+		return new Date(dateStr).toLocaleString('en-GB', { hour12: false });
+	}
+
+	onMount(() => {
+		loadInterviews();
+		window.addEventListener('click', handleWindowClick);
+		return () => {
+			window.removeEventListener('click', handleWindowClick);
+		};
+	});
+</script>
+
+<div class="container mx-auto px-4 py-8">
+	<div class="mb-6 flex items-end justify-between">
+		<h2 class="border-b-2 border-gray-800 pb-1 text-2xl font-bold">Interviews</h2>
+		<div class="flex gap-2">
+			<button
+				class="p-2 text-gray-600 transition-transform duration-300 hover:rotate-180 hover:text-gray-900"
+				onclick={loadInterviews}
+				title="Refresh interviews"
+			>
+				<i class="fa-solid fa-arrows-rotate text-lg"></i>
+			</button>
+
+			<button
+				class="p-2 text-gray-600 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30"
+				onclick={handleDownloadSelected}
+				disabled={selectedInterviews.size === 0}
+				title="Download selected interviews"
+			>
+				<i class="fa-solid fa-download text-lg"></i>
+			</button>
+
+			<button
+				class="p-2 text-gray-600 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
+				onclick={handleDeleteSelected}
+				disabled={selectedInterviews.size === 0}
+				title="Delete selected interviews"
+			>
+				<i class="fa-solid fa-trash-can text-lg"></i>
+			</button>
+		</div>
+	</div>
+
+	{#if error}
+		<div
+			class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
+			role="alert"
+		>
+			<span class="block sm:inline">{error}</span>
+		</div>
+	{/if}
+
+	<div class="overflow-x-auto rounded-lg bg-white shadow">
+		<table class="min-w-full leading-normal">
+			<thead>
+				<tr
+					class="border-b-2 border-gray-200 bg-secondary text-left text-xs font-semibold tracking-wider text-gray-600 uppercase"
+				>
+					<th class="w-12 px-5 py-3">
+						<input
+							type="checkbox"
+							class="form-checkbox h-4 w-4 cursor-pointer text-blue-600 transition duration-150 ease-in-out"
+							checked={allSelected}
+							onchange={toggleSelectAll}
+							indeterminate={isIndeterminate}
+						/>
+					</th>
+					{#each columns as col}
+						<SortableHeader
+							column={col.key}
+							label={col.label}
+							{sortColumn}
+							{sortOrder}
+							onSort={handleSort}
+						/>
+					{/each}
+					<th class="px-5 py-3"></th>
+					<th class="px-5 py-3"></th>
+				</tr>
+			</thead>
+			<tbody class="bg-white">
+				{#if loading}
+					<tr>
+						<td colspan="10" class="px-5 py-10 text-center text-gray-500">
+							<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading interviews...
+						</td>
+					</tr>
+				{:else if interviews.length === 0}
+					<tr>
+						<td colspan="10" class="px-5 py-10 text-center text-gray-500"> No interviews found </td>
+					</tr>
+				{:else}
+					{#each interviews as interview (interview.id)}
+						<tr class="border-b border-gray-200 text-sm hover:bg-gray-50">
+							<td class="px-5 py-4">
+								<input
+									type="checkbox"
+									class="form-checkbox h-4 w-4 cursor-pointer text-blue-600 transition duration-150 ease-in-out"
+									checked={selectedInterviews.has(interview.id)}
+									onchange={() => toggleSelection(interview.id)}
+								/>
+							</td>
+							<td class="px-5 py-4 font-mono text-xs">{interview.id}</td>
+							<td class="px-5 py-4">{formatDate(interview.created_at)}</td>
+							<td class="px-5 py-4">{formatDate(interview.last_updated)}</td>
+							<td class="px-5 py-4">{interview.n_messages}</td>
+							<td class="px-5 py-4">{interview.interviewer}</td>
+							<td class="px-5 py-4">{interview.is_synthetic ? 'Yes' : 'No'}</td>
+							<td class="px-5 py-4">
+								{#if interview.is_complete}
+									<span
+										class="rounded-full bg-green-100 px-2 py-1 text-xs leading-tight font-semibold text-green-700"
+										>Complete</span
+									>
+								{:else if interview.is_active}
+									<span
+										class="rounded-full bg-blue-100 px-2 py-1 text-xs leading-tight font-semibold text-blue-700"
+										>Active</span
+									>
+								{:else}
+									<span
+										class="rounded-full bg-gray-100 px-2 py-1 text-xs leading-tight font-semibold text-gray-700"
+										>Inactive</span
+									>
+								{/if}
+							</td>
+							<td class="px-5 py-4">
+								{#if !interview.is_complete && interview.is_active}
+									<button
+										class="rounded bg-blue-500 px-3 py-1 text-xs font-bold text-white transition duration-150 hover:bg-blue-600"
+										onclick={() => handleConnect(interview.id)}
+									>
+										Join
+									</button>
+								{/if}
+							</td>
+							<td class="px-5 py-4 text-right">
+								<div class="dropdown-container relative">
+									<button
+										class="w-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+										onclick={(e) => {
+											e.stopPropagation();
+											toggleDropdown(interview.id);
+										}}
+										aria-label="Actions"
+									>
+										<i class="fa-solid fa-ellipsis-vertical"></i>
+									</button>
+									{#if activeDropdown === interview.id}
+										<div
+											class="absolute right-0 z-50 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-left shadow-lg"
+										>
+											<button
+												class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+												onclick={() => handleSingleAction('view', interview.id)}
+											>
+												<i class="fa-solid fa-eye mr-2 text-gray-500"></i> View
+											</button>
+											<button
+												class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+												onclick={() => handleSingleAction('download', interview.id)}
+											>
+												<i class="fa-solid fa-download mr-2 text-gray-500"></i> Download
+											</button>
+											<button
+												class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+												onclick={() => handleSingleAction('delete', interview.id)}
+											>
+												<i class="fa-solid fa-trash-can mr-2"></i> Delete
+											</button>
+										</div>
+									{/if}
+								</div>
+							</td>
+						</tr>
+					{/each}
+				{/if}
+			</tbody>
+		</table>
+	</div>
+
+	<div class="mt-6 flex flex-col items-center justify-between text-sm text-gray-700 sm:flex-row">
+		<div class="mb-4 sm:mb-0">
+			{#if totalItems > 0}
+				Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to {Math.min(
+					currentPage * itemsPerPage,
+					totalItems
+				)} of {totalItems} interviews
+			{:else}
+				No interviews
+			{/if}
+		</div>
+
+		<!-- Table Page Navigation -->
+		<Pagination {totalItems} {itemsPerPage} {currentPage} onPageChange={handlePageChange} />
+
+		<!-- Table Page Size  -->
+		<div class="flex items-center gap-2">
+			<label for="items-per-page" class="w-fit text-gray-600">Items per page:</label>
+			<select
+				id="items-per-page"
+				class="block w-fit form-select rounded-md border-gray-300 py-1 pr-10 pl-3 text-base focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
+				value={itemsPerPage}
+				onchange={handleLimitChange}
+			>
+				<option value="10">10</option>
+				<option value="20">20</option>
+				<option value="50">50</option>
+				<option value="100">100</option>
+			</select>
+		</div>
+	</div>
+</div>
+
+<style>
+	.dropdown-container {
+		position: relative;
+	}
+</style>

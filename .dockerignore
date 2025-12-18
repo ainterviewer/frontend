@@ -1,0 +1,13 @@
+node_modules
+.svelte-kit
+build
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+.vscode
+.npmrc
+*.log
+tests-results
+playwright-report

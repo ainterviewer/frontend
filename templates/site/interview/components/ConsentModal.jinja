@@ -1,0 +1,43 @@
+{#def 
+  project_id: str,
+  consent: dict[str, str], 
+  display_modal: bool = False,
+#}
+<div id="consent-modal"
+     class="modal"
+     style="display: {% if display_modal %}block{% else %}none{% endif %}">
+    <div class="modal-content">
+        <h2>{{ consent.title }}</h2>
+        <div style="white-space: pre-wrap;">{{ consent.text | safe }}</div>
+        <div style="margin-top: 2rem">
+            <button id="accept-consent" onclick="acceptConsent(event)">{{ consent.accept }}</button>
+            <button id="decline-consent" onclick="declineConsent(event)">{{ consent.decline }}</button>
+        </div>
+    </div>
+</div>
+<script>
+    async function acceptConsent(e) {
+              try {
+                const response = await fetch('/api/projects/{{ project_id }}/interviews', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  }
+                });
+                
+                if (response.ok) {
+                  await htmx.ajax('POST', '/api/projects/{{ project_id }}/welcome/render', {target: '#consent-modal', swap: 'outerHTML'});
+                  document.getElementById("welcome-modal").style.display = "block";
+                }
+              } catch (error) {
+                console.error('Error creating interview:', error);
+              }
+    }
+
+    function declineConsent(e) {
+      e.preventDefault();
+      document.getElementById("consent-modal").style.display = "none";
+      window.onbeforeunload = null;
+      window.location.href = "/";
+    }
+</script>

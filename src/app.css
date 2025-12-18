@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+/* Theme  */
+
+@theme {
+	--color-primary: #196858;
+	--color-dark: #1c2826;
+	--color-light: #ffffff;
+	--color-secondary: #e8dcb9;
+	--color-on-primary: #e8dcb9; /* text on primary */
+	--color-on-dark: #ffffff; /* text on dark */
+	--color-on-light: #1c2826; /* text on light */
+	--color-on-secondary: #1c2826; /* text on secondary */
+}
+
+/* Base  */
+
+@layer base {
+	html {
+		font-family: 'Inter', system-ui, sans-serif;
+	}
+	button:not(:disabled),
+	[role='button']:not(:disabled) {
+		cursor: pointer;
+	}
+}
+
+/* Custom  */
+
+@layer components {
+	.page-title {
+		@apply text-2xl font-bold;
+	}
+}
