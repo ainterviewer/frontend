@@ -70,14 +70,9 @@ export const projectSidebarItems: SidebarItem[] = [
 		icon: 'fas fa-flask-vial',
 		children: [
 			{
-				label: 'Setup',
-				href: '/dashboard/projects/{projectId}/{languageCode}/tests/setup',
-				icon: 'fas fa-sliders'
-			},
-			{
-				label: 'Runs',
-				href: '/dashboard/projects/{projectId}/{languageCode}/tests/runs',
-				icon: 'fas fa-forward-fast'
+				label: 'Results',
+				href: '/dashboard/projects/{projectId}/{languageCode}/tests/results',
+				icon: 'fas fa-chart-simple'
 			}
 		]
 	},

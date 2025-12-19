@@ -73,8 +73,7 @@
 			class={[
 				'peer relative block w-full text-light no-underline transition-colors',
 				'hover:bg-light hover:text-dark',
-				active && 'active',
-				hasChildren && "after:absolute after:right-[25px] after:content-['⌄']"
+				active && 'active'
 			].join(' ')}
 		>
 			{#if item.icon}
@@ -91,21 +90,14 @@
 					class={[
 						'item pl-1',
 						collapsed ? 'hidden' : 'inline',
-						active && "after:ml-2 after:content-['<']"
+						active && "font-bold after:ml-2 after:content-['<']"
 					].join(' ')}>{item.label}</span
 				>
 			{/if}
 		</a>
 
 		{#if hasChildren}
-			<ul
-				class={[
-					'max-h-0 overflow-hidden opacity-0 transition-all duration-300 ease-out',
-					'group-hover:max-h-[500px] group-hover:opacity-100',
-					'peer-[.active]:max-h-[500px] peer-[.active]:opacity-100',
-					'has-[.active]:max-h-[500px] has-[.active]:opacity-100'
-				].join(' ')}
-			>
+			<ul class="m-0 list-none p-0">
 				{#each item.children! as child (child.label || child.href || child)}
 					{#if !child.requiresAdmin || auth.isAdmin}
 						{@render listItem(child, level + 1)}
