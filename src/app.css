@@ -33,6 +33,6 @@
 
 @layer components {
 	.page-title {
-		@apply text-2xl font-bold;
+		@apply w-fit text-2xl font-bold;
 	}
 }
