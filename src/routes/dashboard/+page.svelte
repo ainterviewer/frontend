@@ -4,4 +4,4 @@
 </script>
 
 <Sidebar items={mainSidebarItems} />
-<h1 class="page-title">Welcome</h1>
+<h1 class="page-title text-5xl">Welcome to AInterviewer</h1>
