@@ -4,4 +4,8 @@
 </script>
 
 <Sidebar items={mainSidebarItems} />
-<h1 class="page-title text-5xl">Welcome to AInterviewer</h1>
+<h1 class="page-title text-5xl">
+	Welcome to <span class="bg-linear-to-r from-dark to-primary bg-clip-text text-transparent"
+		>AInterviewer</span
+	>
+</h1>
