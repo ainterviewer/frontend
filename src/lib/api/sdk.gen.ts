@@ -738,7 +738,15 @@ export class Default {
      * Get Background Info
      */
     public static getBackgroundInfo<ThrowOnError extends boolean = false>(options: Options<GetBackgroundInfoData, ThrowOnError>) {
-        return (options.client ?? client).get<GetBackgroundInfoResponses, GetBackgroundInfoErrors, ThrowOnError>({ url: '/api/projects/{project_id}/tests/{test_id}/background_info', ...options });
+        return (options.client ?? client).get<GetBackgroundInfoResponses, GetBackgroundInfoErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/tests/{test_id}/background_info',
+            ...options
+        });
     }
     
     /**
@@ -746,6 +754,11 @@ export class Default {
      */
     public static updateBackgroundInfo<ThrowOnError extends boolean = false>(options: Options<UpdateBackgroundInfoData, ThrowOnError>) {
         return (options.client ?? client).post<UpdateBackgroundInfoResponses, UpdateBackgroundInfoErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
             url: '/api/projects/{project_id}/tests/{test_id}/background_info',
             ...options,
             headers: {
@@ -759,7 +772,15 @@ export class Default {
      * Get Fixed Answers
      */
     public static getFixedAnswers<ThrowOnError extends boolean = false>(options: Options<GetFixedAnswersData, ThrowOnError>) {
-        return (options.client ?? client).get<GetFixedAnswersResponses, GetFixedAnswersErrors, ThrowOnError>({ url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers', ...options });
+        return (options.client ?? client).get<GetFixedAnswersResponses, GetFixedAnswersErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers',
+            ...options
+        });
     }
     
     /**
@@ -767,6 +788,11 @@ export class Default {
      */
     public static updateFixedAnswers<ThrowOnError extends boolean = false>(options: Options<UpdateFixedAnswersData, ThrowOnError>) {
         return (options.client ?? client).post<UpdateFixedAnswersResponses, UpdateFixedAnswersErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
             url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers',
             ...options,
             headers: {
@@ -815,6 +841,11 @@ export class Default {
      */
     public static addInterviewee<ThrowOnError extends boolean = false>(options: Options<AddIntervieweeData, ThrowOnError>) {
         return (options.client ?? client).post<AddIntervieweeResponses, AddIntervieweeErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
             url: '/api/interviewee',
             ...options,
             headers: {
