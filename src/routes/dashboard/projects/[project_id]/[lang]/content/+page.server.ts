@@ -1,4 +1,4 @@
-import { Default } from '$lib/api/sdk.gen';
+import { Projects } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, cookies }) => {
@@ -6,7 +6,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 	const token = cookies.get('token');
 
 	try {
-		const response = await Default.getGuide({
+		const response = await Projects.getGuide({
 			path: { project_id, lang },
 			headers: {
 				Cookie: `token=${token}`

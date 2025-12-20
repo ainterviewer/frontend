@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Default } from '$lib/api/sdk.gen';
+	import { Projects } from '$lib/api';
 	import type {
 		AgentConfigsInput,
 		AgentConfigsOutput,
@@ -35,11 +35,11 @@
 		saving = true;
 		try {
 			await Promise.all([
-				Default.createInterviewAgents({
+				Projects.createInterviewAgents({
 					path: { project_id: projectId, lang: lang },
 					body: agents as AgentConfigsInput
 				}),
-				Default.createPrompts({
+				Projects.createPrompts({
 					path: { project_id: projectId, lang: lang },
 					body: prompts as PromptsUpdateRequest
 				})

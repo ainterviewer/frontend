@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Default, type TestSetupPublic } from '$lib/api';
+	import { Synthesize, type TestSetupPublic } from '$lib/api';
 
 	let { test, questions }: { test: TestSetupPublic; questions: string[] } = $props();
 
@@ -17,7 +17,7 @@
 	async function saveSetup() {
 		isSaving = true;
 		try {
-			await Default.updateFixedAnswers({
+			await Synthesize.updateFixedAnswers({
 				path: {
 					project_id: test.project_id,
 					test_id: test.id

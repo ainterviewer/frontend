@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Default } from '$lib/api/sdk.gen';
+	import { Projects } from '$lib/api';
 	import type { PageData } from './$types';
 	import { invalidateAll } from '$app/navigation';
 
@@ -22,7 +22,7 @@
 	async function saveTitle() {
 		savingTitle = true;
 		try {
-			await Default.changeProjectTitle({
+			await Projects.changeProjectTitle({
 				path: { project_id: project.id },
 				body: { title }
 			});
@@ -39,7 +39,7 @@
 	async function saveLanguage() {
 		savingLanguage = true;
 		try {
-			await Default.createInterviewConfig({
+			await Projects.createInterviewConfig({
 				path: { project_id: project.id },
 				body: { default_language: defaultLanguage }
 			});
@@ -60,7 +60,7 @@
 		changingStatus = true;
 		const newStatus = project.status === 'active' ? 'inactive' : 'active';
 		try {
-			await Default.changeProjectStatus({
+			await Projects.changeProjectStatus({
 				path: { project_id: project.id },
 				body: { status: newStatus }
 			});

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Default } from '$lib/api';
+	import { Projects } from '$lib/api';
 
 	interface Props {
 		initialData?: {
@@ -50,7 +50,7 @@
 
 	async function loadData() {
 		if (!projectId) return;
-		const { data, error } = await Default.getWelcome({
+		const { data, error } = await Projects.getWelcome({
 			path: { project_id: projectId, language: language }
 		});
 		if (data) {
@@ -69,7 +69,7 @@
 			video: videoFile || null
 		};
 
-		const { error } = await Default.createWelcome({
+		const { error } = await Projects.createWelcome({
 			path: { project_id: projectId, language: language },
 			body: body
 		});

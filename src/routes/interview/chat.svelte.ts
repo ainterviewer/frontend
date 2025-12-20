@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { Default } from '$lib/api/sdk.gen';
+import { Interviews } from '$lib/api';
 
 export type MessageType = 'sent' | 'received' | 'system';
 
@@ -71,7 +71,7 @@ export class ChatClient {
 
 	async createInterview() {
 		try {
-			const { error, response } = await Default.createInterview({
+			const { error, response } = await Interviews.createInterview({
 				path: {
 					project_id: this.project_id,
 					lang: this.lang
@@ -198,7 +198,7 @@ export class ChatClient {
 		if (!this.project_id || !this.interview_id) return;
 
 		try {
-			await Default.putFeedback({
+			await Interviews.putFeedback({
 				body: {
 					message_id: Number(messageId),
 					feedback: feedback,
@@ -237,7 +237,7 @@ export class ChatClient {
 		formData.append('interview_id', this.interview_id); // This might be set later via 'data' message
 
 		try {
-			const { data, error, response } = await Default.uploadImage2({
+			const { data, error, response } = await Interviews.uploadImage2({
 				body: {
 					project_id: this.project_id,
 					interview_id: this.interview_id!,

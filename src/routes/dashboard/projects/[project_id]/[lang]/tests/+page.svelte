@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Default, type TestSetupPublic } from '$lib/api/sdk.gen';
+	import { Synthesize, type TestSetupPublic } from '$lib/api';
 	import { client } from '$lib/api/client.gen';
 
 	let tests: TestSetupPublic[] = $state([]);
@@ -18,7 +18,7 @@
 	async function loadTests() {
 		if (!projectId) return;
 		try {
-			const response = await Default.getTestSetups({
+			const response = await Synthesize.getTestSetups({
 				path: { project_id: projectId }
 			});
 			if (response.data) {
@@ -82,8 +82,7 @@
 		if (!projectId) return;
 		isCreating = true;
 		try {
-			const response = await Default.createTestSetup({
-				path: { project_id: projectId },
+			const response = await Synthesize.createTestSetup({
 				body: {
 					name: newTestName,
 					type: newTestType as any,
@@ -203,7 +202,7 @@
 					<td class="p-3 text-center text-gray-800">
 						{#if test.type === 'shuffled_ai'}
 							<i class="fa-solid fa-robot" title="Shuffled AI Respondents"></i>
-						{:else if test.type === 'fixed_respondents'}
+						{:else if test.type === 'fixed_ai'}
 							<i class="fa-solid fa-user-pen" title="Fixed AI Respondents"></i>
 						{:else}
 							<i class="fa-solid fa-file-pen" title="Fixed answers"></i>
@@ -249,6 +248,7 @@
 				<button
 					onclick={() => (isModalOpen = false)}
 					class="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+					aria-label="Close"
 				>
 					<i class="fa-solid fa-xmark"></i>
 				</button>
@@ -284,7 +284,7 @@
 							<input
 								type="radio"
 								name="test-type"
-								value="fixed_respondents"
+								value="fixed_ai"
 								disabled
 								class="text-primary focus:ring-primary"
 							/>

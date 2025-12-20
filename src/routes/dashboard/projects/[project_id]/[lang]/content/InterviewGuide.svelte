@@ -2,7 +2,6 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
-	import { Default } from '$lib/api/sdk.gen';
 	import type { InterviewGuideOutput } from '$lib/api/types.gen';
 	import {
 		DragDropProvider,

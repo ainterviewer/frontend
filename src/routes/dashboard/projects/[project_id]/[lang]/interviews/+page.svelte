@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Default as Api } from '$lib/api/sdk.gen';
+	import { Projects as Api } from '$lib/api';
 	import { onMount } from 'svelte';
 	import Pagination from './Pagination.svelte';
 	import SortableHeader from './SortableHeader.svelte';

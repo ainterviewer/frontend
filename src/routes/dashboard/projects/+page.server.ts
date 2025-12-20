@@ -1,11 +1,11 @@
-import { Default } from '$lib/api';
+import { Projects, Default } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ request }) => {
 	const cookieHeader = request.headers.get('cookie');
 
 	const [foldersRes, langRes] = await Promise.all([
-		Default.getFolders({ headers: { cookie: cookieHeader || '' } }),
+		Projects.getFolders({ headers: { cookie: cookieHeader || '' } }),
 		Default.getLanguages({ headers: { cookie: cookieHeader || '' } })
 	]);
 

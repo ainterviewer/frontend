@@ -1,4 +1,4 @@
-import { Default } from '$lib/api/sdk.gen';
+import { Projects } from '$lib/api';
 import type {
 	QuestionOutput as ApiQuestion,
 	InterviewGuideOutput,
@@ -78,7 +78,7 @@ export async function saveGuide(
 			...guide,
 			question_sections: mapFromLocal(localSections, localQuestions)
 		};
-		await Default.createGuide({
+		await Projects.createGuide({
 			path: { project_id: projectId, lang: lang },
 			body: payload as any
 		});

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Default, type TestSetupPublic } from '$lib/api';
+	import { Synthesize, type TestSetupPublic } from '$lib/api';
 
 	let { test }: { test: TestSetupPublic } = $props();
 
@@ -81,7 +81,7 @@
 			const cleanPairs = (list: [string, string][]) =>
 				list.filter((pair) => pair[0] && pair[0].trim() !== ''); // Check name at least
 
-			await Default.updateBackgroundInfo({
+			await Synthesize.updateBackgroundInfo({
 				path: {
 					project_id: test.project_id,
 					test_id: test.id

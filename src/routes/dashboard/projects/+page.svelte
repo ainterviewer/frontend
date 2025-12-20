@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { LanguageDict, ProjectFolderWithProjects, ProjectPublic } from '$lib/api';
-	import { Default } from '$lib/api';
+	import { Default, Projects } from '$lib/api';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { onMount } from 'svelte';
@@ -48,7 +48,7 @@
 		isLoading = true;
 		try {
 			const [foldersRes, langRes] = await Promise.all([
-				Default.getFolders(),
+				Projects.getFolders(),
 				Default.getLanguages()
 			]);
 			folders = (foldersRes as unknown as { data: ProjectFolderWithProjects[] }).data || foldersRes;
@@ -82,7 +82,7 @@
 			return;
 		}
 		try {
-			await Default.createProject({
+			await Projects.createProject({
 				body: {
 					title: createProjectName,
 					folder_id: createProjectFolderId,
@@ -104,7 +104,7 @@
 
 	async function handleCreateFolder() {
 		try {
-			await Default.createFolder({
+			await Projects.createFolder({
 				body: {
 					title: createFolderName
 				}
@@ -130,7 +130,7 @@
 	async function handleEditFolder() {
 		if (!selectedFolder) return;
 		try {
-			await Default.editFolder({
+			await Projects.editFolder({
 				body: {
 					id: selectedFolder.id,
 					title: editFolderName
@@ -159,7 +159,7 @@
 		if (!selectedFolder || deleteFolderConfirmation !== selectedFolder.title) return;
 
 		try {
-			await Default.deleteFolder({
+			await Projects.deleteFolder({
 				body: { id: selectedFolder.id }
 			});
 			isDeleteFolderModalOpen = false;
@@ -182,7 +182,7 @@
 		if (!selectedProject || deleteConfirmation !== selectedProject.title) return;
 
 		try {
-			await Default.deleteProject({
+			await Projects.deleteProject({
 				path: { project_id: selectedProject.id }
 			});
 			isDeleteProjectModalOpen = false;
@@ -196,7 +196,7 @@
 
 	async function handleCloneProject(project: ProjectPublic) {
 		try {
-			await Default.cloneProject({
+			await Projects.cloneProject({
 				path: { project_id: project.id }
 			});
 			activeDropdown = null;

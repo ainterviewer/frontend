@@ -1,4 +1,4 @@
-import { Default } from '$lib/api/sdk.gen';
+import { Default, Projects } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ cookies, params, fetch }) => {
@@ -10,12 +10,12 @@ export const load: PageServerLoad = async ({ cookies, params, fetch }) => {
 			auth: token,
 			fetch
 		}),
-		Default.getInterviewAgents({
+		Projects.getInterviewAgents({
 			path: { project_id, lang },
 			auth: token,
 			fetch
 		}),
-		Default.getPrompts({
+		Projects.getPrompts({
 			path: { project_id, lang },
 			auth: token,
 			fetch

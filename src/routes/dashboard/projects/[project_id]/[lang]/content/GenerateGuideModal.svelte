@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Default } from '$lib/api/sdk.gen';
+	import { Projects } from '$lib/api';
 
 	let {
 		open = $bindable(),
@@ -19,7 +19,7 @@
 	async function generateGuide() {
 		generating = true;
 		try {
-			await Default.generateGuide({
+			await Projects.generateGuide({
 				path: { project_id: projectId, lang: lang },
 				body: { prompt: generatePrompt }
 			});
