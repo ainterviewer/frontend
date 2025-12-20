@@ -114,231 +114,238 @@
 	}
 </script>
 
-<div style="width: 80%; max-width: 1000px">
-	<h2 class="underline-simple">Setup</h2>
-	<h3>Background Information</h3>
-	<p>
-		Define the background characteristics of the synthetic interviewees. These will be randomly
-		mixed for each synthetic interviewee.
-	</p>
+<h2 class="page-title">Setup</h2>
+<h3 class="mt-8 mb-3 text-lg font-bold text-gray-800">Background Information</h3>
+<p>
+	Define the background characteristics of the synthetic interviewees. These will be randomly mixed
+	for each synthetic interviewee.
+</p>
 
-	<!-- Names and Gender -->
-	<div class="section">
-		<h4>Names and Gender</h4>
-		{#each names_gender as pair, i}
-			<div class="row">
-				<input type="text" placeholder="Name" bind:value={pair[0]} />
-				<input type="text" placeholder="Gender" bind:value={pair[1]} />
-				<button class="remove-btn" onclick={() => removeNameGender(i)}>
-					<span class="minus-icon">×</span>
-				</button>
-			</div>
-		{/each}
-		<button class="add-btn" onclick={addNameGender}>
-			<span class="plus-icon">+</span>Add Name/Gender Pair
-		</button>
-	</div>
-
-	<!-- Age Range -->
-	<div class="section">
-		<h4>Age Range</h4>
-		<div class="row">
-			<input type="number" min="18" max="100" bind:value={age_range[0]} />
-			<span>to</span>
-			<input type="number" min="18" max="100" bind:value={age_range[1]} />
-		</div>
-	</div>
-
-	<!-- Generic String Lists -->
-	{#each [{ title: 'Education', list: educations }, { title: 'Occupations', list: occupations }, { title: 'Locations', list: locations }, { title: 'Personalities', list: personalities }] as group}
-		<div class="section">
-			<h4>{group.title}</h4>
-			{#each group.list as item, i}
-				<div class="row">
-					<input type="text" placeholder={group.title} bind:value={group.list[i]} />
-					<button class="remove-btn" onclick={() => removeRow(group.list, i)}>
-						<span class="minus-icon">×</span>
-					</button>
-				</div>
-			{/each}
-			<button class="add-btn" onclick={() => addRow(group.list)}>
-				<span class="plus-icon">+</span>Add {group.title}
+<!-- Names and Gender -->
+<div class="my-6">
+	<h4 class="mb-2.5 font-bold text-gray-600">Names and Gender</h4>
+	{#each names_gender as pair, i}
+		<div class="mb-2.5 flex items-center gap-2.5">
+			<input
+				type="text"
+				placeholder="Name"
+				bind:value={pair[0]}
+				class="flex-1 rounded border border-gray-300 p-2"
+			/>
+			<input
+				type="text"
+				placeholder="Gender"
+				bind:value={pair[1]}
+				class="flex-1 rounded border border-gray-300 p-2"
+			/>
+			<button
+				class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+				onclick={() => removeNameGender(i)}
+			>
+				<span class="text-lg font-bold">×</span>
 			</button>
 		</div>
 	{/each}
+	<button
+		class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+		onclick={addNameGender}
+	>
+		<span class="text-lg font-bold">+</span>Add Name/Gender Pair
+	</button>
+</div>
 
-	<!-- Communication Traits -->
-	<div class="section communication-traits">
-		<h4>Communication Traits</h4>
-
-		<div class="subsection">
-			<h5>Length</h5>
-			{#each comm_length as item, i}
-				<div class="row">
-					<input type="text" placeholder="Length" bind:value={comm_length[i]} />
-					<button class="remove-btn" onclick={() => removeRow(comm_length, i)}>
-						<span class="minus-icon">×</span>
-					</button>
-				</div>
-			{/each}
-			<button class="add-btn" onclick={() => addRow(comm_length)}>
-				<span class="plus-icon">+</span>Add Length
-			</button>
-		</div>
-
-		<div class="subsection">
-			<h5>Style</h5>
-			{#each comm_style as item, i}
-				<div class="row">
-					<input type="text" placeholder="Style" bind:value={comm_style[i]} />
-					<button class="remove-btn" onclick={() => removeRow(comm_style, i)}>
-						<span class="minus-icon">×</span>
-					</button>
-				</div>
-			{/each}
-			<button class="add-btn" onclick={() => addRow(comm_style)}>
-				<span class="plus-icon">+</span>Add Style
-			</button>
-		</div>
-
-		<div class="subsection">
-			<h5>Tone</h5>
-			{#each comm_tone as item, i}
-				<div class="row">
-					<input type="text" placeholder="Tone" bind:value={comm_tone[i]} />
-					<button class="remove-btn" onclick={() => removeRow(comm_tone, i)}>
-						<span class="minus-icon">×</span>
-					</button>
-				</div>
-			{/each}
-			<button class="add-btn" onclick={() => addRow(comm_tone)}>
-				<span class="plus-icon">+</span>Add Tone
-			</button>
-		</div>
+<!-- Age Range -->
+<div class="mb-6">
+	<h4 class="mb-2.5 font-bold text-gray-600">Age Range</h4>
+	<div class="mb-2.5 flex items-center gap-2.5">
+		<input
+			type="number"
+			min="18"
+			max="100"
+			bind:value={age_range[0]}
+			class="w-[70px] flex-none rounded border border-gray-300 p-2"
+		/>
+		<span>to</span>
+		<input
+			type="number"
+			min="18"
+			max="100"
+			bind:value={age_range[1]}
+			class="w-[70px] flex-none rounded border border-gray-300 p-2"
+		/>
 	</div>
+</div>
 
-	<!-- Extra Traits -->
-	<div class="section">
-		<h4>Extra traits</h4>
-		{#each extra_traits as item, i}
-			<div class="row">
-				<input type="text" placeholder="Trait" bind:value={extra_traits[i]} />
-				<button class="remove-btn" onclick={() => removeRow(extra_traits, i)}>
-					<span class="minus-icon">×</span>
+<!-- Generic String Lists -->
+{#each [{ title: 'Education', list: educations }, { title: 'Occupations', list: occupations }, { title: 'Locations', list: locations }, { title: 'Personalities', list: personalities }] as group}
+	<div class="mb-6">
+		<h4 class="mb-2.5 font-bold text-gray-600">{group.title}</h4>
+		{#each group.list as item, i}
+			<div class="mb-2.5 flex items-center gap-2.5">
+				<input
+					type="text"
+					placeholder={group.title}
+					bind:value={group.list[i]}
+					class="flex-1 rounded border border-gray-300 p-2"
+				/>
+				<button
+					class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+					onclick={() => removeRow(group.list, i)}
+				>
+					<span class="text-lg font-bold">×</span>
 				</button>
 			</div>
 		{/each}
-		<button class="add-btn" onclick={() => addRow(extra_traits)}>
-			<span class="plus-icon">+</span>Add Trait
+		<button
+			class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+			onclick={() => addRow(group.list)}
+		>
+			<span class="text-lg font-bold">+</span>Add {group.title}
+		</button>
+	</div>
+{/each}
+
+<!-- Communication Traits -->
+<div class="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+	<h4 class="mb-2.5 font-bold text-gray-600">Communication Traits</h4>
+
+	<div>
+		<h5 class="mt-2.5 mb-1.5 font-bold">Length</h5>
+		{#each comm_length as item, i}
+			<div class="mb-2.5 flex items-center gap-2.5">
+				<input
+					type="text"
+					placeholder="Length"
+					bind:value={comm_length[i]}
+					class="flex-1 rounded border border-gray-300 p-2"
+				/>
+				<button
+					class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+					onclick={() => removeRow(comm_length, i)}
+				>
+					<span class="text-lg font-bold">×</span>
+				</button>
+			</div>
+		{/each}
+		<button
+			class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+			onclick={() => addRow(comm_length)}
+		>
+			<span class="text-lg font-bold">+</span>Add Length
 		</button>
 	</div>
 
-	<!-- Refusal Rate -->
-	<div class="section">
-		<h4>Refusal Rate (%)</h4>
-		<p>The chance that the subject will be explicitly told to refuse answering a given question.</p>
-		<div class="row">
-			<label>Min:</label>
-			<input type="number" min="0" max="100" bind:value={refusal_rate[0]} />
-			<label>Max:</label>
-			<input type="number" min="0" max="100" bind:value={refusal_rate[1]} />
-		</div>
+	<div>
+		<h5 class="mt-2.5 mb-1.5 font-bold">Style</h5>
+		{#each comm_style as item, i}
+			<div class="mb-2.5 flex items-center gap-2.5">
+				<input
+					type="text"
+					placeholder="Style"
+					bind:value={comm_style[i]}
+					class="flex-1 rounded border border-gray-300 p-2"
+				/>
+				<button
+					class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+					onclick={() => removeRow(comm_style, i)}
+				>
+					<span class="text-lg font-bold">×</span>
+				</button>
+			</div>
+		{/each}
+		<button
+			class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+			onclick={() => addRow(comm_style)}
+		>
+			<span class="text-lg font-bold">+</span>Add Style
+		</button>
 	</div>
 
-	<br /><br />
-	<button onclick={saveSetup} disabled={isSaving} class="save-btn">
-		{isSaving ? 'Saving...' : 'Save'}
-	</button>
-	<!-- Export button not implemented yet as per request scope but present in HTML -->
+	<div>
+		<h5 class="mt-2.5 mb-1.5 font-bold">Tone</h5>
+		{#each comm_tone as item, i}
+			<div class="mb-2.5 flex items-center gap-2.5">
+				<input
+					type="text"
+					placeholder="Tone"
+					bind:value={comm_tone[i]}
+					class="flex-1 rounded border border-gray-300 p-2"
+				/>
+				<button
+					class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+					onclick={() => removeRow(comm_tone, i)}
+				>
+					<span class="text-lg font-bold">×</span>
+				</button>
+			</div>
+		{/each}
+		<button
+			class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+			onclick={() => addRow(comm_tone)}
+		>
+			<span class="text-lg font-bold">+</span>Add Tone
+		</button>
+	</div>
 </div>
 
-<style>
-	.section {
-		margin-bottom: 24px;
-	}
+<!-- Extra Traits -->
+<div class="mb-6">
+	<h4 class="mb-2.5 font-bold text-gray-600">Extra traits</h4>
+	{#each extra_traits as item, i}
+		<div class="mb-2.5 flex items-center gap-2.5">
+			<input
+				type="text"
+				placeholder="Trait"
+				bind:value={extra_traits[i]}
+				class="flex-1 rounded border border-gray-300 p-2"
+			/>
+			<button
+				class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+				onclick={() => removeRow(extra_traits, i)}
+			>
+				<span class="text-lg font-bold">×</span>
+			</button>
+		</div>
+	{/each}
+	<button
+		class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+		onclick={() => addRow(extra_traits)}
+	>
+		<span class="text-lg font-bold">+</span>Add Trait
+	</button>
+</div>
 
-	.communication-traits {
-		border: 1px solid #eee;
-		padding: 16px;
-		border-radius: 8px;
-		background-color: #fafafa;
-	}
+<!-- Refusal Rate -->
+<div class="mb-6">
+	<h4 class="mb-2.5 font-bold text-gray-600">Refusal Rate (%)</h4>
+	<p>The chance that the subject will be explicitly told to refuse answering a given question.</p>
+	<div class="mb-2.5 flex items-center gap-2.5">
+		<label>Min:</label>
+		<input
+			type="number"
+			min="0"
+			max="100"
+			bind:value={refusal_rate[0]}
+			class="w-[70px] flex-none rounded border border-gray-300 p-2"
+		/>
+		<label>Max:</label>
+		<input
+			type="number"
+			min="0"
+			max="100"
+			bind:value={refusal_rate[1]}
+			class="w-[70px] flex-none rounded border border-gray-300 p-2"
+		/>
+	</div>
+</div>
 
-	.row {
-		display: flex;
-		gap: 10px;
-		margin-bottom: 10px;
-		align-items: center;
-	}
+<br /><br />
+<button
+	onclick={saveSetup}
+	disabled={isSaving}
+	class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-600 px-4 py-2 font-bold text-white disabled:cursor-not-allowed disabled:opacity-70"
+>
+	{isSaving ? 'Saving...' : 'Save'}
+</button>
 
-	input {
-		padding: 8px;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		flex: 1;
-	}
-
-	input[type='number'] {
-		width: 70px;
-		flex: initial;
-	}
-
-	button {
-		padding: 8px 16px;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		gap: 5px;
-	}
-
-	.save-btn {
-		background-color: #0066cc;
-		color: white;
-		font-weight: bold;
-	}
-
-	.add-btn {
-		background-color: #e6f3ff;
-		color: #0066cc;
-	}
-
-	.remove-btn {
-		background-color: #ffe6e6;
-		color: #cc0000;
-		padding: 8px;
-	}
-
-	h3 {
-		color: #333;
-		margin-bottom: 20px;
-	}
-
-	h4 {
-		color: #666;
-		margin-bottom: 10px;
-	}
-
-	h5 {
-		margin-top: 10px;
-		margin-bottom: 5px;
-		font-weight: bold;
-	}
-
-	.plus-icon {
-		font-size: 18px;
-		font-weight: bold;
-	}
-
-	.minus-icon {
-		font-size: 18px;
-		font-weight: bold;
-	}
-
-	.underline-simple {
-		border-bottom: 2px solid #eee;
-		padding-bottom: 10px;
-		margin-bottom: 20px;
-	}
-</style>
+<!-- Export button not implemented yet as per request scope but present in HTML -->

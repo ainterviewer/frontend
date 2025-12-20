@@ -36,80 +36,31 @@
 	}
 </script>
 
-<div style="width: 80%; max-width: 1000px">
-	<h2 class="underline-simple">Setup</h2>
-	<h3>Fixed answers</h3>
+<div class="w-[80%] w-full max-w-[1000px]">
+	<h2 class="page-title">Setup</h2>
+	<h3 class="mb-5 text-gray-800">Fixed answers</h3>
 	<p>Define fixed answers for each main question.</p>
 
 	{#each questions as question, index}
-		<div class="section">
-			<h4>Main question {index + 1}</h4>
-			<span type="text">{question}</span>
-			<div>
+		<div class="mb-6">
+			<h4 class="mt-8 mb-2.5 text-gray-500">Main question {index + 1}</h4>
+			<span class="italic">{question}</span>
+			<div class="mt-2.5 flex flex-col">
 				<label for="question-{index}-answer">Answer: </label>
-				<input type="text" id="question-{index}-answer" bind:value={answers[index]} />
+				<input
+					type="text"
+					id="question-{index}-answer"
+					bind:value={answers[index]}
+					class="w-full flex-1 rounded border border-gray-300 p-2"
+				/>
 			</div>
 		</div>
 	{/each}
-	<button onclick={saveSetup} disabled={isSaving}>
+	<button
+		onclick={saveSetup}
+		disabled={isSaving}
+		class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+	>
 		{isSaving ? 'Saving...' : 'Save'}
 	</button>
 </div>
-
-<style>
-	.section {
-		margin-bottom: 24px;
-	}
-
-	.section > div {
-		display: flex;
-		flex-direction: column;
-		margin-top: 10px;
-	}
-
-	.section > span {
-		font-style: italic;
-	}
-
-	input {
-		padding: 8px;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		flex: 1;
-		width: 100%;
-	}
-
-	button {
-		padding: 8px 16px;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		gap: 5px;
-		background-color: #e6f3ff;
-		color: #0066cc;
-	}
-
-	button:disabled {
-		opacity: 0.7;
-		cursor: not-allowed;
-	}
-
-	h3 {
-		color: #333;
-		margin-bottom: 20px;
-	}
-
-	h4 {
-		color: #666;
-		margin-bottom: 10px;
-		margin-top: 30px;
-	}
-
-	.underline-simple {
-		border-bottom: 2px solid #eee;
-		padding-bottom: 10px;
-		margin-bottom: 20px;
-	}
-</style>

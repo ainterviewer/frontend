@@ -4,6 +4,6 @@
 </script>
 
 <div>
-	<h3>Fixed AI Personas</h3>
+	<h3 class="mb-5 text-gray-800">Fixed AI Personas</h3>
 	<p>Setup for Fixed AI Personas is not implemented yet.</p>
 </div>
