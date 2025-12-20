@@ -1,6 +1,6 @@
-import type { LayoutServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
 import { Auth } from '$lib/api';
+import { redirect } from '@sveltejs/kit';
+import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ cookies, request }) => {
 	const token = cookies.get('token');

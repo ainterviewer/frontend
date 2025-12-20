@@ -36,31 +36,29 @@
 	}
 </script>
 
-<div class="w-[80%] w-full max-w-[1000px]">
-	<h2 class="page-title">Setup</h2>
-	<h3 class="mb-5 text-gray-800">Fixed answers</h3>
-	<p>Define fixed answers for each main question.</p>
+<h2 class="page-title">Setup</h2>
+<h3 class="mb-5 text-gray-800">Fixed answers</h3>
+<p>Define fixed answers for each main question.</p>
 
-	{#each questions as question, index}
-		<div class="mb-6">
-			<h4 class="mt-8 mb-2.5 text-gray-500">Main question {index + 1}</h4>
-			<span class="italic">{question}</span>
-			<div class="mt-2.5 flex flex-col">
-				<label for="question-{index}-answer">Answer: </label>
-				<input
-					type="text"
-					id="question-{index}-answer"
-					bind:value={answers[index]}
-					class="w-full flex-1 rounded border border-gray-300 p-2"
-				/>
-			</div>
+{#each questions as question, index}
+	<div class="mb-6">
+		<h4 class="mt-8 mb-2.5 text-gray-500">Main question {index + 1}</h4>
+		<span class="italic">{question}</span>
+		<div class="mt-2.5 flex flex-col">
+			<label for="question-{index}-answer">Answer: </label>
+			<input
+				type="text"
+				id="question-{index}-answer"
+				bind:value={answers[index]}
+				class="w-full flex-1 rounded border border-gray-300 p-2"
+			/>
 		</div>
-	{/each}
-	<button
-		onclick={saveSetup}
-		disabled={isSaving}
-		class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
-	>
-		{isSaving ? 'Saving...' : 'Save'}
-	</button>
-</div>
+	</div>
+{/each}
+<button
+	onclick={saveSetup}
+	disabled={isSaving}
+	class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+>
+	{isSaving ? 'Saving...' : 'Save'}
+</button>
