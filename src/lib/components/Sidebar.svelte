@@ -63,7 +63,7 @@
 	</ul>
 </div>
 
-{#snippet listItem(item: SidebarItem, level = 0)}
+{#snippet listItem(item: SidebarItem, level = 0, isLast = false)}
 	{@const active = isActive(item.href)}
 	{@const hasChildren = !!item.children?.length}
 
@@ -78,9 +78,15 @@
 		>
 			{#if item.icon}
 				<span
-					class={['icon inline-block min-w-6 text-center', level === 0 ? 'ml-6' : 'ml-14'].join(
-						' '
-					)}
+					class={[
+						'icon inline-block min-w-6 text-center',
+						level === 0
+							? 'ml-6'
+							: 'ml-9 border-l pl-5' +
+								(isLast
+									? ' [border-image:linear-gradient(to_bottom,#fff_60%,transparent_40%)_1_100%]'
+									: '')
+					].join(' ')}
 				>
 					<i class={item.icon}></i>
 				</span>
@@ -97,11 +103,12 @@
 		</a>
 
 		{#if hasChildren}
+			{@const visibleChildren = item.children!.filter(
+				(child) => !child.requiresAdmin || auth.isAdmin
+			)}
 			<ul class="m-0 list-none p-0">
-				{#each item.children! as child (child.label || child.href || child)}
-					{#if !child.requiresAdmin || auth.isAdmin}
-						{@render listItem(child, level + 1)}
-					{/if}
+				{#each visibleChildren as child, i (child.label || child.href || child)}
+					{@render listItem(child, level + 1, i === visibleChildren.length - 1)}
 				{/each}
 			</ul>
 		{/if}
