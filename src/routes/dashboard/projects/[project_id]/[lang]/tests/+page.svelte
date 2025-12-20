@@ -108,11 +108,7 @@
 	});
 
 	function navigateToTest(test: TestSetupPublic) {
-		// Store context in cookies similar to the old app
-		document.cookie = `test_id=${test.id}; path=/`;
-		document.cookie = `test_type=${test.type}; path=/`;
-		// Navigate to setup page
-		window.location.href = `/dashboard/projects/${projectId}/${page.params.lang}/tests/setup`;
+		window.location.href = `/dashboard/projects/${projectId}/${page.params.lang}/tests/${test.id}/setup`;
 	}
 </script>
 
@@ -195,6 +191,7 @@
 				{#each tests as test (test.id)}
 					<tr
 						class="cursor-pointer border-b border-gray-100 transition-colors hover:bg-gray-50"
+						role="button"
 						onclick={(e) => {
 							if (
 								(e.target as HTMLElement).tagName !== 'INPUT' &&
