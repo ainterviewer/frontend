@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ActiveWebsocketsWsConnectionsGetData, ActiveWebsocketsWsConnectionsGetResponses, AddIntervieweeData, AddIntervieweeErrors, AddIntervieweeResponses, AddProjectLanguagesData, AddProjectLanguagesErrors, AddProjectLanguagesResponses, BroadcastWsBroadcastPostData, BroadcastWsBroadcastPostErrors, BroadcastWsBroadcastPostResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ConnectWsConnectProjectIdInterviewIdGetData, ConnectWsConnectProjectIdInterviewIdGetErrors, ConnectWsConnectProjectIdInterviewIdGetResponses, CreateConsentData, CreateConsentErrors, CreateConsentResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateGuideData, CreateGuideErrors, CreateGuideResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreatePromptsData, CreatePromptsErrors, CreatePromptsResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, CreateWelcomeData, CreateWelcomeErrors, CreateWelcomeResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, EditFolderData, EditFolderErrors, EditFolderResponses, ExitData, ExitResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GetAccessRequestsData, GetAccessRequestsResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetExperimentsData, GetExperimentsResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFoldersData, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetLanguagesData, GetLanguagesResponses, GetModelsData, GetModelsResponses, GetProjectData, GetProjectErrors, GetProjectIdsData, GetProjectIdsResponses, GetProjectResponses, GetProjectsData, GetProjectsResponses, GetPromptsData, GetPromptsErrors, GetPromptsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthResponses, LoginData2, LoginErrors, LoginResponses, LogoutData, LogoutResponses, MeData, MeResponses, ProccessAccessRequestsData, ProccessAccessRequestsErrors, ProccessAccessRequestsResponses, ProxyToEc2Manager2Data, ProxyToEc2Manager2Errors, ProxyToEc2Manager2Responses, ProxyToEc2Manager3Data, ProxyToEc2Manager3Errors, ProxyToEc2Manager3Responses, ProxyToEc2Manager4Data, ProxyToEc2Manager4Errors, ProxyToEc2Manager4Responses, ProxyToEc2Manager5Data, ProxyToEc2Manager5Errors, ProxyToEc2Manager5Responses, ProxyToEc2ManagerData, ProxyToEc2ManagerErrors, ProxyToEc2ManagerResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, RefreshTokenData, RefreshTokenResponses, RegisterData, RegisterErrors, RegisterResponses, RemoveProjectLanguagesData, RemoveProjectLanguagesErrors, RemoveProjectLanguagesResponses, RenderConsentModalData, RenderConsentModalErrors, RenderConsentModalResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SetConsentData, SetConsentErrors, SetConsentResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UploadImage2Data, UploadImage2Errors, UploadImage2Responses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
+import type { ActiveWebsocketsWsConnectionsGetData, ActiveWebsocketsWsConnectionsGetResponses, AddIntervieweeData, AddIntervieweeErrors, AddIntervieweeResponses, AddMessageAnnotationData, AddMessageAnnotationErrors, AddMessageAnnotationResponses, AddProjectLanguagesData, AddProjectLanguagesErrors, AddProjectLanguagesResponses, BroadcastWsBroadcastPostData, BroadcastWsBroadcastPostErrors, BroadcastWsBroadcastPostResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ConnectWsConnectProjectIdInterviewIdGetData, ConnectWsConnectProjectIdInterviewIdGetErrors, ConnectWsConnectProjectIdInterviewIdGetResponses, CreateAnalysisCategoryData, CreateAnalysisCategoryErrors, CreateAnalysisCategoryResponses, CreateConsentData, CreateConsentErrors, CreateConsentResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateGuideData, CreateGuideErrors, CreateGuideResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreatePromptsData, CreatePromptsErrors, CreatePromptsResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, CreateWelcomeData, CreateWelcomeErrors, CreateWelcomeResponses, DeleteAnalysisCategoryData, DeleteAnalysisCategoryErrors, DeleteAnalysisCategoryResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteMessageAnnotationData, DeleteMessageAnnotationErrors, DeleteMessageAnnotationResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, EditFolderData, EditFolderErrors, EditFolderResponses, ExitData, ExitResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GetAccessRequestsData, GetAccessRequestsResponses, GetAnalysisCategoriesData, GetAnalysisCategoriesErrors, GetAnalysisCategoriesResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetExperimentsData, GetExperimentsResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFoldersData, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetLanguagesData, GetLanguagesResponses, GetMessageAnnotationsData, GetMessageAnnotationsErrors, GetMessageAnnotationsResponses, GetModelsData, GetModelsResponses, GetProjectData, GetProjectErrors, GetProjectIdsData, GetProjectIdsResponses, GetProjectResponses, GetProjectsData, GetProjectsResponses, GetPromptsData, GetPromptsErrors, GetPromptsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthResponses, LoginData2, LoginErrors, LoginResponses, LogoutData, LogoutResponses, MeData, MeResponses, ProccessAccessRequestsData, ProccessAccessRequestsErrors, ProccessAccessRequestsResponses, ProxyToEc2Manager2Data, ProxyToEc2Manager2Errors, ProxyToEc2Manager2Responses, ProxyToEc2Manager3Data, ProxyToEc2Manager3Errors, ProxyToEc2Manager3Responses, ProxyToEc2Manager4Data, ProxyToEc2Manager4Errors, ProxyToEc2Manager4Responses, ProxyToEc2Manager5Data, ProxyToEc2Manager5Errors, ProxyToEc2Manager5Responses, ProxyToEc2ManagerData, ProxyToEc2ManagerErrors, ProxyToEc2ManagerResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, RefreshTokenData, RefreshTokenResponses, RegisterData, RegisterErrors, RegisterResponses, RemoveProjectLanguagesData, RemoveProjectLanguagesErrors, RemoveProjectLanguagesResponses, RenderConsentModalData, RenderConsentModalErrors, RenderConsentModalResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SetConsentData, SetConsentErrors, SetConsentResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateMessageAnnotationData, UpdateMessageAnnotationErrors, UpdateMessageAnnotationResponses, UploadImage2Data, UploadImage2Errors, UploadImage2Responses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -18,7 +18,126 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
     meta?: Record<string, unknown>;
 };
 
-export class Default {
+export class Analysis {
+    /**
+     * Get Analysis Categories
+     */
+    public static getAnalysisCategories<ThrowOnError extends boolean = false>(options: Options<GetAnalysisCategoriesData, ThrowOnError>) {
+        return (options.client ?? client).get<GetAnalysisCategoriesResponses, GetAnalysisCategoriesErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/analysis/categories',
+            ...options
+        });
+    }
+    
+    /**
+     * Create Analysis Category
+     */
+    public static createAnalysisCategory<ThrowOnError extends boolean = false>(options: Options<CreateAnalysisCategoryData, ThrowOnError>) {
+        return (options.client ?? client).post<CreateAnalysisCategoryResponses, CreateAnalysisCategoryErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/analysis/categories',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Analysis Category
+     */
+    public static deleteAnalysisCategory<ThrowOnError extends boolean = false>(options: Options<DeleteAnalysisCategoryData, ThrowOnError>) {
+        return (options.client ?? client).delete<DeleteAnalysisCategoryResponses, DeleteAnalysisCategoryErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/analysis/categories/{category_id}',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Message Annotations
+     */
+    public static getMessageAnnotations<ThrowOnError extends boolean = false>(options: Options<GetMessageAnnotationsData, ThrowOnError>) {
+        return (options.client ?? client).get<GetMessageAnnotationsResponses, GetMessageAnnotationsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/messages/{message_id}/annotations',
+            ...options
+        });
+    }
+    
+    /**
+     * Add Message Annotation
+     */
+    public static addMessageAnnotation<ThrowOnError extends boolean = false>(options: Options<AddMessageAnnotationData, ThrowOnError>) {
+        return (options.client ?? client).post<AddMessageAnnotationResponses, AddMessageAnnotationErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/messages/{message_id}/annotations',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Message Annotation
+     */
+    public static deleteMessageAnnotation<ThrowOnError extends boolean = false>(options: Options<DeleteMessageAnnotationData, ThrowOnError>) {
+        return (options.client ?? client).delete<DeleteMessageAnnotationResponses, DeleteMessageAnnotationErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/analysis/annotations/{annotation_id}',
+            ...options
+        });
+    }
+    
+    /**
+     * Update Message Annotation
+     */
+    public static updateMessageAnnotation<ThrowOnError extends boolean = false>(options: Options<UpdateMessageAnnotationData, ThrowOnError>) {
+        return (options.client ?? client).put<UpdateMessageAnnotationResponses, UpdateMessageAnnotationErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/analysis/annotations/{annotation_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class Collaborators {
     /**
      * Get Collaborators
      */
@@ -33,7 +152,9 @@ export class Default {
             ...options
         });
     }
-    
+}
+
+export class Experiments {
     /**
      * Get Experiments
      */
@@ -97,7 +218,9 @@ export class Default {
             ...options
         });
     }
-    
+}
+
+export class Projects {
     /**
      * Delete Folder
      *
@@ -644,13 +767,13 @@ export class Default {
      * Export Messages
      */
     public static exportMessages<ThrowOnError extends boolean = false>(options: Options<ExportMessagesData, ThrowOnError>) {
-        return (options.client ?? client).post<ExportMessagesResponses, ExportMessagesErrors, ThrowOnError>({
+        return (options.client ?? client).get<ExportMessagesResponses, ExportMessagesErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
                     name: 'token',
                     type: 'apiKey'
                 }],
-            url: '/api/projects/{project_id}/interviews/messages',
+            url: '/api/projects/{project_id}/interviews/{interview_id}/messages',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -673,67 +796,9 @@ export class Default {
             ...options
         });
     }
-    
-    /**
-     * Render Consent Modal
-     */
-    public static renderConsentModal<ThrowOnError extends boolean = false>(options: Options<RenderConsentModalData, ThrowOnError>) {
-        return (options.client ?? client).post<RenderConsentModalResponses, RenderConsentModalErrors, ThrowOnError>({ url: '/api/projects/{project_id}/consent/render', ...options });
-    }
-    
-    /**
-     * Set Consent
-     */
-    public static setConsent<ThrowOnError extends boolean = false>(options: Options<SetConsentData, ThrowOnError>) {
-        return (options.client ?? client).post<SetConsentResponses, SetConsentErrors, ThrowOnError>({ url: '/api/projects/{project_id}/welcome/render', ...options });
-    }
-    
-    /**
-     * Create Interview
-     */
-    public static createInterview<ThrowOnError extends boolean = false>(options: Options<CreateInterviewData, ThrowOnError>) {
-        return (options.client ?? client).post<CreateInterviewResponses, CreateInterviewErrors, ThrowOnError>({ url: '/api/projects/{project_id}/{lang}/interviews', ...options });
-    }
-    
-    /**
-     * Put Feedback
-     */
-    public static putFeedback<ThrowOnError extends boolean = false>(options: Options<PutFeedbackData, ThrowOnError>) {
-        return (options.client ?? client).patch<PutFeedbackResponses, PutFeedbackErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/feedback',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Upload Image
-     */
-    public static uploadImage2<ThrowOnError extends boolean = false>(options: Options<UploadImage2Data, ThrowOnError>) {
-        return (options.client ?? client).post<UploadImage2Responses, UploadImage2Errors, ThrowOnError>({
-            ...formDataBodySerializer,
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/image',
-            ...options,
-            headers: {
-                'Content-Type': null,
-                ...options.headers
-            }
-        });
-    }
-    
+}
+
+export class Synthesize {
     /**
      * Get Background Info
      */
@@ -888,46 +953,67 @@ export class Default {
             }
         });
     }
+}
+
+export class Interviews {
+    /**
+     * Render Consent Modal
+     */
+    public static renderConsentModal<ThrowOnError extends boolean = false>(options: Options<RenderConsentModalData, ThrowOnError>) {
+        return (options.client ?? client).post<RenderConsentModalResponses, RenderConsentModalErrors, ThrowOnError>({ url: '/api/projects/{project_id}/consent/render', ...options });
+    }
     
     /**
-     * Get Models
-     *
-     * available models
+     * Set Consent
      */
-    public static getModels<ThrowOnError extends boolean = false>(options?: Options<GetModelsData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetModelsResponses, unknown, ThrowOnError>({
+    public static setConsent<ThrowOnError extends boolean = false>(options: Options<SetConsentData, ThrowOnError>) {
+        return (options.client ?? client).post<SetConsentResponses, SetConsentErrors, ThrowOnError>({ url: '/api/projects/{project_id}/welcome/render', ...options });
+    }
+    
+    /**
+     * Create Interview
+     */
+    public static createInterview<ThrowOnError extends boolean = false>(options: Options<CreateInterviewData, ThrowOnError>) {
+        return (options.client ?? client).post<CreateInterviewResponses, CreateInterviewErrors, ThrowOnError>({ url: '/api/projects/{project_id}/{lang}/interviews', ...options });
+    }
+    
+    /**
+     * Put Feedback
+     */
+    public static putFeedback<ThrowOnError extends boolean = false>(options: Options<PutFeedbackData, ThrowOnError>) {
+        return (options.client ?? client).patch<PutFeedbackResponses, PutFeedbackErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
                     name: 'token',
                     type: 'apiKey'
                 }],
-            url: '/api/models',
-            ...options
+            url: '/api/feedback',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
         });
     }
     
     /**
-     * Get Languages
-     *
-     * Get supported languages
+     * Upload Image
      */
-    public static getLanguages<ThrowOnError extends boolean = false>(options?: Options<GetLanguagesData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetLanguagesResponses, unknown, ThrowOnError>({
+    public static uploadImage2<ThrowOnError extends boolean = false>(options: Options<UploadImage2Data, ThrowOnError>) {
+        return (options.client ?? client).post<UploadImage2Responses, UploadImage2Errors, ThrowOnError>({
+            ...formDataBodySerializer,
             security: [{
                     in: 'cookie',
                     name: 'token',
                     type: 'apiKey'
                 }],
-            url: '/api/languages',
-            ...options
+            url: '/api/image',
+            ...options,
+            headers: {
+                'Content-Type': null,
+                ...options.headers
+            }
         });
-    }
-    
-    /**
-     * Health
-     */
-    public static health<ThrowOnError extends boolean = false>(options?: Options<HealthData, ThrowOnError>) {
-        return (options?.client ?? client).get<HealthResponses, unknown, ThrowOnError>({ url: '/api/health', ...options });
     }
     
     /**
@@ -1195,5 +1281,48 @@ export class Admin {
             url: '/api/admin/aws/ec2/{full_path}',
             ...options
         });
+    }
+}
+
+export class Default {
+    /**
+     * Get Models
+     *
+     * available models
+     */
+    public static getModels<ThrowOnError extends boolean = false>(options?: Options<GetModelsData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetModelsResponses, unknown, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/models',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Languages
+     *
+     * Get supported languages
+     */
+    public static getLanguages<ThrowOnError extends boolean = false>(options?: Options<GetLanguagesData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetLanguagesResponses, unknown, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/languages',
+            ...options
+        });
+    }
+    
+    /**
+     * Health
+     */
+    public static health<ThrowOnError extends boolean = false>(options?: Options<HealthData, ThrowOnError>) {
+        return (options?.client ?? client).get<HealthResponses, unknown, ThrowOnError>({ url: '/api/health', ...options });
     }
 }

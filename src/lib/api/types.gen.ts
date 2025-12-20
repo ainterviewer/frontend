@@ -84,6 +84,105 @@ export type AgentConfigsOutput = {
 };
 
 /**
+ * AnalysisCategoryCreate
+ */
+export type AnalysisCategoryCreate = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    type: AnalysisType;
+    /**
+     * Min Value
+     */
+    min_value?: number | null;
+    /**
+     * Max Value
+     */
+    max_value?: number | null;
+};
+
+/**
+ * AnalysisCategoryPublic
+ */
+export type AnalysisCategoryPublic = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    type: AnalysisType;
+    /**
+     * Min Value
+     */
+    min_value?: number | null;
+    /**
+     * Max Value
+     */
+    max_value?: number | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * AnalysisType
+ */
+export type AnalysisType = 'tag' | 'score';
+
+/**
+ * AnnotationValueCreate
+ */
+export type AnnotationValueCreate = {
+    /**
+     * Category Id
+     */
+    category_id: string;
+    /**
+     * Value Int
+     */
+    value_int: number;
+};
+
+/**
+ * AnnotationValuePublic
+ */
+export type AnnotationValuePublic = {
+    /**
+     * Category Id
+     */
+    category_id: string;
+    /**
+     * Value Int
+     */
+    value_int: number;
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
  * AnswerLength
  */
 export type AnswerLength = 'short' | 'medium' | 'long';
@@ -332,6 +431,16 @@ export type DeleteInterviewRequest = {
      * Interview Ids
      */
     interview_ids: Array<string>;
+};
+
+/**
+ * ErrorResponse
+ */
+export type ErrorResponse = {
+    /**
+     * Detail
+     */
+    detail: string;
 };
 
 /**
@@ -617,6 +726,62 @@ export type LoginData = {
 };
 
 /**
+ * MessageAnnotationCreate
+ */
+export type MessageAnnotationCreate = {
+    /**
+     * Message Id
+     */
+    message_id: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Comment
+     */
+    comment?: string | null;
+    /**
+     * Values
+     */
+    values: Array<AnnotationValueCreate>;
+};
+
+/**
+ * MessageAnnotationPublic
+ */
+export type MessageAnnotationPublic = {
+    /**
+     * Message Id
+     */
+    message_id: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Comment
+     */
+    comment?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Values
+     */
+    values: Array<AnnotationValuePublic>;
+};
+
+/**
  * MessageFeedback
  */
 export type MessageFeedback = {
@@ -634,6 +799,102 @@ export type MessageFeedback = {
     message_id: number;
     feedback: Feedback | null;
 };
+
+/**
+ * MessagePublic
+ */
+export type MessagePublic = {
+    /**
+     * Message Id
+     */
+    message_id: number;
+    /**
+     * Content
+     */
+    content: string;
+    role: MessageRole;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    message_type?: MessageType;
+    /**
+     * Section
+     */
+    section?: number | null;
+    /**
+     * Main Question
+     */
+    main_question?: number | null;
+    /**
+     * Sub Question
+     */
+    sub_question?: number | null;
+    /**
+     * Is Introduction
+     */
+    is_introduction?: boolean;
+    /**
+     * Outro
+     */
+    outro?: boolean;
+    /**
+     * Timed
+     */
+    timed?: boolean;
+    /**
+     * Can Answer
+     */
+    can_answer?: boolean;
+    /**
+     * Include In History
+     */
+    include_in_history?: boolean;
+    /**
+     * Attachment
+     */
+    attachment?: string | null;
+    feedback?: Feedback | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Image
+     */
+    image?: Image | Array<Image> | null;
+    survey_item?: SurveyItem | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Annotations
+     */
+    annotations?: Array<MessageAnnotationPublic>;
+    /**
+     * Is Test
+     */
+    is_test: boolean;
+    /**
+     * Is Synthetic
+     */
+    is_synthetic: boolean;
+};
+
+/**
+ * MessageRole
+ */
+export type MessageRole = 'system' | 'assistant' | 'user';
+
+/**
+ * MessageType
+ */
+export type MessageType = 'text' | 'image' | 'custom_token' | 'survey_item';
 
 /**
  * ProbingAgentConfig
@@ -1535,11 +1796,6 @@ export type OutgoingData = {
 };
 
 /**
- * MessageRole
- */
-export type MessageRole = 'system' | 'assistant' | 'user';
-
-/**
  * OutgoingHistoryMessage
  */
 export type OutgoingHistoryMessage = {
@@ -1618,11 +1874,6 @@ export type OutgoingMessage = {
 };
 
 /**
- * MessageType
- */
-export type MessageType = 'text' | 'image' | 'custom_token' | 'survey_item';
-
-/**
  * ReceivedData
  */
 export type ReceivedData = {
@@ -1640,6 +1891,242 @@ export type ReceivedData = {
      */
     file?: string | null;
 };
+
+export type GetAnalysisCategoriesData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/analysis/categories';
+};
+
+export type GetAnalysisCategoriesErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAnalysisCategoriesError = GetAnalysisCategoriesErrors[keyof GetAnalysisCategoriesErrors];
+
+export type GetAnalysisCategoriesResponses = {
+    /**
+     * Response Get Analysis Categories
+     *
+     * Successful Response
+     */
+    200: Array<AnalysisCategoryPublic>;
+};
+
+export type GetAnalysisCategoriesResponse = GetAnalysisCategoriesResponses[keyof GetAnalysisCategoriesResponses];
+
+export type CreateAnalysisCategoryData = {
+    body: AnalysisCategoryCreate;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/analysis/categories';
+};
+
+export type CreateAnalysisCategoryErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateAnalysisCategoryError = CreateAnalysisCategoryErrors[keyof CreateAnalysisCategoryErrors];
+
+export type CreateAnalysisCategoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type DeleteAnalysisCategoryData = {
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/analysis/categories/{category_id}';
+};
+
+export type DeleteAnalysisCategoryErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteAnalysisCategoryError = DeleteAnalysisCategoryErrors[keyof DeleteAnalysisCategoryErrors];
+
+export type DeleteAnalysisCategoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetMessageAnnotationsData = {
+    body?: never;
+    path: {
+        /**
+         * Message Id
+         */
+        message_id: string;
+    };
+    query?: never;
+    url: '/api/messages/{message_id}/annotations';
+};
+
+export type GetMessageAnnotationsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMessageAnnotationsError = GetMessageAnnotationsErrors[keyof GetMessageAnnotationsErrors];
+
+export type GetMessageAnnotationsResponses = {
+    /**
+     * Response Get Message Annotations
+     *
+     * Successful Response
+     */
+    200: Array<MessageAnnotationPublic>;
+};
+
+export type GetMessageAnnotationsResponse = GetMessageAnnotationsResponses[keyof GetMessageAnnotationsResponses];
+
+export type AddMessageAnnotationData = {
+    body: MessageAnnotationCreate;
+    path: {
+        /**
+         * Message Id
+         */
+        message_id: string;
+    };
+    query?: never;
+    url: '/api/messages/{message_id}/annotations';
+};
+
+export type AddMessageAnnotationErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddMessageAnnotationError = AddMessageAnnotationErrors[keyof AddMessageAnnotationErrors];
+
+export type AddMessageAnnotationResponses = {
+    /**
+     * Successful Response
+     */
+    200: MessageAnnotationPublic;
+};
+
+export type AddMessageAnnotationResponse = AddMessageAnnotationResponses[keyof AddMessageAnnotationResponses];
+
+export type DeleteMessageAnnotationData = {
+    body?: never;
+    path: {
+        /**
+         * Annotation Id
+         */
+        annotation_id: string;
+    };
+    query?: never;
+    url: '/api/analysis/annotations/{annotation_id}';
+};
+
+export type DeleteMessageAnnotationErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteMessageAnnotationError = DeleteMessageAnnotationErrors[keyof DeleteMessageAnnotationErrors];
+
+export type DeleteMessageAnnotationResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type UpdateMessageAnnotationData = {
+    body: MessageAnnotationCreate;
+    path: {
+        /**
+         * Annotation Id
+         */
+        annotation_id: string;
+    };
+    query?: never;
+    url: '/api/analysis/annotations/{annotation_id}';
+};
+
+export type UpdateMessageAnnotationErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateMessageAnnotationError = UpdateMessageAnnotationErrors[keyof UpdateMessageAnnotationErrors];
+
+export type UpdateMessageAnnotationResponses = {
+    /**
+     * Successful Response
+     */
+    200: MessageAnnotationPublic;
+};
+
+export type UpdateMessageAnnotationResponse = UpdateMessageAnnotationResponses[keyof UpdateMessageAnnotationResponses];
 
 export type GetCollaboratorsData = {
     body?: never;
@@ -2573,6 +3060,22 @@ export type GetInterviewsData = {
     };
     query?: {
         /**
+         * Synthetic
+         */
+        synthetic?: boolean | null;
+        /**
+         * Test
+         */
+        test?: boolean | null;
+        /**
+         * Created At
+         */
+        created_at?: string | null;
+        /**
+         * Completed
+         */
+        completed?: boolean | null;
+        /**
          * Offset
          */
         offset?: number;
@@ -2615,9 +3118,13 @@ export type ExportMessagesData = {
          * Project Id
          */
         project_id: string;
+        /**
+         * Interview Id
+         */
+        interview_id: string;
     };
     query?: never;
-    url: '/api/projects/{project_id}/interviews/messages';
+    url: '/api/projects/{project_id}/interviews/{interview_id}/messages';
 };
 
 export type ExportMessagesErrors = {
@@ -2658,6 +3165,280 @@ export type GenerateProjectQrErrors = {
 export type GenerateProjectQrError = GenerateProjectQrErrors[keyof GenerateProjectQrErrors];
 
 export type GenerateProjectQrResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetBackgroundInfoData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Test Id
+         */
+        test_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/tests/{test_id}/background_info';
+};
+
+export type GetBackgroundInfoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetBackgroundInfoError = GetBackgroundInfoErrors[keyof GetBackgroundInfoErrors];
+
+export type GetBackgroundInfoResponses = {
+    /**
+     * Successful Response
+     */
+    200: BackgroundInfoOptionsOutput;
+};
+
+export type GetBackgroundInfoResponse = GetBackgroundInfoResponses[keyof GetBackgroundInfoResponses];
+
+export type UpdateBackgroundInfoData = {
+    body: UpdateBackgroundInfoRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Test Id
+         */
+        test_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/tests/{test_id}/background_info';
+};
+
+export type UpdateBackgroundInfoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateBackgroundInfoError = UpdateBackgroundInfoErrors[keyof UpdateBackgroundInfoErrors];
+
+export type UpdateBackgroundInfoResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetFixedAnswersData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Test Id
+         */
+        test_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers';
+};
+
+export type GetFixedAnswersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetFixedAnswersError = GetFixedAnswersErrors[keyof GetFixedAnswersErrors];
+
+export type GetFixedAnswersResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type UpdateFixedAnswersData = {
+    body: UpdateFixedAnswersRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Test Id
+         */
+        test_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers';
+};
+
+export type UpdateFixedAnswersErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateFixedAnswersError = UpdateFixedAnswersErrors[keyof UpdateFixedAnswersErrors];
+
+export type UpdateFixedAnswersResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetTestSetupsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/tests';
+};
+
+export type GetTestSetupsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetTestSetupsError = GetTestSetupsErrors[keyof GetTestSetupsErrors];
+
+export type GetTestSetupsResponses = {
+    /**
+     * Response Get Test Setups
+     *
+     * Successful Response
+     */
+    200: Array<TestSetupPublic>;
+};
+
+export type GetTestSetupsResponse = GetTestSetupsResponses[keyof GetTestSetupsResponses];
+
+export type CreateTestSetupData = {
+    body: TestSetupCreate;
+    path?: never;
+    query?: never;
+    url: '/api/projects/{project_id}/tests';
+};
+
+export type CreateTestSetupErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateTestSetupError = CreateTestSetupErrors[keyof CreateTestSetupErrors];
+
+export type CreateTestSetupResponses = {
+    /**
+     * Successful Response
+     */
+    200: TestSetupPublic;
+};
+
+export type CreateTestSetupResponse = CreateTestSetupResponses[keyof CreateTestSetupResponses];
+
+export type AddIntervieweeData = {
+    body: IntervieweeCreate;
+    path?: never;
+    query?: never;
+    url: '/api/interviewee';
+};
+
+export type AddIntervieweeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddIntervieweeError = AddIntervieweeErrors[keyof AddIntervieweeErrors];
+
+export type AddIntervieweeResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetTestStatusData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Test Id
+         */
+        test_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/tests/{test_id}/status';
+};
+
+export type GetTestStatusErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetTestStatusError = GetTestStatusErrors[keyof GetTestStatusErrors];
+
+export type GetTestStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type RunSyntheticTestData = {
+    body: SynthesizeRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Test Id
+         */
+        test_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/tests/{test_id}/run';
+};
+
+export type RunSyntheticTestErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RunSyntheticTestError = RunSyntheticTestErrors[keyof RunSyntheticTestErrors];
+
+export type RunSyntheticTestResponses = {
     /**
      * Successful Response
      */
@@ -2942,280 +3723,6 @@ export type RefreshTokenData = {
 };
 
 export type RefreshTokenResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type GetBackgroundInfoData = {
-    body?: never;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string;
-        /**
-         * Test Id
-         */
-        test_id: string;
-    };
-    query?: never;
-    url: '/api/projects/{project_id}/tests/{test_id}/background_info';
-};
-
-export type GetBackgroundInfoErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetBackgroundInfoError = GetBackgroundInfoErrors[keyof GetBackgroundInfoErrors];
-
-export type GetBackgroundInfoResponses = {
-    /**
-     * Successful Response
-     */
-    200: BackgroundInfoOptionsOutput;
-};
-
-export type GetBackgroundInfoResponse = GetBackgroundInfoResponses[keyof GetBackgroundInfoResponses];
-
-export type UpdateBackgroundInfoData = {
-    body: UpdateBackgroundInfoRequest;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string;
-        /**
-         * Test Id
-         */
-        test_id: string;
-    };
-    query?: never;
-    url: '/api/projects/{project_id}/tests/{test_id}/background_info';
-};
-
-export type UpdateBackgroundInfoErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type UpdateBackgroundInfoError = UpdateBackgroundInfoErrors[keyof UpdateBackgroundInfoErrors];
-
-export type UpdateBackgroundInfoResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type GetFixedAnswersData = {
-    body?: never;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string;
-        /**
-         * Test Id
-         */
-        test_id: string;
-    };
-    query?: never;
-    url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers';
-};
-
-export type GetFixedAnswersErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetFixedAnswersError = GetFixedAnswersErrors[keyof GetFixedAnswersErrors];
-
-export type GetFixedAnswersResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type UpdateFixedAnswersData = {
-    body: UpdateFixedAnswersRequest;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string;
-        /**
-         * Test Id
-         */
-        test_id: string;
-    };
-    query?: never;
-    url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers';
-};
-
-export type UpdateFixedAnswersErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type UpdateFixedAnswersError = UpdateFixedAnswersErrors[keyof UpdateFixedAnswersErrors];
-
-export type UpdateFixedAnswersResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type GetTestSetupsData = {
-    body?: never;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string;
-    };
-    query?: never;
-    url: '/api/projects/{project_id}/tests';
-};
-
-export type GetTestSetupsErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetTestSetupsError = GetTestSetupsErrors[keyof GetTestSetupsErrors];
-
-export type GetTestSetupsResponses = {
-    /**
-     * Response Get Test Setups
-     *
-     * Successful Response
-     */
-    200: Array<TestSetupPublic>;
-};
-
-export type GetTestSetupsResponse = GetTestSetupsResponses[keyof GetTestSetupsResponses];
-
-export type CreateTestSetupData = {
-    body: TestSetupCreate;
-    path?: never;
-    query?: never;
-    url: '/api/projects/{project_id}/tests';
-};
-
-export type CreateTestSetupErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CreateTestSetupError = CreateTestSetupErrors[keyof CreateTestSetupErrors];
-
-export type CreateTestSetupResponses = {
-    /**
-     * Successful Response
-     */
-    200: TestSetupPublic;
-};
-
-export type CreateTestSetupResponse = CreateTestSetupResponses[keyof CreateTestSetupResponses];
-
-export type AddIntervieweeData = {
-    body: IntervieweeCreate;
-    path?: never;
-    query?: never;
-    url: '/api/interviewee';
-};
-
-export type AddIntervieweeErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type AddIntervieweeError = AddIntervieweeErrors[keyof AddIntervieweeErrors];
-
-export type AddIntervieweeResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type GetTestStatusData = {
-    body?: never;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string;
-        /**
-         * Test Id
-         */
-        test_id: string;
-    };
-    query?: never;
-    url: '/api/projects/{project_id}/tests/{test_id}/status';
-};
-
-export type GetTestStatusErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetTestStatusError = GetTestStatusErrors[keyof GetTestStatusErrors];
-
-export type GetTestStatusResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type RunSyntheticTestData = {
-    body: SynthesizeRequest;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string;
-        /**
-         * Test Id
-         */
-        test_id: string;
-    };
-    query?: never;
-    url: '/api/projects/{project_id}/tests/{test_id}/run';
-};
-
-export type RunSyntheticTestErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RunSyntheticTestError = RunSyntheticTestErrors[keyof RunSyntheticTestErrors];
-
-export type RunSyntheticTestResponses = {
     /**
      * Successful Response
      */
