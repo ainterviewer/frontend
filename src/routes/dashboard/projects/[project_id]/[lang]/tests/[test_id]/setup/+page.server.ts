@@ -1,16 +1,21 @@
 import { Default, type BackgroundInfoOptionsOutput } from '$lib/api';
 import { error } from '@sveltejs/kit';
-import type { PageLoad } from './$types';
+import type { PageServerLoad } from './$types';
 
-export const load: PageLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 	const { project_id, test_id, lang } = params;
+	const token = cookies.get('token');
 
 	try {
 		const [testsResponse, guideResponse] = await Promise.all([
 			Default.getTestSetups({
+				auth: token,
+				fetch,
 				path: { project_id }
 			}),
 			Default.getGuide({
+				auth: token,
+				fetch,
 				path: { project_id, lang }
 			})
 		]);
@@ -25,6 +30,8 @@ export const load: PageLoad = async ({ params }) => {
 		if (test.type === 'fixed_answers') {
 			try {
 				const answersResponse = await Default.getFixedAnswers({
+					auth: token,
+					fetch,
 					path: { project_id, test_id }
 				});
 				if (answersResponse.data) {
@@ -36,6 +43,8 @@ export const load: PageLoad = async ({ params }) => {
 		} else if (test.type === 'shuffled_ai') {
 			try {
 				const bgInfoResponse = await Default.getBackgroundInfo({
+					auth: token,
+					fetch,
 					path: { project_id, test_id }
 				});
 				if (bgInfoResponse.data) {
