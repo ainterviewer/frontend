@@ -1,3 +1,6 @@
+/**
+A deterministic approach to generating most optimal new color
+*/
 export function generateColor(existingColors: string[] = []): string {
 	// Convert hex to HSL (Hue, Saturation, Lightness)
 	const hexToHsl = (hex: string): [number, number, number] | null => {
