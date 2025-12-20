@@ -92,8 +92,8 @@ export const projectSidebarItems: SidebarItem[] = [
 		icon: 'fas fa-chart-pie',
 		children: [
 			{
-				label: 'Categories',
-				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/categories',
+				label: 'Annotate',
+				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
 				icon: 'fas fa-tags'
 			},
 			{
