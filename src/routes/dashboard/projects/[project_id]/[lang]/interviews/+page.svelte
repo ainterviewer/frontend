@@ -32,7 +32,6 @@
 		{ key: 'last_updated', label: 'Updated' },
 		{ key: 'n_messages', label: 'Messages' },
 		{ key: 'interviewer', label: 'Interviewer' },
-		{ key: 'is_synthetic', label: 'Synthetic' },
 		{ key: 'is_complete', label: 'Status' }
 	];
 
@@ -260,12 +259,12 @@
 		<table class="min-w-full leading-normal">
 			<thead>
 				<tr
-					class="border-b-2 border-gray-200 bg-secondary text-left text-xs font-semibold tracking-wider text-gray-600 uppercase"
+					class="border-b-2 border-gray-200 bg-secondary text-left text-xs font-semibold tracking-wider text-gray-700 uppercase"
 				>
 					<th class="w-12 px-5 py-3">
 						<input
 							type="checkbox"
-							class="form-checkbox h-4 w-4 cursor-pointer text-blue-600 transition duration-150 ease-in-out"
+							class="form-checkbox h-4 w-4 cursor-pointer text-primary transition duration-150 ease-in-out"
 							checked={allSelected}
 							onchange={toggleSelectAll}
 							indeterminate={isIndeterminate}
@@ -311,7 +310,6 @@
 							<td class="px-5 py-4">{formatDate(interview.last_updated)}</td>
 							<td class="px-5 py-4">{interview.n_messages}</td>
 							<td class="px-5 py-4">{interview.interviewer}</td>
-							<td class="px-5 py-4">{interview.is_synthetic ? 'Yes' : 'No'}</td>
 							<td class="px-5 py-4">
 								{#if interview.is_complete}
 									<span

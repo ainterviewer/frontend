@@ -19,7 +19,7 @@
 		{#if sortColumn === column}
 			<i class="fa-solid fa-sort-{sortOrder === 'asc' ? 'up' : 'down'} ml-2"></i>
 		{:else}
-			<i class="fa-solid fa-sort ml-2 text-gray-400 group-hover:text-gray-500"></i>
+			<i class="fa-solid fa-sort ml-2 text-gray-400 group-hover:text-gray-600"></i>
 		{/if}
 	</div>
 </th>
