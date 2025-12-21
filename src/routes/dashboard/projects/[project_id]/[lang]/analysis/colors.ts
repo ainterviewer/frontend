@@ -139,3 +139,31 @@ export function generateColor(existingColors: string[] = []): string {
 
 	return hslToHex(bestHue, saturation, lightness);
 }
+
+/**
+ * Calculates the best contrast color (black or white) for a given background color
+ */
+export function getContrastColor(hex: string): string {
+	if (!hex) return '#000000';
+
+	// Remove # if present
+	const cleanHex = hex.replace('#', '');
+
+	// Handle short hex
+	const fullHex =
+		cleanHex.length === 3
+			? cleanHex
+					.split('')
+					.map((c) => c + c)
+					.join('')
+			: cleanHex;
+
+	const r = parseInt(fullHex.substring(0, 2), 16);
+	const g = parseInt(fullHex.substring(2, 4), 16);
+	const b = parseInt(fullHex.substring(4, 6), 16);
+
+	// Calculate luminance using YIQ formula
+	const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+
+	return yiq >= 128 ? '#000000' : '#ffffff';
+}

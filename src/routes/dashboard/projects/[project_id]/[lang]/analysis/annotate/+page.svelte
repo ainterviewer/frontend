@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { Analysis } from '$lib/api';
 	import type { AnalysisCategoryPublic, AnnotationType } from '$lib/api/types.gen';
-	import { generateColor } from '../colors';
+	import { generateColor, getContrastColor } from '../colors';
 	import { onMount } from 'svelte';
 
 	// State
@@ -192,7 +192,7 @@
 						<div class="flex items-center justify-between border-t border-gray-200 px-4 py-2">
 							<span
 								class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-								style="background-color: {tag.color}"
+								style="background-color: {tag.color}; color: {getContrastColor(tag.color)}"
 							>
 								{tag.name}
 							</span>
@@ -260,7 +260,7 @@
 						<div class="flex items-center justify-between border-t border-gray-200 px-4 py-2">
 							<span
 								class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-								style="background-color: {score.color}"
+								style="background-color: {score.color}; color: {getContrastColor(score.color)}"
 							>
 								{score.name}
 							</span>
