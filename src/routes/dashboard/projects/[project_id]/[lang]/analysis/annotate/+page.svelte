@@ -18,6 +18,7 @@
 	let activeDropdown = $state<string | null>(null);
 	let isCreateModalOpen = $state(false);
 	let isCreating = $state(false);
+	let editingCategoryId = $state<string | null>(null);
 
 	// Form State
 	let newName = $state('');
@@ -46,6 +47,7 @@
 	}
 
 	function openCreateModal(type: AnnotationType) {
+		editingCategoryId = null;
 		newType = type;
 		newName = '';
 		newDescription = '';
@@ -54,6 +56,18 @@
 		// Generate a fresh color based on existing ones
 		newColor = generateColor(categories.map((c) => c.color));
 		isCreateModalOpen = true;
+	}
+
+	function openEditModal(category: AnalysisCategoryPublic) {
+		editingCategoryId = category.id;
+		newType = category.type;
+		newName = category.name;
+		newDescription = category.description || '';
+		newColor = category.color;
+		newMin = category.min_value ?? null;
+		newMax = category.max_value ?? null;
+		isCreateModalOpen = true;
+		activeDropdown = null;
 	}
 
 	async function createCategory() {
@@ -80,6 +94,34 @@
 		} catch (e) {
 			console.error('Failed to create category', e);
 			alert('Failed to create category');
+		} finally {
+			isCreating = false;
+		}
+	}
+
+	async function updateCategory() {
+		if (!newName || !editingCategoryId || !projectId) return;
+
+		isCreating = true;
+		try {
+			await Analysis.updateAnalysisCategory({
+				path: { category_id: editingCategoryId },
+				body: {
+					project_id: projectId,
+					name: newName,
+					description: newDescription || null,
+					type: newType,
+					color: newColor,
+					min_value: newType === 'score' ? newMin : null,
+					max_value: newType === 'score' ? newMax : null
+				}
+			});
+
+			await loadCategories();
+			isCreateModalOpen = false;
+		} catch (e) {
+			console.error('Failed to update category', e);
+			alert('Failed to update category');
 		} finally {
 			isCreating = false;
 		}
@@ -165,6 +207,12 @@
 								{#if activeDropdown === tag.id}
 									<div class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg">
 										<button
+											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+											onclick={() => openEditModal(tag)}
+										>
+											Edit
+										</button>
+										<button
 											class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
 											onclick={() => deleteCategory(tag.id)}
 										>
@@ -227,6 +275,12 @@
 								{#if activeDropdown === score.id}
 									<div class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg">
 										<button
+											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+											onclick={() => openEditModal(score)}
+										>
+											Edit
+										</button>
+										<button
 											class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
 											onclick={() => deleteCategory(score.id)}
 										>
@@ -272,12 +326,19 @@
 				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
 				onclick={() => (isCreateModalOpen = false)}>&times;</button
 			>
-			<h2 class="mt-0 mb-6 text-2xl font-bold">Create New {newType === 'tag' ? 'Tag' : 'Score'}</h2>
+			<h2 class="mt-0 mb-6 text-2xl font-bold">
+				{editingCategoryId ? 'Edit' : 'Create New'}
+				{newType === 'tag' ? 'Tag' : 'Score'}
+			</h2>
 
 			<form
 				onsubmit={(e) => {
 					e.preventDefault();
-					createCategory();
+					if (editingCategoryId) {
+						updateCategory();
+					} else {
+						createCategory();
+					}
 				}}
 				class="space-y-6"
 			>
@@ -363,7 +424,13 @@
 						disabled={isCreating}
 						class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
 					>
-						{isCreating ? 'Creating...' : 'Create Category'}
+						{isCreating
+							? editingCategoryId
+								? 'Saving...'
+								: 'Creating...'
+							: editingCategoryId
+								? 'Save Changes'
+								: 'Create Category'}
 					</button>
 				</div>
 			</form>

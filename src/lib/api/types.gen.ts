@@ -99,7 +99,11 @@ export type AnalysisCategoryCreate = {
      * Description
      */
     description?: string | null;
-    type: AnalysisType;
+    type: AnnotationType;
+    /**
+     * Color
+     */
+    color: string;
     /**
      * Min Value
      */
@@ -126,7 +130,11 @@ export type AnalysisCategoryPublic = {
      * Description
      */
     description?: string | null;
-    type: AnalysisType;
+    type: AnnotationType;
+    /**
+     * Color
+     */
+    color: string;
     /**
      * Min Value
      */
@@ -146,9 +154,9 @@ export type AnalysisCategoryPublic = {
 };
 
 /**
- * AnalysisType
+ * AnnotationType
  */
-export type AnalysisType = 'tag' | 'score';
+export type AnnotationType = 'tag' | 'score';
 
 /**
  * AnnotationValueCreate
@@ -1991,6 +1999,40 @@ export type DeleteAnalysisCategoryResponses = {
      */
     200: unknown;
 };
+
+export type UpdateAnalysisCategoryData = {
+    body: AnalysisCategoryCreate;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/analysis/categories/{category_id}';
+};
+
+export type UpdateAnalysisCategoryErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateAnalysisCategoryError = UpdateAnalysisCategoryErrors[keyof UpdateAnalysisCategoryErrors];
+
+export type UpdateAnalysisCategoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: AnalysisCategoryPublic;
+};
+
+export type UpdateAnalysisCategoryResponse = UpdateAnalysisCategoryResponses[keyof UpdateAnalysisCategoryResponses];
 
 export type GetMessageAnnotationsData = {
     body?: never;
