@@ -8,11 +8,6 @@ export const mainSidebarItems: SidebarItem[] = [
 	},
 	{ type: 'separator' },
 	{
-		label: 'Project Folders',
-		href: '/dashboard/projects',
-		icon: 'fas fa-folder-open'
-	},
-	{
 		label: 'Experiments',
 		href: '/dashboard/experiments',
 		icon: 'fa-solid fa-vials'
