@@ -165,7 +165,9 @@
 	<h1 class="text-2xl font-semibold text-gray-800">Annotate</h1>
 </div>
 
-<p class="mb-6 text-gray-600">Manage analysis categories and annotations for your project.</p>
+<p class="mb-6 text-gray-600">
+	Manage and apply analytical categories and scores for your project.
+</p>
 
 {#if loading && categories.length === 0}
 	<div class="flex justify-center py-8">
