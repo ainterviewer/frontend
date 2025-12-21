@@ -96,7 +96,7 @@
 	}
 </script>
 
-<h2 class="m-0 text-xl font-bold">Welcome</h2>
+<h1 class="page-title">Welcome</h1>
 <p class="my-4">
 	Fill out the text you want to display to the user as a welcome message, before the interview
 	starts.

@@ -36,7 +36,7 @@
 	}
 </script>
 
-<h2 class="m-0 text-xl font-bold">Consent</h2>
+<h1 class="page-title">Consent</h1>
 <p class="my-4">
 	Fill out the consent message you want the user to accept before they can start the interview.
 </p>

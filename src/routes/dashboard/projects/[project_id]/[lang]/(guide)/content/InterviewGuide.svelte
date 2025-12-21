@@ -176,7 +176,7 @@
 </script>
 
 <div class="mb-6 flex items-center justify-between">
-	<h2 class="text-2xl font-semibold text-gray-800">Interview Guide</h2>
+	<h1 class="page-title">Interview Guide</h1>
 </div>
 
 <p class="mb-6 text-gray-600">
