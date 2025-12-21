@@ -148,7 +148,10 @@
 							</p>
 						</div>
 						<div class="flex items-center justify-between border-t border-gray-200 px-4 py-2">
-							<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
+							<span
+								class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+								style="background-color: {tag.color}"
+							>
 								{tag.name}
 							</span>
 							<div class="dropdown-container relative">
@@ -208,7 +211,8 @@
 						</div>
 						<div class="flex items-center justify-between border-t border-gray-200 px-4 py-2">
 							<span
-								class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
+								class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+								style="background-color: {score.color}"
 							>
 								{score.name}
 							</span>
