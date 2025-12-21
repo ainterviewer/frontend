@@ -214,205 +214,203 @@
 	});
 </script>
 
-<div class="container mx-auto px-4 py-8">
-	<div class="mb-6 flex items-end justify-between">
-		<h2 class="border-b-2 border-gray-800 pb-1 text-2xl font-bold">Interviews</h2>
-		<div class="flex gap-2">
-			<button
-				class="p-2 text-gray-600 transition-transform duration-300 hover:rotate-180 hover:text-gray-900"
-				onclick={loadInterviews}
-				title="Refresh interviews"
-			>
-				<i class="fa-solid fa-arrows-rotate text-lg"></i>
-			</button>
-
-			<button
-				class="p-2 text-gray-600 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30"
-				onclick={handleDownloadSelected}
-				disabled={selectedInterviews.size === 0}
-				title="Download selected interviews"
-			>
-				<i class="fa-solid fa-download text-lg"></i>
-			</button>
-
-			<button
-				class="p-2 text-gray-600 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
-				onclick={handleDeleteSelected}
-				disabled={selectedInterviews.size === 0}
-				title="Delete selected interviews"
-			>
-				<i class="fa-solid fa-trash-can text-lg"></i>
-			</button>
-		</div>
-	</div>
-
-	{#if error}
-		<div
-			class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
-			role="alert"
+<div class="mb-2 flex items-end justify-between">
+	<h1 class="page-title mb-10">Interviews</h1>
+	<div class="flex gap-1">
+		<button
+			class="p-2 text-gray-600 transition-transform duration-300 hover:rotate-180 hover:text-gray-900"
+			onclick={loadInterviews}
+			title="Refresh interviews"
 		>
-			<span class="block sm:inline">{error}</span>
-		</div>
-	{/if}
+			<i class="fa-solid fa-arrows-rotate text-lg"></i>
+		</button>
 
-	<div class="overflow-x-auto rounded-lg bg-white shadow">
-		<table class="min-w-full leading-normal">
-			<thead>
-				<tr
-					class="border-b-2 border-gray-200 bg-secondary text-left text-xs font-semibold tracking-wider text-gray-700 uppercase"
-				>
-					<th class="w-12 px-5 py-3">
-						<input
-							type="checkbox"
-							class="form-checkbox h-4 w-4 cursor-pointer text-primary transition duration-150 ease-in-out"
-							checked={allSelected}
-							onchange={toggleSelectAll}
-							indeterminate={isIndeterminate}
-						/>
-					</th>
-					{#each columns as col}
-						<SortableHeader
-							column={col.key}
-							label={col.label}
-							{sortColumn}
-							{sortOrder}
-							onSort={handleSort}
-						/>
-					{/each}
-					<th class="px-5 py-3"></th>
-					<th class="px-5 py-3"></th>
+		<button
+			class="p-2 text-gray-600 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30"
+			onclick={handleDownloadSelected}
+			disabled={selectedInterviews.size === 0}
+			title="Download selected interviews"
+		>
+			<i class="fa-solid fa-download text-lg"></i>
+		</button>
+
+		<button
+			class="p-2 text-gray-600 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
+			onclick={handleDeleteSelected}
+			disabled={selectedInterviews.size === 0}
+			title="Delete selected interviews"
+		>
+			<i class="fa-solid fa-trash-can text-lg"></i>
+		</button>
+	</div>
+</div>
+
+{#if error}
+	<div
+		class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
+		role="alert"
+	>
+		<span class="block sm:inline">{error}</span>
+	</div>
+{/if}
+
+<div class="overflow-x-auto rounded-lg bg-white shadow">
+	<table class="min-w-full leading-normal">
+		<thead>
+			<tr
+				class="border-b-2 border-gray-200 bg-secondary text-left text-[13px] font-bold tracking-wider text-gray-900 uppercase"
+			>
+				<th class="w-12 px-5 py-3.5">
+					<input
+						type="checkbox"
+						class="form-checkbox h-4 w-4 cursor-pointer text-primary transition duration-150 ease-in-out"
+						checked={allSelected}
+						onchange={toggleSelectAll}
+						indeterminate={isIndeterminate}
+					/>
+				</th>
+				{#each columns as col}
+					<SortableHeader
+						column={col.key}
+						label={col.label}
+						{sortColumn}
+						{sortOrder}
+						onSort={handleSort}
+					/>
+				{/each}
+				<th class="px-5 py-3"></th>
+				<th class="px-5 py-3"></th>
+			</tr>
+		</thead>
+		<tbody class="bg-white">
+			{#if loading}
+				<tr>
+					<td colspan="10" class="px-5 py-10 text-center text-gray-500">
+						<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading interviews...
+					</td>
 				</tr>
-			</thead>
-			<tbody class="bg-white">
-				{#if loading}
-					<tr>
-						<td colspan="10" class="px-5 py-10 text-center text-gray-500">
-							<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading interviews...
+			{:else if interviews.length === 0}
+				<tr>
+					<td colspan="10" class="px-5 py-10 text-center text-gray-500"> No interviews found </td>
+				</tr>
+			{:else}
+				{#each interviews as interview (interview.id)}
+					<tr class="border-b border-gray-200 text-sm hover:bg-gray-50">
+						<td class="px-5 py-4">
+							<input
+								type="checkbox"
+								class="form-checkbox h-4 w-4 cursor-pointer text-blue-600 transition duration-150 ease-in-out"
+								checked={selectedInterviews.has(interview.id)}
+								onchange={() => toggleSelection(interview.id)}
+							/>
+						</td>
+						<td class="px-5 py-4 font-mono text-xs">{interview.id}</td>
+						<td class="px-5 py-4">{formatDate(interview.created_at)}</td>
+						<td class="px-5 py-4">{formatDate(interview.last_updated)}</td>
+						<td class="px-5 py-4">{interview.n_messages}</td>
+						<td class="px-5 py-4">{interview.interviewer}</td>
+						<td class="px-5 py-4">
+							{#if interview.is_complete}
+								<span
+									class="rounded-full bg-green-100 px-2 py-1 text-xs leading-tight font-semibold text-green-700"
+									>Complete</span
+								>
+							{:else if interview.is_active}
+								<span
+									class="rounded-full bg-blue-100 px-2 py-1 text-xs leading-tight font-semibold text-blue-700"
+									>Active</span
+								>
+							{:else}
+								<span
+									class="rounded-full bg-gray-100 px-2 py-1 text-xs leading-tight font-semibold text-gray-700"
+									>Inactive</span
+								>
+							{/if}
+						</td>
+						<td class="px-5 py-4">
+							{#if !interview.is_complete && interview.is_active}
+								<button
+									class="rounded bg-blue-500 px-3 py-1 text-xs font-bold text-white transition duration-150 hover:bg-blue-600"
+									onclick={() => handleConnect(interview.id)}
+								>
+									Join
+								</button>
+							{/if}
+						</td>
+						<td class="px-5 py-4 text-right">
+							<div class="dropdown-container relative">
+								<button
+									class="w-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+									onclick={(e) => {
+										e.stopPropagation();
+										toggleDropdown(interview.id);
+									}}
+									aria-label="Actions"
+								>
+									<i class="fa-solid fa-ellipsis-vertical"></i>
+								</button>
+								{#if activeDropdown === interview.id}
+									<div
+										class="absolute right-0 z-50 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-left shadow-lg"
+									>
+										<button
+											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+											onclick={() => handleSingleAction('view', interview.id)}
+										>
+											<i class="fa-solid fa-eye mr-2 text-gray-500"></i> View
+										</button>
+										<button
+											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+											onclick={() => handleSingleAction('download', interview.id)}
+										>
+											<i class="fa-solid fa-download mr-2 text-gray-500"></i> Download
+										</button>
+										<button
+											class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+											onclick={() => handleSingleAction('delete', interview.id)}
+										>
+											<i class="fa-solid fa-trash-can mr-2"></i> Delete
+										</button>
+									</div>
+								{/if}
+							</div>
 						</td>
 					</tr>
-				{:else if interviews.length === 0}
-					<tr>
-						<td colspan="10" class="px-5 py-10 text-center text-gray-500"> No interviews found </td>
-					</tr>
-				{:else}
-					{#each interviews as interview (interview.id)}
-						<tr class="border-b border-gray-200 text-sm hover:bg-gray-50">
-							<td class="px-5 py-4">
-								<input
-									type="checkbox"
-									class="form-checkbox h-4 w-4 cursor-pointer text-blue-600 transition duration-150 ease-in-out"
-									checked={selectedInterviews.has(interview.id)}
-									onchange={() => toggleSelection(interview.id)}
-								/>
-							</td>
-							<td class="px-5 py-4 font-mono text-xs">{interview.id}</td>
-							<td class="px-5 py-4">{formatDate(interview.created_at)}</td>
-							<td class="px-5 py-4">{formatDate(interview.last_updated)}</td>
-							<td class="px-5 py-4">{interview.n_messages}</td>
-							<td class="px-5 py-4">{interview.interviewer}</td>
-							<td class="px-5 py-4">
-								{#if interview.is_complete}
-									<span
-										class="rounded-full bg-green-100 px-2 py-1 text-xs leading-tight font-semibold text-green-700"
-										>Complete</span
-									>
-								{:else if interview.is_active}
-									<span
-										class="rounded-full bg-blue-100 px-2 py-1 text-xs leading-tight font-semibold text-blue-700"
-										>Active</span
-									>
-								{:else}
-									<span
-										class="rounded-full bg-gray-100 px-2 py-1 text-xs leading-tight font-semibold text-gray-700"
-										>Inactive</span
-									>
-								{/if}
-							</td>
-							<td class="px-5 py-4">
-								{#if !interview.is_complete && interview.is_active}
-									<button
-										class="rounded bg-blue-500 px-3 py-1 text-xs font-bold text-white transition duration-150 hover:bg-blue-600"
-										onclick={() => handleConnect(interview.id)}
-									>
-										Join
-									</button>
-								{/if}
-							</td>
-							<td class="px-5 py-4 text-right">
-								<div class="dropdown-container relative">
-									<button
-										class="w-4 text-gray-500 hover:text-gray-700 focus:outline-none"
-										onclick={(e) => {
-											e.stopPropagation();
-											toggleDropdown(interview.id);
-										}}
-										aria-label="Actions"
-									>
-										<i class="fa-solid fa-ellipsis-vertical"></i>
-									</button>
-									{#if activeDropdown === interview.id}
-										<div
-											class="absolute right-0 z-50 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-left shadow-lg"
-										>
-											<button
-												class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-												onclick={() => handleSingleAction('view', interview.id)}
-											>
-												<i class="fa-solid fa-eye mr-2 text-gray-500"></i> View
-											</button>
-											<button
-												class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-												onclick={() => handleSingleAction('download', interview.id)}
-											>
-												<i class="fa-solid fa-download mr-2 text-gray-500"></i> Download
-											</button>
-											<button
-												class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-												onclick={() => handleSingleAction('delete', interview.id)}
-											>
-												<i class="fa-solid fa-trash-can mr-2"></i> Delete
-											</button>
-										</div>
-									{/if}
-								</div>
-							</td>
-						</tr>
-					{/each}
-				{/if}
-			</tbody>
-		</table>
+				{/each}
+			{/if}
+		</tbody>
+	</table>
+</div>
+
+<div class="mt-6 flex flex-col items-center justify-between text-sm text-gray-700 sm:flex-row">
+	<div class="mb-4 sm:mb-0">
+		{#if totalItems > 0}
+			Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to {Math.min(
+				currentPage * itemsPerPage,
+				totalItems
+			)} of {totalItems} interviews
+		{:else}
+			No interviews
+		{/if}
 	</div>
 
-	<div class="mt-6 flex flex-col items-center justify-between text-sm text-gray-700 sm:flex-row">
-		<div class="mb-4 sm:mb-0">
-			{#if totalItems > 0}
-				Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to {Math.min(
-					currentPage * itemsPerPage,
-					totalItems
-				)} of {totalItems} interviews
-			{:else}
-				No interviews
-			{/if}
-		</div>
+	<!-- Table Page Navigation -->
+	<Pagination {totalItems} {itemsPerPage} {currentPage} onPageChange={handlePageChange} />
 
-		<!-- Table Page Navigation -->
-		<Pagination {totalItems} {itemsPerPage} {currentPage} onPageChange={handlePageChange} />
-
-		<!-- Table Page Size  -->
-		<div class="flex items-center gap-2">
-			<label for="items-per-page" class="w-fit text-gray-600">Items per page:</label>
-			<select
-				id="items-per-page"
-				class="block w-fit form-select rounded-md border-gray-300 py-1 pr-10 pl-3 text-base focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
-				value={itemsPerPage}
-				onchange={handleLimitChange}
-			>
-				<option value="10">10</option>
-				<option value="20">20</option>
-				<option value="50">50</option>
-				<option value="100">100</option>
-			</select>
-		</div>
+	<!-- Table Page Size  -->
+	<div class="flex items-center gap-2">
+		<label for="items-per-page" class="w-fit text-gray-600">Items per page:</label>
+		<select
+			id="items-per-page"
+			class="block w-fit form-select rounded-md border-gray-300 py-1 pr-10 pl-3 text-base focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
+			value={itemsPerPage}
+			onchange={handleLimitChange}
+		>
+			<option value="10">10</option>
+			<option value="20">20</option>
+			<option value="50">50</option>
+			<option value="100">100</option>
+		</select>
 	</div>
 </div>
 
