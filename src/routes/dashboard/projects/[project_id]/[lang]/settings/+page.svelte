@@ -6,11 +6,9 @@
 	let { data }: { data: PageData } = $props();
 
 	let project = $state(data.project);
-	let languages = $state(data.languages);
 
 	$effect(() => {
 		project = data.project;
-		languages = data.languages;
 	});
 
 	let title = $state(project.title);
@@ -126,7 +124,7 @@
 						disabled={savingLanguage}
 						class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
 					>
-						{#each languages as language}
+						{#each project.available_languages as language}
 							<option value={language.code}>{language.name}</option>
 						{/each}
 					</select>
