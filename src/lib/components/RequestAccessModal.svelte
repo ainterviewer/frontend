@@ -86,9 +86,11 @@
 			<div class="px-6 py-8 sm:p-10">
 				<div class="text-center">
 					<h3 class="text-2xl font-extrabold tracking-tight text-dark">Request Access</h3>
-					<p class="mt-4 text-sm text-dark/70">
-						Join the waitlist for AInterviewer. We are currently onboarding select partners at a
-						slow pace - so don't be discouraged if our response is delayed.
+					<p class="mt-4 text-sm text-gray-700">
+						We are currently onboarding select partners at a slow pace - so don't be discouraged if
+						our response is delayed.
+						<br />
+						You can join the waitlist by signing up below.
 					</p>
 				</div>
 
@@ -132,6 +134,18 @@
 								required
 								class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
 							/>
+						</div>
+					</div>
+
+					<div>
+						<label for="message" class="block text-sm font-medium text-dark"> Purpose </label>
+						<div class="mt-1">
+							<textarea
+								id="message"
+								name="message"
+								rows="3"
+								class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+							></textarea>
 						</div>
 					</div>
 
