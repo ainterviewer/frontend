@@ -332,6 +332,42 @@ export type Broadcast = {
 };
 
 /**
+ * CollaboratorCreate
+ */
+export type CollaboratorCreate = {
+    role: CollaboratorRole;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Folder Id
+     */
+    folder_id: string;
+};
+
+/**
+ * CollaboratorPublic
+ */
+export type CollaboratorPublic = {
+    role: CollaboratorRole;
+    /**
+     * Id
+     */
+    id: string;
+    user: UserPublic;
+    /**
+     * Added At
+     */
+    added_at: string;
+};
+
+/**
+ * CollaboratorRole
+ */
+export type CollaboratorRole = 'admin' | 'editor' | 'viewer';
+
+/**
  * CommunicationTrait
  */
 export type CommunicationTrait = {
@@ -731,6 +767,10 @@ export type LoginData = {
      * Password
      */
     password: string;
+    /**
+     * Extended
+     */
+    extended?: boolean;
 };
 
 /**
@@ -935,6 +975,10 @@ export type ProjectFolderCreate = {
      * Title
      */
     title: string;
+    /**
+     * Collaborators
+     */
+    collaborators?: Array<string>;
 };
 
 /**
@@ -973,6 +1017,10 @@ export type ProjectFolderPublic = {
      * Id
      */
     id: string;
+    /**
+     * Collaborators
+     */
+    collaborators?: Array<CollaboratorPublic>;
 };
 
 /**
@@ -987,6 +1035,10 @@ export type ProjectFolderWithProjects = {
      * Id
      */
     id: string;
+    /**
+     * Collaborators
+     */
+    collaborators?: Array<CollaboratorPublic>;
     /**
      * Projects
      */
@@ -2170,14 +2222,50 @@ export type UpdateMessageAnnotationResponses = {
 
 export type UpdateMessageAnnotationResponse = UpdateMessageAnnotationResponses[keyof UpdateMessageAnnotationResponses];
 
-export type GetCollaboratorsData = {
+export type RemoveCollaboratorData = {
     body?: never;
     path?: never;
     query: {
         /**
+         * Folder Id
+         */
+        folder_id: string;
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    url: '/api/dashboard/collaborators';
+};
+
+export type RemoveCollaboratorErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveCollaboratorError = RemoveCollaboratorErrors[keyof RemoveCollaboratorErrors];
+
+export type RemoveCollaboratorResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetCollaboratorsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
          * Project Id
          */
-        project_id: string;
+        project_id?: string | null;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
     };
     url: '/api/dashboard/collaborators';
 };
@@ -2193,10 +2281,74 @@ export type GetCollaboratorsError = GetCollaboratorsErrors[keyof GetCollaborator
 
 export type GetCollaboratorsResponses = {
     /**
+     * Response Get Collaborators
+     *
      * Successful Response
      */
-    200: unknown;
+    200: Array<CollaboratorPublic>;
 };
+
+export type GetCollaboratorsResponse = GetCollaboratorsResponses[keyof GetCollaboratorsResponses];
+
+export type UpdateCollaboratorRoleData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Folder Id
+         */
+        folder_id: string;
+        /**
+         * User Id
+         */
+        user_id: string;
+        role: CollaboratorRole;
+    };
+    url: '/api/dashboard/collaborators';
+};
+
+export type UpdateCollaboratorRoleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateCollaboratorRoleError = UpdateCollaboratorRoleErrors[keyof UpdateCollaboratorRoleErrors];
+
+export type UpdateCollaboratorRoleResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollaboratorPublic;
+};
+
+export type UpdateCollaboratorRoleResponse = UpdateCollaboratorRoleResponses[keyof UpdateCollaboratorRoleResponses];
+
+export type AddCollaboratorData = {
+    body: CollaboratorCreate;
+    path?: never;
+    query?: never;
+    url: '/api/dashboard/collaborators';
+};
+
+export type AddCollaboratorErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddCollaboratorError = AddCollaboratorErrors[keyof AddCollaboratorErrors];
+
+export type AddCollaboratorResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollaboratorPublic;
+};
+
+export type AddCollaboratorResponse = AddCollaboratorResponses[keyof AddCollaboratorResponses];
 
 export type GetExperimentsData = {
     body?: never;
