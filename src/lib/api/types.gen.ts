@@ -365,7 +365,7 @@ export type CollaboratorPublic = {
 /**
  * CollaboratorRole
  */
-export type CollaboratorRole = 'admin' | 'editor' | 'viewer';
+export type CollaboratorRole = 'viewer' | 'annotator' | 'editor' | 'admin';
 
 /**
  * CommunicationTrait
