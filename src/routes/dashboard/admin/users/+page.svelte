@@ -121,11 +121,12 @@
 								})}
 							</td>
 							<td
-								class="relative py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-6"
+								class="relative py-2 pr-2 pl-1 text-right text-sm font-medium whitespace-nowrap sm:pr-6"
 							>
 								<button
 									onclick={() => deleteUser(user.id)}
-									class="text-red-600 transition-colors hover:text-red-900"
+									class="rounded p-2 text-red-600 transition-colors hover:bg-red-200 hover:text-red-900
+                  "
 								>
 									Delete<span class="sr-only">, {user.name}</span>
 								</button>
