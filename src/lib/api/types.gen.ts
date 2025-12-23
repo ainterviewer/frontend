@@ -332,6 +332,17 @@ export type Broadcast = {
 };
 
 /**
+ * Collaborator
+ */
+export type Collaborator = {
+    /**
+     * Email
+     */
+    email: string;
+    role: CollaboratorRole;
+};
+
+/**
  * CollaboratorCreate
  */
 export type CollaboratorCreate = {
@@ -976,9 +987,9 @@ export type ProjectFolderCreate = {
      */
     title: string;
     /**
-     * Collaborators
+     * Folder Collaborations
      */
-    collaborators?: Array<string>;
+    folder_collaborations?: Array<Collaborator>;
 };
 
 /**
@@ -4094,6 +4105,48 @@ export type ProxyToEc2Manager5Errors = {
 export type ProxyToEc2Manager5Error = ProxyToEc2Manager5Errors[keyof ProxyToEc2Manager5Errors];
 
 export type ProxyToEc2Manager5Responses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type DeleteUserData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    url: '/api/admin/users';
+};
+
+export type DeleteUserErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteUserError = DeleteUserErrors[keyof DeleteUserErrors];
+
+export type DeleteUserResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetUsersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/admin/users';
+};
+
+export type GetUsersResponses = {
     /**
      * Successful Response
      */
