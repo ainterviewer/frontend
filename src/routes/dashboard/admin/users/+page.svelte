@@ -115,7 +115,10 @@
 								</span>
 							</td>
 							<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
-								{user.last_active ? new Date(user.last_active).toLocaleDateString() : 'Never'}
+								{new Date(user.last_active).toLocaleDateString('en-GB', {
+									hour: '2-digit',
+									minute: '2-digit'
+								})}
 							</td>
 							<td
 								class="relative py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-6"
