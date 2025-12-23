@@ -32,7 +32,7 @@
 	// Form Data
 	// Folder Creation
 	let createFolderName = $state('');
-	let createFolderCollaborators: string[] = $state([]);
+	let createFolderCollaborators: { email: string; role: CollaboratorRole }[] = $state([]);
 
 	// Folder Editing
 	let editFolderName = $state('');
@@ -85,8 +85,8 @@
 		return () => window.removeEventListener('click', handleClickOutside);
 	});
 
-	async function addCollaborator() {
-		createFolderCollaborators.push('');
+	function addCollaborator() {
+		createFolderCollaborators.push({ email: '', role: 'viewer' });
 	}
 
 	async function handleCreateProject() {
@@ -121,7 +121,7 @@
 			await Projects.createFolder({
 				body: {
 					title: createFolderName,
-					collaborators: createFolderCollaborators.filter((c) => c.trim() !== '')
+					collaborators: createFolderCollaborators.filter((c) => c.email.trim() !== '') as any
 				}
 			});
 
@@ -812,31 +812,64 @@
 				/>
 			</div>
 
-			<div class="mb-4">
-				<label class="mb-2 block font-medium" for="folder-name">Share</label>
-				{#each createFolderCollaborators as _collaborator, i (i)}
-					<div class="mb-2 flex">
-						<input
-							type="text"
-							class="box-border w-full rounded border border-gray-300 p-2"
-							bind:value={createFolderCollaborators[i]}
-							placeholder="Email"
-							autocomplete="off"
-						/>
-						<div class="ml-2 flex rounded-lg transition-shadow hover:bg-red-500 hover:shadow-lg">
+			<div class="mt-6 mb-4">
+				<label class="mb-2 block font-bold" for="create-folder-collaborators">Collaborators</label>
+
+				{#if createFolderCollaborators.length > 0}
+					<div
+						class="mb-2 grid grid-cols-[1fr_8rem_2rem] gap-2 px-1 text-sm font-bold text-gray-700"
+					>
+						<span>Email</span>
+						<span
+							>Role
+							<Info>
+								<div>
+									<div class="mb-2 font-bold">Collaborator Role</div>
+									<div class="text-sm">
+										<div class="mb-2">
+											<span class="font-bold text-gray-800">Viewer:</span> Can only view the project information
+											and interviews but do no further action
+										</div>
+										<div class="mb-2">
+											<span class="font-bold text-gray-800">Annotator:</span> Can view the project information
+											and view and annotate interviews
+										</div>
+										<div class="mb-2">
+											<span class="font-bold text-gray-800">Editor:</span> Can view and edit the interview
+											guide and basic configuration
+										</div>
+										<div>
+											<span class="font-bold text-gray-800">Admin:</span> Can change projects status from
+											active to inactive and delete projects all together.
+										</div>
+									</div>
+								</div>
+							</Info>
+						</span>
+					</div>
+					{#each createFolderCollaborators as collaborator, i (i)}
+						<div class="mb-2 grid grid-cols-[1fr_8rem_2rem] items-center gap-2 px-1">
+							<input
+								type="text"
+								class="w-full rounded border border-gray-300 p-2"
+								bind:value={collaborator.email}
+								placeholder="Email"
+							/>
+							<div class="w-32">
+								<Select items={roleItems} bind:value={collaborator.role} class="text-md h-9 py-1" />
+							</div>
 							<button
-								class="flex border-none bg-transparent px-4 py-2 transition-transform active:translate-y-[2px]"
-								onclick={() => {
-									createFolderCollaborators.splice(i, 1);
-								}}
+								class="flex h-9 items-center justify-center rounded text-red-500 hover:bg-red-200 hover:text-red-700"
+								onclick={() => createFolderCollaborators.splice(i, 1)}
 								aria-label="Remove collaborator"
 							>
-								<i class="fa-solid fa-trash content-center text-xl"></i>
+								<i class="fa-solid fa-trash"></i>
 							</button>
 						</div>
-					</div>
-				{/each}
-				<div class="flex w-fit rounded-lg transition-shadow hover:shadow-lg">
+					{/each}
+				{/if}
+
+				<div class="mt-4 flex w-fit rounded-lg transition-shadow hover:shadow-lg">
 					<button
 						class="flex border-none bg-transparent px-4 py-2
             transition-transform active:translate-y-[2px]"
