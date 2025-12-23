@@ -13,15 +13,32 @@ export const mainSidebarItems: SidebarItem[] = [
 		icon: 'fa-solid fa-vials'
 	},
 	{
-		label: 'Admin',
-		href: '/dashboard/admin',
-		icon: 'fas fa-user-shield',
-		requiresAdmin: true
-	},
-	{
 		label: 'Settings',
 		href: '/dashboard/settings',
 		icon: 'fas fa-cog'
+	},
+	{ type: 'separator', requiresAdmin: true },
+	{
+		label: 'Admin',
+		icon: 'fas fa-user-shield',
+		requiresAdmin: true,
+		children: [
+			{
+				label: 'AWS',
+				href: '/dashboard/admin/aws',
+				icon: 'fas fa-server'
+			},
+			{
+				label: 'Access Requests',
+				href: '/dashboard/admin/access-requests',
+				icon: 'fas fa-user-plus'
+			},
+			{
+				label: 'Users',
+				href: '/dashboard/admin/users',
+				icon: 'fas fa-users'
+			}
+		]
 	}
 ];
 
@@ -102,29 +119,5 @@ export const projectSidebarItems: SidebarItem[] = [
 		label: 'Settings',
 		href: '/dashboard/projects/{projectId}/{languageCode}/settings',
 		icon: 'fas fa-gears'
-	}
-];
-
-export const adminSidebarItems: SidebarItem[] = [
-	{
-		label: 'Home',
-		href: '/dashboard',
-		icon: 'fas fa-house'
-	},
-	{ type: 'separator' },
-	{
-		label: 'AWS',
-		href: '/dashboard/admin',
-		icon: 'fas fa-server'
-	},
-	{
-		label: 'Access Requests',
-		href: '/dashboard/admin/access-requests',
-		icon: 'fas fa-user-plus'
-	},
-	{
-		label: 'Users',
-		href: '/dashboard/admin/users',
-		icon: 'fas fa-users'
 	}
 ];
