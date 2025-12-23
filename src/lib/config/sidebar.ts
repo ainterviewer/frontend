@@ -121,5 +121,10 @@ export const adminSidebarItems: SidebarItem[] = [
 		label: 'Access Requests',
 		href: '/dashboard/admin/access-requests',
 		icon: 'fas fa-user-plus'
+	},
+	{
+		label: 'Users',
+		href: '/dashboard/admin/users',
+		icon: 'fas fa-users'
 	}
 ];
