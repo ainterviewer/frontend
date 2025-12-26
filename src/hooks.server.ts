@@ -6,6 +6,7 @@ import { redirect, type Handle } from '@sveltejs/kit';
 // This ensures that calls made from load functions or form actions
 // hit the running backend service directly, as there is no browser proxy on the server.
 client.setConfig({
+	// TODO: Add auth here, or as a middleware to also implement token refresh and error handling
 	baseUrl: env.API_URL || 'http://localhost:8666'
 });
 
