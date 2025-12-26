@@ -293,7 +293,7 @@
 	function handleRowClick(projectId: string, defaultLanguage: string) {
 		// Mock navigation or real navigation if route exists
 		// document.cookie = `project_id=${projectId}; path=/`; // Old app did this
-		goto(resolve(`/dashboard/projects/${projectId}/${defaultLanguage}/guide`));
+		goto(resolve(`/dashboard/projects/${projectId}/${defaultLanguage}/setup`));
 	}
 
 	function toggleDropdown(e: MouseEvent, projectId: string) {

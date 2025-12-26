@@ -50,23 +50,23 @@ export const projectSidebarItems: SidebarItem[] = [
 	},
 	{ type: 'separator' },
 	{
-		label: 'Interview Guide',
-		href: '/dashboard/projects/{projectId}/{languageCode}/guide',
+		label: 'Setup',
+		href: '/dashboard/projects/{projectId}/{languageCode}/setup',
 		icon: 'fas fa-file-lines',
 		children: [
 			{
 				label: 'Consent',
-				href: '/dashboard/projects/{projectId}/{languageCode}/consent',
+				href: '/dashboard/projects/{projectId}/{languageCode}/setup/consent',
 				icon: 'fas fa-file-signature'
 			},
 			{
 				label: 'Welcome',
-				href: '/dashboard/projects/{projectId}/{languageCode}/welcome',
+				href: '/dashboard/projects/{projectId}/{languageCode}/setup/welcome',
 				icon: 'fas fa-handshake'
 			},
 			{
-				label: 'Guide',
-				href: '/dashboard/projects/{projectId}/{languageCode}/content',
+				label: 'Interview Guide',
+				href: '/dashboard/projects/{projectId}/{languageCode}/setup/guide',
 				icon: 'fas fa-clipboard-question'
 			}
 		]
