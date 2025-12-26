@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 90" preserveAspectRatio="none">
+  <path
+    d="
+      M0 45
+      C50 25, 150 55, 200 45
+      C250 25, 350 65, 400 45
+      C450 25, 550 60, 600 50
+      C650 25, 750 65, 800 45
+    "
+    fill="none"
+    stroke="#196858"
+    stroke-width="4"
+    stroke-linecap="round"
+  />
+</svg>
