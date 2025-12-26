@@ -1,5 +1,5 @@
 <script lang="ts">
-	import TypingIndicator from '../interview/components/TypingIndicator.svelte';
+	import Info from '$lib/components/Info.svelte';
 </script>
 
-<TypingIndicator />
+<Info><i>Hello</i></Info>
