@@ -3563,6 +3563,38 @@ export type CreateTestSetupResponses = {
 
 export type CreateTestSetupResponse = CreateTestSetupResponses[keyof CreateTestSetupResponses];
 
+export type DeleteTestSetupData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Test Id
+         */
+        test_id: string;
+    };
+    query?: never;
+    url: '/api/projects{project_id}/tests/{test_id}';
+};
+
+export type DeleteTestSetupErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteTestSetupError = DeleteTestSetupErrors[keyof DeleteTestSetupErrors];
+
+export type DeleteTestSetupResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type AddIntervieweeData = {
     body: IntervieweeCreate;
     path?: never;
