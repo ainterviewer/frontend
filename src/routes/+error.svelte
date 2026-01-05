@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import Wave from '$lib/components/Wave.svelte';
 </script>
 
@@ -28,7 +29,7 @@
 		</p>
 
 		<a
-			href="/"
+			href={resolve('/')}
 			class="mt-8 inline-block rounded-md bg-primary px-8 py-3 text-base font-medium text-white shadow-sm transition-all hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
 		>
 			Go back home
