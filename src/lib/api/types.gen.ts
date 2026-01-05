@@ -1801,6 +1801,24 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage1 = {
+    /**
      * Primer
      */
     primer: string;
@@ -1812,24 +1830,6 @@ export type FastapiCompatV2BodyUploadImage = {
      * Alt
      */
     alt: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage2 = {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
     /**
      * File
      */
@@ -2900,7 +2900,7 @@ export type GenerateGuideResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage1;
     path: {
         /**
          * Project Id
@@ -3785,7 +3785,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage2;
+    body: FastapiCompatV2BodyUploadImage;
     path?: never;
     query?: never;
     url: '/api/image';
@@ -3948,23 +3948,23 @@ export type GetAccessRequestsResponses = {
     200: unknown;
 };
 
-export type ProccessAccessRequestsData = {
+export type ProcessAccessRequestsData = {
     body: AccessRequestsProcessRequest;
     path?: never;
     query?: never;
     url: '/api/admin/admin/access-requests/process';
 };
 
-export type ProccessAccessRequestsErrors = {
+export type ProcessAccessRequestsErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ProccessAccessRequestsError = ProccessAccessRequestsErrors[keyof ProccessAccessRequestsErrors];
+export type ProcessAccessRequestsError = ProcessAccessRequestsErrors[keyof ProcessAccessRequestsErrors];
 
-export type ProccessAccessRequestsResponses = {
+export type ProcessAccessRequestsResponses = {
     /**
      * Successful Response
      */
