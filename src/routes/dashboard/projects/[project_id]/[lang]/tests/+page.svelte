@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Synthesize, type TestSetupPublic } from '$lib/api';
-	import { client } from '$lib/api/client.gen';
+	import Info from '$lib/components/Info.svelte';
 
 	let tests: TestSetupPublic[] = $state([]);
 	let sortBy = $state('created_at');
@@ -19,9 +19,27 @@
 	let activeDropdown: string | null = $state(null);
 
 	const testTypes = [
-		{ type: 'shuffled_ai', label: 'Shuffled AI Respondents', icon: 'fa-robot' },
-		{ type: 'fixed_ai', label: 'Fixed AI Personas', icon: 'fa-user-pen' },
-		{ type: 'fixed_answers', label: 'Fixed Answers', icon: 'fa-file-pen' }
+		{
+			type: 'shuffled_ai',
+			label: 'Shuffled AI Respondents',
+			icon: 'fa-robot',
+			description:
+				'Specify different background characteristics, which our system then shuffles automatically to generate.'
+		},
+		{
+			type: 'fixed_ai',
+			label: 'Fixed AI Personas',
+			icon: 'fa-user-pen',
+			description:
+				'Define different personas based on our template, which will then be used to generate the answers.'
+		},
+		{
+			type: 'fixed_answers',
+			label: 'Fixed Answers',
+			icon: 'fa-file-pen',
+			description:
+				'Write predefined answers to every main question, the system then automatically generates follow up questions where relevant'
+		}
 	];
 
 	async function loadTests() {
@@ -53,19 +71,17 @@
 		});
 	}
 
-	async function deleteTests(ids: string[]) {
+	async function deleteTest(testId: string) {
 		if (!projectId) return;
-		if (
-			!confirm(
-				`Are you sure you want to delete ${ids.length} test(s)?\n\nThis action cannot be undone.`
-			)
-		)
+		if (!confirm(`Are you sure you want to delete the test?\n\nThis action cannot be undone.`))
 			return;
 
 		try {
-			await client.delete({
-				url: `/api/projects/${projectId}/tests`,
-				body: { test_ids: ids },
+			await Synthesize.deleteTestSetup({
+				path: {
+					project_id: projectId,
+					test_id: testId
+				},
 				headers: { 'Content-Type': 'application/json' }
 			});
 			loadTests();
@@ -124,9 +140,10 @@
 </p>
 
 {#each testTypes as typeInfo}
-	<div class="relative mt-4 mb-2 flex items-center gap-2 border-t-2 border-primary pt-6">
+	<div class="relative mt-4 mb-4 flex items-center gap-2 border-t-2 border-primary pt-6">
 		<i class="fas {typeInfo.icon} text-4xl text-dark"></i>
 		<h2 class="text-lg">{typeInfo.label}</h2>
+		<Info text={typeInfo.description} />
 	</div>
 
 	<div class="mb-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -147,7 +164,7 @@
 								<div class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg">
 									<button
 										class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
-										onclick={() => deleteTests([test.id])}
+										onclick={() => deleteTest([test.id])}
 									>
 										Delete
 									</button>
@@ -234,46 +251,6 @@
 						placeholder="My Test"
 					/>
 				</div>
-
-				<fieldset>
-					<legend class="mb-2 block font-medium text-gray-700">Test type</legend>
-					<div class="space-y-2">
-						<label
-							class="flex cursor-pointer items-center gap-2 rounded border border-transparent p-2 hover:border-gray-200 hover:bg-gray-50"
-						>
-							<input
-								type="radio"
-								name="test-type"
-								value="shuffled_ai"
-								bind:group={newTestType}
-								class="text-primary focus:ring-primary"
-							/>
-							<span>Shuffled AI Respondents</span>
-						</label>
-						<label class="flex cursor-not-allowed items-center gap-2 p-2 opacity-50">
-							<input
-								type="radio"
-								name="test-type"
-								value="fixed_ai"
-								disabled
-								class="text-primary focus:ring-primary"
-							/>
-							<span>Fixed AI Respondents</span>
-						</label>
-						<label
-							class="flex cursor-pointer items-center gap-2 rounded border border-transparent p-2 hover:border-gray-200 hover:bg-gray-50"
-						>
-							<input
-								type="radio"
-								name="test-type"
-								value="fixed_answers"
-								bind:group={newTestType}
-								class="text-primary focus:ring-primary"
-							/>
-							<span>Fixed answers</span>
-						</label>
-					</div>
-				</fieldset>
 			</div>
 			<div class="flex justify-end gap-2 border-t border-gray-100 bg-gray-50 p-4">
 				<button
