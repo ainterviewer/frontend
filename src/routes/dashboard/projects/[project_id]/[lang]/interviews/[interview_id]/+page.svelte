@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { Image, MessagePublic } from '$lib/api';
 	import type { Message } from '../../../../../../interview/chat.svelte';
 	import InterviewMessage from '../../../../../../interview/components/InterviewMessage.svelte';
@@ -61,13 +62,13 @@
 </script>
 
 <div
-	class="flex h-[calc(100vh-9rem)] w-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white"
+	class="flex h-[calc(100vh-8.5rem)] w-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white"
 >
 	<!-- Header -->
 	<header class="flex items-center justify-between border-b px-6 py-4">
 		<div class="flex items-center gap-4">
 			<a
-				href="/dashboard/projects/{data.project_id}/{data.lang}/interviews"
+				href={resolve('/dashboard/projects/{data.project_id}/{data.lang}/interviews')}
 				class="text-gray-500 transition-colors hover:text-gray-700"
 				aria-label="Back to interviews"
 			>
