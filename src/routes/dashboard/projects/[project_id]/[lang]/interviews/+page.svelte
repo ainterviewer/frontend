@@ -141,20 +141,21 @@
 		}
 	}
 
-	function downloadFile(ids: string[], format: 'csv' | 'xlsx') {
-		fetch(`/api/projects/${project_id}/interviews/messages`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				interview_ids: ids,
-				format: format
-			})
-		})
-			.then((response) => response.blob())
-			.then((blob) => {
-				const url = window.URL.createObjectURL(blob);
+	async function downloadFile(ids: string[], format: 'csv' | 'xlsx') {
+		try {
+			const response = await Api.exportMessages({
+				path: {
+					project_id
+				},
+				body: {
+					interview_ids: ids,
+					format: format
+				},
+				parseAs: 'blob'
+			});
+
+			if (response.data) {
+				const url = window.URL.createObjectURL(response.data as Blob);
 				const a = document.createElement('a');
 				a.href = url;
 				a.download = `interview_${project_id}.${format}`;
@@ -162,8 +163,10 @@
 				a.click();
 				window.URL.revokeObjectURL(url);
 				document.body.removeChild(a);
-			})
-			.catch(console.error);
+			}
+		} catch (error) {
+			console.error('Error downloading file:', error);
+		}
 	}
 
 	function handleSingleAction(action: 'view' | 'download' | 'delete', id: string) {
