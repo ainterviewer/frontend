@@ -83,6 +83,35 @@
 		}
 	}
 
+	async function handleDelete() {
+		const ids = Array.from(selectedIds);
+		if (ids.length === 0) {
+			alert('Please select one or more requests to delete.');
+			return;
+		}
+
+		if (!confirm('Are you sure you want to delete these requests?')) {
+			return;
+		}
+
+		isLoading = true;
+		try {
+			const response = await Admin.deleteAccessRequests({
+				body: {
+					ids: ids
+				}
+			});
+			if (response.error) {
+				throw new Error(String(response.error));
+			}
+			isLoading = false;
+			await loadRequests();
+		} catch (e: any) {
+			error = `Failed to delete requests: ${e.message}`;
+			isLoading = false;
+		}
+	}
+
 	onMount(() => {
 		loadRequests();
 	});
@@ -110,6 +139,14 @@
 			disabled={selectedIds.size === 0 || isLoading}
 		>
 			<i class="fa-solid fa-ban"></i>
+		</button>
+		<button
+			class="cursor-pointer rounded bg-gray-600 p-2 text-white transition hover:bg-gray-700 disabled:opacity-50"
+			onclick={handleDelete}
+			title="Delete selected requests"
+			disabled={selectedIds.size === 0 || isLoading}
+		>
+			<i class="fa-solid fa-trash"></i>
 		</button>
 		<button
 			class="cursor-pointer rounded bg-blue-600 p-2 text-white transition hover:bg-blue-700 disabled:opacity-50"
