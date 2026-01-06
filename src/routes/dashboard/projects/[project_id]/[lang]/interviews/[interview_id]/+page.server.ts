@@ -1,13 +1,17 @@
 import { Projects } from '$lib/api';
-import type { PageLoad } from './$types';
+import type { PageServerLoad } from './$types';
 
-export const load: PageLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, request }) => {
 	const { project_id, interview_id, lang } = params;
+	const cookieHeader = request.headers.get('cookie');
 
 	const { data, error } = await Projects.getInterviewMessages({
 		path: {
 			project_id,
 			interview_id
+		},
+		headers: {
+			cookie: cookieHeader || ''
 		}
 	});
 
