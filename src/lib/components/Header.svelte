@@ -3,10 +3,18 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Auth } from '$lib/api';
+	import type { ProjectPublic, UserPublic } from '$lib/api/types.gen';
 	import Wave from '$lib/components/Wave.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls.js';
 
-	let { data } = $props();
+	interface HeaderProps {
+		data: {
+			user: UserPublic;
+			project?: ProjectPublic | null;
+		};
+	}
+
+	let { data }: HeaderProps = $props();
 	let { projectId } = $derived(parseProjectRoute(page.url.pathname));
 
 	let logoAnimate = $state(false);
@@ -27,7 +35,7 @@
 		<div class="flex items-center">
 			<div class="group">
 				<a
-					href="/dashboard"
+					href={resolve('/dashboard')}
 					class="flex items-center gap-3 text-xl text-light no-underline visited:text-gray-200 hover:text-light"
 				>
 					<Wave className="h-5 w-5 transition-transform group-hover:scale-120" animate={logoAnimate}
@@ -37,8 +45,8 @@
 			</div>
 			<div id="project-id-picker">
 				{#if projectId}
-					<span class="mx-[10px]"> / </span>
-					<span class="text-xs">{projectId}</span>
+					<span class="mx-2.5"> / </span>
+					<span class="text-xs">{data.project?.title ?? projectId}</span>
 				{/if}
 			</div>
 		</div>
@@ -46,14 +54,14 @@
 			<ul class="m-0 flex items-center">
 				<li>
 					<a
-						href="/dashboard"
+						href={resolve('/dashboard')}
 						class="m-2 block p-2 text-center text-sm text-gray-200 no-underline hover:text-light"
 						>Dashboard</a
 					>
 				</li>
 				<li>
 					<a
-						href="/docs"
+						href={resolve('/docs')}
 						class="m-2 block p-2 text-center text-sm text-gray-200 no-underline hover:text-light"
 						>Docs</a
 					>
@@ -92,7 +100,7 @@
 									{data.user.email}
 								</div>
 								<a
-									href="/dashboard/settings/"
+									href={resolve('/dashboard/settings/')}
 									class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
 									role="menuitem">Your profile</a
 								>

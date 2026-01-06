@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { auth } from '$lib/auth.svelte';
 	import Header from '$lib/components/Header.svelte';
+	import type { Snippet } from 'svelte';
+	import type { LayoutData } from './$types';
 
-	let { children, data } = $props();
+	let { children, data }: { children: Snippet; data: LayoutData } = $props();
 
 	$effect(() => {
 		console.log(data.user);

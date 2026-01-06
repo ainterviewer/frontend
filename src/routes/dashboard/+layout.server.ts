@@ -1,8 +1,9 @@
-import { Auth } from '$lib/api';
+import { Auth, Projects } from '$lib/api';
+import { parseProjectRoute } from '$lib/utils/urls';
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ cookies, request }) => {
+export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
 	const token = cookies.get('token');
 
 	if (!token) {
@@ -21,7 +22,21 @@ export const load: LayoutServerLoad = async ({ cookies, request }) => {
 
 	const me = response.data;
 
+	let project = null;
+	const { projectId } = parseProjectRoute(url.pathname);
+
+	if (projectId) {
+		const projectResponse = await Projects.getProject({
+			headers: { cookie: cookieHeader },
+			path: { project_id: projectId }
+		});
+		if (projectResponse.data) {
+			project = projectResponse.data;
+		}
+	}
+
 	return {
-		user: me
+		user: me,
+		project
 	};
 };
