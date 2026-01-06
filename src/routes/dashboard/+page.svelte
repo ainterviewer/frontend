@@ -8,9 +8,9 @@
 		ProjectPublic
 	} from '$lib/api';
 	import { Collaborators, Default, Projects } from '$lib/api';
+	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
-	import Info from '$lib/components/Info.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
