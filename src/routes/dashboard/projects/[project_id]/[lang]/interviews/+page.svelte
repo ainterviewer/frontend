@@ -15,6 +15,7 @@
 	let sortOrder = $state<'asc' | 'desc'>('desc');
 	let selectedInterviews = $state(new Set<string>());
 	let activeDropdown = $state<string | null>(null);
+	let dropdownPosition = $state({ top: 0, right: 0 });
 	let error = $state<string | null>(null);
 
 	const project_id = $derived(page.params.project_id as string);
@@ -186,17 +187,23 @@
 		alert('Not implemented');
 	}
 
-	function toggleDropdown(id: string) {
+	function toggleDropdown(event: MouseEvent, id: string) {
+		const target = event.currentTarget as HTMLElement;
+		const rect = target.getBoundingClientRect();
 		if (activeDropdown === id) {
 			activeDropdown = null;
 		} else {
 			activeDropdown = id;
+			dropdownPosition = {
+				top: rect.bottom,
+				right: window.innerWidth - rect.right
+			};
 		}
 	}
 
 	function handleWindowClick(event: MouseEvent) {
 		const target = event.target as HTMLElement;
-		if (!target.closest('.dropdown-container')) {
+		if (!target.closest('.dropdown-container') && !target.closest('.dropdown-menu')) {
 			activeDropdown = null;
 		}
 	}
@@ -344,36 +351,12 @@
 									class="w-4 text-gray-500 hover:text-gray-700 focus:outline-none"
 									onclick={(e) => {
 										e.stopPropagation();
-										toggleDropdown(interview.id);
+										toggleDropdown(e, interview.id);
 									}}
 									aria-label="Actions"
 								>
 									<i class="fa-solid fa-ellipsis-vertical"></i>
 								</button>
-								{#if activeDropdown === interview.id}
-									<div
-										class="absolute right-0 z-50 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-left shadow-lg"
-									>
-										<button
-											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-											onclick={() => handleSingleAction('view', interview.id)}
-										>
-											<i class="fa-solid fa-eye mr-2 text-gray-500"></i> View
-										</button>
-										<button
-											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-											onclick={() => handleSingleAction('download', interview.id)}
-										>
-											<i class="fa-solid fa-download mr-2 text-gray-500"></i> Download
-										</button>
-										<button
-											class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-											onclick={() => handleSingleAction('delete', interview.id)}
-										>
-											<i class="fa-solid fa-trash-can mr-2"></i> Delete
-										</button>
-									</div>
-								{/if}
 							</div>
 						</td>
 					</tr>
@@ -414,6 +397,32 @@
 		</select>
 	</div>
 </div>
+
+{#if activeDropdown}
+	<div
+		class="dropdown-menu fixed z-50 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-left shadow-lg"
+		style="top: {dropdownPosition.top}px; right: {dropdownPosition.right}px;"
+	>
+		<button
+			class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+			onclick={() => handleSingleAction('view', activeDropdown!)}
+		>
+			<i class="fa-solid fa-eye mr-2 text-gray-500"></i> View
+		</button>
+		<button
+			class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+			onclick={() => handleSingleAction('download', activeDropdown!)}
+		>
+			<i class="fa-solid fa-download mr-2 text-gray-500"></i> Download
+		</button>
+		<button
+			class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+			onclick={() => handleSingleAction('delete', activeDropdown!)}
+		>
+			<i class="fa-solid fa-trash-can mr-2"></i> Delete
+		</button>
+	</div>
+{/if}
 
 <style>
 	.dropdown-container {
