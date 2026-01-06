@@ -36,10 +36,45 @@
 		return resolvedHref;
 	}
 
+	function getActiveHref(itemList: SidebarItem[], pathname: string) {
+		let bestMatch: string | undefined;
+		let maxLen = -1;
+		const normalizedPath = pathname.replace(/\/$/, '') || '/';
+
+		function traverse(list: SidebarItem[]) {
+			for (const item of list) {
+				if (item.href) {
+					const resolved = getResolvedHref(item.href);
+					if (resolved) {
+						const normalizedResolved = resolved.replace(/\/$/, '') || '/';
+
+						const isMatch =
+							normalizedPath === normalizedResolved ||
+							(normalizedResolved === '/' && normalizedPath !== '/') ||
+							normalizedPath.startsWith(normalizedResolved + '/');
+
+						if (isMatch) {
+							if (normalizedResolved.length > maxLen) {
+								maxLen = normalizedResolved.length;
+								bestMatch = item.href;
+							}
+						}
+					}
+				}
+				if (item.children) {
+					traverse(item.children);
+				}
+			}
+		}
+
+		traverse(itemList);
+		return bestMatch;
+	}
+
+	let activeItemHref = $derived(getActiveHref(items, page.url.pathname));
+
 	function isActive(href?: string) {
-		if (!href) return false;
-		const resolvedHref = getResolvedHref(href);
-		return page.url.pathname === resolvedHref;
+		return !!href && href === activeItemHref;
 	}
 </script>
 
