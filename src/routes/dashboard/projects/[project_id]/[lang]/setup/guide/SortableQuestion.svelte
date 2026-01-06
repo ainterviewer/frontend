@@ -45,7 +45,7 @@
 
 <div
 	id={question.id}
-	class="group relative scroll-mt-24 rounded-lg border border-black bg-secondary p-5 transition-all duration-200 hover:shadow-md"
+	class="group relative scroll-mt-24 rounded-lg border border-black bg-secondary p-5 brightness-105 transition-all duration-200 hover:shadow-md"
 	class:opacity-50={isDragging.current && !isOverlay}
 	class:shadow-xl={isOverlay}
 	class:scale-[1.02]={isOverlay}
@@ -168,7 +168,7 @@
 		{#if showSettings}
 			<div
 				transition:slide={{ duration: 200 }}
-				class="-mx-5 space-y-6 border-t border-gray-100 bg-gray-50/50 px-5 pt-4 pb-4"
+				class="-mx-5 space-y-6 border-t border-gray-100 bg-gray-50/30 px-5 pt-4 pb-4"
 			>
 				<!-- Media Controls (Edit Mode) -->
 				<div class="flex gap-4">
