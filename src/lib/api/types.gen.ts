@@ -1701,7 +1701,7 @@ export type UserCreate = {
     /**
      * Invite Token
      */
-    invite_token?: string | 'test' | null;
+    invite_token?: string | null;
     /**
      * Research Consent
      */
@@ -1811,6 +1811,24 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage1 = {
+    /**
      * Primer
      */
     primer: string;
@@ -1822,24 +1840,6 @@ export type FastapiCompatV2BodyUploadImage = {
      * Alt
      */
     alt: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage2 = {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
     /**
      * File
      */
@@ -2910,7 +2910,7 @@ export type GenerateGuideResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage1;
     path: {
         /**
          * Project Id
@@ -3326,6 +3326,78 @@ export type GetInterviewsResponses = {
     200: unknown;
 };
 
+export type GetMessageData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Interview Id
+         */
+        interview_id: string;
+        /**
+         * Message Id
+         */
+        message_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/interviews/{interview_id}/messages/{message_id}';
+};
+
+export type GetMessageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMessageError = GetMessageErrors[keyof GetMessageErrors];
+
+export type GetMessageResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetInterviewMessagesData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Interview Id
+         */
+        interview_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/interviews/{interview_id}/messages';
+};
+
+export type GetInterviewMessagesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetInterviewMessagesError = GetInterviewMessagesErrors[keyof GetInterviewMessagesErrors];
+
+export type GetInterviewMessagesResponses = {
+    /**
+     * Response Get Interview Messages
+     *
+     * Successful Response
+     */
+    200: Array<MessagePublic>;
+};
+
+export type GetInterviewMessagesResponse = GetInterviewMessagesResponses[keyof GetInterviewMessagesResponses];
+
 export type ExportMessagesData = {
     body: ExportMessagesRequest;
     path: {
@@ -3339,7 +3411,7 @@ export type ExportMessagesData = {
         interview_id: string;
     };
     query?: never;
-    url: '/api/projects/{project_id}/interviews/{interview_id}/messages';
+    url: '/api/projects/{project_id}/interviews/{interview_id}/messages/export';
 };
 
 export type ExportMessagesErrors = {
@@ -3827,7 +3899,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage2;
+    body: FastapiCompatV2BodyUploadImage;
     path?: never;
     query?: never;
     url: '/api/image';
