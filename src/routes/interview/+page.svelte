@@ -124,7 +124,11 @@
 
 <div class="flex h-dvh w-full flex-col bg-white pb-[env(safe-area-inset-bottom)]">
 	<!-- Header -->
-	<h1 class="mt-2.5 mb-6 text-center text-3xl font-bold text-dark">AInterviewer</h1>
+	<h1
+		class="mx-auto mt-6 w-fit bg-[url('/svgs/underline-main.svg')] bg-bottom bg-center bg-no-repeat pb-12 text-center text-3xl font-bold text-dark"
+	>
+		AInterviewer
+	</h1>
 
 	<!-- Chat Area -->
 	<div class="mb-8 flex flex-1 grow flex-col items-center overflow-y-auto">
