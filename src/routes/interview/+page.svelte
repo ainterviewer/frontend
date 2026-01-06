@@ -205,7 +205,7 @@
 				{/if}
 				<button
 					type="button"
-					class="flex h-[30px] w-[30px] items-center justify-center bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-100"
+					class="flex h-[30px] w-[30px] items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
 					onclick={() => (showHelp = true)}
 					title="Show help"
 				>
@@ -213,7 +213,7 @@
 				</button>
 				<button
 					type="button"
-					class="flex h-[30px] w-[30px] items-center justify-center bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-100"
+					class="flex h-[30px] w-[30px] items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
 					onclick={() => (showExit = true)}
 					title="End interview"
 				>
