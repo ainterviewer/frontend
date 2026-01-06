@@ -865,13 +865,13 @@ export class Projects {
      * Export Messages
      */
     public static exportMessages<ThrowOnError extends boolean = false>(options: Options<ExportMessagesData, ThrowOnError>) {
-        return (options.client ?? client).get<ExportMessagesResponses, ExportMessagesErrors, ThrowOnError>({
+        return (options.client ?? client).post<ExportMessagesResponses, ExportMessagesErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
                     name: 'token',
                     type: 'apiKey'
                 }],
-            url: '/api/projects/{project_id}/interviews/{interview_id}/messages/export',
+            url: '/api/projects/{project_id}/interviews/messages/export',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

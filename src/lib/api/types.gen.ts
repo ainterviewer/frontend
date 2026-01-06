@@ -1811,24 +1811,6 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage1 = {
-    /**
      * Primer
      */
     primer: string;
@@ -1840,6 +1822,24 @@ export type FastapiCompatV2BodyUploadImage1 = {
      * Alt
      */
     alt: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage2 = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
     /**
      * File
      */
@@ -2910,7 +2910,7 @@ export type GenerateGuideResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage1;
+    body: FastapiCompatV2BodyUploadImage;
     path: {
         /**
          * Project Id
@@ -3405,13 +3405,9 @@ export type ExportMessagesData = {
          * Project Id
          */
         project_id: string;
-        /**
-         * Interview Id
-         */
-        interview_id: string;
     };
     query?: never;
-    url: '/api/projects/{project_id}/interviews/{interview_id}/messages/export';
+    url: '/api/projects/{project_id}/interviews/messages/export';
 };
 
 export type ExportMessagesErrors = {
@@ -3899,7 +3895,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage2;
     path?: never;
     query?: never;
     url: '/api/image';
