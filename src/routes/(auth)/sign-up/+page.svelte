@@ -1,33 +1,54 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { Auth } from '$lib/api';
-	import RequestAccessModal from '$lib/components/RequestAccessModal.svelte';
 
 	let showPassword = $state(false);
-	let showModal = $state(false);
+	let showConfirmPassword = $state(false);
 	let errorMessage = $state('');
 	let isLoading = $state(false);
 
-	async function handleLogin(event: Event) {
+	async function handleSignup(event: Event) {
 		event.preventDefault();
 		errorMessage = '';
 		isLoading = true;
 
 		const form = event.target as HTMLFormElement;
 		const formData = new FormData(form);
+		const name = formData.get('name') as string;
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
+		const confirmPassword = formData.get('confirm_password') as string;
+
+		const inviteToken = page.url.searchParams.get('token');
+
+		if (password !== confirmPassword) {
+			errorMessage = 'Passwords do not match';
+			isLoading = false;
+			return;
+		}
+
+		if (!inviteToken) {
+			errorMessage = 'Signup token is missing';
+			isLoading = false;
+			return;
+		}
 
 		try {
-			const { error } = await Auth.login({
-				body: { email, password }
+			const { error } = await Auth.register({
+				body: {
+					email,
+					password,
+					name,
+					invite_token: inviteToken
+				}
 			});
 
 			if (error) {
-				errorMessage = 'Invalid email or password';
+				errorMessage = 'Registration failed. Please check your details and token.';
 			} else {
-				await goto(resolve('/dashboard'));
+				await goto(resolve('/login'));
 			}
 		} catch (e) {
 			errorMessage = 'An unexpected error occurred';
@@ -41,12 +62,12 @@
 <div class="flex w-full flex-col justify-center px-4 py-12 sm:px-6 lg:w-1/2 lg:px-8 xl:px-12">
 	<div class="mx-auto w-full max-w-sm lg:w-96">
 		<div>
-			<h2 class="text-3xl font-bold tracking-tight text-dark">Welcome back</h2>
+			<h2 class="text-3xl font-bold tracking-tight text-dark">Create an account</h2>
 		</div>
 
 		<div class="mt-8">
 			<div class="mt-8">
-				<form onsubmit={handleLogin} class="space-y-6">
+				<form onsubmit={handleSignup} class="space-y-6">
 					{#if errorMessage}
 						<div class="rounded-md bg-red-50 p-4">
 							<div class="flex">
@@ -56,6 +77,19 @@
 							</div>
 						</div>
 					{/if}
+
+					<div>
+						<label for="name" class="block text-sm font-medium text-gray-700"> Full Name </label>
+						<div class="mt-1">
+							<input
+								id="name"
+								name="name"
+								type="text"
+								required
+								class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm transition-all focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+							/>
+						</div>
+					</div>
 
 					<div>
 						<label for="email" class="block text-sm font-medium text-gray-700">
@@ -80,7 +114,7 @@
 								id="password"
 								name="password"
 								type={showPassword ? 'text' : 'password'}
-								autocomplete="current-password"
+								autocomplete="new-password"
 								required
 								class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 pr-10 placeholder-gray-400 transition-all focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
 							/>
@@ -128,26 +162,60 @@
 						</div>
 					</div>
 
-					<div class="flex items-center justify-between">
-						<div class="flex items-center">
+					<div>
+						<label for="confirm_password" class="block text-sm font-medium text-gray-700">
+							Confirm Password
+						</label>
+						<div class="relative mt-1 rounded-md shadow-sm">
 							<input
-								id="remember-me"
-								name="remember-me"
-								type="checkbox"
-								class="h-4 w-4 rounded border-gray-300 text-primary transition-colors focus:ring-primary"
+								id="confirm_password"
+								name="confirm_password"
+								type={showConfirmPassword ? 'text' : 'password'}
+								autocomplete="new-password"
+								required
+								class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 pr-10 placeholder-gray-400 transition-all focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
 							/>
-							<label for="remember-me" class="ml-2 block text-sm text-gray-900">
-								Remember me
-							</label>
-						</div>
-
-						<div class="text-sm">
-							<a
-								href="/forgot-password"
-								class="font-medium text-primary transition-colors hover:text-primary/80"
+							<button
+								type="button"
+								class="absolute inset-y-0 right-0 flex items-center pr-3"
+								onclick={() => (showConfirmPassword = !showConfirmPassword)}
 							>
-								Forgot your password?
-							</a>
+								{#if showConfirmPassword}
+									<svg
+										class="h-5 w-5 text-gray-400 transition-colors hover:text-gray-600"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+										/>
+									</svg>
+								{:else}
+									<svg
+										class="h-5 w-5 text-gray-400 transition-colors hover:text-gray-600"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+										/>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+										/>
+									</svg>
+								{/if}
+							</button>
 						</div>
 					</div>
 
@@ -158,25 +226,21 @@
 							class="flex w-full justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{#if isLoading}
-								Signing in...
+								Creating account...
 							{:else}
-								Sign in
+								Sign up
 							{/if}
 						</button>
 					</div>
 				</form>
 
 				<p class="mt-4 text-sm text-gray-600">
-					Don't have an account?
-					<button
-						onclick={() => (showModal = true)}
-						class="font-medium text-primary transition-colors hover:text-primary/80"
-						>Request access</button
+					Already have an account?
+					<a href="/login" class="font-medium text-primary transition-colors hover:text-primary/80"
+						>Sign in</a
 					>
 				</p>
 			</div>
 		</div>
 	</div>
 </div>
-
-<RequestAccessModal isOpen={showModal} close={() => (showModal = false)} />
