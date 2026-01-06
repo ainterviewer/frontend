@@ -44,6 +44,19 @@
 				}
 			}
 
+			// Construct question label
+			let question_label: string | undefined = undefined;
+			if (msg.section !== undefined && msg.section !== null) {
+				question_label = `${msg.section + 1}`;
+				if (msg.main_question !== undefined && msg.main_question !== null) {
+					question_label += `.${msg.main_question + 1}`;
+					// sub_question = 0 means main question, sub_question > 0 means probe
+					if (msg.sub_question) {
+						question_label += `.${msg.sub_question}`;
+					}
+				}
+			}
+
 			return {
 				id: msg.id,
 				text: msg.content,
@@ -54,6 +67,8 @@
 				image: image,
 				can_answer: msg.can_answer,
 				user_image: false, // Default to false for history view
+				question_label,
+				section: msg.section,
 				options: undefined,
 				required: false
 			} as Message;
@@ -95,7 +110,18 @@
 				</div>
 			{:else}
 				<div class="flex flex-col gap-4">
-					{#each messages as msg (msg.message_id || msg.id)}
+					{#each messages as msg, i (msg.message_id || msg.id)}
+						{#if msg.section !== undefined && msg.section !== null && (i === 0 || messages[i - 1].section !== msg.section)}
+							<div class="relative my-6 flex items-center">
+								<div class="flex-grow border-t border-gray-200"></div>
+								<span
+									class="mx-4 flex-shrink text-xs font-bold tracking-widest text-gray-400 uppercase"
+								>
+									Section {msg.section + 1}
+								</span>
+								<div class="flex-grow border-t border-gray-200"></div>
+							</div>
+						{/if}
 						<div
 							class={msg.type === 'system'
 								? 'my-2 text-center text-sm text-gray-500 select-none'

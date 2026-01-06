@@ -13,6 +13,8 @@ export interface Message {
 	image?: { data: string; alt?: string; primer?: string };
 	can_answer?: boolean;
 	user_image?: boolean;
+	question_label?: string;
+	section?: number | null;
 	// For survey responses or other internal use
 	options?: any;
 	required?: boolean;

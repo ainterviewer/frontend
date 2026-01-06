@@ -31,6 +31,11 @@
         {isReceived ? 'bg-[#eee] text-gray-900' : 'bg-[#007bff] text-white'}"
 		{lang}
 	>
+		{#if message.question_label}
+			<div class="mb-1 text-xs font-bold opacity-60">
+				{message.question_label}
+			</div>
+		{/if}
 		{#if message.image}
 			<img
 				src={message.image.data}
