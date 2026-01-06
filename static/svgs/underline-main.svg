@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 50">
+  <defs>
+    <linearGradient id="waveGradient" x1="0" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#196858" />
+      <stop offset="100%" stop-color="#196858" />
+    </linearGradient>
+  </defs>
+
+  <!-- Waves with gradient strokes -->
+  <path
+    d="M10 25 Q75 5 150 25 T290 25"
+    stroke="url(#waveGradient)"
+    stroke-width="3"
+    fill="none"
+    opacity="0.8"
+  />
+  <path
+    d="M15 30 Q80 10 150 30 T285 30"
+    stroke="url(#waveGradient)"
+    stroke-width="2"
+    fill="none"
+    opacity="0.6"
+  />
+</svg>
