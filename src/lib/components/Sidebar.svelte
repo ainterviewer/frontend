@@ -16,6 +16,7 @@
 	import { auth } from '$lib/auth.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
 
+	//  TODO: Align text after icons
 	let { items, collapsed = false }: { items: SidebarItem[]; collapsed?: boolean } = $props();
 
 	// Extract projectId from the current URL
