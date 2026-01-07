@@ -11,8 +11,9 @@
 	interface PageData {
 		project_id?: string;
 		id?: string;
-		lang?: string;
-		test?: boolean;
+		lang: string;
+		synthetic: boolean;
+		test: boolean;
 		testType?: TestType;
 		experimentID?: string;
 		image_upload?: any;
@@ -27,8 +28,7 @@
 
 	let projectId = $derived(data.project_id || 'default');
 	let interviewId = $derived(data.id || '');
-	let lang = $derived(data.lang || 'en');
-	let test = $derived(data.test || '');
+	let lang = $derived(data.lang);
 	let testType = $derived(data.testType || '');
 	let experimentID = $derived(data.experimentID);
 	let imageUpload = $derived(data.image_upload);
@@ -41,7 +41,13 @@
 	let exitButtonText = $derived(data.exit_button || 'End Interview');
 
 	// Initialize chat client
-	let chat = new ChatClient(data.project_id || 'default', 'respondent', data.lang || 'en');
+	let chat = new ChatClient(
+		data.project_id || 'default',
+		'respondent',
+		data.lang || 'en',
+		data.test,
+		data.synthetic
+	);
 
 	$effect(() => {
 		chat.project_id = projectId;

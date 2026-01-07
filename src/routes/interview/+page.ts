@@ -10,6 +10,7 @@ export const load: PageLoad = ({ url }) => {
 	}
 
 	const lang = url.searchParams.get('lang') || 'en';
+	const synthetic: boolean = Boolean(url.searchParams.get('synthetic')) || false;
 	const test: boolean = Boolean(url.searchParams.get('test')) || false;
 	const testType: TestType | undefined = url.searchParams.get('test_type');
 	const experimentID: string | undefined = url.searchParams.get('x');
@@ -18,6 +19,7 @@ export const load: PageLoad = ({ url }) => {
 	return {
 		project_id,
 		lang,
+		synthetic,
 		test,
 		testType,
 		experimentID

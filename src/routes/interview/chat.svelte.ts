@@ -39,6 +39,8 @@ export class ChatClient {
 	interview_id?: string;
 	role: string;
 	lang: string;
+	is_test: boolean;
+	is_synthetic: boolean;
 	ws_path: string | null;
 
 	messageQueue: any[] = [];
@@ -48,11 +50,15 @@ export class ChatClient {
 		project_id: string,
 		role: string = 'respondent',
 		lang: string = 'en',
+		is_test: boolean = false,
+		is_synthetic: boolean = false,
 		ws_path: string | null = null
 	) {
 		this.project_id = project_id;
 		this.role = role;
 		this.lang = lang;
+		this.is_test = is_test;
+		this.is_synthetic = is_synthetic;
 		this.ws_path = ws_path;
 		if (role === 'interviewer') {
 			this.inputEnabled = true;
@@ -77,6 +83,10 @@ export class ChatClient {
 				path: {
 					project_id: this.project_id,
 					lang: this.lang
+				},
+				query: {
+					synthetic: this.is_synthetic,
+					test: this.is_test
 				}
 			});
 			if (error || !response.ok) {
