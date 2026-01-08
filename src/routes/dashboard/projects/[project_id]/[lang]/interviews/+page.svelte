@@ -47,9 +47,7 @@
 					offset,
 					limit: itemsPerPage,
 					column: sortColumn,
-					order: sortOrder,
-					test: false,
-					synthetic: false
+					order: sortOrder
 				}
 			});
 

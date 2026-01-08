@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
+	import type { InterviewType } from '$lib/api';
 	import { onMount } from 'svelte';
 	import Pagination from '../../interviews/Pagination.svelte';
 	import SortableHeader from '../../interviews/SortableHeader.svelte';
@@ -48,8 +49,7 @@
 					limit: itemsPerPage,
 					column: sortColumn,
 					order: sortOrder,
-					test: true,
-					synthetic: true
+					interview_types: ['test', 'synthetic']
 				}
 			});
 
