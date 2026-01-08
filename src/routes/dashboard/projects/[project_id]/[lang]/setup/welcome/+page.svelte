@@ -6,4 +6,3 @@
 </script>
 
 <Welcome initialData={data.welcome} />
-

@@ -6,4 +6,3 @@
 </script>
 
 <Consent initialData={data.consent} />
-
