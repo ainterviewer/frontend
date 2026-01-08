@@ -1,23 +1,23 @@
 <script lang="ts">
 	import { Admin, type UserPublic } from '$lib/api';
-	import { onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
+	import type { PageData } from './$types';
 
-	let users = $state<UserPublic[]>([]);
-	let loading = $state(true);
-	let error = $state<string | null>(null);
+	let { data }: { data: PageData } = $props();
+
+	let users = $state<UserPublic[]>(data.users);
+	let loading = $state(false);
+	let error = $state<string | null>(data.error);
+
+	$effect(() => {
+		users = data.users;
+		error = data.error;
+	});
 
 	async function loadUsers() {
 		loading = true;
-		error = null;
 		try {
-			const response = await Admin.getUsers();
-			if (response.error) {
-				error = 'Failed to load users';
-				console.error(response.error);
-			} else {
-				// The API definition says the response is unknown, but we expect it to be an array of users
-				users = (response.data as unknown as UserPublic[]) || [];
-			}
+			await invalidateAll();
 		} catch (e) {
 			error = 'An unexpected error occurred';
 			console.error(e);
@@ -45,10 +45,6 @@
 			console.error(e);
 		}
 	}
-
-	onMount(() => {
-		loadUsers();
-	});
 </script>
 
 <div class="mb-6 flex items-center justify-between">

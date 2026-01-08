@@ -1,13 +1,29 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { invalidateAll } from '$app/navigation';
 	import { Synthesize, type TestSetupPublic } from '$lib/api';
 	import Info from '$lib/components/Info.svelte';
 
-	let tests: TestSetupPublic[] = $state([]);
+	let { data } = $props();
+
 	let sortBy = $state('created_at');
 	let sortDesc = $state(true);
 	let projectId = $derived(page.params.project_id);
 	let lang = $derived(page.params.lang);
+
+	let tests = $derived.by(() => {
+		return [...data.tests].sort((a: any, b: any) => {
+			let valA = a[sortBy];
+			let valB = b[sortBy];
+			if (sortBy === 'created_at' || sortBy === 'last_updated') {
+				valA = new Date(valA || 0).getTime();
+				valB = new Date(valB || 0).getTime();
+			}
+			if (valA < valB) return sortDesc ? 1 : -1;
+			if (valA > valB) return sortDesc ? -1 : 1;
+			return 0;
+		});
+	});
 
 	// Modal state
 	let isModalOpen = $state(false);
@@ -42,35 +58,6 @@
 		}
 	];
 
-	async function loadTests() {
-		if (!projectId) return;
-		try {
-			const response = await Synthesize.getTestSetups({
-				path: { project_id: projectId }
-			});
-			if (response.data) {
-				tests = response.data;
-				sortTests();
-			}
-		} catch (e) {
-			console.error('Failed to load tests', e);
-		}
-	}
-
-	function sortTests() {
-		tests = [...tests].sort((a: any, b: any) => {
-			let valA = a[sortBy];
-			let valB = b[sortBy];
-			if (sortBy === 'created_at' || sortBy === 'last_updated') {
-				valA = new Date(valA || 0).getTime();
-				valB = new Date(valB || 0).getTime();
-			}
-			if (valA < valB) return sortDesc ? 1 : -1;
-			if (valA > valB) return sortDesc ? -1 : 1;
-			return 0;
-		});
-	}
-
 	async function deleteTest(testId: string) {
 		if (!projectId) return;
 		if (!confirm(`Are you sure you want to delete the test?\n\nThis action cannot be undone.`))
@@ -84,7 +71,7 @@
 				},
 				headers: { 'Content-Type': 'application/json' }
 			});
-			loadTests();
+			await invalidateAll();
 		} catch (e) {
 			console.error('Failed to delete tests', e);
 			alert('Failed to delete tests');
@@ -104,7 +91,7 @@
 			});
 			isModalOpen = false;
 			newTestName = '';
-			loadTests();
+			await invalidateAll();
 		} catch (e) {
 			console.error('Failed to create test', e);
 			alert('Failed to create test');
@@ -123,9 +110,6 @@
 	}
 
 	$effect(() => {
-		if (projectId) {
-			loadTests();
-		}
 		window.addEventListener('click', closeDropdowns);
 		return () => window.removeEventListener('click', closeDropdowns);
 	});
@@ -164,7 +148,7 @@
 								<div class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg">
 									<button
 										class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
-										onclick={() => deleteTest([test.id])}
+										onclick={() => deleteTest(test.id)}
 									>
 										Delete
 									</button>

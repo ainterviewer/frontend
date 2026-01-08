@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import { Admin } from '$lib/api/sdk.gen';
+	import type { PageData } from './$types';
 
 	interface AccessRequest {
 		id: string;
@@ -13,23 +14,26 @@
 		updated_at: string;
 	}
 
-	let requests = $state<AccessRequest[]>([]);
+	let { data }: { data: PageData } = $props();
+
+	let requests = $state<AccessRequest[]>(data.requests);
 	let isLoading = $state(false);
-	let error = $state<string | null>(null);
+	let error = $state<string | null>(data.error);
 	let selectedIds = $state<Set<string>>(new Set());
 
 	let allSelected = $derived(requests.length > 0 && selectedIds.size === requests.length);
+
+	$effect(() => {
+		requests = data.requests;
+		error = data.error;
+	});
 
 	async function loadRequests() {
 		if (isLoading) return;
 		isLoading = true;
 		error = null;
 		try {
-			const response = await Admin.getAccessRequests();
-			if (response.error) {
-				throw new Error(String(response.error));
-			}
-			requests = (response.data as unknown as AccessRequest[]) ?? [];
+			await invalidateAll();
 			selectedIds = new Set();
 		} catch (e: any) {
 			error = e.message || 'Failed to fetch requests';
@@ -111,10 +115,6 @@
 			isLoading = false;
 		}
 	}
-
-	onMount(() => {
-		loadRequests();
-	});
 </script>
 
 <svelte:head>
