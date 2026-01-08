@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
+	import { fade, fly } from 'svelte/transition';
 
 	interface Props {
 		initialData?: {
@@ -26,8 +27,9 @@
 	let videoFileName = $state<string | null>(initialData?.video_file_name || null);
 	let videoFile = $state<File | null>(null);
 
-	let showModal = $state(false);
+	let showFullscreenModal = $state(false);
 	let notification = $state<{ type: 'success' | 'error'; message: string } | null>(null);
+	let saving = $state(false);
 
 	let videoPreviewUrl = $state<string | null>(null);
 
@@ -62,6 +64,7 @@
 	}
 
 	async function saveWelcome() {
+		saving = true;
 		const body = {
 			title,
 			text,
@@ -75,12 +78,13 @@
 		});
 
 		if (!error) {
-			showNotification('success', 'Welcome saved.');
+			showNotification('success', 'Welcome saved successfully.');
 			loadData();
 			videoFile = null;
 		} else {
 			showNotification('error', 'Error when saving welcome.');
 		}
+		saving = false;
 	}
 
 	function showNotification(type: 'success' | 'error', message: string) {
@@ -94,134 +98,352 @@
 			videoFile = input.files[0];
 		}
 	}
+
+	function removeVideo() {
+		videoFile = null;
+		videoFileName = null;
+	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape' && showFullscreenModal) {
+			showFullscreenModal = false;
+		}
+	}
 </script>
 
-<h1 class="page-title">Welcome</h1>
-<p class="my-4">
-	Fill out the text you want to display to the user as a welcome message, before the interview
-	starts.
-</p>
+<svelte:window onkeydown={handleKeydown} />
 
-<form class="flex flex-col gap-4">
-	<div class="flex flex-col">
-		<label for="welcome-title" class="mt-4 mb-2 block">Title</label>
-		<input
-			id="welcome-title"
-			bind:value={title}
-			placeholder="Thank you for participating!"
-			class="w-full flex-1 rounded border border-gray-300 p-2"
-		/>
-	</div>
-
-	<div class="flex flex-col">
-		<label for="welcome-video" class="mt-4 mb-2 block">Video</label>
-		<input
-			id="welcome-video"
-			type="file"
-			accept=".mp4"
-			onchange={handleFileChange}
-			class="w-fit flex-1 rounded border border-gray-300 p-2"
-		/>
-		{#if videoFileName && !videoFile}
-			<p class="mt-1 text-sm text-gray-500">Current file: {videoFileName}</p>
-		{/if}
-	</div>
-
-	<div class="flex flex-col">
-		<label for="welcome-text" class="mt-4 mb-2 block">Text</label>
-		<textarea
-			id="welcome-text"
-			bind:value={text}
-			placeholder="Please read the following text carefully before starting the interview."
-			rows="10"
-			class="min-h-60 w-full resize-y overflow-y-auto rounded border border-gray-300 bg-white p-2 text-[13px] leading-relaxed"
-		></textarea>
-	</div>
-
-	<div class="flex flex-col">
-		<label for="welcome-email" class="mt-4 mb-2 block">Contact email</label>
-		<input
-			id="welcome-email"
-			bind:value={email}
-			placeholder="contact@company.com"
-			class="w-full flex-1 rounded border border-gray-300 p-2"
-		/>
-	</div>
-</form>
-
-<div class="mt-5 flex gap-2">
-	<button
-		onclick={() => (showModal = true)}
-		class="rounded border border-gray-300 bg-gray-100 px-3 py-1 hover:bg-gray-200"
-	>
-		Test
-	</button>
-	<button
-		onclick={saveWelcome}
-		class="rounded border border-gray-300 bg-gray-100 px-3 py-1 hover:bg-gray-200"
-	>
-		Save
-	</button>
+<div class="mb-6">
+	<h1 class="page-title">Welcome</h1>
+	<p class="mt-2 text-gray-600">
+		Configure the welcome message, video, and contact information shown before the interview begins.
+	</p>
 </div>
 
-{#if showModal}
-	<div
-		class="fixed inset-0 z-[1000] flex h-full w-full items-center justify-center overflow-auto bg-black/40 pt-[100px]"
-	>
-		<div
-			class="relative m-auto max-h-[calc(100vh-100px)] w-1/2 overflow-x-hidden overflow-y-auto border border-gray-400 bg-white p-10 shadow-lg"
-		>
-			<h2 class="mb-4 text-2xl font-bold">{title}</h2>
+<div class="flex gap-8">
+	<!-- Editor Panel -->
+	<div class="min-w-0 flex-1">
+		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+			<h3 class="mb-4 text-lg font-medium text-gray-900">
+				<i class="fa-solid fa-pen-to-square mr-2 text-gray-400"></i>
+				Edit Content
+			</h3>
 
-			{#if videoPreviewUrl}
-				<div class="mb-4">
-					<video controls class="max-w-full">
-						<source src={videoPreviewUrl} type="video/mp4" />
-						Your browser does not support the video tag.
-					</video>
+			<form class="space-y-5">
+				<div>
+					<label for="welcome-title" class="mb-1.5 block text-sm font-medium text-gray-700">
+						Title
+					</label>
+					<input
+						id="welcome-title"
+						bind:value={title}
+						placeholder="e.g., Thank you for participating!"
+						class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none"
+					/>
 				</div>
-			{/if}
 
-			<div class="mb-4 leading-relaxed whitespace-pre-wrap">{text}</div>
+				<div>
+					<label for="welcome-video" class="mb-1.5 block text-sm font-medium text-gray-700">
+						Video (optional)
+					</label>
+					<div class="flex items-center gap-3">
+						<label
+							class="inline-flex cursor-pointer items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50"
+						>
+							<i class="fa-solid fa-upload text-gray-400"></i>
+							Choose file
+							<input
+								id="welcome-video"
+								type="file"
+								accept=".mp4"
+								onchange={handleFileChange}
+								class="hidden"
+							/>
+						</label>
+						{#if videoFileName || videoFile}
+							<span class="text-sm text-gray-600">
+								{videoFile?.name || videoFileName}
+							</span>
+							<button
+								type="button"
+								onclick={removeVideo}
+								class="text-sm text-red-600 hover:text-red-700"
+							>
+								Remove
+							</button>
+						{:else}
+							<span class="text-sm text-gray-400">No file selected</span>
+						{/if}
+					</div>
+					<p class="mt-1.5 text-xs text-gray-500">MP4 format recommended. Max 50MB.</p>
+				</div>
 
-			<hr class="my-4" />
+				<div>
+					<label for="welcome-text" class="mb-1.5 block text-sm font-medium text-gray-700">
+						Welcome Message
+					</label>
+					<textarea
+						id="welcome-text"
+						bind:value={text}
+						placeholder="Write your welcome message here. This will be shown to participants before they start the interview..."
+						rows="8"
+						class="block w-full resize-y rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none"
+					></textarea>
+				</div>
 
-			<div class="text-sm">
-				If you wish to withdraw your consent or change your answers, please contact <a
-					href={`mailto:${email}`}
-					class="text-blue-600 hover:underline">{email}</a
+				<div>
+					<label for="welcome-email" class="mb-1.5 block text-sm font-medium text-gray-700">
+						Contact Email
+					</label>
+					<input
+						id="welcome-email"
+						type="email"
+						bind:value={email}
+						placeholder="e.g., contact@university.edu"
+						class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none"
+					/>
+					<p class="mt-1.5 text-xs text-gray-500">
+						Participants can contact this email to withdraw consent or modify their data.
+					</p>
+				</div>
+			</form>
+
+			<!-- Actions -->
+			<div class="mt-6 flex items-center gap-3 border-t border-gray-100 pt-5">
+				<button
+					onclick={saveWelcome}
+					disabled={saving}
+					class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none disabled:opacity-50"
 				>
-				with a reference to the following code:
+					{#if saving}
+						<i class="fa-solid fa-spinner fa-spin"></i>
+					{:else}
+						<i class="fa-solid fa-floppy-disk"></i>
+					{/if}
+					Save Changes
+				</button>
+				<button
+					onclick={() => (showFullscreenModal = true)}
+					class="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
+				>
+					<i class="fa-solid fa-expand"></i>
+					Fullscreen Preview
+				</button>
+			</div>
+		</div>
+	</div>
 
-				<div class="my-1.5 flex w-fit rounded border border-gray-300 bg-gray-100 p-1.5">
-					<code class="mr-2 inline-block">&lt;interview-id&gt;</code>
-					<i class="fa-solid fa-fingerprint self-center"></i>
-				</div>
-				It is your own responsibility to store this code securely before starting the interview. It is
-				the only way for us to identify and modify or delete your data.
+	<!-- Live Preview Panel -->
+	<div class="w-[420px] shrink-0">
+		<div class="sticky top-6">
+			<div class="mb-3 flex items-center justify-between">
+				<h3 class="text-sm font-medium text-gray-500">
+					<i class="fa-solid fa-eye mr-1.5"></i>
+					Live Preview
+				</h3>
 			</div>
 
-			<div class="mt-8 flex gap-2">
+			<!-- Modal Preview Container -->
+			<div class="rounded-lg border border-gray-200 bg-gray-100 p-4 shadow-inner">
+				<div class="overflow-hidden rounded-lg border border-gray-300 bg-white shadow-xl">
+					<!-- Simulated Modal -->
+					<div class="max-h-[600px] overflow-y-auto p-6">
+						<h2 class="mb-4 text-xl font-bold text-gray-900">
+							{title || 'Welcome Title'}
+						</h2>
+
+						{#if videoPreviewUrl}
+							<div class="mb-4 overflow-hidden rounded-lg bg-black">
+								<video controls class="w-full">
+									<source src={videoPreviewUrl} type="video/mp4" />
+									Your browser does not support the video tag.
+								</video>
+							</div>
+						{/if}
+
+						<div
+							class="prose prose-sm max-w-none leading-relaxed whitespace-pre-wrap text-gray-700"
+						>
+							{#if text}
+								{text}
+							{:else}
+								<span class="text-gray-400 italic"> Your welcome message will appear here... </span>
+							{/if}
+						</div>
+
+						<hr class="my-4 border-gray-200" />
+
+						<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+							<p class="mb-2">
+								If you wish to withdraw your consent or change your answers, please contact
+								{#if email}
+									<a href="mailto:{email}" class="font-medium text-primary hover:underline">
+										{email}
+									</a>
+								{:else}
+									<span class="text-gray-400">[contact email]</span>
+								{/if}
+								with a reference to the following code:
+							</p>
+
+							<div
+								class="my-2 flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
+							>
+								<code class="font-mono text-sm text-gray-700">&lt;interview-id&gt;</code>
+								<i class="fa-solid fa-fingerprint text-gray-400"></i>
+							</div>
+
+							<p class="text-xs text-gray-500">
+								It is your own responsibility to store this code securely before starting the
+								interview.
+							</p>
+						</div>
+
+						<div class="mt-6">
+							<button
+								class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm"
+								disabled
+							>
+								Start Interview
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<p class="mt-3 text-center text-xs text-gray-500">
+				This is how participants will see the welcome screen.
+			</p>
+		</div>
+	</div>
+</div>
+
+<!-- Fullscreen Modal Preview -->
+{#if showFullscreenModal}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="welcome-modal-title"
+	>
+		<!-- Backdrop -->
+		<button
+			class="fixed inset-0 h-full w-full cursor-default bg-dark/80 transition-opacity focus:outline-none"
+			transition:fade={{ duration: 200 }}
+			onclick={() => (showFullscreenModal = false)}
+			aria-label="Close modal"
+			type="button"
+		></button>
+
+		<!-- Modal Panel -->
+		<div
+			class="relative w-full max-w-2xl transform overflow-hidden rounded-xl bg-white shadow-2xl transition-all"
+			transition:fly={{ y: 20, duration: 300 }}
+		>
+			<div class="absolute top-0 right-0 z-10 pt-4 pr-4">
 				<button
-					onclick={() => (showModal = false)}
-					class="rounded border border-gray-300 bg-gray-100 px-3 py-1 hover:bg-gray-200"
+					type="button"
+					class="rounded-md bg-white text-gray-400 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
+					onclick={() => (showFullscreenModal = false)}
 				>
-					Start
+					<span class="sr-only">Close</span>
+					<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M6 18L18 6M6 6l12 12"
+						/>
+					</svg>
 				</button>
+			</div>
+
+			<div class="max-h-[calc(100vh-120px)] overflow-y-auto px-6 py-8 sm:p-10">
+				<h2 id="welcome-modal-title" class="text-2xl font-bold tracking-tight text-gray-900">
+					{title || 'Welcome Title'}
+				</h2>
+
+				{#if videoPreviewUrl}
+					<div class="mt-4 overflow-hidden rounded-lg bg-black">
+						<video controls class="w-full">
+							<source src={videoPreviewUrl} type="video/mp4" />
+							Your browser does not support the video tag.
+						</video>
+					</div>
+				{/if}
+
+				<div class="mt-4 leading-relaxed whitespace-pre-wrap text-gray-700">
+					{#if text}
+						{text}
+					{:else}
+						<span class="text-gray-400 italic">No welcome message configured yet.</span>
+					{/if}
+				</div>
+
+				<hr class="my-6 border-gray-200" />
+
+				<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+					<p class="mb-2">
+						If you wish to withdraw your consent or change your answers, please contact
+						{#if email}
+							<a href="mailto:{email}" class="font-medium text-primary hover:underline">
+								{email}
+							</a>
+						{:else}
+							<span class="text-gray-400">[contact email]</span>
+						{/if}
+						with a reference to the following code:
+					</p>
+
+					<div
+						class="my-2 flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
+					>
+						<code class="font-mono text-sm text-gray-700">&lt;interview-id&gt;</code>
+						<i class="fa-solid fa-fingerprint text-gray-400"></i>
+					</div>
+
+					<p class="text-xs text-gray-500">
+						It is your own responsibility to store this code securely before starting the interview.
+						It is the only way for us to identify and modify or delete your data.
+					</p>
+				</div>
+
+				<div class="mt-8">
+					<button
+						onclick={() => (showFullscreenModal = false)}
+						class="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
+					>
+						Start Interview
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
 {/if}
 
+<!-- Notification Toast -->
 {#if notification}
 	<div
-		class="fixed right-4 bottom-4 z-[2000] rounded p-4 shadow-lg"
-		class:bg-green-100={notification.type === 'success'}
+		class="fixed right-4 bottom-4 z-[2000] rounded-lg p-4 shadow-lg"
+		class:bg-green-50={notification.type === 'success'}
 		class:text-green-800={notification.type === 'success'}
-		class:bg-red-100={notification.type === 'error'}
+		class:border-green-200={notification.type === 'success'}
+		class:bg-red-50={notification.type === 'error'}
 		class:text-red-800={notification.type === 'error'}
+		class:border-red-200={notification.type === 'error'}
+		class:border={true}
+		transition:fly={{ y: 20, duration: 200 }}
 	>
-		<h2 class="font-bold">{notification.type === 'success' ? 'Success' : 'Error'}</h2>
-		<p>{notification.message}</p>
+		<div class="flex items-center gap-3">
+			{#if notification.type === 'success'}
+				<i class="fa-solid fa-circle-check text-green-500"></i>
+			{:else}
+				<i class="fa-solid fa-circle-xmark text-red-500"></i>
+			{/if}
+			<div>
+				<h3 class="font-semibold">{notification.type === 'success' ? 'Success' : 'Error'}</h3>
+				<p class="text-sm">{notification.message}</p>
+			</div>
+		</div>
 	</div>
 {/if}
