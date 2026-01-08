@@ -1,16 +1,16 @@
 class QuestionElement extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-  }
+	constructor() {
+		super();
+		this.attachShadow({ mode: 'open' });
+	}
 
-  connectedCallback() {
-    this.render();
-    this.setupEventListeners();
-  }
+	connectedCallback() {
+		this.render();
+		this.setupEventListeners();
+	}
 
-  render() {
-    this.shadowRoot.innerHTML = `
+	render() {
+		this.shadowRoot.innerHTML = `
       <style>
         :host {
           display: block;
@@ -122,23 +122,23 @@ class QuestionElement extends HTMLElement {
         </div>
       </div>
     `;
-  }
+	}
 
-  setupEventListeners() {
-    const removeButton = this.shadowRoot.querySelector(".remove-button");
-    removeButton.addEventListener("click", () => this.remove());
+	setupEventListeners() {
+		const removeButton = this.shadowRoot.querySelector('.remove-button');
+		removeButton.addEventListener('click', () => this.remove());
 
-    const probeButton = this.shadowRoot.querySelector(".probe-button");
-    probeButton.addEventListener("click", () => this.addProbe());
-  }
+		const probeButton = this.shadowRoot.querySelector('.probe-button');
+		probeButton.addEventListener('click', () => this.addProbe());
+	}
 
-  addProbe() {
-    const probesContainer = this.shadowRoot.querySelector(".probes");
-    const probeInput = document.createElement("input");
-    probeInput.type = "text";
-    probeInput.placeholder = "Enter a probe question";
-    probesContainer.insertBefore(probeInput, probesContainer.lastElementChild);
-  }
+	addProbe() {
+		const probesContainer = this.shadowRoot.querySelector('.probes');
+		const probeInput = document.createElement('input');
+		probeInput.type = 'text';
+		probeInput.placeholder = 'Enter a probe question';
+		probesContainer.insertBefore(probeInput, probesContainer.lastElementChild);
+	}
 }
 
-customElements.define("question-element", QuestionElement);
+customElements.define('question-element', QuestionElement);

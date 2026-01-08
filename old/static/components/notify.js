@@ -1,23 +1,23 @@
 class NotificationPopup extends HTMLElement {
-  constructor() {
-    super();
-    this.isHovered = false;
-  }
+	constructor() {
+		super();
+		this.isHovered = false;
+	}
 
-  connectedCallback() {
-    const shadow = this.attachShadow({ mode: "open" });
-    const timeout = this.getAttribute("timeout") ?? 3000;
-    const type = this.hasAttribute("success")
-      ? "success"
-      : this.hasAttribute("error")
-        ? "error"
-        : this.hasAttribute("warning")
-          ? "warning"
-          : this.hasAttribute("info")
-            ? "info"
-            : "";
+	connectedCallback() {
+		const shadow = this.attachShadow({ mode: 'open' });
+		const timeout = this.getAttribute('timeout') ?? 3000;
+		const type = this.hasAttribute('success')
+			? 'success'
+			: this.hasAttribute('error')
+				? 'error'
+				: this.hasAttribute('warning')
+					? 'warning'
+					: this.hasAttribute('info')
+						? 'info'
+						: '';
 
-    shadow.innerHTML = `
+		shadow.innerHTML = `
       <style>
         :host {
           min-height: 80px;
@@ -87,32 +87,32 @@ class NotificationPopup extends HTMLElement {
       </div>
     `;
 
-    // Make visible after a brief delay
-    requestAnimationFrame(() => {
-      this.classList.add("visible");
-    });
+		// Make visible after a brief delay
+		requestAnimationFrame(() => {
+			this.classList.add('visible');
+		});
 
-    if (timeout) {
-      const hideNotification = () => {
-        if (!this.isHovered) {
-          this.classList.remove("visible");
-          setTimeout(() => this.remove(), 500);
-        }
-      };
+		if (timeout) {
+			const hideNotification = () => {
+				if (!this.isHovered) {
+					this.classList.remove('visible');
+					setTimeout(() => this.remove(), 500);
+				}
+			};
 
-      let timeoutId = setTimeout(hideNotification, parseInt(timeout, 10));
+			let timeoutId = setTimeout(hideNotification, parseInt(timeout, 10));
 
-      this.addEventListener("mouseenter", () => {
-        this.isHovered = true;
-        clearTimeout(timeoutId);
-      });
+			this.addEventListener('mouseenter', () => {
+				this.isHovered = true;
+				clearTimeout(timeoutId);
+			});
 
-      this.addEventListener("mouseleave", () => {
-        this.isHovered = false;
-        timeoutId = setTimeout(hideNotification, 500);
-      });
-    }
-  }
+			this.addEventListener('mouseleave', () => {
+				this.isHovered = false;
+				timeoutId = setTimeout(hideNotification, 500);
+			});
+		}
+	}
 }
 
-customElements.define("notification-popup", NotificationPopup);
+customElements.define('notification-popup', NotificationPopup);

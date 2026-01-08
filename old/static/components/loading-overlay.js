@@ -1,23 +1,23 @@
 class LoadingOverlay extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
+	constructor() {
+		super();
+		this.attachShadow({ mode: 'open' });
 
-    const wrapper = document.createElement("div");
-    wrapper.style.position = "fixed";
-    wrapper.style.top = "0";
-    wrapper.style.left = "0";
-    wrapper.style.width = "100vw";
-    wrapper.style.height = "100vh";
-    wrapper.style.background = "rgba(0,0,0,0.4)";
-    wrapper.style.display = "flex";
-    wrapper.style.justifyContent = "center";
-    wrapper.style.alignItems = "center";
-    wrapper.style.zIndex = "9999";
-    wrapper.innerHTML = `<div class="spinner"></div>`;
+		const wrapper = document.createElement('div');
+		wrapper.style.position = 'fixed';
+		wrapper.style.top = '0';
+		wrapper.style.left = '0';
+		wrapper.style.width = '100vw';
+		wrapper.style.height = '100vh';
+		wrapper.style.background = 'rgba(0,0,0,0.4)';
+		wrapper.style.display = 'flex';
+		wrapper.style.justifyContent = 'center';
+		wrapper.style.alignItems = 'center';
+		wrapper.style.zIndex = '9999';
+		wrapper.innerHTML = `<div class="spinner"></div>`;
 
-    const style = document.createElement("style");
-    style.textContent = `
+		const style = document.createElement('style');
+		style.textContent = `
       .spinner {
         width: 40px;
         height: 40px;
@@ -31,31 +31,31 @@ class LoadingOverlay extends HTMLElement {
       }
     `;
 
-    this.shadowRoot.append(style, wrapper);
-  }
+		this.shadowRoot.append(style, wrapper);
+	}
 
-  close() {
-    if (this.isConnected) {
-      this.remove();
-    }
-  }
+	close() {
+		if (this.isConnected) {
+			this.remove();
+		}
+	}
 
-  static createFor({ duration, promise } = {}) {
-    const overlay = document.createElement("loading-overlay");
+	static createFor({ duration, promise } = {}) {
+		const overlay = document.createElement('loading-overlay');
 
-    // Append to body for full-screen coverage
-    document.body.appendChild(overlay);
+		// Append to body for full-screen coverage
+		document.body.appendChild(overlay);
 
-    if (typeof duration === "number" && duration > 0) {
-      overlay._durationTimer = setTimeout(() => overlay.close(), duration);
-    }
+		if (typeof duration === 'number' && duration > 0) {
+			overlay._durationTimer = setTimeout(() => overlay.close(), duration);
+		}
 
-    if (promise instanceof Promise) {
-      promise.finally(() => overlay.close());
-    }
+		if (promise instanceof Promise) {
+			promise.finally(() => overlay.close());
+		}
 
-    return overlay;
-  }
+		return overlay;
+	}
 }
 
-customElements.define("loading-overlay", LoadingOverlay);
+customElements.define('loading-overlay', LoadingOverlay);

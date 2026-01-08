@@ -1,65 +1,60 @@
 // First, create a FontAwesome loader component that will handle the stylesheet
 class FontAwesomeLoader extends HTMLElement {
-  constructor() {
-    super();
-    if (!document.querySelector("#font-awesome-stylesheet")) {
-      const link = document.createElement("link");
-      link.id = "font-awesome-stylesheet";
-      link.rel = "stylesheet";
-      link.href = "https://use.fontawesome.com/releases/v6.6.0/css/all.css";
-      document.head.appendChild(link);
-    }
-  }
+	constructor() {
+		super();
+		if (!document.querySelector('#font-awesome-stylesheet')) {
+			const link = document.createElement('link');
+			link.id = 'font-awesome-stylesheet';
+			link.rel = 'stylesheet';
+			link.href = 'https://use.fontawesome.com/releases/v6.6.0/css/all.css';
+			document.head.appendChild(link);
+		}
+	}
 }
 
-customElements.define("font-awesome-loader", FontAwesomeLoader);
+customElements.define('font-awesome-loader', FontAwesomeLoader);
 
 class SurveyItem extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-  }
+	constructor() {
+		super();
+		this.attachShadow({ mode: 'open' });
+	}
 
-  connectedCallback() {
-    this.render();
-  }
+	connectedCallback() {
+		this.render();
+	}
 
-  static get observedAttributes() {
-    return ["type", "options", "required"];
-  }
+	static get observedAttributes() {
+		return ['type', 'options', 'required'];
+	}
 
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue !== newValue) {
-      this.render();
-    }
-  }
+	attributeChangedCallback(name, oldValue, newValue) {
+		if (oldValue !== newValue) {
+			this.render();
+		}
+	}
 
-  render() {
-    const type = this.getAttribute("type") || "checkbox";
-    const options = JSON.parse(this.getAttribute("options") || "[]");
-    const required = this.getAttribute("required") === "true";
+	render() {
+		const type = this.getAttribute('type') || 'checkbox';
+		const options = JSON.parse(this.getAttribute('options') || '[]');
+		const required = this.getAttribute('required') === 'true';
 
-    if (chatClient.lang == "da") {
-      // Temporary fix for different value/labels
-      options.forEach((option, index) => {
-        if (option === "yes") options[index] = "ja";
-        if (option === "no") options[index] = "nej";
-      });
-    }
+		if (chatClient.lang == 'da') {
+			// Temporary fix for different value/labels
+			options.forEach((option, index) => {
+				if (option === 'yes') options[index] = 'ja';
+				if (option === 'no') options[index] = 'nej';
+			});
+		}
 
-    let inputElements = "";
-    if (type === "slider") {
-      const marks = options
-        .map(
-          (label, index) =>
-            `<option label="${label}" value="${index}"></option>`,
-        )
-        .join("");
-      const labels = options
-        .map((label, index) => `<span>${label}</span>`)
-        .join("");
+		let inputElements = '';
+		if (type === 'slider') {
+			const marks = options
+				.map((label, index) => `<option label="${label}" value="${index}"></option>`)
+				.join('');
+			const labels = options.map((label, index) => `<span>${label}</span>`).join('');
 
-      inputElements = `
+			inputElements = `
         <div class="slider-container">
           <input type="range" min="0" max="${options.length - 1}" step="1" value="0" id="slider" list="tickmarks" />
           <datalist id="tickmarks">
@@ -70,33 +65,33 @@ class SurveyItem extends HTMLElement {
           </div>
         </div>
       `;
-    } else {
-      inputElements = options
-        .map((option) => {
-          let label = option;
-          let value = option;
-          let tip = "";
+		} else {
+			inputElements = options
+				.map((option) => {
+					let label = option;
+					let value = option;
+					let tip = '';
 
-          if (typeof option === "object") {
-            label = option.label;
-            value = option.value || option.label;
-            tip = option.tip;
-          }
+					if (typeof option === 'object') {
+						label = option.label;
+						value = option.value || option.label;
+						tip = option.tip;
+					}
 
-          return `
+					return `
           <div>
-            <label for="${value}" title="${tip || ""}">
+            <label for="${value}" title="${tip || ''}">
               <input type="${type}" id="${value}" name="survey-option" value="${value}" />
               ${label}
-              ${tip ? `<i class="fa-regular fa-circle-question"></i>` : ""}
+              ${tip ? `<i class="fa-regular fa-circle-question"></i>` : ''}
             </label>
           </div>
         `;
-        })
-        .join("");
-    }
+				})
+				.join('');
+		}
 
-    this.shadowRoot.innerHTML = `
+		this.shadowRoot.innerHTML = `
       <font-awesome-loader></font-awesome-loader>
       <style>
         @import url("https://use.fontawesome.com/releases/v6.6.0/css/all.css");
@@ -107,7 +102,7 @@ class SurveyItem extends HTMLElement {
           padding: 5px;
           display: flex;
           flex-flow: wrap;
-          ${type === "radio" ? "flex-direction: column;" : ""}
+          ${type === 'radio' ? 'flex-direction: column;' : ''}
           gap: 5px;
         }
 
@@ -210,65 +205,60 @@ class SurveyItem extends HTMLElement {
         }
       </style>
       <fieldset>
-        <legend>${type === "slider" ? "Pick a value" : type === "radio" ? "Choose one" : "Select multiple"}</legend>
+        <legend>${type === 'slider' ? 'Pick a value' : type === 'radio' ? 'Choose one' : 'Select multiple'}</legend>
         ${inputElements}
       </fieldset>
       <button class="send survey" onclick="this.getRootNode().host.sendAnswer()">
         <i class="fa-solid fa-arrow-right"></i>
       </button>
     `;
-  }
+	}
 
-  sendAnswer() {
-    let selectedOptions = [];
+	sendAnswer() {
+		let selectedOptions = [];
 
-    if (this.getAttribute("type") === "slider") {
-      const slider = this.shadowRoot.querySelector("#slider");
-      const options = JSON.parse(this.getAttribute("options") || "[]");
-      selectedOptions = [options[slider.value]];
-      console.log(selectedOptions);
-    } else {
-      selectedOptions = Array.from(
-        this.shadowRoot.querySelectorAll("input:checked"),
-      ).map((input) => input.value);
-    }
+		if (this.getAttribute('type') === 'slider') {
+			const slider = this.shadowRoot.querySelector('#slider');
+			const options = JSON.parse(this.getAttribute('options') || '[]');
+			selectedOptions = [options[slider.value]];
+			console.log(selectedOptions);
+		} else {
+			selectedOptions = Array.from(this.shadowRoot.querySelectorAll('input:checked')).map(
+				(input) => input.value
+			);
+		}
 
-    if (
-      this.getAttribute("required") === "true" &&
-      selectedOptions.length === 0
-    ) {
-      alert("Please select at least one option");
-      return;
-    }
+		if (this.getAttribute('required') === 'true' && selectedOptions.length === 0) {
+			alert('Please select at least one option');
+			return;
+		}
 
-    if (this.getAttribute("type") === "slider") {
-    } else {
-      this.shadowRoot
-        .querySelectorAll("input:not(:checked)")
-        .forEach((input) => {
-          input.parentElement.parentElement.remove();
-        });
-    }
+		if (this.getAttribute('type') === 'slider') {
+		} else {
+			this.shadowRoot.querySelectorAll('input:not(:checked)').forEach((input) => {
+				input.parentElement.parentElement.remove();
+			});
+		}
 
-    this.shadowRoot.querySelectorAll("input").forEach((input) => {
-      input.disabled = true;
-    });
+		this.shadowRoot.querySelectorAll('input').forEach((input) => {
+			input.disabled = true;
+		});
 
-    const chatUI = chatClient.chatUI;
-    if (chatUI.role === "respondent") {
-      chatUI.disableInput();
-      chatUI.createLoadingIndicator();
-    }
-    chatUI.ws.sendjson({
-      type: "message",
-      content: selectedOptions.join(", "),
-    });
+		const chatUI = chatClient.chatUI;
+		if (chatUI.role === 'respondent') {
+			chatUI.disableInput();
+			chatUI.createLoadingIndicator();
+		}
+		chatUI.ws.sendjson({
+			type: 'message',
+			content: selectedOptions.join(', ')
+		});
 
-    const button = this.shadowRoot.querySelector("button");
-    if (button) {
-      button.remove();
-    }
-  }
+		const button = this.shadowRoot.querySelector('button');
+		if (button) {
+			button.remove();
+		}
+	}
 }
 
-customElements.define("survey-item", SurveyItem);
+customElements.define('survey-item', SurveyItem);

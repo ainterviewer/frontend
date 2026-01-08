@@ -1,102 +1,102 @@
 #sidebar hr {
-  color: var(--green);
-  width: 90%;
+	color: var(--green);
+	width: 90%;
 }
 
 #sidebar.collapsed {
-  width: 70px;
+	width: 70px;
 }
 
 #sidebar.collapsed span {
-  display: none;
+	display: none;
 }
 #sidebar.collapsed ul li a.active::after {
-  content: "";
+	content: '';
 }
 #sidebar.collapsed ul li a.active {
-  color: var(--dark-green);
-  background: white;
-  border-right: 2px solid rgb(5, 68, 104);
+	color: var(--dark-green);
+	background: white;
+	border-right: 2px solid rgb(5, 68, 104);
 }
 
 #sidebar {
-  background: var(--dark-green);
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 250px;
-  height: 100%;
-  padding: 100px 0;
-  transition: all 0.5s ease;
+	background: var(--dark-green);
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 250px;
+	height: 100%;
+	padding: 100px 0;
+	transition: all 0.5s ease;
 }
 
 #sidebar ul {
-  padding: 0;
-  margin: 0;
+	padding: 0;
+	margin: 0;
 }
 
 #sidebar ul li {
-  width: 100%;
-  line-height: 2;
+	width: 100%;
+	line-height: 2;
 }
 
 #sidebar ul li a span.icon {
-  margin-left: 25px;
-  min-width: 25px;
-  display: inline-block;
+	margin-left: 25px;
+	min-width: 25px;
+	display: inline-block;
 }
 
 #sidebar ul li::marker {
-  content: "";
+	content: '';
 }
 
 #sidebar ul li a {
-  color: white;
-  width: 100%;
-  display: inline-block;
-  text-decoration: none;
+	color: white;
+	width: 100%;
+	display: inline-block;
+	text-decoration: none;
 }
 
 #sidebar ul li a:hover {
-  color: var(--dark-green);
-  background: white;
-  border-right: 2px solid rgb(5, 68, 104);
+	color: var(--dark-green);
+	background: white;
+	border-right: 2px solid rgb(5, 68, 104);
 }
 
 #siderbar ul li a:visited {
-  color: inherit;
+	color: inherit;
 }
 
 #sidebar ul li a.active span.item::after {
-  margin-left: 8px;
-  content: "<";
+	margin-left: 8px;
+	content: '<';
 }
 
 #sidebar ul li.main > a::after {
-  position: absolute;
-  right: 25px;
-  content: "⌄";
+	position: absolute;
+	right: 25px;
+	content: '⌄';
 }
 
 #sidebar ul li.main ul {
-  max-height: 0;
-  overflow: hidden;
-  transition:
-    max-height 0.3s ease-out,
-    opacity 0.25s ease-out;
-  opacity: 0;
+	max-height: 0;
+	overflow: hidden;
+	transition:
+		max-height 0.3s ease-out,
+		opacity 0.25s ease-out;
+	opacity: 0;
 }
 
 #sidebar ul li.main:has(.active) ul,
 #sidebar ul li.main ul:has(.active),
 #sidebar ul li.main:hover ul {
-  max-height: 200px !important;
-  opacity: 1 !important;
-  transition:
-    max-height 0.5s ease-out,
-    opacity 0.1s ease-in;
+	max-height: 200px !important;
+	opacity: 1 !important;
+	transition:
+		max-height 0.5s ease-out,
+		opacity 0.1s ease-in;
 }
 
 #sidebar ul li.main ul li a span.icon {
-  margin-left: 54px;
+	margin-left: 54px;
 }

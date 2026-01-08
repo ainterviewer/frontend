@@ -1,106 +1,102 @@
 p {
-  hyphens: auto;
+	hyphens: auto;
 }
 
 textarea {
-  margin-top: 10px;
-  max-width: 100%;
-  width: 100%;
-  height: 8rem;
-  max-height: 400px;
-  border: 1px lightgray solid;
-  border-radius: 10px;
-  box-sizing: border-box;
-  resize: vertical;
-  padding: 10px;
+	margin-top: 10px;
+	max-width: 100%;
+	width: 100%;
+	height: 8rem;
+	max-height: 400px;
+	border: 1px lightgray solid;
+	border-radius: 10px;
+	box-sizing: border-box;
+	resize: vertical;
+	padding: 10px;
 }
 
 button {
-  background-color: white !important;
-  border: none !important;
+	background-color: white !important;
+	border: none !important;
 }
 
 button:hover {
-  cursor: pointer;
-  background-color: var(--light-gray) !important;
-  box-shadow: 0 0 5px 0 var(--light-gray);
+	cursor: pointer;
+	background-color: var(--light-gray) !important;
+	box-shadow: 0 0 5px 0 var(--light-gray);
 }
 
 button > i.fa-solid.fa-circle-plus {
-  padding-right: 5px;
+	padding-right: 5px;
 }
 
 button.fa-solid.fa-trash:hover {
-  background-color: var(--light-red) !important;
+	background-color: var(--light-red) !important;
 }
 
 #questions {
-  counter-set: question-section 0;
+	counter-set: question-section 0;
 }
 
 #questions > drag-drop-container > div {
-  counter-increment: question-section;
-  margin-bottom: 10px;
+	counter-increment: question-section;
+	margin-bottom: 10px;
 }
 
-#questions
-  > drag-drop-container
-  > div
-  > div.separator
-  > span.header-counter:before {
-  content: counter(question-section) ".";
+#questions > drag-drop-container > div > div.separator > span.header-counter:before {
+	content: counter(question-section) '.';
 }
 
 .section-description {
-  height: 150px;
+	height: 150px;
 }
 
 .remove-section,
 .remove-question {
-  position: absolute;
-  right: 35px;
+	position: absolute;
+	right: 35px;
 }
 
 .dragger {
-  position: absolute;
-  right: 12px;
-  cursor: grab;
+	position: absolute;
+	right: 12px;
+	cursor: grab;
 }
 
 *:has(* > .dragging),
 .draggable.dragging,
 .dragger:active {
-  cursor: grabbing !important;
+	cursor: grabbing !important;
 }
 
 .guide-extra {
-  margin-bottom: 8px;
+	margin-bottom: 8px;
 }
 .section-extra,
 .question-extra {
-  display: flex;
-  margin-top: 8px;
+	display: flex;
+	margin-top: 8px;
 }
 
 .question-extra > span {
-  padding-left: 40px;
+	padding-left: 40px;
 }
 .probes {
-  width: 100%;
+	width: 100%;
 }
 
 .question-container {
-  margin-bottom: 20px;
+	margin-bottom: 20px;
 }
 
 .probe-button-container {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
 }
 
 .minimized .question-description {
-  height: 5rem;
+	height: 5rem;
 }
 
 .question-description {
@@ -109,128 +105,128 @@ button.fa-solid.fa-trash:hover {
 .question-description,
 .question,
 .probe-container {
-  margin-bottom: 10px;
+	margin-bottom: 10px;
 }
 
 label {
-  padding-right: 10px;
-  display: inline-block;
-  text-wrap: nowrap;
-  align-content: center;
+	padding-right: 10px;
+	display: inline-block;
+	text-wrap: nowrap;
+	align-content: center;
 }
 
 input {
-  border: 1px solid lightgray;
-  border-radius: 5px;
-  padding: 5px;
-  margin-right: 5px;
+	border: 1px solid lightgray;
+	border-radius: 5px;
+	padding: 5px;
+	margin-right: 5px;
 }
 
-input[type="file"] {
-  margin-top: 4px;
-  border: 1px solid white;
+input[type='file'] {
+	margin-top: 4px;
+	border: 1px solid white;
 }
-input[type="file"]:hover {
-  cursor: pointer;
+input[type='file']:hover {
+	cursor: pointer;
 }
 
 .question-description,
 .main-question {
-  width: 100%;
-  padding: 5px;
-  margin-right: 0px !important;
-  height: 95px;
+	width: 100%;
+	padding: 5px;
+	margin-right: 0px !important;
+	height: 95px;
 }
 
 .main-question {
 }
 
 .alternative-main-question-container {
-  margin: 5px 0px;
+	margin: 5px 0px;
 
-  .alternative-main-question {
-    width: 90%;
-  }
+	.alternative-main-question {
+		width: 90%;
+	}
 }
 
 .probe-container {
-  display: flex;
-  justify-content: flex-end;
+	display: flex;
+	justify-content: flex-end;
 }
 
 .probe-container > input {
-  width: 80%;
+	width: 80%;
 }
 
 .question-settings {
-  width: fit-content;
+	width: fit-content;
 }
 
 .question-settings > .max-probes-n input,
 .question-settings > .max-probes-time input {
-  width: 50px;
-  /*padding: 2px;*/
-  /*padding-left: 5px;*/
+	width: 50px;
+	/*padding: 2px;*/
+	/*padding-left: 5px;*/
 }
 
 .question-settings > .question-language,
 .question-settings > .max-probes-n,
 .question-settings > .max-probes-time {
-  margin-bottom: 10px;
+	margin-bottom: 10px;
 }
 
 .question-button {
-  min-width: 35px;
+	min-width: 35px;
 }
 
 .question-image,
 .question-survey {
-  margin: 5px 0px;
+	margin: 5px 0px;
 }
 
 .question-subcontainer {
-  border: 1px solid grey;
-  border-radius: 5px;
-  padding: 8px;
+	border: 1px solid grey;
+	border-radius: 5px;
+	padding: 8px;
 }
 
 .question-image button i,
 .question-survey button i,
 .question-condition button i {
-  padding-right: 5px;
+	padding-right: 5px;
 }
 
 .question-image input::file-selector-button {
-  font-weight: bold;
-  color: black;
-  padding: 6px 10px;
-  border: unset;
-  border-radius: 5px;
-  background-color: white;
+	font-weight: bold;
+	color: black;
+	padding: 6px 10px;
+	border: unset;
+	border-radius: 5px;
+	background-color: white;
 }
 
 .question-image input::file-selector-button:hover {
-  cursor: pointer;
-  background-color: var(--light-gray) !important;
-  box-shadow: 0 0 5px 0 var(--light-gray);
+	cursor: pointer;
+	background-color: var(--light-gray) !important;
+	box-shadow: 0 0 5px 0 var(--light-gray);
 }
 
 .image-preview img {
-  max-width: 100%;
-  background-color: white;
-  margin: 8px 0px;
+	max-width: 100%;
+	background-color: white;
+	margin: 8px 0px;
 }
 
 .survey-option:first-of-type {
-  margin-top: 8px;
+	margin-top: 8px;
 }
 
 .survey-option {
-  display: flex;
-  margin-bottom: 8px;
+	display: flex;
+	margin-bottom: 8px;
 }
 
 .option-button-container {
-  display: flex;
-  justify-content: space-between;
+	display: flex;
+	justify-content: space-between;
 }

@@ -1,630 +1,612 @@
 <html>
-  <head>
-    <title>AInterviewer</title>
-    <link rel="stylesheet" href="/static/css/dashboard.css" />
-    <link rel="stylesheet" href="/static/css/guide.css" />
-    <style>
-      .container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-      }
+	<head>
+		<title>AInterviewer</title>
+		<link rel="stylesheet" href="/static/css/dashboard.css" />
+		<link rel="stylesheet" href="/static/css/guide.css" />
+		<style>
+			.container {
+				max-width: 800px;
+				margin: 0 auto;
+				padding: 20px;
+				font-family:
+					system-ui,
+					-apple-system,
+					sans-serif;
+			}
 
-      .section {
-        margin-bottom: 24px;
-      }
+			.section {
+				margin-bottom: 24px;
+			}
 
-      .communication-traits {
-        border: 1px solid #eee;
-        padding: 16px;
-        border-radius: 8px;
-        background-color: #fafafa;
-      }
+			.communication-traits {
+				border: 1px solid #eee;
+				padding: 16px;
+				border-radius: 8px;
+				background-color: #fafafa;
+			}
 
-      .row {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-        align-items: center;
-      }
+			.row {
+				display: flex;
+				gap: 10px;
+				margin-bottom: 10px;
+				align-items: center;
+			}
 
-      input {
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        flex: 1;
-      }
+			input {
+				padding: 8px;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				flex: 1;
+			}
 
-      input[type="number"] {
-        width: 70px;
-        flex: initial;
-      }
+			input[type='number'] {
+				width: 70px;
+				flex: initial;
+			}
 
-      button {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
+			button {
+				padding: 8px 16px;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				gap: 5px;
+			}
 
-      .add-btn {
-        background-color: #e6f3ff;
-        color: #0066cc;
-      }
+			.add-btn {
+				background-color: #e6f3ff;
+				color: #0066cc;
+			}
 
-      .remove-btn {
-        background-color: #ffe6e6;
-        color: #cc0000;
-        padding: 8px;
-      }
+			.remove-btn {
+				background-color: #ffe6e6;
+				color: #cc0000;
+				padding: 8px;
+			}
 
-      h3 {
-        color: #333;
-        margin-bottom: 20px;
-      }
+			h3 {
+				color: #333;
+				margin-bottom: 20px;
+			}
 
-      h4 {
-        color: #666;
-        margin-bottom: 10px;
-      }
+			h4 {
+				color: #666;
+				margin-bottom: 10px;
+			}
 
-      .plus-icon::before {
-        content: "+";
-        font-size: 18px;
-        font-weight: bold;
-      }
+			.plus-icon::before {
+				content: '+';
+				font-size: 18px;
+				font-weight: bold;
+			}
 
-      .minus-icon::before {
-        content: "×";
-        font-size: 18px;
-        font-weight: bold;
-      }
-    </style>
-    <script src="/static/components/multi-slider.js"></script>
-    {% include 'shared/head.html' %}
-  </head>
-  <body>
-    {% include 'shared/header.html' %} {% include 'shared/sidebar_sub.html' %}
-    <main>
-      <div style="width: 80%; max-width: 1000px">
-        <h2 class="underline-simple">Setup</h2>
-        <h3>Background Information</h3>
-        <p>
-          Define the background characteristics of the synthetic interviewees.
-          These will be randomly mixed for each synthetic interviewee.
-        </p>
+			.minus-icon::before {
+				content: '×';
+				font-size: 18px;
+				font-weight: bold;
+			}
+		</style>
+		<script src="/static/components/multi-slider.js"></script>
+		{% include 'shared/head.html' %}
+	</head>
+	<body>
+		{% include 'shared/header.html' %} {% include 'shared/sidebar_sub.html' %}
+		<main>
+			<div style="width: 80%; max-width: 1000px">
+				<h2 class="underline-simple">Setup</h2>
+				<h3>Background Information</h3>
+				<p>
+					Define the background characteristics of the synthetic interviewees. These will be
+					randomly mixed for each synthetic interviewee.
+				</p>
 
-        <!-- Names and Gender -->
-        <div class="section" id="namesGenderSection">
-          <h4>Names and Gender</h4>
-          <div id="namesGenderList">
-            <div class="row">
-              <input type="text" placeholder="Name" />
-              <input type="text" placeholder="Gender" />
-              <button class="remove-btn" onclick="removeRow(this)">
-                <span class="minus-icon"></span>
-              </button>
-            </div>
-          </div>
-          <button class="add-btn" onclick="addNameGenderPair()">
-            <span class="plus-icon"></span>Add Name/Gender Pair
-          </button>
-        </div>
+				<!-- Names and Gender -->
+				<div class="section" id="namesGenderSection">
+					<h4>Names and Gender</h4>
+					<div id="namesGenderList">
+						<div class="row">
+							<input type="text" placeholder="Name" />
+							<input type="text" placeholder="Gender" />
+							<button class="remove-btn" onclick="removeRow(this)">
+								<span class="minus-icon"></span>
+							</button>
+						</div>
+					</div>
+					<button class="add-btn" onclick="addNameGenderPair()">
+						<span class="plus-icon"></span>Add Name/Gender Pair
+					</button>
+				</div>
 
-        <!-- Age Range -->
-        <div class="section">
-          <h4>Age Range</h4>
-          <div class="row">
-            <input type="number" id="minAge" value="18" min="18" max="80" />
-            <span>to</span>
-            <input type="number" id="maxAge" value="80" min="18" max="80" />
-          </div>
-        </div>
+				<!-- Age Range -->
+				<div class="section">
+					<h4>Age Range</h4>
+					<div class="row">
+						<input type="number" id="minAge" value="18" min="18" max="80" />
+						<span>to</span>
+						<input type="number" id="maxAge" value="80" min="18" max="80" />
+					</div>
+				</div>
 
-        <!-- Education -->
-        <div class="section" id="educationSection">
-          <h4>Education</h4>
-          <div id="educationList">
-            <div class="row">
-              <input type="text" placeholder="Education" />
-              <button class="remove-btn" onclick="removeRow(this)">
-                <span class="minus-icon"></span>
-              </button>
-            </div>
-          </div>
-          <button class="add-btn" onclick="addField('educationList')">
-            <span class="plus-icon"></span>Add Education
-          </button>
-        </div>
+				<!-- Education -->
+				<div class="section" id="educationSection">
+					<h4>Education</h4>
+					<div id="educationList">
+						<div class="row">
+							<input type="text" placeholder="Education" />
+							<button class="remove-btn" onclick="removeRow(this)">
+								<span class="minus-icon"></span>
+							</button>
+						</div>
+					</div>
+					<button class="add-btn" onclick="addField('educationList')">
+						<span class="plus-icon"></span>Add Education
+					</button>
+				</div>
 
-        <!-- Occupations -->
-        <div class="section" id="occupationSection">
-          <h4>Occupations</h4>
-          <div id="occupationList">
-            <div class="row">
-              <input type="text" placeholder="Occupation" />
-              <button class="remove-btn" onclick="removeRow(this)">
-                <span class="minus-icon"></span>
-              </button>
-            </div>
-          </div>
-          <button class="add-btn" onclick="addField('occupationList')">
-            <span class="plus-icon"></span>Add Occupation
-          </button>
-        </div>
+				<!-- Occupations -->
+				<div class="section" id="occupationSection">
+					<h4>Occupations</h4>
+					<div id="occupationList">
+						<div class="row">
+							<input type="text" placeholder="Occupation" />
+							<button class="remove-btn" onclick="removeRow(this)">
+								<span class="minus-icon"></span>
+							</button>
+						</div>
+					</div>
+					<button class="add-btn" onclick="addField('occupationList')">
+						<span class="plus-icon"></span>Add Occupation
+					</button>
+				</div>
 
-        <!-- Locations -->
-        <div class="section" id="locationSection">
-          <h4>Locations</h4>
-          <div id="locationList">
-            <div class="row">
-              <input type="text" placeholder="Location" />
-              <button class="remove-btn" onclick="removeRow(this)">
-                <span class="minus-icon"></span>
-              </button>
-            </div>
-          </div>
-          <button class="add-btn" onclick="addField('locationList')">
-            <span class="plus-icon"></span>Add Location
-          </button>
-        </div>
+				<!-- Locations -->
+				<div class="section" id="locationSection">
+					<h4>Locations</h4>
+					<div id="locationList">
+						<div class="row">
+							<input type="text" placeholder="Location" />
+							<button class="remove-btn" onclick="removeRow(this)">
+								<span class="minus-icon"></span>
+							</button>
+						</div>
+					</div>
+					<button class="add-btn" onclick="addField('locationList')">
+						<span class="plus-icon"></span>Add Location
+					</button>
+				</div>
 
-        <!-- Personalities -->
-        <div class="section" id="personalitySection">
-          <h4>Personalities</h4>
-          <div id="personalityList">
-            <div class="row">
-              <input type="text" placeholder="Personality" />
-              <button class="remove-btn" onclick="removeRow(this)">
-                <span class="minus-icon"></span>
-              </button>
-            </div>
-          </div>
-          <button class="add-btn" onclick="addField('personalityList')">
-            <span class="plus-icon"></span>Add Personality
-          </button>
-        </div>
+				<!-- Personalities -->
+				<div class="section" id="personalitySection">
+					<h4>Personalities</h4>
+					<div id="personalityList">
+						<div class="row">
+							<input type="text" placeholder="Personality" />
+							<button class="remove-btn" onclick="removeRow(this)">
+								<span class="minus-icon"></span>
+							</button>
+						</div>
+					</div>
+					<button class="add-btn" onclick="addField('personalityList')">
+						<span class="plus-icon"></span>Add Personality
+					</button>
+				</div>
 
-        <!-- Communication Traits -->
-        <div class="section communication-traits">
-          <h4>Communication Traits</h4>
+				<!-- Communication Traits -->
+				<div class="section communication-traits">
+					<h4>Communication Traits</h4>
 
-          <!-- Length -->
-          <div class="subsection" id="lengthSection">
-            <h5>Length</h5>
-            <div id="lengthList">
-              <div class="row">
-                <input type="text" placeholder="Length" />
-                <button class="remove-btn" onclick="removeRow(this)">
-                  <span class="minus-icon"></span>
-                </button>
-              </div>
-            </div>
-            <button class="add-btn" onclick="addField('lengthList')">
-              <span class="plus-icon"></span>Add Length
-            </button>
-          </div>
+					<!-- Length -->
+					<div class="subsection" id="lengthSection">
+						<h5>Length</h5>
+						<div id="lengthList">
+							<div class="row">
+								<input type="text" placeholder="Length" />
+								<button class="remove-btn" onclick="removeRow(this)">
+									<span class="minus-icon"></span>
+								</button>
+							</div>
+						</div>
+						<button class="add-btn" onclick="addField('lengthList')">
+							<span class="plus-icon"></span>Add Length
+						</button>
+					</div>
 
-          <!-- Style -->
-          <div class="subsection" id="styleSection">
-            <h5>Style</h5>
-            <div id="styleList">
-              <div class="row">
-                <input type="text" placeholder="Style" />
-                <button class="remove-btn" onclick="removeRow(this)">
-                  <span class="minus-icon"></span>
-                </button>
-              </div>
-            </div>
-            <button class="add-btn" onclick="addField('styleList')">
-              <span class="plus-icon"></span>Add Style
-            </button>
-          </div>
+					<!-- Style -->
+					<div class="subsection" id="styleSection">
+						<h5>Style</h5>
+						<div id="styleList">
+							<div class="row">
+								<input type="text" placeholder="Style" />
+								<button class="remove-btn" onclick="removeRow(this)">
+									<span class="minus-icon"></span>
+								</button>
+							</div>
+						</div>
+						<button class="add-btn" onclick="addField('styleList')">
+							<span class="plus-icon"></span>Add Style
+						</button>
+					</div>
 
-          <!-- Tone -->
-          <div class="subsection" id="toneSection">
-            <h5>Tone</h5>
-            <div id="toneList">
-              <div class="row">
-                <input type="text" placeholder="Tone" />
-                <button class="remove-btn" onclick="removeRow(this)">
-                  <span class="minus-icon"></span>
-                </button>
-              </div>
-            </div>
-            <button class="add-btn" onclick="addField('toneList')">
-              <span class="plus-icon"></span>Add Tone
-            </button>
-          </div>
-        </div>
-        <div class="section">
-          <h4>Extra traits</h4>
-          <p></p>
-          <div id="extraTraits">
-            <div class="row">
-              <input type="text" placeholder="Trait" />
-              <button class="remove-btn" onclick="removeRow(this)">
-                <span class="minus-icon"></span>
-              </button>
-            </div>
-          </div>
-          <button class="add-btn" onclick="addField('extraTraits')">
-            <span class="plus-icon"></span>Add Trait
-          </button>
-        </div>
+					<!-- Tone -->
+					<div class="subsection" id="toneSection">
+						<h5>Tone</h5>
+						<div id="toneList">
+							<div class="row">
+								<input type="text" placeholder="Tone" />
+								<button class="remove-btn" onclick="removeRow(this)">
+									<span class="minus-icon"></span>
+								</button>
+							</div>
+						</div>
+						<button class="add-btn" onclick="addField('toneList')">
+							<span class="plus-icon"></span>Add Tone
+						</button>
+					</div>
+				</div>
+				<div class="section">
+					<h4>Extra traits</h4>
+					<p></p>
+					<div id="extraTraits">
+						<div class="row">
+							<input type="text" placeholder="Trait" />
+							<button class="remove-btn" onclick="removeRow(this)">
+								<span class="minus-icon"></span>
+							</button>
+						</div>
+					</div>
+					<button class="add-btn" onclick="addField('extraTraits')">
+						<span class="plus-icon"></span>Add Trait
+					</button>
+				</div>
 
-        <div class="section">
-          <h4>Refusal Rate</h4>
-          <p>
-            The chance that the subject will be explicitly told to refuse
-            answering a given question.
-          </p>
-          <div class="row">
-            <label>0%</label>
-            <multi-slider
-              id="refusalRate"
-              min="0"
-              max="100"
-              step="1"
-              value="0"
-              style="width: 100%"
-            ></multi-slider>
-            <label>100%</label>
-          </div>
-        </div>
-        <br /><br />
-        <button onclick="saveSetup()">Save</button>
-        <button onclick="exportJson()">Export</button>
-      </div>
+				<div class="section">
+					<h4>Refusal Rate</h4>
+					<p>
+						The chance that the subject will be explicitly told to refuse answering a given
+						question.
+					</p>
+					<div class="row">
+						<label>0%</label>
+						<multi-slider
+							id="refusalRate"
+							min="0"
+							max="100"
+							step="1"
+							value="0"
+							style="width: 100%"
+						></multi-slider>
+						<label>100%</label>
+					</div>
+				</div>
+				<br /><br />
+				<button onclick="saveSetup()">Save</button>
+				<button onclick="exportJson()">Export</button>
+			</div>
 
-      <script>
-        // Fetch IDs from cookies
-        const project_id = Cookies.get("project_id");
-        const test_id = Cookies.get("test_id");
+			<script>
+				// Fetch IDs from cookies
+				const project_id = Cookies.get('project_id');
+				const test_id = Cookies.get('test_id');
 
-        if (!test_id) {
-          window.location.href = "/dashboard/projects/tests";
-        }
+				if (!test_id) {
+					window.location.href = '/dashboard/projects/tests';
+				}
 
-        // Add name-gender pair
-        function addNameGenderPair() {
-          const container = document.getElementById("namesGenderList");
-          const newRow = document.createElement("div");
-          newRow.className = "row";
-          newRow.innerHTML = `
+				// Add name-gender pair
+				function addNameGenderPair() {
+					const container = document.getElementById('namesGenderList');
+					const newRow = document.createElement('div');
+					newRow.className = 'row';
+					newRow.innerHTML = `
                 <input type="text" placeholder="Name">
                 <input type="text" placeholder="Gender">
                 <button class="remove-btn" onclick="removeRow(this)"><span class="minus-icon"></span></button>
             `;
-          container.appendChild(newRow);
-        }
+					container.appendChild(newRow);
+				}
 
-        // Add field to any list
-        function addField(listId) {
-          const container = document.getElementById(listId);
-          const newRow = document.createElement("div");
-          let placeholder = listId
-            .replace("List", "")
-            .replace(/\b\w/g, (s) => s.toUpperCase());
+				// Add field to any list
+				function addField(listId) {
+					const container = document.getElementById(listId);
+					const newRow = document.createElement('div');
+					let placeholder = listId.replace('List', '').replace(/\b\w/g, (s) => s.toUpperCase());
 
-          newRow.className = "row";
-          newRow.innerHTML = `
+					newRow.className = 'row';
+					newRow.innerHTML = `
                 <input type="text" placeholder="${placeholder}">
                 <button class="remove-btn" onclick="removeRow(this)"><span class="minus-icon"></span></button>
             `;
-          container.appendChild(newRow);
-        }
+					container.appendChild(newRow);
+				}
 
-        // Remove a row
-        function removeRow(button) {
-          const row = button.parentElement;
-          const container = row.parentElement;
-          if (container.children.length > 1) {
-            container.removeChild(row);
-          }
-        }
+				// Remove a row
+				function removeRow(button) {
+					const row = button.parentElement;
+					const container = row.parentElement;
+					if (container.children.length > 1) {
+						container.removeChild(row);
+					}
+				}
 
-        // Collect all data
-        function collectData() {
-          const data = {
-            names_gender: Array.from(
-              document.getElementById("namesGenderList").children,
-            ).map((row) => {
-              const inputs = row.getElementsByTagName("input");
-              return [inputs[0].value, inputs[1].value];
-            }),
-            age_range: [
-              parseInt(document.getElementById("minAge").value),
-              parseInt(document.getElementById("maxAge").value),
-            ],
-            educations: Array.from(
-              document.getElementById("educationList").children,
-            ).map((row) => row.getElementsByTagName("input")[0].value),
-            occupations: Array.from(
-              document.getElementById("occupationList").children,
-            ).map((row) => row.getElementsByTagName("input")[0].value),
-            locations: Array.from(
-              document.getElementById("locationList").children,
-            ).map((row) => row.getElementsByTagName("input")[0].value),
-            personalities: Array.from(
-              document.getElementById("personalityList").children,
-            ).map((row) => row.getElementsByTagName("input")[0].value),
-            communication_traits: {
-              length: Array.from(
-                document.getElementById("lengthList").children,
-              ).map((row) => row.getElementsByTagName("input")[0].value),
-              style: Array.from(
-                document.getElementById("styleList").children,
-              ).map((row) => row.getElementsByTagName("input")[0].value),
-              tone: Array.from(
-                document.getElementById("toneList").children,
-              ).map((row) => row.getElementsByTagName("input")[0].value),
-            },
-            extra_traits: Array.from(
-              document.getElementById("extraTraits").children,
-            ).map((row) => row.getElementsByTagName("input")[0].value),
-            refusal_rate: [
-              Math.min(
-                ...document.getElementById("refusalRate").allProps.values,
-              ) / 100,
-              Math.max(
-                ...document.getElementById("refusalRate").allProps.values,
-              ) / 100,
-            ],
-          };
+				// Collect all data
+				function collectData() {
+					const data = {
+						names_gender: Array.from(document.getElementById('namesGenderList').children).map(
+							(row) => {
+								const inputs = row.getElementsByTagName('input');
+								return [inputs[0].value, inputs[1].value];
+							}
+						),
+						age_range: [
+							parseInt(document.getElementById('minAge').value),
+							parseInt(document.getElementById('maxAge').value)
+						],
+						educations: Array.from(document.getElementById('educationList').children).map(
+							(row) => row.getElementsByTagName('input')[0].value
+						),
+						occupations: Array.from(document.getElementById('occupationList').children).map(
+							(row) => row.getElementsByTagName('input')[0].value
+						),
+						locations: Array.from(document.getElementById('locationList').children).map(
+							(row) => row.getElementsByTagName('input')[0].value
+						),
+						personalities: Array.from(document.getElementById('personalityList').children).map(
+							(row) => row.getElementsByTagName('input')[0].value
+						),
+						communication_traits: {
+							length: Array.from(document.getElementById('lengthList').children).map(
+								(row) => row.getElementsByTagName('input')[0].value
+							),
+							style: Array.from(document.getElementById('styleList').children).map(
+								(row) => row.getElementsByTagName('input')[0].value
+							),
+							tone: Array.from(document.getElementById('toneList').children).map(
+								(row) => row.getElementsByTagName('input')[0].value
+							)
+						},
+						extra_traits: Array.from(document.getElementById('extraTraits').children).map(
+							(row) => row.getElementsByTagName('input')[0].value
+						),
+						refusal_rate: [
+							Math.min(...document.getElementById('refusalRate').allProps.values) / 100,
+							Math.max(...document.getElementById('refusalRate').allProps.values) / 100
+						]
+					};
 
-          console.log("Collected Data:", data);
-          return data;
-        }
+					console.log('Collected Data:', data);
+					return data;
+				}
 
-        function saveSetup() {
-          data = collectData();
-          response = fetch(
-            `/api/projects/${project_id}/tests/${test_id}/background_info`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ background_info: data }),
-            },
-          )
-            // Add response body to the page
-            .then((response) => {
-              let notify = document.createElement("notification-popup");
-              if (response.ok) {
-                notify.setAttribute("success", "");
-                notify.innerHTML = `
+				function saveSetup() {
+					data = collectData();
+					response = fetch(`/api/projects/${project_id}/tests/${test_id}/background_info`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({ background_info: data })
+					})
+						// Add response body to the page
+						.then((response) => {
+							let notify = document.createElement('notification-popup');
+							if (response.ok) {
+								notify.setAttribute('success', '');
+								notify.innerHTML = `
                   <h2 slot="title">Success</h2>
                   <div slot="body">
                     <p>Background information saved.</p>
                   </div>
                 `;
 
-                document.body.insertAdjacentElement("beforeend", notify);
-                return response.json();
-              } else {
-                notify.setAttribute("error", "");
-                notify.innerHTML = `
+								document.body.insertAdjacentElement('beforeend', notify);
+								return response.json();
+							} else {
+								notify.setAttribute('error', '');
+								notify.innerHTML = `
                   <h2 slot="title">Error</h2>
                   <div slot="body">
                     <p>Failed to save setup.</p>
                   </div>
                 `;
 
-                document.body.insertAdjacentElement("beforeend", notify);
-                throw new Error("Failed to save setup");
-              }
+								document.body.insertAdjacentElement('beforeend', notify);
+								throw new Error('Failed to save setup');
+							}
 
-              console.log(notify);
-            })
-            .then((data) => {});
-        }
+							console.log(notify);
+						})
+						.then((data) => {});
+				}
 
-        // Age range validation
-        document
-          .getElementById("minAge")
-          .addEventListener("change", function () {
-            const maxAge = document.getElementById("maxAge");
-            if (parseInt(this.value) > parseInt(maxAge.value)) {
-              maxAge.value = this.value;
-            }
-          });
+				// Age range validation
+				document.getElementById('minAge').addEventListener('change', function () {
+					const maxAge = document.getElementById('maxAge');
+					if (parseInt(this.value) > parseInt(maxAge.value)) {
+						maxAge.value = this.value;
+					}
+				});
 
-        document
-          .getElementById("maxAge")
-          .addEventListener("change", function () {
-            const minAge = document.getElementById("minAge");
-            if (parseInt(this.value) < parseInt(minAge.value)) {
-              minAge.value = this.value;
-            }
-          });
+				document.getElementById('maxAge').addEventListener('change', function () {
+					const minAge = document.getElementById('minAge');
+					if (parseInt(this.value) < parseInt(minAge.value)) {
+						minAge.value = this.value;
+					}
+				});
 
-        // Function to populate the form with data from the API
-        function populateForm(data) {
-          // Clear existing rows before populating
-          clearFormRows();
+				// Function to populate the form with data from the API
+				function populateForm(data) {
+					// Clear existing rows before populating
+					clearFormRows();
 
-          // Populate Names and Gender
-          if (data.names_gender && data.names_gender.length > 0) {
-            const namesGenderList = document.getElementById("namesGenderList");
-            // Remove existing rows except one
-            while (namesGenderList.children.length > 1) {
-              namesGenderList.removeChild(namesGenderList.lastChild);
-            }
+					// Populate Names and Gender
+					if (data.names_gender && data.names_gender.length > 0) {
+						const namesGenderList = document.getElementById('namesGenderList');
+						// Remove existing rows except one
+						while (namesGenderList.children.length > 1) {
+							namesGenderList.removeChild(namesGenderList.lastChild);
+						}
 
-            // Set first row with first name-gender pair
-            const firstRow = namesGenderList.children[0];
-            const firstInputs = firstRow.getElementsByTagName("input");
-            if (data.names_gender[0]) {
-              firstInputs[0].value = data.names_gender[0][0] || "";
-              firstInputs[1].value = data.names_gender[0][1] || "";
-            }
+						// Set first row with first name-gender pair
+						const firstRow = namesGenderList.children[0];
+						const firstInputs = firstRow.getElementsByTagName('input');
+						if (data.names_gender[0]) {
+							firstInputs[0].value = data.names_gender[0][0] || '';
+							firstInputs[1].value = data.names_gender[0][1] || '';
+						}
 
-            // Add additional rows
-            for (let i = 1; i < data.names_gender.length; i++) {
-              const newRow = document.createElement("div");
-              newRow.className = "row";
-              newRow.innerHTML = `
-        <input type="text" placeholder="Name" value="${data.names_gender[i][0] || ""}">
-        <input type="text" placeholder="Gender" value="${data.names_gender[i][1] || ""}">
+						// Add additional rows
+						for (let i = 1; i < data.names_gender.length; i++) {
+							const newRow = document.createElement('div');
+							newRow.className = 'row';
+							newRow.innerHTML = `
+        <input type="text" placeholder="Name" value="${data.names_gender[i][0] || ''}">
+        <input type="text" placeholder="Gender" value="${data.names_gender[i][1] || ''}">
         <button class="remove-btn" onclick="removeRow(this)"><span class="minus-icon"></span></button>
       `;
-              namesGenderList.appendChild(newRow);
-            }
-          }
+							namesGenderList.appendChild(newRow);
+						}
+					}
 
-          // Set Age Range
-          if (data.age_range && data.age_range.length === 2) {
-            document.getElementById("minAge").value = data.age_range[0];
-            document.getElementById("maxAge").value = data.age_range[1];
-          }
+					// Set Age Range
+					if (data.age_range && data.age_range.length === 2) {
+						document.getElementById('minAge').value = data.age_range[0];
+						document.getElementById('maxAge').value = data.age_range[1];
+					}
 
-          // Populate Education
-          populateFieldList("educationList", data.educations);
+					// Populate Education
+					populateFieldList('educationList', data.educations);
 
-          // Populate Occupations
-          populateFieldList("occupationList", data.occupations);
+					// Populate Occupations
+					populateFieldList('occupationList', data.occupations);
 
-          // Populate Locations
-          populateFieldList("locationList", data.locations);
+					// Populate Locations
+					populateFieldList('locationList', data.locations);
 
-          // Populate Personalities
-          populateFieldList("personalityList", data.personalities);
+					// Populate Personalities
+					populateFieldList('personalityList', data.personalities);
 
-          // Populate Communication Traits
-          if (data.communication_traits) {
-            // Length
-            populateFieldList("lengthList", data.communication_traits.length);
+					// Populate Communication Traits
+					if (data.communication_traits) {
+						// Length
+						populateFieldList('lengthList', data.communication_traits.length);
 
-            // Style
-            populateFieldList("styleList", data.communication_traits.style);
+						// Style
+						populateFieldList('styleList', data.communication_traits.style);
 
-            // Tone
-            populateFieldList("toneList", data.communication_traits.tone);
-          }
+						// Tone
+						populateFieldList('toneList', data.communication_traits.tone);
+					}
 
-          // Set Refusal Rate if it exists
-          if (data.refusal_rate && data.refusal_rate.length === 2) {
-            console.log(data.refusal_rate);
-            const refusalRateElement = document.getElementById("refusalRate");
-            refusalRateElement.allProps.values = data.refusal_rate.map(
-              (val) => val * 100,
-            );
-            refusalRateElement.resizeHandler();
-          }
-          populateFieldList("extraTraits", data.extra_traits);
-        }
+					// Set Refusal Rate if it exists
+					if (data.refusal_rate && data.refusal_rate.length === 2) {
+						console.log(data.refusal_rate);
+						const refusalRateElement = document.getElementById('refusalRate');
+						refusalRateElement.allProps.values = data.refusal_rate.map((val) => val * 100);
+						refusalRateElement.resizeHandler();
+					}
+					populateFieldList('extraTraits', data.extra_traits);
+				}
 
-        // Helper function to populate a list of fields
-        function populateFieldList(listId, values) {
-          if (!values || values.length === 0) return;
+				// Helper function to populate a list of fields
+				function populateFieldList(listId, values) {
+					if (!values || values.length === 0) return;
 
-          const list = document.getElementById(listId);
-          // Remove existing rows except one
-          while (list.children.length > 1) {
-            list.removeChild(list.lastChild);
-          }
+					const list = document.getElementById(listId);
+					// Remove existing rows except one
+					while (list.children.length > 1) {
+						list.removeChild(list.lastChild);
+					}
 
-          // Set first row
-          const firstRow = list.children[0];
-          const firstInput = firstRow.getElementsByTagName("input")[0];
-          firstInput.value = values[0] || "";
+					// Set first row
+					const firstRow = list.children[0];
+					const firstInput = firstRow.getElementsByTagName('input')[0];
+					firstInput.value = values[0] || '';
 
-          // Add additional rows
-          for (let i = 1; i < values.length; i++) {
-            const newRow = document.createElement("div");
-            newRow.className = "row";
-            newRow.innerHTML = `
-      <input type="text" placeholder="${listId.replace("List", "")}" value="${values[i] || ""}">
+					// Add additional rows
+					for (let i = 1; i < values.length; i++) {
+						const newRow = document.createElement('div');
+						newRow.className = 'row';
+						newRow.innerHTML = `
+      <input type="text" placeholder="${listId.replace('List', '')}" value="${values[i] || ''}">
       <button class="remove-btn" onclick="removeRow(this)"><span class="minus-icon"></span></button>
     `;
-            list.appendChild(newRow);
-          }
-        }
+						list.appendChild(newRow);
+					}
+				}
 
-        // Helper function to clear all form rows
-        function clearFormRows() {
-          const listIds = [
-            "namesGenderList",
-            "educationList",
-            "occupationList",
-            "locationList",
-            "personalityList",
-            "lengthList",
-            "styleList",
-            "toneList",
-          ];
+				// Helper function to clear all form rows
+				function clearFormRows() {
+					const listIds = [
+						'namesGenderList',
+						'educationList',
+						'occupationList',
+						'locationList',
+						'personalityList',
+						'lengthList',
+						'styleList',
+						'toneList'
+					];
 
-          listIds.forEach((id) => {
-            const list = document.getElementById(id);
-            if (list && list.children.length > 0) {
-              // Keep the first row but clear its inputs
-              const firstRow = list.children[0];
-              const inputs = firstRow.getElementsByTagName("input");
-              for (let i = 0; i < inputs.length; i++) {
-                inputs[i].value = "";
-              }
+					listIds.forEach((id) => {
+						const list = document.getElementById(id);
+						if (list && list.children.length > 0) {
+							// Keep the first row but clear its inputs
+							const firstRow = list.children[0];
+							const inputs = firstRow.getElementsByTagName('input');
+							for (let i = 0; i < inputs.length; i++) {
+								inputs[i].value = '';
+							}
 
-              // Remove additional rows
-              while (list.children.length > 1) {
-                list.removeChild(list.lastChild);
-              }
-            }
-          });
-        }
+							// Remove additional rows
+							while (list.children.length > 1) {
+								list.removeChild(list.lastChild);
+							}
+						}
+					});
+				}
 
-        // Modify getSetup to use the populated data
-        function getSetup() {
-          fetch(
-            `/api/projects/${project_id}/tests/${test_id}/background_info`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              redirect: "follow",
-            },
-          )
-            .then((response) => {
-              if (response.redirected) {
-                window.location.href = response.url;
-              }
-              if (!response.ok) {
-                throw new Error("Failed to fetch setup");
-              } else {
-                return response.json();
-              }
-            })
-            .then((data) => {
-              console.log("Retrieved data:", data);
-              // Populate the form with the retrieved data
-              populateForm(data);
-            })
-            .catch((error) => {
-              console.error("Error fetching setup:", error);
-              let notify = document.createElement("notification-popup");
-              notify.setAttribute("error", "");
-              notify.innerHTML = `
+				// Modify getSetup to use the populated data
+				function getSetup() {
+					fetch(`/api/projects/${project_id}/tests/${test_id}/background_info`, {
+						method: 'GET',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						redirect: 'follow'
+					})
+						.then((response) => {
+							if (response.redirected) {
+								window.location.href = response.url;
+							}
+							if (!response.ok) {
+								throw new Error('Failed to fetch setup');
+							} else {
+								return response.json();
+							}
+						})
+						.then((data) => {
+							console.log('Retrieved data:', data);
+							// Populate the form with the retrieved data
+							populateForm(data);
+						})
+						.catch((error) => {
+							console.error('Error fetching setup:', error);
+							let notify = document.createElement('notification-popup');
+							notify.setAttribute('error', '');
+							notify.innerHTML = `
         <h2 slot="title">Error</h2>
         <div slot="body">
           <p>Failed to load setup data: ${error.message}</p>
         </div>
       `;
-              document.body.insertAdjacentElement("beforeend", notify);
-            });
-        }
+							document.body.insertAdjacentElement('beforeend', notify);
+						});
+				}
 
-        // Call getSetup when the page loads
-        document.addEventListener("DOMContentLoaded", getSetup);
-      </script>
-    </main>
-  </body>
+				// Call getSetup when the page loads
+				document.addEventListener('DOMContentLoaded', getSetup);
+			</script>
+		</main>
+	</body>
 </html>
