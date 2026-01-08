@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { Popover } from 'bits-ui';
+	import type { Snippet } from 'svelte';
 
-	let { text = '', class: className = '', children } = $props();
+	let {
+		text = '',
+		class: className = '',
+		children
+	}: { text?: string; class?: string; children?: Snippet } = $props();
 </script>
 
 <Popover.Root>
