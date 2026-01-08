@@ -372,7 +372,7 @@
 	<div class="mb-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 		{#each folder.projects as project (project.id)}
 			<div
-				class="flex flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg"
+				class="flex flex-col rounded-lg bg-white shadow-md transition-shadow hover:scale-101 hover:shadow-xl"
 				role="button"
 				tabindex="0"
 				onclick={() => handleRowClick(project.id, project.config.default_language ?? 'EN')}
