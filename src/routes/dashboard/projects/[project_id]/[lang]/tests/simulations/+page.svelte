@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
-	import { Synthesize, type TestSetupPublic } from '$lib/api';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { Synthesize } from '$lib/api';
 	import Info from '$lib/components/Info.svelte';
 
 	let { data } = $props();
@@ -173,13 +174,17 @@
 				</div>
 				<div class="flex items-center justify-between border-t border-gray-200">
 					<a
-						href="/dashboard/projects/{projectId}/{lang}/tests/{test.id}/setup"
+						href={resolve(
+							`/dashboard/projects/${projectId}/${lang}/tests/simulations/${test.id}/setup`
+						)}
 						class="flex-1 border-r border-gray-200 py-2 text-center font-medium text-primary hover:bg-gray-50"
 					>
 						Setup
 					</a>
 					<a
-						href="/dashboard/projects/{projectId}/{lang}/tests/{test.id}/runs"
+						href={resolve(
+							`/dashboard/projects/${projectId}/${lang}/tests/simulations/${test.id}/runs`
+						)}
 						class="flex-1 py-2 text-center font-medium text-primary hover:bg-gray-50"
 					>
 						Runs
