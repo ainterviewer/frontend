@@ -34,6 +34,7 @@
 	let selectedExperiment = $state<Experiment | null>(null);
 	let qrCodeUrl = $state<string | null>(null);
 	let openDropdownId = $state<string | null>(null);
+	let dropdownPosition = $state<{ top: number; left: number } | null>(null);
 
 	// Create Form State
 	let newExperimentTitle = $state('');
@@ -45,16 +46,30 @@
 
 	// Close dropdowns on outside click
 	function handleWindowClick(event: MouseEvent) {
-		if (openDropdownId && !(event.target as Element).closest('.dropdown-container')) {
+		const target = event.target as Element;
+		if (
+			openDropdownId &&
+			!target.closest('.dropdown-trigger') &&
+			!target.closest('.dropdown-menu')
+		) {
 			openDropdownId = null;
+			dropdownPosition = null;
 		}
 	}
 
-	function toggleDropdown(id: string) {
+	function toggleDropdown(id: string, event: MouseEvent) {
 		if (openDropdownId === id) {
 			openDropdownId = null;
+			dropdownPosition = null;
 		} else {
+			const button = event.currentTarget as HTMLElement;
+			const rect = button.getBoundingClientRect();
+
 			openDropdownId = id;
+			dropdownPosition = {
+				top: rect.bottom + window.scrollY,
+				left: rect.right + window.scrollX - 192 // 192px = w-48 (12rem)
+			};
 		}
 	}
 
@@ -193,7 +208,7 @@
 	</button>
 </div>
 
-<div class="ring-opacity-5 overflow-visible rounded-lg bg-white shadow ring-1 ring-black">
+<div class="ring-opacity-5 overflow-hidden rounded-lg bg-white shadow ring-1 ring-black">
 	<table class="min-w-full divide-y divide-gray-300">
 		<thead class="bg-gray-50">
 			<tr>
@@ -236,61 +251,18 @@
 						{/if}
 					</td>
 					<td
-						class="dropdown-container relative py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-6"
+						class="relative py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-6"
 					>
 						<button
-							class="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+							class="dropdown-trigger rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
 							onclick={(e) => {
 								e.stopPropagation();
-								toggleDropdown(experiment.id);
+								toggleDropdown(experiment.id, e);
 							}}
 							aria-label="Experiment options"
 						>
 							<i class="fa-solid fa-ellipsis-vertical"></i>
 						</button>
-
-						{#if openDropdownId === experiment.id}
-							<div
-								transition:fade={{ duration: 100 }}
-								class="absolute top-8 right-8 z-10 w-48 rounded-md border border-gray-100 bg-white py-1 shadow-lg"
-							>
-								<button
-									class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-									onclick={() => {
-										copyLink(experiment);
-										openDropdownId = null;
-									}}
-								>
-									<i class="fa-solid fa-copy w-4"></i> Copy link
-								</button>
-								<button
-									class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-									onclick={() => {
-										openQRModal(experiment);
-										openDropdownId = null;
-									}}
-								>
-									<i class="fa-solid fa-qrcode w-4"></i> QR code
-								</button>
-								<button
-									class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-									onclick={() => {
-										/* Edit logic would go here */ openDropdownId = null;
-									}}
-								>
-									<i class="fa-solid fa-pen-to-square w-4"></i> Edit
-								</button>
-								<button
-									class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-									onclick={() => {
-										openDeleteModal(experiment);
-										openDropdownId = null;
-									}}
-								>
-									<i class="fa-solid fa-trash-can w-4"></i> Delete
-								</button>
-							</div>
-						{/if}
 					</td>
 				</tr>
 			{/each}
@@ -302,6 +274,59 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Dropdown Portal -->
+{#if openDropdownId && dropdownPosition}
+	{@const experiment = experiments.find((e) => e.id === openDropdownId)}
+	<div
+		transition:fade={{ duration: 100 }}
+		class="dropdown-menu absolute z-50 w-48 rounded-md border border-gray-100 bg-white py-1 shadow-lg"
+		style="top: {dropdownPosition.top}px; left: {dropdownPosition.left}px;"
+	>
+		{#if experiment}
+			<button
+				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+				onclick={() => {
+					copyLink(experiment);
+					openDropdownId = null;
+					dropdownPosition = null;
+				}}
+			>
+				<i class="fa-solid fa-copy w-4"></i> Copy link
+			</button>
+			<button
+				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+				onclick={() => {
+					openQRModal(experiment);
+					openDropdownId = null;
+					dropdownPosition = null;
+				}}
+			>
+				<i class="fa-solid fa-qrcode w-4"></i> QR code
+			</button>
+			<button
+				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+				onclick={() => {
+					/* Edit logic would go here */
+					openDropdownId = null;
+					dropdownPosition = null;
+				}}
+			>
+				<i class="fa-solid fa-pen-to-square w-4"></i> Edit
+			</button>
+			<button
+				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+				onclick={() => {
+					openDeleteModal(experiment);
+					openDropdownId = null;
+					dropdownPosition = null;
+				}}
+			>
+				<i class="fa-solid fa-trash-can w-4"></i> Delete
+			</button>
+		{/if}
+	</div>
+{/if}
 
 <!-- Create Modal -->
 {#if isCreateModalOpen}
