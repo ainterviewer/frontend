@@ -11,6 +11,7 @@
 	import InterviewMessage from '../../../../../../interview/components/InterviewMessage.svelte';
 	import { getContrastColor } from '../../analysis/colors';
 	import MessageAnnotationPanel from './MessageAnnotationPanel.svelte';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -348,13 +349,17 @@
 													</span>
 												{/each}
 												{#if annotationSummary.hasComment}
-													<span
-														class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
-														title={annotation?.comment || ''}
-													>
-														<i class="fa-solid fa-comment mr-1"></i>
-														Note
-													</span>
+													<HoverInfo text={annotation?.comment || ''} asChild>
+														{#snippet children({ props })}
+															<span
+																{...props}
+																class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
+															>
+																<i class="fa-solid fa-comment mr-1"></i>
+																Note
+															</span>
+														{/snippet}
+													</HoverInfo>
 												{/if}
 											</div>
 										{/if}

@@ -5,6 +5,7 @@
 		AnnotationValueCreate
 	} from '$lib/api/types.gen';
 	import { getContrastColor } from '../../analysis/colors';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
 
 	interface Props {
 		categories: AnalysisCategoryPublic[];
@@ -157,25 +158,29 @@
 				</legend>
 				<div class="flex flex-wrap gap-2">
 					{#each tags as tag (tag.id)}
-						<button
-							type="button"
-							class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-all {selectedTags.has(
-								tag.id
-							)
-								? 'ring-2 ring-offset-1'
-								: 'opacity-60 hover:opacity-100'}"
-							style="background-color: {tag.color}; color: {getContrastColor(
-								tag.color
-							)}; {selectedTags.has(tag.id) ? `ring-color: ${tag.color}` : ''}"
-							onclick={() => toggleTag(tag.id)}
-							title={tag.description || tag.name}
-							disabled={saving}
-						>
-							{#if selectedTags.has(tag.id)}
-								<i class="fa-solid fa-check mr-1.5 text-[10px]"></i>
-							{/if}
-							{tag.name}
-						</button>
+						<HoverInfo text={tag.description || tag.name} asChild>
+							{#snippet children({ props })}
+								<button
+									{...props}
+									type="button"
+									class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-all {selectedTags.has(
+										tag.id
+									)
+										? 'ring-2 ring-offset-1'
+										: 'opacity-60 hover:opacity-100'}"
+									style="background-color: {tag.color}; color: {getContrastColor(
+										tag.color
+									)}; {selectedTags.has(tag.id) ? `ring-color: ${tag.color}` : ''}"
+									onclick={() => toggleTag(tag.id)}
+									disabled={saving}
+								>
+									{#if selectedTags.has(tag.id)}
+										<i class="fa-solid fa-check mr-1.5 text-[10px]"></i>
+									{/if}
+									{tag.name}
+								</button>
+							{/snippet}
+						</HoverInfo>
 					{/each}
 				</div>
 			</fieldset>
@@ -194,9 +199,14 @@
 						{@const currentValue = scoreValues.get(score.id)}
 						<div class="rounded-md border border-gray-100 bg-gray-50 p-2">
 							<div class="mb-1.5 flex items-center justify-between">
-								<span class="text-xs font-medium text-gray-700" title={score.description || ''}>
-									{score.name}
-								</span>
+								<div class="flex items-center gap-1.5">
+									<span class="text-xs font-medium text-gray-700">
+										{score.name}
+									</span>
+									{#if score.description}
+										<HoverInfo text={score.description} />
+									{/if}
+								</div>
 								{#if currentValue !== undefined}
 									<button
 										type="button"
