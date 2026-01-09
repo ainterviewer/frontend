@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Analysis, type Image, type MessagePublic } from '$lib/api';
 	import type {
@@ -9,7 +10,7 @@
 	} from '$lib/api/types.gen';
 	import type { Message } from '../../../../../../interview/chat.svelte';
 	import InterviewMessage from '../../../../../../interview/components/InterviewMessage.svelte';
-	import { getContrastColor } from '../../analysis/colors';
+	import { getContrastColor } from '$lib/utils/colors';
 	import MessageAnnotationPanel from './MessageAnnotationPanel.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import type { PageData } from './$types';
@@ -394,6 +395,7 @@
 							{#if activeAnnotationMessageId === messageId}
 								<div class="annotation-panel-container mt-2 max-w-2xl px-4 sm:px-12">
 									<MessageAnnotationPanel
+										projectId={data.project_id}
 										categories={data.categories as AnalysisCategoryPublic[]}
 										{annotation}
 										saving={savingAnnotation}
@@ -401,6 +403,7 @@
 											handleSaveAnnotation(messageId, values, comment, shouldClose)}
 										onDelete={annotation ? () => handleDeleteAnnotation(messageId) : undefined}
 										onCancel={() => (activeAnnotationMessageId = null)}
+										onCategoryCreated={() => invalidateAll()}
 									/>
 								</div>
 							{/if}

@@ -4,13 +4,17 @@
 		AnnotationValueCreate,
 		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
+	import { Analysis } from '$lib/api';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import Info from '$lib/components/Info.svelte';
-	import { getContrastColor } from '../../analysis/colors';
+	import { getContrastColor, generateColor } from '$lib/utils/colors';
+	import CategoryModal from '$lib/components/analysis/CategoryModal.svelte';
+	import type { AnnotationType } from '$lib/api/types.gen';
 
 	interface Props {
 		categories: AnalysisCategoryPublic[];
 		annotation?: MessageAnnotationPublic | null;
+		projectId: string;
 		onSave: (
 			values: AnnotationValueCreate[],
 			comment: string | null,
@@ -18,15 +22,18 @@
 		) => void;
 		onDelete?: () => void;
 		onCancel: () => void;
+		onCategoryCreated?: () => void;
 		saving?: boolean;
 	}
 
 	let {
 		categories,
 		annotation = null,
+		projectId,
 		onSave,
 		onDelete,
 		onCancel,
+		onCategoryCreated,
 		saving = false
 	}: Props = $props();
 
@@ -40,6 +47,9 @@
 	let comment = $state('');
 	let isInitialized = false;
 	let isSavingComment = $state(false);
+
+	let isCategoryModalOpen = $state(false);
+	let modalDefaultType = $state<AnnotationType>('tag');
 
 	// Reset isSavingComment when saving completes
 	$effect(() => {
@@ -137,6 +147,11 @@
 		triggerSave(true);
 	}
 
+	function openCreateModal(type: AnnotationType) {
+		modalDefaultType = type;
+		isCategoryModalOpen = true;
+	}
+
 	let hasChanges = $derived.by(() => {
 		// Check if there are any values to save
 		return selectedTags.size > 0 || scoreValues.size > 0 || comment.trim().length > 0;
@@ -162,7 +177,7 @@
 
 	<div class="max-h-96 space-y-4 p-4">
 		<!-- Tags Section -->
-		{#if tags.length > 0}
+		{#if tags.length > 0 || true}
 			<fieldset>
 				<legend class="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">
 					Tags
@@ -193,6 +208,17 @@
 							{/snippet}
 						</HoverInfo>
 					{/each}
+
+					<!-- New Tag Button -->
+					<button
+						type="button"
+						class="inline-flex items-center rounded-full border border-dashed border-gray-300 bg-transparent px-3 py-1 text-xs font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700 disabled:opacity-50"
+						onclick={() => openCreateModal('tag')}
+						disabled={saving}
+					>
+						<i class="fa-solid fa-plus mr-1.5 text-[10px]"></i>
+						New Tag
+					</button>
 				</div>
 			</fieldset>
 		{/if}
@@ -296,3 +322,12 @@
 		</div>
 	</div>
 </div>
+
+<CategoryModal
+	open={isCategoryModalOpen}
+	{projectId}
+	defaultType={modalDefaultType}
+	existingColors={categories.map((c) => c.color)}
+	onClose={() => (isCategoryModalOpen = false)}
+	onSave={() => onCategoryCreated?.()}
+/>
