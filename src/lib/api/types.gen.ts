@@ -1964,7 +1964,7 @@ export type ReceivedData = {
     /**
      * Content
      */
-    content?: string | null;
+    content: string;
     /**
      * File
      */
@@ -2245,6 +2245,146 @@ export type UpdateMessageAnnotationResponses = {
 };
 
 export type UpdateMessageAnnotationResponse = UpdateMessageAnnotationResponses[keyof UpdateMessageAnnotationResponses];
+
+export type GetAnnotatedMessagesCountData = {
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/analysis/categories/{category_id}/count';
+};
+
+export type GetAnnotatedMessagesCountErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAnnotatedMessagesCountError = GetAnnotatedMessagesCountErrors[keyof GetAnnotatedMessagesCountErrors];
+
+export type GetAnnotatedMessagesCountResponses = {
+    /**
+     * Response Get Annotated Messages Count
+     *
+     * Successful Response
+     */
+    200: number;
+};
+
+export type GetAnnotatedMessagesCountResponse = GetAnnotatedMessagesCountResponses[keyof GetAnnotatedMessagesCountResponses];
+
+export type GetAnnotatedMessagesData = {
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/analysis/categories/{category_id}/messages';
+};
+
+export type GetAnnotatedMessagesErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAnnotatedMessagesError = GetAnnotatedMessagesErrors[keyof GetAnnotatedMessagesErrors];
+
+export type GetAnnotatedMessagesResponses = {
+    /**
+     * Response Get Annotated Messages
+     *
+     * Successful Response
+     */
+    200: Array<MessagePublic>;
+};
+
+export type GetAnnotatedMessagesResponse = GetAnnotatedMessagesResponses[keyof GetAnnotatedMessagesResponses];
+
+export type SemanticSearchData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Query
+         */
+        query: string;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/messages/search';
+};
+
+export type SemanticSearchErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SemanticSearchError = SemanticSearchErrors[keyof SemanticSearchErrors];
+
+export type SemanticSearchResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type QueueStatusData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/emebeddings/queue/status';
+};
+
+export type QueueStatusErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+};
+
+export type QueueStatusError = QueueStatusErrors[keyof QueueStatusErrors];
+
+export type QueueStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type RemoveCollaboratorData = {
     body?: never;
