@@ -9,7 +9,11 @@
 	interface Props {
 		categories: AnalysisCategoryPublic[];
 		annotation?: MessageAnnotationPublic | null;
-		onSave: (values: AnnotationValueCreate[], comment: string | null) => void;
+		onSave: (
+			values: AnnotationValueCreate[],
+			comment: string | null,
+			shouldClose?: boolean
+		) => void;
 		onDelete?: () => void;
 		onCancel: () => void;
 		saving?: boolean;
@@ -32,60 +36,50 @@
 	let selectedTags = $state<Set<string>>(new Set());
 	let scoreValues = $state<Map<string, number>>(new Map());
 	let comment = $state('');
+	let isInitialized = false;
+	let isSavingComment = $state(false);
 
-	// Initialize form state from existing annotation
+	// Reset isSavingComment when saving completes
 	$effect(() => {
-		if (annotation) {
-			const tagIds = new Set<string>();
-			const scoreMap = new Map<string, number>();
-
-			for (const value of annotation.values) {
-				const category = categories.find((c) => c.id === value.category_id);
-				if (category) {
-					if (category.type === 'tag') {
-						// For tags, value_int = 1 means selected
-						if (value.value_int === 1) {
-							tagIds.add(value.category_id);
-						}
-					} else if (category.type === 'score') {
-						scoreMap.set(value.category_id, value.value_int);
-					}
-				}
-			}
-
-			selectedTags = tagIds;
-			scoreValues = scoreMap;
-			comment = annotation.comment || '';
-		} else {
-			selectedTags = new Set();
-			scoreValues = new Map();
-			comment = '';
+		if (!saving) {
+			isSavingComment = false;
 		}
 	});
 
-	function toggleTag(categoryId: string) {
-		const newSet = new Set(selectedTags);
-		if (newSet.has(categoryId)) {
-			newSet.delete(categoryId);
-		} else {
-			newSet.add(categoryId);
+	// Initialize form state from existing annotation
+	$effect(() => {
+		if (!isInitialized) {
+			if (annotation) {
+				const tagIds = new Set<string>();
+				const scoreMap = new Map<string, number>();
+
+				for (const value of annotation.values) {
+					const category = categories.find((c) => c.id === value.category_id);
+					if (category) {
+						if (category.type === 'tag') {
+							// For tags, value_int = 1 means selected
+							if (value.value_int === 1) {
+								tagIds.add(value.category_id);
+							}
+						} else if (category.type === 'score') {
+							scoreMap.set(value.category_id, value.value_int);
+						}
+					}
+				}
+
+				selectedTags = tagIds;
+				scoreValues = scoreMap;
+				comment = annotation.comment || '';
+			} else {
+				selectedTags = new Set();
+				scoreValues = new Map();
+				comment = '';
+			}
+			isInitialized = true;
 		}
-		selectedTags = newSet;
-	}
+	});
 
-	function setScore(categoryId: string, value: number) {
-		const newMap = new Map(scoreValues);
-		newMap.set(categoryId, value);
-		scoreValues = newMap;
-	}
-
-	function clearScore(categoryId: string) {
-		const newMap = new Map(scoreValues);
-		newMap.delete(categoryId);
-		scoreValues = newMap;
-	}
-
-	function handleSave() {
+	function triggerSave(shouldClose: boolean) {
 		const values: AnnotationValueCreate[] = [];
 
 		// Add selected tags
@@ -104,7 +98,41 @@
 			});
 		}
 
-		onSave(values, comment.trim() || null);
+		onSave(values, comment.trim() || null, shouldClose);
+	}
+
+	function toggleTag(categoryId: string) {
+		const newSet = new Set(selectedTags);
+		if (newSet.has(categoryId)) {
+			newSet.delete(categoryId);
+		} else {
+			newSet.add(categoryId);
+		}
+		selectedTags = newSet;
+		triggerSave(false);
+	}
+
+	function setScore(categoryId: string, value: number) {
+		if (scoreValues.get(categoryId) === value) {
+			clearScore(categoryId);
+			return;
+		}
+		const newMap = new Map(scoreValues);
+		newMap.set(categoryId, value);
+		scoreValues = newMap;
+		triggerSave(false);
+	}
+
+	function clearScore(categoryId: string) {
+		const newMap = new Map(scoreValues);
+		newMap.delete(categoryId);
+		scoreValues = newMap;
+		triggerSave(false);
+	}
+
+	function handleSave() {
+		isSavingComment = true;
+		triggerSave(true);
 	}
 
 	let hasChanges = $derived.by(() => {
@@ -141,6 +169,7 @@
 							)}; {selectedTags.has(tag.id) ? `ring-color: ${tag.color}` : ''}"
 							onclick={() => toggleTag(tag.id)}
 							title={tag.description || tag.name}
+							disabled={saving}
 						>
 							{#if selectedTags.has(tag.id)}
 								<i class="fa-solid fa-check mr-1.5 text-[10px]"></i>
@@ -174,6 +203,7 @@
 										class="text-xs text-gray-400 hover:text-gray-600"
 										onclick={() => clearScore(score.id)}
 										aria-label="Clear {score.name} score"
+										disabled={saving}
 									>
 										<i class="fa-solid fa-xmark"></i>
 									</button>
@@ -190,6 +220,7 @@
 											: 'bg-white text-gray-600 hover:bg-gray-100'}"
 										style={currentValue === value ? `background-color: ${score.color}` : ''}
 										onclick={() => setScore(score.id, value)}
+										disabled={saving}
 									>
 										{value}
 									</button>
@@ -213,7 +244,7 @@
 				id="annotation-comment"
 				bind:value={comment}
 				rows="3"
-				class="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+				class="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
 				placeholder="Add a note about this message..."
 			></textarea>
 		</div>
@@ -246,12 +277,12 @@
 				type="button"
 				class="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
 				onclick={handleSave}
-				disabled={saving || !hasChanges}
+				disabled={isSavingComment || !hasChanges}
 			>
-				{#if saving}
+				{#if isSavingComment && saving}
 					<i class="fa-solid fa-spinner fa-spin mr-1"></i>
 				{/if}
-				{annotation ? 'Update' : 'Save'}
+				{annotation ? 'Save Comment' : 'Save'}
 			</button>
 		</div>
 	</div>

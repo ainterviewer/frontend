@@ -114,7 +114,8 @@
 	async function handleSaveAnnotation(
 		messageId: string,
 		values: AnnotationValueCreate[],
-		comment: string | null
+		comment: string | null,
+		shouldClose: boolean = true
 	) {
 		if (!userId) {
 			console.error('No user ID available');
@@ -173,7 +174,9 @@
 				}
 			}
 
-			activeAnnotationMessageId = null;
+			if (shouldClose) {
+				activeAnnotationMessageId = null;
+			}
 		} catch (e) {
 			console.error('Error saving annotation:', e);
 			alert('Error saving annotation');
@@ -377,25 +380,23 @@
 													<i class="fa-solid fa-plus text-xs"></i>
 												{/if}
 											</button>
-
-											<!-- Annotation Panel (positioned absolutely) -->
-											{#if activeAnnotationMessageId === messageId}
-												<div class="absolute top-0 right-full z-50 mr-2">
-													<MessageAnnotationPanel
-														categories={data.categories as AnalysisCategoryPublic[]}
-														{annotation}
-														saving={savingAnnotation}
-														onSave={(values, comment) =>
-															handleSaveAnnotation(messageId, values, comment)}
-														onDelete={annotation
-															? () => handleDeleteAnnotation(messageId)
-															: undefined}
-														onCancel={() => (activeAnnotationMessageId = null)}
-													/>
-												</div>
-											{/if}
 										</div>
 									{/if}
+								</div>
+							{/if}
+
+							<!-- Annotation Panel (inline) -->
+							{#if activeAnnotationMessageId === messageId}
+								<div class="annotation-panel-container mt-2 max-w-2xl px-4 sm:px-12">
+									<MessageAnnotationPanel
+										categories={data.categories as AnalysisCategoryPublic[]}
+										{annotation}
+										saving={savingAnnotation}
+										onSave={(values, comment, shouldClose) =>
+											handleSaveAnnotation(messageId, values, comment, shouldClose)}
+										onDelete={annotation ? () => handleDeleteAnnotation(messageId) : undefined}
+										onCancel={() => (activeAnnotationMessageId = null)}
+									/>
 								</div>
 							{/if}
 						</div>
