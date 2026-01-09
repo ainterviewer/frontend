@@ -9,6 +9,7 @@
 	// State
 	let projectId = $derived(page.params.project_id);
 	let categories = $state<AnalysisCategoryPublic[]>([]);
+	let categoryCounts = $state<Record<string, number>>({});
 	let loading = $state(true);
 
 	// Derived State
@@ -30,6 +31,20 @@
 			});
 			if (res.data) {
 				categories = res.data;
+				const counts: Record<string, number> = {};
+				await Promise.all(
+					categories.map(async (c) => {
+						try {
+							const { data } = await Analysis.getAnnotatedMessagesCount({
+								path: { category_id: c.id }
+							});
+							if (data !== undefined) counts[c.id] = data;
+						} catch (e) {
+							console.error(`Failed to load count for category ${c.id}`, e);
+						}
+					})
+				);
+				categoryCounts = counts;
 			}
 		} catch (e) {
 			console.error('Failed to load categories', e);
@@ -110,6 +125,11 @@
 						<div class="grow p-4">
 							<div class="mb-2 flex items-center gap-2">
 								<h3 class="font-semibold text-gray-900">{tag.name}</h3>
+								<span
+									class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
+								>
+									{categoryCounts[tag.id] ?? 0}
+								</span>
 							</div>
 							<p class="line-clamp-2 text-sm text-gray-500" title={tag.description || ''}>
 								{tag.description || 'No description'}
@@ -173,6 +193,11 @@
 						<div class="grow p-4">
 							<div class="mb-2 flex items-center gap-2">
 								<h3 class="font-semibold text-gray-900">{score.name}</h3>
+								<span
+									class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
+								>
+									{categoryCounts[score.id] ?? 0}
+								</span>
 							</div>
 							<p class="mb-2 line-clamp-2 text-sm text-gray-500" title={score.description || ''}>
 								{score.description || 'No description'}
@@ -234,7 +259,7 @@
 
 <CategoryModal
 	open={isCreateModalOpen}
-	{projectId}
+	projectId={projectId ?? ''}
 	category={editingCategory}
 	defaultType={modalDefaultType}
 	existingColors={categories.map((c) => c.color)}
