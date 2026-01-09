@@ -1,11 +1,12 @@
 <script lang="ts">
 	import type {
 		AnalysisCategoryPublic,
-		MessageAnnotationPublic,
-		AnnotationValueCreate
+		AnnotationValueCreate,
+		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
-	import { getContrastColor } from '../../analysis/colors';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import Info from '$lib/components/Info.svelte';
+	import { getContrastColor } from '../../analysis/colors';
 
 	interface Props {
 		categories: AnalysisCategoryPublic[];
@@ -143,10 +144,20 @@
 </script>
 
 <div class="rounded-lg border border-gray-200 bg-white shadow-lg">
-	<div class="border-b border-gray-200 px-4 py-3">
+	<div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
 		<h3 class="text-sm font-semibold text-gray-800">
 			{annotation ? 'Edit Annotation' : 'Add Annotation'}
 		</h3>
+		{#if annotation && onDelete}
+			<button
+				type="button"
+				class="text-sm text-red-600 hover:text-red-700"
+				onclick={onDelete}
+				disabled={saving}
+			>
+				Delete
+			</button>
+		{/if}
 	</div>
 
 	<div class="max-h-96 space-y-4 p-4">
@@ -197,14 +208,14 @@
 						{@const min = score.min_value ?? 1}
 						{@const max = score.max_value ?? 5}
 						{@const currentValue = scoreValues.get(score.id)}
-						<div class="rounded-md border border-gray-100 bg-gray-50 p-2">
+						<div class="w-fit rounded-md border border-gray-100 bg-gray-50 p-2">
 							<div class="mb-1.5 flex items-center justify-between">
 								<div class="flex items-center gap-1.5">
 									<span class="text-xs font-medium text-gray-700">
 										{score.name}
 									</span>
 									{#if score.description}
-										<HoverInfo text={score.description} />
+										<Info text={score.description} />
 									{/if}
 								</div>
 								{#if currentValue !== undefined}
@@ -261,19 +272,7 @@
 	</div>
 
 	<!-- Actions -->
-	<div class="flex items-center justify-between border-t border-gray-200 px-4 py-3">
-		<div>
-			{#if annotation && onDelete}
-				<button
-					type="button"
-					class="text-sm text-red-600 hover:text-red-700"
-					onclick={onDelete}
-					disabled={saving}
-				>
-					Delete
-				</button>
-			{/if}
-		</div>
+	<div class="flex items-center justify-end border-t border-gray-200 px-4 py-3">
 		<div class="flex gap-2">
 			<button
 				type="button"
@@ -281,7 +280,7 @@
 				onclick={onCancel}
 				disabled={saving}
 			>
-				Cancel
+				Close
 			</button>
 			<button
 				type="button"
