@@ -2246,19 +2246,36 @@ export type UpdateMessageAnnotationResponses = {
 
 export type UpdateMessageAnnotationResponse = UpdateMessageAnnotationResponses[keyof UpdateMessageAnnotationResponses];
 
-export type GetAnnotatedMessagesCountData = {
+export type GetFilteredMessagesCountData = {
     body?: never;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
          * Category Id
          */
-        category_id: string;
+        category_id?: string | null;
+        /**
+         * Search Text
+         */
+        search_text?: string | null;
+        /**
+         * Exact Match
+         */
+        exact_match?: boolean;
+        /**
+         * Case Sensitive
+         */
+        case_sensitive?: boolean;
     };
-    query?: never;
-    url: '/api/analysis/categories/{category_id}/count';
+    url: '/api/analysis/{project_id}/messages/count';
 };
 
-export type GetAnnotatedMessagesCountErrors = {
+export type GetFilteredMessagesCountErrors = {
     /**
      * Invalid request
      */
@@ -2269,26 +2286,26 @@ export type GetAnnotatedMessagesCountErrors = {
     422: HttpValidationError;
 };
 
-export type GetAnnotatedMessagesCountError = GetAnnotatedMessagesCountErrors[keyof GetAnnotatedMessagesCountErrors];
+export type GetFilteredMessagesCountError = GetFilteredMessagesCountErrors[keyof GetFilteredMessagesCountErrors];
 
-export type GetAnnotatedMessagesCountResponses = {
+export type GetFilteredMessagesCountResponses = {
     /**
-     * Response Get Annotated Messages Count
+     * Response Get Filtered Messages Count
      *
      * Successful Response
      */
     200: number;
 };
 
-export type GetAnnotatedMessagesCountResponse = GetAnnotatedMessagesCountResponses[keyof GetAnnotatedMessagesCountResponses];
+export type GetFilteredMessagesCountResponse = GetFilteredMessagesCountResponses[keyof GetFilteredMessagesCountResponses];
 
-export type GetAnnotatedMessagesData = {
+export type GetFilteredMessagesData = {
     body?: never;
     path: {
         /**
-         * Category Id
+         * Project Id
          */
-        category_id: string;
+        project_id: string;
     };
     query?: {
         /**
@@ -2299,11 +2316,27 @@ export type GetAnnotatedMessagesData = {
          * Limit
          */
         limit?: number;
+        /**
+         * Category Id
+         */
+        category_id?: string | null;
+        /**
+         * Search Text
+         */
+        search_text?: string | null;
+        /**
+         * Exact Match
+         */
+        exact_match?: boolean;
+        /**
+         * Case Sensitive
+         */
+        case_sensitive?: boolean;
     };
-    url: '/api/analysis/categories/{category_id}/messages';
+    url: '/api/analysis/{project_id}/messages';
 };
 
-export type GetAnnotatedMessagesErrors = {
+export type GetFilteredMessagesErrors = {
     /**
      * Invalid request
      */
@@ -2314,18 +2347,18 @@ export type GetAnnotatedMessagesErrors = {
     422: HttpValidationError;
 };
 
-export type GetAnnotatedMessagesError = GetAnnotatedMessagesErrors[keyof GetAnnotatedMessagesErrors];
+export type GetFilteredMessagesError = GetFilteredMessagesErrors[keyof GetFilteredMessagesErrors];
 
-export type GetAnnotatedMessagesResponses = {
+export type GetFilteredMessagesResponses = {
     /**
-     * Response Get Annotated Messages
+     * Response Get Filtered Messages
      *
      * Successful Response
      */
     200: Array<MessagePublic>;
 };
 
-export type GetAnnotatedMessagesResponse = GetAnnotatedMessagesResponses[keyof GetAnnotatedMessagesResponses];
+export type GetFilteredMessagesResponse = GetFilteredMessagesResponses[keyof GetFilteredMessagesResponses];
 
 export type SemanticSearchData = {
     body?: never;
