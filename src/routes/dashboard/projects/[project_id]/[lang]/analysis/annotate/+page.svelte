@@ -37,8 +37,9 @@
 				await Promise.all(
 					categories.map(async (c) => {
 						try {
-							const { data } = await Analysis.getAnnotatedMessagesCount({
-								path: { category_id: c.id }
+							const { data } = await Analysis.getFilteredMessagesCount({
+								path: { project_id: projectId },
+								query: { category_id: c.id }
 							});
 							if (data !== undefined) counts[c.id] = data;
 						} catch (e) {

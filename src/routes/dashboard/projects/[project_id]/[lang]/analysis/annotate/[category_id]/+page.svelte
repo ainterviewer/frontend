@@ -140,7 +140,10 @@
 		try {
 			const [catsRes, msgsRes] = await Promise.all([
 				Analysis.getAnalysisCategories({ path: { project_id: projectId } }),
-				Analysis.getAnnotatedMessages({ path: { category_id: categoryId } })
+				Analysis.getFilteredMessages({
+					path: { project_id: projectId },
+					query: { category_id: categoryId }
+				})
 			]);
 
 			if (catsRes.data) categories = catsRes.data;
