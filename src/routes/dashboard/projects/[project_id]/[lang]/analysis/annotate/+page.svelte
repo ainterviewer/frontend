@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import { Analysis } from '$lib/api';
 	import type { AnalysisCategoryPublic, AnnotationType } from '$lib/api/types.gen';
 	import { getContrastColor } from '$lib/utils/colors';
@@ -8,6 +9,7 @@
 
 	// State
 	let projectId = $derived(page.params.project_id);
+	let lang = $derived(page.params.lang);
 	let categories = $state<AnalysisCategoryPublic[]>([]);
 	let categoryCounts = $state<Record<string, number>>({});
 	let loading = $state(true);
@@ -84,6 +86,10 @@
 		activeDropdown = activeDropdown === id ? null : id;
 	}
 
+	function navigateToCategory(id: string) {
+		goto(`/dashboard/projects/${projectId}/${lang}/analysis/annotate/${id}`);
+	}
+
 	onMount(() => {
 		const handleClickOutside = (e: MouseEvent) => {
 			if (activeDropdown && !(e.target as Element).closest('.dropdown-container')) {
@@ -119,8 +125,12 @@
 			<h3 class="mb-4 text-lg font-medium text-gray-800">Tags</h3>
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 				{#each tags as tag (tag.id)}
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<div
-						class="flex flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg"
+						class="flex cursor-pointer flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg"
+						onclick={() => navigateToCategory(tag.id)}
+						role="button"
+						tabindex="0"
 					>
 						<div class="grow p-4">
 							<div class="mb-2 flex items-center gap-2">
@@ -151,7 +161,10 @@
 									<i class="fa-solid fa-ellipsis-vertical"></i>
 								</button>
 								{#if activeDropdown === tag.id}
-									<div class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg">
+									<div
+										class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg"
+										onclick={(e) => e.stopPropagation()}
+									>
 										<button
 											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
 											onclick={() => openEditModal(tag)}
@@ -187,8 +200,12 @@
 			<h3 class="mb-4 text-lg font-medium text-gray-800">Scores</h3>
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 				{#each scores as score (score.id)}
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<div
-						class="flex flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg"
+						class="flex cursor-pointer flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg"
+						onclick={() => navigateToCategory(score.id)}
+						role="button"
+						tabindex="0"
 					>
 						<div class="grow p-4">
 							<div class="mb-2 flex items-center gap-2">
@@ -224,7 +241,10 @@
 									<i class="fa-solid fa-ellipsis-vertical"></i>
 								</button>
 								{#if activeDropdown === score.id}
-									<div class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg">
+									<div
+										class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg"
+										onclick={(e) => e.stopPropagation()}
+									>
 										<button
 											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
 											onclick={() => openEditModal(score)}

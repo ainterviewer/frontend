@@ -11,7 +11,7 @@
 	import type { Message } from '../../../../../../interview/chat.svelte';
 	import InterviewMessage from '../../../../../../interview/components/InterviewMessage.svelte';
 	import { getContrastColor } from '$lib/utils/colors';
-	import MessageAnnotationPanel from './MessageAnnotationPanel.svelte';
+	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import type { PageData } from './$types';
 
