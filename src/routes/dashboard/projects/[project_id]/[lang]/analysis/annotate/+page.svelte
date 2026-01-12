@@ -88,7 +88,7 @@
 	}
 
 	function navigateToCategory(id: string) {
-		goto(`/dashboard/projects/${projectId}/${lang}/analysis/annotate/${id}`);
+		goto(`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?category_id=${id}`);
 	}
 
 	onMount(() => {
@@ -109,6 +109,13 @@
 
 <div class="mb-6 flex items-center justify-between">
 	<h1 class="text-2xl font-semibold text-gray-800">Annotate</h1>
+	<a
+		href={`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages`}
+		class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700"
+	>
+		<i class="fa-solid fa-search mr-2"></i>
+		Browse & Search Messages
+	</a>
 </div>
 
 <p class="mb-6 text-gray-600">

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { Analysis, type Image, type MessagePublic } from '$lib/api';
 	import type {
 		AnalysisCategoryPublic,
@@ -12,12 +13,16 @@
 	import { getContrastColor } from '$lib/utils/colors';
 	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { onMount } from 'svelte';
 
 	// State
 	let projectId = $derived(page.params.project_id ?? '');
 	let lang = $derived(page.params.lang ?? '');
-	let categoryId = $derived(page.params.category_id ?? '');
+
+	// Query params
+	let categoryId = $derived(page.url.searchParams.get('category_id'));
+	let searchTextParam = $derived(page.url.searchParams.get('search_text'));
+	let exactMatchParam = $derived(page.url.searchParams.get('exact_match') === 'true');
+	let caseSensitiveParam = $derived(page.url.searchParams.get('case_sensitive') === 'true');
 
 	let categories = $state<AnalysisCategoryPublic[]>([]);
 	let rawMessages = $state<MessagePublic[]>([]);
@@ -28,8 +33,23 @@
 	let activeAnnotationMessageId = $state<string | null>(null);
 	let savingAnnotation = $state(false);
 
+	// Search State (local form state)
+	let searchText = $state('');
+	let exactMatch = $state(false);
+	let caseSensitive = $state(false);
+	let showSearchOptions = $state(false);
+
+	// Sync form state with URL params
+	$effect(() => {
+		searchText = searchTextParam || '';
+		exactMatch = exactMatchParam;
+		caseSensitive = caseSensitiveParam;
+	});
+
 	// Derived State
-	let currentCategory = $derived(categories.find((c) => c.id === categoryId));
+	let currentCategory = $derived(
+		categoryId ? categories.find((c) => c.id === categoryId) : null
+	);
 
 	// Map raw messages to UI messages and group by interview
 	let groupedMessages = $derived.by(() => {
@@ -134,7 +154,7 @@
 	});
 
 	async function loadData() {
-		if (!projectId || !categoryId) return;
+		if (!projectId) return;
 		loading = true;
 		error = null;
 		try {
@@ -142,7 +162,12 @@
 				Analysis.getAnalysisCategories({ path: { project_id: projectId } }),
 				Analysis.getFilteredMessages({
 					path: { project_id: projectId },
-					query: { category_id: categoryId }
+					query: {
+						category_id: categoryId || null,
+						search_text: searchTextParam || null,
+						exact_match: exactMatchParam || undefined,
+						case_sensitive: caseSensitiveParam || undefined
+					}
 				})
 			]);
 
@@ -157,8 +182,44 @@
 	}
 
 	$effect(() => {
-		if (projectId && categoryId) loadData();
+		if (projectId) loadData();
 	});
+
+	// Handle search form submission
+	function handleSearch(e: Event) {
+		e.preventDefault();
+		updateSearchParams();
+	}
+
+	function updateSearchParams() {
+		const params = new URLSearchParams();
+		if (categoryId) params.set('category_id', categoryId);
+		if (searchText.trim()) {
+			params.set('search_text', searchText.trim());
+			if (exactMatch) params.set('exact_match', 'true');
+			if (caseSensitive) params.set('case_sensitive', 'true');
+		}
+		goto(`?${params.toString()}`, { replaceState: false, keepFocus: true });
+	}
+
+	function clearSearch() {
+		searchText = '';
+		exactMatch = false;
+		caseSensitive = false;
+		const params = new URLSearchParams();
+		if (categoryId) params.set('category_id', categoryId);
+		goto(`?${params.toString()}`, { replaceState: false });
+	}
+
+	function clearCategoryFilter() {
+		const params = new URLSearchParams();
+		if (searchTextParam) {
+			params.set('search_text', searchTextParam);
+			if (exactMatchParam) params.set('exact_match', 'true');
+			if (caseSensitiveParam) params.set('case_sensitive', 'true');
+		}
+		goto(`?${params.toString()}`, { replaceState: false });
+	}
 
 	// Annotation Helpers
 	function getAnnotationSummary(annotation: MessageAnnotationPublic): {
@@ -189,9 +250,6 @@
 		comment: string | null,
 		shouldClose: boolean = true
 	) {
-		// Use a dummy user ID or fetch it. The existing implementation used `page.data.user?.id`.
-		// I need to ensure I have access to the user ID.
-		// `page` from `$app/state` gives access to page data if it's there.
 		const userId = page.data.user?.id;
 
 		if (!userId) {
@@ -261,14 +319,6 @@
 			newMap.delete(messageId);
 			messageAnnotations = newMap;
 			activeAnnotationMessageId = null;
-
-			// If we deleted the annotation that put this message in the list,
-			// we might want to remove it from the list?
-			// But for now let's keep it to avoid jarring UI shifts.
-			// Or better, reload the list? The user might have just removed the specific tag for *this* category,
-			// but added another tag.
-			// If I remove the annotation completely, it definitely shouldn't be here.
-			// Re-fetching data might be safest to ensure consistency.
 			loadData();
 		} catch (e) {
 			console.error('Error deleting annotation:', e);
@@ -283,29 +333,119 @@
 	class="flex h-[calc(100vh-8.5rem)] w-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white"
 >
 	<!-- Header -->
-	<header class="flex items-center justify-between border-b px-6 py-4">
-		<div class="flex items-center gap-4">
-			<a
-				href={resolve(`/dashboard/projects/${projectId}/${lang}/analysis/annotate`)}
-				class="text-gray-500 transition-colors hover:text-gray-700"
-				aria-label="Back to categories"
-			>
-				<i class="fa-solid fa-arrow-left text-lg"></i>
-			</a>
-			<div class="flex flex-col">
-				<h1 class="text-xl font-semibold text-gray-800">
-					{#if currentCategory}
-						Messages with <span
-							class="inline-flex items-center rounded-full px-2 py-0.5 text-sm font-medium"
-							style="background-color: {currentCategory.color}; color: {getContrastColor(
-								currentCategory.color
-							)}">{currentCategory.name}</span
-						>
-					{:else}
-						Annotated Messages
-					{/if}
-				</h1>
+	<header class="flex flex-col border-b">
+		<div class="flex items-center justify-between px-6 py-4">
+			<div class="flex items-center gap-4">
+				<a
+					href={resolve(`/dashboard/projects/${projectId}/${lang}/analysis/annotate`)}
+					class="text-gray-500 transition-colors hover:text-gray-700"
+					aria-label="Back to categories"
+				>
+					<i class="fa-solid fa-arrow-left text-lg"></i>
+				</a>
+				<div class="flex flex-col">
+					<h1 class="text-xl font-semibold text-gray-800">
+						{#if currentCategory}
+							Messages with <span
+								class="inline-flex items-center rounded-full px-2 py-0.5 text-sm font-medium"
+								style="background-color: {currentCategory.color}; color: {getContrastColor(
+									currentCategory.color
+								)}">{currentCategory.name}</span
+							>
+						{:else if searchTextParam}
+							Search Results
+						{:else}
+							All Messages
+						{/if}
+					</h1>
+				</div>
 			</div>
+		</div>
+
+		<!-- Search Bar -->
+		<div class="border-t bg-gray-50 px-6 py-3">
+			<form onsubmit={handleSearch} class="flex flex-col gap-2">
+				<div class="flex gap-2">
+					<div class="relative flex-1">
+						<input
+							type="text"
+							bind:value={searchText}
+							placeholder="Search messages..."
+							class="w-full rounded-md border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+						/>
+						<i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+						></i>
+					</div>
+					<button
+						type="submit"
+						class="rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+					>
+						Search
+					</button>
+					{#if searchTextParam}
+						<button
+							type="button"
+							onclick={clearSearch}
+							class="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
+						>
+							Clear
+						</button>
+					{/if}
+					<button
+						type="button"
+						onclick={() => (showSearchOptions = !showSearchOptions)}
+						class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50"
+						title="Search options"
+					>
+						<i class="fa-solid fa-sliders"></i>
+					</button>
+				</div>
+
+				{#if showSearchOptions}
+					<div class="flex gap-4 rounded-md bg-white p-3 text-sm">
+						<label class="flex items-center gap-2">
+							<input type="checkbox" bind:checked={exactMatch} class="rounded" />
+							<span class="text-gray-700">Exact match</span>
+						</label>
+						<label class="flex items-center gap-2">
+							<input type="checkbox" bind:checked={caseSensitive} class="rounded" />
+							<span class="text-gray-700">Case sensitive</span>
+						</label>
+					</div>
+				{/if}
+
+				<!-- Active Filters -->
+				{#if currentCategory || searchTextParam}
+					<div class="flex flex-wrap items-center gap-2">
+						<span class="text-xs text-gray-500">Active filters:</span>
+						{#if currentCategory}
+							<button
+								type="button"
+								onclick={clearCategoryFilter}
+								class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-opacity hover:opacity-80"
+								style="background-color: {currentCategory.color}; color: {getContrastColor(
+									currentCategory.color
+								)}"
+							>
+								{currentCategory.name}
+								<i class="fa-solid fa-times"></i>
+							</button>
+						{/if}
+						{#if searchTextParam}
+							<span class="inline-flex items-center gap-1 rounded-full bg-gray-200 px-2 py-0.5 text-xs">
+								<i class="fa-solid fa-search"></i>
+								"{searchTextParam}"
+								{#if exactMatchParam}
+									<span class="text-[10px]">(exact)</span>
+								{/if}
+								{#if caseSensitiveParam}
+									<span class="text-[10px]">(case)</span>
+								{/if}
+							</span>
+						{/if}
+					</div>
+				{/if}
+			</form>
 		</div>
 	</header>
 
@@ -323,7 +463,13 @@
 			{:else if groupedMessages.length === 0}
 				<div class="rounded-lg bg-white p-8 text-center shadow-sm">
 					<i class="fa-regular fa-comments mb-3 text-3xl text-gray-400"></i>
-					<p class="text-gray-500">No messages found for this category.</p>
+					<p class="text-gray-500">
+						{#if searchTextParam || currentCategory}
+							No messages found matching your filters.
+						{:else}
+							No messages found.
+						{/if}
+					</p>
 				</div>
 			{:else}
 				{#each groupedMessages as group (group.interviewId)}
