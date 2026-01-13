@@ -46,7 +46,6 @@
 	// UI State
 	let activeAnnotationMessageId = $state<string | null>(null);
 	let savingAnnotation = $state(false);
-	let showCategoryDropdown = $state(false);
 	let showQuestionDropdown = $state(false);
 
 	// Search State (local form state)
@@ -134,7 +133,6 @@
 
 	// Derived State
 	let selectedCategories = $derived(categories.filter((c) => selectedCategoryIds.includes(c.id)));
-	let availableCategories = $derived(categories.filter((c) => !selectedCategoryIds.includes(c.id)));
 
 	// Map raw messages to UI messages and group by interview
 	let groupedMessages = $derived.by(() => {
@@ -248,9 +246,17 @@
 		goto(`?${params.toString()}`, { replaceState: false });
 	}
 
+	function toggleCategoryFilter(categoryId: string) {
+		if (selectedCategoryIds.includes(categoryId)) {
+			selectedCategoryIds = selectedCategoryIds.filter((id) => id !== categoryId);
+		} else {
+			selectedCategoryIds = [...selectedCategoryIds, categoryId];
+		}
+		updateSearchParams();
+	}
+
 	function addCategoryFilter(categoryId: string) {
 		selectedCategoryIds = [...selectedCategoryIds, categoryId];
-		showCategoryDropdown = false;
 		updateSearchParams();
 	}
 
@@ -573,59 +579,6 @@
 							type="button"
 							onclick={(e) => {
 								stopEvent(e);
-								showCategoryDropdown = !showCategoryDropdown;
-							}}
-							class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50"
-							title="Add category filter"
-						>
-							<i class="fa-solid fa-filter mr-1"></i>
-							Categories
-							{#if selectedCategories.length > 0}
-								<span class="ml-1 text-xs">({selectedCategories.length})</span>
-							{/if}
-						</button>
-						{#if showCategoryDropdown}
-							<div
-								class="absolute right-0 z-10 mt-2 max-h-64 w-64 overflow-y-auto rounded-md bg-white shadow-lg"
-							>
-								{#if availableCategories.length > 0}
-									<div class="py-1">
-										{#each availableCategories as category}
-											<button
-												type="button"
-												onclick={(e) => {
-													stopEvent(e);
-													addCategoryFilter(category.id);
-												}}
-												class="block w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-100"
-											>
-												<span
-													class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-													style="background-color: {category.color}; color: {getContrastColor(
-														category.color
-													)}"
-												>
-													{category.name}
-												</span>
-												<span class="ml-2 text-xs text-gray-500">({category.type})</span>
-											</button>
-										{/each}
-									</div>
-								{:else}
-									<div class="px-4 py-3 text-sm text-gray-500">
-										{selectedCategories.length > 0
-											? 'All categories selected'
-											: 'No categories available'}
-									</div>
-								{/if}
-							</div>
-						{/if}
-					</div>
-					<div class="relative">
-						<button
-							type="button"
-							onclick={(e) => {
-								stopEvent(e);
 								showQuestionDropdown = !showQuestionDropdown;
 							}}
 							class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50"
@@ -748,34 +701,51 @@
 					</div>
 				{/if}
 
+				<!-- Category Badges -->
+				{#if categories.length > 0}
+					<div class="flex flex-wrap items-center gap-2">
+						<span class="text-xs text-gray-500">Categories:</span>
+						{#each categories as category}
+							{@const isSelected = selectedCategoryIds.includes(category.id)}
+							<button
+								type="button"
+								onclick={(e) => {
+									stopEvent(e);
+									toggleCategoryFilter(category.id);
+								}}
+								class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all {isSelected
+									? 'ring-2 ring-offset-1'
+									: 'opacity-60 hover:opacity-100'}"
+								style="background-color: {category.color}; color: {getContrastColor(
+									category.color
+								)}; {isSelected ? `ring-color: ${category.color}` : ''}"
+							>
+								{#if isSelected}
+									<i class="fa-solid fa-check text-[10px]"></i>
+								{/if}
+								{category.name}
+								<span class="text-[10px] opacity-75">({category.type})</span>
+							</button>
+						{/each}
+						{#if selectedCategoryIds.length > 0}
+							<button
+								type="button"
+								onclick={(e) => {
+									stopEvent(e);
+									clearAllCategoryFilters();
+								}}
+								class="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+							>
+								Clear
+							</button>
+						{/if}
+					</div>
+				{/if}
+
 				<!-- Active Filters -->
-				{#if selectedCategories.length > 0 || selectedQuestions.length > 0 || searchTextParam}
+				{#if selectedQuestions.length > 0 || searchTextParam}
 					<div class="flex flex-wrap items-center gap-2">
 						<span class="text-xs text-gray-500">Active filters:</span>
-						{#if selectedCategories.length > 0}
-							{#each selectedCategories as category}
-								<button
-									type="button"
-									onclick={() => removeCategoryFilter(category.id)}
-									class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-opacity hover:opacity-80"
-									style="background-color: {category.color}; color: {getContrastColor(
-										category.color
-									)}"
-								>
-									{category.name}
-									<i class="fa-solid fa-times"></i>
-								</button>
-							{/each}
-							{#if selectedCategories.length > 1}
-								<button
-									type="button"
-									onclick={clearAllCategoryFilters}
-									class="text-xs text-blue-600 hover:underline"
-								>
-									Clear all categories
-								</button>
-							{/if}
-						{/if}
 						{#if selectedQuestions.length > 0}
 							{#each selectedQuestions as [section, question]}
 								{@const questionText = getQuestionText(section, question)}
@@ -1042,25 +1012,27 @@
 										{/if}
 
 										<!-- Context After Button -->
-										<div class="mt-2 flex justify-center">
-											<button
-												type="button"
-												onclick={() => fetchContextAfter(messageId, group.interviewId)}
-												class="text-xs text-gray-500 transition-colors hover:text-gray-700"
-												disabled={isLoadingAfter}
-											>
-												{#if isLoadingAfter}
-													<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-													Loading context...
-												{:else if hasContextAfter}
-													<i class="fa-solid fa-minus mr-1"></i>
-													Hide context after
-												{:else}
-													<i class="fa-solid fa-plus mr-1"></i>
-													Show context after
-												{/if}
-											</button>
-										</div>
+										{#if !msg.raw.is_introduction}
+											<div class="mt-2 flex justify-center">
+												<button
+													type="button"
+													onclick={() => fetchContextAfter(messageId, group.interviewId)}
+													class="text-xs text-gray-500 transition-colors hover:text-gray-700"
+													disabled={isLoadingAfter}
+												>
+													{#if isLoadingAfter}
+														<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+														Loading context...
+													{:else if hasContextAfter}
+														<i class="fa-solid fa-minus mr-1"></i>
+														Hide context after
+													{:else}
+														<i class="fa-solid fa-plus mr-1"></i>
+														Show context after
+													{/if}
+												</button>
+											</div>
+										{/if}
 									{/if}
 								</div>
 							{/each}
@@ -1085,7 +1057,6 @@
 		const target = e.target as Element;
 		const clickedInside = target.closest('.relative');
 		if (!clickedInside) {
-			showCategoryDropdown = false;
 			showQuestionDropdown = false;
 		}
 	}}
