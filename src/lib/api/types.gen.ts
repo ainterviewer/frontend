@@ -710,9 +710,9 @@ export type InterviewGuideOutput = {
 };
 
 /**
- * InterviewGuideGenerationPromptRequest
+ * InterviewGuideGenerationRequest
  */
-export type InterviewGuideGenerationPromptRequest = {
+export type InterviewGuideGenerationRequest = {
     /**
      * Prompt
      */
@@ -1465,10 +1465,34 @@ export type QuestionContext = {
     part?: 'main' | 'probes' | 'all';
 };
 
+/**
+ * QuestionGenerationRequest
+ */
+export type QuestionGenerationRequest = {
+    /**
+     * Prompt
+     */
+    prompt: string;
+    /**
+     * Section Idx
+     */
+    section_idx: number;
+};
+
 export type QuestionIndex = [
     number,
     number
 ];
+
+/**
+ * QuestionSectionGenerationRequest
+ */
+export type QuestionSectionGenerationRequest = {
+    /**
+     * Prompt
+     */
+    prompt: string;
+};
 
 /**
  * QuestionSection[Question]
@@ -1897,24 +1921,6 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage1 = {
-    /**
      * Primer
      */
     primer: string;
@@ -1926,6 +1932,24 @@ export type FastapiCompatV2BodyUploadImage1 = {
      * Alt
      */
     alt: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage2 = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
     /**
      * File
      */
@@ -3200,7 +3224,7 @@ export type CreateGuideResponses = {
 };
 
 export type GenerateGuideData = {
-    body: InterviewGuideGenerationPromptRequest;
+    body: InterviewGuideGenerationRequest;
     path: {
         /**
          * Project Id
@@ -3229,7 +3253,7 @@ export type GenerateGuideResponses = {
 };
 
 export type GenerateGuideSectionData = {
-    body: InterviewGuideGenerationPromptRequest;
+    body: QuestionSectionGenerationRequest;
     path: {
         /**
          * Project Id
@@ -3258,7 +3282,7 @@ export type GenerateGuideSectionResponses = {
 };
 
 export type GenerateSectionQuestionData = {
-    body: InterviewGuideGenerationPromptRequest;
+    body: QuestionGenerationRequest;
     path: {
         /**
          * Project Id
@@ -3287,7 +3311,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage1;
+    body: FastapiCompatV2BodyUploadImage;
     path: {
         /**
          * Project Id
@@ -4267,7 +4291,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage2;
     path?: never;
     query?: never;
     url: '/api/image';
