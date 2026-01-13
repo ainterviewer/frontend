@@ -10,12 +10,13 @@
 		PointerSensor
 	} from '@dnd-kit-svelte/svelte';
 	import { move } from '@dnd-kit/helpers';
-	import GenerateGuideModal from './GenerateGuideModal.svelte';
+	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 	import { generateId, mapFromLocal, mapToLocal, saveGuide } from './utils';
+	import { Projects } from '$lib/api';
 
 	const sensors = [KeyboardSensor, PointerSensor];
 
@@ -55,9 +56,40 @@
 	let activeItem = $state<GuideSection | GuideQuestion | null>(null);
 
 	// Modal state
-	let showGenerateModal = $state(false);
+	let showGenerateGuideModal = $state(false);
+	let showGenerateSectionModal = $state(false);
+	let showGenerateQuestionModal = $state(false);
+	let generatingQuestionSectionId = $state<string | null>(null);
 
 	let activeId = $state('');
+
+	async function handleGenerateGuide(prompt: string) {
+		await Projects.generateGuide({
+			path: { project_id: projectId, lang: lang },
+			body: { prompt }
+		});
+		await invalidateAll();
+	}
+
+	async function handleGenerateSection(prompt: string) {
+		await Projects.generateGuideSection({
+			path: { project_id: projectId, lang: lang },
+			body: { prompt }
+		});
+		await invalidateAll();
+	}
+
+	async function handleGenerateQuestion(prompt: string) {
+		// Note: The API currently doesn't accept a section ID for question generation.
+		// We send the prompt and rely on the backend or subsequent logic.
+		// If we could, we would pass generatingQuestionSectionId.
+		await Projects.generateSectionQuestion({
+			path: { project_id: projectId, lang: lang },
+			body: { prompt }
+		});
+		await invalidateAll();
+		generatingQuestionSectionId = null;
+	}
 
 	function addSection() {
 		const newId = generateId();
@@ -238,16 +270,28 @@
 							questions={localQuestions[section.id]}
 							sectionIndex={sIdx}
 							onRemove={() => removeSection(sIdx)}
+							onGenerateQuestion={() => {
+								generatingQuestionSectionId = section.id;
+								showGenerateQuestionModal = true;
+							}}
 						/>
 					{/each}
 				</div>
 
-				<button
-					class="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
-					onclick={addSection}
-				>
-					<i class="fa-solid fa-plus"></i> Add Section
-				</button>
+				<div class="mt-6 grid grid-cols-2 gap-4">
+					<button
+						class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
+						onclick={addSection}
+					>
+						<i class="fa-solid fa-plus"></i> Add Section
+					</button>
+					<button
+						class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-secondary bg-secondary/50 py-4 font-medium text-gray-600 hover:bg-secondary"
+						onclick={() => (showGenerateSectionModal = true)}
+					>
+						<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Section
+					</button>
+				</div>
 
 				<DragOverlay>
 					{#snippet children(active)}
@@ -307,7 +351,7 @@
 			</button>
 			<button
 				class="rounded-full bg-secondary px-6 py-2 font-medium text-gray-700 hover:brightness-95"
-				onclick={() => (showGenerateModal = true)}
+				onclick={() => (showGenerateGuideModal = true)}
 			>
 				<i class="fa-solid fa-wand-magic-sparkles"></i>
 				Generate
@@ -328,9 +372,23 @@
 	</div>
 </div>
 
-<GenerateGuideModal
-	bind:open={showGenerateModal}
-	{projectId}
-	{lang}
-	onSuccess={async () => await invalidateAll()}
+<GenerateModal
+	bind:open={showGenerateGuideModal}
+	title="Generate Interview Guide"
+	placeholder="Describe the interview you want to generate..."
+	onGenerate={handleGenerateGuide}
+/>
+
+<GenerateModal
+	bind:open={showGenerateSectionModal}
+	title="Generate Question Section"
+	placeholder="Describe the section you want to generate..."
+	onGenerate={handleGenerateSection}
+/>
+
+<GenerateModal
+	bind:open={showGenerateQuestionModal}
+	title="Generate Question"
+	placeholder="Describe the question you want to generate..."
+	onGenerate={handleGenerateQuestion}
 />

@@ -572,6 +572,10 @@ export type FilteredMessagesRequest = {
         number,
         number
     ]> | null;
+    /**
+     * Include Previous On User
+     */
+    include_previous_on_user?: boolean;
 };
 
 /**
@@ -1893,6 +1897,24 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage1 = {
+    /**
      * Primer
      */
     primer: string;
@@ -1904,24 +1926,6 @@ export type FastapiCompatV2BodyUploadImage = {
      * Alt
      */
     alt: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage2 = {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
     /**
      * File
      */
@@ -3224,8 +3228,66 @@ export type GenerateGuideResponses = {
     200: unknown;
 };
 
+export type GenerateGuideSectionData = {
+    body: InterviewGuideGenerationPromptRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        lang: LanguageCode;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/{lang}/guide/section/generate';
+};
+
+export type GenerateGuideSectionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GenerateGuideSectionError = GenerateGuideSectionErrors[keyof GenerateGuideSectionErrors];
+
+export type GenerateGuideSectionResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GenerateSectionQuestionData = {
+    body: InterviewGuideGenerationPromptRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        lang: LanguageCode;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/{lang}/guide/section/question/generate';
+};
+
+export type GenerateSectionQuestionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GenerateSectionQuestionError = GenerateSectionQuestionErrors[keyof GenerateSectionQuestionErrors];
+
+export type GenerateSectionQuestionResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage1;
     path: {
         /**
          * Project Id
@@ -4205,7 +4267,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage2;
+    body: FastapiCompatV2BodyUploadImage;
     path?: never;
     query?: never;
     url: '/api/image';

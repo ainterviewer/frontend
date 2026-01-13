@@ -9,10 +9,18 @@
 		questions: GuideQuestion[];
 		sectionIndex: number;
 		onRemove: () => void;
+		onGenerateQuestion?: () => void;
 		isOverlay?: boolean;
 	}
 
-	let { section, questions, sectionIndex, onRemove, isOverlay = false }: Props = $props();
+	let {
+		section,
+		questions,
+		sectionIndex,
+		onRemove,
+		onGenerateQuestion,
+		isOverlay = false
+	}: Props = $props();
 
 	const { ref, handleRef, isDragging } = useSortable({
 		id: section.id,
@@ -103,11 +111,19 @@
 				onRemove={() => removeQuestion(qIdx)}
 			/>
 		{/each}
-		<button
-			class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed border-gray-500 py-2 text-gray-700 transition hover:border-primary hover:bg-white/30 hover:text-primary"
-			onclick={addQuestion}
-		>
-			<i class="fa-solid fa-plus"></i> Add Question
-		</button>
+		<div class="grid grid-cols-2 gap-4">
+			<button
+				class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed border-gray-500 py-2 text-gray-700 transition hover:border-primary hover:bg-white/30 hover:text-primary"
+				onclick={addQuestion}
+			>
+				<i class="fa-solid fa-plus"></i> Add Question
+			</button>
+			<button
+				class="border-opacity-50 flex w-full cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed border-secondary py-2 text-gray-700 transition hover:border-secondary hover:bg-white/30 hover:text-secondary"
+				onclick={onGenerateQuestion}
+			>
+				<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Question
+			</button>
+		</div>
 	</div>
 </div>

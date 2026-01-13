@@ -1,33 +1,28 @@
 <script lang="ts">
-	import { Projects } from '$lib/api';
-
 	let {
 		open = $bindable(),
-		projectId,
-		lang,
-		onSuccess
+		title = 'Generate',
+		onGenerate,
+		placeholder = 'Describe what you want to generate...'
 	} = $props<{
 		open: boolean;
-		projectId: string;
-		lang: string;
-		onSuccess?: () => void;
+		title?: string;
+		onGenerate: (prompt: string) => Promise<void>;
+		placeholder?: string;
 	}>();
 
 	let generatePrompt = $state('');
 	let generating = $state(false);
 
-	async function generateGuide() {
+	async function handleGenerate() {
 		generating = true;
 		try {
-			await Projects.generateGuide({
-				path: { project_id: projectId, lang: lang },
-				body: { prompt: generatePrompt }
-			});
+			await onGenerate(generatePrompt);
 			open = false;
-			onSuccess?.();
+			generatePrompt = ''; // Reset prompt after success
 		} catch (e) {
-			console.error('Failed to generate guide', e);
-			alert('Failed to generate guide');
+			console.error('Failed to generate', e);
+			alert('Failed to generate. Please try again.');
 		} finally {
 			generating = false;
 		}
@@ -42,7 +37,7 @@
 	>
 		<div class="w-full max-w-lg overflow-hidden rounded-lg bg-white shadow-xl">
 			<div class="flex items-center justify-between border-b p-4">
-				<h3 class="text-lg font-semibold">Generate Interview Guide</h3>
+				<h3 class="text-lg font-semibold">{title}</h3>
 				<button
 					class="text-gray-400 hover:text-gray-600"
 					onclick={() => (open = false)}
@@ -56,7 +51,7 @@
 				<textarea
 					id="prompt"
 					class="h-32 w-full rounded border border-gray-300 p-3 focus:border-blue-500 focus:ring-blue-500"
-					placeholder="Describe the interview you want to generate..."
+					{placeholder}
 					bind:value={generatePrompt}
 				></textarea>
 			</div>
@@ -69,7 +64,7 @@
 				</button>
 				<button
 					class="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-					onclick={generateGuide}
+					onclick={handleGenerate}
 					disabled={generating || !generatePrompt.trim()}
 				>
 					{#if generating}
