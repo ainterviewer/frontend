@@ -837,10 +837,14 @@
 						</div>
 
 						<div class="flex flex-col gap-4 p-4">
-							{#each group.messages as msg (msg.id)}
+							{#each group.messages as msg, msgIndex (msg.id)}
 								{@const messageId = msg.id}
 								{@const annotation = messageAnnotations.get(messageId)}
 								{@const annotationSummary = annotation ? getAnnotationSummary(annotation) : null}
+								{@const prevMsg = msgIndex > 0 ? group.messages[msgIndex - 1] : null}
+								{@const nextMsg = msgIndex < group.messages.length - 1 ? group.messages[msgIndex + 1] : null}
+								{@const hasImmediateSiblingBefore = prevMsg !== null && prevMsg.raw.message_id === msg.raw.message_id - 1}
+								{@const hasImmediateSiblingAfter = nextMsg !== null && nextMsg.raw.message_id === msg.raw.message_id + 1}
 
 								<div
 									class={msg.type === 'system'
@@ -858,7 +862,7 @@
 										{@const isLoadingAfter = messageContext.loadingAfter.has(messageId)}
 
 										<!-- Context Before Button -->
-										{#if !isMainQuestion || msg.raw.role === 'user'}
+										{#if !hasImmediateSiblingBefore && (!isMainQuestion || msg.raw.role === 'user')}
 											<div class="mb-2 flex justify-center">
 												<button
 													type="button"
@@ -1012,7 +1016,7 @@
 										{/if}
 
 										<!-- Context After Button -->
-										{#if !msg.raw.is_introduction}
+										{#if !hasImmediateSiblingAfter && !msg.raw.is_introduction}
 											<div class="mt-2 flex justify-center">
 												<button
 													type="button"
