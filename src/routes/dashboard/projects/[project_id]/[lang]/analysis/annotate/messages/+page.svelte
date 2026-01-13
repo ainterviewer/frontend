@@ -57,6 +57,72 @@
 	let selectedCategoryIds = $state<string[]>([]);
 	let selectedQuestions = $state<[number, number][]>([]);
 
+	// Per-message context state (consolidated)
+	let messageContext = $state<{
+		before: Map<string, MessagePublic[]>;
+		after: Map<string, MessagePublic[]>;
+		loadingBefore: Set<string>;
+		loadingAfter: Set<string>;
+	}>({
+		before: new Map(),
+		after: new Map(),
+		loadingBefore: new Set(),
+		loadingAfter: new Set()
+	});
+
+	// Helper to prevent default and stop propagation
+	function stopEvent(e: Event) {
+		e.preventDefault();
+		e.stopPropagation();
+	}
+
+	// Transform raw message to UI message format
+	function transformToUIMessage(msg: MessagePublic): Message & { id: string; raw: MessagePublic } {
+		let type: 'sent' | 'received' | 'system' = 'system';
+		if (msg.role === 'user') type = 'sent';
+		else if (msg.role === 'assistant') type = 'received';
+
+		let image: { data: string; alt?: string; primer?: string } | undefined;
+		if (msg.image) {
+			const imgSource = Array.isArray(msg.image) ? msg.image[0] : (msg.image as Image);
+			if (imgSource?.data) {
+				image = {
+					data: imgSource.data,
+					alt: imgSource.alt,
+					primer: imgSource.primer || undefined
+				};
+			}
+		}
+
+		let question_label: string | undefined;
+		if (msg.section !== undefined && msg.section !== null) {
+			question_label = `${msg.section + 1}`;
+			if (msg.main_question !== undefined && msg.main_question !== null) {
+				question_label += `.${msg.main_question + 1}`;
+				if (msg.sub_question) {
+					question_label += `.${msg.sub_question}`;
+				}
+			}
+		}
+
+		return {
+			id: msg.id,
+			text: msg.content,
+			type,
+			message_id: msg.message_id,
+			feedback: msg.feedback,
+			survey_item: msg.survey_item,
+			image,
+			can_answer: msg.can_answer,
+			user_image: false,
+			question_label,
+			section: msg.section,
+			options: undefined,
+			required: false,
+			raw: msg
+		};
+	}
+
 	// Sync form state with URL params
 	$effect(() => {
 		searchText = searchTextParam || '';
@@ -86,74 +152,14 @@
 			interviewId: string;
 			messages: (Message & { id: string; raw: MessagePublic })[];
 		}[] = [];
-		let currentGroup: {
-			interviewId: string;
-			messages: (Message & { id: string; raw: MessagePublic })[];
-		} | null = null;
+		let currentGroup: (typeof groups)[number] | null = null;
 
 		for (const msg of sorted) {
 			if (!currentGroup || currentGroup.interviewId !== msg.interview_id) {
 				currentGroup = { interviewId: msg.interview_id, messages: [] };
 				groups.push(currentGroup);
 			}
-
-			// Transform logic (copied from interview page)
-			let type: 'sent' | 'received' | 'system' = 'system';
-			if (msg.role === 'user') type = 'sent';
-			else if (msg.role === 'assistant') type = 'received';
-
-			let image: { data: string; alt?: string; primer?: string } | undefined = undefined;
-			if (msg.image) {
-				if (Array.isArray(msg.image)) {
-					if (msg.image.length > 0) {
-						const img = msg.image[0];
-						if (img.data) {
-							image = {
-								data: img.data,
-								alt: img.alt,
-								primer: img.primer || undefined
-							};
-						}
-					}
-				} else {
-					const img = msg.image as Image;
-					if (img.data) {
-						image = {
-							data: img.data,
-							alt: img.alt,
-							primer: img.primer || undefined
-						};
-					}
-				}
-			}
-
-			let question_label: string | undefined = undefined;
-			if (msg.section !== undefined && msg.section !== null) {
-				question_label = `${msg.section + 1}`;
-				if (msg.main_question !== undefined && msg.main_question !== null) {
-					question_label += `.${msg.main_question + 1}`;
-					if (msg.sub_question) {
-						question_label += `.${msg.sub_question}`;
-					}
-				}
-			}
-
-			currentGroup.messages.push({
-				id: msg.id,
-				text: msg.content,
-				type,
-				message_id: msg.message_id,
-				feedback: msg.feedback,
-				survey_item: msg.survey_item,
-				image: image,
-				can_answer: msg.can_answer,
-				user_image: false,
-				question_label,
-				section: msg.section,
-				options: undefined,
-				required: false,
-				raw: msg // Keep raw message for annotations
-			});
+			currentGroup.messages.push(transformToUIMessage(msg));
 		}
 
 		return groups;
@@ -428,6 +434,68 @@
 			savingAnnotation = false;
 		}
 	}
+
+	async function fetchContextBefore(messageId: string, interviewId: string) {
+		if (messageContext.before.has(messageId)) {
+			const newMap = new Map(messageContext.before);
+			newMap.delete(messageId);
+			messageContext = { ...messageContext, before: newMap };
+			return;
+		}
+
+		const newLoading = new Set(messageContext.loadingBefore);
+		newLoading.add(messageId);
+		messageContext = { ...messageContext, loadingBefore: newLoading };
+
+		try {
+			const response = await Analysis.getMessageContextBefore({
+				path: { project_id: projectId, interview_id: interviewId, message_id: messageId }
+			});
+
+			if (response.data) {
+				const newMap = new Map(messageContext.before);
+				newMap.set(messageId, response.data);
+				messageContext = { ...messageContext, before: newMap };
+			}
+		} catch (e) {
+			console.error('Error fetching context before:', e);
+		} finally {
+			const newLoading = new Set(messageContext.loadingBefore);
+			newLoading.delete(messageId);
+			messageContext = { ...messageContext, loadingBefore: newLoading };
+		}
+	}
+
+	async function fetchContextAfter(messageId: string, interviewId: string) {
+		if (messageContext.after.has(messageId)) {
+			const newMap = new Map(messageContext.after);
+			newMap.delete(messageId);
+			messageContext = { ...messageContext, after: newMap };
+			return;
+		}
+
+		const newLoading = new Set(messageContext.loadingAfter);
+		newLoading.add(messageId);
+		messageContext = { ...messageContext, loadingAfter: newLoading };
+
+		try {
+			const response = await Analysis.getMessageContextAfter({
+				path: { project_id: projectId, interview_id: interviewId, message_id: messageId }
+			});
+
+			if (response.data) {
+				const newMap = new Map(messageContext.after);
+				newMap.set(messageId, response.data);
+				messageContext = { ...messageContext, after: newMap };
+			}
+		} catch (e) {
+			console.error('Error fetching context after:', e);
+		} finally {
+			const newLoading = new Set(messageContext.loadingAfter);
+			newLoading.delete(messageId);
+			messageContext = { ...messageContext, loadingAfter: newLoading };
+		}
+	}
 </script>
 
 <div
@@ -451,7 +519,8 @@
 							{#if selectedCategories.length > 0}
 								({selectedCategories.length}
 								{selectedCategories.length === 1 ? 'category' : 'categories'}
-								{#if selectedQuestions.length > 0}, {/if})
+								{#if selectedQuestions.length > 0},
+								{/if})
 							{/if}
 							{#if selectedQuestions.length > 0}
 								({selectedQuestions.length}
@@ -491,8 +560,7 @@
 						<button
 							type="button"
 							onclick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
+								stopEvent(e);
 								clearSearch();
 							}}
 							class="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
@@ -504,8 +572,7 @@
 						<button
 							type="button"
 							onclick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
+								stopEvent(e);
 								showCategoryDropdown = !showCategoryDropdown;
 							}}
 							class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50"
@@ -527,8 +594,7 @@
 											<button
 												type="button"
 												onclick={(e) => {
-													e.preventDefault();
-													e.stopPropagation();
+													stopEvent(e);
 													addCategoryFilter(category.id);
 												}}
 												class="block w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-100"
@@ -559,8 +625,7 @@
 						<button
 							type="button"
 							onclick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
+								stopEvent(e);
 								showQuestionDropdown = !showQuestionDropdown;
 							}}
 							class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50"
@@ -586,8 +651,7 @@
 													<button
 														type="button"
 														onclick={(e) => {
-															e.preventDefault();
-															e.stopPropagation();
+															stopEvent(e);
 															toggleSection(sectionIdx);
 														}}
 														class="flex w-full items-center gap-2 bg-gray-50 px-4 py-2 text-left transition-colors hover:bg-gray-100"
@@ -595,7 +659,7 @@
 														<input
 															type="checkbox"
 															checked={isFullySelected}
-															class="rounded pointer-events-none"
+															class="pointer-events-none rounded"
 															readonly
 														/>
 														<span class="text-xs font-semibold text-gray-700">
@@ -619,13 +683,10 @@
 																<button
 																	type="button"
 																	onclick={(e) => {
-																		e.preventDefault();
-																		e.stopPropagation();
-																		if (isSelected) {
-																			removeQuestionFilter(sectionIdx, questionIdx);
-																		} else {
-																			addQuestionFilter(sectionIdx, questionIdx);
-																		}
+																		stopEvent(e);
+																		isSelected
+																			? removeQuestionFilter(sectionIdx, questionIdx)
+																			: addQuestionFilter(sectionIdx, questionIdx);
 																	}}
 																	class="flex w-full items-center gap-2 px-2 py-1 text-left text-xs transition-colors hover:bg-gray-100 {isSelected
 																		? 'bg-blue-50'
@@ -634,7 +695,7 @@
 																	<input
 																		type="checkbox"
 																		checked={isSelected}
-																		class="rounded pointer-events-none"
+																		class="pointer-events-none rounded"
 																		readonly
 																	/>
 																	<span class="font-medium text-gray-600">
@@ -664,8 +725,7 @@
 					<button
 						type="button"
 						onclick={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
+							stopEvent(e);
 							showSearchOptions = !showSearchOptions;
 						}}
 						class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50"
@@ -724,10 +784,9 @@
 									type="button"
 									onclick={() => removeQuestionFilter(section, question)}
 									class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 transition-opacity hover:opacity-80"
-									title="{sectionDesc ? `Section ${section + 1}: ${sectionDesc}\n` : ''}Q {getQuestionLabel(
-										section,
-										question
-									)}: {questionText}"
+									title="{sectionDesc
+										? `Section ${section + 1}: ${sectionDesc}\n`
+										: ''}Q {getQuestionLabel(section, question)}: {questionText}"
 								>
 									Q {getQuestionLabel(section, question)}
 									<i class="fa-solid fa-times"></i>
@@ -821,6 +880,55 @@
 									{#if msg.type === 'system'}
 										{msg.text}
 									{:else}
+										{@const isMainQuestion =
+											msg.raw.sub_question === null || msg.raw.sub_question === 0}
+										{@const hasContextBefore = messageContext.before.has(messageId)}
+										{@const hasContextAfter = messageContext.after.has(messageId)}
+										{@const isLoadingBefore = messageContext.loadingBefore.has(messageId)}
+										{@const isLoadingAfter = messageContext.loadingAfter.has(messageId)}
+
+										<!-- Context Before Button -->
+										{#if !isMainQuestion || msg.raw.role === 'user'}
+											<div class="mb-2 flex justify-center">
+												<button
+													type="button"
+													onclick={() => fetchContextBefore(messageId, group.interviewId)}
+													class="text-xs text-gray-500 transition-colors hover:text-gray-700"
+													disabled={isLoadingBefore}
+												>
+													{#if isLoadingBefore}
+														<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+														Loading context...
+													{:else if hasContextBefore}
+														<i class="fa-solid fa-minus mr-1"></i>
+														Hide context before
+													{:else}
+														<i class="fa-solid fa-plus mr-1"></i>
+														Show context before
+													{/if}
+												</button>
+											</div>
+										{/if}
+
+										<!-- Display Context Before Messages -->
+										{#if hasContextBefore}
+											{@const contextMessages = messageContext.before.get(messageId) || []}
+											{#each contextMessages as ctxMsg}
+												{@const ctxUIMsg = transformToUIMessage(ctxMsg)}
+												<div class="mb-2 opacity-60">
+													<InterviewMessage
+														message={ctxUIMsg}
+														lang={lang || 'en'}
+														isLast={false}
+														readonly={true}
+														onFeedback={() => {}}
+														onSkip={() => {}}
+														onSurveyAnswer={() => {}}
+													/>
+												</div>
+											{/each}
+										{/if}
+
 										<div class="flex items-start gap-2">
 											<div class="min-w-0 flex-1">
 												<InterviewMessage
@@ -913,6 +1021,46 @@
 												/>
 											</div>
 										{/if}
+
+										<!-- Display Context After Messages -->
+										{#if hasContextAfter}
+											{@const contextMessages = messageContext.after.get(messageId) || []}
+											{#each contextMessages as ctxMsg}
+												{@const ctxUIMsg = transformToUIMessage(ctxMsg)}
+												<div class="mt-2 opacity-60">
+													<InterviewMessage
+														message={ctxUIMsg}
+														lang={lang || 'en'}
+														isLast={false}
+														readonly={true}
+														onFeedback={() => {}}
+														onSkip={() => {}}
+														onSurveyAnswer={() => {}}
+													/>
+												</div>
+											{/each}
+										{/if}
+
+										<!-- Context After Button -->
+										<div class="mt-2 flex justify-center">
+											<button
+												type="button"
+												onclick={() => fetchContextAfter(messageId, group.interviewId)}
+												class="text-xs text-gray-500 transition-colors hover:text-gray-700"
+												disabled={isLoadingAfter}
+											>
+												{#if isLoadingAfter}
+													<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+													Loading context...
+												{:else if hasContextAfter}
+													<i class="fa-solid fa-minus mr-1"></i>
+													Hide context after
+												{:else}
+													<i class="fa-solid fa-plus mr-1"></i>
+													Show context after
+												{/if}
+											</button>
+										</div>
 									{/if}
 								</div>
 							{/each}
