@@ -1,13 +1,18 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
-	import type { InterviewType } from '$lib/api';
+	import type { InterviewSummaryPublic, InterviewType } from '$lib/api';
 	import { onMount } from 'svelte';
 	import Pagination from '../../interviews/Pagination.svelte';
 	import SortableHeader from '../../interviews/SortableHeader.svelte';
 
+	// Extend InterviewSummaryPublic with interview_type field
+	type InterviewWithType = InterviewSummaryPublic & {
+		interview_type?: InterviewType;
+	};
+
 	// State
-	let interviews = $state<any[]>([]);
+	let interviews = $state<InterviewWithType[]>([]);
 	let loading = $state(false);
 	let totalItems = $state(0);
 	let currentPage = $state(1);
@@ -33,7 +38,7 @@
 		{ key: 'created_at', label: 'Created' },
 		{ key: 'last_updated', label: 'Updated' },
 		{ key: 'n_messages', label: 'Messages' },
-		{ key: 'interviewer', label: 'Interviewer' },
+		{ key: 'interview_type', label: 'Type' },
 		{ key: 'is_complete', label: 'Status' }
 	];
 
@@ -321,7 +326,7 @@
 						<td class="px-5 py-4">{formatDate(interview.created_at)}</td>
 						<td class="px-5 py-4">{formatDate(interview.last_updated)}</td>
 						<td class="px-5 py-4">{interview.n_messages}</td>
-						<td class="px-5 py-4">{interview.interviewer}</td>
+						<td class="px-5 py-4">{interview.type}</td>
 						<td class="px-5 py-4">
 							{#if interview.is_complete}
 								<span
