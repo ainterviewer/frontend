@@ -43,6 +43,11 @@
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
+	// Pagination State
+	const limit = 20;
+	let hasMore = $state(true);
+	let loadingMore = $state(false);
+
 	// UI State
 	let activeAnnotationMessageId = $state<string | null>(null);
 	let savingAnnotation = $state(false);
@@ -360,13 +365,20 @@
 						exact_match: exactMatchParam || undefined,
 						case_sensitive: caseSensitiveParam || undefined,
 						questions: questionsParam.length > 0 ? questionsParam : null
+					},
+					query: {
+						limit,
+						skip: 0
 					}
 				})
 			]);
 
 			if (catsRes.data) categories = catsRes.data;
 			if (guideRes.data) guide = guideRes.data;
-			if (msgsRes.data) rawMessages = msgsRes.data;
+			if (msgsRes.data) {
+				rawMessages = msgsRes.data;
+				hasMore = msgsRes.data.length === limit;
+			}
 		} catch (e) {
 			console.error('Failed to load data', e);
 			error = 'Failed to load data';
@@ -378,6 +390,39 @@
 	$effect(() => {
 		if (projectId) loadData();
 	});
+
+	async function loadMore() {
+		if (loading || loadingMore || !hasMore || !projectId) return;
+
+		loadingMore = true;
+		try {
+			const skip = rawMessages.length;
+			const { data, error: err } = await Analysis.getFilteredMessages({
+				path: { project_id: projectId },
+				body: {
+					category_ids: categoryIdsParam.length > 0 ? categoryIdsParam : null,
+					search_text: searchTextParam || null,
+					exact_match: exactMatchParam || undefined,
+					case_sensitive: caseSensitiveParam || undefined,
+					questions: questionsParam.length > 0 ? questionsParam : null
+				},
+				query: {
+					limit,
+					skip
+				}
+			});
+
+			if (err) throw err;
+			if (data) {
+				rawMessages = [...rawMessages, ...data];
+				hasMore = data.length === limit;
+			}
+		} catch (e) {
+			console.error('Failed to load more messages', e);
+		} finally {
+			loadingMore = false;
+		}
+	}
 
 	// Handle search form submission
 	function handleSearch(e: Event) {
@@ -1014,7 +1059,15 @@
 	</header>
 
 	<!-- Content -->
-	<div class="flex-1 overflow-y-auto bg-gray-50 p-4">
+	<div
+		class="flex-1 overflow-y-auto bg-gray-50 p-4"
+		onscroll={(e) => {
+			const target = e.target as HTMLElement;
+			if (target.scrollTop + target.clientHeight >= target.scrollHeight - 100) {
+				loadMore();
+			}
+		}}
+	>
 		<div class="mx-auto min-h-full max-w-4xl space-y-6">
 			{#if loading}
 				<div class="flex justify-center py-8">
@@ -1237,6 +1290,12 @@
 						</div>
 					</div>
 				{/each}
+
+				{#if loadingMore}
+					<div class="flex justify-center py-4">
+						<i class="fas fa-spinner fa-spin text-xl text-gray-400"></i>
+					</div>
+				{/if}
 			{/if}
 		</div>
 	</div>
