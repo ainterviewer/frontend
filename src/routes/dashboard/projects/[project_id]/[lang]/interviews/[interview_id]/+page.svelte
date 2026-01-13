@@ -326,12 +326,12 @@
 										{#if annotationSummary && (annotationSummary.tags.length > 0 || annotationSummary.scores.length > 0 || annotationSummary.hasComment)}
 											<div
 												class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type === 'received'
-													? 'ml-[10px] sm:ml-[50px]'
-													: 'mr-[10px] justify-end sm:mr-[50px]'}"
+													? 'ml-2.5 sm:ml-[50px]'
+													: 'mr-2.5 justify-end sm:mr-[50px]'}"
 											>
 												{#each annotationSummary.tags as tag}
 													<span
-														class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+														class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
 														style="background-color: {tag.color}; color: {getContrastColor(
 															tag.color
 														)}"
@@ -341,7 +341,7 @@
 												{/each}
 												{#each annotationSummary.scores as score}
 													<span
-														class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
+														class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
 														style="background-color: {score.color}; color: {getContrastColor(
 															score.color
 														)}"

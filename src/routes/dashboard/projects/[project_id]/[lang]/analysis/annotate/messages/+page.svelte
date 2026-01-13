@@ -435,6 +435,12 @@
 		updateSearchParams();
 	}
 
+	function clearCategoryFiltersByType(type: 'tag' | 'score') {
+		const typeIds = new Set(categories.filter((c) => c.type === type).map((c) => c.id));
+		selectedCategoryIds = selectedCategoryIds.filter((id) => !typeIds.has(id));
+		updateSearchParams();
+	}
+
 	function addQuestionFilter(section: number, question: number) {
 		if (!selectedQuestions.some(([s, q]) => s === section && q === question)) {
 			selectedQuestions = [...selectedQuestions, [section, question]];
@@ -868,41 +874,91 @@
 
 				<!-- Category Badges -->
 				{#if categories.length > 0}
-					<div class="flex flex-wrap items-center gap-2">
-						<span class="text-xs text-gray-500">Categories:</span>
-						{#each categories as category}
-							{@const isSelected = selectedCategoryIds.includes(category.id)}
-							<button
-								type="button"
-								onclick={(e) => {
-									stopEvent(e);
-									toggleCategoryFilter(category.id);
-								}}
-								class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all {isSelected
-									? 'ring-2 ring-offset-1'
-									: 'opacity-60 hover:opacity-100'}"
-								style="background-color: {category.color}; color: {getContrastColor(
-									category.color
-								)}; {isSelected ? `ring-color: ${category.color}` : ''}"
-							>
-								{#if isSelected}
-									<i class="fa-solid fa-check text-[10px]"></i>
-								{/if}
-								{category.name}
-								<span class="text-[10px] opacity-75">({category.type})</span>
-							</button>
-						{/each}
-						{#if selectedCategoryIds.length > 0}
-							<button
-								type="button"
-								onclick={(e) => {
-									stopEvent(e);
-									clearAllCategoryFilters();
-								}}
-								class="text-xs text-gray-500 hover:text-gray-700 hover:underline"
-							>
-								Clear
-							</button>
+					<div class="flex flex-col gap-2">
+						{#if categories.some((c) => c.type === 'tag')}
+							<div class="flex items-start gap-2">
+								<span class="w-24 shrink-0 pt-1 text-xs text-gray-500">Tags:</span>
+								<div class="flex flex-wrap items-center gap-2">
+									{#each categories.filter((c) => c.type === 'tag') as category}
+										{@const isSelected = selectedCategoryIds.includes(category.id)}
+										<button
+											type="button"
+											onclick={(e) => {
+												stopEvent(e);
+												toggleCategoryFilter(category.id);
+											}}
+											class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all {isSelected
+												? 'ring-2 ring-offset-1'
+												: 'opacity-60 hover:opacity-100'}"
+											style="background-color: {category.color}; color: {getContrastColor(
+												category.color
+											)}; {isSelected ? `ring-color: ${category.color}` : ''}"
+										>
+											{#if isSelected}
+												<i class="fa-solid fa-check text-[10px]"></i>
+											{/if}
+											{category.name}
+										</button>
+									{/each}
+									{#if categories
+										.filter((c) => c.type === 'tag')
+										.some((c) => selectedCategoryIds.includes(c.id))}
+										<button
+											type="button"
+											onclick={(e) => {
+												stopEvent(e);
+												clearCategoryFiltersByType('tag');
+											}}
+											class="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+										>
+											Clear
+										</button>
+									{/if}
+								</div>
+							</div>
+						{/if}
+
+						{#if categories.some((c) => c.type === 'score')}
+							<div class="flex items-start gap-2">
+								<span class="w-24 shrink-0 pt-1 text-xs text-gray-500">Categories:</span>
+								<div class="flex flex-wrap items-center gap-2">
+									{#each categories.filter((c) => c.type === 'score') as category}
+										{@const isSelected = selectedCategoryIds.includes(category.id)}
+										<button
+											type="button"
+											onclick={(e) => {
+												stopEvent(e);
+												toggleCategoryFilter(category.id);
+											}}
+											class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all {isSelected
+												? 'ring-2 ring-offset-1'
+												: 'opacity-60 hover:opacity-100'}"
+											style="background-color: {category.color}; color: {getContrastColor(
+												category.color
+											)}; {isSelected ? `ring-color: ${category.color}` : ''}"
+										>
+											{#if isSelected}
+												<i class="fa-solid fa-check text-[10px]"></i>
+											{/if}
+											{category.name}
+										</button>
+									{/each}
+									{#if categories
+										.filter((c) => c.type === 'score')
+										.some((c) => selectedCategoryIds.includes(c.id))}
+										<button
+											type="button"
+											onclick={(e) => {
+												stopEvent(e);
+												clearCategoryFiltersByType('score');
+											}}
+											class="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+										>
+											Clear
+										</button>
+									{/if}
+								</div>
+							</div>
 						{/if}
 					</div>
 				{/if}
@@ -1066,7 +1122,7 @@
 														>
 															{#each annotationSummary.tags as tag}
 																<span
-																	class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+																	class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
 																	style="background-color: {tag.color}; color: {getContrastColor(
 																		tag.color
 																	)}"
