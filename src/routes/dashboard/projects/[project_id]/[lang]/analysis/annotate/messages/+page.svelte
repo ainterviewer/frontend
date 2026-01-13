@@ -138,26 +138,191 @@
 	let groupedMessages = $derived.by(() => {
 		if (rawMessages.length === 0) return [];
 
+		const activeMessages = new Map<string, MessagePublic>();
+		const queue: MessagePublic[] = [];
+		const rawIds = new Set<string>();
+
+		// Initialize with raw messages
+		for (const msg of rawMessages) {
+			activeMessages.set(msg.id, msg);
+			queue.push(msg);
+			rawIds.add(msg.id);
+		}
+
+		// BFS to find all connected context messages
+		let head = 0;
+		while (head < queue.length) {
+			const msg = queue[head++];
+
+			// Check before context
+			const before = messageContext.before.get(msg.id);
+			if (before) {
+				for (const ctxMsg of before) {
+					if (!activeMessages.has(ctxMsg.id)) {
+						activeMessages.set(ctxMsg.id, ctxMsg);
+						queue.push(ctxMsg);
+					}
+				}
+			}
+
+			// Check after context
+			const after = messageContext.after.get(msg.id);
+			if (after) {
+				for (const ctxMsg of after) {
+					if (!activeMessages.has(ctxMsg.id)) {
+						activeMessages.set(ctxMsg.id, ctxMsg);
+						queue.push(ctxMsg);
+					}
+				}
+			}
+		}
+
 		// Sort by interview_id then message_id
-		const sorted = [...rawMessages].sort((a, b) => {
+		const sorted = Array.from(activeMessages.values()).sort((a, b) => {
 			if (a.interview_id !== b.interview_id) {
 				return a.interview_id.localeCompare(b.interview_id);
 			}
 			return a.message_id - b.message_id;
 		});
 
+		// Create a map for quick lookup by ID to check for siblings
+		const messageMap = new Map<string, MessagePublic>();
+		// Also map by (interview_id, message_number) for gap checks
+		const messageByNum = new Map<string, MessagePublic>();
+
+		for (const msg of sorted) {
+			messageMap.set(msg.id, msg);
+			messageByNum.set(`${msg.interview_id}:${msg.message_id}`, msg);
+		}
+
+		// Calculate insertions for "Hide Context" buttons
+		type Item =
+			| {
+					type: 'message';
+					data: Message & {
+						id: string;
+						raw: MessagePublic;
+						isContext: boolean;
+						hasGapBefore: boolean;
+						hasGapAfter: boolean;
+					};
+			  }
+			| {
+					type: 'context-control';
+					action: 'hide-before' | 'hide-after';
+					targetId: string;
+					interviewId: string;
+			  };
+
+		const items: Item[] = [];
+		const messageToIndex = new Map(sorted.map((m, i) => [m.id, i]));
+		const insertions = new Map<number, { before: Item[]; after: Item[] }>();
+
+		const addInsertion = (index: number, position: 'before' | 'after', item: Item) => {
+			if (!insertions.has(index)) insertions.set(index, { before: [], after: [] });
+			insertions.get(index)![position].push(item);
+		};
+
+		// Iterate RAW messages to place context controls
+		for (const rawMsg of rawMessages) {
+			// Check Before
+			const contextBefore = messageContext.before.get(rawMsg.id);
+			if (contextBefore && contextBefore.length > 0) {
+				let minIdx = Infinity;
+				let found = false;
+				for (const ctx of contextBefore) {
+					const idx = messageToIndex.get(ctx.id);
+					if (idx !== undefined) {
+						if (idx < minIdx) minIdx = idx;
+						found = true;
+					}
+				}
+
+				if (found && minIdx !== Infinity) {
+					addInsertion(minIdx, 'before', {
+						type: 'context-control',
+						action: 'hide-before',
+						targetId: rawMsg.id,
+						interviewId: rawMsg.interview_id
+					});
+				}
+			}
+
+			// Check After
+			const contextAfter = messageContext.after.get(rawMsg.id);
+			if (contextAfter && contextAfter.length > 0) {
+				let maxIdx = -1;
+				let found = false;
+				for (const ctx of contextAfter) {
+					const idx = messageToIndex.get(ctx.id);
+					if (idx !== undefined) {
+						if (idx > maxIdx) maxIdx = idx;
+						found = true;
+					}
+				}
+
+				if (found && maxIdx !== -1) {
+					addInsertion(maxIdx, 'after', {
+						type: 'context-control',
+						action: 'hide-after',
+						targetId: rawMsg.id,
+						interviewId: rawMsg.interview_id
+					});
+				}
+			}
+		}
+
+		// Build final flat list
+		for (let i = 0; i < sorted.length; i++) {
+			const msg = sorted[i];
+			const ins = insertions.get(i);
+
+			if (ins?.before) items.push(...ins.before);
+
+			const uiMsg = transformToUIMessage(msg);
+			const isContext = !rawIds.has(msg.id);
+
+			// Check gaps
+			const prevNum = msg.message_id - 1;
+			const nextNum = msg.message_id + 1;
+			const hasGapBefore = !messageByNum.has(`${msg.interview_id}:${prevNum}`);
+			const hasGapAfter = !messageByNum.has(`${msg.interview_id}:${nextNum}`);
+
+			// Check if we are inserting hide controls around this message
+			const hasHideBeforeControl = ins?.before?.some(
+				(item) => item.type === 'context-control' && item.action === 'hide-before'
+			);
+			const hasHideAfterControl = ins?.after?.some(
+				(item) => item.type === 'context-control' && item.action === 'hide-after'
+			);
+
+			items.push({
+				type: 'message',
+				data: {
+					...uiMsg,
+					isContext,
+					hasGapBefore: hasGapBefore && !hasHideBeforeControl,
+					hasGapAfter: hasGapAfter && !hasHideAfterControl
+				}
+			});
+
+			if (ins?.after) items.push(...ins.after);
+		}
+
 		const groups: {
 			interviewId: string;
-			messages: (Message & { id: string; raw: MessagePublic })[];
+			items: Item[];
 		}[] = [];
 		let currentGroup: (typeof groups)[number] | null = null;
 
-		for (const msg of sorted) {
-			if (!currentGroup || currentGroup.interviewId !== msg.interview_id) {
-				currentGroup = { interviewId: msg.interview_id, messages: [] };
+		for (const item of items) {
+			const interviewId = item.type === 'message' ? item.data.raw.interview_id : item.interviewId;
+
+			if (!currentGroup || currentGroup.interviewId !== interviewId) {
+				currentGroup = { interviewId, items: [] };
 				groups.push(currentGroup);
 			}
-			currentGroup.messages.push(transformToUIMessage(msg));
+			currentGroup.items.push(item);
 		}
 
 		return groups;
@@ -837,173 +1002,52 @@
 						</div>
 
 						<div class="flex flex-col gap-4 p-4">
-							{#each group.messages as msg, msgIndex (msg.id)}
-								{@const messageId = msg.id}
-								{@const annotation = messageAnnotations.get(messageId)}
-								{@const annotationSummary = annotation ? getAnnotationSummary(annotation) : null}
-								{@const prevMsg = msgIndex > 0 ? group.messages[msgIndex - 1] : null}
-								{@const nextMsg = msgIndex < group.messages.length - 1 ? group.messages[msgIndex + 1] : null}
-								{@const hasImmediateSiblingBefore = prevMsg !== null && prevMsg.raw.message_id === msg.raw.message_id - 1}
-								{@const hasImmediateSiblingAfter = nextMsg !== null && nextMsg.raw.message_id === msg.raw.message_id + 1}
+							{#each group.items as item, itemIndex (item.type === 'message' ? item.data.id : `ctrl-${item.action}-${item.targetId}`)}
+								{#if item.type === 'message'}
+									{@const msg = item.data}
+									{@const messageId = msg.id}
+									{@const annotation = messageAnnotations.get(messageId)}
+									{@const annotationSummary = annotation ? getAnnotationSummary(annotation) : null}
 
-								<div
-									class={msg.type === 'system'
-										? 'my-2 text-center text-sm text-gray-500'
-										: 'group relative'}
-								>
-									{#if msg.type === 'system'}
-										{msg.text}
-									{:else}
-										{@const isMainQuestion =
-											msg.raw.sub_question === null || msg.raw.sub_question === 0}
-										{@const hasContextBefore = messageContext.before.has(messageId)}
-										{@const hasContextAfter = messageContext.after.has(messageId)}
-										{@const isLoadingBefore = messageContext.loadingBefore.has(messageId)}
-										{@const isLoadingAfter = messageContext.loadingAfter.has(messageId)}
+									<div
+										class={msg.type === 'system'
+											? 'my-2 text-center text-sm text-gray-500'
+											: `group relative ${msg.isContext ? 'opacity-60' : ''}`}
+									>
+										{#if msg.type === 'system'}
+											{msg.text}
+										{:else}
+											{@const isMainQuestion =
+												msg.raw.sub_question === null || msg.raw.sub_question === 0}
+											{@const hasContextBefore = messageContext.before.has(messageId)}
+											{@const hasContextAfter = messageContext.after.has(messageId)}
+											{@const isLoadingBefore = messageContext.loadingBefore.has(messageId)}
+											{@const isLoadingAfter = messageContext.loadingAfter.has(messageId)}
 
-										<!-- Context Before Button -->
-										{#if !hasImmediateSiblingBefore && (!isMainQuestion || msg.raw.role === 'user')}
-											<div class="mb-2 flex justify-center">
-												<button
-													type="button"
-													onclick={() => fetchContextBefore(messageId, group.interviewId)}
-													class="text-xs text-gray-500 transition-colors hover:text-gray-700"
-													disabled={isLoadingBefore}
-												>
-													{#if isLoadingBefore}
-														<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-														Loading context...
-													{:else if hasContextBefore}
-														<i class="fa-solid fa-minus mr-1"></i>
-														Hide context before
-													{:else}
-														<i class="fa-solid fa-plus mr-1"></i>
-														Show context before
-													{/if}
-												</button>
-											</div>
-										{/if}
-
-										<!-- Display Context Before Messages -->
-										{#if hasContextBefore}
-											{@const contextMessages = messageContext.before.get(messageId) || []}
-											{#each contextMessages as ctxMsg}
-												{@const ctxUIMsg = transformToUIMessage(ctxMsg)}
-												<div class="mb-2 opacity-60">
-													<InterviewMessage
-														message={ctxUIMsg}
-														lang={lang || 'en'}
-														isLast={false}
-														readonly={true}
-														onFeedback={() => {}}
-														onSkip={() => {}}
-														onSurveyAnswer={() => {}}
-													/>
-												</div>
-											{/each}
-										{/if}
-
-										<div class="flex items-start gap-2">
-											<div class="min-w-0 flex-1">
-												<InterviewMessage
-													message={msg}
-													lang={lang || 'en'}
-													isLast={false}
-													readonly={true}
-													onFeedback={() => {}}
-													onSkip={() => {}}
-													onSurveyAnswer={() => {}}
-												/>
-
-												<!-- Annotation Summary -->
-												{#if annotationSummary && (annotationSummary.tags.length > 0 || annotationSummary.scores.length > 0 || annotationSummary.hasComment)}
-													<div
-														class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type === 'received'
-															? 'ml-[10px] sm:ml-[50px]'
-															: 'mr-[10px] justify-end sm:mr-[50px]'}"
+											<!-- Context Before Button (only if not loaded and has gap) -->
+											{#if !hasContextBefore && msg.hasGapBefore && (!isMainQuestion || msg.raw.role === 'user')}
+												<div class="mb-2 flex justify-center">
+													<button
+														type="button"
+														onclick={() => fetchContextBefore(messageId, group.interviewId)}
+														class="text-xs text-gray-500 transition-colors hover:text-gray-700"
+														disabled={isLoadingBefore}
 													>
-														{#each annotationSummary.tags as tag}
-															<span
-																class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
-																style="background-color: {tag.color}; color: {getContrastColor(
-																	tag.color
-																)}"
-															>
-																{tag.name}
-															</span>
-														{/each}
-														{#each annotationSummary.scores as score}
-															<span
-																class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
-																style="background-color: {score.color}; color: {getContrastColor(
-																	score.color
-																)}"
-															>
-																{score.name}: {score.value}
-															</span>
-														{/each}
-														{#if annotationSummary.hasComment}
-															<HoverInfo text={annotation?.comment || ''} asChild>
-																{#snippet children({ props })}
-																	<span
-																		{...props}
-																		class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
-																	>
-																		<i class="fa-solid fa-comment mr-1"></i>
-																		Note
-																	</span>
-																{/snippet}
-															</HoverInfo>
+														{#if isLoadingBefore}
+															<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+															Loading context...
+														{:else}
+															<i class="fa-solid fa-plus mr-1"></i>
+															Show context before
 														{/if}
-													</div>
-												{/if}
-											</div>
+													</button>
+												</div>
+											{/if}
 
-											<!-- Edit Button -->
-											<div class="relative flex-shrink-0 self-start pt-2">
-												<button
-													type="button"
-													class="flex h-7 w-7 items-center justify-center rounded-full transition-all {annotation
-														? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-														: 'bg-gray-100 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600'}"
-													onclick={() => {
-														activeAnnotationMessageId =
-															activeAnnotationMessageId === messageId ? null : messageId;
-													}}
-													title="Edit annotation"
-												>
-													<i class="fa-solid fa-pen-to-square text-xs"></i>
-												</button>
-											</div>
-										</div>
-
-										<!-- Annotation Panel -->
-										{#if activeAnnotationMessageId === messageId}
-											<div class="annotation-panel-container mt-2 max-w-2xl px-4 sm:px-12">
-												<MessageAnnotationPanel
-													{projectId}
-													{categories}
-													{annotation}
-													saving={savingAnnotation}
-													onSave={(values, comment, shouldClose) =>
-														handleSaveAnnotation(messageId, values, comment, shouldClose)}
-													onDelete={annotation
-														? () => handleDeleteAnnotation(messageId)
-														: undefined}
-													onCancel={() => (activeAnnotationMessageId = null)}
-													onCategoryCreated={() => loadData()}
-												/>
-											</div>
-										{/if}
-
-										<!-- Display Context After Messages -->
-										{#if hasContextAfter}
-											{@const contextMessages = messageContext.after.get(messageId) || []}
-											{#each contextMessages as ctxMsg}
-												{@const ctxUIMsg = transformToUIMessage(ctxMsg)}
-												<div class="mt-2 opacity-60">
+											<div class="flex items-start gap-2">
+												<div class="min-w-0 flex-1">
 													<InterviewMessage
-														message={ctxUIMsg}
+														message={msg}
 														lang={lang || 'en'}
 														isLast={false}
 														readonly={true}
@@ -1011,34 +1055,128 @@
 														onSkip={() => {}}
 														onSurveyAnswer={() => {}}
 													/>
-												</div>
-											{/each}
-										{/if}
 
-										<!-- Context After Button -->
-										{#if !hasImmediateSiblingAfter && !msg.raw.is_introduction}
-											<div class="mt-2 flex justify-center">
-												<button
-													type="button"
-													onclick={() => fetchContextAfter(messageId, group.interviewId)}
-													class="text-xs text-gray-500 transition-colors hover:text-gray-700"
-													disabled={isLoadingAfter}
-												>
-													{#if isLoadingAfter}
-														<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-														Loading context...
-													{:else if hasContextAfter}
-														<i class="fa-solid fa-minus mr-1"></i>
-														Hide context after
-													{:else}
-														<i class="fa-solid fa-plus mr-1"></i>
-														Show context after
+													<!-- Annotation Summary -->
+													{#if annotationSummary && (annotationSummary.tags.length > 0 || annotationSummary.scores.length > 0 || annotationSummary.hasComment)}
+														<div
+															class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type ===
+															'received'
+																? 'ml-[10px] sm:ml-[50px]'
+																: 'mr-[10px] justify-end sm:mr-[50px]'}"
+														>
+															{#each annotationSummary.tags as tag}
+																<span
+																	class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+																	style="background-color: {tag.color}; color: {getContrastColor(
+																		tag.color
+																	)}"
+																>
+																	{tag.name}
+																</span>
+															{/each}
+															{#each annotationSummary.scores as score}
+																<span
+																	class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
+																	style="background-color: {score.color}; color: {getContrastColor(
+																		score.color
+																	)}"
+																>
+																	{score.name}: {score.value}
+																</span>
+															{/each}
+															{#if annotationSummary.hasComment}
+																<HoverInfo text={annotation?.comment || ''} asChild>
+																	{#snippet children({ props })}
+																		<span
+																			{...props}
+																			class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
+																		>
+																			<i class="fa-solid fa-comment mr-1"></i>
+																			Note
+																		</span>
+																	{/snippet}
+																</HoverInfo>
+															{/if}
+														</div>
 													{/if}
-												</button>
+												</div>
+
+												<!-- Edit Button -->
+												<div class="relative flex-shrink-0 self-start pt-2">
+													<button
+														type="button"
+														class="flex h-7 w-7 items-center justify-center rounded-full transition-all {annotation
+															? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+															: 'bg-gray-100 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600'}"
+														onclick={() => {
+															activeAnnotationMessageId =
+																activeAnnotationMessageId === messageId ? null : messageId;
+														}}
+														title="Edit annotation"
+													>
+														<i class="fa-solid fa-pen-to-square text-xs"></i>
+													</button>
+												</div>
 											</div>
+
+											<!-- Annotation Panel -->
+											{#if activeAnnotationMessageId === messageId}
+												<div class="annotation-panel-container mt-2 max-w-2xl px-4 sm:px-12">
+													<MessageAnnotationPanel
+														{projectId}
+														{categories}
+														{annotation}
+														saving={savingAnnotation}
+														onSave={(values, comment, shouldClose) =>
+															handleSaveAnnotation(messageId, values, comment, shouldClose)}
+														onDelete={annotation
+															? () => handleDeleteAnnotation(messageId)
+															: undefined}
+														onCancel={() => (activeAnnotationMessageId = null)}
+														onCategoryCreated={() => loadData()}
+													/>
+												</div>
+											{/if}
+
+											<!-- Context After Button (only if not loaded and has gap) -->
+											{#if !hasContextAfter && msg.hasGapAfter && !msg.raw.is_introduction}
+												<div class="mt-2 flex justify-center">
+													<button
+														type="button"
+														onclick={() => fetchContextAfter(messageId, group.interviewId)}
+														class="text-xs text-gray-500 transition-colors hover:text-gray-700"
+														disabled={isLoadingAfter}
+													>
+														{#if isLoadingAfter}
+															<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+															Loading context...
+														{:else}
+															<i class="fa-solid fa-plus mr-1"></i>
+															Show context after
+														{/if}
+													</button>
+												</div>
+											{/if}
 										{/if}
-									{/if}
-								</div>
+									</div>
+								{:else if item.type === 'context-control'}
+									<div class="my-2 flex justify-center">
+										<button
+											type="button"
+											onclick={() => {
+												if (item.action === 'hide-before') {
+													fetchContextBefore(item.targetId, item.interviewId);
+												} else {
+													fetchContextAfter(item.targetId, item.interviewId);
+												}
+											}}
+											class="flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+										>
+											<i class="fa-solid fa-minus text-[10px]"></i>
+											{item.action === 'hide-before' ? 'Hide context before' : 'Hide context after'}
+										</button>
+									</div>
+								{/if}
 							{/each}
 						</div>
 					</div>
