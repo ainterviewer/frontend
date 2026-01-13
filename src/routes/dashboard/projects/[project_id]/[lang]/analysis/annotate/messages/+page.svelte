@@ -2,11 +2,12 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
-	import { Analysis, type Image, type MessagePublic } from '$lib/api';
+	import { Analysis, Projects, type Image, type MessagePublic } from '$lib/api';
 	import type {
 		AnalysisCategoryPublic,
 		AnnotationValueCreate,
-		MessageAnnotationPublic
+		MessageAnnotationPublic,
+		InterviewGuideOutput
 	} from '$lib/api/types.gen';
 	import type { Message } from '../../../../../../../interview/chat.svelte';
 	import InterviewMessage from '../../../../../../../interview/components/InterviewMessage.svelte';
@@ -19,12 +20,25 @@
 	let lang = $derived(page.params.lang ?? '');
 
 	// Query params
-	let categoryId = $derived(page.url.searchParams.get('category_id'));
+	let categoryIdsParam = $derived(page.url.searchParams.getAll('category_id'));
 	let searchTextParam = $derived(page.url.searchParams.get('search_text'));
 	let exactMatchParam = $derived(page.url.searchParams.get('exact_match') === 'true');
 	let caseSensitiveParam = $derived(page.url.searchParams.get('case_sensitive') === 'true');
+	let questionsParam = $derived(
+		page.url.searchParams
+			.getAll('question')
+			.map((q) => {
+				const parts = q.split(',').map(Number);
+				if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+					return [parts[0], parts[1]] as [number, number];
+				}
+				return null;
+			})
+			.filter((q): q is [number, number] => q !== null)
+	);
 
 	let categories = $state<AnalysisCategoryPublic[]>([]);
+	let guide = $state<InterviewGuideOutput | null>(null);
 	let rawMessages = $state<MessagePublic[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
@@ -32,24 +46,29 @@
 	// UI State
 	let activeAnnotationMessageId = $state<string | null>(null);
 	let savingAnnotation = $state(false);
+	let showCategoryDropdown = $state(false);
+	let showQuestionDropdown = $state(false);
 
 	// Search State (local form state)
 	let searchText = $state('');
 	let exactMatch = $state(false);
 	let caseSensitive = $state(false);
 	let showSearchOptions = $state(false);
+	let selectedCategoryIds = $state<string[]>([]);
+	let selectedQuestions = $state<[number, number][]>([]);
 
 	// Sync form state with URL params
 	$effect(() => {
 		searchText = searchTextParam || '';
 		exactMatch = exactMatchParam;
 		caseSensitive = caseSensitiveParam;
+		selectedCategoryIds = categoryIdsParam;
+		selectedQuestions = questionsParam;
 	});
 
 	// Derived State
-	let currentCategory = $derived(
-		categoryId ? categories.find((c) => c.id === categoryId) : null
-	);
+	let selectedCategories = $derived(categories.filter((c) => selectedCategoryIds.includes(c.id)));
+	let availableCategories = $derived(categories.filter((c) => !selectedCategoryIds.includes(c.id)));
 
 	// Map raw messages to UI messages and group by interview
 	let groupedMessages = $derived.by(() => {
@@ -158,20 +177,26 @@
 		loading = true;
 		error = null;
 		try {
-			const [catsRes, msgsRes] = await Promise.all([
+			const [catsRes, guideRes, msgsRes] = await Promise.all([
 				Analysis.getAnalysisCategories({ path: { project_id: projectId } }),
+				Projects.getGuide({ path: { project_id: projectId, lang: lang } }).catch((err) => {
+					console.warn('Failed to load guide:', err);
+					return { data: null };
+				}),
 				Analysis.getFilteredMessages({
 					path: { project_id: projectId },
-					query: {
-						category_id: categoryId || null,
+					body: {
+						category_ids: categoryIdsParam.length > 0 ? categoryIdsParam : null,
 						search_text: searchTextParam || null,
 						exact_match: exactMatchParam || undefined,
-						case_sensitive: caseSensitiveParam || undefined
+						case_sensitive: caseSensitiveParam || undefined,
+						questions: questionsParam.length > 0 ? questionsParam : null
 					}
 				})
 			]);
 
 			if (catsRes.data) categories = catsRes.data;
+			if (guideRes.data) guide = guideRes.data;
 			if (msgsRes.data) rawMessages = msgsRes.data;
 		} catch (e) {
 			console.error('Failed to load data', e);
@@ -193,7 +218,10 @@
 
 	function updateSearchParams() {
 		const params = new URLSearchParams();
-		if (categoryId) params.set('category_id', categoryId);
+		selectedCategoryIds.forEach((id) => params.append('category_id', id));
+		selectedQuestions.forEach(([section, question]) =>
+			params.append('question', `${section},${question}`)
+		);
 		if (searchText.trim()) {
 			params.set('search_text', searchText.trim());
 			if (exactMatch) params.set('exact_match', 'true');
@@ -207,18 +235,91 @@
 		exactMatch = false;
 		caseSensitive = false;
 		const params = new URLSearchParams();
-		if (categoryId) params.set('category_id', categoryId);
+		selectedCategoryIds.forEach((id) => params.append('category_id', id));
+		selectedQuestions.forEach(([section, question]) =>
+			params.append('question', `${section},${question}`)
+		);
 		goto(`?${params.toString()}`, { replaceState: false });
 	}
 
-	function clearCategoryFilter() {
-		const params = new URLSearchParams();
-		if (searchTextParam) {
-			params.set('search_text', searchTextParam);
-			if (exactMatchParam) params.set('exact_match', 'true');
-			if (caseSensitiveParam) params.set('case_sensitive', 'true');
+	function addCategoryFilter(categoryId: string) {
+		selectedCategoryIds = [...selectedCategoryIds, categoryId];
+		showCategoryDropdown = false;
+		updateSearchParams();
+	}
+
+	function removeCategoryFilter(categoryId: string) {
+		selectedCategoryIds = selectedCategoryIds.filter((id) => id !== categoryId);
+		updateSearchParams();
+	}
+
+	function clearAllCategoryFilters() {
+		selectedCategoryIds = [];
+		updateSearchParams();
+	}
+
+	function addQuestionFilter(section: number, question: number) {
+		if (!selectedQuestions.some(([s, q]) => s === section && q === question)) {
+			selectedQuestions = [...selectedQuestions, [section, question]];
+			updateSearchParams();
 		}
-		goto(`?${params.toString()}`, { replaceState: false });
+	}
+
+	function removeQuestionFilter(section: number, question: number) {
+		selectedQuestions = selectedQuestions.filter(([s, q]) => !(s === section && q === question));
+		updateSearchParams();
+	}
+
+	function clearAllQuestionFilters() {
+		selectedQuestions = [];
+		updateSearchParams();
+	}
+
+	function getQuestionLabel(section: number, question: number): string {
+		return `${section + 1}.${question + 1}`;
+	}
+
+	function getQuestionText(section: number, question: number): string {
+		if (!guide?.question_sections) return '';
+		const sectionData = guide.question_sections[section];
+		if (!sectionData?.questions) return '';
+		const questionData = sectionData.questions[question];
+		return questionData?.main_question || '';
+	}
+
+	function getSectionDescription(section: number): string {
+		if (!guide?.question_sections) return '';
+		const sectionData = guide.question_sections[section];
+		return sectionData?.description || '';
+	}
+
+	function isSectionFullySelected(sectionIdx: number): boolean {
+		if (!guide?.question_sections) return false;
+		const section = guide.question_sections[sectionIdx];
+		if (!section?.questions) return false;
+		return section.questions.every((_, qIdx) =>
+			selectedQuestions.some(([s, q]) => s === sectionIdx && q === qIdx)
+		);
+	}
+
+	function toggleSection(sectionIdx: number) {
+		if (!guide?.question_sections) return;
+		const section = guide.question_sections[sectionIdx];
+		if (!section?.questions) return;
+
+		const isFullySelected = isSectionFullySelected(sectionIdx);
+
+		if (isFullySelected) {
+			// Remove all questions from this section
+			selectedQuestions = selectedQuestions.filter(([s]) => s !== sectionIdx);
+		} else {
+			// Add all questions from this section that aren't already selected
+			const questionsToAdd = section.questions
+				.map((_, qIdx) => [sectionIdx, qIdx] as [number, number])
+				.filter(([s, q]) => !selectedQuestions.some(([ss, qq]) => ss === s && qq === q));
+			selectedQuestions = [...selectedQuestions, ...questionsToAdd];
+		}
+		updateSearchParams();
 	}
 
 	// Annotation Helpers
@@ -345,13 +446,17 @@
 				</a>
 				<div class="flex flex-col">
 					<h1 class="text-xl font-semibold text-gray-800">
-						{#if currentCategory}
-							Messages with <span
-								class="inline-flex items-center rounded-full px-2 py-0.5 text-sm font-medium"
-								style="background-color: {currentCategory.color}; color: {getContrastColor(
-									currentCategory.color
-								)}">{currentCategory.name}</span
-							>
+						{#if selectedCategories.length > 0 || selectedQuestions.length > 0}
+							Filtered Messages
+							{#if selectedCategories.length > 0}
+								({selectedCategories.length}
+								{selectedCategories.length === 1 ? 'category' : 'categories'}
+								{#if selectedQuestions.length > 0}, {/if})
+							{/if}
+							{#if selectedQuestions.length > 0}
+								({selectedQuestions.length}
+								{selectedQuestions.length === 1 ? 'question' : 'questions'})
+							{/if}
 						{:else if searchTextParam}
 							Search Results
 						{:else}
@@ -371,9 +476,9 @@
 							type="text"
 							bind:value={searchText}
 							placeholder="Search messages..."
-							class="w-full rounded-md border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+							class="w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 						/>
-						<i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+						<i class="fa-solid fa-search absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
 						></i>
 					</div>
 					<button
@@ -385,15 +490,184 @@
 					{#if searchTextParam}
 						<button
 							type="button"
-							onclick={clearSearch}
+							onclick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								clearSearch();
+							}}
 							class="rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
 						>
 							Clear
 						</button>
 					{/if}
+					<div class="relative">
+						<button
+							type="button"
+							onclick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								showCategoryDropdown = !showCategoryDropdown;
+							}}
+							class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50"
+							title="Add category filter"
+						>
+							<i class="fa-solid fa-filter mr-1"></i>
+							Categories
+							{#if selectedCategories.length > 0}
+								<span class="ml-1 text-xs">({selectedCategories.length})</span>
+							{/if}
+						</button>
+						{#if showCategoryDropdown}
+							<div
+								class="absolute right-0 z-10 mt-2 max-h-64 w-64 overflow-y-auto rounded-md bg-white shadow-lg"
+							>
+								{#if availableCategories.length > 0}
+									<div class="py-1">
+										{#each availableCategories as category}
+											<button
+												type="button"
+												onclick={(e) => {
+													e.preventDefault();
+													e.stopPropagation();
+													addCategoryFilter(category.id);
+												}}
+												class="block w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-100"
+											>
+												<span
+													class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+													style="background-color: {category.color}; color: {getContrastColor(
+														category.color
+													)}"
+												>
+													{category.name}
+												</span>
+												<span class="ml-2 text-xs text-gray-500">({category.type})</span>
+											</button>
+										{/each}
+									</div>
+								{:else}
+									<div class="px-4 py-3 text-sm text-gray-500">
+										{selectedCategories.length > 0
+											? 'All categories selected'
+											: 'No categories available'}
+									</div>
+								{/if}
+							</div>
+						{/if}
+					</div>
+					<div class="relative">
+						<button
+							type="button"
+							onclick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								showQuestionDropdown = !showQuestionDropdown;
+							}}
+							class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50"
+							title="Add question filter"
+						>
+							<i class="fa-solid fa-list-ol mr-1"></i>
+							Questions
+							{#if selectedQuestions.length > 0}
+								<span class="ml-1 text-xs">({selectedQuestions.length})</span>
+							{/if}
+						</button>
+						{#if showQuestionDropdown}
+							<div
+								class="absolute right-0 z-10 mt-2 max-h-96 w-96 overflow-y-auto rounded-md bg-white shadow-lg"
+							>
+								{#if guide?.question_sections && guide.question_sections.length > 0}
+									<div class="py-1">
+										{#each guide.question_sections as section, sectionIdx}
+											{#if section.questions && section.questions.length > 0}
+												{@const isFullySelected = isSectionFullySelected(sectionIdx)}
+												<div class="border-b border-gray-100">
+													<!-- Section Header (clickable to select all) -->
+													<button
+														type="button"
+														onclick={(e) => {
+															e.preventDefault();
+															e.stopPropagation();
+															toggleSection(sectionIdx);
+														}}
+														class="flex w-full items-center gap-2 bg-gray-50 px-4 py-2 text-left transition-colors hover:bg-gray-100"
+													>
+														<input
+															type="checkbox"
+															checked={isFullySelected}
+															class="rounded pointer-events-none"
+															readonly
+														/>
+														<span class="text-xs font-semibold text-gray-700">
+															Section {sectionIdx + 1}
+															{#if section.description}
+																<span class="font-normal text-gray-500">
+																	- {section.description.length > 40
+																		? section.description.substring(0, 40) + '...'
+																		: section.description}
+																</span>
+															{/if}
+														</span>
+													</button>
+													<!-- Individual Questions -->
+													<div class="px-4 py-2">
+														<div class="space-y-1">
+															{#each section.questions as question, questionIdx}
+																{@const isSelected = selectedQuestions.some(
+																	([s, q]) => s === sectionIdx && q === questionIdx
+																)}
+																<button
+																	type="button"
+																	onclick={(e) => {
+																		e.preventDefault();
+																		e.stopPropagation();
+																		if (isSelected) {
+																			removeQuestionFilter(sectionIdx, questionIdx);
+																		} else {
+																			addQuestionFilter(sectionIdx, questionIdx);
+																		}
+																	}}
+																	class="flex w-full items-center gap-2 px-2 py-1 text-left text-xs transition-colors hover:bg-gray-100 {isSelected
+																		? 'bg-blue-50'
+																		: ''}"
+																>
+																	<input
+																		type="checkbox"
+																		checked={isSelected}
+																		class="rounded pointer-events-none"
+																		readonly
+																	/>
+																	<span class="font-medium text-gray-600">
+																		{sectionIdx + 1}.{questionIdx + 1}
+																	</span>
+																	<span class="flex-1 text-gray-700">
+																		{question.main_question.length > 60
+																			? question.main_question.substring(0, 60) + '...'
+																			: question.main_question}
+																	</span>
+																</button>
+															{/each}
+														</div>
+													</div>
+												</div>
+											{/if}
+										{/each}
+									</div>
+								{:else}
+									<div class="px-4 py-3 text-sm text-gray-500">
+										{loading ? 'Loading questions...' : 'No questions available'}
+									</div>
+								{/if}
+							</div>
+						{/if}
+					</div>
 					<button
 						type="button"
-						onclick={() => (showSearchOptions = !showSearchOptions)}
+						onclick={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+							showSearchOptions = !showSearchOptions;
+						}}
 						class="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50"
 						title="Search options"
 					>
@@ -415,24 +689,64 @@
 				{/if}
 
 				<!-- Active Filters -->
-				{#if currentCategory || searchTextParam}
+				{#if selectedCategories.length > 0 || selectedQuestions.length > 0 || searchTextParam}
 					<div class="flex flex-wrap items-center gap-2">
 						<span class="text-xs text-gray-500">Active filters:</span>
-						{#if currentCategory}
-							<button
-								type="button"
-								onclick={clearCategoryFilter}
-								class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-opacity hover:opacity-80"
-								style="background-color: {currentCategory.color}; color: {getContrastColor(
-									currentCategory.color
-								)}"
-							>
-								{currentCategory.name}
-								<i class="fa-solid fa-times"></i>
-							</button>
+						{#if selectedCategories.length > 0}
+							{#each selectedCategories as category}
+								<button
+									type="button"
+									onclick={() => removeCategoryFilter(category.id)}
+									class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-opacity hover:opacity-80"
+									style="background-color: {category.color}; color: {getContrastColor(
+										category.color
+									)}"
+								>
+									{category.name}
+									<i class="fa-solid fa-times"></i>
+								</button>
+							{/each}
+							{#if selectedCategories.length > 1}
+								<button
+									type="button"
+									onclick={clearAllCategoryFilters}
+									class="text-xs text-blue-600 hover:underline"
+								>
+									Clear all categories
+								</button>
+							{/if}
+						{/if}
+						{#if selectedQuestions.length > 0}
+							{#each selectedQuestions as [section, question]}
+								{@const questionText = getQuestionText(section, question)}
+								{@const sectionDesc = getSectionDescription(section)}
+								<button
+									type="button"
+									onclick={() => removeQuestionFilter(section, question)}
+									class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 transition-opacity hover:opacity-80"
+									title="{sectionDesc ? `Section ${section + 1}: ${sectionDesc}\n` : ''}Q {getQuestionLabel(
+										section,
+										question
+									)}: {questionText}"
+								>
+									Q {getQuestionLabel(section, question)}
+									<i class="fa-solid fa-times"></i>
+								</button>
+							{/each}
+							{#if selectedQuestions.length > 1}
+								<button
+									type="button"
+									onclick={clearAllQuestionFilters}
+									class="text-xs text-blue-600 hover:underline"
+								>
+									Clear all questions
+								</button>
+							{/if}
 						{/if}
 						{#if searchTextParam}
-							<span class="inline-flex items-center gap-1 rounded-full bg-gray-200 px-2 py-0.5 text-xs">
+							<span
+								class="inline-flex items-center gap-1 rounded-full bg-gray-200 px-2 py-0.5 text-xs"
+							>
 								<i class="fa-solid fa-search"></i>
 								"{searchTextParam}"
 								{#if exactMatchParam}
@@ -464,7 +778,7 @@
 				<div class="rounded-lg bg-white p-8 text-center shadow-sm">
 					<i class="fa-regular fa-comments mb-3 text-3xl text-gray-400"></i>
 					<p class="text-gray-500">
-						{#if searchTextParam || currentCategory}
+						{#if searchTextParam || selectedCategories.length > 0}
 							No messages found matching your filters.
 						{:else}
 							No messages found.
@@ -618,6 +932,13 @@
 			!(e.target as Element).closest('button')
 		) {
 			// Optional: close on click outside
+		}
+		// Close dropdowns on outside click
+		const target = e.target as Element;
+		const clickedInside = target.closest('.relative');
+		if (!clickedInside) {
+			showCategoryDropdown = false;
+			showQuestionDropdown = false;
 		}
 	}}
 />

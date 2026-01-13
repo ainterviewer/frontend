@@ -39,7 +39,7 @@
 						try {
 							const { data } = await Analysis.getFilteredMessagesCount({
 								path: { project_id: projectId },
-								query: { category_id: c.id }
+								body: { category_ids: [c.id] }
 							});
 							if (data !== undefined) counts[c.id] = data;
 						} catch (e) {
@@ -88,7 +88,11 @@
 	}
 
 	function navigateToCategory(id: string) {
-		goto(`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?category_id=${id}`);
+		const params = new URLSearchParams();
+		params.append('category_id', id);
+		goto(
+			`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?${params.toString()}`
+		);
 	}
 
 	onMount(() => {
