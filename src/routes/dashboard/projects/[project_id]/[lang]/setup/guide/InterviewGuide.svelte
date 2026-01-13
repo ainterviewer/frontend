@@ -2,7 +2,11 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
-	import type { InterviewGuideOutput } from '$lib/api/types.gen';
+	import type {
+		InterviewGuideOutput,
+		QuestionOutput,
+		QuestionSectionQuestionOutput
+	} from '$lib/api/types.gen';
 	import {
 		DragDropProvider,
 		DragOverlay,
@@ -60,6 +64,7 @@
 	let showGenerateSectionModal = $state(false);
 	let showGenerateQuestionModal = $state(false);
 	let generatingQuestionSectionId = $state<string | null>(null);
+	let generatingQuestionSectionIdx = $state<number | null>(null);
 
 	let activeId = $state('');
 
@@ -72,23 +77,97 @@
 	}
 
 	async function handleGenerateSection(prompt: string) {
-		await Projects.generateGuideSection({
+		const { data, error } = await Projects.generateGuideSection({
 			path: { project_id: projectId, lang: lang },
 			body: { prompt }
 		});
-		await invalidateAll();
+
+		if (error) {
+			console.error('Failed to generate section', error);
+			alert('Failed to generate section');
+			return;
+		}
+
+		if (data) {
+			const section = data as QuestionSectionQuestionOutput;
+			const newId = generateId();
+			const newSection: GuideSection = {
+				id: newId,
+				description: section.description,
+				questions: [],
+				shuffle: section.shuffle ?? false
+			};
+
+			localSections.push(newSection);
+			localQuestions[newId] = (section.questions || []).map((q) => ({
+				...q,
+				id: generateId(),
+				alternative_main_questions: q.alternative_main_questions || [],
+				image: q.image || null,
+				survey_item: q.survey_item || null,
+				condition: q.condition || null,
+				can_skip: q.can_skip ?? true,
+				check_if_answered: q.check_if_answered ?? false,
+				check_if_exhausted: q.check_if_exhausted ?? false,
+				create_segue: q.create_segue ?? false,
+				exclude_from_history: q.exclude_from_history ?? false,
+				user_image: q.user_image ?? false,
+				shuffle: q.shuffle ?? false,
+				probes: q.probes || [],
+				max_probes_n: q.max_probes_n ?? 3,
+				max_probes_time: q.max_probes_time ?? null,
+				can_answer: q.can_answer ?? true
+			}));
+		}
 	}
 
 	async function handleGenerateQuestion(prompt: string) {
-		// Note: The API currently doesn't accept a section ID for question generation.
-		// We send the prompt and rely on the backend or subsequent logic.
-		// If we could, we would pass generatingQuestionSectionId.
-		await Projects.generateSectionQuestion({
+		if (generatingQuestionSectionIdx === null || !generatingQuestionSectionId) return;
+
+		const { data, error } = await Projects.generateSectionQuestion({
 			path: { project_id: projectId, lang: lang },
-			body: { prompt }
+			body: {
+				prompt,
+				section_idx: generatingQuestionSectionIdx
+			}
 		});
-		await invalidateAll();
+
+		if (error) {
+			console.error('Failed to generate question', error);
+			alert('Failed to generate question');
+			return;
+		}
+
+		if (data) {
+			const q = data as QuestionOutput;
+			const newQuestion: GuideQuestion = {
+				...q,
+				id: generateId(),
+				alternative_main_questions: q.alternative_main_questions || [],
+				image: q.image || null,
+				survey_item: q.survey_item || null,
+				condition: q.condition || null,
+				can_skip: q.can_skip ?? true,
+				check_if_answered: q.check_if_answered ?? false,
+				check_if_exhausted: q.check_if_exhausted ?? false,
+				create_segue: q.create_segue ?? false,
+				exclude_from_history: q.exclude_from_history ?? false,
+				user_image: q.user_image ?? false,
+				shuffle: q.shuffle ?? false,
+				probes: q.probes || [],
+				max_probes_n: q.max_probes_n ?? 3,
+				max_probes_time: q.max_probes_time ?? null,
+				can_answer: q.can_answer ?? true
+			};
+
+			if (!localQuestions[generatingQuestionSectionId]) {
+				localQuestions[generatingQuestionSectionId] = [];
+			}
+			localQuestions[generatingQuestionSectionId].push(newQuestion);
+		}
+
 		generatingQuestionSectionId = null;
+		generatingQuestionSectionIdx = null;
 	}
 
 	function addSection() {
@@ -272,6 +351,7 @@
 							onRemove={() => removeSection(sIdx)}
 							onGenerateQuestion={() => {
 								generatingQuestionSectionId = section.id;
+								generatingQuestionSectionIdx = sIdx;
 								showGenerateQuestionModal = true;
 							}}
 						/>
