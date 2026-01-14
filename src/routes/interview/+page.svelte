@@ -64,7 +64,9 @@
 	let showExit = $state(false);
 
 	// Audio recording state
+	let showRecordingOverlay = $state(false);
 	let isRecording = $state(false);
+	let isPaused = $state(false);
 	let audioAmplitude = $state(0);
 	let mediaRecorder: MediaRecorder | null = $state(null);
 	let audioContext: AudioContext | null = null;
@@ -72,6 +74,7 @@
 	let audioStream: MediaStream | null = null;
 	let animationFrameId: number | null = null;
 	let recordedChunks: Blob[] = [];
+	let hasRecordedContent = $state(false);
 
 	onMount(() => {
 		chat.initialize();
@@ -139,38 +142,68 @@
 	}
 
 	// Audio recording functions
+	function openRecordingOverlay() {
+		showRecordingOverlay = true;
+		isRecording = false;
+		isPaused = false;
+		hasRecordedContent = false;
+		recordedChunks = [];
+		audioAmplitude = 0;
+	}
+
 	async function startRecording() {
 		try {
-			audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			if (!audioStream) {
+				audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-			// Set up audio analysis for amplitude
-			audioContext = new AudioContext();
-			const source = audioContext.createMediaStreamSource(audioStream);
-			analyser = audioContext.createAnalyser();
-			analyser.fftSize = 256;
-			analyser.smoothingTimeConstant = 0.8;
-			source.connect(analyser);
+				// Set up audio analysis for amplitude
+				audioContext = new AudioContext();
+				const source = audioContext.createMediaStreamSource(audioStream);
+				analyser = audioContext.createAnalyser();
+				analyser.fftSize = 256;
+				analyser.smoothingTimeConstant = 0.8;
+				source.connect(analyser);
 
-			// Set up media recorder
-			recordedChunks = [];
-			mediaRecorder = new MediaRecorder(audioStream);
+				// Set up media recorder
+				mediaRecorder = new MediaRecorder(audioStream);
 
-			mediaRecorder.ondataavailable = (e) => {
-				if (e.data.size > 0) {
-					recordedChunks.push(e.data);
-				}
-			};
+				mediaRecorder.ondataavailable = (e) => {
+					if (e.data.size > 0) {
+						recordedChunks.push(e.data);
+						hasRecordedContent = true;
+					}
+				};
+			}
 
-			mediaRecorder.onstop = handleRecordingComplete;
+			if (mediaRecorder && mediaRecorder.state === 'inactive') {
+				mediaRecorder.start(100); // Collect data every 100ms for pause support
+			} else if (mediaRecorder && mediaRecorder.state === 'paused') {
+				mediaRecorder.resume();
+			}
 
-			mediaRecorder.start();
 			isRecording = true;
+			isPaused = false;
 
 			// Start amplitude analysis loop
 			analyzeAmplitude();
 		} catch (err) {
 			console.error('Failed to start recording:', err);
 		}
+	}
+
+	function pauseRecording() {
+		if (mediaRecorder && mediaRecorder.state === 'recording') {
+			mediaRecorder.pause();
+		}
+
+		if (animationFrameId) {
+			cancelAnimationFrame(animationFrameId);
+			animationFrameId = null;
+		}
+
+		isRecording = false;
+		isPaused = true;
+		audioAmplitude = 0;
 	}
 
 	function analyzeAmplitude() {
@@ -186,14 +219,14 @@
 		animationFrameId = requestAnimationFrame(analyzeAmplitude);
 	}
 
-	function stopRecording() {
-		if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-			mediaRecorder.stop();
-		}
-
+	function cleanupRecording() {
 		if (animationFrameId) {
 			cancelAnimationFrame(animationFrameId);
 			animationFrameId = null;
+		}
+
+		if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+			mediaRecorder.stop();
 		}
 
 		if (audioStream) {
@@ -207,22 +240,42 @@
 		}
 
 		analyser = null;
+		mediaRecorder = null;
 		isRecording = false;
+		isPaused = false;
 		audioAmplitude = 0;
 	}
 
-	function handleRecordingComplete() {
-		if (recordedChunks.length === 0) return;
-
-		const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
-		// TODO: Send audioBlob for transcription or handle as needed
-		console.log('Recording complete:', audioBlob.size, 'bytes');
+	function deleteRecording() {
+		cleanupRecording();
 		recordedChunks = [];
+		hasRecordedContent = false;
+		showRecordingOverlay = false;
 	}
 
-	function toggleRecording() {
+	function sendRecording() {
+		if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+			mediaRecorder.stop();
+		}
+
+		// Wait a moment for final data to be collected
+		setTimeout(() => {
+			if (recordedChunks.length > 0) {
+				const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+				// TODO: Send audioBlob for transcription or handle as needed
+				console.log('Sending recording:', audioBlob.size, 'bytes');
+			}
+
+			cleanupRecording();
+			recordedChunks = [];
+			hasRecordedContent = false;
+			showRecordingOverlay = false;
+		}, 100);
+	}
+
+	function toggleRecordPause() {
 		if (isRecording) {
-			stopRecording();
+			pauseRecording();
 		} else {
 			startRecording();
 		}
@@ -367,18 +420,11 @@
 					<button
 						type="button"
 						class="m-auto flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
-						class:bg-red-100={isRecording}
-						onclick={toggleRecording}
+						onclick={openRecordingOverlay}
 						disabled={!chat.inputEnabled}
-						title={isRecording ? 'Stop recording' : 'Record audio'}
+						title="Record audio"
 					>
-						<i
-							class="fas text-lg"
-							class:fa-microphone-lines={!isRecording}
-							class:fa-stop={isRecording}
-							class:text-gray-600={!isRecording}
-							class:text-red-600={isRecording}
-						></i>
+						<i class="fas fa-microphone-lines text-lg text-gray-600"></i>
 					</button>
 				</div>
 			</div>
@@ -411,40 +457,88 @@
 </Modal>
 
 <!-- Recording Overlay -->
-{#if isRecording}
+{#if showRecordingOverlay}
 	<div
 		class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm"
 		role="dialog"
 		aria-modal="true"
-		aria-label="Recording in progress"
+		aria-label="Audio recording"
 	>
 		<div class="flex flex-col items-center gap-6">
 			<div class="h-64 w-64 sm:h-80 sm:w-80">
 				<Wave
-					amplitude={audioAmplitude}
-					animate={true}
+					amplitude={isRecording ? audioAmplitude : 0.5}
+					animate={isRecording}
 					speed={2}
 					color="#196858"
-					title="Recording..."
 				/>
 			</div>
 
 			<div class="flex flex-col items-center gap-2">
-				<div class="flex items-center gap-2">
-					<span class="h-3 w-3 animate-pulse rounded-full bg-red-500"></span>
-					<span class="text-lg font-medium text-white">Recording...</span>
-				</div>
-				<p class="text-sm text-gray-300">Speak clearly into your microphone</p>
+				{#if isRecording}
+					<div class="flex items-center gap-2">
+						<span class="h-3 w-3 animate-pulse rounded-full bg-red-500"></span>
+						<span class="text-lg font-medium text-white">Recording...</span>
+					</div>
+				{:else if isPaused && hasRecordedContent}
+					<div class="flex items-center gap-2">
+						<span class="h-3 w-3 rounded-full bg-yellow-500"></span>
+						<span class="text-lg font-medium text-white">Paused</span>
+					</div>
+				{:else}
+					<span class="text-lg font-medium text-white">Ready to record</span>
+				{/if}
+				<p class="text-sm text-gray-300">
+					{isRecording ? 'Speak clearly into your microphone' : 'Press record to start'}
+				</p>
 			</div>
 
-			<button
-				type="button"
-				class="mt-4 flex items-center gap-2 rounded-full bg-red-600 px-6 py-3 text-white shadow-lg transition-all hover:bg-red-700 hover:shadow-xl active:scale-95"
-				onclick={stopRecording}
-			>
-				<i class="fas fa-stop"></i>
-				<span class="font-medium">Stop Recording</span>
-			</button>
+			<!-- Control Buttons -->
+			<div class="mt-4 flex items-center gap-4">
+				<!-- Delete Button -->
+				<button
+					type="button"
+					class="flex h-14 w-14 items-center justify-center rounded-full bg-gray-700 text-white shadow-lg transition-all hover:bg-gray-600 active:scale-95"
+					onclick={deleteRecording}
+					title="Delete recording"
+				>
+					<i class="fas fa-trash text-xl"></i>
+				</button>
+
+				<!-- Record/Pause Button -->
+				<button
+					type="button"
+					class="flex h-20 w-20 items-center justify-center rounded-full shadow-lg transition-all active:scale-95"
+					class:bg-red-600={!isRecording}
+					class:hover:bg-red-700={!isRecording}
+					class:bg-yellow-600={isRecording}
+					class:hover:bg-yellow-700={isRecording}
+					onclick={toggleRecordPause}
+					title={isRecording ? 'Pause recording' : 'Start recording'}
+				>
+					{#if isRecording}
+						<i class="fas fa-pause text-3xl text-white"></i>
+					{:else}
+						<i class="fas fa-microphone text-3xl text-white"></i>
+					{/if}
+				</button>
+
+				<!-- Send Button -->
+				<button
+					type="button"
+					class="flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all active:scale-95"
+					class:bg-green-600={hasRecordedContent}
+					class:hover:bg-green-700={hasRecordedContent}
+					class:bg-gray-600={!hasRecordedContent}
+					class:opacity-50={!hasRecordedContent}
+					class:cursor-not-allowed={!hasRecordedContent}
+					onclick={sendRecording}
+					disabled={!hasRecordedContent}
+					title="Send recording"
+				>
+					<i class="fas fa-paper-plane text-xl text-white"></i>
+				</button>
+			</div>
 		</div>
 	</div>
 {/if}
