@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { Interviews } from '$lib/api';
+import { Interviews, type ReceivedData } from '$lib/api';
 
 export type MessageType = 'sent' | 'received' | 'system';
 
@@ -290,7 +290,7 @@ export class ChatClient {
 	sendMessage(text: string) {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 
-		const msg = { type: 'message', content: text };
+		const msg: ReceivedData = { type: 'message', content: text };
 		this.ws.send(JSON.stringify(msg));
 
 		// Optimistically add to UI
