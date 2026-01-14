@@ -75,6 +75,8 @@
 	let animationFrameId: number | null = null;
 	let recordedChunks: Blob[] = [];
 	let hasRecordedContent = $state(false);
+	let recordingStartTime: number | null = null;
+	let totalRecordingDuration = $state(0);
 
 	onMount(() => {
 		chat.initialize();
@@ -149,6 +151,8 @@
 		hasRecordedContent = false;
 		recordedChunks = [];
 		audioAmplitude = 0;
+		recordingStartTime = null;
+		totalRecordingDuration = 0;
 	}
 
 	async function startRecording() {
@@ -183,6 +187,7 @@
 
 			isRecording = true;
 			isPaused = false;
+			recordingStartTime = Date.now();
 
 			// Start amplitude analysis loop
 			analyzeAmplitude();
@@ -199,6 +204,12 @@
 		if (animationFrameId) {
 			cancelAnimationFrame(animationFrameId);
 			animationFrameId = null;
+		}
+
+		// Accumulate recording duration
+		if (recordingStartTime) {
+			totalRecordingDuration += Date.now() - recordingStartTime;
+			recordingStartTime = null;
 		}
 
 		isRecording = false;
@@ -254,6 +265,12 @@
 	}
 
 	function sendRecording() {
+		// Calculate final duration (add any current recording segment)
+		let finalDuration = totalRecordingDuration;
+		if (recordingStartTime) {
+			finalDuration += Date.now() - recordingStartTime;
+		}
+
 		if (mediaRecorder && mediaRecorder.state !== 'inactive') {
 			mediaRecorder.stop();
 		}
@@ -262,8 +279,7 @@
 		setTimeout(() => {
 			if (recordedChunks.length > 0) {
 				const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
-				// TODO: Send audioBlob for transcription or handle as needed
-				console.log('Sending recording:', audioBlob.size, 'bytes');
+				chat.sendAudio(audioBlob, finalDuration);
 			}
 
 			cleanupRecording();

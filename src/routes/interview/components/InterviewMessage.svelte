@@ -3,6 +3,7 @@
 	import SurveyItem from './SurveyItem.svelte';
 	import FeedbackToggle from './FeedbackToggle.svelte';
 	import SkipButton from './SkipButton.svelte';
+	import AudioMessage from './AudioMessage.svelte';
 
 	// Custom token definitions with their display properties
 	const TOKEN_CONFIG: Record<CustomTokens, { icon: string; label: string; color: string }> = {
@@ -126,6 +127,9 @@
 					alt={message.image.alt || 'Image'}
 					class="max-h-[350px] max-w-full rounded-[5px] sm:max-h-[40vh]"
 				/>
+			{/if}
+			{#if message.audio}
+				<AudioMessage blob={message.audio.blob} duration={message.audio.duration} />
 			{/if}
 			{#if processedText}
 				{@html processedText}

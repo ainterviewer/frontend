@@ -11,6 +11,7 @@ export interface Message {
 	feedback?: 'positive' | 'negative' | null;
 	survey_item?: any;
 	image?: { data: string; alt?: string; primer?: string };
+	audio?: { blob: Blob; duration: number };
 	can_answer?: boolean;
 	user_image?: boolean;
 	question_label?: string;
@@ -298,6 +299,26 @@ export class ChatClient {
 			type: 'sent',
 			text: text,
 			message_id: Date.now() // temporary ID
+		});
+
+		if (this.role === 'respondent') {
+			this.inputEnabled = false;
+			this.showTypingIndicator = true;
+		}
+	}
+
+	sendAudio(text: string, audioBlob: Blob, duration: number) {
+		// TODO: Send audio to server for transcription
+		// For now, just show in chat
+		//
+		const msg: ReceivedData = { type: 'audio', content: text, audio_content: audioBlob };
+		this.ws.send(JSON.stringify(msg));
+
+		// Add audio message to UI
+		this.messages.push({
+			type: 'sent',
+			audio: { blob: audioBlob, duration },
+			message_id: Date.now()
 		});
 
 		if (this.role === 'respondent') {
