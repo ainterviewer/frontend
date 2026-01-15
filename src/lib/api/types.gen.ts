@@ -332,6 +332,24 @@ export type BodyCreateWelcome = {
 };
 
 /**
+ * Body_upload_audio
+ */
+export type BodyUploadAudio = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
  * Broadcast
  */
 export type Broadcast = {
@@ -595,6 +613,20 @@ export type HttpValidationError = {
  */
 export type Image = {
     /**
+     * Type
+     */
+    type?: 'audio' | 'image' | 'video';
+    /**
+     * Filename
+     *
+     * The filename
+     */
+    filename: string;
+    /**
+     * Data
+     */
+    data: string;
+    /**
      * Primer
      *
      * A primer to show the interviewee before showing the image
@@ -612,16 +644,6 @@ export type Image = {
      * The alt text for the image for accessibility
      */
     alt: string;
-    /**
-     * Name
-     *
-     * The filename
-     */
-    name: string;
-    /**
-     * Data
-     */
-    data?: string | null;
 };
 
 /**
@@ -871,6 +893,20 @@ export type LoginData = {
      * Extended
      */
     extended?: boolean;
+};
+
+/**
+ * MediaUploadResponse
+ */
+export type MediaUploadResponse = {
+    /**
+     * Message
+     */
+    message: string;
+    /**
+     * Filename
+     */
+    filename: string;
 };
 
 /**
@@ -1921,6 +1957,24 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage1 = {
+    /**
      * Primer
      */
     primer: string;
@@ -1939,9 +1993,30 @@ export type FastapiCompatV2BodyUploadImage = {
 };
 
 /**
- * Body_upload_image
+ * AuthToken
  */
-export type FastapiCompatV2BodyUploadImage2 = {
+export type AuthToken = {
+    /**
+     * User Id
+     */
+    user_id: string;
+    scope: Scope;
+};
+
+/**
+ * CustomTokens
+ */
+export type CustomTokens = '<|endofprobe|>' | '<|endofsection|>' | '<|endofinterview|>' | '<|skipquestion|>' | '<|skipsection|>' | '<|noanswer|>' | '<|restartinterview|>';
+
+/**
+ * InterviewRole
+ */
+export type InterviewRole = 'interviewer' | 'respondent';
+
+/**
+ * InterviewToken
+ */
+export type InterviewToken = {
     /**
      * Project Id
      */
@@ -1950,10 +2025,8 @@ export type FastapiCompatV2BodyUploadImage2 = {
      * Interview Id
      */
     interview_id: string;
-    /**
-     * File
-     */
-    file: Blob | File;
+    interviewer: Interviewer;
+    role?: InterviewRole;
 };
 
 /**
@@ -2071,22 +2144,19 @@ export type ReceivedData = {
     /**
      * Type
      */
-    type: 'message' | 'image';
+    type: 'message' | 'image' | 'audio';
     message_type?: MessageType | null;
     /**
      * Content
      */
     content: string;
     /**
-     * File
+     * Filename
+     *
+     * filename for media asset
      */
-    file?: string | null;
+    filename?: string | null;
 };
-
-/**
- * CustomTokens
- */
-export type CustomTokens = '<|endofprobe|>' | '<|endofsection|>' | '<|endofinterview|>' | '<|skipquestion|>' | '<|skipsection|>' | '<|noanswer|>' | '<|restartinterview|>';
 
 export type GetAnalysisCategoriesData = {
     body?: never;
@@ -3311,7 +3381,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage1;
     path: {
         /**
          * Project Id
@@ -4291,7 +4361,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage2;
+    body: FastapiCompatV2BodyUploadImage;
     path?: never;
     query?: never;
     url: '/api/image';
@@ -4310,8 +4380,35 @@ export type UploadImage2Responses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MediaUploadResponse;
 };
+
+export type UploadImage2Response = UploadImage2Responses[keyof UploadImage2Responses];
+
+export type UploadAudioData = {
+    body: BodyUploadAudio;
+    path?: never;
+    query?: never;
+    url: '/api/audio';
+};
+
+export type UploadAudioErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UploadAudioError = UploadAudioErrors[keyof UploadAudioErrors];
+
+export type UploadAudioResponses = {
+    /**
+     * Successful Response
+     */
+    200: MediaUploadResponse;
+};
+
+export type UploadAudioResponse = UploadAudioResponses[keyof UploadAudioResponses];
 
 export type LoginData2 = {
     body: LoginData;
