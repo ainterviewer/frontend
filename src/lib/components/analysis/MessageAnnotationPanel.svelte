@@ -4,10 +4,9 @@
 		AnnotationValueCreate,
 		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
-	import { Analysis } from '$lib/api';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import Info from '$lib/components/Info.svelte';
-	import { getContrastColor, generateColor } from '$lib/utils/colors';
+	import { getContrastColor } from '$lib/utils/colors';
 	import CategoryModal from '$lib/components/analysis/CategoryModal.svelte';
 	import type { AnnotationType } from '$lib/api/types.gen';
 
@@ -15,11 +14,7 @@
 		categories: AnalysisCategoryPublic[];
 		annotation?: MessageAnnotationPublic | null;
 		projectId: string;
-		onSave: (
-			values: AnnotationValueCreate[],
-			comment: string | null,
-			shouldClose?: boolean
-		) => void;
+		onSave: (values: AnnotationValueCreate[], shouldClose?: boolean) => void;
 		onDelete?: () => void;
 		onCancel: () => void;
 		onCategoryCreated?: () => void;
@@ -44,19 +39,10 @@
 	// Form state - initialize from existing annotation if present
 	let selectedTags = $state<Set<string>>(new Set());
 	let scoreValues = $state<Map<string, number>>(new Map());
-	let comment = $state('');
 	let isInitialized = false;
-	let isSavingComment = $state(false);
 
 	let isCategoryModalOpen = $state(false);
 	let modalDefaultType = $state<AnnotationType>('tag');
-
-	// Reset isSavingComment when saving completes
-	$effect(() => {
-		if (!saving) {
-			isSavingComment = false;
-		}
-	});
 
 	// Initialize form state from existing annotation
 	$effect(() => {
@@ -81,11 +67,9 @@
 
 				selectedTags = tagIds;
 				scoreValues = scoreMap;
-				comment = annotation.comment || '';
 			} else {
 				selectedTags = new Set();
 				scoreValues = new Map();
-				comment = '';
 			}
 			isInitialized = true;
 		}
@@ -110,7 +94,7 @@
 			});
 		}
 
-		onSave(values, comment.trim() || null, shouldClose);
+		onSave(values, shouldClose);
 	}
 
 	function toggleTag(categoryId: string) {
@@ -142,20 +126,10 @@
 		triggerSave(false);
 	}
 
-	function handleSave() {
-		isSavingComment = true;
-		triggerSave(true);
-	}
-
 	function openCreateModal(type: AnnotationType) {
 		modalDefaultType = type;
 		isCategoryModalOpen = true;
 	}
-
-	let hasChanges = $derived.by(() => {
-		// Check if there are any values to save
-		return selectedTags.size > 0 || scoreValues.size > 0 || comment.trim().length > 0;
-	});
 </script>
 
 <div class="rounded-lg border border-gray-200 bg-white shadow-lg">
@@ -279,47 +253,18 @@
 			</fieldset>
 		{/if}
 
-		<!-- Comment Section -->
-		<div>
-			<label
-				for="annotation-comment"
-				class="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase"
-			>
-				Comment
-			</label>
-			<textarea
-				id="annotation-comment"
-				bind:value={comment}
-				rows="3"
-				class="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
-				placeholder="Add a note about this message..."
-			></textarea>
-		</div>
 	</div>
 
 	<!-- Actions -->
 	<div class="flex items-center justify-end border-t border-gray-200 px-4 py-3">
-		<div class="flex gap-2">
-			<button
-				type="button"
-				class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-				onclick={onCancel}
-				disabled={saving}
-			>
-				Close
-			</button>
-			<button
-				type="button"
-				class="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-				onclick={handleSave}
-				disabled={isSavingComment || !hasChanges}
-			>
-				{#if isSavingComment && saving}
-					<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-				{/if}
-				{annotation ? 'Save Comment' : 'Save'}
-			</button>
-		</div>
+		<button
+			type="button"
+			class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+			onclick={onCancel}
+			disabled={saving}
+		>
+			Close
+		</button>
 	</div>
 </div>
 

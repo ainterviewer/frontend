@@ -50,7 +50,10 @@
 
 	// UI State
 	let activeAnnotationMessageId = $state<string | null>(null);
+	let activeCommentMessageId = $state<string | null>(null);
+	let commentText = $state('');
 	let savingAnnotation = $state(false);
+	let savingComment = $state(false);
 	let showQuestionDropdown = $state(false);
 
 	// Search State (local form state)
@@ -576,7 +579,6 @@
 	async function handleSaveAnnotation(
 		messageId: string,
 		values: AnnotationValueCreate[],
-		comment: string | null,
 		shouldClose: boolean = true
 	) {
 		const userId = page.data.user?.id;
@@ -589,6 +591,8 @@
 		savingAnnotation = true;
 		try {
 			const existingAnnotation = messageAnnotations.get(messageId);
+			// Preserve existing comment when saving annotations
+			const existingComment = existingAnnotation?.comment || null;
 
 			if (existingAnnotation) {
 				const { data: updatedAnnotation, error } = await Analysis.updateMessageAnnotation({
@@ -596,7 +600,7 @@
 					body: {
 						message_id: messageId,
 						user_id: userId,
-						comment,
+						comment: existingComment,
 						values
 					}
 				});
@@ -612,7 +616,7 @@
 					body: {
 						message_id: messageId,
 						user_id: userId,
-						comment,
+						comment: null,
 						values
 					}
 				});
@@ -631,6 +635,72 @@
 		} finally {
 			savingAnnotation = false;
 		}
+	}
+
+	async function handleSaveComment(messageId: string) {
+		const userId = page.data.user?.id;
+
+		if (!userId) {
+			alert('User not found. Please reload.');
+			return;
+		}
+
+		savingComment = true;
+		try {
+			const existingAnnotation = messageAnnotations.get(messageId);
+			const newComment = commentText.trim() || null;
+
+			if (existingAnnotation) {
+				const { data: updatedAnnotation, error } = await Analysis.updateMessageAnnotation({
+					path: { annotation_id: existingAnnotation.id },
+					body: {
+						message_id: messageId,
+						user_id: userId,
+						comment: newComment,
+						values: existingAnnotation.values.map((v) => ({
+							category_id: v.category_id,
+							value_int: v.value_int
+						}))
+					}
+				});
+				if (error) throw error;
+				if (updatedAnnotation) {
+					const newMap = new Map(messageAnnotations);
+					newMap.set(messageId, updatedAnnotation);
+					messageAnnotations = newMap;
+				}
+			} else {
+				const { data: newAnnotation, error } = await Analysis.addMessageAnnotation({
+					path: { message_id: messageId },
+					body: {
+						message_id: messageId,
+						user_id: userId,
+						comment: newComment,
+						values: []
+					}
+				});
+				if (error) throw error;
+				if (newAnnotation) {
+					const newMap = new Map(messageAnnotations);
+					newMap.set(messageId, newAnnotation);
+					messageAnnotations = newMap;
+				}
+			}
+
+			activeCommentMessageId = null;
+			commentText = '';
+		} catch (e) {
+			console.error('Error saving comment:', e);
+			alert('Error saving comment');
+		} finally {
+			savingComment = false;
+		}
+	}
+
+	function openCommentInput(messageId: string) {
+		const existingAnnotation = messageAnnotations.get(messageId);
+		commentText = existingAnnotation?.comment || '';
+		activeCommentMessageId = messageId;
 	}
 
 	async function handleDeleteAnnotation(messageId: string) {
@@ -1165,14 +1235,14 @@
 														onSurveyAnswer={() => {}}
 													/>
 
-													<!-- Annotation Summary -->
-													{#if annotationSummary && (annotationSummary.tags.length > 0 || annotationSummary.scores.length > 0 || annotationSummary.hasComment)}
-														<div
-															class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type ===
-															'received'
-																? 'ml-2.5 sm:ml-[50px]'
-																: 'mr-2.5 justify-end sm:mr-[50px]'}"
-														>
+													<!-- Annotation Summary & Annotate Badge -->
+													<div
+														class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type ===
+														'received'
+															? 'ml-2.5 sm:ml-[50px]'
+															: 'mr-2.5 justify-end sm:mr-[50px]'}"
+													>
+														{#if annotationSummary}
 															{#each annotationSummary.tags as tag}
 																<span
 																	class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
@@ -1206,25 +1276,88 @@
 																	{/snippet}
 																</HoverInfo>
 															{/if}
-														</div>
-													{/if}
+														{/if}
+														<!-- Annotate Badge (shown on hover) -->
+														<button
+															type="button"
+															class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
+															onclick={() => {
+																activeAnnotationMessageId =
+																	activeAnnotationMessageId === messageId ? null : messageId;
+															}}
+														>
+															<i class="fa-solid fa-tag text-[8px]"></i>
+															Annotate
+														</button>
+													</div>
 												</div>
 
-												<!-- Edit Button -->
+												<!-- Comment Button with Margin Comment -->
 												<div class="relative flex-shrink-0 self-start pt-2">
 													<button
 														type="button"
-														class="flex h-7 w-7 items-center justify-center rounded-full transition-all {annotation
-															? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+														class="flex h-7 w-7 items-center justify-center rounded-full transition-all {annotation?.comment
+															? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
 															: 'bg-gray-100 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600'}"
-														onclick={() => {
-															activeAnnotationMessageId =
-																activeAnnotationMessageId === messageId ? null : messageId;
-														}}
-														title="Edit annotation"
+														onclick={() => openCommentInput(messageId)}
+														title={annotation?.comment ? 'Edit comment' : 'Add comment'}
 													>
-														<i class="fa-solid fa-pen-to-square text-xs"></i>
+														<i class="fa-solid fa-comment text-xs"></i>
 													</button>
+
+													<!-- Margin Comment Input (Google Docs style) -->
+													{#if activeCommentMessageId === messageId}
+														<div class="comment-input-container absolute top-0 left-full z-20 ml-2 w-72">
+															<div class="rounded-lg border border-gray-200 bg-white shadow-lg">
+																<div class="flex items-center justify-between border-b border-gray-100 px-3 py-2">
+																	<span class="text-xs font-medium text-gray-600">
+																		{annotation?.comment ? 'Edit Comment' : 'Add Comment'}
+																	</span>
+																	<button
+																		type="button"
+																		class="text-gray-400 hover:text-gray-600"
+																		onclick={() => {
+																			activeCommentMessageId = null;
+																			commentText = '';
+																		}}
+																	>
+																		<i class="fa-solid fa-times text-xs"></i>
+																	</button>
+																</div>
+																<div class="p-3">
+																	<textarea
+																		bind:value={commentText}
+																		rows="3"
+																		class="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+																		placeholder="Add a comment..."
+																	></textarea>
+																	<div class="mt-2 flex justify-end gap-2">
+																		<button
+																			type="button"
+																			class="rounded px-3 py-1 text-xs text-gray-600 hover:bg-gray-100"
+																			onclick={() => {
+																				activeCommentMessageId = null;
+																				commentText = '';
+																			}}
+																		>
+																			Cancel
+																		</button>
+																		<button
+																			type="button"
+																			class="rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+																			onclick={() => handleSaveComment(messageId)}
+																			disabled={savingComment}
+																		>
+																			{#if savingComment}
+																				<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+																			{/if}
+																			Save
+																		</button>
+																	</div>
+																</div>
+															</div>
+														</div>
+													{/if}
 												</div>
 											</div>
 
@@ -1236,8 +1369,8 @@
 														{categories}
 														{annotation}
 														saving={savingAnnotation}
-														onSave={(values, comment, shouldClose) =>
-															handleSaveAnnotation(messageId, values, comment, shouldClose)}
+														onSave={(values, shouldClose) =>
+															handleSaveAnnotation(messageId, values, shouldClose)}
 														onDelete={annotation
 															? () => handleDeleteAnnotation(messageId)
 															: undefined}
@@ -1303,15 +1436,19 @@
 
 <svelte:window
 	onclick={(e) => {
-		if (
-			activeAnnotationMessageId &&
-			!(e.target as Element).closest('.annotation-panel-container') &&
-			!(e.target as Element).closest('button')
-		) {
-			// Optional: close on click outside
-		}
-		// Close dropdowns on outside click
 		const target = e.target as Element;
+
+		// Close comment input on outside click
+		if (
+			activeCommentMessageId &&
+			!target.closest('.comment-input-container') &&
+			!target.closest('button')
+		) {
+			activeCommentMessageId = null;
+			commentText = '';
+		}
+
+		// Close dropdowns on outside click
 		const clickedInside = target.closest('.relative');
 		if (!clickedInside) {
 			showQuestionDropdown = false;
