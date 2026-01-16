@@ -1957,24 +1957,6 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage1 = {
-    /**
      * Primer
      */
     primer: string;
@@ -1986,6 +1968,24 @@ export type FastapiCompatV2BodyUploadImage1 = {
      * Alt
      */
     alt: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage2 = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
     /**
      * File
      */
@@ -2042,14 +2042,6 @@ export type OutgoingData = {
      */
     content?: string | null;
     /**
-     * Interview Id
-     */
-    interview_id?: string | null;
-    /**
-     * Project Id
-     */
-    project_id?: string | null;
-    /**
      * Progress
      */
     progress?: number | null;
@@ -2064,32 +2056,24 @@ export type OutgoingData = {
  */
 export type OutgoingHistoryMessage = {
     /**
+     * Type
+     */
+    type?: 'history';
+    /**
      * Content
      */
     content: string;
     role: MessageRole;
     /**
-     * Interview Id
-     */
-    interview_id: string;
-    /**
      * Message Id
      */
     message_id: number;
-    /**
-     * Include In History
-     */
-    include_in_history?: boolean;
     feedback?: Feedback | null;
     /**
      * Image
      */
     image?: Image | Array<Image> | null;
     survey_item?: SurveyItem | null;
-    /**
-     * Type
-     */
-    type?: 'history';
 };
 
 /**
@@ -2097,32 +2081,24 @@ export type OutgoingHistoryMessage = {
  */
 export type OutgoingMessage = {
     /**
+     * Type
+     */
+    type?: 'message';
+    /**
      * Content
      */
     content: string;
     role: MessageRole;
     /**
-     * Interview Id
-     */
-    interview_id: string;
-    /**
      * Message Id
      */
     message_id: number;
-    /**
-     * Include In History
-     */
-    include_in_history?: boolean;
     feedback?: Feedback | null;
     /**
      * Image
      */
     image?: Image | Array<Image> | null;
     survey_item?: SurveyItem | null;
-    /**
-     * Type
-     */
-    type?: 'message';
     /**
      * Can Answer
      */
@@ -3381,7 +3357,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage1;
+    body: FastapiCompatV2BodyUploadImage;
     path: {
         /**
          * Project Id
@@ -4361,7 +4337,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage2;
     path?: never;
     query?: never;
     url: '/api/image';

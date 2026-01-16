@@ -861,15 +861,7 @@ export class Projects {
      * Get Consent
      */
     public static getConsent<ThrowOnError extends boolean = false>(options: Options<GetConsentData, ThrowOnError>) {
-        return (options.client ?? client).get<GetConsentResponses, GetConsentErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/guide/consent/{language}',
-            ...options
-        });
+        return (options.client ?? client).get<GetConsentResponses, GetConsentErrors, ThrowOnError>({ url: '/api/projects/{project_id}/guide/consent/{language}', ...options });
     }
     
     /**
