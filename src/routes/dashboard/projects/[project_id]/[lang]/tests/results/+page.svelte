@@ -179,7 +179,9 @@
 		activeDropdown = null;
 		if (action === 'view') {
 			const lang = page.params.lang || 'en';
-			window.open(`/dashboard/projects/${project_id}/${lang}/interviews/${id}`, '_blank')?.focus();
+			window
+				.open(`/dashboard/projects/${project_id}/${lang}/tests/results/${id}`, '_blank')
+				?.focus();
 		} else if (action === 'download') {
 			downloadFile([id], 'csv');
 		} else if (action === 'delete') {
