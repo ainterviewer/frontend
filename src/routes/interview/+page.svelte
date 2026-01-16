@@ -1,23 +1,16 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
-	import { Auth } from '$lib/api/sdk.gen';
-	import { ChatClient } from './chat.svelte';
-	import AudioRecordingOverlay from './components/AudioRecordingOverlay.svelte';
-	import GradientProgressBar from './components/GradientProgressBar.svelte';
-	import InterviewMessage from './components/InterviewMessage.svelte';
-	import Modal from './components/Modal.svelte';
-	import TypingIndicator from './components/TypingIndicator.svelte';
-	import type { TestType } from '$lib/api';
+	import { onMount } from 'svelte';
+	import { Projects, type Consent } from '$lib/api';
+	import { ChatClient, getInterviewIdFromCookie, createInterview } from './chat.svelte';
+	import InterviewChat from './components/InterviewChat.svelte';
+	import type { InterviewType } from '$lib/api';
 
 	interface PageData {
-		project_id?: string;
-		id?: string;
+		project_id: string;
 		lang: string;
-		synthetic: boolean;
-		test: boolean;
-		testType?: TestType;
+		interviewType?: InterviewType;
 		experimentID?: string;
-		image_upload?: any;
+		image_upload?: boolean;
 		help_title?: string;
 		help_text?: string;
 		exit_title?: string;
@@ -27,11 +20,8 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let projectId = $derived(data.project_id || 'default');
-	let interviewId = $derived(data.id || '');
+	let projectId = $derived(data.project_id);
 	let lang = $derived(data.lang);
-	let testType = $derived(data.testType || '');
-	let experimentID = $derived(data.experimentID);
 	let imageUpload = $derived(data.image_upload);
 
 	// Help/Exit data
@@ -41,96 +31,80 @@
 	let exitText = $derived(data.exit_text || 'Are you sure you want to exit?');
 	let exitButtonText = $derived(data.exit_button || 'End Interview');
 
-	// Initialize chat client
-	let chat = new ChatClient(
-		data.project_id || 'default',
-		'respondent',
-		data.lang || 'en',
-		data.test,
-		data.synthetic
-	);
+	// Chat client - initialized after consent/interview creation
+	let chat = $state<ChatClient | null>(null);
 
-	$effect(() => {
-		chat.project_id = projectId;
-		chat.lang = lang;
-	});
-
-	let messageInput = $state('');
-	let messagesContainer: HTMLDivElement | undefined = $state();
-	let textarea: HTMLTextAreaElement | undefined = $state();
-	let fileInput: HTMLInputElement | undefined = $state();
-
-	let showHelp = $state(false);
-	let showExit = $state(false);
-	let showRecordingOverlay = $state(false);
+	// Consent flow state
+	let showConsent = $state(false);
+	let consentData = $state<Consent | null>(null);
+	let isInitializing = $state(true);
+	let consentAccepting = $state(false);
 
 	onMount(() => {
-		chat.initialize();
-		return () => chat.disconnect();
-	});
+		const existingInterviewId = getInterviewIdFromCookie();
 
-	// Auto-scroll logic
-	$effect(() => {
-		const _ = [chat.messages.length, chat.showTypingIndicator];
-		scrollToBottom();
-	});
-
-	async function scrollToBottom() {
-		await tick();
-		if (messagesContainer && messagesContainer.lastElementChild) {
-			messagesContainer.lastElementChild.scrollIntoView({ behavior: 'smooth' });
-		}
-	}
-
-	function handleInput(e: Event) {
-		const target = e.target as HTMLTextAreaElement;
-		target.style.height = 'auto';
-		target.style.height = target.scrollHeight + 'px';
-		if (target.scrollHeight > 150) {
-			target.style.overflowY = 'scroll';
+		if (existingInterviewId) {
+			initializeChat(existingInterviewId);
 		} else {
-			target.style.overflowY = 'hidden';
+			loadConsentAndStart();
 		}
+
+		return () => chat?.disconnect();
+	});
+
+	function initializeChat(interviewId: string) {
+		chat = new ChatClient(projectId, 'respondent', lang);
+		chat.initialize(interviewId);
+		isInitializing = false;
 	}
 
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-			handleSubmit(e);
-		}
-	}
+	async function loadConsentAndStart() {
+		try {
+			const { data: consent } = await Projects.getConsent({
+				path: {
+					project_id: projectId,
+					language: lang
+				}
+			});
 
-	function handleSubmit(e: Event) {
-		e.preventDefault();
-		if (!messageInput.trim()) return;
-		chat.sendMessage(messageInput.trim());
-		messageInput = '';
-		if (textarea) {
-			textarea.style.height = 'auto';
-		}
-	}
-
-	function triggerCamera() {
-		fileInput?.click();
-	}
-
-	function handleFileSelect(e: Event) {
-		const target = e.target as HTMLInputElement;
-		if (target.files && target.files.length > 0) {
-			chat.sendImage(target.files[0]);
-			target.value = '';
-		}
-	}
-
-	function exitInterview() {
-		Auth.exit().then(({ response }) => {
-			if (response.ok) {
-				window.location.href = '/';
+			if (consent && consent.title && consent.text) {
+				consentData = consent;
+				showConsent = true;
+				isInitializing = false;
+			} else {
+				await startInterview();
 			}
-		});
+		} catch (e) {
+			console.error('Error loading consent', e);
+			await startInterview();
+		}
 	}
 
-	function handleAudioSend(blob: Blob, duration: number) {
-		chat.sendAudio('', blob, duration);
+	async function startInterview() {
+		const newInterviewId = await createInterview(
+			projectId,
+			lang,
+			data.interviewType,
+			data.experimentID
+		);
+
+		if (newInterviewId) {
+			initializeChat(newInterviewId);
+		} else {
+			console.error('Failed to create interview');
+			isInitializing = false;
+		}
+	}
+
+	async function acceptConsent() {
+		consentAccepting = true;
+		showConsent = false;
+		await startInterview();
+		consentAccepting = false;
+	}
+
+	function declineConsent() {
+		window.location.href = '/';
 	}
 </script>
 
@@ -142,170 +116,68 @@
 		AInterviewer
 	</h1>
 
-	<!-- Chat Area -->
-	<div class="mb-8 flex flex-1 grow flex-col items-center overflow-y-auto">
-		<div
-			id="messages"
-			bind:this={messagesContainer}
-			class="w-full flex-1 overflow-y-auto px-2.5 sm:w-[90%] sm:max-w-[700px] sm:min-w-[500px] sm:px-0"
-		>
-			{#each chat.messages as msg, i (msg.message_id || i)}
-				<div
-					class={msg.type === 'system' ? 'mb-4 text-center text-sm text-gray-500 select-none' : ''}
-				>
-					{#if msg.type === 'system'}
-						{msg.text}
-					{:else}
-						<InterviewMessage
-							message={msg}
-							{lang}
-							isLast={i === chat.messages.length - 1}
-							onFeedback={(f: any, id: any) => chat.sendFeedback(f, id)}
-							onSkip={() => chat.sendSkip()}
-							onSurveyAnswer={(ans: any, id: any) => chat.sendSurveyResponse(ans, id)}
-						/>
-					{/if}
-				</div>
-			{/each}
-
-			{#if chat.showTypingIndicator}
-				<TypingIndicator />
-			{/if}
-
-			<div class="h-4"></div>
-		</div>
-	</div>
-
-	<!-- Reconnection Indicator -->
-	{#if chat.isConnecting && !chat.isConnected && chat.messages.length > 0}
-		<div
-			class="fixed top-20 right-4 z-50 flex items-center rounded-full bg-gray-900/90 px-4 py-2 text-sm font-medium text-white shadow-xl backdrop-blur-md transition-all"
-		>
-			<div
-				class="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"
-			></div>
-			Reconnecting...
-		</div>
+	{#if chat}
+		<InterviewChat
+			{chat}
+			{lang}
+			{imageUpload}
+			{helpTitle}
+			{helpText}
+			{exitTitle}
+			{exitText}
+			{exitButtonText}
+		/>
 	{/if}
-
-	<!-- Input Area -->
-	<div class="flex w-full flex-col items-center pb-2">
-		<form
-			onsubmit={handleSubmit}
-			class="flex w-full flex-row items-center justify-center px-4 sm:px-0"
-		>
-			<!-- Controls Left -->
-			<div class="mr-2 flex flex-col gap-[7px]">
-				{#if imageUpload}
-					<button
-						type="button"
-						class="flex h-[30px] w-[30px] items-center justify-center bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-100 disabled:opacity-50"
-						onclick={triggerCamera}
-						disabled={!chat.inputEnabled}
-						title="Upload Image"
-					>
-						<i class="fa-regular fa-image text-lg text-gray-600"></i>
-					</button>
-					<input
-						bind:this={fileInput}
-						type="file"
-						accept="image/*"
-						capture={imageUpload === 'camera' ? 'environment' : undefined}
-						class="hidden"
-						onchange={handleFileSelect}
-					/>
-				{/if}
-				<button
-					type="button"
-					class="flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
-					onclick={() => (showHelp = true)}
-					title="Show help"
-				>
-					<i class="fa-regular fa-circle-question text-lg text-gray-600"></i>
-				</button>
-				<button
-					type="button"
-					class="flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
-					onclick={() => (showExit = true)}
-					title="End interview"
-				>
-					<i class="fa-solid fa-door-open text-lg text-gray-600"></i>
-				</button>
-			</div>
-
-			<!-- Textarea -->
-			<textarea
-				bind:this={textarea}
-				bind:value={messageInput}
-				disabled={!chat.inputEnabled}
-				rows="1"
-				placeholder="Message"
-				class="
-					min-h-[100px] w-full resize-none rounded border border-gray-300 p-2.5 text-[15px] shadow-sm transition-all
-					focus:border-[#66afe9] focus:shadow-[0_0_5px_rgba(102,175,233,0.5)] focus:outline-none
-					disabled:text-[#666666]
-					sm:max-h-[8rem] sm:w-[40%] sm:max-w-[500px] sm:min-w-[350px]
-				"
-				oninput={handleInput}
-				onkeydown={handleKeydown}
-			></textarea>
-
-			<!-- Send Button -->
-			<div class="ml-1.5 flex flex-col">
-				<button
-					type="submit"
-					disabled={!chat.inputEnabled || !messageInput.trim()}
-					id="send-message"
-					class="
-						mt-[15px] cursor-pointer rounded bg-[#007bff] px-3 py-1.5 text-sm text-white transition-colors
-						hover:bg-[#0056b3] active:bg-[#004085]
-						disabled:cursor-not-allowed disabled:bg-[#cccccc] disabled:text-[#666666]
-					"
-					title="Send message (Ctrl+Enter)"
-				>
-					Send
-				</button>
-				<div class="mt-1 hidden text-center text-xs text-gray-400 sm:block">
-					<span class="font-sans">ctrl</span>+<span class="font-bold">↵</span>
-				</div>
-				<div class="flex">
-					<button
-						type="button"
-						class="m-auto flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
-						onclick={() => (showRecordingOverlay = true)}
-						disabled={!chat.inputEnabled}
-						title="Record audio"
-					>
-						<i class="fas fa-microphone-lines text-lg text-gray-600"></i>
-					</button>
-				</div>
-			</div>
-		</form>
-
-		<div class="mt-2 w-full max-w-[25rem] px-4 sm:px-0">
-			<GradientProgressBar progress={chat.progress} />
-		</div>
-	</div>
 </div>
 
-<Modal show={showHelp} title={helpTitle} onClose={() => (showHelp = false)}>
-	<div class="prose prose-sm max-w-none text-gray-600">
-		{@html helpText}
+<!-- Consent Modal -->
+{#if showConsent && consentData}
+	<div
+		class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="consent-title"
+	>
+		<div class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+			<div class="max-h-[calc(100vh-120px)] overflow-y-auto px-6 py-8 sm:p-10">
+				<h2 id="consent-title" class="text-2xl font-bold tracking-tight text-gray-900">
+					{consentData.title}
+				</h2>
+				<div class="mt-4 leading-relaxed whitespace-pre-wrap text-gray-700">
+					{consentData.text}
+				</div>
+				<div class="mt-8 flex gap-3">
+					<button
+						onclick={acceptConsent}
+						disabled={consentAccepting}
+						class="rounded-md bg-[#007bff] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0056b3] focus:ring-2 focus:ring-[#007bff] focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+					>
+						{#if consentAccepting}
+							<i class="fa-solid fa-spinner fa-spin mr-2"></i>
+						{/if}
+						Accept
+					</button>
+					<button
+						onclick={declineConsent}
+						disabled={consentAccepting}
+						class="rounded-md bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+					>
+						Decline
+					</button>
+				</div>
+			</div>
+		</div>
 	</div>
-</Modal>
+{/if}
 
-<Modal show={showExit} title={exitTitle} onClose={() => (showExit = false)}>
-	<div class="prose prose-sm max-w-none text-gray-600">
-		{@html exitText}
+<!-- Loading State -->
+{#if isInitializing && !showConsent}
+	<div class="fixed inset-0 z-[200] flex items-center justify-center bg-white">
+		<div class="flex flex-col items-center gap-4">
+			<div
+				class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#007bff]"
+			></div>
+			<p class="text-sm text-gray-500">Loading...</p>
+		</div>
 	</div>
-	<div class="mt-6 flex justify-end">
-		<button
-			class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-			onclick={exitInterview}
-		>
-			{exitButtonText}
-		</button>
-	</div>
-</Modal>
-
-<AudioRecordingOverlay bind:show={showRecordingOverlay} onSend={handleAudioSend} />
+{/if}

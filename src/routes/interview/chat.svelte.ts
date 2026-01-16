@@ -2,6 +2,7 @@ import { browser } from '$app/environment';
 import {
 	Interviews,
 	type InterviewToken,
+	type InterviewType,
 	type MediaUploadResponse,
 	type ReceivedData
 } from '$lib/api';
@@ -24,6 +25,60 @@ export interface Message {
 	// For survey responses or other internal use
 	options?: any;
 	required?: boolean;
+}
+
+/**
+ * Get interview ID from the interview_token cookie
+ */
+export function getInterviewIdFromCookie(): string | null {
+	if (!browser) return null;
+	const cookie = document.cookie
+		.split(';')
+		.find((item) => item.trim().startsWith('interview_token='));
+	if (!cookie) return null;
+	const token = cookie.split('=')[1];
+	if (!token) return null;
+
+	try {
+		// Parse JWT payload (second part)
+		const payload = token.split('.')[1];
+		const decoded: InterviewToken = JSON.parse(atob(payload));
+		return decoded.interview_id;
+	} catch (e) {
+		console.error('Failed to parse interview token', e);
+		return null;
+	}
+}
+
+/**
+ * Create a new interview for the given project
+ */
+export async function createInterview(
+	project_id: string,
+	lang: string,
+	interviewType: InterviewType | undefined,
+	experimentID: string | null
+): Promise<string | null> {
+	try {
+		const { data, error, response } = await Interviews.createInterview({
+			path: {
+				project_id: project_id,
+				lang: lang
+			},
+			body: {
+				interview_type: interviewType,
+				experiment_id: experimentID
+			}
+		});
+		if (error || !response.ok) {
+			console.error('Failed to create interview');
+			return null;
+		}
+		return data || null;
+	} catch (e) {
+		console.error('Error creating interview', e);
+		return null;
+	}
 }
 
 export class ChatClient {
@@ -71,63 +126,14 @@ export class ChatClient {
 		}
 	}
 
-	async initialize() {
-		const existingToken = this.getTokenFromCookie();
-		if (existingToken) {
-			this.interview_id = existingToken;
-		} else {
-			await this.createInterview();
-		}
-		console.log(this.interview_id);
+	/**
+	 * Initialize the chat client with an existing interview ID.
+	 * The interview must already exist (either from cookie or newly created).
+	 */
+	initialize(interviewId: string) {
+		this.interview_id = interviewId;
+		console.log('Initializing chat with interview:', this.interview_id);
 		this.connect();
-	}
-
-	getTokenFromCookie(): string | null {
-		if (!browser) return null;
-		const cookie = document.cookie
-			.split(';')
-			.find((item) => item.trim().startsWith('interview_token='));
-		if (!cookie) return null;
-		const token = cookie.split('=')[1];
-		if (!token) return null;
-
-		try {
-			// Parse JWT payload (second part)
-			const payload = token.split('.')[1];
-			const decoded: InterviewToken = JSON.parse(atob(payload));
-			return decoded.interview_id;
-		} catch (e) {
-			console.error('Failed to parse interview token', e);
-			return null;
-		}
-	}
-
-	hasToken() {
-		return this.getTokenFromCookie() !== null;
-	}
-
-	async createInterview() {
-		try {
-			const { data, error, response } = await Interviews.createInterview({
-				path: {
-					project_id: this.project_id,
-					lang: this.lang
-				},
-				query: {
-					synthetic: this.is_synthetic,
-					test: this.is_test
-				}
-			});
-			if (error || !response.ok) {
-				console.error('Failed to create interview');
-				return;
-			}
-			if (data) {
-				this.interview_id = data;
-			}
-		} catch (e) {
-			console.error('Error creating interview', e);
-		}
 	}
 
 	connect() {
