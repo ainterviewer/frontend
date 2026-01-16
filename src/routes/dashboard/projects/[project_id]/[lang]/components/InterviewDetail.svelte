@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Analysis, type Image, type MessagePublic } from '$lib/api';
 	import type {
@@ -8,11 +8,11 @@
 		AnnotationValueCreate,
 		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
-	import type { Message } from '../../../../../interview/chat.svelte';
-	import InterviewMessage from '../../../../../interview/components/InterviewMessage.svelte';
-	import { getContrastColor } from '$lib/utils/colors';
 	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
+	import type { Message } from '$lib/components/interview/types';
+	import { getContrastColor } from '$lib/utils/colors';
 
 	interface InterviewData {
 		messages: MessagePublic[];

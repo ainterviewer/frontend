@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { Projects, type Consent } from '$lib/api';
-	import { ChatClient, getInterviewIdFromCookie, createInterview } from './chat.svelte';
-	import InterviewChat from './components/InterviewChat.svelte';
 	import type { InterviewType } from '$lib/api';
+	import { Projects, type Consent } from '$lib/api';
+	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
+	import { onMount } from 'svelte';
+	import { ChatClient, createInterview, getInterviewIdFromCookie } from './chat.svelte';
 
 	interface PageData {
 		project_id: string;

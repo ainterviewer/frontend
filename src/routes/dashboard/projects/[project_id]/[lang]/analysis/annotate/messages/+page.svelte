@@ -1,19 +1,19 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { Analysis, Projects, type Image, type MessagePublic } from '$lib/api';
 	import type {
 		AnalysisCategoryPublic,
 		AnnotationValueCreate,
-		MessageAnnotationPublic,
-		InterviewGuideOutput
+		InterviewGuideOutput,
+		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
-	import type { Message } from '../../../../../../../interview/chat.svelte';
-	import InterviewMessage from '../../../../../../../interview/components/InterviewMessage.svelte';
-	import { getContrastColor } from '$lib/utils/colors';
 	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
+	import type { Message } from '$lib/components/interview/types';
+	import { getContrastColor } from '$lib/utils/colors';
 
 	// State
 	let projectId = $derived(page.params.project_id ?? '');
@@ -1237,8 +1237,7 @@
 
 													<!-- Annotation Summary & Annotate Badge -->
 													<div
-														class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type ===
-														'received'
+														class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type === 'received'
 															? 'ml-2.5 sm:ml-[50px]'
 															: 'mr-2.5 justify-end sm:mr-[50px]'}"
 													>
@@ -1307,9 +1306,13 @@
 
 													<!-- Margin Comment Input (Google Docs style) -->
 													{#if activeCommentMessageId === messageId}
-														<div class="comment-input-container absolute top-0 left-full z-20 ml-2 w-72">
+														<div
+															class="comment-input-container absolute top-0 left-full z-20 ml-2 w-72"
+														>
 															<div class="rounded-lg border border-gray-200 bg-white shadow-lg">
-																<div class="flex items-center justify-between border-b border-gray-100 px-3 py-2">
+																<div
+																	class="flex items-center justify-between border-b border-gray-100 px-3 py-2"
+																>
 																	<span class="text-xs font-medium text-gray-600">
 																		{annotation?.comment ? 'Edit Comment' : 'Add Comment'}
 																	</span>

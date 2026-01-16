@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { CustomTokens } from '$lib/api';
-	import SurveyItem from './SurveyItem.svelte';
+	import AudioMessage from './AudioMessage.svelte';
 	import FeedbackToggle from './FeedbackToggle.svelte';
 	import SkipButton from './SkipButton.svelte';
-	import AudioMessage from './AudioMessage.svelte';
+	import SurveyItem from './SurveyItem.svelte';
 
 	// Custom token definitions with their display properties
 	const TOKEN_CONFIG: Record<CustomTokens, { icon: string; label: string; color: string }> = {

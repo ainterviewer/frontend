@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { tick } from 'svelte';
 	import { Auth } from '$lib/api';
+	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
+	import { tick } from 'svelte';
 	import type { ChatClient } from '../chat.svelte';
 	import AudioRecordingOverlay from './AudioRecordingOverlay.svelte';
 	import GradientProgressBar from './GradientProgressBar.svelte';
-	import InterviewMessage from './InterviewMessage.svelte';
 	import Modal from './Modal.svelte';
 	import TypingIndicator from './TypingIndicator.svelte';
 
@@ -19,16 +19,8 @@
 		exitButtonText: string;
 	}
 
-	let {
-		chat,
-		lang,
-		imageUpload,
-		helpTitle,
-		helpText,
-		exitTitle,
-		exitText,
-		exitButtonText
-	}: Props = $props();
+	let { chat, lang, imageUpload, helpTitle, helpText, exitTitle, exitText, exitButtonText }: Props =
+		$props();
 
 	let messageInput = $state('');
 	let messagesContainer: HTMLDivElement | undefined = $state();
@@ -112,7 +104,9 @@
 		class="w-full flex-1 overflow-y-auto px-2.5 sm:w-[90%] sm:max-w-[700px] sm:min-w-[500px] sm:px-0"
 	>
 		{#each chat.messages as msg, i (msg.message_id || i)}
-			<div class={msg.type === 'system' ? 'mb-4 text-center text-sm text-gray-500 select-none' : ''}>
+			<div
+				class={msg.type === 'system' ? 'mb-4 text-center text-sm text-gray-500 select-none' : ''}
+			>
 				{#if msg.type === 'system'}
 					{msg.text}
 				{:else}
