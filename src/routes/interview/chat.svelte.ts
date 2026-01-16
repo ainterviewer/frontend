@@ -57,7 +57,7 @@ export async function createInterview(
 	project_id: string,
 	lang: string,
 	interviewType: InterviewType | undefined,
-	experimentID: string | null
+	experimentID: string | undefined
 ): Promise<string | null> {
 	try {
 		const { data, error, response } = await Interviews.createInterview({
@@ -66,7 +66,7 @@ export async function createInterview(
 				lang: lang
 			},
 			body: {
-				interview_type: interviewType,
+				...(interviewType != null && { interview_type: interviewType }),
 				experiment_id: experimentID
 			}
 		});
