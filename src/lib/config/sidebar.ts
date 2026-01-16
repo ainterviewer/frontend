@@ -77,7 +77,7 @@ export const projectSidebarItems: SidebarItem[] = [
 		icon: 'fas fa-people-group'
 	},
 	{
-		label: 'Tests',
+		label: 'Pilot Tests',
 		href: '/dashboard/projects/{projectId}/{languageCode}/tests',
 		icon: 'fas fa-flask-vial',
 		children: [
@@ -87,7 +87,7 @@ export const projectSidebarItems: SidebarItem[] = [
 				icon: 'fas fa-microchip'
 			},
 			{
-				label: 'Results',
+				label: 'Test Results',
 				href: '/dashboard/projects/{projectId}/{languageCode}/tests/results',
 				icon: 'fas fa-comment'
 			}
