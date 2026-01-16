@@ -1,5 +1,10 @@
 import { browser } from '$app/environment';
-import { Interviews, type ReceivedData } from '$lib/api';
+import {
+	Interviews,
+	type InterviewToken,
+	type MediaUploadResponse,
+	type ReceivedData
+} from '$lib/api';
 
 export type MessageType = 'sent' | 'received' | 'system';
 
@@ -67,20 +72,43 @@ export class ChatClient {
 	}
 
 	async initialize() {
-		if (!this.hasToken()) {
+		const existingToken = this.getTokenFromCookie();
+		if (existingToken) {
+			this.interview_id = existingToken;
+		} else {
 			await this.createInterview();
 		}
+		console.log(this.interview_id);
 		this.connect();
 	}
 
+	getTokenFromCookie(): string | null {
+		if (!browser) return null;
+		const cookie = document.cookie
+			.split(';')
+			.find((item) => item.trim().startsWith('interview_token='));
+		if (!cookie) return null;
+		const token = cookie.split('=')[1];
+		if (!token) return null;
+
+		try {
+			// Parse JWT payload (second part)
+			const payload = token.split('.')[1];
+			const decoded: InterviewToken = JSON.parse(atob(payload));
+			return decoded.interview_id;
+		} catch (e) {
+			console.error('Failed to parse interview token', e);
+			return null;
+		}
+	}
+
 	hasToken() {
-		if (!browser) return false;
-		return document.cookie.split(';').some((item) => item.trim().startsWith('interview_token='));
+		return this.getTokenFromCookie() !== null;
 	}
 
 	async createInterview() {
 		try {
-			const { error, response } = await Interviews.createInterview({
+			const { data, error, response } = await Interviews.createInterview({
 				path: {
 					project_id: this.project_id,
 					lang: this.lang
@@ -92,6 +120,10 @@ export class ChatClient {
 			});
 			if (error || !response.ok) {
 				console.error('Failed to create interview');
+				return;
+			}
+			if (data) {
+				this.interview_id = data;
 			}
 		} catch (e) {
 			console.error('Error creating interview', e);
@@ -307,14 +339,14 @@ export class ChatClient {
 		}
 	}
 
-	sendAudio(text: string, audioBlob: Blob, duration: number) {
-		// TODO: Send audio to server for transcription
-		// For now, just show in chat
-		//
-		const msg: ReceivedData = { type: 'audio', content: text, audio_content: audioBlob };
-		this.ws.send(JSON.stringify(msg));
+	async sendAudio(text: string, audioBlob: Blob, duration: number) {
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+		if (!this.project_id || !this.interview_id) {
+			console.error('Missing session info');
+			return;
+		}
 
-		// Add audio message to UI
+		// Add audio message to UI optimistically
 		this.messages.push({
 			type: 'sent',
 			audio: { blob: audioBlob, duration },
@@ -324,6 +356,26 @@ export class ChatClient {
 		if (this.role === 'respondent') {
 			this.inputEnabled = false;
 			this.showTypingIndicator = true;
+		}
+
+		try {
+			const { data, error, response } = await Interviews.uploadAudio({
+				body: {
+					project_id: this.project_id,
+					interview_id: this.interview_id,
+					file: audioBlob
+				}
+			});
+
+			if (error || !response.ok) throw new Error('Upload failed');
+
+			const msg: ReceivedData = { type: 'audio', content: text, filename: data.filename };
+			this.ws.send(JSON.stringify(msg));
+		} catch (error) {
+			console.error('Error uploading audio', error);
+			this.messages.push({ type: 'system', text: 'Error uploading audio.' });
+			this.inputEnabled = true;
+			this.showTypingIndicator = false;
 		}
 	}
 

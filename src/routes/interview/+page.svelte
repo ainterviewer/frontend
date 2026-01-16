@@ -130,7 +130,7 @@
 	}
 
 	function handleAudioSend(blob: Blob, duration: number) {
-		chat.sendAudio(blob, duration);
+		chat.sendAudio('', blob, duration);
 	}
 </script>
 
