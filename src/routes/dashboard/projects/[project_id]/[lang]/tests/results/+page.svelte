@@ -3,7 +3,7 @@
 	import { Projects as Api } from '$lib/api';
 	import type { InterviewSummaryPublic, InterviewType } from '$lib/api';
 	import { onMount } from 'svelte';
-	import Pagination from '../../interviews/Pagination.svelte';
+	import TablePaginationFooter from '../../interviews/TablePaginationFooter.svelte';
 	import SortableHeader from '../../interviews/SortableHeader.svelte';
 
 	// Extend InterviewSummaryPublic with interview_type field
@@ -93,9 +93,8 @@
 		loadInterviews();
 	}
 
-	function handleLimitChange(event: Event) {
-		const select = event.target as HTMLSelectElement;
-		itemsPerPage = parseInt(select.value);
+	function handleLimitChange(newLimit: number) {
+		itemsPerPage = newLimit;
 		currentPage = 1;
 		loadInterviews();
 	}
@@ -376,37 +375,14 @@
 	</table>
 </div>
 
-<div class="mt-6 flex flex-col items-center justify-between text-sm text-gray-700 sm:flex-row">
-	<div class="mb-4 sm:mb-0">
-		{#if totalItems > 0}
-			Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to {Math.min(
-				currentPage * itemsPerPage,
-				totalItems
-			)} of {totalItems} results
-		{:else}
-			No test results
-		{/if}
-	</div>
-
-	<!-- Table Page Navigation -->
-	<Pagination {totalItems} {itemsPerPage} {currentPage} onPageChange={handlePageChange} />
-
-	<!-- Table Page Size  -->
-	<div class="flex items-center gap-2">
-		<label for="items-per-page" class="w-fit text-gray-600">Items per page:</label>
-		<select
-			id="items-per-page"
-			class="block w-fit form-select rounded-md border-gray-300 py-1 pr-10 pl-3 text-base focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
-			bind:value={itemsPerPage}
-			onchange={handleLimitChange}
-		>
-			<option value="10">10</option>
-			<option value="20">20</option>
-			<option value="50">50</option>
-			<option value="100">100</option>
-		</select>
-	</div>
-</div>
+<TablePaginationFooter
+	{totalItems}
+	{itemsPerPage}
+	{currentPage}
+	onPageChange={handlePageChange}
+	onItemsPerPageChange={handleLimitChange}
+	itemName="results"
+/>
 
 {#if activeDropdown}
 	<div
