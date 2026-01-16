@@ -10,7 +10,6 @@
 		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
 	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
-	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import { getContrastColor } from '$lib/utils/colors';
@@ -1276,19 +1275,6 @@
 																	{score.name}: {score.value}
 																</span>
 															{/each}
-															{#if annotationSummary.hasComment}
-																<HoverInfo text={annotation?.comment || ''} asChild>
-																	{#snippet children({ props })}
-																		<span
-																			{...props}
-																			class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
-																		>
-																			<i class="fa-solid fa-comment mr-1"></i>
-																			Note
-																		</span>
-																	{/snippet}
-																</HoverInfo>
-															{/if}
 														{/if}
 														{#if msg.type === 'received'}
 															<!-- Annotate Badge (shown on hover) -->
