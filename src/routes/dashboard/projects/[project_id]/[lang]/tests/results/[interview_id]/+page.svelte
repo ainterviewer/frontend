@@ -1,6 +1,6 @@
 <script lang="ts">
+	import InterviewDetail from '$lib/components/interview/InterviewDetail.svelte';
 	import type { PageData } from './$types';
-	import InterviewDetail from '../../../components/InterviewDetail.svelte';
 
 	let { data }: { data: PageData } = $props();
 </script>
