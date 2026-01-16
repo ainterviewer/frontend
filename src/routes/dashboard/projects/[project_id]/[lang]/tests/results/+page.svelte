@@ -39,7 +39,7 @@
 		{ key: 'last_updated', label: 'Updated' },
 		{ key: 'n_messages', label: 'Messages' },
 		{ key: 'interview_type', label: 'Type' },
-		{ key: 'is_complete', label: 'Status' }
+		{ key: 'status', label: 'Status' }
 	];
 
 	async function loadInterviews() {
@@ -218,7 +218,7 @@
 		}
 	}
 
-	function formatDate(dateStr: string) {
+	function formatDate(dateStr: string | null | undefined) {
 		if (!dateStr) return 'N/A';
 		return new Date(dateStr).toLocaleString('en-GB', { hour12: false });
 	}
@@ -328,12 +328,12 @@
 						<td class="px-5 py-4">{interview.n_messages}</td>
 						<td class="px-5 py-4">{interview.type}</td>
 						<td class="px-5 py-4">
-							{#if interview.is_complete}
+							{#if interview.status === 'completed'}
 								<span
 									class="rounded-full bg-green-100 px-2 py-1 text-xs leading-tight font-semibold text-green-700"
 									>Complete</span
 								>
-							{:else if interview.is_active}
+							{:else if interview.status === 'active'}
 								<span
 									class="rounded-full bg-blue-100 px-2 py-1 text-xs leading-tight font-semibold text-blue-700"
 									>Active</span
@@ -346,7 +346,7 @@
 							{/if}
 						</td>
 						<td class="px-5 py-4">
-							{#if !interview.is_complete && interview.is_active}
+							{#if interview.status === 'active'}
 								<button
 									class="rounded bg-blue-500 px-3 py-1 text-xs font-bold text-white transition duration-150 hover:bg-blue-600"
 									onclick={() => handleConnect(interview.id)}
