@@ -372,7 +372,10 @@
 	<div class="mb-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 		{#each folder.projects as project (project.id)}
 			<div
-				class="flex flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-xl {activeDropdown !== project.id ? 'hover:scale-101' : ''}"
+				class="flex flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-xl {activeDropdown !==
+				project.id
+					? 'hover:scale-101'
+					: ''}"
 				role="button"
 				tabindex="0"
 				onclick={() => handleRowClick(project.id, project.config.default_language ?? 'EN')}
@@ -424,18 +427,18 @@
 								<button
 									class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
 									onclick={(e) => {
-									e.stopPropagation();
-									handleCloneProject(project);
-								}}
+										e.stopPropagation();
+										handleCloneProject(project);
+									}}
 								>
 									Clone
 								</button>
 								<button
 									class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
 									onclick={(e) => {
-									e.stopPropagation();
-									openDeleteModal(project);
-								}}
+										e.stopPropagation();
+										openDeleteModal(project);
+									}}
 								>
 									Delete
 								</button>

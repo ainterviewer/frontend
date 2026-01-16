@@ -1241,6 +1241,20 @@
 															? 'ml-2.5 sm:ml-[50px]'
 															: 'mr-2.5 justify-end sm:mr-[50px]'}"
 													>
+														{#if msg.type !== 'received'}
+															<!-- Annotate Badge (shown on hover) -->
+															<button
+																type="button"
+																class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
+																onclick={() => {
+																	activeAnnotationMessageId =
+																		activeAnnotationMessageId === messageId ? null : messageId;
+																}}
+															>
+																<i class="fa-solid fa-tag text-[8px]"></i>
+																Annotate
+															</button>
+														{/if}
 														{#if annotationSummary}
 															{#each annotationSummary.tags as tag}
 																<span
@@ -1276,18 +1290,20 @@
 																</HoverInfo>
 															{/if}
 														{/if}
-														<!-- Annotate Badge (shown on hover) -->
-														<button
-															type="button"
-															class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
-															onclick={() => {
-																activeAnnotationMessageId =
-																	activeAnnotationMessageId === messageId ? null : messageId;
-															}}
-														>
-															<i class="fa-solid fa-tag text-[8px]"></i>
-															Annotate
-														</button>
+														{#if msg.type === 'received'}
+															<!-- Annotate Badge (shown on hover) -->
+															<button
+																type="button"
+																class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
+																onclick={() => {
+																	activeAnnotationMessageId =
+																		activeAnnotationMessageId === messageId ? null : messageId;
+																}}
+															>
+																<i class="fa-solid fa-tag text-[8px]"></i>
+																Annotate
+															</button>
+														{/if}
 													</div>
 												</div>
 
