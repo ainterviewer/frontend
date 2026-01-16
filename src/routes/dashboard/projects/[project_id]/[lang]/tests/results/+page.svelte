@@ -16,7 +16,7 @@
 	let loading = $state(false);
 	let totalItems = $state(0);
 	let currentPage = $state(1);
-	let itemsPerPage = $state(20);
+	let itemsPerPage = $state(10);
 	let sortColumn = $state('created_at');
 	let sortOrder = $state<'asc' | 'desc'>('desc');
 	let selectedInterviews = $state(new Set<string>());
@@ -54,7 +54,7 @@
 					limit: itemsPerPage,
 					column: sortColumn,
 					order: sortOrder,
-					interview_types: ['test', 'synthetic']
+					interview_types: ['manual_test', 'synthetic_test']
 				}
 			});
 
@@ -397,7 +397,7 @@
 		<select
 			id="items-per-page"
 			class="block w-fit form-select rounded-md border-gray-300 py-1 pr-10 pl-3 text-base focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
-			value={itemsPerPage}
+			bind:value={itemsPerPage}
 			onchange={handleLimitChange}
 		>
 			<option value="10">10</option>

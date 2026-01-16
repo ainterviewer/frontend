@@ -416,7 +416,7 @@
 		>
 			<a
 				class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
-				href={resolve(`/interview?id=${projectId}&test=true`)}
+				href={resolve(`/interview?id=${projectId}&interview_type=manual_test`)}
 				target="_blank"
 			>
 				<i class="fa-solid fa-person-circle-question"></i>
