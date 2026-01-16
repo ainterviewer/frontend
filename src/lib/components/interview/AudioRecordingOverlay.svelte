@@ -1,7 +1,10 @@
 <script lang="ts">
 	import Wave from '$lib/components/Wave.svelte';
 
-	let { show = $bindable(false), onSend }: { show: boolean; onSend: (blob: Blob, duration: number) => void } = $props();
+	let {
+		show = $bindable(false),
+		onSend
+	}: { show: boolean; onSend: (blob: Blob, duration: number) => void } = $props();
 
 	// Audio recording state
 	let isRecording = $state(false);

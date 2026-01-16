@@ -40,7 +40,7 @@
 		{#if isPlaying}
 			<i class="fas fa-pause text-white"></i>
 		{:else}
-			<i class="fas fa-play text-white pl-0.5"></i>
+			<i class="fas fa-play pl-0.5 text-white"></i>
 		{/if}
 	</button>
 

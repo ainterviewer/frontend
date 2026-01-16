@@ -252,7 +252,6 @@
 				</div>
 			</fieldset>
 		{/if}
-
 	</div>
 
 	<!-- Actions -->
