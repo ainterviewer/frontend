@@ -112,8 +112,8 @@
 	>
 		<!-- Message Content -->
 		<div
-			class="relative inline-block max-w-[90%] rounded-[10px] p-[10px] break-words hyphens-auto sm:max-w-[80%]
-			{isReceived ? 'bg-[#eee] text-gray-900' : 'bg-[#007bff] text-white'}"
+			class="relative inline-block max-w-[90%] rounded-xl p-[10px] break-words hyphens-auto sm:max-w-[80%]
+			{isReceived ? 'rounded-bl-sm bg-[#eee] text-gray-900' : 'rounded-br-sm bg-primary text-white'}"
 			{lang}
 		>
 			{#if message.question_label}
