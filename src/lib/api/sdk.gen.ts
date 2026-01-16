@@ -1208,7 +1208,14 @@ export class Interviews {
      * Create Interview
      */
     public static createInterview<ThrowOnError extends boolean = false>(options: Options<CreateInterviewData, ThrowOnError>) {
-        return (options.client ?? client).post<CreateInterviewResponses, CreateInterviewErrors, ThrowOnError>({ url: '/api/projects/{project_id}/{lang}/interviews', ...options });
+        return (options.client ?? client).post<CreateInterviewResponses, CreateInterviewErrors, ThrowOnError>({
+            url: '/api/projects/{project_id}/{lang}/interviews',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
     }
     
     /**

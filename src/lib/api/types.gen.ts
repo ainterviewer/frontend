@@ -492,6 +492,23 @@ export type Consent = {
 export type ContextType = 'section' | 'question';
 
 /**
+ * CreateInterviewRequest
+ */
+export type CreateInterviewRequest = {
+    interviewer?: Interviewer;
+    interview_type?: InterviewType;
+    /**
+     * Test Run Id
+     */
+    test_run_id?: string | null;
+    /**
+     * Experiment Id
+     */
+    experiment_id?: string | null;
+    synthetic_test_type?: TestType | null;
+};
+
+/**
  * CreateProjectRequest
  */
 export type CreateProjectRequest = {
@@ -752,6 +769,11 @@ export type InterviewMessage = {
 };
 
 /**
+ * InterviewStatus
+ */
+export type InterviewStatus = 'active' | 'inactive' | 'completed';
+
+/**
  * InterviewSubject
  *
  * Dataclass representing the interview subject
@@ -808,14 +830,7 @@ export type InterviewSummaryPublic = {
     id: string;
     language?: LanguageCode;
     interviewer?: Interviewer;
-    /**
-     * Is Complete
-     */
-    is_complete?: boolean;
-    /**
-     * Is Active
-     */
-    is_active?: boolean;
+    status: InterviewStatus;
     type: InterviewType;
     /**
      * Created At
@@ -842,7 +857,7 @@ export type InterviewSummaryPublic = {
 /**
  * InterviewType
  */
-export type InterviewType = 'test' | 'synthetic' | 'distributed';
+export type InterviewType = 'manual_test' | 'synthetic_test' | 'distributed';
 
 /**
  * IntervieweeCreate
@@ -1957,6 +1972,24 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage1 = {
+    /**
      * Primer
      */
     primer: string;
@@ -1968,24 +2001,6 @@ export type FastapiCompatV2BodyUploadImage = {
      * Alt
      */
     alt: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage2 = {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
     /**
      * File
      */
@@ -3357,7 +3372,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage1;
     path: {
         /**
          * Project Id
@@ -4262,7 +4277,7 @@ export type SetConsentResponses = {
 };
 
 export type CreateInterviewData = {
-    body?: never;
+    body: CreateInterviewRequest;
     headers?: {
         /**
          * User-Agent
@@ -4280,14 +4295,7 @@ export type CreateInterviewData = {
         project_id: string;
         lang: LanguageCode;
     };
-    query?: {
-        interviewer?: Interviewer;
-        interview_type?: InterviewType;
-        /**
-         * Fixed Answers
-         */
-        fixed_answers?: boolean;
-    };
+    query?: never;
     url: '/api/projects/{project_id}/{lang}/interviews';
 };
 
@@ -4337,7 +4345,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage2;
+    body: FastapiCompatV2BodyUploadImage;
     path?: never;
     query?: never;
     url: '/api/image';
