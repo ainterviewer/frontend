@@ -57,7 +57,7 @@
 	<!-- Header with Drag Handle and Actions -->
 	<div class="mb-4 flex items-start justify-between">
 		<div class="flex items-center gap-2">
-			<span class="font-bold text-black"># {sectionIndex + 1}.{index + 1}</span>
+			<span class="font-bold text-black">Question {sectionIndex + 1}.{index + 1}</span>
 			<div
 				class="cursor-grab rounded p-1 text-gray-800 outline-none hover:bg-white/50"
 				{@attach handleRef}
@@ -88,23 +88,23 @@
 		<!-- Main Content -->
 		<div>
 			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase"
+				>Description</label
+			>
+			<textarea
+				class="h-16 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+				placeholder="Add some context or description..."
+				bind:value={question.description}
+			></textarea>
+		</div>
+
+		<div>
+			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase"
 				>Main Question</label
 			>
 			<textarea
 				class="h-20 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 				placeholder="What would you like to ask?"
 				bind:value={question.main_question}
-			></textarea>
-		</div>
-
-		<div>
-			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase"
-				>Description / Context</label
-			>
-			<textarea
-				class="h-16 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
-				placeholder="Add some context or description..."
-				bind:value={question.description}
 			></textarea>
 		</div>
 

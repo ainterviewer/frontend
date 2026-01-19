@@ -366,7 +366,7 @@
 						<i class="fa-solid fa-plus"></i> Add Section
 					</button>
 					<button
-						class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-secondary bg-secondary/50 py-4 font-medium text-gray-600 hover:bg-secondary"
+						class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
 						onclick={() => (showGenerateSectionModal = true)}
 					>
 						<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Section

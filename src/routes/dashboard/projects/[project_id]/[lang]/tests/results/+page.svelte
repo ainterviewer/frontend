@@ -347,7 +347,7 @@
 							{/if}
 						</td>
 						<td class="px-5 py-4">
-							{#if interview.status === 'active'}
+							{#if interview.interviewer !== 'ai' && interview.status === 'active'}
 								<button
 									class="rounded bg-blue-500 px-3 py-1 text-xs font-bold text-white transition duration-150 hover:bg-blue-600"
 									onclick={() => handleConnect(interview.id)}

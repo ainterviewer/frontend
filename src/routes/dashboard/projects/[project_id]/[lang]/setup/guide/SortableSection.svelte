@@ -65,7 +65,7 @@
 	<!-- Section Header/Controls -->
 	<div class="mb-4 flex items-start justify-between">
 		<div class="flex items-center gap-2">
-			<span class="font-bold text-black"># {sectionIndex + 1}</span>
+			<span class="font-bold text-black">Section {sectionIndex + 1}</span>
 			<div
 				class="cursor-grab rounded px-1 text-gray-800 outline-none hover:bg-white/50"
 				{@attach handleRef}
@@ -113,13 +113,13 @@
 		{/each}
 		<div class="grid grid-cols-2 gap-4">
 			<button
-				class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed border-gray-500 py-2 text-gray-700 transition hover:border-primary hover:bg-white/30 hover:text-primary"
+				class="flex w-[calc(100%-0.5rem)] cursor-pointer items-center justify-center gap-2 rounded border-2 border-gray-500 py-2 text-gray-700 transition hover:border-primary hover:bg-white/30 hover:text-primary"
 				onclick={addQuestion}
 			>
 				<i class="fa-solid fa-plus"></i> Add Question
 			</button>
 			<button
-				class="border-opacity-50 flex w-full cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed border-secondary py-2 text-gray-700 transition hover:border-secondary hover:bg-white/30 hover:text-secondary"
+				class="-ml-2 flex w-[calc(100%+0.5rem)] cursor-pointer items-center justify-center gap-2 rounded border-2 border-gray-500 py-2 text-gray-700 transition hover:border-primary hover:bg-white/30 hover:text-primary"
 				onclick={onGenerateQuestion}
 			>
 				<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Question
