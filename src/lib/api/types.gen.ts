@@ -524,6 +524,26 @@ export type CreateProjectRequest = {
 };
 
 /**
+ * DailyInterviewCount
+ *
+ * Count of interviews created per day.
+ */
+export type DailyInterviewCount = {
+    /**
+     * Date
+     */
+    date: string;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Completed Count
+     */
+    completed_count: number;
+};
+
+/**
  * DeleteInterviewRequest
  */
 export type DeleteInterviewRequest = {
@@ -689,6 +709,30 @@ export type InterviewConfig = {
 };
 
 /**
+ * InterviewDurationStats
+ *
+ * Statistics about interview duration (time spent).
+ */
+export type InterviewDurationStats = {
+    /**
+     * Min Seconds
+     */
+    min_seconds: number;
+    /**
+     * Max Seconds
+     */
+    max_seconds: number;
+    /**
+     * Avg Seconds
+     */
+    avg_seconds: number;
+    /**
+     * Median Seconds
+     */
+    median_seconds?: number | null;
+};
+
+/**
  * InterviewGuide
  */
 export type InterviewGuideInput = {
@@ -772,6 +816,19 @@ export type InterviewMessage = {
  * InterviewStatus
  */
 export type InterviewStatus = 'active' | 'inactive' | 'completed';
+
+/**
+ * InterviewStatusCount
+ *
+ * Count of interviews by status.
+ */
+export type InterviewStatusCount = {
+    status: InterviewStatus;
+    /**
+     * Count
+     */
+    count: number;
+};
 
 /**
  * InterviewSubject
@@ -858,6 +915,19 @@ export type InterviewSummaryPublic = {
  * InterviewType
  */
 export type InterviewType = 'manual_test' | 'synthetic_test' | 'distributed';
+
+/**
+ * InterviewTypeCount
+ *
+ * Count of interviews by type.
+ */
+export type InterviewTypeCount = {
+    type: InterviewType;
+    /**
+     * Count
+     */
+    count: number;
+};
 
 /**
  * IntervieweeCreate
@@ -981,6 +1051,26 @@ export type MessageAnnotationPublic = {
 };
 
 /**
+ * MessageCountStats
+ *
+ * Statistics about message counts per interview.
+ */
+export type MessageCountStats = {
+    /**
+     * Min Messages
+     */
+    min_messages: number;
+    /**
+     * Max Messages
+     */
+    max_messages: number;
+    /**
+     * Avg Messages
+     */
+    avg_messages: number;
+};
+
+/**
  * MessageFeedback
  */
 export type MessageFeedback = {
@@ -1084,9 +1174,64 @@ export type MessagePublic = {
 export type MessageRole = 'system' | 'assistant' | 'user';
 
 /**
+ * MessageRoleCount
+ *
+ * Count of messages by role.
+ */
+export type MessageRoleCount = {
+    role: MessageRole;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * MessageType
  */
 export type MessageType = 'text' | 'image' | 'custom_token' | 'survey_item';
+
+/**
+ * MonitoringStats
+ *
+ * Aggregated monitoring statistics for a project.
+ */
+export type MonitoringStats = {
+    /**
+     * Total Interviews
+     */
+    total_interviews: number;
+    /**
+     * Total Messages
+     */
+    total_messages: number;
+    /**
+     * Total Completed Interviews
+     */
+    total_completed_interviews: number;
+    /**
+     * Completion Rate
+     */
+    completion_rate: number;
+    /**
+     * Interviews By Status
+     */
+    interviews_by_status: Array<InterviewStatusCount>;
+    /**
+     * Interviews By Type
+     */
+    interviews_by_type: Array<InterviewTypeCount>;
+    /**
+     * Messages By Role
+     */
+    messages_by_role: Array<MessageRoleCount>;
+    /**
+     * Interviews Over Time
+     */
+    interviews_over_time: Array<DailyInterviewCount>;
+    duration_stats: InterviewDurationStats | null;
+    message_count_stats: MessageCountStats | null;
+};
 
 /**
  * PaginatedResponse[InterviewSummaryPublic]
@@ -2646,6 +2791,53 @@ export type QueueStatusResponses = {
      */
     200: unknown;
 };
+
+export type GetProjectMonitoringStatsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Interview Types
+         */
+        interview_types?: Array<InterviewType> | null;
+        /**
+         * Start Date
+         */
+        start_date?: string | null;
+        /**
+         * End Date
+         */
+        end_date?: string | null;
+    };
+    url: '/api/monitoring/projects/{project_id}/stats';
+};
+
+export type GetProjectMonitoringStatsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetProjectMonitoringStatsError = GetProjectMonitoringStatsErrors[keyof GetProjectMonitoringStatsErrors];
+
+export type GetProjectMonitoringStatsResponses = {
+    /**
+     * Successful Response
+     */
+    200: MonitoringStats;
+};
+
+export type GetProjectMonitoringStatsResponse = GetProjectMonitoringStatsResponses[keyof GetProjectMonitoringStatsResponses];
 
 export type RemoveCollaboratorData = {
     body?: never;
