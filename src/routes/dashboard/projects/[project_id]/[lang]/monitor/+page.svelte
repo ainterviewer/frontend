@@ -24,6 +24,8 @@
 
 	let stats = $derived(data.stats);
 
+	console.log(stats);
+
 	let interviewsOverTime = $derived.by(() => {
 		const items = stats.interviews_over_time.map((d) => ({
 			...d,
@@ -197,30 +199,49 @@
 				<div class="h-[120px] w-full">
 					<!-- Using a simple 1D chart for range -->
 					<Chart
-						data={[stats.duration_stats]}
-						x="max_seconds"
 						xDomain={[0, stats.duration_stats.max_seconds * 1.1]}
 						padding={{ left: 20, right: 20, top: 40, bottom: 40 }}
+						let:xScale
 					>
 						<Svg>
 							<Axis placement="bottom" />
-							<!-- Range Line -->
 							<Group x={0} y={20}>
-								<!-- Min to Max line -->
-								<Rule
-									x1={stats.duration_stats.min_seconds}
-									x2={stats.duration_stats.max_seconds}
-									y1={0}
-									y2={0}
-									class="stroke-muted-foreground/50 stroke-linecap-round stroke-[4px]"
+								<Circle
+									cx={xScale(stats.duration_stats.min_seconds)}
+									cy={0}
+									r={8}
+									class="fill-primary"
 								/>
-
-								<!-- Avg Circle -->
-								<Circle cx={stats.duration_stats.avg_seconds} cy={0} r={8} class="fill-primary" />
 								<Text
-									x={stats.duration_stats.avg_seconds}
+									x={xScale(stats.duration_stats.min_seconds)}
+									y={-20}
+									value="Min"
+									textAnchor="middle"
+									class="fill-foreground text-xs"
+								/>
+								<Circle
+									cx={xScale(stats.duration_stats.avg_seconds)}
+									cy={0}
+									r={8}
+									class="fill-primary"
+								/>
+								<Text
+									x={xScale(stats.duration_stats.avg_seconds)}
 									y={-20}
 									value="Avg"
+									textAnchor="middle"
+									class="fill-foreground text-xs"
+								/>
+								<Circle
+									cx={xScale(stats.duration_stats.max_seconds)}
+									cy={0}
+									r={8}
+									class="fill-primary"
+								/>
+								<Text
+									x={xScale(stats.duration_stats.max_seconds)}
+									y={-20}
+									value="Max"
 									textAnchor="middle"
 									class="fill-foreground text-xs"
 								/>
@@ -253,51 +274,45 @@
 					<Chart
 						xDomain={[0, stats.message_count_stats.max_messages * 1.1]}
 						padding={{ left: 20, right: 20, top: 40, bottom: 40 }}
+						let:xScale
 					>
 						<Svg>
 							<Axis placement="bottom" />
 							<Group x={0} y={20}>
-								<Rule
-									x1={stats.message_count_stats.min_messages}
-									x2={stats.message_count_stats.max_messages}
-									y1={0}
-									y2={0}
-									class="stroke-muted-foreground/50 stroke-linecap-round stroke-[4px]"
-								/>
 								<Circle
-									cx={stats.message_count_stats.min_messages}
+									cx={xScale(stats.message_count_stats.min_messages)}
 									cy={0}
 									r={8}
 									class="fill-primary"
 								/>
 								<Text
-									x={stats.message_count_stats.min_messages}
+									x={xScale(stats.message_count_stats.min_messages)}
 									y={-20}
 									value="Min"
 									textAnchor="middle"
 									class="fill-foreground text-xs"
 								/>
 								<Circle
-									cx={stats.message_count_stats.avg_messages}
+									cx={xScale(stats.message_count_stats.avg_messages)}
 									cy={0}
 									r={8}
 									class="fill-primary"
 								/>
 								<Text
-									x={stats.message_count_stats.avg_messages}
+									x={xScale(stats.message_count_stats.avg_messages)}
 									y={-20}
 									value="Avg"
 									textAnchor="middle"
 									class="fill-foreground text-xs"
 								/>
 								<Circle
-									cx={stats.message_count_stats.max_messages}
+									cx={xScale(stats.message_count_stats.max_messages)}
 									cy={0}
 									r={8}
 									class="fill-primary"
 								/>
 								<Text
-									x={stats.message_count_stats.max_messages}
+									x={xScale(stats.message_count_stats.max_messages)}
 									y={-20}
 									value="Max"
 									textAnchor="middle"
