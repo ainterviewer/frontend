@@ -37,11 +37,11 @@
 
 	const testTypes = [
 		{
-			type: 'shuffled_ai',
-			label: 'Shuffled AI Respondents',
-			icon: 'fa-robot',
+			type: 'fixed_answers',
+			label: 'Fixed Answers',
+			icon: 'fa-file-pen',
 			description:
-				'Specify different background characteristics, which our system then shuffles automatically to generate.'
+				'Write predefined answers to every main question, the system then automatically generates follow up questions where relevant'
 		},
 		{
 			type: 'fixed_ai',
@@ -51,11 +51,11 @@
 				'Define different personas based on our template, which will then be used to generate the answers.'
 		},
 		{
-			type: 'fixed_answers',
-			label: 'Fixed Answers',
-			icon: 'fa-file-pen',
+			type: 'shuffled_ai',
+			label: 'Shuffled AI Respondents',
+			icon: 'fa-robot',
 			description:
-				'Write predefined answers to every main question, the system then automatically generates follow up questions where relevant'
+				'Specify different background characteristics, which our system then shuffles automatically to generate.'
 		}
 	];
 
