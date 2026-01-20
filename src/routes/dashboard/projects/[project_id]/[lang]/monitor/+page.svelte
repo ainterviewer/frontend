@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { sum } from 'd3-array';
+	import { sum, min, max } from 'd3-array';
 	import { format } from 'd3-format';
 	import { scaleOrdinal } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
@@ -24,12 +24,42 @@
 
 	let stats = $derived(data.stats);
 
-	let interviewsOverTime = $derived(
-		stats.interviews_over_time.map((d) => ({
+	let interviewsOverTime = $derived.by(() => {
+		const items = stats.interviews_over_time.map((d) => ({
 			...d,
 			date: new Date(d.date)
-		}))
-	);
+		}));
+
+		if (items.length === 0) return [];
+
+		const minDate = min(items, (d) => d.date);
+		const maxDate = max(items, (d) => d.date);
+
+		if (!minDate || !maxDate) return items;
+
+		const filled = [];
+		const current = new Date(minDate);
+		const end = new Date(maxDate);
+		const itemMap = new Map(items.map((d) => [d.date.toISOString().slice(0, 10), d]));
+
+		while (current <= end) {
+			const dateStr = current.toISOString().slice(0, 10);
+			const existing = itemMap.get(dateStr);
+
+			if (existing) {
+				filled.push(existing);
+			} else {
+				filled.push({
+					date: new Date(current),
+					count: 0,
+					completed_count: 0
+				});
+			}
+			current.setDate(current.getDate() + 1);
+		}
+
+		return filled;
+	});
 
 	const statusColorScale = scaleOrdinal(
 		['active', 'completed', 'inactive'],
