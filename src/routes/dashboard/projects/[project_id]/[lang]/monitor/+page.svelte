@@ -1,22 +1,23 @@
 <script lang="ts">
+	import { sum } from 'd3-array';
 	import { format } from 'd3-format';
-	import { scaleOrdinal, scaleTime } from 'd3-scale';
+	import { scaleOrdinal } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
 	import {
-		Area,
 		Axis,
+		Bars,
 		Chart,
 		Circle,
 		Grid,
+		PieChart,
 		Group,
 		Highlight,
-		Line,
-		Pie,
 		Rule,
 		Svg,
 		Text,
 		Tooltip
 	} from 'layerchart';
+	import { scaleBand } from 'd3-scale';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -47,7 +48,12 @@
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 		<div class="bg-card rounded-lg border p-6 shadow-sm">
 			<div class="text-muted-foreground text-sm font-medium">Total Interviews</div>
-			<div class="mt-2 text-3xl font-bold">{formatNumber(stats.total_interviews)}</div>
+			<div class="mt-2 flex items-baseline gap-2">
+				<span class="text-3xl font-bold">{formatNumber(stats.total_interviews)}</span>
+				<span class="text-muted-foreground text-sm"
+					>({stats.interviews_by_status.find((s) => s.status === 'active')?.count ?? 0} active)</span
+				>
+			</div>
 		</div>
 		<div class="bg-card rounded-lg border p-6 shadow-sm">
 			<div class="text-muted-foreground text-sm font-medium">Total Messages</div>
@@ -77,27 +83,22 @@
 				<Chart
 					data={interviewsOverTime}
 					x="date"
-					xScale={scaleTime()}
+					xScale={scaleBand().padding(0.2)}
 					y="count"
 					yDomain={[0, null]}
 					yNice
 					padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
-					tooltip={{ mode: 'bisect-x' }}
+					tooltip={{ mode: 'band' }}
 				>
 					<Svg>
 						<Axis placement="left" grid rule />
 						<Axis placement="bottom" format={(d) => timeFormat('%b %d')(d)} rule />
 						<Grid strokeDasharray="2" />
 
-						<!-- Total Interviews Area -->
-						<Area class="fill-primary/20" />
-						<Line class="stroke-primary stroke-2" />
+						<!-- Total Interviews Bar -->
+						<Bars radius={4} class="fill-primary" />
 
-						<!-- Completed Interviews Line -->
-						<Area y="completed_count" class="fill-green-500/10" />
-						<Line y="completed_count" class="stroke-green-500 stroke-2" />
-
-						<Highlight points lines={{ class: 'stroke-muted-foreground/50 stroke-dasharray-2' }} />
+						<Highlight area />
 					</Svg>
 					<Tooltip.Root let:data>
 						<Tooltip.Header>{timeFormat('%B %d, %Y')(data.date)}</Tooltip.Header>
@@ -114,37 +115,34 @@
 		<div class="bg-card rounded-lg border p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Interviews by Status</h3>
 			<div class="h-[300px] w-full">
-				<Chart
+				<PieChart
 					data={stats.interviews_by_status}
-					x="count"
-					c="status"
-					cScale={statusColorScale}
-					cDomain={['active', 'completed', 'inactive']}
-					tooltip
+					key="status"
+					value="count"
+					innerRadius={-20}
+					cornerRadius={5}
+					padAngle={0.02}
+					cRange={['#3b82f6', '#22c55e', '#94a3b8']}
+					renderContext="svg"
+					debug={true}
 				>
-					<Svg>
-						<Pie innerRadius={0.6} cornerRadius={4} padAngle={0.02} />
-					</Svg>
-					<Tooltip.Root let:data>
-						<Tooltip.Header>{data.status}</Tooltip.Header>
-						<Tooltip.List>
-							<Tooltip.Item label="Count" value={data.count} />
-							<Tooltip.Item
-								label="Share"
-								value={data.count / stats.total_interviews}
-								format="percent"
-							/>
-						</Tooltip.List>
-					</Tooltip.Root>
-					<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-						<div class="text-center">
-							<div class="text-3xl font-bold">{stats.total_interviews}</div>
-							<div class="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-								Interviews
-							</div>
-						</div>
-					</div>
-				</Chart>
+					{#snippet aboveMarks()}
+						<Text
+							value={formatNumber(sum(stats.interviews_by_status, (d) => d.count))}
+							textAnchor="middle"
+							verticalAnchor="middle"
+							class="text-4xl"
+							dy={4}
+						/>
+						<Text
+							value="interviews"
+							textAnchor="middle"
+							verticalAnchor="middle"
+							class="fill-surface-content/50 text-sm"
+							dy={26}
+						/>
+					{/snippet}
+				</PieChart>
 			</div>
 			<!-- Legend -->
 			<div class="mt-4 flex flex-wrap justify-center gap-4">

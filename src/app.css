@@ -4,6 +4,9 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
+@source '../node_modules/layerchart/dist';
+@import '@layerstack/tailwind/core.css';
+
 /* Theme  */
 
 @theme {
