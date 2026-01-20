@@ -12,6 +12,11 @@
 		"@tailwindcss/forms": "^0.5.10",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.17",
+		"@types/d3-array": "^3.2.2",
+		"@types/d3-format": "^3.0.4",
+		"@types/d3-scale": "^4.0.9",
+		"@types/d3-shape": "^3.1.8",
+		"@types/d3-time-format": "^4.0.3",
 		"@types/node": "^24",
 		"@vitest/browser-playwright": "^4.0.10",
 		"eslint": "^9.39.1",
@@ -51,6 +56,12 @@
 		"@dnd-kit/abstract": "^0.1.21",
 		"@dnd-kit/helpers": "^0.1.21",
 		"@dnd-kit/utilities": "^3.2.2",
-		"bits-ui": "^2.14.4"
+		"bits-ui": "^2.14.4",
+		"d3-array": "^3.2.4",
+		"d3-format": "^3.1.2",
+		"d3-scale": "^4.0.2",
+		"d3-shape": "^3.2.0",
+		"d3-time-format": "^4.1.0",
+		"layerchart": "^1.0.13"
 	}
 }
