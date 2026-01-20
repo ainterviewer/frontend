@@ -19,15 +19,18 @@
 	} from 'layerchart';
 	import type { PageData } from './$types';
 
-	export let data: PageData;
-	$: stats = data.stats;
+	let { data }: { data: PageData } = $props();
 
-	$: interviewsOverTime = stats.interviews_over_time.map((d) => ({
-		...d,
-		date: new Date(d.date)
-	}));
+	let stats = $derived(data.stats);
 
-	$: statusColorScale = scaleOrdinal(
+	let interviewsOverTime = $derived(
+		stats.interviews_over_time.map((d) => ({
+			...d,
+			date: new Date(d.date)
+		}))
+	);
+
+	const statusColorScale = scaleOrdinal(
 		['active', 'completed', 'inactive'],
 		['#3b82f6', '#22c55e', '#94a3b8']
 	);
