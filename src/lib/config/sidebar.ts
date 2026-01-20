@@ -103,23 +103,23 @@ export const projectSidebarItems: SidebarItem[] = [
 		href: '/dashboard/projects/{projectId}/{languageCode}/interviews',
 		icon: 'fas fa-comments'
 	},
-	{
-		label: 'Analysis',
-		href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
-		icon: 'fas fa-chart-pie',
-		children: [
-			{
-				label: 'Annotate',
-				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
-				icon: 'fas fa-tags'
-			},
-			{
-				label: 'Visualizations',
-				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/visualizations',
-				icon: 'fas fa-chart-line'
-			}
-		]
-	},
+	// {
+	// 	label: 'Analysis',
+	// 	href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
+	// 	icon: 'fas fa-chart-pie',
+	// 	children: [
+	// 		{
+	// 			label: 'Annotate',
+	// 			href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
+	// 			icon: 'fas fa-tags'
+	// 		},
+	// 		{
+	// 			label: 'Visualizations',
+	// 			href: '/dashboard/projects/{projectId}/{languageCode}/analysis/visualizations',
+	// 			icon: 'fas fa-chart-line'
+	// 		}
+	// 	]
+	// },
 	{
 		label: 'Settings',
 		href: '/dashboard/projects/{projectId}/{languageCode}/settings',
