@@ -222,7 +222,7 @@
 			<div class="mt-1 hidden text-center text-xs text-gray-400 sm:block">
 				<span class="font-sans">ctrl</span>+<span class="font-bold">↵</span>
 			</div>
-			<div class="flex">
+			<div class="flex hidden">
 				<button
 					type="button"
 					class="m-auto flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"

@@ -281,7 +281,7 @@
 				</div>
 
 				<!-- Alternative Main Questions -->
-				<div>
+				<div class="hidden">
 					<label class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase"
 						>Alternative Phrasings</label
 					>
