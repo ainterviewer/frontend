@@ -117,7 +117,7 @@
 </script>
 
 <div class="flex justify-between">
-	<h1 class="relative inline-block text-2xl font-bold">Tests</h1>
+	<h1 class="relative inline-block text-2xl font-bold">Simulations</h1>
 </div>
 <p>
 	Create different test setups to help you develop your interview guide. Select one of the three
