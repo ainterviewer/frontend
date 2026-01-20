@@ -214,20 +214,6 @@
 									y2={0}
 									class="stroke-muted-foreground/50 stroke-linecap-round stroke-[4px]"
 								/>
-								<!-- Min Tick -->
-								<Rule
-									x={stats.duration_stats.min_seconds}
-									y1={-10}
-									y2={10}
-									class="stroke-muted-foreground stroke-2"
-								/>
-								<!-- Max Tick -->
-								<Rule
-									x={stats.duration_stats.max_seconds}
-									y1={-10}
-									y2={10}
-									class="stroke-muted-foreground stroke-2"
-								/>
 
 								<!-- Avg Circle -->
 								<Circle cx={stats.duration_stats.avg_seconds} cy={0} r={8} class="fill-primary" />
@@ -238,28 +224,11 @@
 									textAnchor="middle"
 									class="fill-foreground text-xs"
 								/>
-
-								<!-- Median Circle (if exists) -->
-								{#if stats.duration_stats.median_seconds}
-									<Circle
-										cx={stats.duration_stats.median_seconds}
-										cy={0}
-										r={6}
-										class="fill-secondary"
-									/>
-									<Text
-										x={stats.duration_stats.median_seconds}
-										y={25}
-										value="Med"
-										textAnchor="middle"
-										class="fill-foreground text-xs"
-									/>
-								{/if}
 							</Group>
 						</Svg>
 					</Chart>
 				</div>
-				<div class="grid grid-cols-4 gap-4 text-center text-sm">
+				<div class="grid grid-cols-3 gap-4 text-center text-sm">
 					<div>
 						<div class="text-muted-foreground">Min</div>
 						<div class="font-bold">{stats.duration_stats.min_seconds}s</div>
@@ -267,10 +236,6 @@
 					<div>
 						<div class="text-muted-foreground">Avg</div>
 						<div class="font-bold">{Math.round(stats.duration_stats.avg_seconds)}s</div>
-					</div>
-					<div>
-						<div class="text-muted-foreground">Median</div>
-						<div class="font-bold">{stats.duration_stats.median_seconds ?? '-'}s</div>
 					</div>
 					<div>
 						<div class="text-muted-foreground">Max</div>
@@ -286,8 +251,6 @@
 				<h3 class="mb-4 text-lg font-medium">Message Count Stats</h3>
 				<div class="h-[120px] w-full">
 					<Chart
-						data={[stats.message_count_stats]}
-						x="max_messages"
 						xDomain={[0, stats.message_count_stats.max_messages * 1.1]}
 						padding={{ left: 20, right: 20, top: 40, bottom: 40 }}
 					>
@@ -301,17 +264,18 @@
 									y2={0}
 									class="stroke-muted-foreground/50 stroke-linecap-round stroke-[4px]"
 								/>
-								<Rule
-									x={stats.message_count_stats.min_messages}
-									y1={-10}
-									y2={10}
-									class="stroke-muted-foreground stroke-2"
+								<Circle
+									cx={stats.message_count_stats.min_messages}
+									cy={0}
+									r={8}
+									class="fill-primary"
 								/>
-								<Rule
-									x={stats.message_count_stats.max_messages}
-									y1={-10}
-									y2={10}
-									class="stroke-muted-foreground stroke-2"
+								<Text
+									x={stats.message_count_stats.min_messages}
+									y={-20}
+									value="Min"
+									textAnchor="middle"
+									class="fill-foreground text-xs"
 								/>
 								<Circle
 									cx={stats.message_count_stats.avg_messages}
@@ -323,6 +287,19 @@
 									x={stats.message_count_stats.avg_messages}
 									y={-20}
 									value="Avg"
+									textAnchor="middle"
+									class="fill-foreground text-xs"
+								/>
+								<Circle
+									cx={stats.message_count_stats.max_messages}
+									cy={0}
+									r={8}
+									class="fill-primary"
+								/>
+								<Text
+									x={stats.message_count_stats.max_messages}
+									y={-20}
+									value="Max"
 									textAnchor="middle"
 									class="fill-foreground text-xs"
 								/>
