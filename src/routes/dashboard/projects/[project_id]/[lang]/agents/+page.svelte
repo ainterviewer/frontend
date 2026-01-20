@@ -188,7 +188,7 @@
 			</div>
 
 			<!-- Security Agent -->
-			<div class="border-b border-gray-100 pb-6">
+			<div class="hidden border-b border-gray-100 pb-6">
 				<div class="mb-4 flex items-center justify-between">
 					<h4 class="font-medium text-gray-700">Security Agent</h4>
 					<div class="flex items-center">
