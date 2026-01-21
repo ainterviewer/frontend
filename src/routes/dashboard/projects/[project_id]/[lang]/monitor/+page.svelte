@@ -65,21 +65,51 @@
 
 	let dropoutStats = $derived.by(() => {
 		if (!stats.dropout_stats) return [];
-		return stats.dropout_stats
-			.filter((d) => d.main_question !== null)
-			.map((d) => ({
-				...d,
-				label:
-					d.sub_question === null || d.sub_question === 0
-						? `Q${d.main_question}`
-						: `${d.main_question}.${d.sub_question}`
-			}))
-			.sort((a, b) => {
-				if (a.main_question !== b.main_question) {
-					return (a.main_question ?? 0) - (b.main_question ?? 0);
-				}
-				return (a.sub_question ?? 0) - (b.sub_question ?? 0);
-			});
+
+		// Filter to only include entries with a main_question
+		const validStats = stats.dropout_stats.filter((d) => d.main_question !== null);
+		if (validStats.length === 0) return [];
+
+		// Create a map for quick lookup of existing data
+		const dataMap = new Map<string, number>();
+		for (const d of validStats) {
+			const key = `${d.main_question}-${d.sub_question ?? 0}`;
+			dataMap.set(key, d.count);
+		}
+
+		// Find the range of main questions and max sub_question per main question
+		const maxSubByMain = new Map<number, number>();
+		for (const d of validStats) {
+			const main = d.main_question!;
+			const sub = d.sub_question ?? 0;
+			maxSubByMain.set(main, Math.max(maxSubByMain.get(main) ?? 0, sub));
+		}
+
+		const maxMain = Math.max(...maxSubByMain.keys());
+
+		// Generate all labels in the range
+		const result: { main_question: number; sub_question: number; count: number; label: string }[] =
+			[];
+
+		for (let main = 0; main <= maxMain; main++) {
+			// Get max sub_question for this main question (0 if no entries exist)
+			const maxSub = maxSubByMain.get(main) ?? 0;
+
+			for (let sub = 0; sub <= maxSub; sub++) {
+				const key = `${main}-${sub}`;
+				const count = dataMap.get(key) ?? 0;
+				const label = sub === 0 ? `Q${main}` : `${main}.${sub}`;
+
+				result.push({
+					main_question: main,
+					sub_question: sub,
+					count,
+					label
+				});
+			}
+		}
+
+		return result;
 	});
 </script>
 
@@ -185,8 +215,8 @@
 					seriesLayout="stack"
 					padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
 					props={{
-						xAxis: { format: (d) => timeFormat('%b %d')(d), classes: { tickLabel: 'text-sm' } },
-						yAxis: { format: 'metric', classes: { tickLabel: 'text-sm' } },
+						xAxis: { format: (d) => timeFormat('%b %d')(d), classes: { tickLabel: 'text-xs' } },
+						yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
 						tooltip: {
 							header: { format: (d) => timeFormat('%B %d, %Y')(d) }
 						}
@@ -207,7 +237,7 @@
 					>
 						{#snippet children({ context: { xScale } })}
 							<Svg>
-								<Axis placement="bottom" classes={{ tickLabel: 'text-sm' }} />
+								<Axis placement="bottom" ticks={10} classes={{ tickLabel: 'text-xs' }} />
 								<Group x={0} y={20}>
 									<Circle
 										cx={xScale(stats.duration_stats!.min_seconds)}
@@ -217,7 +247,7 @@
 									/>
 									<Text
 										x={xScale(stats.duration_stats!.min_seconds)}
-										y={-20}
+										y={-15}
 										value="Min"
 										textAnchor="middle"
 										class="fill-foreground text-sm"
@@ -230,7 +260,7 @@
 									/>
 									<Text
 										x={xScale(stats.duration_stats!.avg_seconds)}
-										y={-20}
+										y={-15}
 										value="Avg"
 										textAnchor="middle"
 										class="fill-foreground text-sm"
@@ -243,7 +273,7 @@
 									/>
 									<Text
 										x={xScale(stats.duration_stats!.max_seconds)}
-										y={-20}
+										y={-15}
 										value="Max"
 										textAnchor="middle"
 										class="fill-foreground text-sm"
@@ -281,7 +311,7 @@
 					>
 						{#snippet children({ context: { xScale } })}
 							<Svg>
-								<Axis placement="bottom" classes={{ tickLabel: 'text-sm' }} />
+								<Axis placement="bottom" ticks={10} classes={{ tickLabel: 'text-xs' }} />
 								<Group x={0} y={20}>
 									<Circle
 										cx={xScale(stats.message_count_stats!.min_messages)}
@@ -291,7 +321,7 @@
 									/>
 									<Text
 										x={xScale(stats.message_count_stats!.min_messages)}
-										y={-20}
+										y={-15}
 										value="Min"
 										textAnchor="middle"
 										class="fill-foreground text-sm"
@@ -304,7 +334,7 @@
 									/>
 									<Text
 										x={xScale(stats.message_count_stats!.avg_messages)}
-										y={-20}
+										y={-15}
 										value="Avg"
 										textAnchor="middle"
 										class="fill-foreground text-sm"
@@ -317,7 +347,7 @@
 									/>
 									<Text
 										x={xScale(stats.message_count_stats!.max_messages)}
-										y={-20}
+										y={-15}
 										value="Max"
 										textAnchor="middle"
 										class="fill-foreground text-sm"
@@ -355,8 +385,8 @@
 						series={[{ key: 'count', label: 'Dropouts', color: '#94a3b8' }]}
 						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
 						props={{
-							xAxis: { classes: { tickLabel: 'text-sm' } },
-							yAxis: { format: 'metric', classes: { tickLabel: 'text-sm' } },
+							xAxis: { classes: { tickLabel: 'text-xs' } },
+							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
 							tooltip: {
 								header: {
 									format: (d) => {
