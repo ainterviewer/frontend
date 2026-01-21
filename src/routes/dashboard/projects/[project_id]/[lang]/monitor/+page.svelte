@@ -70,7 +70,9 @@
 			.map((d) => ({
 				...d,
 				label:
-					d.sub_question !== null ? `${d.main_question}.${d.sub_question}` : `${d.main_question}`
+					d.sub_question === null || d.sub_question === 0
+						? `Q${d.main_question}`
+						: `${d.main_question}.${d.sub_question}`
 			}))
 			.sort((a, b) => {
 				if (a.main_question !== b.main_question) {
@@ -183,8 +185,8 @@
 					seriesLayout="stack"
 					padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
 					props={{
-						xAxis: { format: (d) => timeFormat('%b %d')(d) },
-						yAxis: { format: 'metric' },
+						xAxis: { format: (d) => timeFormat('%b %d')(d), classes: { tickLabel: 'text-sm' } },
+						yAxis: { format: 'metric', classes: { tickLabel: 'text-sm' } },
 						tooltip: {
 							header: { format: (d) => timeFormat('%B %d, %Y')(d) }
 						}
@@ -205,7 +207,7 @@
 					>
 						{#snippet children({ context: { xScale } })}
 							<Svg>
-								<Axis placement="bottom" />
+								<Axis placement="bottom" classes={{ tickLabel: 'text-sm' }} />
 								<Group x={0} y={20}>
 									<Circle
 										cx={xScale(stats.duration_stats!.min_seconds)}
@@ -218,7 +220,7 @@
 										y={-20}
 										value="Min"
 										textAnchor="middle"
-										class="fill-foreground text-xs"
+										class="fill-foreground text-sm"
 									/>
 									<Circle
 										cx={xScale(stats.duration_stats!.avg_seconds)}
@@ -231,7 +233,7 @@
 										y={-20}
 										value="Avg"
 										textAnchor="middle"
-										class="fill-foreground text-xs"
+										class="fill-foreground text-sm"
 									/>
 									<Circle
 										cx={xScale(stats.duration_stats!.max_seconds)}
@@ -244,7 +246,7 @@
 										y={-20}
 										value="Max"
 										textAnchor="middle"
-										class="fill-foreground text-xs"
+										class="fill-foreground text-sm"
 									/>
 								</Group>
 							</Svg>
@@ -279,7 +281,7 @@
 					>
 						{#snippet children({ context: { xScale } })}
 							<Svg>
-								<Axis placement="bottom" />
+								<Axis placement="bottom" classes={{ tickLabel: 'text-sm' }} />
 								<Group x={0} y={20}>
 									<Circle
 										cx={xScale(stats.message_count_stats!.min_messages)}
@@ -292,7 +294,7 @@
 										y={-20}
 										value="Min"
 										textAnchor="middle"
-										class="fill-foreground text-xs"
+										class="fill-foreground text-sm"
 									/>
 									<Circle
 										cx={xScale(stats.message_count_stats!.avg_messages)}
@@ -305,7 +307,7 @@
 										y={-20}
 										value="Avg"
 										textAnchor="middle"
-										class="fill-foreground text-xs"
+										class="fill-foreground text-sm"
 									/>
 									<Circle
 										cx={xScale(stats.message_count_stats!.max_messages)}
@@ -318,7 +320,7 @@
 										y={-20}
 										value="Max"
 										textAnchor="middle"
-										class="fill-foreground text-xs"
+										class="fill-foreground text-sm"
 									/>
 								</Group>
 							</Svg>
@@ -341,7 +343,6 @@
 				</div>
 			</div>
 		{/if}
-
 		<!-- 8. Dropout Stats -->
 		{#if dropoutStats.length > 0}
 			<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
@@ -351,12 +352,21 @@
 						data={dropoutStats}
 						x="label"
 						y="count"
-						series={[{ key: 'count', label: 'Dropouts', color: '#ef4444' }]}
+						series={[{ key: 'count', label: 'Dropouts', color: '#94a3b8' }]}
 						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
 						props={{
-							yAxis: { format: 'metric' },
+							xAxis: { classes: { tickLabel: 'text-sm' } },
+							yAxis: { format: 'metric', classes: { tickLabel: 'text-sm' } },
 							tooltip: {
-								header: { format: (d) => `Question ${d}` }
+								header: {
+									format: (d) => {
+										if (d.startsWith('Q')) {
+											return `Main Question ${d.substring(1)}`;
+										}
+										const [main, sub] = d.split('.');
+										return `Main Question ${main} Sub Question ${sub}`;
+									}
+								}
 							}
 						}}
 					/>
