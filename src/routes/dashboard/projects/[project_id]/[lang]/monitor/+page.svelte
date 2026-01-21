@@ -10,6 +10,12 @@
 
 	let stats = $derived(data.stats);
 
+	let interviewsByStatus = $derived.by(() => {
+		const order = ['active', 'completed', 'inactive'];
+		const map = new Map(stats.interviews_by_status.map((d) => [d.status, d]));
+		return order.map((status) => map.get(status) || { status, count: 0 });
+	});
+
 	let interviewsOverTime = $derived.by(() => {
 		const items = stats.interviews_over_time.map((d) => ({
 			...d,
@@ -51,7 +57,7 @@
 
 	const statusColorScale = scaleOrdinal(
 		['active', 'completed', 'inactive'],
-		['#3b82f6', '#22c55e', '#94a3b8']
+		['#e8dcb9', '#196858', '#94a3b8']
 	);
 	const formatNumber = format(',');
 	const formatPercent = format('.1%');
@@ -88,7 +94,7 @@
 					<span class="text-3xl font-bold">{formatPercent(stats.completion_rate)}</span>
 				</div>
 				<!-- Simple Progress Bar for Completion Rate -->
-				<div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
+				<div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#94a3b8]">
 					<div class="h-full bg-primary" style="width: {stats.completion_rate * 100}%"></div>
 				</div>
 			</div>
@@ -99,19 +105,19 @@
 			<h3 class="mb-4 text-lg font-medium">Interviews by Status</h3>
 			<div class="h-[300px] w-full">
 				<PieChart
-					data={stats.interviews_by_status}
+					data={interviewsByStatus}
 					key="status"
 					value="count"
 					innerRadius={-20}
 					cornerRadius={5}
 					padAngle={0.02}
-					cRange={['#3b82f6', '#22c55e', '#94a3b8']}
+					cRange={['#e8dcb9', '#196858', '#94a3b8']}
 					renderContext="svg"
 					debug={true}
 				>
 					{#snippet aboveMarks()}
 						<Text
-							value={formatNumber(sum(stats.interviews_by_status, (d) => d.count))}
+							value={formatNumber(sum(interviewsByStatus, (d) => d.count))}
 							textAnchor="middle"
 							verticalAnchor="middle"
 							class="text-4xl"
@@ -129,7 +135,7 @@
 			</div>
 			<!-- Legend -->
 			<div class="mt-4 flex flex-wrap justify-center gap-4">
-				{#each stats.interviews_by_status as item}
+				{#each interviewsByStatus as item}
 					<div class="flex items-center gap-2">
 						<div
 							class="h-3 w-3 rounded-full"
@@ -172,7 +178,7 @@
 		<!-- 6. Duration Stats (Box Plot / Range) -->
 		{#if stats.duration_stats}
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<h3 class="mb-4 text-lg font-medium">Duration Stats (Seconds)</h3>
+				<h3 class="mb-4 text-lg font-medium">Duration (Seconds)</h3>
 				<div class="h-[120px] w-full">
 					<!-- Using a simple 1D chart for range -->
 					<Chart
@@ -247,7 +253,7 @@
 		<!-- 7. Message Count Stats (Bullet / Range) -->
 		{#if stats.message_count_stats}
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<h3 class="mb-4 text-lg font-medium">Message Count Stats</h3>
+				<h3 class="mb-4 text-lg font-medium">Message Count</h3>
 				<div class="h-[120px] w-full">
 					<Chart
 						xDomain={[0, stats.message_count_stats.max_messages * 1.1]}
