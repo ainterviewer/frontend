@@ -726,10 +726,6 @@ export type InterviewDurationStats = {
      * Avg Seconds
      */
     avg_seconds: number;
-    /**
-     * Median Seconds
-     */
-    median_seconds?: number | null;
 };
 
 /**
@@ -915,19 +911,6 @@ export type InterviewSummaryPublic = {
  * InterviewType
  */
 export type InterviewType = 'manual_test' | 'synthetic_test' | 'distributed';
-
-/**
- * InterviewTypeCount
- *
- * Count of interviews by type.
- */
-export type InterviewTypeCount = {
-    type: InterviewType;
-    /**
-     * Count
-     */
-    count: number;
-};
 
 /**
  * IntervieweeCreate
@@ -1174,19 +1157,6 @@ export type MessagePublic = {
 export type MessageRole = 'system' | 'assistant' | 'user';
 
 /**
- * MessageRoleCount
- *
- * Count of messages by role.
- */
-export type MessageRoleCount = {
-    role: MessageRole;
-    /**
-     * Count
-     */
-    count: number;
-};
-
-/**
  * MessageType
  */
 export type MessageType = 'text' | 'image' | 'custom_token' | 'survey_item';
@@ -1217,14 +1187,6 @@ export type MonitoringStats = {
      * Interviews By Status
      */
     interviews_by_status: Array<InterviewStatusCount>;
-    /**
-     * Interviews By Type
-     */
-    interviews_by_type: Array<InterviewTypeCount>;
-    /**
-     * Messages By Role
-     */
-    messages_by_role: Array<MessageRoleCount>;
     /**
      * Interviews Over Time
      */

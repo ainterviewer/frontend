@@ -923,15 +923,7 @@ export class Projects {
      * Get Welcome
      */
     public static getWelcome<ThrowOnError extends boolean = false>(options: Options<GetWelcomeData, ThrowOnError>) {
-        return (options.client ?? client).get<GetWelcomeResponses, GetWelcomeErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/guide/welcome/{language}',
-            ...options
-        });
+        return (options.client ?? client).get<GetWelcomeResponses, GetWelcomeErrors, ThrowOnError>({ url: '/api/projects/{project_id}/guide/welcome/{language}', ...options });
     }
     
     /**
