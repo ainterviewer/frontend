@@ -130,8 +130,29 @@
 
 	async function acceptConsent() {
 		consentAccepting = true;
-		showConsent = false;
-		await loadWelcome();
+
+		try {
+			const { data: welcome } = await Projects.getWelcome({
+				path: {
+					project_id: projectId,
+					language: lang
+				}
+			});
+
+			if (welcome && (welcome.title || welcome.text)) {
+				welcomeData = welcome;
+				showWelcome = true;
+				showConsent = false;
+			} else {
+				await startInterview();
+				showConsent = false;
+			}
+		} catch (e) {
+			console.error('Error loading welcome', e);
+			await startInterview();
+			showConsent = false;
+		}
+
 		consentAccepting = false;
 	}
 
@@ -162,106 +183,101 @@
 	{/if}
 </div>
 
-<!-- Welcome Modal -->
-{#if showWelcome && welcomeData}
+<!-- Modal Container -->
+{#if (showWelcome && welcomeData) || (showConsent && consentData)}
 	<div
 		class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
 		role="dialog"
 		aria-modal="true"
-		aria-labelledby="welcome-title"
+		aria-labelledby={showWelcome ? 'welcome-title' : 'consent-title'}
 	>
-		<div class="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-			<div class="max-h-[calc(100vh-120px)] overflow-y-auto px-6 py-8 sm:p-10">
-				<h2 id="welcome-title" class="text-2xl font-bold tracking-tight text-gray-900">
-					{welcomeData.title}
-				</h2>
+		{#if showWelcome && welcomeData}
+			<div class="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+				<div class="max-h-[calc(100vh-120px)] overflow-y-auto px-6 py-8 sm:p-10">
+					<h2 id="welcome-title" class="text-2xl font-bold tracking-tight text-gray-900">
+						{welcomeData.title}
+					</h2>
 
-				{#if welcomeData.video_file_name}
-					<div class="mt-4 overflow-hidden rounded-lg bg-black">
-						<video controls class="w-full">
-							<source src={`/assets/videos/${welcomeData.video_file_name}`} type="video/mp4" />
-							Your browser does not support the video tag.
-						</video>
-					</div>
-				{/if}
-
-				<div class="mt-4 leading-relaxed whitespace-pre-wrap text-gray-700">
-					{welcomeData.text}
-				</div>
-
-				{#if welcomeData.email}
-					<hr class="my-6 border-gray-200" />
-					<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-						<p class="mb-2">
-							If you wish to withdraw your consent or change your answers, please contact
-							<a href="mailto:{welcomeData.email}" class="font-medium text-primary hover:underline">
-								{welcomeData.email}
-							</a>
-							with a reference to the following code:
-						</p>
-						<div
-							class="my-2 flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
-						>
-							<code class="font-mono text-sm text-gray-700">&lt;interview-id&gt;</code>
-							<i class="fa-solid fa-fingerprint text-gray-400"></i>
+					{#if welcomeData.video_file_name}
+						<div class="mt-4 overflow-hidden rounded-lg bg-black">
+							<video controls class="w-full">
+								<source src={`/assets/videos/${welcomeData.video_file_name}`} type="video/mp4" />
+								Your browser does not support the video tag.
+							</video>
 						</div>
-						<p class="text-xs text-gray-500">
-							It is your own responsibility to store this code securely before starting the
-							interview. It is the only way for us to identify and modify or delete your data.
-						</p>
+					{/if}
+
+					<div class="mt-4 leading-relaxed whitespace-pre-wrap text-gray-700">
+						{welcomeData.text}
 					</div>
-				{/if}
 
-				<div class="mt-8">
-					<button
-						onclick={proceedFromWelcome}
-						class="rounded-md bg-[#007bff] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0056b3] focus:ring-2 focus:ring-[#007bff] focus:ring-offset-2 focus:outline-none"
-					>
-						Start Interview
-					</button>
+					{#if welcomeData.email}
+						<hr class="my-6 border-gray-200" />
+						<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+							<p class="mb-2">
+								If you wish to withdraw your consent or change your answers, please contact
+								<a
+									href="mailto:{welcomeData.email}"
+									class="font-medium text-primary hover:underline"
+								>
+									{welcomeData.email}
+								</a>
+								with a reference to the following code:
+							</p>
+							<div
+								class="my-2 flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
+							>
+								<code class="font-mono text-sm text-gray-700">&lt;interview-id&gt;</code>
+								<i class="fa-solid fa-fingerprint text-gray-400"></i>
+							</div>
+							<p class="text-xs text-gray-500">
+								It is your own responsibility to store this code securely before starting the
+								interview. It is the only way for us to identify and modify or delete your data.
+							</p>
+						</div>
+					{/if}
+
+					<div class="mt-8">
+						<button
+							onclick={proceedFromWelcome}
+							class="rounded-md bg-[#007bff] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0056b3] focus:ring-2 focus:ring-[#007bff] focus:ring-offset-2 focus:outline-none"
+						>
+							Start Interview
+						</button>
+					</div>
 				</div>
 			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Consent Modal -->
-{#if showConsent && consentData}
-	<div
-		class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="consent-title"
-	>
-		<div class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
-			<div class="max-h-[calc(100vh-120px)] overflow-y-auto px-6 py-8 sm:p-10">
-				<h2 id="consent-title" class="text-2xl font-bold tracking-tight text-gray-900">
-					{consentData.title}
-				</h2>
-				<div class="mt-4 leading-relaxed whitespace-pre-wrap text-gray-700">
-					{consentData.text}
-				</div>
-				<div class="mt-8 flex gap-3">
-					<button
-						onclick={acceptConsent}
-						disabled={consentAccepting}
-						class="rounded-md bg-[#007bff] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0056b3] focus:ring-2 focus:ring-[#007bff] focus:ring-offset-2 focus:outline-none disabled:opacity-50"
-					>
-						{#if consentAccepting}
-							<i class="fa-solid fa-spinner fa-spin mr-2"></i>
-						{/if}
-						Accept
-					</button>
-					<button
-						onclick={declineConsent}
-						disabled={consentAccepting}
-						class="rounded-md bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
-					>
-						Decline
-					</button>
+		{:else if showConsent && consentData}
+			<div class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+				<div class="max-h-[calc(100vh-120px)] overflow-y-auto px-6 py-8 sm:p-10">
+					<h2 id="consent-title" class="text-2xl font-bold tracking-tight text-gray-900">
+						{consentData.title}
+					</h2>
+					<div class="mt-4 leading-relaxed whitespace-pre-wrap text-gray-700">
+						{consentData.text}
+					</div>
+					<div class="mt-8 flex gap-3">
+						<button
+							onclick={acceptConsent}
+							disabled={consentAccepting}
+							class="rounded-md bg-[#007bff] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0056b3] focus:ring-2 focus:ring-[#007bff] focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+						>
+							{#if consentAccepting}
+								<i class="fa-solid fa-spinner fa-spin mr-2"></i>
+							{/if}
+							Accept
+						</button>
+						<button
+							onclick={declineConsent}
+							disabled={consentAccepting}
+							class="rounded-md bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+						>
+							Decline
+						</button>
+					</div>
 				</div>
 			</div>
-		</div>
+		{/if}
 	</div>
 {/if}
 
