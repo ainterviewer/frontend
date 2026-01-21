@@ -1,23 +1,9 @@
 <script lang="ts">
-	import { sum, min, max } from 'd3-array';
+	import { max, min, sum } from 'd3-array';
 	import { format } from 'd3-format';
 	import { scaleOrdinal } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
-	import {
-		Axis,
-		Bars,
-		Chart,
-		Circle,
-		Grid,
-		PieChart,
-		Group,
-		Highlight,
-		Rule,
-		Svg,
-		Text,
-		Tooltip
-	} from 'layerchart';
-	import { scaleBand } from 'd3-scale';
+	import { Axis, BarChart, Chart, Circle, Group, PieChart, Svg, Text } from 'layerchart';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -29,7 +15,8 @@
 	let interviewsOverTime = $derived.by(() => {
 		const items = stats.interviews_over_time.map((d) => ({
 			...d,
-			date: new Date(d.date)
+			date: new Date(d.date),
+			unfinished_count: d.count - d.completed_count
 		}));
 
 		if (items.length === 0) return [];
@@ -54,7 +41,8 @@
 				filled.push({
 					date: new Date(current),
 					count: 0,
-					completed_count: 0
+					completed_count: 0,
+					unfinished_count: 0
 				});
 			}
 			current.setDate(current.getDate() + 1);
@@ -112,34 +100,23 @@
 		<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
 			<h3 class="mb-4 text-lg font-medium">Interviews Per Day</h3>
 			<div class="h-[300px] w-full">
-				<Chart
+				<BarChart
 					data={interviewsOverTime}
 					x="date"
-					xScale={scaleBand().padding(0.2)}
-					y="count"
-					yDomain={[0, null]}
-					yNice
+					series={[
+						{ key: 'unfinished_count', label: 'Inactive', color: statusColorScale('inactive') },
+						{ key: 'completed_count', label: 'Completed', color: statusColorScale('completed') }
+					]}
+					seriesLayout="stack"
 					padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
-					tooltip={{ mode: 'band' }}
-				>
-					<Svg>
-						<Axis placement="left" grid rule />
-						<Axis placement="bottom" format={(d) => timeFormat('%b %d')(d)} rule />
-						<Grid strokeDasharray="2" />
-
-						<!-- Total Interviews Bar -->
-						<Bars radius={4} class="fill-primary" />
-
-						<Highlight area />
-					</Svg>
-					<Tooltip.Root let:data>
-						<Tooltip.Header>{timeFormat('%B %d, %Y')(data.date)}</Tooltip.Header>
-						<Tooltip.List>
-							<Tooltip.Item label="Total" value={data.count} />
-							<Tooltip.Item label="Completed" value={data.completed_count} color="#22c55e" />
-						</Tooltip.List>
-					</Tooltip.Root>
-				</Chart>
+					props={{
+						xAxis: { format: (d) => timeFormat('%b %d')(d) },
+						yAxis: { format: 'metric' },
+						tooltip: {
+							header: { format: (d) => timeFormat('%B %d, %Y')(d) }
+						}
+					}}
+				/>
 			</div>
 		</div>
 
