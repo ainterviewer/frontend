@@ -73,9 +73,7 @@
 	}
 </script>
 
-<div class="mb-6 flex items-center justify-between">
-	<h2 class="text-2xl font-semibold text-gray-800">Settings</h2>
-</div>
+<h1 class="page-title">Settings</h1>
 
 <p class="mb-6 text-gray-600">Configure the general settings that are used in the interviews.</p>
 
@@ -100,7 +98,7 @@
 					<button
 						onclick={saveTitle}
 						disabled={savingTitle}
-						class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+						class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-dark disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						{#if savingTitle}
 							Saving...

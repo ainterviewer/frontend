@@ -116,10 +116,8 @@
 	});
 </script>
 
-<div class="flex justify-between">
-	<h1 class="relative inline-block text-2xl font-bold">Simulations</h1>
-</div>
-<p>
+<h1 class="page-title">Simulations</h1>
+<p class="text-gray-600">
 	Create different test setups to help you develop your interview guide. Select one of the three
 	test types, fill in the required information, and run any number of synthetic interviews.
 </p>

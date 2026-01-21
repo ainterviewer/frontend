@@ -318,7 +318,7 @@
 	>
 </h1>
 
-<p class="mb-8">
+<p class="mb-8 text-gray-600">
 	On this page you can create and manage different project folders and interview projects. When you
 	create a folder you can choose other users you want to collaborate with. The users your choose wil
 	be able to access all projects in the folder.

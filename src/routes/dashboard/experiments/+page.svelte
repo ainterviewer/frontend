@@ -197,10 +197,16 @@
 
 <Sidebar items={mainSidebarItems} />
 
-<div class="mb-6 flex items-center justify-between">
-	<h1 class="page-title">Experiments</h1>
+<div class="mb-4 flex items-end justify-between">
+	<div>
+		<h1 class="page-title">Experiments</h1>
+		<p class="mr-2 text-gray-600">
+			Experiments allows you to combine multiple different projects, share a single url, and then
+			have users distributed based on your specified probabilities.
+		</p>
+	</div>
 	<button
-		class="hover:bg-opacity-90 flex items-center gap-2 rounded bg-primary px-4 py-2 text-white transition-colors"
+		class="flex items-center gap-2 rounded bg-primary px-4 py-2 whitespace-nowrap text-white transition-colors hover:bg-dark"
 		onclick={openCreateModal}
 		title="Create new experiment"
 	>

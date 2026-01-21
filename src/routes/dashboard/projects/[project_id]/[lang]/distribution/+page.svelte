@@ -50,37 +50,39 @@
 </script>
 
 <div class="w-[80%] max-w-[1000px]">
-	<h2 class="relative inline-block text-2xl font-bold">Distribution</h2>
-	<br /><br />
-
+	<h1 class="page-title">Distribution</h1>
+	<p class="mb-4 text-gray-600">
+		Distribute your interview either via clicking the button below, or by copying the QR-code. Both
+		sends the user to your interview.
+	</p>
 	<div>
-		<label for="interview-distribution-container" class="block">Copy link</label>
-
-		<div class="relative w-fit">
-			<button
-				id="interview-distribution-container"
-				onclick={copyLink}
-				class="mt-5 flex w-fit cursor-pointer items-center transition-transform active:scale-105"
-				title="Copy link"
-				type="button"
-			>
-				<span
-					class="mr-[5px] inline-block rounded-[5px] border border-[#e0e0e0] bg-[#f5f5f5] px-[7px] py-[5px]"
+		<div class="flex items-center">
+			<label for="interview-distribution-container" class="mr-2">Copy link:</label>
+			<div class="relative w-fit">
+				<button
+					id="interview-distribution-container"
+					onclick={copyLink}
+					class="flex w-fit cursor-pointer items-center transition-transform active:scale-105"
+					title="Copy link"
+					type="button"
 				>
-					{projectId}
-				</span>
-				<i class="fa-regular fa-clipboard"></i>
-			</button>
+					<span
+						class="mr-2 inline-block rounded-[5px] border border-[#e0e0e0] bg-[#f5f5f5] px-[7px] py-[5px]"
+					>
+						{projectId}
+					</span>
+					<i class="fa-regular fa-clipboard"></i>
+				</button>
 
-			{#if copied}
-				<div
-					class="absolute top-1/2 left-full z-10 ml-2 -translate-y-1/2 rounded bg-black px-2 py-1 text-xs whitespace-nowrap text-white opacity-90 shadow-lg transition-opacity duration-300"
-				>
-					Copied
-				</div>
-			{/if}
+				{#if copied}
+					<div
+						class="absolute top-1/2 left-full z-10 ml-2 -translate-y-1/2 rounded bg-black px-2 py-1 text-xs whitespace-nowrap text-white opacity-90 shadow-lg transition-opacity duration-300"
+					>
+						Copied
+					</div>
+				{/if}
+			</div>
 		</div>
-
 		<div id="qrcode" class="mt-5 block h-[280px] w-[280px]">
 			<img src={`/api/projects/${projectId}/qr.png`} alt="QR Code" class="h-[280px] w-[280px]" />
 		</div>

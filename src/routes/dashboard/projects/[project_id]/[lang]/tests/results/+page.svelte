@@ -234,7 +234,7 @@
 </script>
 
 <div class="mb-2 flex items-end justify-between">
-	<h1 class="page-title mb-10">Test Results</h1>
+	<h1 class="page-title">Test Results</h1>
 	<div class="flex gap-1">
 		<button
 			class="p-2 text-gray-600 transition-transform duration-300 hover:rotate-180 hover:text-gray-900"

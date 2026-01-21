@@ -55,10 +55,19 @@
 		</div>
 	</div>
 {/each}
-<button
-	onclick={saveSetup}
-	disabled={isSaving}
-	class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+
+<div
+	class="sticky bottom-0 ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
 >
-	{isSaving ? 'Saving...' : 'Save'}
-</button>
+	<button
+		onclick={saveSetup}
+		disabled={isSaving}
+		class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark disabled:cursor-not-allowed disabled:opacity-50"
+	>
+		{#if isSaving}
+			<i class="fas fa-spinner fa-spin"></i> Saving...
+		{:else}
+			<i class="fa-solid fa-floppy-disk"></i> Save Setup
+		{/if}
+	</button>
+</div>

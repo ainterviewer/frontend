@@ -54,7 +54,7 @@
 				{#each Array(totalPages) as _, i}
 					<button
 						class="rounded border px-3 py-1 {currentPage === i + 1
-							? 'border-blue-500 bg-blue-500 text-white'
+							? 'border-primary bg-primary text-white'
 							: 'border-gray-300 bg-white hover:bg-gray-100'}"
 						onclick={() => onPageChange(i + 1)}
 					>
@@ -64,7 +64,7 @@
 			{:else}
 				<button
 					class="rounded border px-3 py-1 {currentPage === 1
-						? 'border-blue-500 bg-blue-500 text-white'
+						? 'border-t-primary bg-primary text-white'
 						: 'border-gray-300 bg-white hover:bg-gray-100'}"
 					onclick={() => onPageChange(1)}>1</button
 				>
@@ -79,7 +79,7 @@
 							onclick={() => onPageChange(currentPage - 1)}>{currentPage - 1}</button
 						>
 					{/if}
-					<button class="rounded border border-blue-500 bg-blue-500 px-3 py-1 text-white" disabled
+					<button class="rounded border border-primary bg-primary px-3 py-1 text-white" disabled
 						>{currentPage}</button
 					>
 					{#if currentPage < totalPages - 1}
@@ -95,7 +95,7 @@
 				{/if}
 				<button
 					class="rounded border px-3 py-1 {currentPage === totalPages
-						? 'border-blue-500 bg-blue-500 text-white'
+						? 'border-primary bg-primary text-white'
 						: 'border-gray-300 bg-white hover:bg-gray-100'}"
 					onclick={() => onPageChange(totalPages)}>{totalPages}</button
 				>
@@ -117,11 +117,11 @@
 		<label for="items-per-page" class="w-fit text-gray-600">Items per page:</label>
 		<select
 			id="items-per-page"
-			class="block w-fit form-select rounded-md border-gray-300 py-1 pr-10 pl-3 text-base focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
+			class="block w-fit form-select rounded-md border-gray-300 py-1 pr-10 pl-3 text-base focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
 			value={itemsPerPage}
 			onchange={handleLimitChange}
 		>
-			<option value={10}>10</option>
+			<option class="checked:bg-primary" value={10}>10</option>
 			<option value={20}>20</option>
 			<option value={50}>50</option>
 			<option value={100}>100</option>

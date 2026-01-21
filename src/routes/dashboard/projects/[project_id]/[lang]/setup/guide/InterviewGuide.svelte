@@ -286,9 +286,7 @@
 	});
 </script>
 
-<div class="mb-6 flex items-center justify-between">
-	<h1 class="page-title">Interview Guide</h1>
-</div>
+<h1 class="page-title">Interview Guide</h1>
 
 <p class="mb-6 text-gray-600">
 	On this page, you can create an interview guide that will be used by AInterviewer to conduct the

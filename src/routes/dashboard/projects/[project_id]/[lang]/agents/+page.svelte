@@ -99,9 +99,7 @@
 	}
 </script>
 
-<div class="mb-6 flex items-center justify-between">
-	<h2 class="text-2xl font-semibold text-gray-800">Agents</h2>
-</div>
+<h1 class="page-title">Agents</h1>
 
 <p class="mb-6 text-gray-600">Configure the agents that are used in the interviews.</p>
 

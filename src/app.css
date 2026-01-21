@@ -36,7 +36,7 @@
 
 @layer components {
 	.page-title {
-		@apply w-fit text-2xl font-bold;
+		@apply mb-4 w-fit text-2xl font-bold;
 	}
 
 	.underline-main {
