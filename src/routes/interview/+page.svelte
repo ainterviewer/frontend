@@ -22,6 +22,7 @@
 
 	let projectId = $derived(data.project_id);
 	let lang = $derived(data.lang);
+	let interviewType = $derived(data.interviewType);
 	let imageUpload = $derived(data.image_upload);
 
 	// Help/Exit data
@@ -173,6 +174,7 @@
 		<InterviewChat
 			{chat}
 			{lang}
+			{interviewType}
 			{imageUpload}
 			{helpTitle}
 			{helpText}

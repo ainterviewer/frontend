@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Auth } from '$lib/api';
+	import { Auth, type InterviewType } from '$lib/api';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import { tick } from 'svelte';
 	import type { ChatClient } from '../chat.svelte';
@@ -11,6 +11,7 @@
 	interface Props {
 		chat: ChatClient;
 		lang: string;
+		interviewType: InterviewType;
 		imageUpload?: any;
 		helpTitle: string;
 		helpText: string;
@@ -19,8 +20,17 @@
 		exitButtonText: string;
 	}
 
-	let { chat, lang, imageUpload, helpTitle, helpText, exitTitle, exitText, exitButtonText }: Props =
-		$props();
+	let {
+		chat,
+		lang,
+		interviewType,
+		imageUpload,
+		helpTitle,
+		helpText,
+		exitTitle,
+		exitText,
+		exitButtonText
+	}: Props = $props();
 
 	let messageInput = $state('');
 	let messagesContainer: HTMLDivElement | undefined = $state();
@@ -86,7 +96,11 @@
 	function exitInterview() {
 		Auth.exit().then(({ response }) => {
 			if (response.ok) {
-				window.location.href = '/';
+				if (interviewType === 'manual_test') {
+					window.close();
+				} else {
+					window.location.href = '/';
+				}
 			}
 		});
 	}
