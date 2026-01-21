@@ -96,7 +96,7 @@
 	function exitInterview() {
 		Auth.exit().then(({ response }) => {
 			if (response.ok) {
-				if (interviewType === 'manual_test') {
+				if (interviewType === 'manual_test' && window.opener) {
 					window.close();
 				} else {
 					window.location.href = '/';
