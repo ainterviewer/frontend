@@ -6,12 +6,16 @@
 		text = '',
 		content,
 		class: className = '',
+		iconColor = 'gray-400',
+		iconHoverColor = 'gray-600',
 		asChild = false,
 		children
 	}: {
 		text?: string;
 		content?: Snippet;
 		class?: string;
+		iconColor?: string;
+		iconHoverColor?: string;
 		asChild?: boolean;
 		children?: Snippet<[{ props?: Record<string, unknown> }]>;
 	} = $props();
@@ -32,7 +36,9 @@
 				{#if children}
 					{@render children({})}
 				{:else}
-					<i class="fas fa-circle-info cursor-pointer text-gray-400 hover:text-gray-600"></i>
+					<i
+						class={`fas fa-circle-info cursor-pointer text-${iconColor} hover:text-${iconHoverColor}`}
+					></i>
 				{/if}
 			</Tooltip.Trigger>
 		{/if}
