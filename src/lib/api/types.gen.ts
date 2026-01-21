@@ -554,6 +554,26 @@ export type DeleteInterviewRequest = {
 };
 
 /**
+ * DropoutPoint
+ *
+ * Count of dropouts at a specific question.
+ */
+export type DropoutPoint = {
+    /**
+     * Main Question
+     */
+    main_question: number | null;
+    /**
+     * Sub Question
+     */
+    sub_question: number | null;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * ErrorResponse
  */
 export type ErrorResponse = {
@@ -1193,6 +1213,10 @@ export type MonitoringStats = {
     interviews_over_time: Array<DailyInterviewCount>;
     duration_stats: InterviewDurationStats | null;
     message_count_stats: MessageCountStats | null;
+    /**
+     * Dropout Stats
+     */
+    dropout_stats: Array<DropoutPoint>;
 };
 
 /**
@@ -1759,21 +1783,24 @@ export type SurveyItemType = 'radio' | 'checkbox' | 'slider' | 'number' | 'date'
  * SurveyOption
  *
  * An option for a survey item.
- * label [str]: The label for the option, will be displayed in the ui.
- * value [Optional[str]]: The value for the option, can be used as a point of reference later in the interview.
- * tip: [Optional[str]]: A tip to show the interviewee when they hover over the option.
  */
 export type SurveyOption = {
     /**
      * Label
+     *
+     * The label for the option, will be displayed in the ui.
      */
     label: string;
     /**
      * Value
+     *
+     * The value for the option, can be used as a point of reference later in the interview.
      */
     value?: string | null;
     /**
      * Tip
+     *
+     * A tip to show the interviewee when they hover over the option.
      */
     tip?: string | null;
 };
