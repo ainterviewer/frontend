@@ -237,7 +237,7 @@
 			</div>
 
 			<!-- Answering Agent -->
-			<div>
+			<div class="hidden">
 				<h4 class="mb-4 font-medium text-gray-700">Answering Agent</h4>
 				<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 					<div>
