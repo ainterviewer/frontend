@@ -352,7 +352,7 @@
 				<div class="grid grid-cols-1 gap-20 border-t border-gray-200 pt-4 sm:grid-cols-3">
 					<div class="space-y-3">
 						<label class="text-xs font-bold tracking-wider text-gray-700 uppercase"
-							>Probing Constraints</label
+							>Probing Limits</label
 						>
 						<div class="space-y-2">
 							<div class="flex items-center justify-between">
@@ -365,7 +365,7 @@
 								/>
 							</div>
 							<div class="flex items-center justify-between">
-								<span class="text-sm text-gray-700">Time (s)</span>
+								<span class="text-sm text-gray-700">Time spend probing (seconds)</span>
 								<input
 									type="number"
 									min="0"
