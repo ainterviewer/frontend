@@ -2,6 +2,7 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { slide } from 'svelte/transition';
 	import type { GuideQuestion } from './types';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
 
 	interface Props {
 		question: GuideQuestion;
@@ -171,7 +172,7 @@
 				class="-mx-5 space-y-6 border-t border-gray-100 bg-gray-50/30 px-5 pt-4 pb-4"
 			>
 				<!-- Media Controls (Edit Mode) -->
-				<div class="flex gap-4">
+				<div class="flex hidden gap-4">
 					<div class="relative">
 						{#if !question.image}
 							<button
@@ -354,7 +355,7 @@
 						<label class="text-xs font-bold tracking-wider text-gray-700 uppercase"
 							>Probing Limits</label
 						>
-						<div class="space-y-2">
+						<div class="mt-2 space-y-2">
 							<div class="flex items-center justify-between">
 								<span class="text-sm text-gray-700">Max Probes</span>
 								<input
@@ -380,87 +381,143 @@
 						<label class="text-xs font-bold tracking-wider text-gray-700 uppercase"
 							>Behavior Flags</label
 						>
-						<div class="grid grid-cols-2 gap-x-4 gap-y-3">
-							<label
-								class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
-							>
-								<input
-									type="checkbox"
-									class="rounded border-gray-300 text-primary focus:ring-primary"
-									bind:checked={question.exclude_from_history}
-								/>
-								Exclude from history
-							</label>
-							<label
-								class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
-							>
-								<input
-									type="checkbox"
-									class="rounded border-gray-300 text-primary focus:ring-primary"
-									bind:checked={question.create_segue}
-								/>
-								Create segue
-							</label>
-							<label
-								class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
-							>
-								<input
-									type="checkbox"
-									class="rounded border-gray-300 text-primary focus:ring-primary"
-									bind:checked={question.check_if_answered}
-								/>
-								Check if answered
-							</label>
-							<label
-								class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
-							>
-								<input
-									type="checkbox"
-									class="rounded border-gray-300 text-primary focus:ring-primary"
-									bind:checked={question.check_if_exhausted}
-								/>
-								Check if exhausted
-							</label>
-							<label
-								class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
-							>
-								<input
-									type="checkbox"
-									class="rounded border-gray-300 text-primary focus:ring-primary"
-									bind:checked={question.can_answer}
-								/>
-								Can answer
-							</label>
-							<label
-								class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
-							>
-								<input
-									type="checkbox"
-									class="rounded border-gray-300 text-primary focus:ring-primary"
-									bind:checked={question.can_skip}
-								/>
-								Can skip
-							</label>
-							<label
-								class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
-							>
-								<input
-									type="checkbox"
-									class="rounded border-gray-300 text-primary focus:ring-primary"
-									bind:checked={question.user_image}
-								/>
-								User image
-							</label>
-							<label
-								class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
-							>
-								<input
-									type="checkbox"
-									class="rounded border-gray-300 text-primary focus:ring-primary"
-									bind:checked={question.shuffle}
-								/>
-								Shuffle question
-							</label>
+						<div class="mt-2 grid grid-cols-2 gap-x-4 gap-y-3">
+							<div class="flex">
+								<label
+									class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+								>
+									<input
+										type="checkbox"
+										class="rounded border-gray-300 text-primary focus:ring-primary"
+										bind:checked={question.exclude_from_history}
+									/>
+									Exclude from history
+								</label>
+								<HoverInfo
+									class="ml-2"
+									iconColor="gray-500"
+									text="Excludes the question from the conversation history"
+								></HoverInfo>
+							</div>
+							<div class="flex">
+								<label
+									class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+								>
+									<input
+										type="checkbox"
+										class="rounded border-gray-300 text-primary focus:ring-primary"
+										bind:checked={question.create_segue}
+									/>
+									Create transition
+								</label>
+								<HoverInfo
+									class="ml-2"
+									iconColor="gray-500"
+									text="Reformulates the main question to include a transition from the previous question to the current."
+								></HoverInfo>
+							</div>
+							<div class="flex">
+								<label
+									class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+								>
+									<input
+										type="checkbox"
+										class="rounded border-gray-300 text-primary focus:ring-primary"
+										bind:checked={question.check_if_answered}
+									/>
+									Check if answered
+								</label>
+								<HoverInfo
+									class="ml-2"
+									iconColor="gray-500"
+									text="Checks is the question has already been answered. If it has, the main question will be reformulated to take the previous answers into acocunt."
+								></HoverInfo>
+							</div>
+							<div class="flex">
+								<label
+									class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+								>
+									<input
+										type="checkbox"
+										class="rounded border-gray-300 text-primary focus:ring-primary"
+										bind:checked={question.check_if_exhausted}
+									/>
+									Check if exhausted
+								</label>
+								<HoverInfo
+									class="ml-2"
+									iconColor="gray-500"
+									text="Checks during probing if the question has been exhausted, based on the provided context."
+								></HoverInfo>
+							</div>
+							<div class="flex">
+								<label
+									class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+								>
+									<input
+										type="checkbox"
+										class="rounded border-gray-300 text-primary focus:ring-primary"
+										bind:checked={question.can_answer}
+									/>
+									Can answer
+								</label>
+								<HoverInfo
+									class="ml-2"
+									iconColor="gray-500"
+									text="If the user can answer; use to send multiple messages in a row while not allowing the user to answer in between."
+								></HoverInfo>
+							</div>
+							<div class="flex">
+								<label
+									class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+								>
+									<input
+										type="checkbox"
+										class="rounded border-gray-300 text-primary focus:ring-primary"
+										bind:checked={question.can_skip}
+									/>
+									Can skip
+								</label>
+								<HoverInfo
+									class="ml-2"
+									iconColor="gray-500"
+									text="If the user should be presented with a 'Skip' button when hovering the question."
+								></HoverInfo>
+							</div>
+							<div class="flex hidden">
+								<label
+									class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+								>
+									<input
+										type="checkbox"
+										class="rounded border-gray-300 text-primary focus:ring-primary"
+										bind:checked={question.user_image}
+									/>
+									User image
+								</label>
+								<HoverInfo
+									class="ml-2"
+									iconColor="gray-500"
+									text="If the user should be able to reply with an image"
+								></HoverInfo>
+							</div>
+							<div class="flex">
+								<label
+									class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+								>
+									<input
+										type="checkbox"
+										class="rounded border-gray-300 text-primary focus:ring-primary"
+										bind:checked={question.shuffle}
+									/>
+									Shuffle question
+								</label>
+								<HoverInfo
+									class="ml-2"
+									iconColor="gray-500"
+									text="If the order of this question should be randomly shuffled. There must be multiple questions in the same section with this toggled for it to have an effect."
+								></HoverInfo>
+							</div>
 						</div>
 					</div>
 				</div>
