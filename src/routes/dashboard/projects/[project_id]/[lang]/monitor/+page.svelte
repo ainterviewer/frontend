@@ -4,6 +4,7 @@
 	import { scaleOrdinal } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
 	import { Axis, BarChart, Chart, Circle, Group, PieChart, Svg, Text } from 'layerchart';
+	import type { InterviewStatus } from '$lib/api/types.gen';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -11,7 +12,7 @@
 	let stats = $derived(data.stats);
 
 	let interviewsByStatus = $derived.by(() => {
-		const order = ['active', 'completed', 'inactive'];
+		const order: InterviewStatus[] = ['active', 'completed', 'inactive'];
 		const map = new Map(stats.interviews_by_status.map((d) => [d.status, d]));
 		return order.map((status) => map.get(status) || { status, count: 0 });
 	});
@@ -61,6 +62,23 @@
 	);
 	const formatNumber = format(',');
 	const formatPercent = format('.1%');
+
+	let dropoutStats = $derived.by(() => {
+		if (!stats.dropout_stats) return [];
+		return stats.dropout_stats
+			.filter((d) => d.main_question !== null)
+			.map((d) => ({
+				...d,
+				label:
+					d.sub_question !== null ? `${d.main_question}.${d.sub_question}` : `${d.main_question}`
+			}))
+			.sort((a, b) => {
+				if (a.main_question !== b.main_question) {
+					return (a.main_question ?? 0) - (b.main_question ?? 0);
+				}
+				return (a.sub_question ?? 0) - (b.sub_question ?? 0);
+			});
+	});
 </script>
 
 <div class="space-y-8 p-6">
@@ -320,6 +338,28 @@
 						<div class="text-muted-foreground">Max</div>
 						<div class="font-bold">{stats.message_count_stats.max_messages}</div>
 					</div>
+				</div>
+			</div>
+		{/if}
+
+		<!-- 8. Dropout Stats -->
+		{#if dropoutStats.length > 0}
+			<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
+				<h3 class="mb-4 text-lg font-medium">Dropout Analysis</h3>
+				<div class="h-[300px] w-full">
+					<BarChart
+						data={dropoutStats}
+						x="label"
+						y="count"
+						series={[{ key: 'count', label: 'Dropouts', color: '#ef4444' }]}
+						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
+						props={{
+							yAxis: { format: 'metric' },
+							tooltip: {
+								header: { format: (d) => `Question ${d}` }
+							}
+						}}
+					/>
 				</div>
 			</div>
 		{/if}
