@@ -273,7 +273,7 @@
 				<th class="w-12 px-5 py-3.5">
 					<input
 						type="checkbox"
-						class="form-checkbox h-4 w-4 cursor-pointer text-primary transition duration-150 ease-in-out"
+						class="form-checkbox h-4 w-4 cursor-pointer text-primary transition duration-150 ease-in-out focus:ring-primary"
 						checked={allSelected}
 						onchange={toggleSelectAll}
 						indeterminate={isIndeterminate}
@@ -309,7 +309,7 @@
 						<td class="px-5 py-4">
 							<input
 								type="checkbox"
-								class="form-checkbox h-4 w-4 cursor-pointer text-blue-600 transition duration-150 ease-in-out"
+								class="form-checkbox h-4 w-4 cursor-pointer text-primary transition duration-150 ease-in-out focus:ring-primary"
 								checked={selectedInterviews.has(interview.id)}
 								onchange={() => toggleSelection(interview.id)}
 							/>
