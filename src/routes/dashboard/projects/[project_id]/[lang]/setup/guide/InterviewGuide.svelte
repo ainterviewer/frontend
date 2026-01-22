@@ -329,8 +329,8 @@
 		<div id="framing" class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h3 class="mb-2 text-lg font-medium">Framing</h3>
 			<p class="mb-4 text-sm text-gray-500">
-				Present the framing of your interview. Is only used by the model to pose more relevant
-				questions.
+				Present the framing of your interview and and important background information. This is only
+				used by the model to help it ask more relevant questions.
 			</p>
 			<textarea
 				class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
@@ -346,7 +346,7 @@
 			<h3 class="mb-2 text-lg font-medium">Introduction</h3>
 			<p class="mb-4 text-sm text-gray-500">
 				Write an introduction to your interview. This is the first message the interviewee will see
-				in the chat.
+				in the chat and cannot be answered.
 			</p>
 			<textarea
 				class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
