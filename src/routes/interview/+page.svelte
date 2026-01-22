@@ -27,7 +27,10 @@
 
 	// Help/Exit data
 	let helpTitle = $derived(data.help_title || 'Help');
-	let helpText = $derived(data.help_text || 'Help text goes here.');
+	let helpText = $derived(
+		data.help_text ||
+			'Type your answers and send them. You can skip or rate questions. You may pause and return later, or exit anytime.'
+	);
 	let exitTitle = $derived(data.exit_title || 'Exit Interview');
 	let exitText = $derived(data.exit_text || 'Are you sure you want to exit?');
 	let exitButtonText = $derived(data.exit_button || 'End Interview');
