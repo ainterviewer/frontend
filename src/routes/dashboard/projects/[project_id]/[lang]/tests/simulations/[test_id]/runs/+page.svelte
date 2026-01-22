@@ -109,7 +109,7 @@
 	});
 </script>
 
-<h1 class="mb-2 text-2xl font-bold">Run</h1>
+<h1 class="page-title">Run</h1>
 <p class="mb-8 text-gray-600">
 	Run a number of synthetic interviews to test your interview guide and configuration.
 </p>

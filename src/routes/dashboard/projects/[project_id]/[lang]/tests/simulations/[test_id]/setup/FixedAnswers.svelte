@@ -36,9 +36,8 @@
 	}
 </script>
 
-<h2 class="page-title">Setup</h2>
-<h3 class="mb-5 text-gray-800">Fixed answers</h3>
-<p>Define fixed answers for each main question.</p>
+<h1 class="page-title">Setup - Fixed Answers</h1>
+<p class="text-gray-600">Define fixed answers for each main question.</p>
 
 {#each questions as question, index}
 	<div class="mb-6">

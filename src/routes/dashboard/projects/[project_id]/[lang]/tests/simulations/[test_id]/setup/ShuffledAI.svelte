@@ -114,9 +114,8 @@
 	}
 </script>
 
-<h2 class="page-title">Setup</h2>
-<h3 class="mt-8 mb-3 text-lg font-bold text-gray-800">Background Information</h3>
-<p>
+<h2 class="page-title">Setup - Shuffled AI Respondents</h2>
+<p class="text-gray-600">
 	Define the background characteristics of the synthetic interviewees. These will be randomly mixed
 	for each synthetic interviewee.
 </p>
