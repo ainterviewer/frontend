@@ -117,7 +117,7 @@
 		bind:this={messagesContainer}
 		class="w-full flex-1 overflow-y-auto px-2.5 sm:w-[90%] sm:max-w-[700px] sm:min-w-[500px] sm:px-0"
 	>
-		{#each chat.messages as msg, i (msg.message_id || i)}
+		{#each chat.messages as msg, i (i)}
 			<div
 				class={msg.type === 'system' ? 'mb-4 text-center text-sm text-gray-500 select-none' : ''}
 			>
