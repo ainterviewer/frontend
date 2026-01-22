@@ -12,11 +12,12 @@ export const mainSidebarItems: SidebarItem[] = [
 		href: '/dashboard/experiments',
 		icon: 'fa-solid fa-vials'
 	},
-	{
-		label: 'Settings',
-		href: '/dashboard/settings',
-		icon: 'fas fa-cog'
-	},
+	// FIXME:
+	// {
+	// 	label: 'Settings',
+	// 	href: '/dashboard/settings',
+	// 	icon: 'fas fa-cog'
+	// },
 	{ type: 'separator', requiresAdmin: true },
 	{
 		label: 'Admin',
@@ -78,7 +79,7 @@ export const projectSidebarItems: SidebarItem[] = [
 	},
 	{
 		label: 'Pilot Tests',
-		href: '/dashboard/projects/{projectId}/{languageCode}/tests',
+		// href: '/dashboard/projects/{projectId}/{languageCode}/tests',
 		icon: 'fas fa-flask-vial',
 		children: [
 			{
@@ -102,7 +103,8 @@ export const projectSidebarItems: SidebarItem[] = [
 		label: 'Interviews',
 		href: '/dashboard/projects/{projectId}/{languageCode}/interviews',
 		icon: 'fas fa-comments'
-	},
+	}
+	// FIXME:
 	// {
 	// 	label: 'Analysis',
 	// 	href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
@@ -120,9 +122,9 @@ export const projectSidebarItems: SidebarItem[] = [
 	// 		}
 	// 	]
 	// },
-	{
-		label: 'Settings',
-		href: '/dashboard/projects/{projectId}/{languageCode}/settings',
-		icon: 'fas fa-gears'
-	}
+	// {
+	// 	label: 'Settings',
+	// 	href: '/dashboard/projects/{projectId}/{languageCode}/settings',
+	// 	icon: 'fas fa-gears'
+	// }
 ];

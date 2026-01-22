@@ -448,8 +448,9 @@
 				<i class="fa-solid fa-person-circle-question"></i>
 				Try Interview
 			</a>
+			<!-- FIXME: -->
 			<button
-				class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
+				class="hidden rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
 				onclick={exportJson}
 			>
 				<i class="fa-solid fa-file-export"></i>
