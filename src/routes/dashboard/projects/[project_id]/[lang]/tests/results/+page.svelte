@@ -100,20 +100,24 @@
 	}
 
 	function toggleSelection(id: string) {
-		if (selectedInterviews.has(id)) {
-			selectedInterviews.delete(id);
+		const newSet = new Set(selectedInterviews);
+		if (newSet.has(id)) {
+			newSet.delete(id);
 		} else {
-			selectedInterviews.add(id);
+			newSet.add(id);
 		}
+		selectedInterviews = newSet;
 	}
 
 	function toggleSelectAll(event: Event) {
 		const checkbox = event.target as HTMLInputElement;
+		const newSet = new Set(selectedInterviews);
 		if (checkbox.checked) {
-			interviews.forEach((i) => selectedInterviews.add(i.id));
+			interviews.forEach((i) => newSet.add(i.id));
 		} else {
-			interviews.forEach((i) => selectedInterviews.delete(i.id));
+			interviews.forEach((i) => newSet.delete(i.id));
 		}
+		selectedInterviews = newSet;
 	}
 
 	async function handleDeleteSelected() {
@@ -129,7 +133,7 @@
 				path: { project_id },
 				body: { interview_ids: Array.from(selectedInterviews) }
 			});
-			selectedInterviews.clear();
+			selectedInterviews = new Set();
 			loadInterviews();
 		} catch (e) {
 			console.error('Error deleting test results:', e);
