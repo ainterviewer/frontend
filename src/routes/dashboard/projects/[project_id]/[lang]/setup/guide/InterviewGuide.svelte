@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidateAll, beforeNavigate } from '$app/navigation';
 	import type {
 		InterviewGuideOutput,
 		QuestionOutput,
@@ -53,6 +53,24 @@
 	// Split state for DnD (Required for dnd-kit-svelte move helper)
 	let localSections = $state<GuideSection[]>(mapped.sections);
 	let localQuestions = $state<Record<string, GuideQuestion[]>>(mapped.questions);
+
+	function getSnapshot() {
+		return JSON.stringify({
+			guide,
+			sections: localSections,
+			questions: localQuestions
+		});
+	}
+
+	let savedSnapshot = $state(getSnapshot());
+
+	beforeNavigate(({ cancel }) => {
+		if (getSnapshot() !== savedSnapshot) {
+			if (!confirm('You have unsaved changes. Are you sure you want to leave?')) {
+				cancel();
+			}
+		}
+	});
 
 	let projectId = $state(page.params.project_id ?? '');
 
@@ -286,6 +304,15 @@
 	});
 </script>
 
+<svelte:window
+	onbeforeunload={(e) => {
+		if (getSnapshot() !== savedSnapshot) {
+			e.preventDefault();
+			e.returnValue = '';
+		}
+	}}
+/>
+
 <h1 class="page-title">Interview Guide</h1>
 
 <p class="mb-6 text-gray-600">
@@ -440,6 +467,7 @@
 				onclick={async () => {
 					saving = true;
 					await saveGuide(projectId, lang, guide, localSections, localQuestions);
+					savedSnapshot = getSnapshot();
 					saving = false;
 				}}
 				disabled={saving}
