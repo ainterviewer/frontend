@@ -396,7 +396,7 @@
 								<HoverInfo
 									class="ml-2"
 									iconColor="gray-500"
-									text="Excludes the question from the conversation history"
+									text="Excludes the question from the conversation history. This means that the AInterviewer doesn't have access to the information from this question when asking other questions."
 								></HoverInfo>
 							</div>
 							<div class="flex">
