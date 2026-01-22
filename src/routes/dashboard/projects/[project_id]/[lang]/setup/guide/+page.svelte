@@ -4,5 +4,5 @@
 </script>
 
 {#key data.guide}
-	<InterviewGuide guide={data.guide} />
+	<InterviewGuide guide={data.guide} lang={data.lang} />
 {/key}

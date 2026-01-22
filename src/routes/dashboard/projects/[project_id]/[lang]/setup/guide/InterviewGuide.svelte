@@ -24,7 +24,10 @@
 
 	const sensors = [KeyboardSensor, PointerSensor];
 
-	let { guide: initialGuide } = $props<{ guide: InterviewGuideOutput | null }>();
+	let { guide: initialGuide, lang } = $props<{
+		guide: InterviewGuideOutput | null;
+		lang: string;
+	}>();
 
 	// State
 	let saving = $state(false);
@@ -74,7 +77,6 @@
 
 	let projectId = $state(page.params.project_id ?? '');
 
-	let lang = $state(page.params.lang ?? '');
 	let activeItem = $state<GuideSection | GuideQuestion | null>(null);
 
 	// Modal state
@@ -441,7 +443,7 @@
 		>
 			<a
 				class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
-				href={resolve(`/interview?id=${projectId}&interview_type=manual_test`)}
+				href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
 				target="_blank"
 				rel="opener"
 			>
