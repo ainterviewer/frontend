@@ -2,12 +2,13 @@
 	import { page } from '$app/state';
 
 	let projectId = $derived(page.params.project_id);
+	let lang = $derived(page.params.lang);
 	let interviewURL = $state('');
 	let copied = $state(false);
 
 	$effect(() => {
 		if (typeof window !== 'undefined' && projectId) {
-			interviewURL = window.location.origin + '/interview?id=' + projectId;
+			interviewURL = window.location.origin + '/interview?id=' + projectId + '&lang=' + lang;
 		}
 	});
 
