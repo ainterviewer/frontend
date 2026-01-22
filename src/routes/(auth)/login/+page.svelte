@@ -168,11 +168,17 @@
 
 				<p class="mt-4 text-sm text-gray-600">
 					Don't have an account?
-					<button
-						onclick={() => (showModal = true)}
+					<a
+						href={resolve('/sign-up?token=test')}
 						class="font-medium text-primary transition-colors hover:text-primary/80"
-						>Request access</button
 					>
+						Sign up
+					</a>
+					<!-- <button -->
+					<!-- 	onclick={() => (showModal = true)} -->
+					<!-- 	class="font-medium text-primary transition-colors hover:text-primary/80" -->
+					<!-- 	>Request access</button -->
+					<!-- > -->
 				</p>
 			</div>
 		</div>
