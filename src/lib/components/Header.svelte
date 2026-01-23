@@ -59,13 +59,14 @@
 						>Dashboard</a
 					>
 				</li>
-				<li>
-					<a
-						href={resolve('/docs')}
-						class="m-2 block p-2 text-center text-sm text-gray-200 no-underline hover:text-light"
-						>Docs</a
-					>
-				</li>
+				<!-- FIXME: -->
+				<!-- <li> -->
+				<!-- 	<a -->
+				<!-- 		href={resolve('/docs')} -->
+				<!-- 		class="m-2 block p-2 text-center text-sm text-gray-200 no-underline hover:text-light" -->
+				<!-- 		>Docs</a -->
+				<!-- 	> -->
+				<!-- </li> -->
 				<li>
 					<div class="relative">
 						<button
