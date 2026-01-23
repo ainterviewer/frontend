@@ -100,11 +100,12 @@
 								<div class="block px-4 pb-2 text-xs text-gray-500">
 									{data.user.email}
 								</div>
-								<a
-									href={resolve('/dashboard/settings/')}
-									class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
-									role="menuitem">Your profile</a
-								>
+								<!-- FIXME: -->
+								<!-- <a -->
+								<!-- 	href={resolve('/dashboard/settings/')} -->
+								<!-- 	class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary" -->
+								<!-- 	role="menuitem">Your profile</a -->
+								<!-- > -->
 								<button
 									type="button"
 									onclick={signOut}
