@@ -1,15 +1,29 @@
 <script lang="ts">
-	import type { InterviewStatus, ProjectMonitoringStats } from '$lib/api/types.gen';
+	import type { InterviewStatus, MonitoringStats } from '$lib/api/types.gen';
 	import { max, min, sum } from 'd3-array';
 	import { format } from 'd3-format';
 	import { scaleOrdinal } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
 	import { Axis, BarChart, Chart, Circle, Group, PieChart, Svg, Text } from 'layerchart';
+	import { Tween } from 'svelte/motion';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	let stats = $state<ProjectMonitoringStats>(data.stats);
+	let stats = $state<MonitoringStats>(data.stats);
+
+	// Animated KPI values
+	const totalInterviews = new Tween(stats.total_interviews, { duration: 400 });
+	const totalMessages = new Tween(stats.total_messages, { duration: 400 });
+	const completedInterviews = new Tween(stats.total_completed_interviews, { duration: 400 });
+	const completionRate = new Tween(stats.completion_rate, { duration: 400 });
+
+	$effect(() => {
+		totalInterviews.set(stats.total_interviews);
+		totalMessages.set(stats.total_messages);
+		completedInterviews.set(stats.total_completed_interviews);
+		completionRate.set(stats.completion_rate);
+	});
 
 	$effect(() => {
 		const interval = setInterval(async () => {
@@ -139,7 +153,8 @@
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Total Interviews</div>
 				<div class="mt-2 flex items-baseline gap-2">
-					<span class="text-3xl font-bold">{formatNumber(stats.total_interviews)}</span>
+					<span class="text-3xl font-bold">{formatNumber(Math.round(totalInterviews.current))}</span
+					>
 					<span class="text-muted-foreground text-sm"
 						>({stats.interviews_by_status.find((s) => s.status === 'active')?.count ?? 0} active)</span
 					>
@@ -147,20 +162,25 @@
 			</div>
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Total Messages</div>
-				<div class="mt-2 text-3xl font-bold">{formatNumber(stats.total_messages)}</div>
+				<div class="mt-2 text-3xl font-bold">{formatNumber(Math.round(totalMessages.current))}</div>
 			</div>
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Completed</div>
-				<div class="mt-2 text-3xl font-bold">{formatNumber(stats.total_completed_interviews)}</div>
+				<div class="mt-2 text-3xl font-bold">
+					{formatNumber(Math.round(completedInterviews.current))}
+				</div>
 			</div>
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Completion Rate</div>
 				<div class="mt-2 flex items-baseline gap-2">
-					<span class="text-3xl font-bold">{formatPercent(stats.completion_rate)}</span>
+					<span class="text-3xl font-bold">{formatPercent(completionRate.current)}</span>
 				</div>
 				<!-- Simple Progress Bar for Completion Rate -->
 				<div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#94a3b8]">
-					<div class="h-full bg-primary" style="width: {stats.completion_rate * 100}%"></div>
+					<div
+						class="h-full bg-primary transition-all duration-500 ease-out"
+						style="width: {completionRate.current * 100}%"
+					></div>
 				</div>
 			</div>
 		</div>
@@ -178,7 +198,9 @@
 					padAngle={0.02}
 					cRange={['#e8dcb9', '#196858', '#94a3b8']}
 					renderContext="svg"
-					debug={true}
+					props={{
+						arc: { motion: { type: 'spring', stiffness: 0.1, damping: 0.4 } }
+					}}
 				>
 					{#snippet aboveMarks()}
 						<Text
@@ -234,7 +256,8 @@
 						yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
 						tooltip: {
 							header: { format: (d) => timeFormat('%B %d, %Y')(d) }
-						}
+						},
+						bars: { motion: { type: 'tween', duration: 300 } }
 					}}
 				/>
 			</div>
@@ -412,7 +435,8 @@
 										return `Main Question ${main} Sub Question ${sub}`;
 									}
 								}
-							}
+							},
+							bars: { motion: { type: 'tween', duration: 300 } }
 						}}
 					/>
 				</div>
