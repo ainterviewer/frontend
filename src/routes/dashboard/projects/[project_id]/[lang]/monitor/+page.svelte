@@ -1,15 +1,30 @@
 <script lang="ts">
+	import type { InterviewStatus, ProjectMonitoringStats } from '$lib/api/types.gen';
 	import { max, min, sum } from 'd3-array';
 	import { format } from 'd3-format';
 	import { scaleOrdinal } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
 	import { Axis, BarChart, Chart, Circle, Group, PieChart, Svg, Text } from 'layerchart';
-	import type { InterviewStatus } from '$lib/api/types.gen';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	let stats = $derived(data.stats);
+	let stats = $state<ProjectMonitoringStats>(data.stats);
+
+	$effect(() => {
+		const interval = setInterval(async () => {
+			try {
+				const response = await fetch(window.location.pathname);
+				if (response.ok) {
+					stats = await response.json();
+				}
+			} catch (e) {
+				console.error('Failed to fetch monitoring stats:', e);
+			}
+		}, 5000);
+
+		return () => clearInterval(interval);
+	});
 
 	let interviewsByStatus = $derived.by(() => {
 		const order: InterviewStatus[] = ['active', 'completed', 'inactive'];
