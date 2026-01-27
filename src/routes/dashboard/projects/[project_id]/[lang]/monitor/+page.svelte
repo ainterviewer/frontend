@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Monitoring } from '$lib/api';
 	import type { InterviewStatus, MonitoringStats } from '$lib/api/types.gen';
 	import { max, min, sum } from 'd3-array';
 	import { format } from 'd3-format';
@@ -10,27 +11,54 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let stats = $state<MonitoringStats>(data.stats);
+	let stats = $state<MonitoringStats | null>(null);
+	let loading = $state(true);
+	let error = $state<string | null>(null);
 
-	// Animated KPI values
-	const totalInterviews = new Tween(stats.total_interviews, { duration: 400 });
-	const totalMessages = new Tween(stats.total_messages, { duration: 400 });
-	const completedInterviews = new Tween(stats.total_completed_interviews, { duration: 400 });
-	const completionRate = new Tween(stats.completion_rate, { duration: 400 });
+	async function fetchStats() {
+		const { data: statsData, error: fetchError } = await Monitoring.getProjectMonitoringStats({
+			path: {
+				project_id: data.project_id
+			}
+		});
+
+		if (fetchError) {
+			error = 'Failed to load monitoring stats';
+			loading = false;
+			return;
+		}
+
+		stats = statsData;
+		loading = false;
+	}
 
 	$effect(() => {
-		totalInterviews.set(stats.total_interviews);
-		totalMessages.set(stats.total_messages);
-		completedInterviews.set(stats.total_completed_interviews);
-		completionRate.set(stats.completion_rate);
+		fetchStats();
+	});
+
+	// Animated KPI values
+	const totalInterviews = new Tween(0, { duration: 400 });
+	const totalMessages = new Tween(0, { duration: 400 });
+	const completedInterviews = new Tween(0, { duration: 400 });
+	const completionRate = new Tween(0, { duration: 400 });
+
+	$effect(() => {
+		if (stats) {
+			totalInterviews.set(stats.total_interviews);
+			totalMessages.set(stats.total_messages);
+			completedInterviews.set(stats.total_completed_interviews);
+			completionRate.set(stats.completion_rate);
+		}
 	});
 
 	$effect(() => {
 		const interval = setInterval(async () => {
 			try {
-				const response = await fetch(window.location.pathname);
-				if (response.ok) {
-					stats = await response.json();
+				const { data: statsData } = await Monitoring.getProjectMonitoringStats({
+					path: { project_id: data.project_id }
+				});
+				if (statsData) {
+					stats = statsData;
 				}
 			} catch (e) {
 				console.error('Failed to fetch monitoring stats:', e);
@@ -41,12 +69,14 @@
 	});
 
 	let interviewsByStatus = $derived.by(() => {
+		if (!stats) return [];
 		const order: InterviewStatus[] = ['active', 'completed', 'inactive'];
 		const map = new Map(stats.interviews_by_status.map((d) => [d.status, d]));
 		return order.map((status) => map.get(status) || { status, count: 0 });
 	});
 
 	let interviewsOverTime = $derived.by(() => {
+		if (!stats) return [];
 		const items = stats.interviews_over_time.map((d) => ({
 			...d,
 			date: new Date(d.date),
@@ -93,7 +123,7 @@
 	const formatPercent = format('.1%');
 
 	let dropoutStats = $derived.by(() => {
-		if (!stats.dropout_stats) return [];
+		if (!stats?.dropout_stats) return [];
 
 		// Filter to only include entries with a main_question
 		const validStats = stats.dropout_stats.filter((d) => d.main_question !== null);
@@ -142,12 +172,16 @@
 	});
 </script>
 
-<div class="space-y-8 p-6">
-	<div class="flex items-center justify-between">
-		<h1 class="text-2xl font-bold tracking-tight">Project Monitoring</h1>
-	</div>
+<h1 class="page-title">Project Monitoring</h1>
 
-	<div class="grid grid-cols-2 gap-4">
+{#if error}
+	<div class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
+{:else if loading}
+	<div class="flex h-64 items-center justify-center">
+		<div class="text-muted-foreground">Loading monitoring data...</div>
+	</div>
+{:else if stats}
+	<div class="mt-8 grid grid-cols-2 gap-4">
 		<!-- 1. KPI Cards -->
 		<div class="grid grid-cols-2 gap-4">
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
@@ -162,7 +196,9 @@
 			</div>
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Total Messages</div>
-				<div class="mt-2 text-3xl font-bold">{formatNumber(Math.round(totalMessages.current))}</div>
+				<div class="mt-2 text-3xl font-bold">
+					{formatNumber(Math.round(totalMessages.current))}
+				</div>
 			</div>
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Completed</div>
@@ -278,39 +314,39 @@
 								<Axis placement="bottom" ticks={10} classes={{ tickLabel: 'text-xs' }} />
 								<Group x={0} y={20}>
 									<Circle
-										cx={xScale(stats.duration_stats!.min_seconds)}
+										cx={xScale(stats!.duration_stats!.min_seconds)}
 										cy={0}
 										r={8}
 										class="fill-primary"
 									/>
 									<Text
-										x={xScale(stats.duration_stats!.min_seconds)}
+										x={xScale(stats!.duration_stats!.min_seconds)}
 										y={-15}
 										value="Min"
 										textAnchor="middle"
 										class="fill-foreground text-sm"
 									/>
 									<Circle
-										cx={xScale(stats.duration_stats!.avg_seconds)}
+										cx={xScale(stats!.duration_stats!.avg_seconds)}
 										cy={0}
 										r={8}
 										class="fill-primary"
 									/>
 									<Text
-										x={xScale(stats.duration_stats!.avg_seconds)}
+										x={xScale(stats!.duration_stats!.avg_seconds)}
 										y={-15}
 										value="Avg"
 										textAnchor="middle"
 										class="fill-foreground text-sm"
 									/>
 									<Circle
-										cx={xScale(stats.duration_stats!.max_seconds)}
+										cx={xScale(stats!.duration_stats!.max_seconds)}
 										cy={0}
 										r={8}
 										class="fill-primary"
 									/>
 									<Text
-										x={xScale(stats.duration_stats!.max_seconds)}
+										x={xScale(stats!.duration_stats!.max_seconds)}
 										y={-15}
 										value="Max"
 										textAnchor="middle"
@@ -352,39 +388,39 @@
 								<Axis placement="bottom" ticks={10} classes={{ tickLabel: 'text-xs' }} />
 								<Group x={0} y={20}>
 									<Circle
-										cx={xScale(stats.message_count_stats!.min_messages)}
+										cx={xScale(stats!.message_count_stats!.min_messages)}
 										cy={0}
 										r={8}
 										class="fill-primary"
 									/>
 									<Text
-										x={xScale(stats.message_count_stats!.min_messages)}
+										x={xScale(stats!.message_count_stats!.min_messages)}
 										y={-15}
 										value="Min"
 										textAnchor="middle"
 										class="fill-foreground text-sm"
 									/>
 									<Circle
-										cx={xScale(stats.message_count_stats!.avg_messages)}
+										cx={xScale(stats!.message_count_stats!.avg_messages)}
 										cy={0}
 										r={8}
 										class="fill-primary"
 									/>
 									<Text
-										x={xScale(stats.message_count_stats!.avg_messages)}
+										x={xScale(stats!.message_count_stats!.avg_messages)}
 										y={-15}
 										value="Avg"
 										textAnchor="middle"
 										class="fill-foreground text-sm"
 									/>
 									<Circle
-										cx={xScale(stats.message_count_stats!.max_messages)}
+										cx={xScale(stats!.message_count_stats!.max_messages)}
 										cy={0}
 										r={8}
 										class="fill-primary"
 									/>
 									<Text
-										x={xScale(stats.message_count_stats!.max_messages)}
+										x={xScale(stats!.message_count_stats!.max_messages)}
 										y={-15}
 										value="Max"
 										textAnchor="middle"
@@ -443,4 +479,4 @@
 			</div>
 		{/if}
 	</div>
-</div>
+{/if}
