@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import { fade, fly } from 'svelte/transition';
+	import { ConsentModal } from '$lib/components/modals';
+	import { fly } from 'svelte/transition';
 
 	interface Props {
 		initialData?: { title: string; text: string } | null;
@@ -38,15 +39,7 @@
 		notification = { type, message };
 		setTimeout(() => (notification = null), 3000);
 	}
-
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape' && showFullscreenModal) {
-			showFullscreenModal = false;
-		}
-	}
 </script>
-
-<svelte:window onkeydown={handleKeydown} />
 
 <div class="mb-6">
 	<h1 class="page-title">Consent</h1>
@@ -172,74 +165,15 @@
 </div>
 
 <!-- Fullscreen Modal Preview -->
-{#if showFullscreenModal}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center p-4"
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="consent-modal-title"
-	>
-		<!-- Backdrop -->
-		<button
-			class="fixed inset-0 h-full w-full cursor-default bg-dark/80 transition-opacity focus:outline-none"
-			transition:fade={{ duration: 200 }}
-			onclick={() => (showFullscreenModal = false)}
-			aria-label="Close modal"
-			type="button"
-		></button>
-
-		<!-- Modal Panel -->
-		<div
-			class="relative w-full max-w-lg transform overflow-hidden rounded-xl bg-white shadow-2xl transition-all"
-			transition:fly={{ y: 20, duration: 300 }}
-		>
-			<div class="absolute top-0 right-0 pt-4 pr-4">
-				<button
-					type="button"
-					class="rounded-md bg-white text-gray-400 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
-					onclick={() => (showFullscreenModal = false)}
-				>
-					<span class="sr-only">Close</span>
-					<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M6 18L18 6M6 6l12 12"
-						/>
-					</svg>
-				</button>
-			</div>
-
-			<div class="max-h-[calc(100vh-120px)] overflow-y-auto px-6 py-8 sm:p-10">
-				<h2 id="consent-modal-title" class="text-2xl font-bold tracking-tight text-gray-900">
-					{title || 'Consent Title'}
-				</h2>
-				<div class="mt-4 leading-relaxed whitespace-pre-wrap text-gray-700">
-					{#if text}
-						{text}
-					{:else}
-						<span class="text-gray-400 italic">No consent message configured yet.</span>
-					{/if}
-				</div>
-				<div class="mt-8 flex gap-3">
-					<button
-						onclick={() => (showFullscreenModal = false)}
-						class="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
-					>
-						Accept
-					</button>
-					<button
-						onclick={() => (showFullscreenModal = false)}
-						class="rounded-md bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 focus:outline-none"
-					>
-						Decline
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
-{/if}
+<ConsentModal
+	show={showFullscreenModal}
+	{title}
+	{text}
+	onAccept={() => (showFullscreenModal = false)}
+	onDecline={() => (showFullscreenModal = false)}
+	onClose={() => (showFullscreenModal = false)}
+	isPreview={true}
+/>
 
 <!-- Notification Toast -->
 {#if notification}

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import { fade, fly } from 'svelte/transition';
+	import { WelcomeModal } from '$lib/components/modals';
+	import { fly } from 'svelte/transition';
 
 	interface Props {
 		initialData?: {
@@ -103,15 +104,7 @@
 		videoFile = null;
 		videoFileName = null;
 	}
-
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape' && showFullscreenModal) {
-			showFullscreenModal = false;
-		}
-	}
 </script>
-
-<svelte:window onkeydown={handleKeydown} />
 
 <div class="mb-6">
 	<h1 class="page-title">Welcome</h1>
@@ -319,107 +312,16 @@
 </div>
 
 <!-- Fullscreen Modal Preview -->
-{#if showFullscreenModal}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center p-4"
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="welcome-modal-title"
-	>
-		<!-- Backdrop -->
-		<button
-			class="fixed inset-0 h-full w-full cursor-default bg-dark/80 transition-opacity focus:outline-none"
-			transition:fade={{ duration: 200 }}
-			onclick={() => (showFullscreenModal = false)}
-			aria-label="Close modal"
-			type="button"
-		></button>
-
-		<!-- Modal Panel -->
-		<div
-			class="relative w-full max-w-2xl transform overflow-hidden rounded-xl bg-white shadow-2xl transition-all"
-			transition:fly={{ y: 20, duration: 300 }}
-		>
-			<div class="absolute top-0 right-0 z-10 pt-4 pr-4">
-				<button
-					type="button"
-					class="rounded-md bg-white text-gray-400 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
-					onclick={() => (showFullscreenModal = false)}
-				>
-					<span class="sr-only">Close</span>
-					<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M6 18L18 6M6 6l12 12"
-						/>
-					</svg>
-				</button>
-			</div>
-
-			<div class="max-h-[calc(100vh-120px)] overflow-y-auto px-6 py-8 sm:p-10">
-				<h2 id="welcome-modal-title" class="text-2xl font-bold tracking-tight text-gray-900">
-					{title || 'Welcome Title'}
-				</h2>
-
-				{#if videoPreviewUrl}
-					<div class="mt-4 overflow-hidden rounded-lg bg-black">
-						<video controls class="w-full">
-							<source src={videoPreviewUrl} type="video/mp4" />
-							Your browser does not support the video tag.
-						</video>
-					</div>
-				{/if}
-
-				<div class="mt-4 leading-relaxed whitespace-pre-wrap text-gray-700">
-					{#if text}
-						{text}
-					{:else}
-						<span class="text-gray-400 italic">No welcome message configured yet.</span>
-					{/if}
-				</div>
-
-				<hr class="my-6 border-gray-200" />
-
-				<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-					<p class="mb-2">
-						If you wish to withdraw your consent or change your answers, please contact
-						{#if email}
-							<a href="mailto:{email}" class="font-medium text-primary hover:underline">
-								{email}
-							</a>
-						{:else}
-							<span class="text-gray-400">[contact email]</span>
-						{/if}
-						with a reference to the following code:
-					</p>
-
-					<div
-						class="my-2 flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
-					>
-						<code class="font-mono text-sm text-gray-700">&lt;interview-id&gt;</code>
-						<i class="fa-solid fa-fingerprint text-gray-400"></i>
-					</div>
-
-					<p class="text-xs text-gray-500">
-						It is your own responsibility to store this code securely before starting the interview.
-						It is the only way for us to identify and modify or delete your data.
-					</p>
-				</div>
-
-				<div class="mt-8">
-					<button
-						onclick={() => (showFullscreenModal = false)}
-						class="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
-					>
-						Start Interview
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
-{/if}
+<WelcomeModal
+	show={showFullscreenModal}
+	{title}
+	{text}
+	videoUrl={videoPreviewUrl}
+	{email}
+	onProceed={() => (showFullscreenModal = false)}
+	onClose={() => (showFullscreenModal = false)}
+	isPreview={true}
+/>
 
 <!-- Notification Toast -->
 {#if notification}
