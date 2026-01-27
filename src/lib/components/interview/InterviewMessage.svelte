@@ -6,41 +6,51 @@
 	import SurveyItem from './SurveyItem.svelte';
 
 	// Custom token definitions with their display properties
-	const TOKEN_CONFIG: Record<CustomTokens, { icon: string; label: string; color: string }> = {
+	const TOKEN_CONFIG: Record<
+		CustomTokens,
+		{ icon: string; label: string; color: string; justify: string }
+	> = {
 		'<|endofprobe|>': {
 			icon: 'fa-solid fa-check',
 			label: 'Probe complete',
-			color: 'text-blue-600 bg-blue-50'
+			color: 'text-blue-600 bg-blue-50',
+			justify: 'center'
 		},
 		'<|endofsection|>': {
 			icon: 'fa-solid fa-flag-checkered',
 			label: 'Section complete',
-			color: 'text-green-600 bg-green-50'
+			color: 'text-green-600 bg-green-50',
+			justify: 'center'
 		},
 		'<|endofinterview|>': {
 			icon: 'fa-solid fa-circle-check',
 			label: 'Interview complete',
-			color: 'text-emerald-600 bg-emerald-50'
+			color: 'text-emerald-600 bg-emerald-50',
+			justify: 'center'
 		},
 		'<|skipquestion|>': {
 			icon: 'fa-solid fa-forward',
 			label: 'Question skipped',
-			color: 'text-amber-600 bg-amber-50'
+			color: 'text-gray-600',
+			justify: 'end'
 		},
 		'<|skipsection|>': {
 			icon: 'fa-solid fa-forward-fast',
 			label: 'Section skipped',
-			color: 'text-amber-600 bg-amber-50'
+			color: 'text-amber-600 bg-amber-50',
+			justify: 'center'
 		},
 		'<|noanswer|>': {
 			icon: 'fa-solid fa-minus',
 			label: 'No answer',
-			color: 'text-gray-500 bg-gray-100'
+			color: 'text-gray-500 bg-gray-100',
+			justify: 'center'
 		},
 		'<|restartinterview|>': {
 			icon: 'fa-solid fa-rotate',
 			label: 'Interview restarted',
-			color: 'text-purple-600 bg-purple-50'
+			color: 'text-purple-600 bg-purple-50',
+			justify: 'center'
 		}
 	};
 
@@ -96,7 +106,7 @@
 
 {#if customToken}
 	<!-- Custom Token Display (standalone token message) -->
-	<div class="mb-[15px] flex w-full justify-center px-[10px] sm:px-[50px]">
+	<div class="mb-[15px] flex w-full justify-{customToken.justify} px-[10px] sm:px-[50px]">
 		<div
 			class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium {customToken.color}"
 		>
