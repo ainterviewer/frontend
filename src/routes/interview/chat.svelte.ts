@@ -522,7 +522,11 @@ export class ChatClient {
 				if (data.content === '<|endofinterview|>') {
 					this.disableReconnect();
 					// Handle exit logic (maybe a callback or event)
-					this.messages.push({ type: 'system', text: 'Interview ended.' });
+					// NOTE:
+					// Type received to have styling applied, consider styling special
+					// tokens for system as well
+
+					this.messages.push({ type: 'received', text: '<|endofinterview|>' });
 				}
 				break;
 		}
