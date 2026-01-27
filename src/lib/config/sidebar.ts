@@ -12,12 +12,11 @@ export const mainSidebarItems: SidebarItem[] = [
 		href: '/dashboard/experiments',
 		icon: 'fa-solid fa-vials'
 	},
-	// FIXME:
-	// {
-	// 	label: 'Settings',
-	// 	href: '/dashboard/settings',
-	// 	icon: 'fas fa-cog'
-	// },
+	{
+		label: 'Settings',
+		href: '/dashboard/settings',
+		icon: 'fas fa-cog'
+	},
 	{ type: 'separator', requiresAdmin: true },
 	{
 		label: 'Admin',
@@ -97,34 +96,40 @@ export const projectSidebarItems: SidebarItem[] = [
 	{
 		label: 'Distribute',
 		href: '/dashboard/projects/{projectId}/{languageCode}/distribution',
-		icon: 'fas fa-envelopes-bulk'
+		icon: 'fas fa-envelopes-bulk',
+		children: [
+			{
+				label: 'Monitor',
+				href: '/dashboard/projects/{projectId}/{languageCode}/monitor',
+				icon: 'fa-solid fa-tower-cell'
+			}
+		]
 	},
 	{
 		label: 'Interviews',
 		href: '/dashboard/projects/{projectId}/{languageCode}/interviews',
 		icon: 'fas fa-comments'
+	},
+	{
+		label: 'Analysis',
+		href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
+		icon: 'fas fa-chart-pie',
+		children: [
+			{
+				label: 'Annotate',
+				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
+				icon: 'fas fa-tags'
+			},
+			{
+				label: 'Visualizations',
+				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/visualizations',
+				icon: 'fas fa-chart-line'
+			}
+		]
+	},
+	{
+		label: 'Settings',
+		href: '/dashboard/projects/{projectId}/{languageCode}/settings',
+		icon: 'fas fa-gears'
 	}
-	// FIXME:
-	// {
-	// 	label: 'Analysis',
-	// 	href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
-	// 	icon: 'fas fa-chart-pie',
-	// 	children: [
-	// 		{
-	// 			label: 'Annotate',
-	// 			href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
-	// 			icon: 'fas fa-tags'
-	// 		},
-	// 		{
-	// 			label: 'Visualizations',
-	// 			href: '/dashboard/projects/{projectId}/{languageCode}/analysis/visualizations',
-	// 			icon: 'fas fa-chart-line'
-	// 		}
-	// 	]
-	// },
-	// {
-	// 	label: 'Settings',
-	// 	href: '/dashboard/projects/{projectId}/{languageCode}/settings',
-	// 	icon: 'fas fa-gears'
-	// }
 ];
