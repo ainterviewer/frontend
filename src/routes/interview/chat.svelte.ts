@@ -1,5 +1,11 @@
 import { browser } from '$app/environment';
-import { Interviews, type InterviewToken, type InterviewType, type ReceivedData } from '$lib/api';
+import {
+	Auth,
+	Interviews,
+	type InterviewToken,
+	type InterviewType,
+	type ReceivedData
+} from '$lib/api';
 import { type Message } from '$lib/components/interview/types';
 
 /**
@@ -521,7 +527,8 @@ export class ChatClient {
 
 				if (data.content === '<|endofinterview|>') {
 					this.disableReconnect();
-					// Handle exit logic (maybe a callback or event)
+
+					await Auth.exit();
 					// NOTE:
 					// Type received to have styling applied, consider styling special
 					// tokens for system as well
