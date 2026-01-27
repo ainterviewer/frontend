@@ -423,6 +423,7 @@ export class ChatClient {
 
 		switch (data.type) {
 			case 'message':
+				if (data.progress) this.progress = data.progress;
 				if (data.image) {
 					if (data.image.primer) {
 						await this.addMessage({
