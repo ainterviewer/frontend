@@ -9,6 +9,21 @@ import {
 import { type Message } from '$lib/components/interview/types';
 
 /**
+ * Parse interview ID from a JWT token
+ */
+export function parseInterviewIdFromToken(token: string): string | null {
+	try {
+		// Parse JWT payload (second part)
+		const payload = token.split('.')[1];
+		const decoded: InterviewToken = JSON.parse(atob(payload));
+		return decoded.interview_id;
+	} catch (e) {
+		console.error('Failed to parse interview token', e);
+		return null;
+	}
+}
+
+/**
  * Get interview ID from the interview_token cookie
  */
 export function getInterviewIdFromCookie(): string | null {
@@ -20,15 +35,7 @@ export function getInterviewIdFromCookie(): string | null {
 	const token = cookie.split('=')[1];
 	if (!token) return null;
 
-	try {
-		// Parse JWT payload (second part)
-		const payload = token.split('.')[1];
-		const decoded: InterviewToken = JSON.parse(atob(payload));
-		return decoded.interview_id;
-	} catch (e) {
-		console.error('Failed to parse interview token', e);
-		return null;
-	}
+	return parseInterviewIdFromToken(token);
 }
 
 /**

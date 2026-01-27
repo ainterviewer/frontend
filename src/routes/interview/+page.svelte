@@ -4,7 +4,7 @@
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { WelcomeModal, ConsentModal } from '$lib/components/modals';
 	import { onMount } from 'svelte';
-	import { ChatClient, createInterview, getInterviewIdFromCookie } from './chat.svelte';
+	import { ChatClient, createInterview, getInterviewIdFromCookie, parseInterviewIdFromToken } from './chat.svelte';
 
 	interface PageData {
 		project_id: string;
@@ -39,6 +39,9 @@
 	// Chat client - initialized after consent/interview creation
 	let chat = $state<ChatClient | null>(null);
 
+	// Interview ID - created after consent, before welcome
+	let interviewId = $state<string | null>(null);
+
 	// Welcome flow state
 	let showWelcome = $state(false);
 	let welcomeData = $state<Welcome | null>(null);
@@ -61,6 +64,29 @@
 		return () => chat?.disconnect();
 	});
 
+	async function createInterviewAndGetId(): Promise<string | null> {
+		const token = await createInterview(
+			projectId,
+			lang,
+			data.interviewType,
+			data.experimentID
+		);
+
+		if (token) {
+			const parsedId = parseInterviewIdFromToken(token);
+			if (parsedId) {
+				interviewId = parsedId;
+				return parsedId;
+			} else {
+				console.error('Failed to parse interview ID from token');
+				return null;
+			}
+		} else {
+			console.error('Failed to create interview');
+			return null;
+		}
+	}
+
 	function initializeChat(interviewId: string) {
 		chat = new ChatClient(projectId, 'respondent', lang);
 		chat.initialize(interviewId);
@@ -81,11 +107,11 @@
 				showWelcome = true;
 				isInitializing = false;
 			} else {
-				await startInterview();
+				startInterview();
 			}
 		} catch (e) {
 			console.error('Error loading welcome', e);
-			await startInterview();
+			startInterview();
 		}
 	}
 
@@ -103,38 +129,51 @@
 				showConsent = true;
 				isInitializing = false;
 			} else {
-				await loadWelcome();
+				// No consent configured - create interview and proceed to welcome
+				const newInterviewId = await createInterviewAndGetId();
+				if (newInterviewId) {
+					await loadWelcome();
+				} else {
+					isInitializing = false;
+				}
 			}
 		} catch (e) {
 			console.error('Error loading consent', e);
-			await loadWelcome();
+			// Error loading consent - create interview and proceed to welcome
+			const newInterviewId = await createInterviewAndGetId();
+			if (newInterviewId) {
+				await loadWelcome();
+			} else {
+				isInitializing = false;
+			}
 		}
 	}
 
-	async function startInterview() {
-		const newInterviewId = await createInterview(
-			projectId,
-			lang,
-			data.interviewType,
-			data.experimentID
-		);
-
-		if (newInterviewId) {
-			initializeChat(newInterviewId);
+	function startInterview() {
+		if (interviewId) {
+			initializeChat(interviewId);
 		} else {
-			console.error('Failed to create interview');
+			console.error('No interview ID available');
 			isInitializing = false;
 		}
 	}
 
-	async function proceedFromWelcome() {
+	function proceedFromWelcome() {
 		showWelcome = false;
 		isInitializing = true;
-		await startInterview();
+		startInterview();
 	}
 
 	async function acceptConsent() {
 		consentAccepting = true;
+
+		// Create interview after consent is accepted
+		const newInterviewId = await createInterviewAndGetId();
+		if (!newInterviewId) {
+			consentAccepting = false;
+			isInitializing = false;
+			return;
+		}
 
 		try {
 			const { data: welcome } = await Projects.getWelcome({
@@ -149,12 +188,12 @@
 				showWelcome = true;
 				showConsent = false;
 			} else {
-				await startInterview();
+				startInterview();
 				showConsent = false;
 			}
 		} catch (e) {
 			console.error('Error loading welcome', e);
-			await startInterview();
+			startInterview();
 			showConsent = false;
 		}
 
@@ -189,18 +228,6 @@
 	{/if}
 </div>
 
-<!-- Welcome Modal -->
-<WelcomeModal
-	show={showWelcome && !!welcomeData}
-	title={welcomeData?.title ?? ''}
-	text={welcomeData?.text ?? ''}
-	videoUrl={welcomeData?.video_file_name ? `/assets/videos/${welcomeData.video_file_name}` : null}
-	email={welcomeData?.email ?? null}
-	onProceed={proceedFromWelcome}
-	animate={false}
-/>
-
-<!-- Consent Modal -->
 <ConsentModal
 	show={showConsent && !!consentData}
 	title={consentData?.title ?? ''}
@@ -208,6 +235,17 @@
 	onAccept={acceptConsent}
 	onDecline={declineConsent}
 	accepting={consentAccepting}
+	animate={false}
+/>
+
+<WelcomeModal
+	show={showWelcome && !!welcomeData}
+	title={welcomeData?.title ?? ''}
+	text={welcomeData?.text ?? ''}
+	videoUrl={welcomeData?.video_file_name ? `/assets/videos/${welcomeData.video_file_name}` : null}
+	email={welcomeData?.email ?? null}
+	{interviewId}
+	onProceed={proceedFromWelcome}
 	animate={false}
 />
 
