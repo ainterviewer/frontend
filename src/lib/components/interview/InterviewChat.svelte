@@ -209,10 +209,10 @@
 			rows="1"
 			placeholder="Message"
 			class="
-				min-h-[100px] w-full resize-none rounded border border-gray-300 p-2.5 text-[15px] shadow-sm transition-all
-				focus:border-[#66afe9] focus:shadow-[0_0_5px_rgba(102,175,233,0.5)] focus:outline-none
+				min-h-25 w-full resize-none rounded border border-gray-300 p-2.5 shadow-sm transition-all
+				focus:border-primary focus:ring-1 focus:ring-primary/50 focus:outline-none
 				disabled:text-[#666666]
-				sm:max-h-[8rem] sm:w-[40%] sm:max-w-[500px] sm:min-w-[350px]
+				sm:max-h-32 sm:w-[40%] sm:max-w-125 sm:min-w-85
 			"
 			oninput={handleInput}
 			onkeydown={handleKeydown}
@@ -225,8 +225,8 @@
 				disabled={!chat.inputEnabled || !messageInput.trim()}
 				id="send-message"
 				class="
-					mt-[15px] cursor-pointer rounded bg-[#007bff] px-3 py-1.5 text-sm text-white transition-colors
-					hover:bg-[#0056b3] active:bg-[#004085]
+					mt-[15px] cursor-pointer rounded bg-primary px-3 py-1.5 text-sm text-white transition-colors
+					hover:bg-dark
 					disabled:cursor-not-allowed disabled:bg-[#cccccc] disabled:text-[#666666]
 				"
 				title="Send message (Ctrl+Enter)"
