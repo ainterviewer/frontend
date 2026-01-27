@@ -363,6 +363,14 @@ export class ChatClient {
 	sendSkip() {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 		this.ws.send(JSON.stringify({ type: 'message', content: '<|skipquestion|>' }));
+
+		// Add to local UI
+		this.messages.push({
+			type: 'sent',
+			text: '<|skipquestion|>',
+			message_id: Date.now()
+		});
+
 		if (this.role === 'respondent') {
 			this.inputEnabled = false;
 			this.showTypingIndicator = true;
