@@ -176,12 +176,8 @@
 
 {#if error}
 	<div class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
-{:else if loading}
-	<div class="flex h-64 items-center justify-center">
-		<div class="text-muted-foreground">Loading monitoring data...</div>
-	</div>
-{:else if stats}
-	<div class="mt-8 grid grid-cols-2 gap-4">
+{:else}
+	<div class="my-8 grid grid-cols-2 gap-4">
 		<!-- 1. KPI Cards -->
 		<div class="grid grid-cols-2 gap-4">
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
@@ -190,7 +186,7 @@
 					<span class="text-3xl font-bold">{formatNumber(Math.round(totalInterviews.current))}</span
 					>
 					<span class="text-muted-foreground text-sm"
-						>({stats.interviews_by_status.find((s) => s.status === 'active')?.count ?? 0} active)</span
+						>({stats?.interviews_by_status.find((s) => s.status === 'active')?.count ?? 0} active)</span
 					>
 				</div>
 			</div>
@@ -225,50 +221,70 @@
 		<div class="bg-card rounded-lg border p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Interviews by Status</h3>
 			<div class="h-[300px] w-full">
-				<PieChart
-					data={interviewsByStatus}
-					key="status"
-					value="count"
-					innerRadius={-20}
-					cornerRadius={5}
-					padAngle={0.02}
-					cRange={['#e8dcb9', '#196858', '#94a3b8']}
-					renderContext="svg"
-					props={{
-						arc: { motion: { type: 'spring', stiffness: 0.1, damping: 0.4 } }
-					}}
-				>
-					{#snippet aboveMarks()}
-						<Text
-							value={formatNumber(sum(interviewsByStatus, (d) => d.count))}
-							textAnchor="middle"
-							verticalAnchor="middle"
-							class="text-4xl"
-							dy={4}
-						/>
-						<Text
-							value="interviews"
-							textAnchor="middle"
-							verticalAnchor="middle"
-							class="fill-surface-content/50 text-sm"
-							dy={26}
-						/>
-					{/snippet}
-				</PieChart>
+				{#if interviewsByStatus.length > 0}
+					<PieChart
+						data={interviewsByStatus}
+						key="status"
+						value="count"
+						innerRadius={-20}
+						cornerRadius={5}
+						padAngle={0.02}
+						cRange={['#e8dcb9', '#196858', '#94a3b8']}
+						renderContext="svg"
+						props={{
+							arc: { motion: { type: 'spring', stiffness: 0.1, damping: 0.4 } }
+						}}
+					>
+						{#snippet aboveMarks()}
+							<Text
+								value={formatNumber(sum(interviewsByStatus, (d) => d.count))}
+								textAnchor="middle"
+								verticalAnchor="middle"
+								class="text-4xl"
+								dy={4}
+							/>
+							<Text
+								value="interviews"
+								textAnchor="middle"
+								verticalAnchor="middle"
+								class="fill-surface-content/50 text-sm"
+								dy={26}
+							/>
+						{/snippet}
+					</PieChart>
+				{:else}
+					<!-- Skeleton placeholder -->
+					<div class="flex h-full items-center justify-center">
+						<div class="h-[200px] w-[200px] animate-pulse rounded-full bg-muted"></div>
+					</div>
+				{/if}
 			</div>
 			<!-- Legend -->
 			<div class="mt-4 flex flex-wrap justify-center gap-4">
-				{#each interviewsByStatus as item}
-					<div class="flex items-center gap-2">
-						<div
-							class="h-3 w-3 rounded-full"
-							style="background-color: {statusColorScale(item.status)}"
-						></div>
-						<span class="text-muted-foreground text-sm capitalize"
-							>{item.status} ({item.count})</span
-						>
-					</div>
-				{/each}
+				{#if interviewsByStatus.length > 0}
+					{#each interviewsByStatus as item}
+						<div class="flex items-center gap-2">
+							<div
+								class="h-3 w-3 rounded-full"
+								style="background-color: {statusColorScale(item.status)}"
+							></div>
+							<span class="text-muted-foreground text-sm capitalize"
+								>{item.status} ({item.count})</span
+							>
+						</div>
+					{/each}
+				{:else}
+					<!-- Skeleton legend -->
+					{#each ['active', 'completed', 'inactive'] as status}
+						<div class="flex items-center gap-2">
+							<div
+								class="h-3 w-3 rounded-full"
+								style="background-color: {statusColorScale(status)}"
+							></div>
+							<span class="text-muted-foreground text-sm capitalize">{status} (0)</span>
+						</div>
+					{/each}
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -278,29 +294,31 @@
 		<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
 			<h3 class="mb-4 text-lg font-medium">Interviews Per Day</h3>
 			<div class="h-[300px] w-full">
-				<BarChart
-					data={interviewsOverTime}
-					x="date"
-					series={[
-						{ key: 'unfinished_count', label: 'Inactive', color: statusColorScale('inactive') },
-						{ key: 'completed_count', label: 'Completed', color: statusColorScale('completed') }
-					]}
-					seriesLayout="stack"
-					padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
-					props={{
-						xAxis: { format: (d) => timeFormat('%b %d')(d), classes: { tickLabel: 'text-xs' } },
-						yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-						tooltip: {
-							header: { format: (d) => timeFormat('%B %d, %Y')(d) }
-						},
-						bars: { motion: { type: 'tween', duration: 300 } }
-					}}
-				/>
+				{#if interviewsOverTime.length > 0}
+					<BarChart
+						data={interviewsOverTime}
+						x="date"
+						series={[
+							{ key: 'unfinished_count', label: 'Inactive', color: statusColorScale('inactive') },
+							{ key: 'completed_count', label: 'Completed', color: statusColorScale('completed') }
+						]}
+						seriesLayout="stack"
+						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
+						props={{
+							xAxis: { format: (d) => timeFormat('%b %d')(d), classes: { tickLabel: 'text-xs' } },
+							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
+							tooltip: {
+								header: { format: (d) => timeFormat('%B %d, %Y')(d) }
+							},
+							bars: { motion: { type: 'tween', duration: 300 } }
+						}}
+					/>
+				{/if}
 			</div>
 		</div>
 
 		<!-- 6. Duration Stats (Box Plot / Range) -->
-		{#if stats.duration_stats}
+		{#if stats?.duration_stats}
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<h3 class="mb-4 text-lg font-medium">Duration (Seconds)</h3>
 				<div class="h-[120px] w-full">
@@ -375,7 +393,7 @@
 		{/if}
 
 		<!-- 7. Message Count Stats (Bullet / Range) -->
-		{#if stats.message_count_stats}
+		{#if stats?.message_count_stats}
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<h3 class="mb-4 text-lg font-medium">Message Count</h3>
 				<div class="h-[120px] w-full">
