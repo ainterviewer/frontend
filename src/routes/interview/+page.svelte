@@ -213,10 +213,10 @@
 
 <!-- Loading State -->
 {#if isInitializing && !showConsent && !showWelcome}
-	<div class="fixed inset-0 z-[200] flex items-center justify-center bg-white">
+	<div class="fixed inset-0 z-200 flex items-center justify-center bg-white">
 		<div class="flex flex-col items-center gap-4">
 			<div
-				class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#007bff]"
+				class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary"
 			></div>
 			<p class="text-sm text-gray-500">Loading...</p>
 		</div>
