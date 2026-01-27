@@ -139,8 +139,6 @@
 		{#if chat.showTypingIndicator}
 			<TypingIndicator />
 		{/if}
-
-		<div class="h-4"></div>
 	</div>
 </div>
 
