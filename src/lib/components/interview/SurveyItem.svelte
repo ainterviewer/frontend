@@ -83,7 +83,7 @@
 					step="1"
 					bind:value={sliderValue}
 					{disabled}
-					class="my-6 w-full cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
+					class="my-6 w-full cursor-pointer accent-primary disabled:cursor-not-allowed"
 					list="tickmarks"
 				/>
 
@@ -101,13 +101,13 @@
 				</div>
 			</div>
 		{:else}
-			{#each normalizedOptions as opt}
+			{#each normalizedOptions as opt, i (i)}
 				<div class="relative max-w-full min-w-min">
 					<label
 						class="flex w-fit max-w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all
-                   hover:border-blue-300 hover:bg-blue-50
+                   hover:border-primary/50 hover:bg-gray-200
                    {isChecked(opt.value)
-							? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
+							? 'border-primary bg-primary/10 text-dark ring-1 ring-primary'
 							: ''}
                   {disabled ? 'cursor-not-allowed opacity-60 grayscale' : ''}"
 						title={opt.tip}
@@ -119,7 +119,7 @@
 							checked={isChecked(opt.value)}
 							onchange={() => toggleOption(opt.value)}
 							{disabled}
-							class="mr-3 h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 disabled:text-gray-400"
+							class="mr-3 h-4 w-4 border-gray-300 text-primary focus:ring-primary disabled:text-gray-400"
 						/>
 						{opt.label}
 						{#if opt.tip}
