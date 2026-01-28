@@ -172,11 +172,11 @@
 				class="-mx-5 space-y-6 border-t border-gray-100 bg-gray-50/30 px-5 pt-4 pb-4"
 			>
 				<!-- Media Controls (Edit Mode) -->
-				<div class="flex hidden gap-4">
+				<div class="flex gap-4">
 					<div class="relative">
 						{#if !question.image}
 							<button
-								class="flex items-center gap-2 rounded border border-gray-300 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+								class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
 								onclick={() => (question.image = { description: '', alt: '' })}
 							>
 								<i class="fa-solid fa-image"></i> Add Image
@@ -230,7 +230,7 @@
 					<div class="relative">
 						{#if !question.survey_item}
 							<button
-								class="flex items-center gap-2 rounded border border-gray-300 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+								class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
 								onclick={() =>
 									(question.survey_item = {
 										type: 'radio',
@@ -351,6 +351,7 @@
 
 				<!-- Configuration Grid -->
 				<div class="grid grid-cols-1 gap-20 border-t border-gray-200 pt-4 sm:grid-cols-3">
+					<!-- Probing Limits -->
 					<div class="space-y-3">
 						<label class="text-xs font-bold tracking-wider text-gray-700 uppercase"
 							>Probing Limits</label
@@ -377,6 +378,7 @@
 						</div>
 					</div>
 
+					<!-- Behavior Flags -->
 					<div class="col-span-2 space-y-3">
 						<label class="text-xs font-bold tracking-wider text-gray-700 uppercase"
 							>Behavior Flags</label

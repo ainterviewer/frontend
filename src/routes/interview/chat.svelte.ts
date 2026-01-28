@@ -398,7 +398,7 @@ export class ChatClient {
 
 		this.ws.send(
 			JSON.stringify({
-				type: 'survey_response',
+				type: 'message',
 				content: response,
 				responds_to: originalMessageId
 			})
@@ -467,7 +467,7 @@ export class ChatClient {
 					}
 					await this.sleep(200);
 					await this.addMessage({
-						type: 'received', // Survey is technically received content
+						type: 'sent', // Survey is technically received content
 						survey_item: data.survey_item,
 						message_id: data.message_id
 					});

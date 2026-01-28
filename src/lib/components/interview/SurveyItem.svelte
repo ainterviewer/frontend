@@ -67,12 +67,7 @@
 </script>
 
 <div class="mt-2 w-full max-w-full">
-	<fieldset
-		class="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-gray-50/50 p-4 {type ===
-		'radio'
-			? 'flex-col'
-			: ''}"
-	>
+	<fieldset class="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-gray-50/50 p-4">
 		<legend
 			class="mx-auto rounded-full bg-white px-3 py-1 text-xs font-semibold tracking-wide text-gray-500 shadow-sm"
 		>
@@ -109,14 +104,12 @@
 			{#each normalizedOptions as opt}
 				<div class="relative max-w-full min-w-min">
 					<label
-						class="
-                            flex w-fit max-w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all
-                            hover:border-blue-300 hover:bg-blue-50
-                            {isChecked(opt.value)
+						class="flex w-fit max-w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all
+                   hover:border-blue-300 hover:bg-blue-50
+                   {isChecked(opt.value)
 							? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
 							: ''}
-                            {disabled ? 'cursor-not-allowed opacity-60 grayscale' : ''}
-                        "
+                  {disabled ? 'cursor-not-allowed opacity-60 grayscale' : ''}"
 						title={opt.tip}
 					>
 						<input
@@ -141,7 +134,7 @@
 	{#if !disabled}
 		<div class="mt-4 flex justify-end">
 			<button
-				class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95"
+				class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-gray-500 shadow-md transition-all hover:scale-110 hover:shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-98"
 				onclick={sendAnswer}
 				aria-label="Submit answer"
 			>
