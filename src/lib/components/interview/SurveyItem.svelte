@@ -67,7 +67,7 @@
 </script>
 
 <div class="mt-2 w-full max-w-full">
-	<fieldset class="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-gray-50/50 p-4">
+	<fieldset class="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-gray-200 p-4">
 		<legend
 			class="mx-auto rounded-full bg-white px-3 py-1 text-xs font-semibold tracking-wide text-gray-500 shadow-sm"
 		>
@@ -132,7 +132,7 @@
 	</fieldset>
 
 	{#if !disabled}
-		<div class="mt-4 flex justify-end">
+		<div class="mt-2 flex justify-end">
 			<button
 				class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-gray-500 shadow-md transition-all hover:scale-110 hover:shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-98"
 				onclick={sendAnswer}
