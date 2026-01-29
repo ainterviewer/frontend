@@ -4489,28 +4489,33 @@ export type DeleteTestSetupResponses = {
     200: unknown;
 };
 
-export type AddIntervieweeData = {
-    body: IntervieweeCreate;
+export type GetIntervieweeData = {
+    body?: never;
     path: {
         /**
          * Project Id
          */
         project_id: string;
     };
-    query?: never;
+    query: {
+        /**
+         * Interview Id
+         */
+        interview_id: string;
+    };
     url: '/api/projects/{project_id}/interviewee';
 };
 
-export type AddIntervieweeErrors = {
+export type GetIntervieweeErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type AddIntervieweeError = AddIntervieweeErrors[keyof AddIntervieweeErrors];
+export type GetIntervieweeError = GetIntervieweeErrors[keyof GetIntervieweeErrors];
 
-export type AddIntervieweeResponses = {
+export type GetIntervieweeResponses = {
     /**
      * Successful Response
      */
