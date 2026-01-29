@@ -7,7 +7,7 @@
 		ProjectFolderWithProjects,
 		ProjectPublic
 	} from '$lib/api';
-	import { Collaborators, Default, Projects } from '$lib/api';
+	import { Default, Projects, Folders } from '$lib/api';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
@@ -62,7 +62,7 @@
 		isLoading = true;
 		try {
 			const [foldersRes, langRes] = await Promise.all([
-				Projects.getFolders(),
+				Folders.getFolders(),
 				Default.getLanguages()
 			]);
 			folders = (foldersRes as unknown as { data: ProjectFolderWithProjects[] }).data || foldersRes;
@@ -97,9 +97,11 @@
 		}
 		try {
 			await Projects.createProject({
+				path: {
+					folder_id: createProjectFolderId
+				},
 				body: {
 					title: createProjectName,
-					folder_id: createProjectFolderId,
 					default_language: createProjectLanguage
 				}
 			});
@@ -149,8 +151,10 @@
 		if (!selectedFolder) return;
 		try {
 			await Projects.editFolder({
+				path: {
+					folder_id: selectedFolder.id
+				},
 				body: {
-					id: selectedFolder.id,
 					title: editFolderName
 				}
 			});
@@ -169,11 +173,13 @@
 	async function handleAddCollaborator(folderId: string) {
 		if (!editCollaboratorEmail) return;
 		try {
-			await Collaborators.addCollaborator({
+			await Folders.addCollaborator({
+				path: {
+					folder_id: folderId
+				},
 				body: {
 					email: editCollaboratorEmail,
-					role: editCollaboratorRole,
-					folder_id: folderId
+					role: editCollaboratorRole
 				}
 			});
 			editCollaboratorEmail = '';
@@ -192,9 +198,11 @@
 	async function handleRemoveCollaborator(userId: string) {
 		if (!selectedFolder) return;
 		try {
-			await Collaborators.removeCollaborator({
+			await Folders.removeCollaborator({
+				path: {
+					folder_id: selectedFolder.id
+				},
 				query: {
-					folder_id: selectedFolder.id,
 					user_id: userId
 				}
 			});
@@ -212,9 +220,11 @@
 	async function handleUpdateCollaboratorRole(userId: string, role: CollaboratorRole) {
 		if (!selectedFolder) return;
 		try {
-			await Collaborators.updateCollaboratorRole({
+			await Folders.updateCollaboratorRole({
+				path: {
+					folder_id: selectedFolder.id
+				},
 				query: {
-					folder_id: selectedFolder.id,
 					user_id: userId,
 					role
 				}
@@ -241,8 +251,8 @@
 		if (!selectedFolder || deleteFolderConfirmation !== selectedFolder.title) return;
 
 		try {
-			await Projects.deleteFolder({
-				body: { id: selectedFolder.id }
+			await Folders.deleteFolder({
+				path: { folder_id: selectedFolder.id }
 			});
 			isDeleteFolderModalOpen = false;
 			selectedFolder = null;
@@ -822,8 +832,7 @@
 				/>
 			</div>
 
-			<!-- FIXME: -->
-			<div class="mt-6 mb-4 hidden">
+			<div class="mt-6 mb-4">
 				<label class="mb-2 block font-bold" for="create-folder-collaborators">Collaborators</label>
 
 				{#if createFolderCollaborators.length > 0}
