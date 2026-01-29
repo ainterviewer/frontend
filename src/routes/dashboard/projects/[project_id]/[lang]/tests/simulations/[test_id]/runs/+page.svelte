@@ -172,7 +172,7 @@
 			<select
 				id="answering-model"
 				bind:value={answeringModel}
-				class="w-64 rounded border-gray-300 bg-white focus:border-primary focus:ring-primary"
+				class="w-fit rounded border-gray-300 bg-white focus:border-primary focus:ring-primary"
 			>
 				{#each data.models as model}
 					<option value={model}>{model}</option>
