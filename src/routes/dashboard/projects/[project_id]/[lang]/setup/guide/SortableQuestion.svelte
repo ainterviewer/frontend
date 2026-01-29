@@ -197,11 +197,11 @@
 												class="h-16 w-16 rounded border bg-gray-100 object-cover"
 											/>
 										{/if}
-										<div class="flex-1 space-y-2">
+										<div class="w-full flex-1 space-y-2">
 											<input
 												type="file"
 												accept=".png,.jpg,.webp"
-												class="text-xs text-gray-500 file:mr-2 file:rounded-full file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-primary hover:file:bg-primary/20"
+												class="w-full text-xs text-gray-500 file:mr-2 file:rounded-full file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-primary hover:file:bg-primary/20"
 												onchange={handleImageUpload}
 											/>
 											<input
