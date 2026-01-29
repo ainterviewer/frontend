@@ -119,12 +119,13 @@ export const projectSidebarItems: SidebarItem[] = [
 				label: 'Annotate',
 				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
 				icon: 'fas fa-tags'
-			},
-			{
-				label: 'Visualizations',
-				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/visualizations',
-				icon: 'fas fa-chart-line'
 			}
+			// FIXME:
+			// {
+			// 	label: 'Visualizations',
+			// 	href: '/dashboard/projects/{projectId}/{languageCode}/analysis/visualizations',
+			// 	icon: 'fas fa-chart-line'
+			// }
 		]
 	},
 	{
