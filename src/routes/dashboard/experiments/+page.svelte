@@ -129,8 +129,9 @@
 			const response = await Experiments.createExperiment({
 				body: {
 					title: newExperimentTitle,
-					project_ids: selectedProjectIds,
-					weights: weights
+					projects: selectedProjectIds.map(function (project_id, i) {
+						return { project_id: project_id, weight: weights[i] };
+					})
 				}
 			});
 
