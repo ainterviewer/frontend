@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ActiveWebsocketsWsConnectionsGetData, ActiveWebsocketsWsConnectionsGetResponses, AddCollaboratorData, AddCollaboratorErrors, AddCollaboratorResponses, AddIntervieweeData, AddIntervieweeErrors, AddIntervieweeResponses, AddMessageAnnotationData, AddMessageAnnotationErrors, AddMessageAnnotationResponses, AddProjectLanguagesData, AddProjectLanguagesErrors, AddProjectLanguagesResponses, BroadcastWsBroadcastPostData, BroadcastWsBroadcastPostErrors, BroadcastWsBroadcastPostResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ConnectWsConnectProjectIdInterviewIdGetData, ConnectWsConnectProjectIdInterviewIdGetErrors, ConnectWsConnectProjectIdInterviewIdGetResponses, CreateAnalysisCategoryData, CreateAnalysisCategoryErrors, CreateAnalysisCategoryResponses, CreateConsentData, CreateConsentErrors, CreateConsentResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateGuideData, CreateGuideErrors, CreateGuideResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreatePromptsData, CreatePromptsErrors, CreatePromptsResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, CreateWelcomeData, CreateWelcomeErrors, CreateWelcomeResponses, DeleteAccessRequestsData, DeleteAccessRequestsErrors, DeleteAccessRequestsResponses, DeleteAnalysisCategoryData, DeleteAnalysisCategoryErrors, DeleteAnalysisCategoryResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteMessageAnnotationData, DeleteMessageAnnotationErrors, DeleteMessageAnnotationResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, DeleteTestSetupData, DeleteTestSetupErrors, DeleteTestSetupResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, EditFolderData, EditFolderErrors, EditFolderResponses, ExitData, ExitResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateGuideSectionData, GenerateGuideSectionErrors, GenerateGuideSectionResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GenerateSectionQuestionData, GenerateSectionQuestionErrors, GenerateSectionQuestionResponses, GetAccessRequestsData, GetAccessRequestsResponses, GetAnalysisCategoriesData, GetAnalysisCategoriesErrors, GetAnalysisCategoriesResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetExperimentsData, GetExperimentsResponses, GetFilteredMessagesCountData, GetFilteredMessagesCountErrors, GetFilteredMessagesCountResponses, GetFilteredMessagesData, GetFilteredMessagesErrors, GetFilteredMessagesResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFoldersData, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetInterviewMessagesData, GetInterviewMessagesErrors, GetInterviewMessagesResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetLanguagesData, GetLanguagesResponses, GetMessageAnnotationsData, GetMessageAnnotationsErrors, GetMessageAnnotationsResponses, GetMessageContextAfterData, GetMessageContextAfterErrors, GetMessageContextAfterResponses, GetMessageContextBeforeData, GetMessageContextBeforeErrors, GetMessageContextBeforeResponses, GetMessageData, GetMessageErrors, GetMessageResponses, GetModelsData, GetModelsResponses, GetProjectData, GetProjectErrors, GetProjectIdsData, GetProjectIdsResponses, GetProjectMonitoringStatsData, GetProjectMonitoringStatsErrors, GetProjectMonitoringStatsResponses, GetProjectResponses, GetProjectsData, GetProjectsResponses, GetPromptsData, GetPromptsErrors, GetPromptsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetUsersData, GetUsersResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthResponses, LoginData2, LoginErrors, LoginResponses, LogoutData, LogoutResponses, MeData, MeResponses, ProcessAccessRequestsData, ProcessAccessRequestsErrors, ProcessAccessRequestsResponses, ProxyToEc2Manager2Data, ProxyToEc2Manager2Errors, ProxyToEc2Manager2Responses, ProxyToEc2Manager3Data, ProxyToEc2Manager3Errors, ProxyToEc2Manager3Responses, ProxyToEc2Manager4Data, ProxyToEc2Manager4Errors, ProxyToEc2Manager4Responses, ProxyToEc2Manager5Data, ProxyToEc2Manager5Errors, ProxyToEc2Manager5Responses, ProxyToEc2ManagerData, ProxyToEc2ManagerErrors, ProxyToEc2ManagerResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, QueueStatusData, QueueStatusErrors, QueueStatusResponses, RefreshTokenData, RefreshTokenResponses, RegisterData, RegisterErrors, RegisterResponses, RemoveCollaboratorData, RemoveCollaboratorErrors, RemoveCollaboratorResponses, RemoveProjectLanguagesData, RemoveProjectLanguagesErrors, RemoveProjectLanguagesResponses, RenderConsentModalData, RenderConsentModalErrors, RenderConsentModalResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SemanticSearchData, SemanticSearchErrors, SemanticSearchResponses, SetConsentData, SetConsentErrors, SetConsentResponses, UpdateAnalysisCategoryData, UpdateAnalysisCategoryErrors, UpdateAnalysisCategoryResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateCollaboratorRoleData, UpdateCollaboratorRoleErrors, UpdateCollaboratorRoleResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateMessageAnnotationData, UpdateMessageAnnotationErrors, UpdateMessageAnnotationResponses, UploadAudioData, UploadAudioErrors, UploadAudioResponses, UploadImage2Data, UploadImage2Errors, UploadImage2Responses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
+import type { ActiveWebsocketsWsConnectionsGetData, ActiveWebsocketsWsConnectionsGetResponses, AddCollaboratorData, AddCollaboratorErrors, AddCollaboratorResponses, AddIntervieweeData, AddIntervieweeErrors, AddIntervieweeResponses, AddMessageAnnotationData, AddMessageAnnotationErrors, AddMessageAnnotationResponses, AddProjectLanguagesData, AddProjectLanguagesErrors, AddProjectLanguagesResponses, BroadcastWsBroadcastPostData, BroadcastWsBroadcastPostErrors, BroadcastWsBroadcastPostResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ConnectWsConnectProjectIdInterviewIdGetData, ConnectWsConnectProjectIdInterviewIdGetErrors, ConnectWsConnectProjectIdInterviewIdGetResponses, CreateAnalysisCategoryData, CreateAnalysisCategoryErrors, CreateAnalysisCategoryResponses, CreateConsentData, CreateConsentErrors, CreateConsentResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateGuideData, CreateGuideErrors, CreateGuideResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreatePromptsData, CreatePromptsErrors, CreatePromptsResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, CreateWelcomeData, CreateWelcomeErrors, CreateWelcomeResponses, DeleteAccessRequestsData, DeleteAccessRequestsErrors, DeleteAccessRequestsResponses, DeleteAnalysisCategoryData, DeleteAnalysisCategoryErrors, DeleteAnalysisCategoryResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteMessageAnnotationData, DeleteMessageAnnotationErrors, DeleteMessageAnnotationResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, DeleteTestSetupData, DeleteTestSetupErrors, DeleteTestSetupResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, EditFolderData, EditFolderErrors, EditFolderResponses, ExitData, ExitResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateGuideSectionData, GenerateGuideSectionErrors, GenerateGuideSectionResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GenerateSectionQuestionData, GenerateSectionQuestionErrors, GenerateSectionQuestionResponses, GetAccessRequestsData, GetAccessRequestsResponses, GetAnalysisCategoriesData, GetAnalysisCategoriesErrors, GetAnalysisCategoriesResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetExperimentsData, GetExperimentsResponses, GetFilteredMessagesCountData, GetFilteredMessagesCountErrors, GetFilteredMessagesCountResponses, GetFilteredMessagesData, GetFilteredMessagesErrors, GetFilteredMessagesResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFoldersData, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetInterviewMessagesData, GetInterviewMessagesErrors, GetInterviewMessagesResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetLanguagesData, GetLanguagesResponses, GetMessageAnnotationsData, GetMessageAnnotationsErrors, GetMessageAnnotationsResponses, GetMessageContextAfterData, GetMessageContextAfterErrors, GetMessageContextAfterResponses, GetMessageContextBeforeData, GetMessageContextBeforeErrors, GetMessageContextBeforeResponses, GetMessageData, GetMessageErrors, GetMessageResponses, GetModelsData, GetModelsResponses, GetProjectData, GetProjectErrors, GetProjectMonitoringStatsData, GetProjectMonitoringStatsErrors, GetProjectMonitoringStatsResponses, GetProjectResponses, GetPromptsData, GetPromptsErrors, GetPromptsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetUsersData, GetUsersResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthResponses, LoginData2, LoginErrors, LoginResponses, LogoutData, LogoutResponses, MeData, MeResponses, ProcessAccessRequestsData, ProcessAccessRequestsErrors, ProcessAccessRequestsResponses, ProxyToEc2Manager2Data, ProxyToEc2Manager2Errors, ProxyToEc2Manager2Responses, ProxyToEc2Manager3Data, ProxyToEc2Manager3Errors, ProxyToEc2Manager3Responses, ProxyToEc2Manager4Data, ProxyToEc2Manager4Errors, ProxyToEc2Manager4Responses, ProxyToEc2Manager5Data, ProxyToEc2Manager5Errors, ProxyToEc2Manager5Responses, ProxyToEc2ManagerData, ProxyToEc2ManagerErrors, ProxyToEc2ManagerResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, QueueStatusData, QueueStatusErrors, QueueStatusResponses, RefreshTokenData, RefreshTokenResponses, RegisterData, RegisterErrors, RegisterResponses, RemoveCollaboratorData, RemoveCollaboratorErrors, RemoveCollaboratorResponses, RemoveProjectLanguagesData, RemoveProjectLanguagesErrors, RemoveProjectLanguagesResponses, RenderConsentModalData, RenderConsentModalErrors, RenderConsentModalResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SemanticSearchData, SemanticSearchErrors, SemanticSearchResponses, SetConsentData, SetConsentErrors, SetConsentResponses, UpdateAnalysisCategoryData, UpdateAnalysisCategoryErrors, UpdateAnalysisCategoryResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateCollaboratorRoleData, UpdateCollaboratorRoleErrors, UpdateCollaboratorRoleResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateMessageAnnotationData, UpdateMessageAnnotationErrors, UpdateMessageAnnotationResponses, UploadAudioData, UploadAudioErrors, UploadAudioResponses, UploadImage2Data, UploadImage2Errors, UploadImage2Responses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -283,72 +283,6 @@ export class Monitoring {
     }
 }
 
-export class Collaborators {
-    /**
-     * Remove Collaborator
-     */
-    public static removeCollaborator<ThrowOnError extends boolean = false>(options: Options<RemoveCollaboratorData, ThrowOnError>) {
-        return (options.client ?? client).delete<RemoveCollaboratorResponses, RemoveCollaboratorErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/dashboard/collaborators',
-            ...options
-        });
-    }
-    
-    /**
-     * Get Collaborators
-     */
-    public static getCollaborators<ThrowOnError extends boolean = false>(options?: Options<GetCollaboratorsData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetCollaboratorsResponses, GetCollaboratorsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/dashboard/collaborators',
-            ...options
-        });
-    }
-    
-    /**
-     * Update Collaborator Role
-     */
-    public static updateCollaboratorRole<ThrowOnError extends boolean = false>(options: Options<UpdateCollaboratorRoleData, ThrowOnError>) {
-        return (options.client ?? client).patch<UpdateCollaboratorRoleResponses, UpdateCollaboratorRoleErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/dashboard/collaborators',
-            ...options
-        });
-    }
-    
-    /**
-     * Add Collaborator
-     */
-    public static addCollaborator<ThrowOnError extends boolean = false>(options: Options<AddCollaboratorData, ThrowOnError>) {
-        return (options.client ?? client).post<AddCollaboratorResponses, AddCollaboratorErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/dashboard/collaborators',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-}
-
 export class Experiments {
     /**
      * Get Experiments
@@ -415,28 +349,7 @@ export class Experiments {
     }
 }
 
-export class Projects {
-    /**
-     * Delete Folder
-     *
-     * Delete folder
-     */
-    public static deleteFolder<ThrowOnError extends boolean = false>(options: Options<DeleteFolderData, ThrowOnError>) {
-        return (options.client ?? client).delete<DeleteFolderResponses, DeleteFolderErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
+export class Folders {
     /**
      * Get Folders
      *
@@ -451,27 +364,6 @@ export class Projects {
                 }],
             url: '/api/folders',
             ...options
-        });
-    }
-    
-    /**
-     * Edit Folder
-     *
-     * Delete folder
-     */
-    public static editFolder<ThrowOnError extends boolean = false>(options: Options<EditFolderData, ThrowOnError>) {
-        return (options.client ?? client).patch<EditFolderResponses, EditFolderErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
         });
     }
     
@@ -497,19 +389,104 @@ export class Projects {
     }
     
     /**
-     * Get Projects
+     * Delete Folder
      *
-     * Load projects
+     * Delete folder
      */
-    public static getProjects<ThrowOnError extends boolean = false>(options?: Options<GetProjectsData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetProjectsResponses, unknown, ThrowOnError>({
+    public static deleteFolder<ThrowOnError extends boolean = false>(options: Options<DeleteFolderData, ThrowOnError>) {
+        return (options.client ?? client).delete<DeleteFolderResponses, DeleteFolderErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
                     name: 'token',
                     type: 'apiKey'
                 }],
-            url: '/api/projects',
+            url: '/api/folders/{folder_id}',
             ...options
+        });
+    }
+    
+    /**
+     * Edit Folder
+     *
+     * Delete folder
+     */
+    public static editFolder<ThrowOnError extends boolean = false>(options: Options<EditFolderData, ThrowOnError>) {
+        return (options.client ?? client).patch<EditFolderResponses, EditFolderErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Remove Collaborator
+     */
+    public static removeCollaborator<ThrowOnError extends boolean = false>(options: Options<RemoveCollaboratorData, ThrowOnError>) {
+        return (options.client ?? client).delete<RemoveCollaboratorResponses, RemoveCollaboratorErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/collaborators',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Collaborators
+     */
+    public static getCollaborators<ThrowOnError extends boolean = false>(options: Options<GetCollaboratorsData, ThrowOnError>) {
+        return (options.client ?? client).get<GetCollaboratorsResponses, GetCollaboratorsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/collaborators',
+            ...options
+        });
+    }
+    
+    /**
+     * Update Collaborator Role
+     */
+    public static updateCollaboratorRole<ThrowOnError extends boolean = false>(options: Options<UpdateCollaboratorRoleData, ThrowOnError>) {
+        return (options.client ?? client).patch<UpdateCollaboratorRoleResponses, UpdateCollaboratorRoleErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/collaborators',
+            ...options
+        });
+    }
+    
+    /**
+     * Add Collaborator
+     */
+    public static addCollaborator<ThrowOnError extends boolean = false>(options: Options<AddCollaboratorData, ThrowOnError>) {
+        return (options.client ?? client).post<AddCollaboratorResponses, AddCollaboratorErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/collaborators',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
         });
     }
     
@@ -525,7 +502,7 @@ export class Projects {
                     name: 'token',
                     type: 'apiKey'
                 }],
-            url: '/api/projects',
+            url: '/api/folders/{folder_id}/projects',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -533,22 +510,9 @@ export class Projects {
             }
         });
     }
-    
-    /**
-     * Get Project Ids
-     */
-    public static getProjectIds<ThrowOnError extends boolean = false>(options?: Options<GetProjectIdsData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetProjectIdsResponses, unknown, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/ids',
-            ...options
-        });
-    }
-    
+}
+
+export class Projects {
     /**
      * Delete Project
      */
@@ -1158,7 +1122,7 @@ export class Synthesize {
                     name: 'token',
                     type: 'apiKey'
                 }],
-            url: '/api/projects{project_id}/tests/{test_id}',
+            url: '/api/projects/{project_id}/tests/{test_id}',
             ...options
         });
     }
@@ -1173,7 +1137,7 @@ export class Synthesize {
                     name: 'token',
                     type: 'apiKey'
                 }],
-            url: '/api/interviewee',
+            url: '/api/projects/{project_id}/interviewee',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

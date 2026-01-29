@@ -379,10 +379,6 @@ export type CollaboratorCreate = {
      * Email
      */
     email: string;
-    /**
-     * Folder Id
-     */
-    folder_id: string;
 };
 
 /**
@@ -516,10 +512,6 @@ export type CreateProjectRequest = {
      * Title
      */
     title: string;
-    /**
-     * Folder Id
-     */
-    folder_id: string;
     default_language: LanguageCode;
 };
 
@@ -592,13 +584,25 @@ export type ExperimentCreate = {
      */
     title: string;
     /**
-     * Project Ids
+     * Projects
      */
-    project_ids: Array<string>;
+    projects: Array<ExperimentProjectCreate>;
+};
+
+/**
+ * ExperimentProjectCreate
+ *
+ * Input model for adding a project to an experiment.
+ */
+export type ExperimentProjectCreate = {
     /**
-     * Weights
+     * Project Id
      */
-    weights?: Array<number> | null;
+    project_id: string;
+    /**
+     * Weight
+     */
+    weight?: number | null;
 };
 
 /**
@@ -674,15 +678,15 @@ export type Image = {
      */
     type?: 'audio' | 'image' | 'video';
     /**
-     * Filename
+     * Name
      *
      * The filename
      */
-    filename: string;
+    name: string;
     /**
      * Data
      */
-    data: string;
+    data: string | null;
     /**
      * Primer
      *
@@ -773,7 +777,7 @@ export type InterviewGuideInput = {
     /**
      * Outro
      *
-     * An outro to the interview. Displayed to the interviewee as the last message. They will not be able to answer this message.
+     * An outro message for the interview. Displayed to the interviewee as the last message they will see. They will not be able to answer this message.
      */
     outro?: string | null;
 };
@@ -803,7 +807,7 @@ export type InterviewGuideOutput = {
     /**
      * Outro
      *
-     * An outro to the interview. Displayed to the interviewee as the last message. They will not be able to answer this message.
+     * An outro message for the interview. Displayed to the interviewee as the last message they will see. They will not be able to answer this message.
      */
     outro?: string | null;
 };
@@ -940,10 +944,6 @@ export type IntervieweeCreate = {
      * Interview Id
      */
     interview_id: string;
-    /**
-     * Project Id
-     */
-    project_id: string;
     interview_subject: InterviewSubject;
 };
 
@@ -1271,16 +1271,6 @@ export type ProjectFolderCreate = {
 };
 
 /**
- * ProjectFolderDelete
- */
-export type ProjectFolderDelete = {
-    /**
-     * Id
-     */
-    id: string;
-};
-
-/**
  * ProjectFolderEdit
  */
 export type ProjectFolderEdit = {
@@ -1288,10 +1278,6 @@ export type ProjectFolderEdit = {
      * Title
      */
     title: string;
-    /**
-     * Id
-     */
-    id: string;
 };
 
 /**
@@ -2106,24 +2092,6 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage1 = {
-    /**
      * Primer
      */
     primer: string;
@@ -2135,6 +2103,24 @@ export type FastapiCompatV2BodyUploadImage1 = {
      * Alt
      */
     alt: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage2 = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
     /**
      * File
      */
@@ -2828,134 +2814,6 @@ export type GetProjectMonitoringStatsResponses = {
 
 export type GetProjectMonitoringStatsResponse = GetProjectMonitoringStatsResponses[keyof GetProjectMonitoringStatsResponses];
 
-export type RemoveCollaboratorData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * Folder Id
-         */
-        folder_id: string;
-        /**
-         * User Id
-         */
-        user_id: string;
-    };
-    url: '/api/dashboard/collaborators';
-};
-
-export type RemoveCollaboratorErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RemoveCollaboratorError = RemoveCollaboratorErrors[keyof RemoveCollaboratorErrors];
-
-export type RemoveCollaboratorResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type GetCollaboratorsData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Project Id
-         */
-        project_id?: string | null;
-        /**
-         * Folder Id
-         */
-        folder_id?: string | null;
-    };
-    url: '/api/dashboard/collaborators';
-};
-
-export type GetCollaboratorsErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetCollaboratorsError = GetCollaboratorsErrors[keyof GetCollaboratorsErrors];
-
-export type GetCollaboratorsResponses = {
-    /**
-     * Response Get Collaborators
-     *
-     * Successful Response
-     */
-    200: Array<CollaboratorPublic>;
-};
-
-export type GetCollaboratorsResponse = GetCollaboratorsResponses[keyof GetCollaboratorsResponses];
-
-export type UpdateCollaboratorRoleData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * Folder Id
-         */
-        folder_id: string;
-        /**
-         * User Id
-         */
-        user_id: string;
-        role: CollaboratorRole;
-    };
-    url: '/api/dashboard/collaborators';
-};
-
-export type UpdateCollaboratorRoleErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type UpdateCollaboratorRoleError = UpdateCollaboratorRoleErrors[keyof UpdateCollaboratorRoleErrors];
-
-export type UpdateCollaboratorRoleResponses = {
-    /**
-     * Successful Response
-     */
-    200: CollaboratorPublic;
-};
-
-export type UpdateCollaboratorRoleResponse = UpdateCollaboratorRoleResponses[keyof UpdateCollaboratorRoleResponses];
-
-export type AddCollaboratorData = {
-    body: CollaboratorCreate;
-    path?: never;
-    query?: never;
-    url: '/api/dashboard/collaborators';
-};
-
-export type AddCollaboratorErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type AddCollaboratorError = AddCollaboratorErrors[keyof AddCollaboratorErrors];
-
-export type AddCollaboratorResponses = {
-    /**
-     * Successful Response
-     */
-    200: CollaboratorPublic;
-};
-
-export type AddCollaboratorResponse = AddCollaboratorResponses[keyof AddCollaboratorResponses];
-
 export type GetExperimentsData = {
     body?: never;
     path?: never;
@@ -3049,29 +2907,6 @@ export type GenerateExperimentQrResponses = {
     200: unknown;
 };
 
-export type DeleteFolderData = {
-    body: ProjectFolderDelete;
-    path?: never;
-    query?: never;
-    url: '/api/folders';
-};
-
-export type DeleteFolderErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type DeleteFolderError = DeleteFolderErrors[keyof DeleteFolderErrors];
-
-export type DeleteFolderResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
 export type GetFoldersData = {
     body?: never;
     path?: never;
@@ -3089,29 +2924,6 @@ export type GetFoldersResponses = {
 };
 
 export type GetFoldersResponse = GetFoldersResponses[keyof GetFoldersResponses];
-
-export type EditFolderData = {
-    body: ProjectFolderEdit;
-    path?: never;
-    query?: never;
-    url: '/api/folders';
-};
-
-export type EditFolderErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type EditFolderError = EditFolderErrors[keyof EditFolderErrors];
-
-export type EditFolderResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
 
 export type CreateFolderData = {
     body: ProjectFolderCreate;
@@ -3138,29 +2950,236 @@ export type CreateFolderResponses = {
 
 export type CreateFolderResponse = CreateFolderResponses[keyof CreateFolderResponses];
 
-export type GetProjectsData = {
+export type DeleteFolderData = {
     body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/projects';
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+    };
+    query?: {
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}';
 };
 
-export type GetProjectsResponses = {
+export type DeleteFolderErrors = {
     /**
-     * Response Get Projects
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteFolderError = DeleteFolderErrors[keyof DeleteFolderErrors];
+
+export type DeleteFolderResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type EditFolderData = {
+    body: ProjectFolderEdit;
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+    };
+    query?: {
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}';
+};
+
+export type EditFolderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type EditFolderError = EditFolderErrors[keyof EditFolderErrors];
+
+export type EditFolderResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type RemoveCollaboratorData = {
+    body?: never;
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+    };
+    query: {
+        /**
+         * User Id
+         */
+        user_id: string;
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}/collaborators';
+};
+
+export type RemoveCollaboratorErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveCollaboratorError = RemoveCollaboratorErrors[keyof RemoveCollaboratorErrors];
+
+export type RemoveCollaboratorResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetCollaboratorsData = {
+    body?: never;
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+    };
+    query?: {
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}/collaborators';
+};
+
+export type GetCollaboratorsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCollaboratorsError = GetCollaboratorsErrors[keyof GetCollaboratorsErrors];
+
+export type GetCollaboratorsResponses = {
+    /**
+     * Response Get Collaborators
      *
      * Successful Response
      */
-    200: Array<ProjectPublic>;
+    200: Array<CollaboratorPublic>;
 };
 
-export type GetProjectsResponse = GetProjectsResponses[keyof GetProjectsResponses];
+export type GetCollaboratorsResponse = GetCollaboratorsResponses[keyof GetCollaboratorsResponses];
+
+export type UpdateCollaboratorRoleData = {
+    body?: never;
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+    };
+    query: {
+        /**
+         * User Id
+         */
+        user_id: string;
+        role: CollaboratorRole;
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}/collaborators';
+};
+
+export type UpdateCollaboratorRoleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateCollaboratorRoleError = UpdateCollaboratorRoleErrors[keyof UpdateCollaboratorRoleErrors];
+
+export type UpdateCollaboratorRoleResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollaboratorPublic;
+};
+
+export type UpdateCollaboratorRoleResponse = UpdateCollaboratorRoleResponses[keyof UpdateCollaboratorRoleResponses];
+
+export type AddCollaboratorData = {
+    body: CollaboratorCreate;
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+    };
+    query?: {
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}/collaborators';
+};
+
+export type AddCollaboratorErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddCollaboratorError = AddCollaboratorErrors[keyof AddCollaboratorErrors];
+
+export type AddCollaboratorResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollaboratorPublic;
+};
+
+export type AddCollaboratorResponse = AddCollaboratorResponses[keyof AddCollaboratorResponses];
 
 export type CreateProjectData = {
     body: CreateProjectRequest;
-    path?: never;
-    query?: never;
-    url: '/api/projects';
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+    };
+    query?: {
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}/projects';
 };
 
 export type CreateProjectErrors = {
@@ -3179,33 +3198,20 @@ export type CreateProjectResponses = {
     200: unknown;
 };
 
-export type GetProjectIdsData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/projects/ids';
-};
-
-export type GetProjectIdsResponses = {
-    /**
-     * Response Get Project Ids
-     *
-     * Successful Response
-     */
-    200: Array<string>;
-};
-
-export type GetProjectIdsResponse = GetProjectIdsResponses[keyof GetProjectIdsResponses];
-
 export type DeleteProjectData = {
     body?: never;
     path: {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}';
 };
 
@@ -3231,9 +3237,14 @@ export type GetProjectData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}';
 };
 
@@ -3261,9 +3272,14 @@ export type CloneProjectData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/clone';
 };
 
@@ -3291,9 +3307,14 @@ export type RemoveProjectLanguagesData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/available_languages';
 };
 
@@ -3323,9 +3344,14 @@ export type AddProjectLanguagesData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/available_languages';
 };
 
@@ -3355,9 +3381,14 @@ export type ChangeProjectStatusData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/status';
 };
 
@@ -3383,9 +3414,14 @@ export type ChangeProjectTitleData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/title';
 };
 
@@ -3411,10 +3447,15 @@ export type GetGuideData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         lang: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/{lang}/guide';
 };
 
@@ -3442,10 +3483,15 @@ export type CreateGuideData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         lang: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/{lang}/guide';
 };
 
@@ -3471,10 +3517,15 @@ export type GenerateGuideData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         lang: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/{lang}/guide/generate';
 };
 
@@ -3500,10 +3551,15 @@ export type GenerateGuideSectionData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         lang: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/{lang}/guide/section/generate';
 };
 
@@ -3529,10 +3585,15 @@ export type GenerateSectionQuestionData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         lang: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/{lang}/guide/section/question/generate';
 };
 
@@ -3553,14 +3614,19 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage1;
+    body: FastapiCompatV2BodyUploadImage;
     path: {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/image';
 };
 
@@ -3586,10 +3652,15 @@ export type GetInterviewAgentsData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         lang: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/{lang}/agents';
 };
 
@@ -3617,10 +3688,15 @@ export type CreateInterviewAgentsData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         lang: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/{lang}/agents';
 };
 
@@ -3646,9 +3722,14 @@ export type GetInterviewConfigData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/config';
 };
 
@@ -3676,9 +3757,14 @@ export type CreateInterviewConfigData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/config';
 };
 
@@ -3704,10 +3790,15 @@ export type GetPromptsData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         lang: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/{lang}/prompts';
 };
 
@@ -3733,10 +3824,15 @@ export type CreatePromptsData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         lang: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/{lang}/prompts';
 };
 
@@ -3795,10 +3891,15 @@ export type CreateConsentData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         language: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/guide/consent/{language}';
 };
 
@@ -3857,10 +3958,15 @@ export type CreateWelcomeData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         language: LanguageCode;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/guide/welcome/{language}';
 };
 
@@ -3886,9 +3992,14 @@ export type DeleteInterviewsData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/interviews';
 };
 
@@ -3914,7 +4025,7 @@ export type GetInterviewsData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
     query?: {
         /**
@@ -3929,6 +4040,10 @@ export type GetInterviewsData = {
          * Completed
          */
         completed?: boolean | null;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
         /**
          * Offset
          */
@@ -3973,7 +4088,7 @@ export type GetMessageData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Interview Id
          */
@@ -3983,7 +4098,12 @@ export type GetMessageData = {
          */
         message_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/interviews/{interview_id}/messages/{message_id}';
 };
 
@@ -4009,13 +4129,18 @@ export type GetInterviewMessagesData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Interview Id
          */
         interview_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/interviews/{interview_id}/messages';
 };
 
@@ -4045,9 +4170,14 @@ export type ExportMessagesData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/interviews/messages/export';
 };
 
@@ -4073,9 +4203,14 @@ export type GenerateProjectQrData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/qr.png';
 };
 
@@ -4101,13 +4236,18 @@ export type GetBackgroundInfoData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Test Id
          */
         test_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/tests/{test_id}/background_info';
 };
 
@@ -4135,13 +4275,18 @@ export type UpdateBackgroundInfoData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Test Id
          */
         test_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/tests/{test_id}/background_info';
 };
 
@@ -4167,13 +4312,18 @@ export type GetFixedAnswersData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Test Id
          */
         test_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers';
 };
 
@@ -4199,13 +4349,18 @@ export type UpdateFixedAnswersData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Test Id
          */
         test_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers';
 };
 
@@ -4231,9 +4386,14 @@ export type GetTestSetupsData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/tests';
 };
 
@@ -4259,8 +4419,18 @@ export type GetTestSetupsResponse = GetTestSetupsResponses[keyof GetTestSetupsRe
 
 export type CreateTestSetupData = {
     body: TestSetupCreate;
-    path?: never;
-    query?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/tests';
 };
 
@@ -4288,14 +4458,19 @@ export type DeleteTestSetupData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Test Id
          */
         test_id: string;
     };
-    query?: never;
-    url: '/api/projects{project_id}/tests/{test_id}';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/tests/{test_id}';
 };
 
 export type DeleteTestSetupErrors = {
@@ -4316,9 +4491,14 @@ export type DeleteTestSetupResponses = {
 
 export type AddIntervieweeData = {
     body: IntervieweeCreate;
-    path?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
     query?: never;
-    url: '/api/interviewee';
+    url: '/api/projects/{project_id}/interviewee';
 };
 
 export type AddIntervieweeErrors = {
@@ -4343,13 +4523,18 @@ export type GetTestStatusData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Test Id
          */
         test_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/tests/{test_id}/status';
 };
 
@@ -4375,13 +4560,18 @@ export type RunSyntheticTestData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Test Id
          */
         test_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/tests/{test_id}/run';
 };
 
@@ -4526,7 +4716,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage2;
     path?: never;
     query?: never;
     url: '/api/image';
