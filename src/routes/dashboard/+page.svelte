@@ -444,6 +444,14 @@
 								>
 									Clone
 								</button>
+								<a
+									class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+									href={resolve(
+										`/dashboard/projects/${project.id}/${project.config.default_language}/settings`
+									)}
+								>
+									Settings
+								</a>
 								<button
 									class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
 									onclick={(e) => {
