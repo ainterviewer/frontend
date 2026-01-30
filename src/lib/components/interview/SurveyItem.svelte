@@ -15,6 +15,9 @@
 	// For radio, we can just use a string variable.
 	let radioValue = $state('');
 
+	let numberValue = $state<number | null>(null);
+	let dateValue = $state('');
+
 	let disabled = $state(false);
 
 	let normalizedOptions = $derived(
@@ -59,12 +62,16 @@
 			}
 		} else if (type === 'radio') {
 			if (radioValue) answer = [radioValue];
+		} else if (type === 'number') {
+			if (numberValue !== null) answer = [String(numberValue)];
+		} else if (type === 'date') {
+			if (dateValue) answer = [dateValue];
 		} else {
 			answer = Array.from(selectedValues);
 		}
 
 		if (required && answer.length === 0) {
-			alert('Please select at least one option');
+			alert('Please provide a value');
 			return;
 		}
 
@@ -78,7 +85,15 @@
 		<legend
 			class="mx-auto rounded-full bg-white px-3 py-1 text-xs font-semibold tracking-wide text-gray-500 shadow-sm"
 		>
-			{type === 'slider' ? 'Pick a value' : type === 'radio' ? 'Choose one' : 'Select multiple'}
+			{type === 'slider'
+				? 'Pick a value'
+				: type === 'radio'
+					? 'Choose one'
+					: type === 'number'
+						? 'Enter a number'
+						: type === 'date'
+							? 'Pick a date'
+							: 'Select multiple'}
 		</legend>
 
 		{#if type === 'slider'}
@@ -106,6 +121,25 @@
 						</span>
 					{/each}
 				</div>
+			</div>
+		{:else if type === 'number'}
+			<div class="w-full px-2">
+				<input
+					type="number"
+					bind:value={numberValue}
+					{disabled}
+					class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
+					placeholder="Enter a number"
+				/>
+			</div>
+		{:else if type === 'date'}
+			<div class="w-full px-2">
+				<input
+					type="date"
+					bind:value={dateValue}
+					{disabled}
+					class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
+				/>
 			</div>
 		{:else}
 			{#each normalizedOptions as opt, i (i)}

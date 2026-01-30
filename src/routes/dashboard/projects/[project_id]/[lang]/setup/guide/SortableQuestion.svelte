@@ -152,7 +152,9 @@
 						<div class="min-w-0 flex-1">
 							<div class="font-medium text-gray-700">Survey</div>
 							<div class="text-xs text-gray-500">
-								{question.survey_item.options.length} options ({question.survey_item.type})
+								{question.survey_item.type === 'number' || question.survey_item.type === 'date'
+									? question.survey_item.type
+									: `${question.survey_item.options.length} options (${question.survey_item.type})`}
 							</div>
 						</div>
 						<button
@@ -253,28 +255,33 @@
 									>
 										<option value="radio">Single Choice (Radio)</option>
 										<option value="checkbox">Multiple Choice (Checkbox)</option>
+										<option value="slider">Slider</option>
+										<option value="number">Number</option>
+										<option value="date">Date</option>
 									</select>
-									<div class="max-h-40 space-y-1 overflow-y-auto">
-										{#each question.survey_item.options as option, oIdx}
-											<div class="flex gap-1">
-												<input
-													class="flex-1 rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-													bind:value={option.label}
-													placeholder={`Option ${oIdx + 1}`}
-												/>
-												<button
-													class="px-1 text-gray-400 hover:text-red-500"
-													onclick={() => question.survey_item?.options.splice(oIdx, 1)}
-													><i class="fa-solid fa-trash text-xs"></i></button
-												>
-											</div>
-										{/each}
-										<button
-											class="mt-1 text-xs font-medium text-primary hover:underline"
-											onclick={() => question.survey_item?.options.push({ label: '' })}
-											>+ Add Option</button
-										>
-									</div>
+									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox' || question.survey_item.type === 'slider'}
+										<div class="max-h-40 space-y-1 overflow-y-auto">
+											{#each question.survey_item.options as option, oIdx}
+												<div class="flex gap-1">
+													<input
+														class="flex-1 rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+														bind:value={option.label}
+														placeholder={`Option ${oIdx + 1}`}
+													/>
+													<button
+														class="px-1 text-gray-400 hover:text-red-500"
+														onclick={() => question.survey_item?.options.splice(oIdx, 1)}
+														><i class="fa-solid fa-trash text-xs"></i></button
+													>
+												</div>
+											{/each}
+											<button
+												class="mt-1 text-xs font-medium text-primary hover:underline"
+												onclick={() => question.survey_item?.options.push({ label: '' })}
+												>+ Add Option</button
+											>
+										</div>
+									{/if}
 								</div>
 							</div>
 						{/if}
