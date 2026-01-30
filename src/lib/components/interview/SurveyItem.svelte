@@ -1,5 +1,12 @@
 <script lang="ts">
-	let { type = 'checkbox', options = [], required = false, onAnswer } = $props();
+	import type { SurveyItem } from '$lib/api';
+
+	let {
+		type = 'checkbox',
+		options = [],
+		required = false,
+		onAnswer
+	} = $props<SurveyItem & { onAnswer?: (value: unknown) => void }>();
 
 	let sliderValue = $state(0);
 	// We can use a set for multi-select (checkbox), single value for radio

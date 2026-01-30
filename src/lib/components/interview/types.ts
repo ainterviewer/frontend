@@ -1,3 +1,4 @@
+import type { SurveyItem } from '$lib/api';
 export type MessageType = 'sent' | 'received' | 'system';
 
 export interface Message {
@@ -6,7 +7,7 @@ export interface Message {
 	type: MessageType;
 	message_id?: number | string;
 	feedback?: 'positive' | 'negative' | null;
-	survey_item?: any;
+	survey_item?: SurveyItem;
 	image?: { data: string; alt?: string; primer?: string };
 	audio?: { blob: Blob; duration: number };
 	can_answer?: boolean;
