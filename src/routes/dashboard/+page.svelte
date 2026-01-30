@@ -7,7 +7,7 @@
 		ProjectFolderWithProjects,
 		ProjectPublic
 	} from '$lib/api';
-	import { Default, Projects, Folders } from '$lib/api';
+	import { Default, Folders, Projects } from '$lib/api';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
@@ -96,7 +96,7 @@
 			return;
 		}
 		try {
-			await Projects.createProject({
+			await Folders.createProject({
 				path: {
 					folder_id: createProjectFolderId
 				},
@@ -120,7 +120,7 @@
 
 	async function handleCreateFolder() {
 		try {
-			await Projects.createFolder({
+			await Folders.createFolder({
 				body: {
 					title: createFolderName,
 					collaborators: createFolderCollaborators.filter((c) => c.email.trim() !== '') as any
@@ -150,7 +150,7 @@
 	async function handleEditFolder() {
 		if (!selectedFolder) return;
 		try {
-			await Projects.editFolder({
+			await Folders.editFolder({
 				path: {
 					folder_id: selectedFolder.id
 				},

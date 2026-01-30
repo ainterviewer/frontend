@@ -85,6 +85,9 @@
 		isCreating = true;
 		try {
 			const response = await Synthesize.createTestSetup({
+				path: {
+					project_id: projectId
+				},
 				body: {
 					name: newTestName,
 					type: newTestType as any,
