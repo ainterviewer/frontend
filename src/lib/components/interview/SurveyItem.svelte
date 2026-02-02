@@ -5,6 +5,10 @@
 		type = 'checkbox',
 		options = [],
 		required = false,
+		min = null,
+		max = null,
+		step = null,
+		with_other = false,
 		onAnswer
 	} = $props<SurveyItem & { onAnswer?: (value: unknown) => void }>();
 
@@ -17,6 +21,9 @@
 
 	let numberValue = $state<number | null>(null);
 	let dateValue = $state('');
+
+	let otherSelected = $state(false);
+	let otherText = $state('');
 
 	let disabled = $state(false);
 
@@ -34,6 +41,7 @@
 
 		if (type === 'radio') {
 			radioValue = value;
+			otherSelected = false;
 		} else {
 			if (selectedValues.has(value)) {
 				selectedValues.delete(value);
@@ -50,6 +58,16 @@
 		return selectedValues.has(value);
 	}
 
+	function selectOther() {
+		if (disabled) return;
+		if (type === 'radio') {
+			radioValue = '';
+			otherSelected = true;
+		} else {
+			otherSelected = !otherSelected;
+		}
+	}
+
 	function sendAnswer() {
 		if (disabled) return;
 
@@ -61,13 +79,15 @@
 				answer = [selectedOption.value];
 			}
 		} else if (type === 'radio') {
-			if (radioValue) answer = [radioValue];
+			if (otherSelected && otherText) answer = [otherText];
+			else if (radioValue) answer = [radioValue];
 		} else if (type === 'number') {
 			if (numberValue !== null) answer = [String(numberValue)];
 		} else if (type === 'date') {
 			if (dateValue) answer = [dateValue];
 		} else {
 			answer = Array.from(selectedValues);
+			if (otherSelected && otherText) answer.push(otherText);
 		}
 
 		if (required && answer.length === 0) {
@@ -127,9 +147,12 @@
 				<input
 					type="number"
 					bind:value={numberValue}
+					min={min ?? undefined}
+					max={max ?? undefined}
+					step={step ?? undefined}
 					{disabled}
 					class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
-					placeholder="Enter a number"
+					placeholder="Enter a number{min != null && max != null ? ` (${min}–${max})` : min != null ? ` (min ${min})` : max != null ? ` (max ${max})` : ''}"
 				/>
 			</div>
 		{:else if type === 'date'}
@@ -169,6 +192,40 @@
 					</label>
 				</div>
 			{/each}
+			{#if with_other}
+				<div class="relative max-w-full min-w-min">
+					<label
+						class="flex w-fit max-w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all
+                   hover:border-primary/50 hover:bg-gray-200
+                   {otherSelected
+							? 'border-primary bg-primary/10 text-dark ring-1 ring-primary'
+							: ''}
+                  {disabled ? 'cursor-not-allowed opacity-60 grayscale' : ''}"
+					>
+						<input
+							{type}
+							name="survey-option"
+							value="__other__"
+							checked={otherSelected}
+							onchange={selectOther}
+							{disabled}
+							class="mr-3 h-4 w-4 border-gray-300 text-primary focus:ring-primary disabled:text-gray-400"
+						/>
+						Other
+					</label>
+				</div>
+				{#if otherSelected}
+					<div class="w-full px-1">
+						<input
+							type="text"
+							bind:value={otherText}
+							{disabled}
+							class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
+							placeholder="Please specify..."
+						/>
+					</div>
+				{/if}
+			{/if}
 		{/if}
 	</fieldset>
 
