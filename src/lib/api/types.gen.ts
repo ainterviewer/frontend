@@ -79,6 +79,7 @@ export type AgentConfigsInput = {
     security?: SecurityConfig;
     visual?: VisualConfig;
     answering?: AgentConfig;
+    reformulation?: AgentConfig;
 };
 
 /**
@@ -91,6 +92,7 @@ export type AgentConfigsOutput = {
     security?: SecurityConfig;
     visual?: VisualConfig;
     answering?: AgentConfig;
+    reformulation?: AgentConfig;
 };
 
 /**
@@ -350,9 +352,9 @@ export type BodyUploadAudio = {
 };
 
 /**
- * Broadcast
+ * BroadcastRequest
  */
-export type Broadcast = {
+export type BroadcastRequest = {
     /**
      * Message
      */
@@ -1074,9 +1076,9 @@ export type MessageCountStats = {
 };
 
 /**
- * MessageFeedback
+ * MessageFeedbackResponse
  */
-export type MessageFeedback = {
+export type MessageFeedbackResponse = {
     /**
      * Interview Id
      */
@@ -1758,6 +1760,22 @@ export type SurveyItem = {
      * Required
      */
     required?: boolean;
+    /**
+     * Min
+     */
+    min?: number | number | null;
+    /**
+     * Max
+     */
+    max?: number | number | null;
+    /**
+     * Step
+     */
+    step?: number | number | null;
+    /**
+     * With Other
+     */
+    with_other?: boolean;
 };
 
 /**
@@ -2092,6 +2110,24 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage1 = {
+    /**
      * Primer
      */
     primer: string;
@@ -2103,24 +2139,6 @@ export type FastapiCompatV2BodyUploadImage = {
      * Alt
      */
     alt: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage2 = {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
     /**
      * File
      */
@@ -3614,7 +3632,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage1;
     path: {
         /**
          * Project Id
@@ -4696,7 +4714,7 @@ export type CreateInterviewResponses = {
 export type CreateInterviewResponse = CreateInterviewResponses[keyof CreateInterviewResponses];
 
 export type PutFeedbackData = {
-    body: MessageFeedback;
+    body: MessageFeedbackResponse;
     path?: never;
     query?: never;
     url: '/api/feedback';
@@ -4715,13 +4733,13 @@ export type PutFeedbackResponses = {
     /**
      * Successful Response
      */
-    200: MessageFeedback;
+    200: MessageFeedbackResponse;
 };
 
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage2;
+    body: FastapiCompatV2BodyUploadImage;
     path?: never;
     query?: never;
     url: '/api/image';
@@ -5238,7 +5256,7 @@ export type ConnectWsConnectProjectIdInterviewIdGetResponses = {
 };
 
 export type BroadcastWsBroadcastPostData = {
-    body: Broadcast;
+    body: BroadcastRequest;
     path?: never;
     query?: never;
     url: '/ws/broadcast';
