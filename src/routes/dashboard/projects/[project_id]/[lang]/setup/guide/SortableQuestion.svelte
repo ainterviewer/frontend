@@ -92,7 +92,7 @@
 				>Description</label
 			>
 			<textarea
-				class="h-16 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+				class="h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 				placeholder="Add some context or description..."
 				bind:value={question.description}
 			></textarea>
@@ -103,7 +103,7 @@
 				>Main Question</label
 			>
 			<textarea
-				class="h-20 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+				class="h-18 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 				placeholder="What would you like to ask?"
 				bind:value={question.main_question}
 			></textarea>
@@ -280,6 +280,40 @@
 												onclick={() => question.survey_item?.options.push({ label: '' })}
 												>+ Add Option</button
 											>
+										</div>
+									{/if}
+									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox'}
+										<label
+											class="mt-1 flex cursor-pointer items-center gap-2 text-xs text-gray-700 transition-colors hover:text-primary"
+										>
+											<input
+												type="checkbox"
+												class="rounded border-gray-300 text-primary focus:ring-primary"
+												bind:checked={question.survey_item.with_other}
+											/>
+											Include "Other" option
+										</label>
+									{/if}
+									{#if question.survey_item.type === 'number'}
+										<div class="grid grid-cols-2 gap-2">
+											<div>
+												<label class="mb-1 block text-xs text-gray-500">Min</label>
+												<input
+													type="number"
+													class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+													placeholder="No min"
+													bind:value={question.survey_item.min}
+												/>
+											</div>
+											<div>
+												<label class="mb-1 block text-xs text-gray-500">Max</label>
+												<input
+													type="number"
+													class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+													placeholder="No max"
+													bind:value={question.survey_item.max}
+												/>
+											</div>
 										</div>
 									{/if}
 								</div>

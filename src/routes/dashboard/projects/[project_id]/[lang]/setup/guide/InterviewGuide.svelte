@@ -335,7 +335,7 @@
 				by the model to help it ask more relevant questions.
 			</p>
 			<textarea
-				class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+				class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
 				bind:value={guide.framing}
 			></textarea>
 		</div>
@@ -351,7 +351,7 @@
 				in the chat and cannot be answered.
 			</p>
 			<textarea
-				class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+				class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
 				bind:value={guide.introduction}
 			></textarea>
 		</div>
@@ -432,7 +432,7 @@
 			<h3 class="mb-2 text-lg font-medium">Outro</h3>
 			<p class="mb-4 text-sm text-gray-500">Last message in the interview.</p>
 			<textarea
-				class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+				class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
 				bind:value={guide.outro}
 			></textarea>
 		</div>
