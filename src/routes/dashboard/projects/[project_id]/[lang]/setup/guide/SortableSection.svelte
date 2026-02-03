@@ -68,6 +68,7 @@
 			<span class="font-bold text-black">Section {sectionIndex + 1}</span>
 			<div
 				class="cursor-grab rounded px-1 text-gray-800 outline-none hover:bg-white/50"
+				title="Move Section"
 				{@attach handleRef}
 			>
 				<i class="fa-solid fa-grip"></i>

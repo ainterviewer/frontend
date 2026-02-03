@@ -61,6 +61,7 @@
 			<span class="font-bold text-black">Question {sectionIndex + 1}.{index + 1}</span>
 			<div
 				class="cursor-grab rounded p-1 text-gray-800 outline-none hover:bg-white/50"
+				title="Move Question"
 				{@attach handleRef}
 			>
 				<i class="fa-solid fa-grip-vertical text-lg"></i>
