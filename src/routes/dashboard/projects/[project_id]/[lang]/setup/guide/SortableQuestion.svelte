@@ -74,7 +74,8 @@
 				onclick={() => (showSettings = !showSettings)}
 				title={showSettings ? 'Hide Settings' : 'Show Settings'}
 			>
-				<i class="fa-solid fa-gear" class:text-primary={showSettings}></i>
+				Settings
+				<i class="fa-solid fa-gear ml-1" class:text-primary={showSettings}></i>
 			</button>
 			<button
 				class="cursor-pointer rounded-md p-1.5 text-gray-700 transition-colors hover:text-red-500"
@@ -151,7 +152,7 @@
 							<i class="fa-solid fa-square-poll-horizontal text-lg"></i>
 						</div>
 						<div class="min-w-0 flex-1">
-							<div class="font-medium text-gray-700">Survey</div>
+							<div class="font-medium text-gray-700">Survey Item</div>
 							<div class="text-xs text-gray-500">
 								{question.survey_item.type === 'number' || question.survey_item.type === 'date'
 									? question.survey_item.type
@@ -240,7 +241,7 @@
 										options: [{ label: 'Option 1' }]
 									})}
 							>
-								<i class="fa-solid fa-square-poll-horizontal"></i> Add Survey
+								<i class="fa-solid fa-square-poll-horizontal"></i> Add Survey Item
 							</button>
 						{:else}
 							<div
@@ -293,6 +294,10 @@
 												bind:checked={question.survey_item.with_other}
 											/>
 											Include "Other" option
+											<HoverInfo
+												iconColor="gray-500"
+												text="Include and 'Other' option that allows the user to input their own answer."
+											></HoverInfo>
 										</label>
 									{/if}
 									{#if question.survey_item.type === 'number'}
