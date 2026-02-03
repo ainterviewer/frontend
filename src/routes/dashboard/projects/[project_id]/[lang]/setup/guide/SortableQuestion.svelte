@@ -176,156 +176,180 @@
 				class="-mx-5 space-y-6 border-t border-gray-100 bg-gray-50/30 px-5 pt-4 pb-4"
 			>
 				<!-- Media Controls (Edit Mode) -->
-				<div class="flex gap-4">
-					<div class="relative">
-						{#if !question.image}
-							<button
-								class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-								onclick={() => (question.image = { description: '', alt: '' })}
-							>
-								<i class="fa-solid fa-image"></i> Add Image
-							</button>
-						{:else}
-							<div
-								class="w-full max-w-sm rounded-md border border-gray-200 bg-white p-3 text-sm shadow-sm"
-							>
-								<h4 class="mb-2 flex items-center gap-2 font-semibold text-gray-700">
+				<div class="space-y-4">
+					<!-- Add buttons row -->
+					{#if !question.image || !question.survey_item}
+						<div class="flex gap-4">
+							{#if !question.image}
+								<button
+									class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+									onclick={() => (question.image = { description: '', alt: '' })}
+								>
+									<i class="fa-solid fa-image"></i> Add Image
+								</button>
+							{/if}
+							{#if !question.survey_item}
+								<button
+									class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+									onclick={() =>
+										(question.survey_item = {
+											type: 'radio',
+											options: [{ label: 'Option 1' }]
+										})}
+								>
+									<i class="fa-solid fa-square-poll-horizontal"></i> Add Survey Item
+								</button>
+							{/if}
+						</div>
+					{/if}
+
+					<!-- Configuration panels (each on own line) -->
+					{#if question.image}
+						<div
+							class="w-full max-w-sm rounded-md border border-gray-200 bg-white p-3 text-sm shadow-sm"
+						>
+							<div class="mb-2 flex items-center justify-between">
+								<h4 class="flex items-center gap-2 font-semibold text-gray-700">
 									<i class="fa-solid fa-image text-primary"></i> Image Details
 								</h4>
-								<div class="space-y-2">
-									<div class="flex gap-2">
-										{#if question.image.data}
-											<img
-												src={question.image.data}
-												alt="Preview"
-												class="h-16 w-16 rounded border bg-gray-100 object-cover"
-											/>
-										{/if}
-										<div class="w-full flex-1 space-y-2">
+								<button
+									class="p-1 text-gray-400 hover:text-red-500"
+									onclick={() => (question.image = null)}
+									title="Remove Image"
+								>
+									<i class="fa-solid fa-trash"></i>
+								</button>
+							</div>
+							<div class="space-y-2">
+								<div class="flex gap-2">
+									{#if question.image.data}
+										<img
+											src={question.image.data}
+											alt="Preview"
+											class="h-16 w-16 rounded border bg-gray-100 object-cover"
+										/>
+									{/if}
+									<div class="w-full flex-1 space-y-2">
+										<input
+											type="file"
+											accept=".png,.jpg,.webp"
+											class="w-full text-xs text-gray-500 file:mr-2 file:rounded-full file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-primary hover:file:bg-primary/20"
+											onchange={handleImageUpload}
+										/>
+										<input
+											class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+											placeholder="Description for AI..."
+											bind:value={question.image.description}
+										/>
+									</div>
+								</div>
+
+								<input
+									class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+									placeholder="Primer text..."
+									bind:value={question.image.primer}
+								/>
+								<input
+									class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+									placeholder="Alt text (accessibility)"
+									bind:value={question.image.alt}
+								/>
+							</div>
+						</div>
+					{/if}
+
+					{#if question.survey_item}
+						<div
+							class="w-full max-w-sm rounded-md border border-gray-200 bg-white p-3 text-sm shadow-sm"
+						>
+							<div class="mb-2 flex items-center justify-between">
+								<h4 class="flex items-center gap-2 font-semibold text-gray-700">
+									<i class="fa-solid fa-square-poll-horizontal text-primary"></i> Survey Options
+								</h4>
+								<button
+									class="p-1 text-gray-400 hover:text-red-500"
+									onclick={() => (question.survey_item = null)}
+									title="Remove Survey Item"
+								>
+									<i class="fa-solid fa-trash"></i>
+								</button>
+							</div>
+							<div class="space-y-2">
+								<select
+									class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+									bind:value={question.survey_item.type}
+								>
+									<option value="radio">Single Choice (Radio)</option>
+									<option value="checkbox">Multiple Choice (Checkbox)</option>
+									<option value="slider">Slider</option>
+									<option value="number">Number</option>
+									<option value="date">Date</option>
+								</select>
+								{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox' || question.survey_item.type === 'slider'}
+									<div class="max-h-40 space-y-1 overflow-y-auto">
+										{#each question.survey_item.options as option, oIdx}
+											<div class="flex gap-1">
+												<input
+													class="flex-1 rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+													bind:value={option.label}
+													placeholder={`Option ${oIdx + 1}`}
+												/>
+												<button
+													class="px-1 text-gray-400 hover:text-red-500"
+													onclick={() => question.survey_item?.options.splice(oIdx, 1)}
+													title="Remove Survey Option"
+													><i class="fa-solid fa-trash text-xs"></i></button
+												>
+											</div>
+										{/each}
+										<button
+											class="mt-1 text-xs font-medium text-primary hover:underline"
+											onclick={() => question.survey_item?.options.push({ label: '' })}
+											>+ Add Option</button
+										>
+									</div>
+								{/if}
+								{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox'}
+									<label
+										class="mt-1 flex cursor-pointer items-center gap-2 text-xs text-gray-700 transition-colors hover:text-primary"
+									>
+										<input
+											type="checkbox"
+											class="rounded border-gray-300 text-primary focus:ring-primary"
+											bind:checked={question.survey_item.with_other}
+										/>
+										Include "Other" option
+										<HoverInfo
+											iconColor="gray-500"
+											text="Include and 'Other' option that allows the user to input their own answer."
+										></HoverInfo>
+									</label>
+								{/if}
+								{#if question.survey_item.type === 'number'}
+									<div class="grid grid-cols-2 gap-2">
+										<div>
+											<label class="mb-1 block text-xs text-gray-500">Min</label>
 											<input
-												type="file"
-												accept=".png,.jpg,.webp"
-												class="w-full text-xs text-gray-500 file:mr-2 file:rounded-full file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-primary hover:file:bg-primary/20"
-												onchange={handleImageUpload}
-											/>
-											<input
+												type="number"
 												class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-												placeholder="Description for AI..."
-												bind:value={question.image.description}
+												placeholder="No min"
+												bind:value={question.survey_item.min}
+											/>
+										</div>
+										<div>
+											<label class="mb-1 block text-xs text-gray-500">Max</label>
+											<input
+												type="number"
+												class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+												placeholder="No max"
+												bind:value={question.survey_item.max}
 											/>
 										</div>
 									</div>
-
-									<input
-										class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-										placeholder="Primer text..."
-										bind:value={question.image.primer}
-									/>
-									<input
-										class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-										placeholder="Alt text (accessibility)"
-										bind:value={question.image.alt}
-									/>
-								</div>
+								{/if}
 							</div>
-						{/if}
-					</div>
-
-					<div class="relative">
-						{#if !question.survey_item}
-							<button
-								class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-								onclick={() =>
-									(question.survey_item = {
-										type: 'radio',
-										options: [{ label: 'Option 1' }]
-									})}
-							>
-								<i class="fa-solid fa-square-poll-horizontal"></i> Add Survey Item
-							</button>
-						{:else}
-							<div
-								class="w-full max-w-sm rounded-md border border-gray-200 bg-white p-3 text-sm shadow-sm"
-							>
-								<h4 class="mb-2 flex items-center gap-2 font-semibold text-gray-700">
-									<i class="fa-solid fa-square-poll-horizontal text-primary"></i> Survey Options
-								</h4>
-								<div class="space-y-2">
-									<select
-										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-										bind:value={question.survey_item.type}
-									>
-										<option value="radio">Single Choice (Radio)</option>
-										<option value="checkbox">Multiple Choice (Checkbox)</option>
-										<option value="slider">Slider</option>
-										<option value="number">Number</option>
-										<option value="date">Date</option>
-									</select>
-									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox' || question.survey_item.type === 'slider'}
-										<div class="max-h-40 space-y-1 overflow-y-auto">
-											{#each question.survey_item.options as option, oIdx}
-												<div class="flex gap-1">
-													<input
-														class="flex-1 rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-														bind:value={option.label}
-														placeholder={`Option ${oIdx + 1}`}
-													/>
-													<button
-														class="px-1 text-gray-400 hover:text-red-500"
-														onclick={() => question.survey_item?.options.splice(oIdx, 1)}
-														><i class="fa-solid fa-trash text-xs"></i></button
-													>
-												</div>
-											{/each}
-											<button
-												class="mt-1 text-xs font-medium text-primary hover:underline"
-												onclick={() => question.survey_item?.options.push({ label: '' })}
-												>+ Add Option</button
-											>
-										</div>
-									{/if}
-									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox'}
-										<label
-											class="mt-1 flex cursor-pointer items-center gap-2 text-xs text-gray-700 transition-colors hover:text-primary"
-										>
-											<input
-												type="checkbox"
-												class="rounded border-gray-300 text-primary focus:ring-primary"
-												bind:checked={question.survey_item.with_other}
-											/>
-											Include "Other" option
-											<HoverInfo
-												iconColor="gray-500"
-												text="Include and 'Other' option that allows the user to input their own answer."
-											></HoverInfo>
-										</label>
-									{/if}
-									{#if question.survey_item.type === 'number'}
-										<div class="grid grid-cols-2 gap-2">
-											<div>
-												<label class="mb-1 block text-xs text-gray-500">Min</label>
-												<input
-													type="number"
-													class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-													placeholder="No min"
-													bind:value={question.survey_item.min}
-												/>
-											</div>
-											<div>
-												<label class="mb-1 block text-xs text-gray-500">Max</label>
-												<input
-													type="number"
-													class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-													placeholder="No max"
-													bind:value={question.survey_item.max}
-												/>
-											</div>
-										</div>
-									{/if}
-								</div>
-							</div>
-						{/if}
-					</div>
+						</div>
+					{/if}
 				</div>
 
 				<!-- Alternative Main Questions -->
