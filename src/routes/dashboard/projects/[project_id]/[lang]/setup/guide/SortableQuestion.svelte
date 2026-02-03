@@ -197,8 +197,7 @@
 						</div>
 						<button
 							class="p-1 text-gray-400 hover:text-red-500"
-							onclick={() => (question.condition = null)}
-							><i class="fa-solid fa-trash"></i></button
+							onclick={() => (question.condition = null)}><i class="fa-solid fa-trash"></i></button
 						>
 					</div>
 				{/if}
@@ -454,7 +453,7 @@
 								</div>
 
 								<!-- Part -->
-								<div>
+								<div class="hidden">
 									<label class="mb-1 block text-xs text-gray-500">Evaluate part</label>
 									<select
 										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
@@ -467,7 +466,7 @@
 								</div>
 
 								<!-- Trigger Type -->
-								<div>
+								<div class="hidden">
 									<label class="mb-1 block text-xs text-gray-500">Trigger type</label>
 									<select
 										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
@@ -516,7 +515,9 @@
 
 								<!-- Action -->
 								<div>
-									<label class="mb-1 block text-xs text-gray-500">Action when condition is met</label>
+									<label class="mb-1 block text-xs text-gray-500"
+										>Action when condition is met</label
+									>
 									<select
 										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
 										bind:value={question.condition.action}
