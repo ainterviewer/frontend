@@ -443,30 +443,39 @@ export type CommunicationTraits = {
  * Create a condition that must be met to ask a question
  */
 export type Condition = {
-    type: ConditionType;
-    trigger_type: ConditionTriggerType;
+    evaluation: ConditionEvaluation;
+    trigger_type: ConditionTrigger;
     question_context: QuestionContext;
-    /**
-     * Trigger Value
-     */
-    trigger_value: unknown;
     action: ConditionAction;
 };
 
 /**
  * ConditionAction
  */
-export type ConditionAction = 'skip_section' | 'skip_question' | 'end_interview';
+export type ConditionAction = 'end_interview' | 'skip_section' | 'skip_question' | 'ask_question';
 
 /**
- * ConditionTriggerType
+ * ConditionEvaluation
  */
-export type ConditionTriggerType = 're' | 'classification';
+export type ConditionEvaluation = {
+    /**
+     * Rule
+     */
+    rule: 'equal' | 'in';
+    /**
+     * Negated
+     */
+    negated?: boolean;
+    /**
+     * Trigger Value
+     */
+    trigger_value: string;
+};
 
 /**
- * ConditionType
+ * ConditionTrigger
  */
-export type ConditionType = 'yes/no';
+export type ConditionTrigger = 're' | 'classification';
 
 /**
  * Consent
@@ -2110,24 +2119,6 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage1 = {
-    /**
      * Primer
      */
     primer: string;
@@ -2139,6 +2130,24 @@ export type FastapiCompatV2BodyUploadImage1 = {
      * Alt
      */
     alt: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage2 = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
     /**
      * File
      */
@@ -3632,7 +3641,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage1;
+    body: FastapiCompatV2BodyUploadImage;
     path: {
         /**
          * Project Id
@@ -4739,7 +4748,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage2;
     path?: never;
     query?: never;
     url: '/api/image';
