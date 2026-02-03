@@ -375,6 +375,8 @@
 							{section}
 							questions={localQuestions[section.id]}
 							sectionIndex={sIdx}
+							allSections={localSections}
+							allQuestions={localQuestions}
 							onRemove={() => removeSection(sIdx)}
 							onGenerateQuestion={() => {
 								generatingQuestionSectionId = section.id;

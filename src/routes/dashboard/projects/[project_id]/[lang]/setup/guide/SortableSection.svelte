@@ -8,6 +8,8 @@
 		section: GuideSection;
 		questions: GuideQuestion[];
 		sectionIndex: number;
+		allSections?: GuideSection[];
+		allQuestions?: Record<string, GuideQuestion[]>;
 		onRemove: () => void;
 		onGenerateQuestion?: () => void;
 		isOverlay?: boolean;
@@ -17,6 +19,8 @@
 		section,
 		questions,
 		sectionIndex,
+		allSections = [],
+		allQuestions = {},
 		onRemove,
 		onGenerateQuestion,
 		isOverlay = false
@@ -109,6 +113,8 @@
 				index={qIdx}
 				sectionId={section.id}
 				{sectionIndex}
+				{allSections}
+				{allQuestions}
 				onRemove={() => removeQuestion(qIdx)}
 			/>
 		{/each}

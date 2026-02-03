@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { slide } from 'svelte/transition';
-	import type { GuideQuestion } from './types';
+	import type { GuideQuestion, GuideSection } from './types';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 
 	interface Props {
@@ -9,11 +9,22 @@
 		sectionId: string;
 		sectionIndex: number;
 		index: number;
+		allSections?: GuideSection[];
+		allQuestions?: Record<string, GuideQuestion[]>;
 		onRemove: () => void;
 		isOverlay?: boolean;
 	}
 
-	let { question, sectionId, sectionIndex, index, onRemove, isOverlay = false }: Props = $props();
+	let {
+		question,
+		sectionId,
+		sectionIndex,
+		index,
+		allSections = [],
+		allQuestions = {},
+		onRemove,
+		isOverlay = false
+	}: Props = $props();
 	let showSettings = $state(false);
 
 	const { ref, handleRef, isDragging } = useSortable({
@@ -111,8 +122,8 @@
 			></textarea>
 		</div>
 
-		<!-- Visible Media/Survey Indicators (if active) -->
-		{#if question.image || question.survey_item}
+		<!-- Visible Media/Survey/Condition Indicators (if active) -->
+		{#if question.image || question.survey_item || question.condition}
 			<div class="flex flex-wrap gap-4 pt-2">
 				{#if question.image}
 					<div
@@ -166,6 +177,31 @@
 						>
 					</div>
 				{/if}
+
+				{#if question.condition}
+					<div
+						class="flex w-full items-center gap-3 rounded-md border border-gray-200 bg-gray-50 p-2 text-sm"
+					>
+						<div
+							class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded bg-amber-50 text-amber-600"
+						>
+							<i class="fa-solid fa-code-branch text-lg"></i>
+						</div>
+						<div class="min-w-0 flex-1">
+							<div class="font-medium text-gray-700">Condition</div>
+							<div class="text-xs text-gray-500">
+								{question.condition.action.replace('_', ' ')} based on Section {question.condition
+									.question_context.section + 1}, Question {question.condition.question_context
+									.question + 1}
+							</div>
+						</div>
+						<button
+							class="p-1 text-gray-400 hover:text-red-500"
+							onclick={() => (question.condition = null)}
+							><i class="fa-solid fa-trash"></i></button
+						>
+					</div>
+				{/if}
 			</div>
 		{/if}
 
@@ -178,8 +214,8 @@
 				<!-- Media Controls (Edit Mode) -->
 				<div class="space-y-4">
 					<!-- Add buttons row -->
-					{#if !question.image || !question.survey_item}
-						<div class="flex gap-4">
+					{#if !question.image || !question.survey_item || !question.condition}
+						<div class="flex flex-wrap gap-4">
 							{#if !question.image}
 								<button
 									class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
@@ -198,6 +234,28 @@
 										})}
 								>
 									<i class="fa-solid fa-square-poll-horizontal"></i> Add Survey Item
+								</button>
+							{/if}
+							{#if !question.condition}
+								<button
+									class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+									onclick={() =>
+										(question.condition = {
+											trigger_type: 'classification',
+											action: 'skip_question',
+											evaluation: {
+												rule: 'equal',
+												negated: false,
+												trigger_value: ''
+											},
+											question_context: {
+												section: 0,
+												question: 0,
+												part: 'main'
+											}
+										})}
+								>
+									<i class="fa-solid fa-code-branch"></i> Add Condition
 								</button>
 							{/if}
 						</div>
@@ -347,6 +405,128 @@
 										</div>
 									</div>
 								{/if}
+							</div>
+						</div>
+					{/if}
+
+					{#if question.condition}
+						<div
+							class="w-full max-w-md rounded-md border border-gray-200 bg-white p-3 text-sm shadow-sm"
+						>
+							<div class="mb-2 flex items-center justify-between">
+								<h4 class="flex items-center gap-2 font-semibold text-gray-700">
+									<i class="fa-solid fa-code-branch text-amber-600"></i> Condition
+								</h4>
+								<button
+									class="p-1 text-gray-400 hover:text-red-500"
+									onclick={() => (question.condition = null)}
+									title="Remove Condition"
+								>
+									<i class="fa-solid fa-trash"></i>
+								</button>
+							</div>
+							<div class="space-y-3">
+								<!-- Question Context -->
+								<div>
+									<label class="mb-1 block text-xs text-gray-500">Based on answer to</label>
+									<select
+										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+										value={`${question.condition.question_context.section}-${question.condition.question_context.question}`}
+										onchange={(e) => {
+											const [sIdx, qIdx] = (e.target as HTMLSelectElement).value
+												.split('-')
+												.map(Number);
+											if (question.condition) {
+												question.condition.question_context.section = sIdx;
+												question.condition.question_context.question = qIdx;
+											}
+										}}
+									>
+										{#each allSections as sec, sIdx}
+											{#each allQuestions[sec.id] || [] as q, qIdx}
+												<option value={`${sIdx}-${qIdx}`}>
+													Section {sIdx + 1} > Question {qIdx + 1}
+													{q.main_question ? `: ${q.main_question.slice(0, 30)}...` : ''}
+												</option>
+											{/each}
+										{/each}
+									</select>
+								</div>
+
+								<!-- Part -->
+								<div>
+									<label class="mb-1 block text-xs text-gray-500">Evaluate part</label>
+									<select
+										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+										bind:value={question.condition.question_context.part}
+									>
+										<option value="main">Main question</option>
+										<option value="probes">Probes only</option>
+										<option value="all">All (main + probes)</option>
+									</select>
+								</div>
+
+								<!-- Trigger Type -->
+								<div>
+									<label class="mb-1 block text-xs text-gray-500">Trigger type</label>
+									<select
+										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+										bind:value={question.condition.trigger_type}
+									>
+										<option value="classification">Classification</option>
+										<option value="re">Regex</option>
+									</select>
+								</div>
+
+								<!-- Evaluation Rule -->
+								<div class="grid grid-cols-2 gap-2">
+									<div>
+										<label class="mb-1 block text-xs text-gray-500">Rule</label>
+										<select
+											class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+											bind:value={question.condition.evaluation.rule}
+										>
+											<option value="equal">Equals</option>
+											<option value="in">Contains</option>
+										</select>
+									</div>
+									<div class="flex items-end pb-0.5">
+										<label
+											class="flex cursor-pointer items-center gap-2 text-xs text-gray-700 transition-colors hover:text-primary"
+										>
+											<input
+												type="checkbox"
+												class="rounded border-gray-300 text-primary focus:ring-primary"
+												bind:checked={question.condition.evaluation.negated}
+											/>
+											Negate
+										</label>
+									</div>
+								</div>
+
+								<!-- Trigger Value -->
+								<div>
+									<label class="mb-1 block text-xs text-gray-500">Trigger value</label>
+									<input
+										class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+										placeholder="Value to match..."
+										bind:value={question.condition.evaluation.trigger_value}
+									/>
+								</div>
+
+								<!-- Action -->
+								<div>
+									<label class="mb-1 block text-xs text-gray-500">Action when condition is met</label>
+									<select
+										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+										bind:value={question.condition.action}
+									>
+										<option value="ask_question">Ask this question</option>
+										<option value="skip_question">Skip this question</option>
+										<option value="skip_section">Skip entire section</option>
+										<option value="end_interview">End interview</option>
+									</select>
+								</div>
 							</div>
 						</div>
 					{/if}
