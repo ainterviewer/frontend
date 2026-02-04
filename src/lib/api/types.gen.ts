@@ -443,10 +443,17 @@ export type CommunicationTraits = {
  * Create a condition that must be met to ask a question
  */
 export type Condition = {
-    evaluation: ConditionEvaluation;
-    trigger_type?: ConditionTrigger;
     question_context: QuestionContext;
+    /**
+     * Evaluation
+     */
+    evaluation: Array<ConditionEvaluation>;
     action: ConditionAction;
+    /**
+     * Negated
+     */
+    negated?: boolean;
+    trigger_type?: ConditionTrigger;
 };
 
 /**
@@ -456,26 +463,44 @@ export type ConditionAction = 'end_interview' | 'skip_section' | 'skip_question'
 
 /**
  * ConditionEvaluation
+ *
+ * A single evaluation check with an optional operator to combine with the next evaluation.
+ *
+ * For "A AND B OR C", create:
+ * [
+ * ConditionEvaluation(trigger_value="A", combine_next="AND"),
+ * ConditionEvaluation(trigger_value="B", combine_next="OR"),
+ * ConditionEvaluation(trigger_value="C"),
+ * ]
+ *
+ * For numeric comparisons (e.g., age >= 18):
+ * ConditionEvaluation(trigger_value="18", comparison_operator=">=")
  */
 export type ConditionEvaluation = {
     /**
-     * Rule
-     */
-    rule: 'equal' | 'in';
-    /**
-     * Negated
-     */
-    negated?: boolean;
-    /**
      * Trigger Value
+     *
+     * The pattern to match or value to compare against
      */
     trigger_value: string;
+    /**
+     * Comparison Operator
+     *
+     * Comparison operator. '==' for pattern matching, others for numeric/date comparison.
+     */
+    comparison_operator?: '==' | '<' | '<=' | '>' | '>=';
+    /**
+     * Combine Next
+     *
+     * Operator to combine this evaluation's result with the next. None for the last evaluation.
+     */
+    combine_next?: 'AND' | 'OR' | null;
 };
 
 /**
  * ConditionTrigger
  */
-export type ConditionTrigger = 're' | 'classification';
+export type ConditionTrigger = 'match' | 'classification';
 
 /**
  * Consent
@@ -1628,20 +1653,27 @@ export type QuestionOutput = {
  * The index of a question in a section
  * section [int]: The index of the section
  * question [int]: The index of the question
+ * part
  */
 export type QuestionContext = {
     /**
      * Section
+     *
+     * The index of a secition
      */
     section: number;
     /**
      * Question
+     *
+     * The index of a question
      */
     question: number;
     /**
      * Part
+     *
+     * The part of the question to include.
      */
-    part?: 'main' | 'probes' | 'all';
+    part?: 'main' | 'probes' | 'both';
 };
 
 /**
@@ -2119,24 +2151,6 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage1 = {
-    /**
      * Primer
      */
     primer: string;
@@ -2148,6 +2162,24 @@ export type FastapiCompatV2BodyUploadImage1 = {
      * Alt
      */
     alt: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage2 = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
     /**
      * File
      */
@@ -3641,7 +3673,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage1;
+    body: FastapiCompatV2BodyUploadImage;
     path: {
         /**
          * Project Id
@@ -4748,7 +4780,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage2;
     path?: never;
     query?: never;
     url: '/api/image';
