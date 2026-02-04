@@ -448,12 +448,17 @@ export type Condition = {
      * Evaluation
      */
     evaluation: Array<ConditionEvaluation>;
-    action: ConditionAction;
     /**
      * Negated
      */
     negated?: boolean;
     trigger_type?: ConditionTrigger;
+    /**
+     * Combine Next
+     *
+     * Operator to combine this condition's result with the next. None for the last condition.
+     */
+    combine_next?: 'AND' | 'OR' | null;
 };
 
 /**
@@ -501,6 +506,28 @@ export type ConditionEvaluation = {
  * ConditionTrigger
  */
 export type ConditionTrigger = 'match' | 'classification';
+
+/**
+ * Conditions
+ */
+export type ConditionsInput = {
+    /**
+     * Conditions
+     */
+    conditions: Array<Condition>;
+    action: ConditionAction;
+};
+
+/**
+ * Conditions
+ */
+export type ConditionsOutput = {
+    /**
+     * Conditions
+     */
+    conditions: Array<Condition>;
+    action: ConditionAction;
+};
 
 /**
  * Consent
@@ -1537,7 +1564,7 @@ export type QuestionInput = {
      * Whether the user should be able to upload an image as a response
      */
     user_image?: boolean;
-    condition?: Condition | null;
+    conditions?: ConditionsInput | null;
     probing_context?: ContextType | null;
 };
 
@@ -1643,7 +1670,7 @@ export type QuestionOutput = {
      * Whether the user should be able to upload an image as a response
      */
     user_image?: boolean;
-    condition?: Condition | null;
+    conditions?: ConditionsOutput | null;
     probing_context?: ContextType | null;
 };
 
@@ -2151,6 +2178,24 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage1 = {
+    /**
      * Primer
      */
     primer: string;
@@ -2162,24 +2207,6 @@ export type FastapiCompatV2BodyUploadImage = {
      * Alt
      */
     alt: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage2 = {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
     /**
      * File
      */
@@ -3673,7 +3700,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage1;
     path: {
         /**
          * Project Id
@@ -4780,7 +4807,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage2;
+    body: FastapiCompatV2BodyUploadImage;
     path?: never;
     query?: never;
     url: '/api/image';
