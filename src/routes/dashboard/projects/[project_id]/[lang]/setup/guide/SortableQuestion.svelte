@@ -1,8 +1,8 @@
 <script lang="ts">
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { slide } from 'svelte/transition';
 	import type { GuideQuestion, GuideSection } from './types';
-	import HoverInfo from '$lib/components/HoverInfo.svelte';
 
 	interface Props {
 		question: GuideQuestion;
