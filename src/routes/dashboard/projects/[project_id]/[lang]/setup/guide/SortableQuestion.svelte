@@ -506,11 +506,24 @@
 								<!-- Trigger Value -->
 								<div>
 									<label class="mb-1 block text-xs text-gray-500">Trigger value</label>
-									<input
-										class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-										placeholder="Value to match..."
-										bind:value={question.condition.evaluation.trigger_value}
-									/>
+									{#if allSections[question.condition.question_context.section] && (allQuestions[allSections[question.condition.question_context.section].id] || [])[question.condition.question_context.question]?.survey_item?.options?.length}
+										{@const referencedQuestion = (allQuestions[allSections[question.condition.question_context.section].id] || [])[question.condition.question_context.question]}
+										<select
+											class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+											bind:value={question.condition.evaluation.trigger_value}
+										>
+											<option value="">Select an option...</option>
+											{#each referencedQuestion.survey_item?.options || [] as option}
+												<option value={option.label}>{option.label}</option>
+											{/each}
+										</select>
+									{:else}
+										<input
+											class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+											placeholder="Value to match..."
+											bind:value={question.condition.evaluation.trigger_value}
+										/>
+									{/if}
 								</div>
 
 								<!-- Action -->
