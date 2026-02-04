@@ -33,7 +33,7 @@ export function mapToLocal(data: InterviewGuideOutput): {
 			alternative_main_questions: q.alternative_main_questions || [],
 			image: q.image || null,
 			survey_item: q.survey_item || null,
-			condition: q.condition || null,
+			conditions: q.conditions || null,
 			can_skip: q.can_skip ?? true,
 			check_if_answered: q.check_if_answered ?? false,
 			check_if_exhausted: q.check_if_exhausted ?? false,

@@ -123,7 +123,7 @@
 		</div>
 
 		<!-- Visible Media/Survey/Condition Indicators (if active) -->
-		{#if question.image || question.survey_item || question.condition}
+		{#if question.image || question.survey_item || question.conditions}
 			<div class="flex flex-wrap gap-4 pt-2">
 				{#if question.image}
 					<div
@@ -178,7 +178,7 @@
 					</div>
 				{/if}
 
-				{#if question.condition}
+				{#if question.conditions}
 					<div
 						class="flex w-full items-center gap-3 rounded-md border border-gray-200 bg-gray-50 p-2 text-sm"
 					>
@@ -190,16 +190,21 @@
 						<div class="min-w-0 flex-1">
 							<div class="font-medium text-gray-700">Condition</div>
 							<div class="text-xs text-gray-500">
-								{question.condition.action.replace(/_/g, ' ')} based on Section {question.condition
-									.question_context.section + 1}, Question {question.condition.question_context
-									.question + 1}{#if question.condition.evaluation.length > 1}
-									<span class="ml-1">({question.condition.evaluation.length} rules)</span>
+								{#if question.conditions.conditions.length === 1}
+									{@const cond = question.conditions.conditions[0]}
+									{question.conditions.action.replace(/_/g, ' ')} based on Section {cond.question_context
+										.section + 1}, Question {cond.question_context.question + 1}{#if cond.evaluation.length > 1}
+										<span class="ml-1">({cond.evaluation.length} rules)</span>
+									{/if}
+								{:else}
+									{question.conditions.action.replace(/_/g, ' ')} based on {question.conditions
+										.conditions.length} conditions
 								{/if}
 							</div>
 						</div>
 						<button
 							class="p-1 text-gray-400 hover:text-red-500"
-							onclick={() => (question.condition = null)}><i class="fa-solid fa-trash"></i></button
+							onclick={() => (question.conditions = null)}><i class="fa-solid fa-trash"></i></button
 						>
 					</div>
 				{/if}
@@ -215,7 +220,7 @@
 				<!-- Media Controls (Edit Mode) -->
 				<div class="space-y-4">
 					<!-- Add buttons row -->
-					{#if !question.image || !question.survey_item || !question.condition}
+					{#if !question.image || !question.survey_item || !question.conditions}
 						<div class="flex flex-wrap gap-4">
 							{#if !question.image}
 								<button
@@ -237,25 +242,29 @@
 									<i class="fa-solid fa-square-poll-horizontal"></i> Add Survey Item
 								</button>
 							{/if}
-							{#if !question.condition}
+							{#if !question.conditions}
 								<button
 									class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
 									onclick={() =>
-										(question.condition = {
-											trigger_type: 'classification',
+										(question.conditions = {
 											action: 'skip_question',
-											negated: false,
-											evaluation: [
+											conditions: [
 												{
-													trigger_value: '',
-													comparison_operator: '=='
+													trigger_type: 'classification',
+													negated: false,
+													evaluation: [
+														{
+															trigger_value: '',
+															comparison_operator: '=='
+														}
+													],
+													question_context: {
+														section: 0,
+														question: 0,
+														part: 'main'
+													}
 												}
-											],
-											question_context: {
-												section: 0,
-												question: 0,
-												part: 'main'
-											}
+											]
 										})}
 								>
 									<i class="fa-solid fa-code-branch"></i> Add Condition
@@ -412,252 +421,329 @@
 						</div>
 					{/if}
 
-					{#if question.condition}
-						{@const referencedQuestion = allSections[question.condition.question_context.section]
-							? (allQuestions[allSections[question.condition.question_context.section].id] || [])[
-									question.condition.question_context.question
-								]
-							: null}
-						{@const isNumericOrDate =
-							referencedQuestion?.survey_item?.type === 'number' ||
-							referencedQuestion?.survey_item?.type === 'date' ||
-							referencedQuestion?.survey_item?.type === 'slider'}
-						{@const hasSurveyOptions = referencedQuestion?.survey_item?.options?.length}
+					{#if question.conditions}
 						<div
-							class="w-full max-w-md rounded-md border border-gray-200 bg-white p-3 text-sm shadow-sm"
+							class="w-full max-w-xl rounded-md border border-gray-200 bg-white p-3 text-sm shadow-sm"
 						>
-							<div class="mb-2 flex items-center justify-between">
+							<div class="mb-3 flex items-center justify-between">
 								<h4 class="flex items-center gap-2 font-semibold text-gray-700">
-									<i class="fa-solid fa-code-branch text-amber-600"></i> Condition
+									<i class="fa-solid fa-code-branch text-amber-600"></i> Conditions
 								</h4>
 								<button
 									class="p-1 text-gray-400 hover:text-red-500"
-									onclick={() => (question.condition = null)}
-									title="Remove Condition"
+									onclick={() => (question.conditions = null)}
+									title="Remove All Conditions"
 								>
 									<i class="fa-solid fa-trash"></i>
 								</button>
 							</div>
+
 							<div class="space-y-3">
-								<!-- Question Context -->
+								<!-- Action (at top level) -->
 								<div>
 									<label class="mb-1 block text-xs font-bold text-gray-500"
-										>Based on answer to</label
+										>Action when conditions are met</label
 									>
 									<select
 										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-										value={`${question.condition.question_context.section}-${question.condition.question_context.question}`}
-										onchange={(e) => {
-											const [sIdx, qIdx] = (e.target as HTMLSelectElement).value
-												.split('-')
-												.map(Number);
-											if (question.condition) {
-												question.condition.question_context.section = sIdx;
-												question.condition.question_context.question = qIdx;
-											}
-										}}
-									>
-										{#each allSections as sec, sIdx}
-											{#if sIdx <= sectionIndex}
-												{#each allQuestions[sec.id] || [] as q, qIdx}
-													{#if sIdx < sectionIndex || qIdx <= index}
-														<option value={`${sIdx}-${qIdx}`}>
-															Section {sIdx + 1} > Question {qIdx + 1}
-															{q.main_question ? `: ${q.main_question.slice(0, 30)}...` : ''}
-														</option>
-													{/if}
-												{/each}
-											{/if}
-										{/each}
-									</select>
-								</div>
-
-								<!-- Part -->
-								<div class="hidden">
-									<label class="mb-1 block text-xs text-gray-500">Evaluate part</label>
-									<select
-										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-										bind:value={question.condition.question_context.part}
-									>
-										<option value="main">Main question</option>
-										<option value="probes">Probes only</option>
-										<option value="all">All (main + probes)</option>
-									</select>
-								</div>
-
-								<!-- Trigger Type -->
-								<div class="hidden">
-									<label class="mb-1 block text-xs text-gray-500">Trigger type</label>
-									<select
-										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-										bind:value={question.condition.trigger_type}
-									>
-										<option value="classification">Classification</option>
-										<option value="re">Regex</option>
-									</select>
-								</div>
-
-								<!-- Negate Condition -->
-								<div class="flex items-center">
-									<label
-										class="flex cursor-pointer items-center gap-2 text-xs text-gray-700 transition-colors hover:text-primary"
-									>
-										<input
-											type="checkbox"
-											class="rounded border-gray-300 text-primary focus:ring-primary"
-											bind:checked={question.condition.negated}
-										/>
-										Negate entire condition
-									</label>
-								</div>
-
-								<!-- Evaluations -->
-								<div class="space-y-1">
-									<label class="mb-1 block text-xs font-bold text-gray-500">Trigger value(s)</label>
-									{#each question.condition.evaluation as evaluation, evalIdx}
-										<div class="space-y-1">
-											<div
-												class="flex items-start gap-2 rounded border border-gray-100 bg-gray-50/50 p-2"
-											>
-												<div class="flex-1 space-y-2">
-													<!-- Comparison Operator (show all for numeric/date, just == otherwise) -->
-													{#if isNumericOrDate}
-														<div>
-															<label class="mb-1 block text-xs text-gray-400">Operator</label>
-															<select
-																class="w-full rounded border-gray-200 bg-white p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-																bind:value={evaluation.comparison_operator}
-															>
-																<option value="==">Equals (==)</option>
-																<option value="<">Less than (&lt;)</option>
-																<option value="<=">Less than or equal (&lt;=)</option>
-																<option value=">">Greater than (&gt;)</option>
-																<option value=">=">Greater than or equal (&gt;=)</option>
-															</select>
-														</div>
-													{/if}
-
-													<!-- Trigger Value -->
-													<div>
-														<label class="mb-1 block text-xs text-gray-400">Value</label>
-														{#if referencedQuestion?.survey_item?.type === 'number'}
-															<input
-																type="number"
-																class="w-full rounded border-gray-200 bg-white p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-																placeholder="Value to compare..."
-																bind:value={evaluation.trigger_value}
-															/>
-														{:else if referencedQuestion?.survey_item?.type === 'date'}
-															<input
-																type="date"
-																class="w-full rounded border-gray-200 bg-white p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-																bind:value={evaluation.trigger_value}
-															/>
-														{:else if hasSurveyOptions}
-															<select
-																class="w-full rounded border-gray-200 bg-white p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-																bind:value={evaluation.trigger_value}
-															>
-																<option value="">Select an option...</option>
-																{#each referencedQuestion.survey_item?.options || [] as option}
-																	<option value={option.label}>{option.label}</option>
-																{/each}
-															</select>
-														{:else}
-															<input
-																class="w-full rounded border-gray-200 bg-white p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-																placeholder="Value to match..."
-																bind:value={evaluation.trigger_value}
-															/>
-														{/if}
-													</div>
-												</div>
-
-												<!-- Remove evaluation button (only show if more than one) -->
-												{#if question.condition.evaluation.length > 1}
-													<button
-														class="mt-5 p-1 text-gray-400 hover:text-red-500"
-														onclick={() => {
-															if (question.condition) {
-																// If removing an item that has combine_next, transfer it to previous
-																if (
-																	evalIdx > 0 &&
-																	evalIdx === question.condition.evaluation.length - 1
-																) {
-																	question.condition.evaluation[evalIdx - 1].combine_next = null;
-																}
-																question.condition.evaluation.splice(evalIdx, 1);
-															}
-														}}
-														title="Remove this condition"
-													>
-														<i class="fa-solid fa-times"></i>
-													</button>
-												{/if}
-											</div>
-
-											<!-- AND/OR connector or Add buttons -->
-											{#if evaluation.combine_next}
-												<div class="flex items-center justify-center gap-2 py-1">
-													<div class="h-px flex-1 bg-gray-200"></div>
-													<span
-														class="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
-													>
-														{evaluation.combine_next}
-													</span>
-													<div class="h-px flex-1 bg-gray-200"></div>
-												</div>
-											{:else if evalIdx === question.condition.evaluation.length - 1}
-												<!-- Add AND/OR buttons for the last evaluation -->
-												<div class="flex items-center justify-center gap-2">
-													<button
-														class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-														onclick={() => {
-															if (question.condition) {
-																evaluation.combine_next = 'AND';
-																question.condition.evaluation.push({
-																	trigger_value: '',
-																	comparison_operator: '=='
-																});
-															}
-														}}
-													>
-														+ AND
-													</button>
-													<button
-														class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-														onclick={() => {
-															if (question.condition) {
-																evaluation.combine_next = 'OR';
-																question.condition.evaluation.push({
-																	trigger_value: '',
-																	comparison_operator: '=='
-																});
-															}
-														}}
-													>
-														+ OR
-													</button>
-												</div>
-											{/if}
-										</div>
-									{/each}
-								</div>
-
-								<!-- Action -->
-								<div>
-									<label class="mb-1 block text-xs font-bold text-gray-500"
-										>Action when condition is met</label
-									>
-									<select
-										class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
-										bind:value={question.condition.action}
+										bind:value={question.conditions.action}
 									>
 										<option value="ask_question">Ask this question</option>
 										<option value="skip_question">Skip this question</option>
 										<option value="skip_section">Skip entire section</option>
 										<option value="end_interview">End interview</option>
 									</select>
+								</div>
+
+								<!-- Condition Blocks -->
+								<div class="space-y-2">
+									<label class="block text-xs font-bold text-gray-500">Condition blocks</label>
+									{#each question.conditions.conditions as condition, condIdx}
+										{@const referencedQuestion = allSections[condition.question_context.section]
+											? (allQuestions[allSections[condition.question_context.section].id] || [])[
+													condition.question_context.question
+												]
+											: null}
+										{@const isNumericOrDate =
+											referencedQuestion?.survey_item?.type === 'number' ||
+											referencedQuestion?.survey_item?.type === 'date' ||
+											referencedQuestion?.survey_item?.type === 'slider'}
+										{@const hasSurveyOptions = referencedQuestion?.survey_item?.options?.length}
+
+										<div class="rounded-md border border-gray-200 bg-gray-50/50 p-3">
+											<div class="mb-2 flex items-center justify-between">
+												<span class="text-xs font-medium text-gray-600"
+													>Condition {condIdx + 1}</span
+												>
+												{#if question.conditions.conditions.length > 1}
+													<button
+														class="p-1 text-gray-400 hover:text-red-500"
+														onclick={() => {
+															if (question.conditions) {
+																// If removing last item, clear combine_next from previous
+																if (
+																	condIdx > 0 &&
+																	condIdx === question.conditions.conditions.length - 1
+																) {
+																	question.conditions.conditions[condIdx - 1].combine_next =
+																		null;
+																}
+																question.conditions.conditions.splice(condIdx, 1);
+															}
+														}}
+														title="Remove this condition block"
+													>
+														<i class="fa-solid fa-times text-xs"></i>
+													</button>
+												{/if}
+											</div>
+
+											<div class="space-y-3">
+												<!-- Question Context -->
+												<div>
+													<label class="mb-1 block text-xs text-gray-500"
+														>Based on answer to</label
+													>
+													<select
+														class="w-full rounded border-gray-200 bg-white p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+														value={`${condition.question_context.section}-${condition.question_context.question}`}
+														onchange={(e) => {
+															const [sIdx, qIdx] = (e.target as HTMLSelectElement).value
+																.split('-')
+																.map(Number);
+															condition.question_context.section = sIdx;
+															condition.question_context.question = qIdx;
+														}}
+													>
+														{#each allSections as sec, sIdx}
+															{#if sIdx <= sectionIndex}
+																{#each allQuestions[sec.id] || [] as q, qIdx}
+																	{#if sIdx < sectionIndex || qIdx <= index}
+																		<option value={`${sIdx}-${qIdx}`}>
+																			Section {sIdx + 1} > Question {qIdx + 1}
+																			{q.main_question
+																				? `: ${q.main_question.slice(0, 30)}...`
+																				: ''}
+																		</option>
+																	{/if}
+																{/each}
+															{/if}
+														{/each}
+													</select>
+												</div>
+
+												<!-- Negate Condition -->
+												<div class="flex items-center">
+													<label
+														class="flex cursor-pointer items-center gap-2 text-xs text-gray-700 transition-colors hover:text-primary"
+													>
+														<input
+															type="checkbox"
+															class="rounded border-gray-300 text-primary focus:ring-primary"
+															bind:checked={condition.negated}
+														/>
+														Negate this condition
+													</label>
+												</div>
+
+												<!-- Evaluations -->
+												<div class="space-y-1">
+													<label class="mb-1 block text-xs text-gray-500">Trigger value(s)</label
+													>
+													{#each condition.evaluation as evaluation, evalIdx}
+														<div class="space-y-1">
+															<div
+																class="flex items-start gap-2 rounded border border-gray-100 bg-white p-2"
+															>
+																<div class="flex-1 space-y-2">
+																	<!-- Comparison Operator -->
+																	{#if isNumericOrDate}
+																		<div>
+																			<label class="mb-1 block text-xs text-gray-400"
+																				>Operator</label
+																			>
+																			<select
+																				class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+																				bind:value={evaluation.comparison_operator}
+																			>
+																				<option value="==">Equals (==)</option>
+																				<option value="<">Less than (&lt;)</option>
+																				<option value="<=">Less than or equal (&lt;=)</option>
+																				<option value=">">Greater than (&gt;)</option>
+																				<option value=">=">Greater than or equal (&gt;=)</option>
+																			</select>
+																		</div>
+																	{/if}
+
+																	<!-- Trigger Value -->
+																	<div>
+																		<label class="mb-1 block text-xs text-gray-400">Value</label>
+																		{#if referencedQuestion?.survey_item?.type === 'number'}
+																			<input
+																				type="number"
+																				class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+																				placeholder="Value to compare..."
+																				bind:value={evaluation.trigger_value}
+																			/>
+																		{:else if referencedQuestion?.survey_item?.type === 'date'}
+																			<input
+																				type="date"
+																				class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+																				bind:value={evaluation.trigger_value}
+																			/>
+																		{:else if hasSurveyOptions}
+																			<select
+																				class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+																				bind:value={evaluation.trigger_value}
+																			>
+																				<option value="">Select an option...</option>
+																				{#each referencedQuestion.survey_item?.options || [] as option}
+																					<option value={option.label}>{option.label}</option>
+																				{/each}
+																			</select>
+																		{:else}
+																			<input
+																				class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+																				placeholder="Value to match..."
+																				bind:value={evaluation.trigger_value}
+																			/>
+																		{/if}
+																	</div>
+																</div>
+
+																<!-- Remove evaluation button -->
+																{#if condition.evaluation.length > 1}
+																	<button
+																		class="mt-5 p-1 text-gray-400 hover:text-red-500"
+																		onclick={() => {
+																			if (
+																				evalIdx > 0 &&
+																				evalIdx === condition.evaluation.length - 1
+																			) {
+																				condition.evaluation[evalIdx - 1].combine_next = null;
+																			}
+																			condition.evaluation.splice(evalIdx, 1);
+																		}}
+																		title="Remove this evaluation"
+																	>
+																		<i class="fa-solid fa-times text-xs"></i>
+																	</button>
+																{/if}
+															</div>
+
+															<!-- AND/OR connector between evaluations -->
+															{#if evaluation.combine_next}
+																<div class="flex items-center justify-center gap-2 py-1">
+																	<div class="h-px flex-1 bg-gray-200"></div>
+																	<span
+																		class="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
+																	>
+																		{evaluation.combine_next}
+																	</span>
+																	<div class="h-px flex-1 bg-gray-200"></div>
+																</div>
+															{:else if evalIdx === condition.evaluation.length - 1}
+																<!-- Add AND/OR buttons for the last evaluation -->
+																<div class="flex items-center justify-center gap-2 pt-1">
+																	<button
+																		class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+																		onclick={() => {
+																			evaluation.combine_next = 'AND';
+																			condition.evaluation.push({
+																				trigger_value: '',
+																				comparison_operator: '=='
+																			});
+																		}}
+																	>
+																		+ AND
+																	</button>
+																	<button
+																		class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+																		onclick={() => {
+																			evaluation.combine_next = 'OR';
+																			condition.evaluation.push({
+																				trigger_value: '',
+																				comparison_operator: '=='
+																			});
+																		}}
+																	>
+																		+ OR
+																	</button>
+																</div>
+															{/if}
+														</div>
+													{/each}
+												</div>
+											</div>
+										</div>
+
+										<!-- AND/OR connector between condition blocks -->
+										{#if condition.combine_next}
+											<div class="flex items-center justify-center gap-2 py-1">
+												<div class="h-px flex-1 bg-amber-200"></div>
+												<span
+													class="rounded bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700"
+												>
+													{condition.combine_next}
+												</span>
+												<div class="h-px flex-1 bg-amber-200"></div>
+											</div>
+										{:else if condIdx === question.conditions.conditions.length - 1}
+											<!-- Add new condition block buttons -->
+											<div class="flex items-center justify-center gap-2 pt-2">
+												<button
+													class="rounded border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 transition-colors hover:border-amber-400 hover:bg-amber-100"
+													onclick={() => {
+														if (question.conditions) {
+															condition.combine_next = 'AND';
+															question.conditions.conditions.push({
+																trigger_type: 'classification',
+																negated: false,
+																evaluation: [
+																	{
+																		trigger_value: '',
+																		comparison_operator: '=='
+																	}
+																],
+																question_context: {
+																	section: 0,
+																	question: 0,
+																	part: 'main'
+																}
+															});
+														}
+													}}
+												>
+													+ AND condition
+												</button>
+												<button
+													class="rounded border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 transition-colors hover:border-amber-400 hover:bg-amber-100"
+													onclick={() => {
+														if (question.conditions) {
+															condition.combine_next = 'OR';
+															question.conditions.conditions.push({
+																trigger_type: 'classification',
+																negated: false,
+																evaluation: [
+																	{
+																		trigger_value: '',
+																		comparison_operator: '=='
+																	}
+																],
+																question_context: {
+																	section: 0,
+																	question: 0,
+																	part: 'main'
+																}
+															});
+														}
+													}}
+												>
+													+ OR condition
+												</button>
+											</div>
+										{/if}
+									{/each}
 								</div>
 							</div>
 						</div>
