@@ -442,12 +442,16 @@
 										}}
 									>
 										{#each allSections as sec, sIdx}
-											{#each allQuestions[sec.id] || [] as q, qIdx}
-												<option value={`${sIdx}-${qIdx}`}>
-													Section {sIdx + 1} > Question {qIdx + 1}
-													{q.main_question ? `: ${q.main_question.slice(0, 30)}...` : ''}
-												</option>
-											{/each}
+											{#if sIdx <= sectionIndex}
+												{#each allQuestions[sec.id] || [] as q, qIdx}
+													{#if sIdx < sectionIndex || qIdx <= index}
+														<option value={`${sIdx}-${qIdx}`}>
+															Section {sIdx + 1} > Question {qIdx + 1}
+															{q.main_question ? `: ${q.main_question.slice(0, 30)}...` : ''}
+														</option>
+													{/if}
+												{/each}
+											{/if}
 										{/each}
 									</select>
 								</div>
