@@ -133,8 +133,8 @@
 							{#if question.image.data}
 								<img src={question.image.data} alt="Preview" class="h-full w-full object-cover" />
 							{:else}
-								<div class="flex h-full w-full items-center justify-center text-gray-400">
-									<i class="fa-solid fa-image"></i>
+								<div class="flex h-full w-full items-center justify-center bg-sky-50">
+									<i class="fa-solid fa-image text-lg text-sky-600"></i>
 								</div>
 							{/if}
 						</div>
@@ -192,8 +192,9 @@
 							<div class="text-xs text-gray-500">
 								{#if question.conditions.conditions.length === 1}
 									{@const cond = question.conditions.conditions[0]}
-									{question.conditions.action.replace(/_/g, ' ')} based on Section {cond.question_context
-										.section + 1}, Question {cond.question_context.question + 1}{#if cond.evaluation.length > 1}
+									{question.conditions.action.replace(/_/g, ' ')} based on Section {cond
+										.question_context.section + 1}, Question {cond.question_context.question +
+										1}{#if cond.evaluation.length > 1}
 										<span class="ml-1">({cond.evaluation.length} rules)</span>
 									{/if}
 								{:else}
@@ -227,7 +228,7 @@
 									class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
 									onclick={() => (question.image = { description: '', alt: '' })}
 								>
-									<i class="fa-solid fa-image"></i> Add Image
+									<i class="fa-solid fa-image text-sky-600"></i> Add Image
 								</button>
 							{/if}
 							{#if !question.survey_item}
@@ -239,7 +240,7 @@
 											options: [{ label: 'Option 1' }]
 										})}
 								>
-									<i class="fa-solid fa-square-poll-horizontal"></i> Add Survey Item
+									<i class="fa-solid fa-square-poll-horizontal text-indigo-500"></i> Add Survey Item
 								</button>
 							{/if}
 							{#if !question.conditions}
@@ -250,7 +251,7 @@
 											action: 'skip_question',
 											conditions: [
 												{
-													trigger_type: 'classification',
+													trigger_type: 'match',
 													negated: false,
 													evaluation: [
 														{
@@ -267,7 +268,7 @@
 											]
 										})}
 								>
-									<i class="fa-solid fa-code-branch"></i> Add Condition
+									<i class="fa-solid fa-code-branch text-amber-600"></i> Add Condition
 								</button>
 							{/if}
 						</div>
@@ -280,7 +281,7 @@
 						>
 							<div class="mb-2 flex items-center justify-between">
 								<h4 class="flex items-center gap-2 font-semibold text-gray-700">
-									<i class="fa-solid fa-image text-primary"></i> Image Details
+									<i class="fa-solid fa-image text-sky-600"></i> Image Details
 								</h4>
 								<button
 									class="p-1 text-gray-400 hover:text-red-500"
@@ -334,7 +335,7 @@
 						>
 							<div class="mb-2 flex items-center justify-between">
 								<h4 class="flex items-center gap-2 font-semibold text-gray-700">
-									<i class="fa-solid fa-square-poll-horizontal text-primary"></i> Survey Options
+									<i class="fa-solid fa-square-poll-horizontal text-indigo-500"></i> Survey Options
 								</h4>
 								<button
 									class="p-1 text-gray-400 hover:text-red-500"
@@ -470,7 +471,7 @@
 											referencedQuestion?.survey_item?.type === 'slider'}
 										{@const hasSurveyOptions = referencedQuestion?.survey_item?.options?.length}
 
-										<div class="rounded-md border border-gray-200 bg-gray-50/50 p-3">
+										<div class="rounded-md border border-gray-300 bg-gray-50/50 p-3">
 											<div class="mb-2 flex items-center justify-between">
 												<span class="text-xs font-medium text-gray-600"
 													>Condition {condIdx + 1}</span
@@ -485,8 +486,7 @@
 																	condIdx > 0 &&
 																	condIdx === question.conditions.conditions.length - 1
 																) {
-																	question.conditions.conditions[condIdx - 1].combine_next =
-																		null;
+																	question.conditions.conditions[condIdx - 1].combine_next = null;
 																}
 																question.conditions.conditions.splice(condIdx, 1);
 															}
@@ -501,9 +501,7 @@
 											<div class="space-y-3">
 												<!-- Question Context -->
 												<div>
-													<label class="mb-1 block text-xs text-gray-500"
-														>Based on answer to</label
-													>
+													<label class="mb-1 block text-xs text-gray-500">Based on answer to</label>
 													<select
 														class="w-full rounded border-gray-200 bg-white p-1.5 text-xs focus:border-primary focus:ring-primary/20"
 														value={`${condition.question_context.section}-${condition.question_context.question}`}
@@ -548,8 +546,7 @@
 
 												<!-- Evaluations -->
 												<div class="space-y-1">
-													<label class="mb-1 block text-xs text-gray-500">Trigger value(s)</label
-													>
+													<label class="mb-1 block text-xs text-gray-500">Trigger value(s)</label>
 													{#each condition.evaluation as evaluation, evalIdx}
 														<div class="space-y-1">
 															<div
@@ -697,7 +694,7 @@
 														if (question.conditions) {
 															condition.combine_next = 'AND';
 															question.conditions.conditions.push({
-																trigger_type: 'classification',
+																trigger_type: 'match',
 																negated: false,
 																evaluation: [
 																	{
@@ -722,7 +719,7 @@
 														if (question.conditions) {
 															condition.combine_next = 'OR';
 															question.conditions.conditions.push({
-																trigger_type: 'classification',
+																trigger_type: 'match',
 																negated: false,
 																evaluation: [
 																	{
