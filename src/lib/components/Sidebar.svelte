@@ -14,10 +14,22 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { auth } from '$lib/auth.svelte';
+	import { sidebar } from '$lib/sidebar.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
 
 	//  TODO: Align text after icons
-	let { items, collapsed = false }: { items: SidebarItem[]; collapsed?: boolean } = $props();
+	let { items }: { items: SidebarItem[] } = $props();
+	let collapsed = $derived(sidebar.collapsed);
+	let expanded = $state(!sidebar.collapsed);
+
+	$effect(() => {
+		if (sidebar.collapsed) {
+			expanded = false;
+		} else {
+			const timeout = setTimeout(() => (expanded = true), 500);
+			return () => clearTimeout(timeout);
+		}
+	});
 
 	// Extract projectId from the current URL
 	let { projectId, languageCode } = $derived(parseProjectRoute(page.url.pathname));
@@ -86,6 +98,14 @@
 		collapsed ? 'w-[70px]' : 'w-[250px]'
 	].join(' ')}
 >
+	<button
+		onclick={() => sidebar.toggle()}
+		class="absolute top-20 right-0 flex h-8 w-8 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-none bg-primary text-light shadow-md transition-transform hover:scale-110"
+		aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+	>
+		<i class={collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'}></i>
+	</button>
+
 	<ul class="m-0 list-none p-0">
 		{#each items as item (item.label || item.href || item)}
 			{#if !item.requiresAdmin || auth.isAdmin}
@@ -115,13 +135,15 @@
 			{#if item.icon}
 				<span
 					class={[
-						'icon inline-block min-w-6 text-center',
+						'icon inline-block min-w-6 text-center transition-all duration-500',
 						level === 0
 							? 'ml-6'
-							: 'ml-9 border-l pl-5' +
-								(isLast
-									? ' [border-image:linear-gradient(to_bottom,#fff_60%,transparent_40%)_1_100%]'
-									: '')
+							: collapsed
+								? 'ml-6 text-xs'
+								: 'ml-9 border-l pl-5' +
+									(isLast
+										? ' [border-image:linear-gradient(to_bottom,#fff_60%,transparent_40%)_1_100%]'
+										: '')
 					].join(' ')}
 				>
 					<i class={item.icon}></i>
@@ -130,8 +152,8 @@
 			{#if item.label}
 				<span
 					class={[
-						'item pl-1 ',
-						collapsed ? 'hidden' : 'inline',
+						'item pl-1',
+						expanded ? 'inline' : 'hidden',
 						active && "font-bold after:ml-2 after:content-['<']"
 					].join(' ')}>{item.label}</span
 				>
