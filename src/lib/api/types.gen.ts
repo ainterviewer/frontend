@@ -813,6 +813,10 @@ export type InterviewDurationStats = {
      * Avg Seconds
      */
     avg_seconds: number;
+    /**
+     * Sum Seconds
+     */
+    sum_seconds: number;
 };
 
 /**
@@ -1134,6 +1138,10 @@ export type MessageCountStats = {
      * Avg Messages
      */
     avg_messages: number;
+    /**
+     * Sum Messages
+     */
+    sum_messages: number;
 };
 
 /**
@@ -1254,14 +1262,6 @@ export type MonitoringStats = {
      * Total Interviews
      */
     total_interviews: number;
-    /**
-     * Total Messages
-     */
-    total_messages: number;
-    /**
-     * Total Completed Interviews
-     */
-    total_completed_interviews: number;
     /**
      * Completion Rate
      */
@@ -1849,7 +1849,7 @@ export type SurveyItem = {
 /**
  * SurveyItemType
  */
-export type SurveyItemType = 'radio' | 'checkbox' | 'slider' | 'number' | 'date';
+export type SurveyItemType = 'radio' | 'checkbox' | 'slider' | 'number' | 'date' | 'datetime';
 
 /**
  * SurveyOption
@@ -2178,24 +2178,6 @@ export type Welcome = {
  */
 export type FastapiCompatV2BodyUploadImage = {
     /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage1 = {
-    /**
      * Primer
      */
     primer: string;
@@ -2207,6 +2189,24 @@ export type FastapiCompatV2BodyUploadImage1 = {
      * Alt
      */
     alt: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_image
+ */
+export type FastapiCompatV2BodyUploadImage2 = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
     /**
      * File
      */
@@ -3700,7 +3700,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage1;
+    body: FastapiCompatV2BodyUploadImage;
     path: {
         /**
          * Project Id
@@ -4807,7 +4807,7 @@ export type PutFeedbackResponses = {
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
 export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage2;
     path?: never;
     query?: never;
     url: '/api/image';
