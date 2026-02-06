@@ -100,8 +100,11 @@
 	}
 </script>
 
-<div class="mt-2 w-full max-w-full">
-	<fieldset class="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-gray-200 p-4">
+<div class="mt-2 w-full max-w-full min-w-60">
+	<fieldset
+		class="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-gray-200 p-4
+            {['radio', 'checkbox'].includes(type) ? 'flex-col' : ''}"
+	>
 		<legend
 			class="mx-auto rounded-full bg-white px-3 py-1 text-xs font-semibold tracking-wide text-gray-500 shadow-sm"
 		>
@@ -152,7 +155,13 @@
 					step={step ?? undefined}
 					{disabled}
 					class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
-					placeholder="Enter a number{min != null && max != null ? ` (${min}–${max})` : min != null ? ` (min ${min})` : max != null ? ` (max ${max})` : ''}"
+					placeholder="Enter a number{min != null && max != null
+						? ` (${min}–${max})`
+						: min != null
+							? ` (min ${min})`
+							: max != null
+								? ` (max ${max})`
+								: ''}"
 				/>
 			</div>
 		{:else if type === 'date'}
@@ -168,7 +177,7 @@
 			{#each normalizedOptions as opt, i (i)}
 				<div class="relative max-w-full min-w-min">
 					<label
-						class="flex w-fit max-w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all
+						class="flex w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all
                    hover:border-primary/50 hover:bg-gray-200
                    {isChecked(opt.value)
 							? 'border-primary bg-primary/10 text-dark ring-1 ring-primary'
@@ -195,7 +204,7 @@
 			{#if with_other}
 				<div class="relative max-w-full min-w-min">
 					<label
-						class="flex w-fit max-w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all
+						class="flex w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all
                    hover:border-primary/50 hover:bg-gray-200
                    {otherSelected
 							? 'border-primary bg-primary/10 text-dark ring-1 ring-primary'
