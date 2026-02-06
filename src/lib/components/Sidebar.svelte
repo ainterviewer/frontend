@@ -100,7 +100,7 @@
 >
 	<button
 		onclick={() => sidebar.toggle()}
-		class="absolute top-20 right-0 flex h-8 w-8 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-none bg-primary text-light shadow-md transition-transform hover:scale-110"
+		class="absolute top-15 right-0 flex h-8 w-8 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-none bg-white text-primary shadow-md transition-transform hover:scale-110"
 		aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 	>
 		<i class={collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'}></i>
@@ -139,14 +139,17 @@
 						level === 0
 							? 'ml-6'
 							: collapsed
-								? 'ml-6 text-xs'
+								? 'ml-6 border-l pl-2' +
+									(isLast
+										? ' [border-image:linear-gradient(to_bottom,#fff_60%,transparent_40%)_1_100%]'
+										: '')
 								: 'ml-9 border-l pl-5' +
 									(isLast
 										? ' [border-image:linear-gradient(to_bottom,#fff_60%,transparent_40%)_1_100%]'
 										: '')
 					].join(' ')}
 				>
-					<i class={item.icon}></i>
+					<i class={[item.icon, collapsed && level > 0 && 'text-xs'].filter(Boolean).join(' ')}></i>
 				</span>
 			{/if}
 			{#if item.label}
