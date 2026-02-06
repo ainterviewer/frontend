@@ -94,29 +94,31 @@
 <div
 	id="sidebar"
 	class={[
-		'fixed top-0 left-0 z-900 h-full overflow-y-auto bg-dark px-0 py-[100px] transition-all duration-500',
+		'fixed top-0 left-0 z-900 h-full overflow-visible bg-dark px-0 py-[100px] transition-all duration-500',
 		collapsed ? 'w-[70px]' : 'w-[250px]'
 	].join(' ')}
 >
 	<button
 		onclick={() => sidebar.toggle()}
-		class="absolute top-15 right-0 flex h-8 w-8 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-none bg-white text-primary shadow-md transition-transform hover:scale-110"
+		class="absolute top-15 right-0 flex h-8 w-8 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-none bg-white text-primary transition-transform hover:scale-110"
 		aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 	>
 		<i class={collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'}></i>
 	</button>
 
-	<ul class="m-0 list-none p-0">
-		{#each items as item (item.label || item.href || item)}
-			{#if !item.requiresAdmin || auth.isAdmin}
-				{#if item.type === 'separator'}
-					<hr class="mx-auto my-2.5 w-[90%] border-0 border-t border-primary" />
-				{:else}
-					{@render listItem(item)}
+	<div class="h-full overflow-y-auto">
+		<ul class="m-0 list-none p-0">
+			{#each items as item (item.label || item.href || item)}
+				{#if !item.requiresAdmin || auth.isAdmin}
+					{#if item.type === 'separator'}
+						<hr class="mx-auto my-2.5 w-[90%] border-0 border-t border-primary" />
+					{:else}
+						{@render listItem(item)}
+					{/if}
 				{/if}
-			{/if}
-		{/each}
-	</ul>
+			{/each}
+		</ul>
+	</div>
 </div>
 
 {#snippet listItem(item: SidebarItem, level = 0, isLast = false)}
