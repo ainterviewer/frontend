@@ -20,16 +20,7 @@
 	//  TODO: Align text after icons
 	let { items }: { items: SidebarItem[] } = $props();
 	let collapsed = $derived(sidebar.collapsed);
-	let expanded = $state(!sidebar.collapsed);
-
-	$effect(() => {
-		if (sidebar.collapsed) {
-			expanded = false;
-		} else {
-			const timeout = setTimeout(() => (expanded = true), 500);
-			return () => clearTimeout(timeout);
-		}
-	});
+	let expanded = $derived(!collapsed);
 
 	// Extract projectId from the current URL
 	let { projectId, languageCode } = $derived(parseProjectRoute(page.url.pathname));
@@ -106,7 +97,7 @@
 		<i class={collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'}></i>
 	</button>
 
-	<div class="h-full overflow-y-auto">
+	<div class="h-full overflow-x-hidden overflow-y-auto">
 		<ul class="m-0 list-none p-0">
 			{#each items as item (item.label || item.href || item)}
 				{#if !item.requiresAdmin || auth.isAdmin}
@@ -129,7 +120,7 @@
 		<a
 			{...item.href && { href: getResolvedHref(item.href) }}
 			class={[
-				'peer relative block w-full text-light no-underline transition-colors select-none',
+				'peer relative block w-full whitespace-nowrap text-light no-underline transition-colors select-none',
 				item.href && 'hover:bg-light hover:text-dark',
 				active && 'active'
 			].join(' ')}
