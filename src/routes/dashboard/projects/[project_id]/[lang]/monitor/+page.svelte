@@ -39,14 +39,14 @@
 	// Animated KPI values
 	const totalInterviews = new Tween(0, { duration: 400 });
 	const totalMessages = new Tween(0, { duration: 400 });
-	const completedInterviews = new Tween(0, { duration: 400 });
+	const totalDuration = new Tween(0, { duration: 400 });
 	const completionRate = new Tween(0, { duration: 400 });
 
 	$effect(() => {
 		if (stats) {
 			totalInterviews.set(stats.total_interviews);
-			totalMessages.set(stats.total_messages);
-			completedInterviews.set(stats.total_completed_interviews);
+			totalMessages.set(stats.message_count_stats?.sum_messages ?? 0);
+			totalDuration.set(stats.duration_stats?.sum_seconds ?? 0);
 			completionRate.set(stats.completion_rate);
 		}
 	});
@@ -122,6 +122,13 @@
 	const formatNumber = format(',');
 	const formatPercent = format('.1%');
 
+	function formatDuration(seconds: number): string {
+		if (seconds >= 3600) {
+			return `${Math.round(seconds / 3600)}h`;
+		}
+		return `${Math.round(seconds / 60)}m`;
+	}
+
 	let dropoutStats = $derived.by(() => {
 		if (!stats?.dropout_stats) return [];
 
@@ -191,18 +198,6 @@
 				</div>
 			</div>
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<div class="text-muted-foreground text-sm font-medium">Total Messages</div>
-				<div class="mt-2 text-3xl font-bold">
-					{formatNumber(Math.round(totalMessages.current))}
-				</div>
-			</div>
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<div class="text-muted-foreground text-sm font-medium">Completed</div>
-				<div class="mt-2 text-3xl font-bold">
-					{formatNumber(Math.round(completedInterviews.current))}
-				</div>
-			</div>
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Completion Rate</div>
 				<div class="mt-2 flex items-baseline gap-2">
 					<span class="text-3xl font-bold">{formatPercent(completionRate.current)}</span>
@@ -214,6 +209,32 @@
 						style="width: {completionRate.current * 100}%"
 					></div>
 				</div>
+			</div>
+			<div class="bg-card rounded-lg border p-6 shadow-sm">
+				<div class="text-muted-foreground text-sm font-medium">Total Messages</div>
+				<div class="mt-2 text-3xl font-bold">
+					{formatNumber(Math.round(totalMessages.current))}
+				</div>
+				{#if stats?.message_count_stats}
+					<div class="text-muted-foreground mt-1 text-xs">
+						Min {stats.message_count_stats.min_messages} · Avg {Math.round(
+							stats.message_count_stats.avg_messages
+						)} · Max {stats.message_count_stats.max_messages}
+					</div>
+				{/if}
+			</div>
+			<div class="bg-card rounded-lg border p-6 shadow-sm">
+				<div class="text-muted-foreground text-sm font-medium">Total Duration</div>
+				<div class="mt-2 text-3xl font-bold">
+					{formatDuration(totalDuration.current)}
+				</div>
+				{#if stats?.duration_stats}
+					<div class="text-muted-foreground mt-1 text-xs">
+						Min {formatDuration(stats.duration_stats.min_seconds)} · Avg {formatDuration(
+							stats.duration_stats.avg_seconds
+						)} · Max {formatDuration(stats.duration_stats.max_seconds)}
+					</div>
+				{/if}
 			</div>
 		</div>
 
@@ -255,7 +276,7 @@
 				{:else}
 					<!-- Skeleton placeholder -->
 					<div class="flex h-full items-center justify-center">
-						<div class="h-[200px] w-[200px] animate-pulse rounded-full bg-muted"></div>
+						<div class="bg-muted h-[200px] w-[200px] animate-pulse rounded-full"></div>
 					</div>
 				{/if}
 			</div>
