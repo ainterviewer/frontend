@@ -60,7 +60,7 @@
 	onMount(() => {
 		const existingInterviewId = getInterviewIdFromCookie();
 
-		if (existingInterviewId) {
+		if (existingInterviewId && !(interviewType === 'manual_test')) {
 			initializeChat(existingInterviewId);
 		} else {
 			loadConsent();
