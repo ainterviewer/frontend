@@ -847,6 +847,12 @@ export type InterviewGuideInput = {
      * An outro message for the interview. Displayed to the interviewee as the last message they will see. They will not be able to answer this message.
      */
     outro?: string | null;
+    /**
+     * Timed Messages
+     *
+     * Messages that are displayed to the interviewee after a certain amount of time
+     */
+    timed_messages?: Array<TimedMessage> | null;
 };
 
 /**
@@ -877,6 +883,12 @@ export type InterviewGuideOutput = {
      * An outro message for the interview. Displayed to the interviewee as the last message they will see. They will not be able to answer this message.
      */
     outro?: string | null;
+    /**
+     * Timed Messages
+     *
+     * Messages that are displayed to the interviewee after a certain amount of time
+     */
+    timed_messages?: Array<TimedMessage> | null;
 };
 
 /**
