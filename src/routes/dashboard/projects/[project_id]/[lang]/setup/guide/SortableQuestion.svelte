@@ -529,13 +529,14 @@
 																					bind:value={evaluation.trigger_value}
 																				/>
 																			{:else if hasSurveyOptions}
+																				{@const selectedValues = condition.evaluation.filter((_, i) => i !== evalIdx).map((e) => e.trigger_value).filter(Boolean)}
 																				<select
 																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 																					bind:value={evaluation.trigger_value}
 																				>
 																					<option value="">Select an option...</option>
 																					{#each referencedQuestion.survey_item?.options || [] as option}
-																						<option value={option.label}>{option.label}</option>
+																						<option value={option.label} disabled={selectedValues.includes(option.label)}>{option.label}</option>
 																					{/each}
 																				</select>
 																			{:else}
@@ -580,7 +581,7 @@
 																{:else if evalIdx === condition.evaluation.length - 1}
 																	<div class="flex items-center justify-center gap-2 pt-1">
 																		<button
-																			class="rounded border border-gray-300 px-2 py-0.5 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+																			class="rounded border px-2 py-0.5 text-sm font-medium transition-colors {referencedQuestion?.survey_item?.type === 'checkbox' ? 'border-gray-300 text-gray-600 hover:border-primary hover:bg-primary/5 hover:text-primary' : 'border-gray-200 text-gray-300 cursor-not-allowed'}"
 																			onclick={() => {
 																				evaluation.combine_next = 'AND';
 																				condition.evaluation.push({
@@ -588,6 +589,7 @@
 																					comparison_operator: '=='
 																				});
 																			}}
+																			disabled={referencedQuestion?.survey_item?.type !== 'checkbox'}
 																		>
 																			+ AND
 																		</button>
