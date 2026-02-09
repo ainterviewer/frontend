@@ -171,28 +171,28 @@
 											<input
 												type="file"
 												accept=".png,.jpg,.webp"
-												class="w-full text-xs text-gray-500 file:mr-2 file:rounded-full file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-primary hover:file:bg-primary/20"
+												class="w-full text-sm text-gray-500 file:mr-2 file:rounded-full file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
 												onchange={handleImageUpload}
 											/>
 											<input
-												class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+												class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 												placeholder="Description for AI..."
 												bind:value={question.image.description}
 											/>
 										</div>
 									</div>
 									<input
-										class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+										class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 										placeholder="Primer text..."
 										bind:value={question.image.primer}
 									/>
 									<input
-										class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+										class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 										placeholder="Alt text (accessibility)"
 										bind:value={question.image.alt}
 									/>
 									<button
-										class="mt-1 text-xs text-gray-400 hover:text-red-500"
+										class="mt-1 text-sm text-gray-400 hover:text-red-500"
 										onclick={() => {
 											question.image = null;
 											expandedImage = false;
@@ -232,11 +232,11 @@
 						</button>
 						{#if expandedSurvey}
 							<div transition:slide={{ duration: 200 }} class="border-t border-gray-200 p-3">
-								<div class="max-w-sm space-y-2">
+								<div class="max-w-sm space-y-2 text-sm">
 									<div>
-										<label class="mb-1 block text-xs text-gray-500">Type</label>
+										<label class="mb-2 block text-gray-500">Type</label>
 										<select
-											class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+											class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 											bind:value={question.survey_item.type}
 										>
 											<option value="radio">Single Choice (Radio)</option>
@@ -248,25 +248,24 @@
 									</div>
 									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox' || question.survey_item.type === 'slider'}
 										<div>
-											<label class="mb-1 block text-xs text-gray-500">Options</label>
+											<label class="mb-1 block text-gray-500">Options</label>
 											<div class="max-h-40 space-y-1 overflow-y-auto">
 												{#each question.survey_item.options as option, oIdx}
 													<div class="flex gap-1">
 														<input
-															class="flex-1 rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+															class="flex-1 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 															bind:value={option.label}
 															placeholder={`Option ${oIdx + 1}`}
 														/>
 														<button
 															class="px-1 text-gray-400 hover:text-red-500"
 															onclick={() => question.survey_item?.options.splice(oIdx, 1)}
-															title="Remove Survey Option"
-															><i class="fa-solid fa-trash text-xs"></i></button
+															title="Remove Survey Option"><i class="fa-solid fa-trash"></i></button
 														>
 													</div>
 												{/each}
 												<button
-													class="mt-1 text-xs font-medium text-primary hover:underline"
+													class="mt-1 text-sm font-medium text-primary hover:underline"
 													onclick={() => question.survey_item?.options.push({ label: '' })}
 													>+ Add Option</button
 												>
@@ -275,7 +274,7 @@
 									{/if}
 									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox'}
 										<label
-											class="mt-1 flex cursor-pointer items-center gap-2 text-xs text-gray-700 transition-colors hover:text-primary"
+											class="mt-1 flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
 										>
 											<input
 												type="checkbox"
@@ -292,19 +291,19 @@
 									{#if question.survey_item.type === 'number'}
 										<div class="grid grid-cols-2 gap-2">
 											<div>
-												<label class="mb-1 block text-xs text-gray-500">Min</label>
+												<label class="mb-1 block text-sm text-gray-500">Min</label>
 												<input
 													type="number"
-													class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No min"
 													bind:value={question.survey_item.min}
 												/>
 											</div>
 											<div>
-												<label class="mb-1 block text-xs text-gray-500">Max</label>
+												<label class="mb-1 block text-sm text-gray-500">Max</label>
 												<input
 													type="number"
-													class="w-full rounded border-gray-200 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No max"
 													bind:value={question.survey_item.max}
 												/>
@@ -312,13 +311,14 @@
 										</div>
 									{/if}
 									<button
-										class="mt-1 text-xs text-gray-400 hover:text-red-500"
+										class="mt-1 text-sm text-gray-400 hover:text-red-500"
+										title="Remove Survey Item"
 										onclick={() => {
 											question.survey_item = null;
 											expandedSurvey = false;
 										}}
 									>
-										<i class="fa-solid fa-trash mr-1"></i>Remove Survey Item
+										<i class="fa-solid fa-trash mr-1"></i>
 									</button>
 								</div>
 							</div>
@@ -363,11 +363,11 @@
 								<div class="max-w-lg space-y-3">
 									<!-- Action -->
 									<div>
-										<label class="mb-1 block text-xs font-bold text-gray-500"
+										<label class="mb-1 block text-sm font-bold text-gray-500"
 											>Action when conditions are met</label
 										>
 										<select
-											class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+											class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 											bind:value={question.conditions.action}
 										>
 											<option value="ask_question">Ask this question</option>
@@ -379,7 +379,7 @@
 
 									<!-- Condition Blocks -->
 									<div class="space-y-2">
-										<label class="block text-xs font-bold text-gray-500">Condition blocks</label>
+										<label class="block text-sm font-bold text-gray-500">Condition blocks</label>
 										{#each question.conditions.conditions as condition, condIdx}
 											{@const referencedQuestion = allSections[condition.question_context.section]
 												? (allQuestions[allSections[condition.question_context.section].id] || [])[
@@ -394,7 +394,7 @@
 
 											<div class="rounded-md border border-gray-300 bg-gray-50/50 p-3">
 												<div class="mb-2 flex items-center justify-between">
-													<span class="text-xs font-medium text-gray-600"
+													<span class="text-sm font-medium text-gray-600"
 														>Condition {condIdx + 1}</span
 													>
 													{#if question.conditions.conditions.length > 1}
@@ -421,11 +421,11 @@
 												<div class="space-y-3">
 													<!-- Question Context -->
 													<div>
-														<label class="mb-1 block text-xs text-gray-500"
+														<label class="mb-1 block text-sm text-gray-500"
 															>Based on answer to</label
 														>
 														<select
-															class="w-full rounded border-gray-200 bg-white p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+															class="w-full rounded border-gray-200 bg-white p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 															value={`${condition.question_context.section}-${condition.question_context.question}`}
 															onchange={(e) => {
 																const [sIdx, qIdx] = (e.target as HTMLSelectElement).value
@@ -455,7 +455,7 @@
 													<!-- Negate Condition -->
 													<div class="flex items-center">
 														<label
-															class="flex cursor-pointer items-center gap-2 text-xs text-gray-700 transition-colors hover:text-primary"
+															class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
 														>
 															<input
 																type="checkbox"
@@ -468,7 +468,7 @@
 
 													<!-- Evaluations -->
 													<div class="space-y-1">
-														<label class="mb-1 block text-xs text-gray-500">Trigger value(s)</label>
+														<label class="mb-1 block text-sm text-gray-500">Trigger value(s)</label>
 														{#each condition.evaluation as evaluation, evalIdx}
 															<div class="space-y-1">
 																<div
@@ -477,11 +477,11 @@
 																	<div class="flex-1 space-y-2">
 																		{#if isNumericOrDate}
 																			<div>
-																				<label class="mb-1 block text-xs text-gray-400"
+																				<label class="mb-1 block text-sm text-gray-400"
 																					>Operator</label
 																				>
 																				<select
-																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 																					bind:value={evaluation.comparison_operator}
 																				>
 																					<option value="==">Equals (==)</option>
@@ -494,23 +494,23 @@
 																		{/if}
 
 																		<div>
-																			<label class="mb-1 block text-xs text-gray-400">Value</label>
+																			<label class="mb-1 block text-sm text-gray-400">Value</label>
 																			{#if referencedQuestion?.survey_item?.type === 'number'}
 																				<input
 																					type="number"
-																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 																					placeholder="Value to compare..."
 																					bind:value={evaluation.trigger_value}
 																				/>
 																			{:else if referencedQuestion?.survey_item?.type === 'date'}
 																				<input
 																					type="date"
-																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 																					bind:value={evaluation.trigger_value}
 																				/>
 																			{:else if hasSurveyOptions}
 																				<select
-																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 																					bind:value={evaluation.trigger_value}
 																				>
 																					<option value="">Select an option...</option>
@@ -520,7 +520,7 @@
 																				</select>
 																			{:else}
 																				<input
-																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-xs focus:border-primary focus:ring-primary/20"
+																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 																					placeholder="Value to match..."
 																					bind:value={evaluation.trigger_value}
 																				/>
@@ -551,7 +551,7 @@
 																	<div class="flex items-center justify-center gap-2 py-1">
 																		<div class="h-px flex-1 bg-gray-200"></div>
 																		<span
-																			class="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
+																			class="rounded bg-gray-100 px-2 py-0.5 text-sm font-medium text-gray-600"
 																		>
 																			{evaluation.combine_next}
 																		</span>
@@ -560,7 +560,7 @@
 																{:else if evalIdx === condition.evaluation.length - 1}
 																	<div class="flex items-center justify-center gap-2 pt-1">
 																		<button
-																			class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+																			class="rounded border border-gray-300 px-2 py-0.5 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
 																			onclick={() => {
 																				evaluation.combine_next = 'AND';
 																				condition.evaluation.push({
@@ -572,7 +572,7 @@
 																			+ AND
 																		</button>
 																		<button
-																			class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+																			class="rounded border border-gray-300 px-2 py-0.5 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
 																			onclick={() => {
 																				evaluation.combine_next = 'OR';
 																				condition.evaluation.push({
@@ -596,7 +596,7 @@
 												<div class="flex items-center justify-center gap-2 py-1">
 													<div class="h-px flex-1 bg-amber-200"></div>
 													<span
-														class="rounded bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700"
+														class="rounded bg-amber-100 px-3 py-1 text-sm font-bold text-amber-700"
 													>
 														{condition.combine_next}
 													</span>
@@ -605,7 +605,7 @@
 											{:else if condIdx === question.conditions.conditions.length - 1}
 												<div class="flex items-center justify-center gap-2 pt-2">
 													<button
-														class="rounded border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 transition-colors hover:border-amber-400 hover:bg-amber-100"
+														class="rounded border border-amber-300 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700 transition-colors hover:border-amber-400 hover:bg-amber-100"
 														onclick={() => {
 															if (question.conditions) {
 																condition.combine_next = 'AND';
@@ -630,7 +630,7 @@
 														+ AND condition
 													</button>
 													<button
-														class="rounded border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 transition-colors hover:border-amber-400 hover:bg-amber-100"
+														class="rounded border border-amber-300 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700 transition-colors hover:border-amber-400 hover:bg-amber-100"
 														onclick={() => {
 															if (question.conditions) {
 																condition.combine_next = 'OR';
@@ -660,7 +660,7 @@
 									</div>
 
 									<button
-										class="mt-1 text-xs text-gray-400 hover:text-red-500"
+										class="mt-1 text-sm text-gray-400 hover:text-red-500"
 										onclick={() => {
 											question.conditions = null;
 											expandedCondition = false;
