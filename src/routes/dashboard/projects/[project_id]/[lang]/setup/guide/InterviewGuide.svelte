@@ -15,6 +15,7 @@
 		KeyboardSensor,
 		PointerSensor
 	} from '@dnd-kit-svelte/svelte';
+	import { dragState } from './dragState.svelte';
 	import { move } from '@dnd-kit/helpers';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
@@ -85,6 +86,10 @@
 	let projectId = $state(page.params.project_id ?? '');
 
 	let activeItem = $state<GuideSection | GuideQuestion | null>(null);
+	let activeDragType = $state<'section' | 'question' | null>(null);
+	$effect(() => {
+		dragState.draggingType = activeDragType;
+	});
 
 	// Modal state
 	let showGenerateGuideModal = $state(false);
@@ -271,16 +276,20 @@
 	}
 
 	function handleDragStart(event: any) {
-		const { current } = event.operation.source;
-		if (current.type === 'section') {
-			activeItem = current.data.section;
-		} else if (current.type === 'question') {
-			activeItem = current.data.question;
+		const source = event.operation?.source;
+		const data = source?.data ?? source?.current?.data;
+		const type = source?.type ?? source?.current?.type;
+		activeDragType = type ?? null;
+		if (type === 'section') {
+			activeItem = data?.section;
+		} else if (type === 'question') {
+			activeItem = data?.question;
 		}
 	}
 
 	function handleDragEnd() {
 		activeItem = null;
+		activeDragType = null;
 	}
 
 	let observer: IntersectionObserver;
@@ -403,7 +412,7 @@
 								generatingQuestionSectionIdx = sIdx;
 								showGenerateQuestionModal = true;
 							}}
-						/>
+					/>
 					{/each}
 				</div>
 

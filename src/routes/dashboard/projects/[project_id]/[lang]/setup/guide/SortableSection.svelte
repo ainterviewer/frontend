@@ -2,6 +2,7 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { CollisionPriority } from '@dnd-kit/abstract';
 	import SortableQuestion from './SortableQuestion.svelte';
+	import { dragState } from './dragState.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 
 	interface Props {
@@ -60,10 +61,12 @@
 
 <div
 	id={section.id}
-	class="group relative rounded-lg border border-black bg-secondary p-4"
+	class="group relative rounded-lg border border-black bg-secondary p-4 transition-all duration-200"
 	class:opacity-50={isDragging.current && !isOverlay}
 	class:shadow-xl={isOverlay}
 	class:rotate-1={isOverlay}
+	style:max-height={dragState.draggingType === 'section' && !isOverlay ? '19rem' : 'none'}
+	style:overflow={dragState.draggingType === 'section' && !isOverlay ? 'hidden' : 'visible'}
 	{@attach ref}
 >
 	<!-- Section Header/Controls -->

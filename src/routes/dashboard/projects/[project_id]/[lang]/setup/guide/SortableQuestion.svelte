@@ -2,6 +2,7 @@
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { slide } from 'svelte/transition';
+	import { dragState } from './dragState.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 
 	interface Props {
@@ -25,6 +26,7 @@
 		onRemove,
 		isOverlay = false
 	}: Props = $props();
+
 	let showSettings = $state(false);
 	let expandedImage = $state(false);
 	let expandedSurvey = $state(false);
@@ -67,6 +69,8 @@
 	class:rotate-1={isOverlay}
 	class:border-l-4={!isOverlay}
 	class:border-l-primary={!isOverlay}
+	style:max-height={dragState.draggingType === 'question' && !isOverlay ? '19rem' : 'none'}
+	style:overflow={dragState.draggingType === 'question' && !isOverlay ? 'hidden' : 'visible'}
 	{@attach ref}
 >
 	<!-- Header with Drag Handle and Actions -->
