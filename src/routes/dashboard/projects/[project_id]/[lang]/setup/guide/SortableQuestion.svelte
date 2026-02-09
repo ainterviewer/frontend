@@ -157,7 +157,10 @@
 							></i>
 						</button>
 						{#if expandedImage}
-							<div transition:slide={{ duration: 200 }} class="relative border-t border-gray-200 p-3">
+							<div
+								transition:slide={{ duration: 200 }}
+								class="relative border-t border-gray-200 p-3"
+							>
 								<button
 									class="absolute top-2 right-2 cursor-pointer p-1 text-gray-400 hover:text-red-500"
 									title="Remove Image"
@@ -168,7 +171,7 @@
 								>
 									<i class="fa-solid fa-trash text-sm"></i>
 								</button>
-								<div class="max-w-sm space-y-2">
+								<div class="max-w-sm space-y-4">
 									<div class="flex gap-2">
 										{#if question.image.data}
 											<img
@@ -232,7 +235,10 @@
 							></i>
 						</button>
 						{#if expandedSurvey}
-							<div transition:slide={{ duration: 200 }} class="relative border-t border-gray-200 p-3">
+							<div
+								transition:slide={{ duration: 200 }}
+								class="relative border-t border-gray-200 p-3"
+							>
 								<button
 									class="absolute top-2 right-2 cursor-pointer p-1 text-gray-400 hover:text-red-500"
 									title="Remove Survey Item"
@@ -243,7 +249,7 @@
 								>
 									<i class="fa-solid fa-trash text-sm"></i>
 								</button>
-								<div class="max-w-sm space-y-2 text-sm">
+								<div class="max-w-sm space-y-4 text-sm">
 									<div>
 										<label class="mb-2 block text-gray-500">Type</label>
 										<select
@@ -259,8 +265,8 @@
 									</div>
 									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox' || question.survey_item.type === 'slider'}
 										<div>
-											<label class="mb-1 block text-gray-500">Options</label>
-											<div class="max-h-40 space-y-1 overflow-y-auto">
+											<label class="mb-2 block text-gray-500">Options</label>
+											<div class="space-y-1">
 												{#each question.survey_item.options as option, oIdx}
 													<div class="flex gap-1">
 														<input
@@ -302,7 +308,7 @@
 									{#if question.survey_item.type === 'number'}
 										<div class="grid grid-cols-2 gap-2">
 											<div>
-												<label class="mb-1 block text-sm text-gray-500">Min</label>
+												<label class="mb-2 block text-sm text-gray-500">Min</label>
 												<input
 													type="number"
 													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
@@ -311,7 +317,7 @@
 												/>
 											</div>
 											<div>
-												<label class="mb-1 block text-sm text-gray-500">Max</label>
+												<label class="mb-2 block text-sm text-gray-500">Max</label>
 												<input
 													type="number"
 													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
@@ -360,7 +366,10 @@
 							></i>
 						</button>
 						{#if expandedCondition}
-							<div transition:slide={{ duration: 200 }} class="relative border-t border-gray-200 p-3">
+							<div
+								transition:slide={{ duration: 200 }}
+								class="relative border-t border-gray-200 p-3"
+							>
 								<button
 									class="absolute top-2 right-2 cursor-pointer p-1 text-gray-400 hover:text-red-500"
 									title="Remove Conditions"
@@ -374,7 +383,7 @@
 								<div class="max-w-lg space-y-3">
 									<!-- Action -->
 									<div>
-										<label class="mb-1 block text-sm font-bold text-gray-500"
+										<label class="mb-2 block text-sm font-bold text-gray-500"
 											>Action when conditions are met</label
 										>
 										<select
@@ -429,10 +438,10 @@
 													{/if}
 												</div>
 
-												<div class="space-y-3">
+												<div class="space-y-4">
 													<!-- Question Context -->
 													<div>
-														<label class="mb-1 block text-sm text-gray-500"
+														<label class="mb-2 block text-sm text-gray-500"
 															>Based on answer to</label
 														>
 														<select
@@ -669,7 +678,6 @@
 											{/if}
 										{/each}
 									</div>
-
 								</div>
 							</div>
 						{/if}
