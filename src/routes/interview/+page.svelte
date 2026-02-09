@@ -2,9 +2,14 @@
 	import type { InterviewType, Welcome } from '$lib/api';
 	import { Projects, type Consent } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
-	import { WelcomeModal, ConsentModal } from '$lib/components/modals';
+	import { ConsentModal, WelcomeModal } from '$lib/components/modals';
 	import { onMount } from 'svelte';
-	import { ChatClient, createInterview, getInterviewIdFromCookie, parseInterviewIdFromToken } from './chat.svelte';
+	import {
+		ChatClient,
+		createInterview,
+		getInterviewIdFromCookie,
+		parseInterviewIdFromToken
+	} from './chat.svelte';
 
 	interface PageData {
 		project_id: string;
@@ -65,12 +70,7 @@
 	});
 
 	async function createInterviewAndGetId(): Promise<string | null> {
-		const token = await createInterview(
-			projectId,
-			lang,
-			data.interviewType,
-			data.experimentID
-		);
+		const token = await createInterview(projectId, lang, data.interviewType, data.experimentID);
 
 		if (token) {
 			const parsedId = parseInterviewIdFromToken(token);
