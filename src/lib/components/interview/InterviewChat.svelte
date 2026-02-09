@@ -2,7 +2,7 @@
 	import { Auth, type InterviewType } from '$lib/api';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import { tick } from 'svelte';
-	import type { ChatClient } from '../chat.svelte';
+	import type { ChatClient } from '../../../routes/interview/chat.svelte';
 	import AudioRecordingOverlay from './AudioRecordingOverlay.svelte';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
