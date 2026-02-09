@@ -157,7 +157,17 @@
 							></i>
 						</button>
 						{#if expandedImage}
-							<div transition:slide={{ duration: 200 }} class="border-t border-gray-200 p-3">
+							<div transition:slide={{ duration: 200 }} class="relative border-t border-gray-200 p-3">
+								<button
+									class="absolute top-2 right-2 cursor-pointer p-1 text-gray-400 hover:text-red-500"
+									title="Remove Image"
+									onclick={() => {
+										question.image = null;
+										expandedImage = false;
+									}}
+								>
+									<i class="fa-solid fa-trash text-sm"></i>
+								</button>
 								<div class="max-w-sm space-y-2">
 									<div class="flex gap-2">
 										{#if question.image.data}
@@ -191,15 +201,6 @@
 										placeholder="Alt text (accessibility)"
 										bind:value={question.image.alt}
 									/>
-									<button
-										class="mt-1 text-sm text-gray-400 hover:text-red-500"
-										onclick={() => {
-											question.image = null;
-											expandedImage = false;
-										}}
-									>
-										<i class="fa-solid fa-trash mr-1"></i>Remove Image
-									</button>
 								</div>
 							</div>
 						{/if}
@@ -231,7 +232,17 @@
 							></i>
 						</button>
 						{#if expandedSurvey}
-							<div transition:slide={{ duration: 200 }} class="border-t border-gray-200 p-3">
+							<div transition:slide={{ duration: 200 }} class="relative border-t border-gray-200 p-3">
+								<button
+									class="absolute top-2 right-2 cursor-pointer p-1 text-gray-400 hover:text-red-500"
+									title="Remove Survey Item"
+									onclick={() => {
+										question.survey_item = null;
+										expandedSurvey = false;
+									}}
+								>
+									<i class="fa-solid fa-trash text-sm"></i>
+								</button>
 								<div class="max-w-sm space-y-2 text-sm">
 									<div>
 										<label class="mb-2 block text-gray-500">Type</label>
@@ -310,16 +321,6 @@
 											</div>
 										</div>
 									{/if}
-									<button
-										class="mt-1 text-sm text-gray-400 hover:text-red-500"
-										title="Remove Survey Item"
-										onclick={() => {
-											question.survey_item = null;
-											expandedSurvey = false;
-										}}
-									>
-										<i class="fa-solid fa-trash mr-1"></i>
-									</button>
 								</div>
 							</div>
 						{/if}
@@ -359,7 +360,17 @@
 							></i>
 						</button>
 						{#if expandedCondition}
-							<div transition:slide={{ duration: 200 }} class="border-t border-gray-200 p-3">
+							<div transition:slide={{ duration: 200 }} class="relative border-t border-gray-200 p-3">
+								<button
+									class="absolute top-2 right-2 cursor-pointer p-1 text-gray-400 hover:text-red-500"
+									title="Remove Conditions"
+									onclick={() => {
+										question.conditions = null;
+										expandedCondition = false;
+									}}
+								>
+									<i class="fa-solid fa-trash text-sm"></i>
+								</button>
 								<div class="max-w-lg space-y-3">
 									<!-- Action -->
 									<div>
@@ -659,15 +670,6 @@
 										{/each}
 									</div>
 
-									<button
-										class="mt-1 text-sm text-gray-400 hover:text-red-500"
-										onclick={() => {
-											question.conditions = null;
-											expandedCondition = false;
-										}}
-									>
-										<i class="fa-solid fa-trash mr-1"></i>Remove Conditions
-									</button>
 								</div>
 							</div>
 						{/if}
