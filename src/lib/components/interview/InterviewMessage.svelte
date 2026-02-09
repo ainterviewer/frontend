@@ -90,9 +90,7 @@
 
 	// Process text to replace embedded tokens with styled badges
 	function processTextWithTokens(text: string): string {
-		const globalPattern =
-			/<\|(endofprobe|endofsection|endofinterview|skipquestion|skipsection|noanswer|restartinterview)\|>/g;
-		return text.replace(globalPattern, (match) => {
+		return text.replace(new RegExp(TOKEN_PATTERN.source, 'g'), (match) => {
 			const config = TOKEN_CONFIG[match as CustomTokens];
 			if (!config) return match;
 			return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.color}"><i class="${config.icon}"></i> ${config.label}</span>`;
