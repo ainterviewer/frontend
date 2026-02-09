@@ -1,12 +1,14 @@
 <script lang="ts">
+	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { invalidateAll, beforeNavigate } from '$app/navigation';
+	import { Projects } from '$lib/api';
 	import type {
 		InterviewGuideOutput,
 		QuestionOutput,
 		QuestionSectionQuestionOutput
 	} from '$lib/api/types.gen';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import {
 		DragDropProvider,
 		DragOverlay,
@@ -20,7 +22,6 @@
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 	import { generateId, mapFromLocal, mapToLocal, saveGuide } from './utils';
-	import { Projects } from '$lib/api';
 
 	const sensors = [KeyboardSensor, PointerSensor];
 
@@ -37,9 +38,15 @@
 			framing: '',
 			introduction: '',
 			question_sections: [],
-			outro: ''
+			outro: '',
+			timed_messages: []
 		}
 	);
+
+	// Ensure timed_messages is initialized
+	if (!guide.timed_messages) {
+		guide.timed_messages = [];
+	}
 
 	let mapped = mapToLocal(guide);
 	if (mapped.sections.length === 0) {
@@ -190,6 +197,19 @@
 		generatingQuestionSectionIdx = null;
 	}
 
+	function addTimedMessage() {
+		guide.timed_messages!.push({
+			message: '',
+			time: 0,
+			include_in_history: false,
+			as_modal: false
+		});
+	}
+
+	function removeTimedMessage(index: number) {
+		guide.timed_messages!.splice(index, 1);
+	}
+
 	function addSection() {
 		const newId = generateId();
 		localSections.push({
@@ -286,7 +306,7 @@
 		);
 
 		// Observe static elements
-		['framing', 'introduction', 'sections', 'outro'].forEach((id) => {
+		['framing', 'introduction', 'sections', 'outro', 'timed_messages'].forEach((id) => {
 			const el = document.getElementById(id);
 			if (el) observer.observe(el);
 		});
@@ -437,6 +457,101 @@
 				class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
 				bind:value={guide.outro}
 			></textarea>
+		</div>
+
+		<!-- Timed Messages -->
+		<div
+			id="timed_messages"
+			class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+		>
+			<h3 class="mb-2 text-lg font-medium">Timed Messages</h3>
+			<p class="mb-4 text-sm text-gray-500">
+				Schedule messages to be sent to the interviewee during the interview after a specified
+				number of seconds.
+			</p>
+
+			<div class="space-y-4">
+				{#each guide.timed_messages! as tm, i}
+					<div class="rounded-md border border-gray-200 bg-gray-50 p-4">
+						<div class="mb-3 flex items-center justify-between">
+							<span class="text-sm font-medium text-gray-700">Timed Message {i + 1}</span>
+							<button
+								class="cursor-pointer text-sm text-gray-700 transition-colors hover:text-red-500"
+								onclick={() => removeTimedMessage(i)}
+								title="Remove timed message"
+							>
+								<i class="fa-solid fa-trash"></i>
+							</button>
+						</div>
+
+						<div class="space-y-3">
+							<div>
+								<label class="mb-1 block text-sm font-medium text-gray-600" for="tm-message-{i}">
+									Message
+								</label>
+								<textarea
+									id="tm-message-{i}"
+									class="h-20 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+									bind:value={tm.message}
+								></textarea>
+							</div>
+
+							<div>
+								<label class="mb-1 block text-sm font-medium text-gray-600" for="tm-time-{i}">
+									Time (seconds)
+								</label>
+								<input
+									id="tm-time-{i}"
+									type="number"
+									min="0"
+									class="w-32 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+									bind:value={tm.time}
+								/>
+							</div>
+
+							<div class="flex gap-6">
+								<div class="flex gap-2">
+									<label
+										class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+									>
+										<input
+											class="rounded border-gray-300 text-primary focus:ring-primary"
+											type="checkbox"
+											bind:checked={tm.include_in_history}
+										/>
+										Include in history
+									</label>
+									<HoverInfo
+										text="Includes the question in the conversation history. This means that the AInterviewer will have access to the information from this message when asking other questions."
+									></HoverInfo>
+								</div>
+								<div class="flex hidden gap-2">
+									<label
+										class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+									>
+										<input
+											class="rounded border-gray-300 text-primary focus:ring-primary"
+											type="checkbox"
+											bind:checked={tm.as_modal}
+										/>
+										Show as modal
+									</label>
+									<HoverInfo
+										text="Should the message be shown as a modal (pop-up message) instead of a normal message in the chat interface?"
+									></HoverInfo>
+								</div>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+
+			<button
+				class="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-white py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+				onclick={addTimedMessage}
+			>
+				<i class="fa-solid fa-plus"></i> Add Timed Message
+			</button>
 		</div>
 
 		<!-- Actions -->

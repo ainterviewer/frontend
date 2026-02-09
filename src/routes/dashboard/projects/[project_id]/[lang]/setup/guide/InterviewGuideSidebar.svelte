@@ -74,5 +74,12 @@
 				? 'bg-primary/10 text-primary'
 				: ''}">Outro</a
 		>
+		<a
+			href="#timed_messages"
+			class="block rounded-md px-3 py-2 font-medium text-gray-600 transition-colors hover:bg-gray-100 {activeId ===
+			'timed_messages'
+				? 'bg-primary/10 text-primary'
+				: ''}">Timed Messages</a
+		>
 	</nav>
 </aside>
