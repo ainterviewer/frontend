@@ -206,6 +206,7 @@
 			disabled={!chat.inputEnabled}
 			rows="1"
 			placeholder="Message"
+			{lang}
 			class="
 				min-h-25 w-full resize-none rounded border border-gray-300 p-2.5 shadow-sm transition-all
 				focus:border-primary focus:ring-1 focus:ring-primary/50 focus:outline-none
