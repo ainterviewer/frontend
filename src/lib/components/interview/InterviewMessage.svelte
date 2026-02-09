@@ -97,9 +97,11 @@
 		});
 	}
 
-	let processedText = $derived(
-		hasEmbeddedTokens ? processTextWithTokens(message.text) : message.text
-	);
+	let processedText = $derived.by(() => {
+		let text = hasEmbeddedTokens ? processTextWithTokens(message.text) : message.text;
+		if (text) text = text.replace(/\n/g, '<br>');
+		return text;
+	});
 </script>
 
 {#if customToken}
