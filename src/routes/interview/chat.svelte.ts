@@ -27,15 +27,34 @@ export function parseInterviewIdFromToken(token: string): string | null {
  * Get interview ID from the interview_token cookie
  */
 export function getInterviewIdFromCookie(): string | null {
+	const token = getTokenFromCookie();
+	if (!token) return null;
+	return parseInterviewIdFromToken(token);
+}
+
+/**
+ * Get project ID from the interview_token cookie
+ */
+export function getProjectIdFromCookie(): string | null {
+	const token = getTokenFromCookie();
+	if (!token) return null;
+	try {
+		const payload = token.split('.')[1];
+		const decoded: InterviewToken = JSON.parse(atob(payload));
+		return decoded.project_id;
+	} catch (e) {
+		console.error('Failed to parse project ID from token', e);
+		return null;
+	}
+}
+
+function getTokenFromCookie(): string | null {
 	if (!browser) return null;
 	const cookie = document.cookie
 		.split(';')
 		.find((item) => item.trim().startsWith('interview_token='));
 	if (!cookie) return null;
-	const token = cookie.split('=')[1];
-	if (!token) return null;
-
-	return parseInterviewIdFromToken(token);
+	return cookie.split('=')[1] || null;
 }
 
 /**

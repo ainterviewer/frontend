@@ -8,6 +8,7 @@
 		ChatClient,
 		createInterview,
 		getInterviewIdFromCookie,
+		getProjectIdFromCookie,
 		parseInterviewIdFromToken
 	} from './chat.svelte';
 
@@ -58,9 +59,14 @@
 	let consentAccepting = $state(false);
 
 	onMount(() => {
+		const existingProjectId = getProjectIdFromCookie();
 		const existingInterviewId = getInterviewIdFromCookie();
 
-		if (existingInterviewId && !(interviewType === 'manual_test')) {
+		if (
+			existingInterviewId &&
+			existingProjectId === projectId &&
+			!(interviewType === 'manual_test')
+		) {
 			initializeChat(existingInterviewId);
 		} else {
 			loadConsent();
