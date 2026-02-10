@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Projects } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import type { PageData } from './$types';
 	import { invalidateAll } from '$app/navigation';
 
@@ -25,10 +26,10 @@
 				body: { title }
 			});
 			await invalidateAll();
-			alert('Title updated');
+			toast.success('Title updated');
 		} catch (e) {
 			console.error(e);
-			alert('Failed to update title');
+			toast.error('Failed to update title');
 		} finally {
 			savingTitle = false;
 		}
@@ -42,13 +43,10 @@
 				body: { default_language: defaultLanguage }
 			});
 			await invalidateAll();
-			// Legacy showed a notification. We'll rely on the alert/toast system if we had one, for now alert.
-			// Or maybe just silent success + invalidate is enough as the UI updates?
-			// Legacy: showNotification("success", ...)
-			alert('Default language updated');
+			toast.success('Default language updated');
 		} catch (e) {
 			console.error(e);
-			alert('Failed to update language');
+			toast.error('Failed to update language');
 		} finally {
 			savingLanguage = false;
 		}
@@ -63,10 +61,10 @@
 				body: { status: newStatus }
 			});
 			await invalidateAll();
-			alert(`Project status changed to ${newStatus}`);
+			toast.success(`Project status changed to ${newStatus}`);
 		} catch (e) {
 			console.error(e);
-			alert('Failed to change status');
+			toast.error('Failed to change status');
 		} finally {
 			changingStatus = false;
 		}

@@ -1,4 +1,5 @@
 import { Projects } from '$lib/api';
+import toast from 'svelte-hot-french-toast';
 import type {
 	QuestionOutput as ApiQuestion,
 	InterviewGuideOutput,
@@ -85,6 +86,6 @@ export async function saveGuide(
 		// Notify success
 	} catch (e) {
 		console.error('Failed to save guide', e);
-		alert('Failed to save guide');
+		toast.error('Failed to save guide');
 	}
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Synthesize } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import type { SynthesizeRequest } from '$lib/api/types.gen';
 	import type { PageData } from './$types';
 	import { auth } from '$lib/auth.svelte';
@@ -39,7 +40,7 @@
 
 	async function runTest() {
 		if (delayBeforeAnswersRandom > delayBeforeAnswers) {
-			alert('The random delay cannot be greater than the base delay.');
+			toast.error('The random delay cannot be greater than the base delay.');
 			return;
 		}
 
@@ -60,9 +61,10 @@
 			});
 
 			await loadTestRuns();
+			toast.success('Test started');
 		} catch (e) {
 			console.error('Failed to run test', e);
-			alert('Failed to run test');
+			toast.error('Failed to run test');
 		} finally {
 			running = false;
 		}

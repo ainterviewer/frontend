@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
 	import type { InterviewSummaryPublic, InterviewType } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import { onMount } from 'svelte';
 	import TablePaginationFooter from '../../interviews/TablePaginationFooter.svelte';
 	import SortableHeader from '../../interviews/SortableHeader.svelte';
@@ -137,7 +138,7 @@
 			loadInterviews();
 		} catch (e) {
 			console.error('Error deleting test results:', e);
-			alert('Failed to delete test results');
+			toast.error('Failed to delete test results');
 		}
 	}
 
@@ -147,7 +148,7 @@
 			downloadFile(ids, 'xlsx');
 		} catch (e) {
 			console.error('Error downloading test results:', e);
-			alert('Failed to download test results');
+			toast.error('Failed to download test results');
 		}
 	}
 

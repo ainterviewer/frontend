@@ -1,4 +1,6 @@
 <script lang="ts">
+	import toast from 'svelte-hot-french-toast';
+
 	let {
 		open = $bindable(),
 		title = 'Generate',
@@ -22,7 +24,7 @@
 			generatePrompt = ''; // Reset prompt after success
 		} catch (e) {
 			console.error('Failed to generate', e);
-			alert('Failed to generate. Please try again.');
+			toast.error('Failed to generate. Please try again.');
 		} finally {
 			generating = false;
 		}

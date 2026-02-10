@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { Analysis } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import type { AnalysisCategoryPublic, AnnotationType } from '$lib/api/types.gen';
 	import { getContrastColor } from '$lib/utils/colors';
 	import CategoryModal from '$lib/components/analysis/CategoryModal.svelte';
@@ -51,7 +52,7 @@
 			}
 		} catch (e) {
 			console.error('Failed to load categories', e);
-			alert('Failed to load categories');
+			toast.error('Failed to load categories');
 		} finally {
 			loading = false;
 		}
@@ -78,7 +79,7 @@
 			await loadCategories();
 		} catch (e) {
 			console.error('Failed to delete category', e);
-			alert('Failed to delete category');
+			toast.error('Failed to delete category');
 		}
 	}
 

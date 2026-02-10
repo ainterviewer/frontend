@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { Admin } from '$lib/api/sdk.gen';
+	import toast from 'svelte-hot-french-toast';
 	import type { PageData } from './$types';
 
 	interface AccessRequest {
@@ -63,7 +64,7 @@
 	async function handleAction(action: 'approve' | 'deny') {
 		const ids = Array.from(selectedIds);
 		if (ids.length === 0) {
-			alert(`Please select one or more requests to ${action}.`);
+			toast.error(`Please select one or more requests to ${action}.`);
 			return;
 		}
 
@@ -81,8 +82,10 @@
 			// Reset loading state so loadRequests can proceed (avoid deadlock)
 			isLoading = false;
 			await loadRequests();
+			toast.success(`Requests ${action === 'approve' ? 'approved' : 'denied'}`);
 		} catch (e: any) {
 			error = `Failed to ${action} requests: ${e.message}`;
+			toast.error(error);
 			isLoading = false;
 		}
 	}
@@ -90,7 +93,7 @@
 	async function handleDelete() {
 		const ids = Array.from(selectedIds);
 		if (ids.length === 0) {
-			alert('Please select one or more requests to delete.');
+			toast.error('Please select one or more requests to delete.');
 			return;
 		}
 
@@ -110,8 +113,10 @@
 			}
 			isLoading = false;
 			await loadRequests();
+			toast.success('Requests deleted');
 		} catch (e: any) {
 			error = `Failed to delete requests: ${e.message}`;
+			toast.error(error);
 			isLoading = false;
 		}
 	}

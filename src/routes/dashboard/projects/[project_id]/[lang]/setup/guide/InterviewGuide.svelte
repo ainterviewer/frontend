@@ -8,6 +8,7 @@
 		QuestionOutput,
 		QuestionSectionQuestionOutput
 	} from '$lib/api/types.gen';
+	import toast from 'svelte-hot-french-toast';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import {
 		DragDropProvider,
@@ -116,7 +117,7 @@
 
 		if (error) {
 			console.error('Failed to generate section', error);
-			alert('Failed to generate section');
+			toast.error('Failed to generate section');
 			return;
 		}
 
@@ -166,7 +167,7 @@
 
 		if (error) {
 			console.error('Failed to generate question', error);
-			alert('Failed to generate question');
+			toast.error('Failed to generate question');
 			return;
 		}
 

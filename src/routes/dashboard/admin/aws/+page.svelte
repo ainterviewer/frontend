@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Admin } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import { onMount } from 'svelte';
 	import type { Instance } from './types';
 
@@ -65,9 +66,9 @@
 				body: minInstances
 			});
 
-			alert('Min instances updated');
+			toast.success('Min instances updated');
 		} catch (err: any) {
-			alert('Failed to update settings: ' + err.message);
+			toast.error('Failed to update settings: ' + err.message);
 		}
 	}
 
@@ -108,8 +109,10 @@
 			}
 			await getInstanceStatus();
 			selectedInstances = new Set();
+			toast.success('Instances starting');
 		} catch (err: any) {
 			error = 'Failed to start instances: ' + err.message;
+			toast.error(error);
 		}
 	}
 
@@ -132,8 +135,10 @@
 			}
 			await getInstanceStatus();
 			selectedInstances = new Set();
+			toast.success('Instances stopping');
 		} catch (err: any) {
 			error = 'Failed to stop instances: ' + err.message;
+			toast.error(error);
 		}
 	}
 

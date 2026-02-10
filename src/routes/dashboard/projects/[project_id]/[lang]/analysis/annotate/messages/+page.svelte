@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Analysis, Projects, type Image, type MessagePublic } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import type {
 		AnalysisCategoryPublic,
 		AnnotationValueCreate,
@@ -630,7 +631,7 @@
 			if (shouldClose) activeAnnotationMessageId = null;
 		} catch (e) {
 			console.error('Error saving annotation:', e);
-			alert('Error saving annotation');
+			toast.error('Error saving annotation');
 		} finally {
 			savingAnnotation = false;
 		}
@@ -690,7 +691,7 @@
 			commentText = '';
 		} catch (e) {
 			console.error('Error saving comment:', e);
-			alert('Error saving comment');
+			toast.error('Error saving comment');
 		} finally {
 			savingComment = false;
 		}
@@ -720,7 +721,7 @@
 			loadData();
 		} catch (e) {
 			console.error('Error deleting annotation:', e);
-			alert('Error deleting annotation');
+			toast.error('Error deleting annotation');
 		} finally {
 			savingAnnotation = false;
 		}

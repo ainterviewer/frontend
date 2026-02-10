@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Synthesize } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import Info from '$lib/components/Info.svelte';
 
 	let { data } = $props();
@@ -76,7 +77,7 @@
 			await invalidateAll();
 		} catch (e) {
 			console.error('Failed to delete tests', e);
-			alert('Failed to delete tests');
+			toast.error('Failed to delete test');
 		}
 	}
 
@@ -99,7 +100,7 @@
 			await invalidateAll();
 		} catch (e) {
 			console.error('Failed to create test', e);
-			alert('Failed to create test');
+			toast.error('Failed to create test');
 		} finally {
 			isCreating = false;
 		}

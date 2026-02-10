@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import { onMount } from 'svelte';
 	import TablePaginationFooter from './TablePaginationFooter.svelte';
 	import SortableHeader from './SortableHeader.svelte';
@@ -130,7 +131,7 @@
 			loadInterviews();
 		} catch (e) {
 			console.error('Error deleting interviews:', e);
-			alert('Failed to delete interviews');
+			toast.error('Failed to delete interviews');
 		}
 	}
 
@@ -140,7 +141,7 @@
 			downloadFile(ids, 'xlsx');
 		} catch (e) {
 			console.error('Error downloading interviews:', e);
-			alert('Failed to download interviews');
+			toast.error('Failed to download interviews');
 		}
 	}
 

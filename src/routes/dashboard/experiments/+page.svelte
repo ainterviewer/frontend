@@ -2,6 +2,7 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { Experiments } from '$lib/api/sdk.gen';
+	import toast from 'svelte-hot-french-toast';
 	import type { PageData } from './$types';
 	import { fade } from 'svelte/transition';
 	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
@@ -115,10 +116,10 @@
 	function copyToClipboard(blob: Blob) {
 		try {
 			navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-			alert('QR Code copied to clipboard!');
+			toast.success('QR Code copied to clipboard');
 		} catch (e) {
 			console.error(e);
-			alert('Failed to copy image.');
+			toast.error('Failed to copy image');
 		}
 	}
 
@@ -141,7 +142,7 @@
 			}
 		} catch (error) {
 			console.error('Failed to create experiment', error);
-			alert('Failed to create experiment');
+			toast.error('Failed to create experiment');
 		}
 	}
 
@@ -157,14 +158,14 @@
 			selectedExperiment = null;
 		} catch (error) {
 			console.error('Failed to delete experiment', error);
-			alert('Failed to delete experiment');
+			toast.error('Failed to delete experiment');
 		}
 	}
 
 	function copyLink(experiment: Experiment) {
 		const url = `${window.location.origin}/interview/redirect?id=${experiment.id}`;
 		navigator.clipboard.writeText(url);
-		alert('Link copied to clipboard!');
+		toast.success('Link copied to clipboard!');
 	}
 
 	function getStatusClass(status: string) {

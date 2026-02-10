@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Analysis } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import type { AnalysisCategoryPublic, AnnotationType } from '$lib/api/types.gen';
 	import { generateColor } from '$lib/utils/colors';
 
@@ -91,7 +92,7 @@
 			onClose();
 		} catch (e) {
 			console.error('Failed to save category', e);
-			alert('Failed to save category');
+			toast.error('Failed to save category');
 		} finally {
 			isSaving = false;
 		}

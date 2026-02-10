@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import type {
 		AgentConfigsInput,
 		AgentConfigsOutput,
@@ -44,11 +45,10 @@
 					body: prompts as PromptsUpdateRequest
 				})
 			]);
-			// Re-highlight after save/reload if needed, but strict mode might not require it
-			// highlightText();
+			toast.success('Configuration saved');
 		} catch (e) {
 			console.error('Failed to save config', e);
-			alert('Failed to save configuration');
+			toast.error('Failed to save configuration');
 		} finally {
 			saving = false;
 		}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Admin, type UserPublic } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 
@@ -35,13 +36,14 @@
 			});
 
 			if (response.error) {
-				alert('Failed to delete user');
+				toast.error('Failed to delete user');
 				console.error(response.error);
 			} else {
 				users = users.filter((u) => u.id !== id);
+				toast.success('User deleted');
 			}
 		} catch (e) {
-			alert('An unexpected error occurred');
+			toast.error('An unexpected error occurred');
 			console.error(e);
 		}
 	}

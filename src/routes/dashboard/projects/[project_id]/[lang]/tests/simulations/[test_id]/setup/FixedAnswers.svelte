@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Synthesize, type TestSetupPublic } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 
 	let { test, questions }: { test: TestSetupPublic; questions: string[] } = $props();
 
@@ -26,10 +27,10 @@
 					answers: answers
 				}
 			});
-			alert('Answers saved.');
+			toast.success('Answers saved');
 		} catch (e) {
 			console.error(e);
-			alert('Failed to save setup.');
+			toast.error('Failed to save setup');
 		} finally {
 			isSaving = false;
 		}

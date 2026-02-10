@@ -8,6 +8,7 @@
 		ProjectPublic
 	} from '$lib/api';
 	import { Default, Folders, Projects } from '$lib/api';
+	import toast from 'svelte-hot-french-toast';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
@@ -92,7 +93,7 @@
 	async function handleCreateProject() {
 		if (!createProjectFolderId) {
 			console.error('No folder selected for project creation.');
-			alert('Please select a folder to create a project in.');
+			toast.error('Please select a folder to create a project in.');
 			return;
 		}
 		try {
@@ -114,7 +115,7 @@
 			await loadData();
 		} catch (error) {
 			console.error('Failed to create project:', error);
-			alert('Failed to create project');
+			toast.error('Failed to create project');
 		}
 	}
 
@@ -134,7 +135,7 @@
 			await loadData();
 		} catch (error) {
 			console.error('Failed to create folder:', error);
-			alert('Failed to create folder');
+			toast.error('Failed to create folder');
 		}
 	}
 
@@ -166,7 +167,7 @@
 			await loadData();
 		} catch (error) {
 			console.error('Failed to edit folder:', error);
-			alert('Failed to edit folder');
+			toast.error('Failed to edit folder');
 		}
 	}
 
@@ -191,7 +192,7 @@
 			}
 		} catch (error) {
 			console.error('Failed to add collaborator:', error);
-			alert('Failed to add collaborator');
+			toast.error('Failed to add collaborator');
 		}
 	}
 
@@ -213,7 +214,7 @@
 			}
 		} catch (error) {
 			console.error('Failed to remove collaborator:', error);
-			alert('Failed to remove collaborator');
+			toast.error('Failed to remove collaborator');
 		}
 	}
 
@@ -236,7 +237,7 @@
 			}
 		} catch (error) {
 			console.error('Failed to update role:', error);
-			alert('Failed to update role');
+			toast.error('Failed to update role');
 		}
 	}
 
@@ -259,7 +260,7 @@
 			await loadData();
 		} catch (error) {
 			console.error('Failed to delete folder:', error);
-			alert('Failed to delete folder');
+			toast.error('Failed to delete folder');
 		}
 	}
 
@@ -282,7 +283,7 @@
 			await loadData();
 		} catch (error) {
 			console.error('Failed to delete project:', error);
-			alert('Failed to delete project');
+			toast.error('Failed to delete project');
 		}
 	}
 
@@ -296,7 +297,7 @@
 			// Could show success notification here
 		} catch (error) {
 			console.error('Failed to clone project:', error);
-			alert('Failed to clone project');
+			toast.error('Failed to clone project');
 		}
 	}
 
