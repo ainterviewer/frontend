@@ -161,7 +161,7 @@
 		<div class="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4">
 			<p class="text-sm text-gray-600">
 				<i class="fa-solid fa-circle-info mr-2 text-gray-400"></i>
-				Complete all setup steps to unlock distribution and testing.
+				Complete all setup steps to unlock testing and distribution.
 			</p>
 		</div>
 	{/if}
