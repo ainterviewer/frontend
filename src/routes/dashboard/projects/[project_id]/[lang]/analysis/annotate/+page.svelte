@@ -116,7 +116,7 @@
 	<h1 class="text-2xl font-semibold text-gray-800">Annotate</h1>
 	<a
 		href={`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages`}
-		class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700"
+		class="rounded-md bg-primary px-4 py-2 text-sm text-white transition-colors hover:bg-dark"
 	>
 		<i class="fa-solid fa-search mr-2"></i>
 		Browse & Search Messages

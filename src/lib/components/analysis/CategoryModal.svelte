@@ -138,7 +138,7 @@
 							type="text"
 							bind:value={newName}
 							required
-							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+							class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							placeholder="e.g. Sentiment, Topic"
 						/>
 					</div>
@@ -155,7 +155,7 @@
 							<input
 								type="text"
 								bind:value={newColor}
-								class="w-32 rounded-md border-gray-300 uppercase shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-32 rounded-md border-gray-300 uppercase shadow-sm focus:border-primary focus:ring-primary"
 							/>
 						</div>
 					</div>
@@ -169,7 +169,7 @@
 						id="description"
 						type="text"
 						bind:value={newDescription}
-						class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+						class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 						placeholder="Describe what this category analyzes..."
 					/>
 				</div>
@@ -183,7 +183,7 @@
 								id="min"
 								type="number"
 								bind:value={newMin}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							/>
 						</div>
 						<div>
@@ -193,7 +193,7 @@
 								id="max"
 								type="number"
 								bind:value={newMax}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							/>
 						</div>
 					</div>
@@ -210,7 +210,7 @@
 					<button
 						type="submit"
 						disabled={isSaving}
-						class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+						class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none disabled:opacity-50"
 					>
 						{isSaving
 							? category

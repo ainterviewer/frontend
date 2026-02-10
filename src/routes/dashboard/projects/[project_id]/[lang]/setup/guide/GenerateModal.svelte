@@ -38,7 +38,7 @@
 		aria-modal="true"
 	>
 		<div class="w-full max-w-lg overflow-hidden rounded-lg bg-white shadow-xl">
-			<div class="flex items-center justify-between border-b p-4">
+			<div class="flex items-center justify-between p-4">
 				<h3 class="text-lg font-semibold">{title}</h3>
 				<button
 					class="text-gray-400 hover:text-gray-600"
@@ -52,12 +52,12 @@
 				<label class="mb-2 block text-sm font-medium text-gray-700" for="prompt">Prompt</label>
 				<textarea
 					id="prompt"
-					class="h-32 w-full rounded border border-gray-300 p-3 focus:border-blue-500 focus:ring-blue-500"
+					class="h-32 w-full rounded border border-gray-300 p-3 focus:border-primary focus:ring-primary"
 					{placeholder}
 					bind:value={generatePrompt}
 				></textarea>
 			</div>
-			<div class="flex justify-end gap-3 border-t bg-gray-50 p-4">
+			<div class="flex justify-end gap-3 p-4">
 				<button
 					class="rounded px-4 py-2 text-gray-600 hover:bg-gray-200"
 					onclick={() => (open = false)}
@@ -65,7 +65,7 @@
 					Cancel
 				</button>
 				<button
-					class="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+					class="flex items-center gap-2 rounded bg-primary px-4 py-2 text-white hover:bg-dark"
 					onclick={handleGenerate}
 					disabled={generating || !generatePrompt.trim()}
 				>
