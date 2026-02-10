@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { Analysis } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import type { AnalysisCategoryPublic, AnnotationType } from '$lib/api/types.gen';
 	import { getContrastColor } from '$lib/utils/colors';
 	import CategoryModal from '$lib/components/analysis/CategoryModal.svelte';

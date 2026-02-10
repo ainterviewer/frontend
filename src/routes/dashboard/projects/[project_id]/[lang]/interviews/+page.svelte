@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 	import TablePaginationFooter from './TablePaginationFooter.svelte';
 	import SortableHeader from './SortableHeader.svelte';

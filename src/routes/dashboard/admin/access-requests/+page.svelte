@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { Admin } from '$lib/api/sdk.gen';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
 	interface AccessRequest {

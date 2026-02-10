@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import { WelcomeModal } from '$lib/components/modals';
-	import { fly } from 'svelte/transition';
+	import { toast } from 'svelte-sonner';
 
 	interface Props {
 		initialData?: {
@@ -29,7 +29,6 @@
 	let videoFile = $state<File | null>(null);
 
 	let showFullscreenModal = $state(false);
-	let notification = $state<{ type: 'success' | 'error'; message: string } | null>(null);
 	let saving = $state(false);
 
 	let videoPreviewUrl = $state<string | null>(null);
@@ -79,18 +78,13 @@
 		});
 
 		if (!error) {
-			showNotification('success', 'Welcome saved successfully.');
+			toast.success('Welcome saved successfully.');
 			loadData();
 			videoFile = null;
 		} else {
-			showNotification('error', 'Error when saving welcome.');
+			toast.error('Error when saving welcome.');
 		}
 		saving = false;
-	}
-
-	function showNotification(type: 'success' | 'error', message: string) {
-		notification = { type, message };
-		setTimeout(() => (notification = null), 3000);
 	}
 
 	function handleFileChange(event: Event) {
@@ -323,29 +317,3 @@
 	isPreview={true}
 />
 
-<!-- Notification Toast -->
-{#if notification}
-	<div
-		class="fixed right-4 bottom-4 z-[2000] rounded-lg p-4 shadow-lg"
-		class:bg-green-50={notification.type === 'success'}
-		class:text-green-800={notification.type === 'success'}
-		class:border-green-200={notification.type === 'success'}
-		class:bg-red-50={notification.type === 'error'}
-		class:text-red-800={notification.type === 'error'}
-		class:border-red-200={notification.type === 'error'}
-		class:border={true}
-		transition:fly={{ y: 20, duration: 200 }}
-	>
-		<div class="flex items-center gap-3">
-			{#if notification.type === 'success'}
-				<i class="fa-solid fa-circle-check text-green-500"></i>
-			{:else}
-				<i class="fa-solid fa-circle-xmark text-red-500"></i>
-			{/if}
-			<div>
-				<h3 class="font-semibold">{notification.type === 'success' ? 'Success' : 'Error'}</h3>
-				<p class="text-sm">{notification.message}</p>
-			</div>
-		</div>
-	</div>
-{/if}

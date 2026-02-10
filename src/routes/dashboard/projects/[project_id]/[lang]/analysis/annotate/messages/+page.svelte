@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Analysis, Projects, type Image, type MessagePublic } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import type {
 		AnalysisCategoryPublic,
 		AnnotationValueCreate,

@@ -1,4 +1,4 @@
-import toast from 'svelte-hot-french-toast';
+import { toast } from 'svelte-sonner';
 
 import { client } from './client.gen';
 

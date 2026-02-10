@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Analysis } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import type { AnalysisCategoryPublic, AnnotationType } from '$lib/api/types.gen';
 	import { generateColor } from '$lib/utils/colors';
 

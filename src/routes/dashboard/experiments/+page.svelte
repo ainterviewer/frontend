@@ -2,7 +2,7 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { Experiments } from '$lib/api/sdk.gen';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 	import { fade } from 'svelte/transition';
 	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';

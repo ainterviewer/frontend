@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
 	import type { InterviewSummaryPublic, InterviewType } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 	import TablePaginationFooter from '../../interviews/TablePaginationFooter.svelte';
 	import SortableHeader from '../../interviews/SortableHeader.svelte';

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 
 	let {
 		open = $bindable(),

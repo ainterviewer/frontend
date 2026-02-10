@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Synthesize, type TestSetupPublic } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 
 	let { test }: { test: TestSetupPublic } = $props();
 

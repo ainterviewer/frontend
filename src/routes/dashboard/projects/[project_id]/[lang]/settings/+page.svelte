@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Projects } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 	import { invalidateAll } from '$app/navigation';
 

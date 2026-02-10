@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Admin, type UserPublic } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 

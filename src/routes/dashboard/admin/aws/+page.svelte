@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Admin } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 	import type { Instance } from './types';
 

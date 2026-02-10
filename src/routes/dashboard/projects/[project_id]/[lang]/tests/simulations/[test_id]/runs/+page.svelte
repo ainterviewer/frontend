@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Synthesize } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import type { SynthesizeRequest } from '$lib/api/types.gen';
 	import type { PageData } from './$types';
 	import { auth } from '$lib/auth.svelte';

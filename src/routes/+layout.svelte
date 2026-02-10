@@ -1,6 +1,6 @@
 <script lang="ts">
 	import favicon from '$lib/assets/favicon.svg';
-	import { Toaster } from 'svelte-hot-french-toast';
+	import { Toaster } from 'svelte-sonner';
 	import '../app.css';
 	import '$lib/api/toast-interceptor';
 
@@ -12,7 +12,7 @@
 	<title>AInterviewer - AI-led Qualitative Interviews</title>
 </svelte:head>
 
-<Toaster />
+<Toaster position="top-center" richColors closeButton />
 
 <div>
 	{@render children()}

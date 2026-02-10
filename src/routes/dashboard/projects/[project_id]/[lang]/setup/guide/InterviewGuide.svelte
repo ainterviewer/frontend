@@ -8,7 +8,7 @@
 		QuestionOutput,
 		QuestionSectionQuestionOutput
 	} from '$lib/api/types.gen';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import {
 		DragDropProvider,

@@ -8,7 +8,7 @@
 		ProjectPublic
 	} from '$lib/api';
 	import { Default, Folders, Projects } from '$lib/api';
-	import toast from 'svelte-hot-french-toast';
+	import { toast } from 'svelte-sonner';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';

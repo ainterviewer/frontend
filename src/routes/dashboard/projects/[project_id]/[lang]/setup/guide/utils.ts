@@ -1,10 +1,10 @@
 import { Projects } from '$lib/api';
-import toast from 'svelte-hot-french-toast';
 import type {
 	QuestionOutput as ApiQuestion,
 	InterviewGuideOutput,
 	QuestionSectionQuestionOutput as QuestionSectionOutput
 } from '$lib/api/types.gen';
+import { toast } from 'svelte-sonner';
 import type { GuideQuestion, GuideSection } from './types';
 
 export function generateId() {
@@ -83,7 +83,7 @@ export async function saveGuide(
 			path: { project_id: projectId, lang: lang },
 			body: payload as any
 		});
-		// Notify success
+		toast.success('Guide saved');
 	} catch (e) {
 		console.error('Failed to save guide', e);
 		toast.error('Failed to save guide');
