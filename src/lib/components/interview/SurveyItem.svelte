@@ -27,6 +27,17 @@
 
 	let disabled = $state(false);
 
+	let hasAnswer = $derived.by(() => {
+		if (type === 'slider') return true;
+		if (type === 'radio') return otherSelected ? otherText.trim() !== '' : radioValue !== '';
+		if (type === 'number') return numberValue !== null;
+		if (type === 'date') return dateValue !== '';
+		// checkbox
+		const hasSelection = selectedValues.size > 0;
+		const hasOther = otherSelected && otherText.trim() !== '';
+		return hasSelection || hasOther;
+	});
+
 	let normalizedOptions = $derived(
 		options.map((opt: any) => {
 			if (typeof opt === 'object') {
@@ -241,8 +252,9 @@
 	{#if !disabled}
 		<div class="mt-2 flex justify-end">
 			<button
-				class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-gray-500 shadow-md transition-all hover:scale-110 hover:shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-98"
+				class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-98 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 disabled:hover:shadow-md"
 				onclick={sendAnswer}
+				disabled={!hasAnswer}
 				aria-label="Submit answer"
 			>
 				<i class="fa-solid fa-arrow-right"></i>
