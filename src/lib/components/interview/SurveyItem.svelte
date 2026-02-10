@@ -27,10 +27,17 @@
 
 	let disabled = $state(false);
 
+	let numberError = $derived.by(() => {
+		if (type !== 'number' || numberValue === null) return '';
+		if (min != null && numberValue < min) return `Must be at least ${min}`;
+		if (max != null && numberValue > max) return `Must be at most ${max}`;
+		return '';
+	});
+
 	let hasAnswer = $derived.by(() => {
 		if (type === 'slider') return true;
 		if (type === 'radio') return otherSelected ? otherText.trim() !== '' : radioValue !== '';
-		if (type === 'number') return numberValue !== null;
+		if (type === 'number') return numberValue !== null && numberError === '';
 		if (type === 'date') return dateValue !== '';
 		// checkbox
 		const hasSelection = selectedValues.size > 0;
@@ -165,7 +172,9 @@
 					max={max ?? undefined}
 					step={step ?? undefined}
 					{disabled}
-					class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
+					class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
+					class:focus:ring-red-500={numberError}
+					class:focus:border-red-500={numberError}
 					placeholder="Enter a number{min != null && max != null
 						? ` (${min}–${max})`
 						: min != null
@@ -174,6 +183,9 @@
 								? ` (max ${max})`
 								: ''}"
 				/>
+				{#if numberError}
+					<p class="mt-1 text-xs text-red-500">{numberError}</p>
+				{/if}
 			</div>
 		{:else if type === 'date'}
 			<div class="w-full px-2">
