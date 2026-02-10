@@ -133,7 +133,9 @@
 		{#if question.image || question.survey_item || question.conditions}
 			<div class="flex flex-wrap gap-2 pt-2">
 				{#if question.image}
-					<div class="w-full rounded-md border border-gray-200 bg-gray-50 text-sm">
+					<div
+						class="w-full rounded-md border border-l-4 border-gray-200 border-l-sky-500 bg-gray-50 text-sm"
+					>
 						<button
 							class="flex w-full cursor-pointer items-center gap-3 p-2"
 							onclick={() => (expandedImage = !expandedImage)}
@@ -215,7 +217,9 @@
 				{/if}
 
 				{#if question.survey_item}
-					<div class="w-full rounded-md border border-gray-200 bg-gray-50 text-sm">
+					<div
+						class="w-full rounded-md border border-l-4 border-gray-200 border-l-indigo-500 bg-gray-50 text-sm"
+					>
 						<button
 							class="flex w-full cursor-pointer items-center gap-3 p-2"
 							onclick={() => (expandedSurvey = !expandedSurvey)}
@@ -338,7 +342,9 @@
 				{/if}
 
 				{#if question.conditions}
-					<div class="w-full rounded-md border border-gray-200 bg-gray-50 text-sm">
+					<div
+						class="w-full rounded-md border border-l-4 border-gray-200 border-l-amber-600 bg-gray-50 text-sm"
+					>
 						<button
 							class="flex w-full cursor-pointer items-center gap-3 p-2"
 							onclick={() => (expandedCondition = !expandedCondition)}
