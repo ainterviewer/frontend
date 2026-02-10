@@ -1,6 +1,6 @@
 import { toast } from 'svelte-sonner';
 
-import { client } from './client.gen';
+import { client } from '../api/client.gen';
 
 client.interceptors.error.use((error, response, _request, _options) => {
 	if (typeof window === 'undefined') {

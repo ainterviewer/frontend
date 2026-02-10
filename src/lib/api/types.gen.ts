@@ -776,12 +776,6 @@ export type Image = {
 export type InterviewConfig = {
     default_language?: LanguageCode;
     /**
-     * Referer Id Key
-     *
-     * Key for the value of the id sent in the referer header
-     */
-    referer_id_key?: string | null;
-    /**
      * With Consent
      *
      * Whether to ask for consent before starting the interview
@@ -793,6 +787,18 @@ export type InterviewConfig = {
      * Whether to show a welcome message before starting the interview
      */
     with_welcome?: boolean;
+    /**
+     * With Audio
+     *
+     * Allows the respondents to record their answers as audio messages which are transcribed before send as answers to the AInterviewer.
+     */
+    with_audio?: boolean;
+    /**
+     * Referer Id Key
+     *
+     * Key for the value of the id sent in the referer header
+     */
+    referer_id_key?: string | null;
 };
 
 /**
@@ -2138,6 +2144,16 @@ export type ValidationError = {
      * Error Type
      */
     type: string;
+    /**
+     * Input
+     */
+    input?: unknown;
+    /**
+     * Context
+     */
+    ctx?: {
+        [key: string]: unknown;
+    };
 };
 
 /**
@@ -2188,7 +2204,7 @@ export type Welcome = {
 /**
  * Body_upload_image
  */
-export type FastapiCompatV2BodyUploadImage = {
+export type FastapiCompatV2BodyUploadImage1 = {
     /**
      * Primer
      */
@@ -3546,7 +3562,10 @@ export type GetGuideData = {
          * Project Id
          */
         project_id: string | null;
-        lang: LanguageCode;
+        /**
+         * Lang
+         */
+        lang: string;
     };
     query?: {
         /**
@@ -3582,7 +3601,10 @@ export type CreateGuideData = {
          * Project Id
          */
         project_id: string | null;
-        lang: LanguageCode;
+        /**
+         * Lang
+         */
+        lang: string;
     };
     query?: {
         /**
@@ -3616,7 +3638,10 @@ export type GenerateGuideData = {
          * Project Id
          */
         project_id: string | null;
-        lang: LanguageCode;
+        /**
+         * Lang
+         */
+        lang: string;
     };
     query?: {
         /**
@@ -3650,7 +3675,10 @@ export type GenerateGuideSectionData = {
          * Project Id
          */
         project_id: string | null;
-        lang: LanguageCode;
+        /**
+         * Lang
+         */
+        lang: string;
     };
     query?: {
         /**
@@ -3684,7 +3712,10 @@ export type GenerateSectionQuestionData = {
          * Project Id
          */
         project_id: string | null;
-        lang: LanguageCode;
+        /**
+         * Lang
+         */
+        lang: string;
     };
     query?: {
         /**
@@ -3712,7 +3743,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage;
+    body: FastapiCompatV2BodyUploadImage1;
     path: {
         /**
          * Project Id
@@ -3751,7 +3782,10 @@ export type GetInterviewAgentsData = {
          * Project Id
          */
         project_id: string | null;
-        lang: LanguageCode;
+        /**
+         * Lang
+         */
+        lang: string;
     };
     query?: {
         /**
@@ -3787,7 +3821,10 @@ export type CreateInterviewAgentsData = {
          * Project Id
          */
         project_id: string | null;
-        lang: LanguageCode;
+        /**
+         * Lang
+         */
+        lang: string;
     };
     query?: {
         /**
@@ -3889,7 +3926,10 @@ export type GetPromptsData = {
          * Project Id
          */
         project_id: string | null;
-        lang: LanguageCode;
+        /**
+         * Lang
+         */
+        lang: string;
     };
     query?: {
         /**
@@ -3923,7 +3963,10 @@ export type CreatePromptsData = {
          * Project Id
          */
         project_id: string | null;
-        lang: LanguageCode;
+        /**
+         * Lang
+         */
+        lang: string;
     };
     query?: {
         /**
@@ -3957,7 +4000,10 @@ export type GetConsentData = {
          * Project Id
          */
         project_id: string;
-        language: LanguageCode;
+        /**
+         * Language
+         */
+        language: string;
     };
     query?: never;
     url: '/api/projects/{project_id}/guide/consent/{language}';
@@ -3990,7 +4036,10 @@ export type CreateConsentData = {
          * Project Id
          */
         project_id: string | null;
-        language: LanguageCode;
+        /**
+         * Language
+         */
+        language: string;
     };
     query?: {
         /**
@@ -4024,7 +4073,10 @@ export type GetWelcomeData = {
          * Project Id
          */
         project_id: string;
-        language: LanguageCode;
+        /**
+         * Language
+         */
+        language: string;
     };
     query?: never;
     url: '/api/projects/{project_id}/guide/welcome/{language}';
@@ -4057,7 +4109,10 @@ export type CreateWelcomeData = {
          * Project Id
          */
         project_id: string | null;
-        language: LanguageCode;
+        /**
+         * Language
+         */
+        language: string;
     };
     query?: {
         /**
