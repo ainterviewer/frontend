@@ -232,7 +232,7 @@
 							<div class="min-w-0 flex-1 text-left">
 								<div class="font-medium text-gray-700">Survey Item</div>
 								<div class="text-xs text-gray-500">
-									{question.survey_item.type === 'number' || question.survey_item.type === 'date'
+									{question.survey_item.type === 'number' || question.survey_item.type === 'date' || question.survey_item.type === 'datetime' || question.survey_item.type === 'time' || question.survey_item.type === 'slider'
 										? question.survey_item.type
 										: `${question.survey_item.options.length} options (${question.survey_item.type})`}
 								</div>
@@ -262,24 +262,45 @@
 										<label class="mb-2 block text-gray-500">Type</label>
 										<select
 											class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-											bind:value={question.survey_item.type}
+											value={question.survey_item.type}
+											onchange={(e) => {
+												const type = (e.target as HTMLSelectElement).value;
+												if (type === 'radio' || type === 'checkbox') {
+													question.survey_item = { type, options: ['Option 1'] };
+												} else if (type === 'likert') {
+													question.survey_item = { type, options: ['Option 1'] };
+												} else if (type === 'slider') {
+													question.survey_item = { type };
+												} else if (type === 'number') {
+													question.survey_item = { type };
+												} else if (type === 'date') {
+													question.survey_item = { type };
+												} else if (type === 'datetime') {
+													question.survey_item = { type };
+												} else if (type === 'time') {
+													question.survey_item = { type };
+												}
+											}}
 										>
 											<option value="radio">Single Choice (Radio)</option>
 											<option value="checkbox">Multiple Choice (Checkbox)</option>
+											<option value="likert">Likert Scale</option>
 											<option value="slider">Slider</option>
 											<option value="number">Number</option>
 											<option value="date">Date</option>
+											<option value="datetime">Date & Time</option>
+											<option value="time">Time</option>
 										</select>
 									</div>
-									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox' || question.survey_item.type === 'slider'}
+									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox' || question.survey_item.type === 'likert'}
 										<div>
 											<label class="mb-2 block text-gray-500">Options</label>
 											<div class="space-y-1">
-												{#each question.survey_item.options as option, oIdx}
+												{#each question.survey_item.options as _, oIdx}
 													<div class="flex gap-1">
 														<input
 															class="flex-1 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-															bind:value={option.label}
+															bind:value={question.survey_item.options[oIdx]}
 															placeholder={`Option ${oIdx + 1}`}
 														/>
 														<button
@@ -291,7 +312,7 @@
 												{/each}
 												<button
 													class="mt-1 text-sm font-medium text-primary hover:underline"
-													onclick={() => question.survey_item?.options.push({ label: '' })}
+													onclick={() => question.survey_item?.options.push('')}
 													>+ Add Option</button
 												>
 											</div>
@@ -313,8 +334,20 @@
 											></HoverInfo>
 										</label>
 									{/if}
+									{#if question.survey_item.type === 'likert'}
+										<div>
+											<label class="mb-2 block text-gray-500">Display as</label>
+											<select
+												class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+												bind:value={question.survey_item.ui}
+											>
+												<option value="radio">Radio buttons</option>
+												<option value="slider">Slider</option>
+											</select>
+										</div>
+									{/if}
 									{#if question.survey_item.type === 'number'}
-										<div class="grid grid-cols-2 gap-2">
+										<div class="grid grid-cols-3 gap-2">
 											<div>
 												<label class="mb-2 block text-sm text-gray-500">Min</label>
 												<input
@@ -330,6 +363,124 @@
 													type="number"
 													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No max"
+													bind:value={question.survey_item.max}
+												/>
+											</div>
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Step</label>
+												<input
+													type="number"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													placeholder="No step"
+													bind:value={question.survey_item.step}
+												/>
+											</div>
+										</div>
+									{/if}
+									{#if question.survey_item.type === 'slider'}
+										<div class="grid grid-cols-2 gap-2">
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Min Label</label>
+												<input
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													placeholder="Min label..."
+													bind:value={question.survey_item.min_label}
+												/>
+											</div>
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Max Label</label>
+												<input
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													placeholder="Max label..."
+													bind:value={question.survey_item.max_label}
+												/>
+											</div>
+										</div>
+										<div class="grid grid-cols-3 gap-2">
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Min</label>
+												<input
+													type="number"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													placeholder="No min"
+													bind:value={question.survey_item.min}
+												/>
+											</div>
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Max</label>
+												<input
+													type="number"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													placeholder="No max"
+													bind:value={question.survey_item.max}
+												/>
+											</div>
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Step</label>
+												<input
+													type="number"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													placeholder="No step"
+													bind:value={question.survey_item.step}
+												/>
+											</div>
+										</div>
+									{/if}
+									{#if question.survey_item.type === 'date'}
+										<div class="grid grid-cols-2 gap-2">
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Min</label>
+												<input
+													type="date"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													bind:value={question.survey_item.min}
+												/>
+											</div>
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Max</label>
+												<input
+													type="date"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													bind:value={question.survey_item.max}
+												/>
+											</div>
+										</div>
+									{/if}
+									{#if question.survey_item.type === 'datetime'}
+										<div class="grid grid-cols-2 gap-2">
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Min</label>
+												<input
+													type="datetime-local"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													bind:value={question.survey_item.min}
+												/>
+											</div>
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Max</label>
+												<input
+													type="datetime-local"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													bind:value={question.survey_item.max}
+												/>
+											</div>
+										</div>
+									{/if}
+									{#if question.survey_item.type === 'time'}
+										<div class="grid grid-cols-2 gap-2">
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Min</label>
+												<input
+													type="time"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													bind:value={question.survey_item.min}
+												/>
+											</div>
+											<div>
+												<label class="mb-2 block text-sm text-gray-500">Max</label>
+												<input
+													type="time"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													bind:value={question.survey_item.max}
 												/>
 											</div>
@@ -419,6 +570,8 @@
 											{@const isNumericOrDate =
 												referencedQuestion?.survey_item?.type === 'number' ||
 												referencedQuestion?.survey_item?.type === 'date' ||
+												referencedQuestion?.survey_item?.type === 'datetime' ||
+												referencedQuestion?.survey_item?.type === 'time' ||
 												referencedQuestion?.survey_item?.type === 'slider'}
 											{@const hasSurveyOptions = referencedQuestion?.survey_item?.options?.length}
 
@@ -538,6 +691,18 @@
 																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 																					bind:value={evaluation.trigger_value}
 																				/>
+																			{:else if referencedQuestion?.survey_item?.type === 'datetime'}
+																				<input
+																					type="datetime-local"
+																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+																					bind:value={evaluation.trigger_value}
+																				/>
+																			{:else if referencedQuestion?.survey_item?.type === 'time'}
+																				<input
+																					type="time"
+																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+																					bind:value={evaluation.trigger_value}
+																				/>
 																			{:else if hasSurveyOptions}
 																				{@const selectedValues = condition.evaluation
 																					.filter((_, i) => i !== evalIdx)
@@ -550,9 +715,9 @@
 																					<option value="">Select an option...</option>
 																					{#each referencedQuestion.survey_item?.options || [] as option}
 																						<option
-																							value={option.label}
-																							disabled={selectedValues.includes(option.label)}
-																							>{option.label}</option
+																							value={option}
+																							disabled={selectedValues.includes(option)}
+																							>{option}</option
 																						>
 																					{/each}
 																				</select>
@@ -736,7 +901,7 @@
 									onclick={() => {
 										question.survey_item = {
 											type: 'radio',
-											options: [{ label: 'Option 1' }]
+											options: ['Option 1']
 										};
 										expandedSurvey = true;
 									}}
