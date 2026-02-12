@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Auth, type InterviewType } from '$lib/api';
+	import { Auth, type InterviewConfig, type InterviewType } from '$lib/api';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import { tick } from 'svelte';
 	import type { ChatClient } from '../../../routes/interview/chat.svelte';
@@ -12,7 +12,7 @@
 		chat: ChatClient;
 		lang: string;
 		interviewType: InterviewType;
-		imageUpload?: any;
+		interviewConfig: InterviewConfig;
 		helpTitle: string;
 		helpText: string;
 		exitTitle: string;
@@ -24,7 +24,7 @@
 		chat,
 		lang,
 		interviewType,
-		imageUpload,
+		interviewConfig,
 		helpTitle,
 		helpText,
 		exitTitle,
@@ -40,6 +40,8 @@
 	let showHelp = $state(false);
 	let showExit = $state(false);
 	let showRecordingOverlay = $state(false);
+
+	let imageUpload = $state(false);
 
 	// Auto-scroll logic
 	$effect(() => {
@@ -235,15 +237,19 @@
 			<div class="mt-1 hidden text-center text-xs text-gray-400 sm:block">
 				<span class="font-sans">ctrl</span>+<span class="font-bold">↵</span>
 			</div>
-			<div class="flex hidden">
+			<div class="flex" class:hidden={interviewConfig.with_audio}>
 				<button
 					type="button"
-					class="m-auto flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
+					class="
+          m-auto flex size-8 items-center justify-center rounded-md bg-center
+          bg-no-repeat p-0 text-gray-600 transition-colors hover:bg-gray-200
+					disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-white
+          "
 					onclick={() => (showRecordingOverlay = true)}
 					disabled={!chat.inputEnabled}
 					title="Record audio"
 				>
-					<i class="fas fa-microphone-lines text-lg text-gray-600"></i>
+					<i class="fas fa-microphone-lines text-lg"></i>
 				</button>
 			</div>
 		</div>

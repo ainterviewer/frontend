@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
-import type { InterviewType } from '$lib/api';
+import { Projects, type InterviewConfig, type InterviewType } from '$lib/api';
 
 export const load: PageLoad = ({ url }) => {
 	const project_id: string | null = url.searchParams.get('id');
@@ -8,6 +8,8 @@ export const load: PageLoad = ({ url }) => {
 	if (!project_id) {
 		redirect(303, '/');
 	}
+
+	const interviewConfig: InterviewConfig = Projects.getInterviewConfig({ path: { project_id } });
 
 	const lang: string = url.searchParams.get('lang') || 'en';
 	const interviewType: InterviewType | null = url.searchParams.get('interview_type');
@@ -18,6 +20,7 @@ export const load: PageLoad = ({ url }) => {
 		project_id,
 		lang,
 		interviewType,
-		experimentID
+		experimentID,
+		interviewConfig
 	};
 };

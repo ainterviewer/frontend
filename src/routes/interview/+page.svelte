@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { InterviewType, Welcome } from '$lib/api';
+	import type { InterviewConfig, InterviewType, Welcome } from '$lib/api';
 	import { Projects, type Consent } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, WelcomeModal } from '$lib/components/modals';
@@ -17,7 +17,7 @@
 		lang: string;
 		interviewType?: InterviewType;
 		experimentID?: string;
-		image_upload?: boolean;
+		interviewConfig: InterviewConfig;
 		help_title?: string;
 		help_text?: string;
 		exit_title?: string;
@@ -30,7 +30,7 @@
 	let projectId = $derived(data.project_id);
 	let lang = $derived(data.lang);
 	let interviewType = $derived(data.interviewType);
-	let imageUpload = $derived(data.image_upload);
+	const interviewConfig = $derived(data.interviewConfig);
 
 	// Help/Exit data
 	let helpTitle = $derived(data.help_title || 'Help');
@@ -224,7 +224,7 @@
 			{chat}
 			{lang}
 			{interviewType}
-			{imageUpload}
+			{interviewConfig}
 			{helpTitle}
 			{helpText}
 			{exitTitle}
