@@ -61,7 +61,6 @@
 			});
 
 			await loadTestRuns();
-			toast.success('Test started');
 		} catch (e) {
 			console.error('Failed to run test', e);
 			toast.error('Failed to run test');
