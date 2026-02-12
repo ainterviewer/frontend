@@ -362,6 +362,28 @@ export type BroadcastRequest = {
 };
 
 /**
+ * CheckboxItem
+ */
+export type CheckboxItem = {
+    /**
+     * Type
+     */
+    type?: 'checkbox';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Options
+     */
+    options: Array<string>;
+    /**
+     * With Other
+     */
+    with_other?: boolean;
+};
+
+/**
  * Collaborator
  */
 export type Collaborator = {
@@ -596,6 +618,50 @@ export type DailyInterviewCount = {
      * Completed Count
      */
     completed_count: number;
+};
+
+/**
+ * DateItem
+ */
+export type DateItem = {
+    /**
+     * Type
+     */
+    type?: 'date';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Min
+     */
+    min?: string | null;
+    /**
+     * Max
+     */
+    max?: string | null;
+};
+
+/**
+ * DatetimeItem
+ */
+export type DatetimeItem = {
+    /**
+     * Type
+     */
+    type?: 'datetime';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Min
+     */
+    min?: string | null;
+    /**
+     * Max
+     */
+    max?: string | null;
 };
 
 /**
@@ -1051,6 +1117,28 @@ export type LanguageDict = {
 };
 
 /**
+ * LikertItem
+ */
+export type LikertItem = {
+    /**
+     * Type
+     */
+    type?: 'likert';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Options
+     */
+    options: Array<string>;
+    /**
+     * Ui
+     */
+    ui?: 'radio' | 'slider';
+};
+
+/**
  * LoginData
  */
 export type LoginData = {
@@ -1248,7 +1336,26 @@ export type MessagePublic = {
      * Image
      */
     image?: Image | Array<Image> | null;
-    survey_item?: SurveyItem | null;
+    /**
+     * Survey Item
+     */
+    survey_item?: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     /**
      * Id
      */
@@ -1298,6 +1405,32 @@ export type MonitoringStats = {
      * Dropout Stats
      */
     dropout_stats: Array<DropoutPoint>;
+};
+
+/**
+ * NumberItem
+ */
+export type NumberItem = {
+    /**
+     * Type
+     */
+    type?: 'number';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Min
+     */
+    min?: number | number | null;
+    /**
+     * Max
+     */
+    max?: number | number | null;
+    /**
+     * Step
+     */
+    step?: number | number | null;
 };
 
 /**
@@ -1570,7 +1703,26 @@ export type QuestionInput = {
      * Variables that can be used in the question, ie. uuid. In case they are supplied, they will be filled in before the question is asked. The question should be formatted with Jinja2 style templating.
      */
     variables?: Array<string> | null;
-    survey_item?: SurveyItem | null;
+    /**
+     * Survey Item
+     */
+    survey_item?: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     /**
      * References
      */
@@ -1676,7 +1828,26 @@ export type QuestionOutput = {
      * Variables that can be used in the question, ie. uuid. In case they are supplied, they will be filled in before the question is asked. The question should be formatted with Jinja2 style templating.
      */
     variables?: Array<string> | null;
-    survey_item?: SurveyItem | null;
+    /**
+     * Survey Item
+     */
+    survey_item?: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     /**
      * References
      */
@@ -1795,6 +1966,28 @@ export type QuestionSectionQuestionOutput = {
 };
 
 /**
+ * RadioItem
+ */
+export type RadioItem = {
+    /**
+     * Type
+     */
+    type?: 'radio';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Options
+     */
+    options: Array<string>;
+    /**
+     * With Other
+     */
+    with_other?: boolean;
+};
+
+/**
  * Reference
  *
  * Create a reference to a previous answer, useful when refering back to a
@@ -1834,18 +2027,25 @@ export type SecurityConfig = {
 };
 
 /**
- * SurveyItem
+ * SliderItem
  */
-export type SurveyItem = {
-    type: SurveyItemType;
+export type SliderItem = {
     /**
-     * Options
+     * Type
      */
-    options: Array<string | SurveyOption>;
+    type?: 'slider';
     /**
      * Required
      */
     required?: boolean;
+    /**
+     * Min Label
+     */
+    min_label?: string | null;
+    /**
+     * Max Label
+     */
+    max_label?: string | null;
     /**
      * Min
      */
@@ -1858,41 +2058,6 @@ export type SurveyItem = {
      * Step
      */
     step?: number | number | null;
-    /**
-     * With Other
-     */
-    with_other?: boolean;
-};
-
-/**
- * SurveyItemType
- */
-export type SurveyItemType = 'radio' | 'checkbox' | 'slider' | 'number' | 'date' | 'datetime';
-
-/**
- * SurveyOption
- *
- * An option for a survey item.
- */
-export type SurveyOption = {
-    /**
-     * Label
-     *
-     * The label for the option, will be displayed in the ui.
-     */
-    label: string;
-    /**
-     * Value
-     *
-     * The value for the option, can be used as a point of reference later in the interview.
-     */
-    value?: string | null;
-    /**
-     * Tip
-     *
-     * A tip to show the interviewee when they hover over the option.
-     */
-    tip?: string | null;
 };
 
 /**
@@ -2008,6 +2173,28 @@ export type TestSetupPublic = {
  * TestType
  */
 export type TestType = 'shuffled_ai' | 'fixed_ai' | 'fixed_answers';
+
+/**
+ * TimeItem
+ */
+export type TimeItem = {
+    /**
+     * Type
+     */
+    type?: 'time';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Min
+     */
+    min?: string | null;
+    /**
+     * Max
+     */
+    max?: string | null;
+};
 
 /**
  * TimedMessage
@@ -2322,7 +2509,26 @@ export type OutgoingHistoryMessage = {
      * Image
      */
     image?: Image | Array<Image> | null;
-    survey_item?: SurveyItem | null;
+    /**
+     * Survey Item
+     */
+    survey_item?: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
 };
 
 /**
@@ -2347,7 +2553,26 @@ export type OutgoingMessage = {
      * Image
      */
     image?: Image | Array<Image> | null;
-    survey_item?: SurveyItem | null;
+    /**
+     * Survey Item
+     */
+    survey_item?: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     /**
      * Can Answer
      */
@@ -3857,14 +4082,9 @@ export type GetInterviewConfigData = {
         /**
          * Project Id
          */
-        project_id: string | null;
+        project_id: string;
     };
-    query?: {
-        /**
-         * Folder Id
-         */
-        folder_id?: string | null;
-    };
+    query?: never;
     url: '/api/projects/{project_id}/config';
 };
 
@@ -4743,62 +4963,6 @@ export type RunSyntheticTestErrors = {
 export type RunSyntheticTestError = RunSyntheticTestErrors[keyof RunSyntheticTestErrors];
 
 export type RunSyntheticTestResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type RenderConsentModalData = {
-    body?: never;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string;
-    };
-    query?: never;
-    url: '/api/projects/{project_id}/consent/render';
-};
-
-export type RenderConsentModalErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RenderConsentModalError = RenderConsentModalErrors[keyof RenderConsentModalErrors];
-
-export type RenderConsentModalResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type SetConsentData = {
-    body?: never;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string;
-    };
-    query?: never;
-    url: '/api/projects/{project_id}/welcome/render';
-};
-
-export type SetConsentErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type SetConsentError = SetConsentErrors[keyof SetConsentErrors];
-
-export type SetConsentResponses = {
     /**
      * Successful Response
      */
