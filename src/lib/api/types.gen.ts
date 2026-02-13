@@ -2303,6 +2303,16 @@ export type UpdateFixedAnswersRequest = {
 };
 
 /**
+ * UpdateFixedPersonasRequest
+ */
+export type UpdateFixedPersonasRequest = {
+    /**
+     * Fixed Personas
+     */
+    fixed_personas: Array<string>;
+};
+
+/**
  * UserCreate
  */
 export type UserCreate = {
@@ -4730,6 +4740,84 @@ export type UpdateBackgroundInfoErrors = {
 export type UpdateBackgroundInfoError = UpdateBackgroundInfoErrors[keyof UpdateBackgroundInfoErrors];
 
 export type UpdateBackgroundInfoResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetFixedPersonasData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Test Id
+         */
+        test_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/tests/{test_id}/fixed_personas';
+};
+
+export type GetFixedPersonasErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetFixedPersonasError = GetFixedPersonasErrors[keyof GetFixedPersonasErrors];
+
+export type GetFixedPersonasResponses = {
+    /**
+     * Response Get Fixed Personas
+     *
+     * Successful Response
+     */
+    200: Array<string>;
+};
+
+export type GetFixedPersonasResponse = GetFixedPersonasResponses[keyof GetFixedPersonasResponses];
+
+export type UpdateFixedPersonasData = {
+    body: UpdateFixedPersonasRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Test Id
+         */
+        test_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/tests/{test_id}/fixed_personas';
+};
+
+export type UpdateFixedPersonasErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateFixedPersonasError = UpdateFixedPersonasErrors[keyof UpdateFixedPersonasErrors];
+
+export type UpdateFixedPersonasResponses = {
     /**
      * Successful Response
      */
