@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { Monitoring } from '$lib/api';
-	import type { InterviewStatus, MonitoringStats } from '$lib/api/types.gen';
+	import type { HistogramBucket, InterviewStatus, MonitoringStats } from '$lib/api/types.gen';
 	import { max, min, sum } from 'd3-array';
 	import { format } from 'd3-format';
 	import { scaleOrdinal } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
-	import { Axis, BarChart, Chart, Circle, Group, PieChart, Svg, Text } from 'layerchart';
+	import { BarChart, PieChart, Text, Tooltip } from 'layerchart';
 	import { Tween } from 'svelte/motion';
 	import type { PageData } from './$types';
 
@@ -115,6 +115,33 @@
 		return filled;
 	});
 
+	let durationChartContext = $state<any>(null);
+	let durationBarBandwidth = $derived(
+		durationChartContext?.xScale?.bandwidth ? durationChartContext.xScale.bandwidth() : 0
+	);
+	let durationBarInsets = $derived({
+		left: durationBarBandwidth / 2,
+		right: -durationBarBandwidth / 2
+	});
+
+	let msgCountChartContext = $state<any>(null);
+	let msgCountBarBandwidth = $derived(
+		msgCountChartContext?.xScale?.bandwidth ? msgCountChartContext.xScale.bandwidth() : 0
+	);
+	let msgCountBarInsets = $derived({
+		left: msgCountBarBandwidth / 2,
+		right: -msgCountBarBandwidth / 2
+	});
+
+	let msgLenChartContext = $state<any>(null);
+	let msgLenBarBandwidth = $derived(
+		msgLenChartContext?.xScale?.bandwidth ? msgLenChartContext.xScale.bandwidth() : 0
+	);
+	let msgLenBarInsets = $derived({
+		left: msgLenBarBandwidth / 2,
+		right: -msgLenBarBandwidth / 2
+	});
+
 	const statusColorScale = scaleOrdinal(
 		['active', 'completed', 'inactive'],
 		['#e8dcb9', '#196858', '#94a3b8']
@@ -128,6 +155,28 @@
 		}
 		return `${Math.round(seconds / 60)}m`;
 	}
+
+	function addClosingTick(buckets: HistogramBucket[] | undefined | null): HistogramBucket[] {
+		if (!buckets || buckets.length === 0) return [];
+		if (buckets.length === 1) return buckets;
+
+		const step = buckets[buckets.length - 1].value - buckets[buckets.length - 2].value;
+		const last = buckets[buckets.length - 1];
+		const nextValue = last.value + step;
+
+		return [
+			...buckets,
+			{
+				value: nextValue,
+				count: 0,
+				label: `${nextValue}`
+			}
+		];
+	}
+
+	let durationHistogram = $derived(addClosingTick(stats?.duration_histogram));
+	let messageCountHistogram = $derived(addClosingTick(stats?.message_count_histogram));
+	let messageLengthHistogram = $derived(addClosingTick(stats?.message_length_histogram));
 
 	let dropoutStats = $derived.by(() => {
 		if (!stats?.dropout_stats) return [];
@@ -241,7 +290,7 @@
 		<!-- 2. Interviews by Status -->
 		<div class="bg-card rounded-lg border p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Interviews by Status</h3>
-			<div class="h-[300px] w-full">
+			<div class="h-75 w-full">
 				{#if interviewsByStatus.length > 0}
 					<PieChart
 						data={interviewsByStatus}
@@ -314,7 +363,7 @@
 		<!-- 5. Interviews Per Day -->
 		<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
 			<h3 class="mb-4 text-lg font-medium">Interviews Per Day</h3>
-			<div class="h-[300px] w-full">
+			<div class="h-75 w-full">
 				{#if interviewsOverTime.length > 0}
 					<BarChart
 						data={interviewsOverTime}
@@ -338,159 +387,151 @@
 			</div>
 		</div>
 
-		<!-- 6. Duration Stats (Box Plot / Range) -->
-		{#if stats?.duration_stats}
+		<!-- 6. Duration Histogram -->
+		{#if durationHistogram.length > 0}
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<h3 class="mb-4 text-lg font-medium">Duration (Seconds)</h3>
-				<div class="h-[120px] w-full">
-					<!-- Using a simple 1D chart for range -->
-					<Chart
-						xDomain={[0, stats.duration_stats.max_seconds * 1.1]}
-						padding={{ left: 20, right: 20, top: 40, bottom: 40 }}
+				<h3 class="mb-4 text-lg font-medium">Duration (seconds)</h3>
+				<div
+					class="shifted-bar-chart h-75 w-full"
+					style="--tooltip-offset: {durationBarBandwidth / 2}px"
+				>
+					<BarChart
+						bind:context={durationChartContext}
+						data={durationHistogram}
+						x="value"
+						y="count"
+						bandPadding={0}
+						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
+						props={{
+							xAxis: { classes: { tickLabel: 'text-xs' } },
+							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
+							bars: {
+								motion: { type: 'tween', duration: 300 },
+								insets: durationBarInsets
+							}
+						}}
 					>
-						{#snippet children({ context: { xScale } })}
-							<Svg>
-								<Axis placement="bottom" ticks={10} classes={{ tickLabel: 'text-xs' }} />
-								<Group x={0} y={20}>
-									<Circle
-										cx={xScale(stats!.duration_stats!.min_seconds)}
-										cy={0}
-										r={8}
-										class="fill-primary"
-									/>
-									<Text
-										x={xScale(stats!.duration_stats!.min_seconds)}
-										y={-15}
-										value="Min"
-										textAnchor="middle"
-										class="fill-foreground text-sm"
-									/>
-									<Circle
-										cx={xScale(stats!.duration_stats!.avg_seconds)}
-										cy={0}
-										r={8}
-										class="fill-primary"
-									/>
-									<Text
-										x={xScale(stats!.duration_stats!.avg_seconds)}
-										y={-15}
-										value="Avg"
-										textAnchor="middle"
-										class="fill-foreground text-sm"
-									/>
-									<Circle
-										cx={xScale(stats!.duration_stats!.max_seconds)}
-										cy={0}
-										r={8}
-										class="fill-primary"
-									/>
-									<Text
-										x={xScale(stats!.duration_stats!.max_seconds)}
-										y={-15}
-										value="Max"
-										textAnchor="middle"
-										class="fill-foreground text-sm"
-									/>
-								</Group>
-							</Svg>
+						{#snippet tooltip({ context })}
+							<Tooltip.Root>
+								{#snippet children({ data })}
+									<Tooltip.Header>{data.label}</Tooltip.Header>
+									<Tooltip.List>
+										<Tooltip.Item label="Interviews" value={context.y(data)} />
+									</Tooltip.List>
+								{/snippet}
+							</Tooltip.Root>
 						{/snippet}
-					</Chart>
-				</div>
-				<div class="grid grid-cols-3 gap-4 text-center text-sm">
-					<div>
-						<div class="text-muted-foreground">Min</div>
-						<div class="font-bold">{stats.duration_stats.min_seconds}s</div>
-					</div>
-					<div>
-						<div class="text-muted-foreground">Avg</div>
-						<div class="font-bold">{Math.round(stats.duration_stats.avg_seconds)}s</div>
-					</div>
-					<div>
-						<div class="text-muted-foreground">Max</div>
-						<div class="font-bold">{stats.duration_stats.max_seconds}s</div>
-					</div>
+					</BarChart>
 				</div>
 			</div>
 		{/if}
 
-		<!-- 7. Message Count Stats (Bullet / Range) -->
-		{#if stats?.message_count_stats}
+		<!-- 7. Message Count Histogram -->
+		{#if messageCountHistogram.length > 0}
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<h3 class="mb-4 text-lg font-medium">Message Count</h3>
-				<div class="h-[120px] w-full">
-					<Chart
-						xDomain={[0, stats.message_count_stats.max_messages * 1.1]}
-						padding={{ left: 20, right: 20, top: 40, bottom: 40 }}
+				<div
+					class="shifted-bar-chart h-75 w-full"
+					style="--tooltip-offset: {msgCountBarBandwidth / 2}px"
+				>
+					<BarChart
+						bind:context={msgCountChartContext}
+						data={messageCountHistogram}
+						x="value"
+						y="count"
+						bandPadding={0}
+						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
+						props={{
+							xAxis: { classes: { tickLabel: 'text-xs' } },
+							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
+							bars: {
+								insets: msgCountBarInsets,
+								motion: { type: 'tween', duration: 300 }
+							}
+						}}
 					>
-						{#snippet children({ context: { xScale } })}
-							<Svg>
-								<Axis placement="bottom" ticks={10} classes={{ tickLabel: 'text-xs' }} />
-								<Group x={0} y={20}>
-									<Circle
-										cx={xScale(stats!.message_count_stats!.min_messages)}
-										cy={0}
-										r={8}
-										class="fill-primary"
-									/>
-									<Text
-										x={xScale(stats!.message_count_stats!.min_messages)}
-										y={-15}
-										value="Min"
-										textAnchor="middle"
-										class="fill-foreground text-sm"
-									/>
-									<Circle
-										cx={xScale(stats!.message_count_stats!.avg_messages)}
-										cy={0}
-										r={8}
-										class="fill-primary"
-									/>
-									<Text
-										x={xScale(stats!.message_count_stats!.avg_messages)}
-										y={-15}
-										value="Avg"
-										textAnchor="middle"
-										class="fill-foreground text-sm"
-									/>
-									<Circle
-										cx={xScale(stats!.message_count_stats!.max_messages)}
-										cy={0}
-										r={8}
-										class="fill-primary"
-									/>
-									<Text
-										x={xScale(stats!.message_count_stats!.max_messages)}
-										y={-15}
-										value="Max"
-										textAnchor="middle"
-										class="fill-foreground text-sm"
-									/>
-								</Group>
-							</Svg>
+						{#snippet tooltip({ context })}
+							<Tooltip.Root>
+								{#snippet children({ data })}
+									<Tooltip.Header>{data.label}</Tooltip.Header>
+									<Tooltip.List>
+										<Tooltip.Item label="Interviews" value={context.y(data)} />
+									</Tooltip.List>
+								{/snippet}
+							</Tooltip.Root>
 						{/snippet}
-					</Chart>
-				</div>
-				<div class="grid grid-cols-3 gap-4 text-center text-sm">
-					<div>
-						<div class="text-muted-foreground">Min</div>
-						<div class="font-bold">{stats.message_count_stats.min_messages}</div>
-					</div>
-					<div>
-						<div class="text-muted-foreground">Avg</div>
-						<div class="font-bold">{Math.round(stats.message_count_stats.avg_messages)}</div>
-					</div>
-					<div>
-						<div class="text-muted-foreground">Max</div>
-						<div class="font-bold">{stats.message_count_stats.max_messages}</div>
-					</div>
+					</BarChart>
 				</div>
 			</div>
 		{/if}
-		<!-- 8. Dropout Stats -->
+
+		<!-- 8. Message Length Histogram -->
+		{#if messageLengthHistogram.length > 0}
+			<div class="bg-card rounded-lg border p-6 shadow-sm">
+				<h3 class="mb-4 text-lg font-medium">Message Length (characters)</h3>
+				<div
+					class="shifted-bar-chart h-75 w-full"
+					style="--tooltip-offset: {msgLenBarBandwidth / 2}px"
+				>
+					<BarChart
+						bind:context={msgLenChartContext}
+						data={messageLengthHistogram}
+						x="value"
+						y="count"
+						bandPadding={0}
+						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
+						props={{
+							xAxis: { classes: { tickLabel: 'text-xs' } },
+							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
+							bars: {
+								motion: { type: 'tween', duration: 300 },
+								insets: msgLenBarInsets
+							}
+						}}
+					>
+						{#snippet tooltip({ context })}
+							<Tooltip.Root>
+								{#snippet children({ data })}
+									<Tooltip.Header>{data.label}</Tooltip.Header>
+									<Tooltip.List>
+										<Tooltip.Item label="Messages" value={context.y(data)} />
+									</Tooltip.List>
+								{/snippet}
+							</Tooltip.Root>
+						{/snippet}
+					</BarChart>
+				</div>
+			</div>
+		{/if}
+
+		<!-- 9. Interviews by Time of Day -->
+		{#if stats?.interviews_by_time_of_day && stats.interviews_by_time_of_day.length > 0}
+			<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
+				<h3 class="mb-4 text-lg font-medium">Interviews by Time of Day</h3>
+				<div class="h-75 w-full">
+					<BarChart
+						data={stats.interviews_by_time_of_day.map((d) => ({
+							...d,
+							label: d.time
+						}))}
+						x="label"
+						y="count"
+						series={[{ key: 'count', label: 'Interviews', color: '#196858' }]}
+						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
+						props={{
+							xAxis: { classes: { tickLabel: 'text-xs' } },
+							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
+							bars: { motion: { type: 'tween', duration: 300 } }
+						}}
+					/>
+				</div>
+			</div>
+		{/if}
+		<!-- 10. Dropout Stats -->
 		{#if dropoutStats.length > 0}
 			<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
 				<h3 class="mb-4 text-lg font-medium">Dropout Analysis</h3>
-				<div class="h-[300px] w-full">
+				<div class="h-75 w-full">
 					<BarChart
 						data={dropoutStats}
 						x="label"
@@ -519,3 +560,13 @@
 		{/if}
 	</div>
 {/if}
+
+<style>
+	:global(.shifted-bar-chart .lc-tooltip-rects-g) {
+		transform: translateX(var(--tooltip-offset));
+	}
+
+	:global(.shifted-bar-chart .lc-highlight-area) {
+		transform: translateX(var(--tooltip-offset));
+	}
+</style>

@@ -797,6 +797,26 @@ export type HttpValidationError = {
 };
 
 /**
+ * HistogramBucket
+ *
+ * A value-count pair for histogram use.
+ */
+export type HistogramBucket = {
+    /**
+     * Value
+     */
+    value: number;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Label
+     */
+    label: string;
+};
+
+/**
  * Image
  *
  * An image to show the interviewee
@@ -1080,6 +1100,20 @@ export type InterviewSummaryPublic = {
      * Messages
      */
     messages: Array<MessagePublic>;
+};
+
+/**
+ * InterviewTimeOfDayCount
+ */
+export type InterviewTimeOfDayCount = {
+    /**
+     * Time
+     */
+    time: string;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 /**
@@ -1399,8 +1433,24 @@ export type MonitoringStats = {
      * Interviews Over Time
      */
     interviews_over_time: Array<DailyInterviewCount>;
+    /**
+     * Interviews By Time Of Day
+     */
+    interviews_by_time_of_day: Array<InterviewTimeOfDayCount>;
     duration_stats: InterviewDurationStats | null;
     message_count_stats: MessageCountStats | null;
+    /**
+     * Duration Histogram
+     */
+    duration_histogram: Array<HistogramBucket>;
+    /**
+     * Message Count Histogram
+     */
+    message_count_histogram: Array<HistogramBucket>;
+    /**
+     * Message Length Histogram
+     */
+    message_length_histogram: Array<HistogramBucket>;
     /**
      * Dropout Stats
      */
@@ -2039,6 +2089,14 @@ export type SliderItem = {
      */
     required?: boolean;
     /**
+     * Min
+     */
+    min: number | number;
+    /**
+     * Max
+     */
+    max: number | number;
+    /**
      * Min Label
      */
     min_label?: string | null;
@@ -2046,14 +2104,6 @@ export type SliderItem = {
      * Max Label
      */
     max_label?: string | null;
-    /**
-     * Min
-     */
-    min?: number | number | null;
-    /**
-     * Max
-     */
-    max?: number | number | null;
     /**
      * Step
      */
