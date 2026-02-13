@@ -1129,7 +1129,10 @@ export type IntervieweeCreate = {
      * Interview Id
      */
     interview_id: string;
-    interview_subject: InterviewSubject;
+    /**
+     * Interview Subject
+     */
+    interview_subject: InterviewSubject | string;
 };
 
 /**
@@ -2217,6 +2220,10 @@ export type TestSetupPublic = {
      * Fixed Answers
      */
     fixed_answers?: Array<string> | null;
+    /**
+     * Fixed Personas
+     */
+    fixed_personas?: Array<string> | null;
 };
 
 /**
