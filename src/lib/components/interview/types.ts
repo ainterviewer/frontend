@@ -1,4 +1,6 @@
-import type { SurveyItem } from '$lib/api';
+import type { MessagePublic } from '$lib/api';
+
+export type SurveyItemUnion = NonNullable<MessagePublic['survey_item']>;
 export type MessageType = 'sent' | 'received' | 'system';
 
 export interface Message {
@@ -7,7 +9,7 @@ export interface Message {
 	type: MessageType;
 	message_id?: number | string;
 	feedback?: 'positive' | 'negative' | null;
-	survey_item?: SurveyItem;
+	survey_item?: SurveyItemUnion | null;
 	image?: { data: string; alt?: string; primer?: string };
 	audio?: { blob: Blob; duration: number };
 	can_answer?: boolean;
