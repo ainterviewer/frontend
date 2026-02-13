@@ -44,14 +44,13 @@
 			description:
 				'Write predefined answers to every main question, the system then automatically generates follow up questions where relevant'
 		},
-		// FIXME:
-		// {
-		// 	type: 'fixed_ai',
-		// 	label: 'Fixed AI Personas',
-		// 	icon: 'fa-user-pen',
-		// 	description:
-		// 		'Define different personas based on our template, which will then be used to generate the answers.'
-		// },
+		{
+			type: 'fixed_ai',
+			label: 'Fixed AI Personas',
+			icon: 'fa-user-pen',
+			description:
+				'Define different personas based on our template, which will then be used to generate the answers.'
+		},
 		{
 			type: 'shuffled_ai',
 			label: 'Shuffled AI Respondents',

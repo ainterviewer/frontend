@@ -40,6 +40,19 @@ export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 			} catch (e) {
 				console.warn('Failed to fetch fixed answers', e);
 			}
+		} else if (test.type === 'fixed_ai') {
+			try {
+				const personasResponse = await Synthesize.getFixedPersonas({
+					auth: token,
+					fetch,
+					path: { project_id, test_id }
+				});
+				if (personasResponse.data) {
+					test.fixed_personas = personasResponse.data as string[];
+				}
+			} catch (e) {
+				console.warn('Failed to fetch fixed personas', e);
+			}
 		} else if (test.type === 'shuffled_ai') {
 			try {
 				const bgInfoResponse = await Synthesize.getBackgroundInfo({
