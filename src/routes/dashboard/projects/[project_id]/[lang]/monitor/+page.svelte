@@ -627,6 +627,12 @@
 		transform: translateX(var(--tooltip-offset));
 	}
 
+	:global(.shifted-bar-chart .lc-tooltip-rects-g > rect:last-child),
+	:global(.shifted-bar-chart .lc-tooltip-rects-g > path:last-child) {
+		pointer-events: none;
+		opacity: 0;
+	}
+
 	:global(.shifted-bar-chart .lc-highlight-area) {
 		transform: translateX(var(--tooltip-offset));
 	}
