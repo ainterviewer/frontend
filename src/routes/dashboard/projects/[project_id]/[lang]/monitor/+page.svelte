@@ -142,6 +142,15 @@
 		right: -msgLenBarBandwidth / 2
 	});
 
+	let todChartContext = $state<any>(null);
+	let todBarBandwidth = $derived(
+		todChartContext?.xScale?.bandwidth ? todChartContext.xScale.bandwidth() : 0
+	);
+	let todBarInsets = $derived({
+		left: todBarBandwidth / 2,
+		right: -todBarBandwidth / 2
+	});
+
 	const statusColorScale = scaleOrdinal(
 		['active', 'completed', 'inactive'],
 		['#e8dcb9', '#196858', '#94a3b8']
@@ -177,6 +186,22 @@
 	let durationHistogram = $derived(addClosingTick(stats?.duration_histogram));
 	let messageCountHistogram = $derived(addClosingTick(stats?.message_count_histogram));
 	let messageLengthHistogram = $derived(addClosingTick(stats?.message_length_histogram));
+
+	let timeOfDayHistogram = $derived.by(() => {
+		if (!stats?.interviews_by_time_of_day || stats.interviews_by_time_of_day.length === 0)
+			return [];
+		// Fill all 24 hours and add closing tick at hour 24
+		const map = new Map(stats.interviews_by_time_of_day.map((d) => [Number(d.time), d.count]));
+		const buckets = [];
+		for (let h = 0; h <= 24; h++) {
+			buckets.push({
+				value: h,
+				count: h === 24 ? 0 : (map.get(h) ?? 0),
+				label: `${String(h).padStart(2, '0')}:00`
+			});
+		}
+		return buckets;
+	});
 
 	let dropoutStats = $derived.by(() => {
 		if (!stats?.dropout_stats) return [];
@@ -505,25 +530,40 @@
 		{/if}
 
 		<!-- 9. Interviews by Time of Day -->
-		{#if stats?.interviews_by_time_of_day && stats.interviews_by_time_of_day.length > 0}
-			<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
+		{#if timeOfDayHistogram.length > 0}
+			<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm">
 				<h3 class="mb-4 text-lg font-medium">Interviews by Time of Day</h3>
-				<div class="h-75 w-full">
+				<div
+					class="shifted-bar-chart h-75 w-full"
+					style="--tooltip-offset: {todBarBandwidth / 2}px"
+				>
 					<BarChart
-						data={stats.interviews_by_time_of_day.map((d) => ({
-							...d,
-							label: d.time
-						}))}
-						x="label"
+						bind:context={todChartContext}
+						data={timeOfDayHistogram}
+						x="value"
 						y="count"
-						series={[{ key: 'count', label: 'Interviews', color: '#196858' }]}
+						bandPadding={0}
 						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
 						props={{
 							xAxis: { classes: { tickLabel: 'text-xs' } },
 							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-							bars: { motion: { type: 'tween', duration: 300 } }
+							bars: {
+								motion: { type: 'tween', duration: 300 },
+								insets: todBarInsets
+							}
 						}}
-					/>
+					>
+						{#snippet tooltip({ context })}
+							<Tooltip.Root>
+								{#snippet children({ data })}
+									<Tooltip.Header>{data.label}</Tooltip.Header>
+									<Tooltip.List>
+										<Tooltip.Item label="Interviews" value={context.y(data)} />
+									</Tooltip.List>
+								{/snippet}
+							</Tooltip.Root>
+						{/snippet}
+					</BarChart>
 				</div>
 			</div>
 		{/if}
