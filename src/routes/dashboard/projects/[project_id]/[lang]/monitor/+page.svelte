@@ -5,7 +5,7 @@
 	import { format } from 'd3-format';
 	import { scaleOrdinal } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
-	import { BarChart, PieChart, Text, Tooltip } from 'layerchart';
+	import { BarChart, Bars, PieChart, Text, Tooltip } from 'layerchart';
 	import { Tween } from 'svelte/motion';
 	import type { PageData } from './$types';
 
@@ -183,9 +183,17 @@
 		];
 	}
 
+	function stripClosingBar<T>(buckets: T[] | undefined | null): T[] {
+		if (!buckets || buckets.length <= 1) return buckets ?? [];
+		return buckets.slice(0, -1);
+	}
+
 	let durationHistogram = $derived(addClosingTick(stats?.duration_histogram));
 	let messageCountHistogram = $derived(addClosingTick(stats?.message_count_histogram));
 	let messageLengthHistogram = $derived(addClosingTick(stats?.message_length_histogram));
+	let durationHistogramBars = $derived.by(() => stripClosingBar(durationHistogram));
+	let messageCountHistogramBars = $derived.by(() => stripClosingBar(messageCountHistogram));
+	let messageLengthHistogramBars = $derived.by(() => stripClosingBar(messageLengthHistogram));
 
 	let timeOfDayHistogram = $derived.by(() => {
 		if (!stats?.interviews_by_time_of_day || stats.interviews_by_time_of_day.length === 0)
@@ -202,6 +210,7 @@
 		}
 		return buckets;
 	});
+	let timeOfDayHistogramBars = $derived.by(() => stripClosingBar(timeOfDayHistogram));
 
 	let dropoutStats = $derived.by(() => {
 		if (!stats?.dropout_stats) return [];
@@ -436,6 +445,9 @@
 							}
 						}}
 					>
+						{#snippet marks({ getBarsProps })}
+							<Bars {...getBarsProps(0)} data={durationHistogramBars} />
+						{/snippet}
 						{#snippet tooltip({ context })}
 							<Tooltip.Root>
 								{#snippet children({ data })}
@@ -475,6 +487,9 @@
 							}
 						}}
 					>
+						{#snippet marks({ getBarsProps })}
+							<Bars {...getBarsProps(0)} data={messageCountHistogramBars} />
+						{/snippet}
 						{#snippet tooltip({ context })}
 							<Tooltip.Root>
 								{#snippet children({ data })}
@@ -514,6 +529,9 @@
 							}
 						}}
 					>
+						{#snippet marks({ getBarsProps })}
+							<Bars {...getBarsProps(0)} data={messageLengthHistogramBars} />
+						{/snippet}
 						{#snippet tooltip({ context })}
 							<Tooltip.Root>
 								{#snippet children({ data })}
@@ -553,6 +571,9 @@
 							}
 						}}
 					>
+						{#snippet marks({ getBarsProps })}
+							<Bars {...getBarsProps(0)} data={timeOfDayHistogramBars} />
+						{/snippet}
 						{#snippet tooltip({ context })}
 							<Tooltip.Root>
 								{#snippet children({ data })}
