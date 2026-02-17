@@ -208,6 +208,20 @@ export type AnnotationValuePublic = {
 export type AnswerLength = 'short' | 'medium' | 'long';
 
 /**
+ * AssistanceSessionToken
+ */
+export type AssistanceSessionToken = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Session Id
+     */
+    session_id: string;
+};
+
+/**
  * BackgroundInfoOptions
  *
  * Dataclass representing the possible values for the background info of the synthetic agents
@@ -331,6 +345,17 @@ export type BodyCreateWelcome = {
      * Video
      */
     video?: Blob | File | null;
+};
+
+/**
+ * Body_send_chat
+ */
+export type BodySendChat = {
+    /**
+     * Prompt
+     */
+    prompt: string;
+    assistance_session: AssistanceSessionToken | null;
 };
 
 /**
@@ -1393,6 +1418,10 @@ export type MessagePublic = {
     } & DatetimeItem) | ({
         type: 'time';
     } & TimeItem) | null;
+    /**
+     * Skipped By Condition
+     */
+    skipped_by_condition?: boolean;
     /**
      * Id
      */
@@ -2507,6 +2536,26 @@ export type AuthToken = {
 };
 
 /**
+ * ChatMessage
+ *
+ * Format of messages sent to the browser.
+ */
+export type ChatMessage = {
+    /**
+     * Role
+     */
+    role: 'user' | 'model';
+    /**
+     * Timestamp
+     */
+    timestamp: string;
+    /**
+     * Content
+     */
+    content: string;
+};
+
+/**
  * CustomTokens
  */
 export type CustomTokens = '<|endofprobe|>' | '<|endofsection|>' | '<|endofinterview|>' | '<|skipquestion|>' | '<|skipsection|>' | '<|noanswer|>' | '<|restartinterview|>';
@@ -3219,6 +3268,83 @@ export type GetProjectMonitoringStatsResponses = {
 };
 
 export type GetProjectMonitoringStatsResponse = GetProjectMonitoringStatsResponses[keyof GetProjectMonitoringStatsResponses];
+
+export type GetChatData = {
+    /**
+     * Assistance Session
+     */
+    body: AssistanceSessionToken | null;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Lang
+         */
+        lang: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/assistance/{project_id}/{lang}/chat/';
+};
+
+export type GetChatErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetChatError = GetChatErrors[keyof GetChatErrors];
+
+export type GetChatResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type SendChatData = {
+    body: BodySendChat;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Lang
+         */
+        lang: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/assistance/{project_id}/{lang}/chat/';
+};
+
+export type SendChatErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SendChatError = SendChatErrors[keyof SendChatErrors];
+
+export type SendChatResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type GetExperimentsData = {
     body?: never;
