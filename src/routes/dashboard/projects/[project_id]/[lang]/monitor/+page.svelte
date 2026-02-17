@@ -6,15 +6,22 @@
 	import { scaleOrdinal } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
 	import { BarChart, PieChart, Text } from 'layerchart';
-	import HistogramChart from './HistogramChart.svelte';
 	import { Tween } from 'svelte/motion';
 	import type { PageData } from './$types';
+	import HistogramChart from './HistogramChart.svelte';
+	import { SvelteDate } from 'svelte/reactivity';
 
 	let { data }: { data: PageData } = $props();
 
 	let stats = $state<MonitoringStats | null>(null);
-	let loading = $state(true);
 	let error = $state<string | null>(null);
+
+	const statusColorScale = scaleOrdinal(
+		['active', 'completed', 'inactive'],
+		['#e8dcb9', '#196858', '#94a3b8']
+	);
+	const formatNumber = format(',');
+	const formatPercent = format('.1%');
 
 	async function fetchStats() {
 		const { data: statsData, error: fetchError } = await Monitoring.getProjectMonitoringStats({
@@ -25,12 +32,10 @@
 
 		if (fetchError) {
 			error = 'Failed to load monitoring stats';
-			loading = false;
 			return;
 		}
 
 		stats = statsData;
-		loading = false;
 	}
 
 	$effect(() => {
@@ -92,7 +97,7 @@
 		if (!minDate || !maxDate) return items;
 
 		const filled = [];
-		const current = new Date(minDate);
+		const current = new SvelteDate(minDate);
 		const end = new Date(maxDate);
 		const itemMap = new Map(items.map((d) => [d.date.toISOString().slice(0, 10), d]));
 
@@ -115,14 +120,6 @@
 
 		return filled;
 	});
-
-
-	const statusColorScale = scaleOrdinal(
-		['active', 'completed', 'inactive'],
-		['#e8dcb9', '#196858', '#94a3b8']
-	);
-	const formatNumber = format(',');
-	const formatPercent = format('.1%');
 
 	function formatDuration(seconds: number): string {
 		if (seconds >= 3600) {
@@ -441,4 +438,3 @@
 		{/if}
 	</div>
 {/if}
-
