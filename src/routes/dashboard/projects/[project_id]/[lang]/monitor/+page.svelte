@@ -5,7 +5,8 @@
 	import { format } from 'd3-format';
 	import { scaleOrdinal } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
-	import { BarChart, Bars, PieChart, Text, Tooltip } from 'layerchart';
+	import { BarChart, PieChart, Text } from 'layerchart';
+	import HistogramChart from './HistogramChart.svelte';
 	import { Tween } from 'svelte/motion';
 	import type { PageData } from './$types';
 
@@ -115,41 +116,6 @@
 		return filled;
 	});
 
-	let durationChartContext = $state<any>(null);
-	let durationBarBandwidth = $derived(
-		durationChartContext?.xScale?.bandwidth ? durationChartContext.xScale.bandwidth() : 0
-	);
-	let durationBarInsets = $derived({
-		left: durationBarBandwidth / 2,
-		right: -durationBarBandwidth / 2
-	});
-
-	let msgCountChartContext = $state<any>(null);
-	let msgCountBarBandwidth = $derived(
-		msgCountChartContext?.xScale?.bandwidth ? msgCountChartContext.xScale.bandwidth() : 0
-	);
-	let msgCountBarInsets = $derived({
-		left: msgCountBarBandwidth / 2,
-		right: -msgCountBarBandwidth / 2
-	});
-
-	let msgLenChartContext = $state<any>(null);
-	let msgLenBarBandwidth = $derived(
-		msgLenChartContext?.xScale?.bandwidth ? msgLenChartContext.xScale.bandwidth() : 0
-	);
-	let msgLenBarInsets = $derived({
-		left: msgLenBarBandwidth / 2,
-		right: -msgLenBarBandwidth / 2
-	});
-
-	let todChartContext = $state<any>(null);
-	let todBarBandwidth = $derived(
-		todChartContext?.xScale?.bandwidth ? todChartContext.xScale.bandwidth() : 0
-	);
-	let todBarInsets = $derived({
-		left: todBarBandwidth / 2,
-		right: -todBarBandwidth / 2
-	});
 
 	const statusColorScale = scaleOrdinal(
 		['active', 'completed', 'inactive'],
@@ -183,17 +149,9 @@
 		];
 	}
 
-	function stripClosingBar<T>(buckets: T[] | undefined | null): T[] {
-		if (!buckets || buckets.length <= 1) return buckets ?? [];
-		return buckets.slice(0, -1);
-	}
-
 	let durationHistogram = $derived(addClosingTick(stats?.duration_histogram));
 	let messageCountHistogram = $derived(addClosingTick(stats?.message_count_histogram));
 	let messageLengthHistogram = $derived(addClosingTick(stats?.message_length_histogram));
-	let durationHistogramBars = $derived.by(() => stripClosingBar(durationHistogram));
-	let messageCountHistogramBars = $derived.by(() => stripClosingBar(messageCountHistogram));
-	let messageLengthHistogramBars = $derived.by(() => stripClosingBar(messageLengthHistogram));
 
 	let timeOfDayHistogram = $derived.by(() => {
 		if (!stats?.interviews_by_time_of_day || stats.interviews_by_time_of_day.length === 0)
@@ -210,8 +168,6 @@
 		}
 		return buckets;
 	});
-	let timeOfDayHistogramBars = $derived.by(() => stripClosingBar(timeOfDayHistogram));
-
 	let dropoutStats = $derived.by(() => {
 		if (!stats?.dropout_stats) return [];
 
@@ -394,7 +350,7 @@
 	</div>
 
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-		<!-- 5. Interviews Per Day -->
+		<!-- 3. Interviews Per Day -->
 		<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
 			<h3 class="mb-4 text-lg font-medium">Interviews Per Day</h3>
 			<div class="h-75 w-full">
@@ -421,174 +377,38 @@
 			</div>
 		</div>
 
-		<!-- 6. Duration Histogram -->
-		{#if durationHistogram.length > 0}
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<h3 class="mb-4 text-lg font-medium">Duration (seconds)</h3>
-				<div
-					class="shifted-bar-chart h-75 w-full"
-					style="--tooltip-offset: {durationBarBandwidth / 2}px"
-				>
-					<BarChart
-						bind:context={durationChartContext}
-						data={durationHistogram}
-						x="value"
-						y="count"
-						bandPadding={0}
-						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
-						props={{
-							xAxis: { classes: { tickLabel: 'text-xs' } },
-							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-							bars: {
-								motion: { type: 'tween', duration: 300 },
-								insets: durationBarInsets
-							}
-						}}
-					>
-						{#snippet marks({ getBarsProps })}
-							<Bars {...getBarsProps(0)} data={durationHistogramBars} />
-						{/snippet}
-						{#snippet tooltip({ context })}
-							<Tooltip.Root>
-								{#snippet children({ data })}
-									<Tooltip.Header>{data.label}</Tooltip.Header>
-									<Tooltip.List>
-										<Tooltip.Item label="Interviews" value={context.y(data)} />
-									</Tooltip.List>
-								{/snippet}
-							</Tooltip.Root>
-						{/snippet}
-					</BarChart>
-				</div>
-			</div>
-		{/if}
-
-		<!-- 7. Message Count Histogram -->
-		{#if messageCountHistogram.length > 0}
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<h3 class="mb-4 text-lg font-medium">Message Count</h3>
-				<div
-					class="shifted-bar-chart h-75 w-full"
-					style="--tooltip-offset: {msgCountBarBandwidth / 2}px"
-				>
-					<BarChart
-						bind:context={msgCountChartContext}
-						data={messageCountHistogram}
-						x="value"
-						y="count"
-						bandPadding={0}
-						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
-						props={{
-							xAxis: { classes: { tickLabel: 'text-xs' } },
-							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-							bars: {
-								insets: msgCountBarInsets,
-								motion: { type: 'tween', duration: 300 }
-							}
-						}}
-					>
-						{#snippet marks({ getBarsProps })}
-							<Bars {...getBarsProps(0)} data={messageCountHistogramBars} />
-						{/snippet}
-						{#snippet tooltip({ context })}
-							<Tooltip.Root>
-								{#snippet children({ data })}
-									<Tooltip.Header>{data.label}</Tooltip.Header>
-									<Tooltip.List>
-										<Tooltip.Item label="Interviews" value={context.y(data)} />
-									</Tooltip.List>
-								{/snippet}
-							</Tooltip.Root>
-						{/snippet}
-					</BarChart>
-				</div>
-			</div>
-		{/if}
-
-		<!-- 8. Message Length Histogram -->
-		{#if messageLengthHistogram.length > 0}
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<h3 class="mb-4 text-lg font-medium">Message Length (characters)</h3>
-				<div
-					class="shifted-bar-chart h-75 w-full"
-					style="--tooltip-offset: {msgLenBarBandwidth / 2}px"
-				>
-					<BarChart
-						bind:context={msgLenChartContext}
-						data={messageLengthHistogram}
-						x="value"
-						y="count"
-						bandPadding={0}
-						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
-						props={{
-							xAxis: { classes: { tickLabel: 'text-xs' } },
-							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-							bars: {
-								motion: { type: 'tween', duration: 300 },
-								insets: msgLenBarInsets
-							}
-						}}
-					>
-						{#snippet marks({ getBarsProps })}
-							<Bars {...getBarsProps(0)} data={messageLengthHistogramBars} />
-						{/snippet}
-						{#snippet tooltip({ context })}
-							<Tooltip.Root>
-								{#snippet children({ data })}
-									<Tooltip.Header>{data.label}</Tooltip.Header>
-									<Tooltip.List>
-										<Tooltip.Item label="Messages" value={context.y(data)} />
-									</Tooltip.List>
-								{/snippet}
-							</Tooltip.Root>
-						{/snippet}
-					</BarChart>
-				</div>
-			</div>
-		{/if}
-
-		<!-- 9. Interviews by Time of Day -->
+		<!-- 4. Interviews by Time of Day -->
 		{#if timeOfDayHistogram.length > 0}
 			<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm">
 				<h3 class="mb-4 text-lg font-medium">Interviews by Time of Day</h3>
-				<div
-					class="shifted-bar-chart h-75 w-full"
-					style="--tooltip-offset: {todBarBandwidth / 2}px"
-				>
-					<BarChart
-						bind:context={todChartContext}
-						data={timeOfDayHistogram}
-						x="value"
-						y="count"
-						bandPadding={0}
-						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
-						props={{
-							xAxis: { classes: { tickLabel: 'text-xs' } },
-							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-							bars: {
-								motion: { type: 'tween', duration: 300 },
-								insets: todBarInsets
-							}
-						}}
-					>
-						{#snippet marks({ getBarsProps })}
-							<Bars {...getBarsProps(0)} data={timeOfDayHistogramBars} />
-						{/snippet}
-						{#snippet tooltip({ context })}
-							<Tooltip.Root>
-								{#snippet children({ data })}
-									<Tooltip.Header>{data.label}</Tooltip.Header>
-									<Tooltip.List>
-										<Tooltip.Item label="Interviews" value={context.y(data)} />
-									</Tooltip.List>
-								{/snippet}
-							</Tooltip.Root>
-						{/snippet}
-					</BarChart>
-				</div>
+				<HistogramChart data={timeOfDayHistogram} />
 			</div>
 		{/if}
-		<!-- 10. Dropout Stats -->
+		<!-- 5. Duration Histogram -->
+		{#if durationHistogram.length > 0}
+			<div class="bg-card rounded-lg border p-6 shadow-sm">
+				<h3 class="mb-4 text-lg font-medium">Duration (seconds)</h3>
+				<HistogramChart data={durationHistogram} />
+			</div>
+		{/if}
+
+		<!-- 6. Message Count Histogram -->
+		{#if messageCountHistogram.length > 0}
+			<div class="bg-card rounded-lg border p-6 shadow-sm">
+				<h3 class="mb-4 text-lg font-medium">Message Count</h3>
+				<HistogramChart data={messageCountHistogram} />
+			</div>
+		{/if}
+
+		<!-- 7. Message Length Histogram -->
+		{#if messageLengthHistogram.length > 0}
+			<div class="bg-card rounded-lg border p-6 shadow-sm">
+				<h3 class="mb-4 text-lg font-medium">Message Length (characters)</h3>
+				<HistogramChart data={messageLengthHistogram} tooltipLabel="Messages" />
+			</div>
+		{/if}
+
+		<!-- 8. Dropout Stats -->
 		{#if dropoutStats.length > 0}
 			<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
 				<h3 class="mb-4 text-lg font-medium">Dropout Analysis</h3>
@@ -622,18 +442,3 @@
 	</div>
 {/if}
 
-<style>
-	:global(.shifted-bar-chart .lc-tooltip-rects-g) {
-		transform: translateX(var(--tooltip-offset));
-	}
-
-	:global(.shifted-bar-chart .lc-tooltip-rects-g > rect:last-child),
-	:global(.shifted-bar-chart .lc-tooltip-rects-g > path:last-child) {
-		pointer-events: none;
-		opacity: 0;
-	}
-
-	:global(.shifted-bar-chart .lc-highlight-area) {
-		transform: translateX(var(--tooltip-offset));
-	}
-</style>
