@@ -7,9 +7,9 @@
 	import { timeFormat } from 'd3-time-format';
 	import { BarChart, PieChart, Text } from 'layerchart';
 	import { Tween } from 'svelte/motion';
+	import { SvelteDate } from 'svelte/reactivity';
 	import type { PageData } from './$types';
 	import HistogramChart from './HistogramChart.svelte';
-	import { SvelteDate } from 'svelte/reactivity';
 
 	let { data }: { data: PageData } = $props();
 
