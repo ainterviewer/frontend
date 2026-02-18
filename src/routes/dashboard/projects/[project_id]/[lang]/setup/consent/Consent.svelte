@@ -33,7 +33,6 @@
 		}
 		saving = false;
 	}
-
 </script>
 
 <div class="mb-6">
@@ -169,4 +168,3 @@
 	onClose={() => (showFullscreenModal = false)}
 	isPreview={true}
 />
-

@@ -1,8 +1,8 @@
 <script lang="ts">
+	import '$lib/api-extra/toast-interceptor';
 	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from 'svelte-sonner';
 	import '../app.css';
-	import '$lib/api-extra/toast-interceptor';
 
 	let { children } = $props();
 </script>

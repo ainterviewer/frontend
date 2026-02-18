@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { Admin, type UserPublic } from '$lib/api';
 	import { toast } from 'svelte-sonner';
-	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Admin } from '$lib/api';
-	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 	import type { Instance } from './types';
 
 	let instances: Instance[] = $state([]);

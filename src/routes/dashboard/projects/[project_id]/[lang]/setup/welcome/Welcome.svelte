@@ -316,4 +316,3 @@
 	onClose={() => (showFullscreenModal = false)}
 	isPreview={true}
 />
-

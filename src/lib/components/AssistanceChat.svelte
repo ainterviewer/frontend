@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
-	import { tick, type Snippet } from 'svelte';
-	import type { ChatMessage } from '$lib/api/types.gen';
 	import { Assistance } from '$lib/api/sdk.gen';
+	import type { ChatMessage } from '$lib/api/types.gen';
 	import type { GuideQuestion, GuideSection } from '$lib/stores/guideStore.svelte';
+	import { tick, type Snippet } from 'svelte';
+	import { fly } from 'svelte/transition';
 
 	interface Props {
 		project_id: string;

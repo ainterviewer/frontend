@@ -1,6 +1,6 @@
+import { Projects, type InterviewConfig, type InterviewType } from '$lib/api';
 import { redirect } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
-import { Projects, type InterviewConfig, type InterviewType } from '$lib/api';
 
 export const load: PageLoad = ({ url }) => {
 	const project_id: string | null = url.searchParams.get('id');

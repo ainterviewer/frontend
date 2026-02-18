@@ -3,7 +3,6 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Analysis, Projects, type Image, type MessagePublic } from '$lib/api';
-	import { toast } from 'svelte-sonner';
 	import type {
 		AnalysisCategoryPublic,
 		AnnotationValueCreate,
@@ -14,6 +13,7 @@
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import { getContrastColor } from '$lib/utils/colors';
+	import { toast } from 'svelte-sonner';
 
 	// State
 	let projectId = $derived(page.params.project_id ?? '');

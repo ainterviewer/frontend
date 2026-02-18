@@ -1,4 +1,4 @@
-import { Folders, Experiments } from '$lib/api/sdk.gen';
+import { Experiments, Folders } from '$lib/api/sdk.gen';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ cookies }) => {

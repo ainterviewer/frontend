@@ -1,4 +1,6 @@
 <script lang="ts">
+	import AssistanceChat from '$lib/components/AssistanceChat.svelte';
+	import { guideStore, type GuideQuestion, type GuideSection } from '$lib/stores/guideStore.svelte';
 	import {
 		DragDropProvider,
 		DragOverlay,
@@ -7,8 +9,6 @@
 	} from '@dnd-kit-svelte/svelte';
 	import { move } from '@dnd-kit/helpers';
 	import { tick } from 'svelte';
-	import AssistanceChat from '$lib/components/AssistanceChat.svelte';
-	import { guideStore, type GuideQuestion, type GuideSection } from '$lib/stores/guideStore.svelte';
 	import { dragState } from './dragState.svelte';
 	import InterviewGuide from './InterviewGuide.svelte';
 	import SortableQuestion from './SortableQuestion.svelte';

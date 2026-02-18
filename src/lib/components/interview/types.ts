@@ -1,5 +1,4 @@
 import type { MessagePublic } from '$lib/api';
-
 export type SurveyItemUnion = NonNullable<MessagePublic['survey_item']>;
 export type MessageType = 'sent' | 'received' | 'system';
 

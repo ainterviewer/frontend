@@ -8,12 +8,11 @@
 		QuestionOutput,
 		QuestionSectionQuestionOutput
 	} from '$lib/api/types.gen';
-	import { toast } from 'svelte-sonner';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { guideStore } from '$lib/stores/guideStore.svelte';
+	import { toast } from 'svelte-sonner';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
-	import SortableQuestion from './SortableQuestion.svelte';
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 	import { generateId, mapFromLocal, mapToLocal, saveGuide } from './utils';

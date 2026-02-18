@@ -1,14 +1,14 @@
 <script lang="ts">
 	import type {
 		AnalysisCategoryPublic,
+		AnnotationType,
 		AnnotationValueCreate,
 		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
+	import CategoryModal from '$lib/components/analysis/CategoryModal.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import Info from '$lib/components/Info.svelte';
 	import { getContrastColor } from '$lib/utils/colors';
-	import CategoryModal from '$lib/components/analysis/CategoryModal.svelte';
-	import type { AnnotationType } from '$lib/api/types.gen';
 
 	interface Props {
 		categories: AnalysisCategoryPublic[];

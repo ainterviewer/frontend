@@ -1,11 +1,11 @@
 <script lang="ts">
+	import { Experiments } from '$lib/api/sdk.gen';
+	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
-	import { Experiments } from '$lib/api/sdk.gen';
 	import { toast } from 'svelte-sonner';
-	import type { PageData } from './$types';
 	import { fade } from 'svelte/transition';
-	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
+	import type { PageData } from './$types';
 
 	interface Experiment {
 		id: string;

@@ -1,5 +1,4 @@
 import { toast } from 'svelte-sonner';
-
 import { client } from '../api/client.gen';
 
 client.interceptors.error.use((error, response, _request, _options) => {

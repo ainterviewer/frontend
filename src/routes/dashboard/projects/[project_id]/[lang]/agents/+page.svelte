@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import { toast } from 'svelte-sonner';
 	import type {
 		AgentConfigsInput,
 		AgentConfigsOutput,
 		PromptsUpdateRequest
 	} from '$lib/api/types.gen';
+	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
