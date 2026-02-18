@@ -208,20 +208,6 @@ export type AnnotationValuePublic = {
 export type AnswerLength = 'short' | 'medium' | 'long';
 
 /**
- * AssistanceSessionToken
- */
-export type AssistanceSessionToken = {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Session Id
-     */
-    session_id: string;
-};
-
-/**
  * BackgroundInfoOptions
  *
  * Dataclass representing the possible values for the background info of the synthetic agents
@@ -355,7 +341,6 @@ export type BodySendChat = {
      * Prompt
      */
     prompt: string;
-    assistance_session: AssistanceSessionToken | null;
 };
 
 /**
@@ -1714,12 +1699,6 @@ export type QuestionInput = {
      */
     main_question: string;
     /**
-     * Alternative Main Questions
-     *
-     * List of alternative formulations of the main question, will be chosen at random.
-     */
-    alternative_main_questions?: Array<string> | null;
-    /**
      * Probes
      *
      * A list of possible follow-up questions to ask after the main question
@@ -1838,12 +1817,6 @@ export type QuestionOutput = {
      * The question to ask the interviewee
      */
     main_question: string;
-    /**
-     * Alternative Main Questions
-     *
-     * List of alternative formulations of the main question, will be chosen at random.
-     */
-    alternative_main_questions?: Array<string> | null;
     /**
      * Probes
      *
@@ -2350,9 +2323,13 @@ export type UserCreate = {
      */
     email: string;
     /**
-     * Name
+     * First Name
      */
-    name: string;
+    first_name: string;
+    /**
+     * Last Name
+     */
+    last_name: string | null;
     /**
      * Created At
      */
@@ -2389,9 +2366,13 @@ export type UserPublic = {
      */
     email: string;
     /**
-     * Name
+     * First Name
      */
-    name: string;
+    first_name: string;
+    /**
+     * Last Name
+     */
+    last_name: string | null;
     /**
      * Created At
      */
@@ -3269,11 +3250,8 @@ export type GetProjectMonitoringStatsResponses = {
 
 export type GetProjectMonitoringStatsResponse = GetProjectMonitoringStatsResponses[keyof GetProjectMonitoringStatsResponses];
 
-export type GetChatData = {
-    /**
-     * Assistance Session
-     */
-    body: AssistanceSessionToken | null;
+export type ResetSessionData = {
+    body?: never;
     path: {
         /**
          * Project Id
@@ -3290,7 +3268,44 @@ export type GetChatData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/assistance/{project_id}/{lang}/chat/';
+    url: '/api/assistance/{project_id}/{lang}/chat/new';
+};
+
+export type ResetSessionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ResetSessionError = ResetSessionErrors[keyof ResetSessionErrors];
+
+export type ResetSessionResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetChatData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Lang
+         */
+        lang: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/assistance/{project_id}/{lang}/chat';
 };
 
 export type GetChatErrors = {
@@ -3327,7 +3342,7 @@ export type SendChatData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/assistance/{project_id}/{lang}/chat/';
+    url: '/api/assistance/{project_id}/{lang}/chat';
 };
 
 export type SendChatErrors = {
