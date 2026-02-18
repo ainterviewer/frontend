@@ -24,6 +24,7 @@
 	let messagesEl: HTMLDivElement | undefined = $state();
 	let textareaEl: HTMLTextAreaElement | undefined = $state();
 	let confirmReset = $state(false);
+	let isMaximized = $state(false);
 
 	// Parsed state for typed messages (question/section). Keyed by message index.
 	// Stored separately so edits are preserved even as new messages arrive.
@@ -234,15 +235,16 @@
 <!-- Chat window -->
 {#if isOpen}
 	<div
-		class="fixed right-6 bottom-24 z-50 flex h-[500px] w-96 flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10"
+		class="fixed z-50 flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 transition-all duration-300 ease-in-out {isMaximized
+			? 'right-4 bottom-4 h-[800px] w-[1200px]'
+			: 'right-6 bottom-24 h-[500px] w-96'}"
 		transition:fly={{ y: 16, duration: 200 }}
 	>
 		<!-- Header -->
 		<div
 			class="z-99 flex h-10 shrink-0 items-center gap-2 bg-primary px-4 py-3 text-white shadow-sm shadow-dark"
 		>
-			<i class="fa-solid fa-robot h-full text-sm"></i>
-			<span class="flex-1 text-sm font-semibold">AInterviewer Assistant</span>
+			<span class="flex-1 text-sm font-semibold">Interview Guide Assistance</span>
 			{#if confirmReset}
 				<span class="text-xs opacity-90">Reset session?</span>
 				<button
@@ -264,6 +266,13 @@
 					class="ml-auto rounded p-1 opacity-70 transition-opacity hover:opacity-100"
 				>
 					<i class="fa-solid fa-rotate-right text-xs"></i>
+				</button>
+				<button
+					onclick={() => (isMaximized = !isMaximized)}
+					title={isMaximized ? 'Minimize' : 'Maximize'}
+					class="rounded p-1 opacity-70 transition-opacity hover:opacity-100"
+				>
+					<i class="fa-solid {isMaximized ? 'fa-compress' : 'fa-expand'} text-xs"></i>
 				</button>
 			{/if}
 		</div>
