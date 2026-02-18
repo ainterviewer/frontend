@@ -2534,6 +2534,10 @@ export type ChatMessage = {
      * Content
      */
     content: string;
+    /**
+     * Type
+     */
+    type?: 'message' | 'question' | 'section';
 };
 
 /**
