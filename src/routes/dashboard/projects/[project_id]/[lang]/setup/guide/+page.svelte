@@ -6,6 +6,7 @@
 		PointerSensor
 	} from '@dnd-kit-svelte/svelte';
 	import { move } from '@dnd-kit/helpers';
+	import { tick } from 'svelte';
 	import AssistanceChat from '$lib/components/AssistanceChat.svelte';
 	import { guideStore, type GuideQuestion, type GuideSection } from '$lib/stores/guideStore.svelte';
 	import { dragState } from './dragState.svelte';
@@ -62,6 +63,10 @@
 		const data = source?.data ?? source?.current?.data;
 		const type = source?.type ?? source?.current?.type;
 		activeDragType = type ?? null;
+		const sourceId = source?.id ?? source?.current?.id;
+		if (sourceId) {
+			dragState.draggingId = sourceId;
+		}
 		if (type === 'section') {
 			activeItem = data?.section;
 		} else if (type === 'question') {
@@ -69,8 +74,13 @@
 		}
 	}
 
-	function handleDragEnd(event: any) {
+	async function handleDragEnd(event: any) {
 		const { source, target } = event.operation ?? {};
+
+		// Track the id of the element to scroll to after the drop.
+		// For guide-sourced drags this is the original element; for chat-sourced
+		// drags we update it to the newly created element below.
+		let scrollTargetId = dragState.draggingId;
 
 		if (source?.data?.source === 'chat' && target) {
 			const chatData = source.data;
@@ -101,6 +111,7 @@
 					} else {
 						guideStore.localQuestions[targetSectionId].push(newQ);
 					}
+					scrollTargetId = newQ.id;
 				}
 			} else if (chatData.type === 'section' && chatData.section) {
 				const src = chatData.section as GuideSection;
@@ -119,12 +130,56 @@
 					...q,
 					id: crypto.randomUUID()
 				}));
+				scrollTargetId = newId;
 			}
 		}
+
+		// --- Scroll compensation ---
+		// During drag, items are collapsed to max-height: 19rem so the list is
+		// compact and easier to navigate. When the drag ends the max-height is
+		// removed and items expand back to their full size, which shifts the
+		// viewport. To counteract this we:
+		// 1. Keep CSS transitions disabled so the height change is instant.
+		// 2. Wait for Svelte to flush DOM updates (tick) + one animation frame.
+		// 3. Scroll the dropped element back into view.
+		// 4. Re-enable transitions only after the smooth scroll finishes.
+		dragState.keepTransitionsDisabled = true;
 
 		activeItem = null;
 		activeDragType = null;
 		dragState.chatDropTarget = null;
+
+		if (scrollTargetId) {
+			// Wait for Svelte reactivity to flush DOM changes, then one frame
+			// for the browser to lay out the expanded elements.
+			await tick();
+			requestAnimationFrame(() => {
+				const el = document.getElementById(scrollTargetId);
+				if (el) {
+					el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+
+					// Re-enable transitions after the scroll finishes so the
+					// height snap doesn't animate. Fall back to a timeout for
+					// browsers that don't support scrollend.
+					const scrollContainer = document.scrollingElement ?? document.documentElement;
+					let settled = false;
+					const settle = () => {
+						if (settled) return;
+						settled = true;
+						dragState.draggingId = null;
+						dragState.keepTransitionsDisabled = false;
+					};
+					scrollContainer.addEventListener('scrollend', settle, { once: true });
+					setTimeout(settle, 600);
+				} else {
+					dragState.draggingId = null;
+					dragState.keepTransitionsDisabled = false;
+				}
+			});
+		} else {
+			dragState.draggingId = null;
+			dragState.keepTransitionsDisabled = false;
+		}
 	}
 </script>
 
@@ -152,7 +207,10 @@
 			/>
 		{/snippet}
 
-		{#snippet sectionMessage(item: { section: GuideSection; questions: GuideQuestion[] }, msgIndex: number)}
+		{#snippet sectionMessage(
+			item: { section: GuideSection; questions: GuideQuestion[] },
+			msgIndex: number
+		)}
 			<SortableSection
 				section={item.section}
 				questions={item.questions}

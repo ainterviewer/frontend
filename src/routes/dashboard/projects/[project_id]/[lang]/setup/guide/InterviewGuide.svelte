@@ -512,7 +512,13 @@
 				class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark"
 				onclick={async () => {
 					saving = true;
-					await saveGuide(projectId, lang, guide, guideStore.localSections, guideStore.localQuestions);
+					await saveGuide(
+						projectId,
+						lang,
+						guide,
+						guideStore.localSections,
+						guideStore.localQuestions
+					);
 					savedSnapshot = getSnapshot();
 					saving = false;
 				}}

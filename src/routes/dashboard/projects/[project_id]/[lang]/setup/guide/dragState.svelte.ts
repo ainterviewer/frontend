@@ -1,4 +1,6 @@
 let _draggingType = $state<'section' | 'question' | null>(null);
+let _keepTransitionsDisabled = $state(false);
+let _draggingId = $state<string | null>(null);
 
 export type ChatDropTarget = {
 	id: string;
@@ -14,6 +16,18 @@ export const dragState = {
 	},
 	set draggingType(value: 'section' | 'question' | null) {
 		_draggingType = value;
+	},
+	get keepTransitionsDisabled() {
+		return _keepTransitionsDisabled;
+	},
+	set keepTransitionsDisabled(value: boolean) {
+		_keepTransitionsDisabled = value;
+	},
+	get draggingId() {
+		return _draggingId;
+	},
+	set draggingId(value: string | null) {
+		_draggingId = value;
 	},
 	get chatDropTarget() {
 		return _chatDropTarget;

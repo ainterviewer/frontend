@@ -68,15 +68,16 @@
 <div
 	id={question.id}
 	class="group relative scroll-mt-24 rounded-lg border border-black bg-secondary p-5 brightness-105 transition-all duration-200 hover:shadow-md"
+	style:transition={(dragState.draggingType || dragState.keepTransitionsDisabled) && !isOverlay
+		? 'opacity 200ms, transform 200ms, box-shadow 200ms'
+		: undefined}
 	class:opacity-50={isDragging.current && !isOverlay}
 	class:shadow-xl={isOverlay}
 	class:scale-[1.02]={isOverlay}
 	class:rotate-1={isOverlay}
 	class:border-l-4={!isOverlay}
 	class:border-l-primary={!isOverlay}
-	style:box-shadow={isChatDropTarget && !isOverlay
-		? '0 -3px 0 0 var(--color-primary)'
-		: undefined}
+	style:box-shadow={isChatDropTarget && !isOverlay ? '0 -3px 0 0 var(--color-primary)' : undefined}
 	style:max-height={dragState.draggingType === 'question' && !isOverlay ? '19rem' : 'none'}
 	style:overflow={dragState.draggingType === 'question' && !isOverlay ? 'hidden' : 'visible'}
 	{@attach ref}
@@ -240,7 +241,11 @@
 							<div class="min-w-0 flex-1 text-left">
 								<div class="font-medium text-gray-700">Survey Item</div>
 								<div class="text-xs text-gray-500">
-									{question.survey_item.type === 'number' || question.survey_item.type === 'date' || question.survey_item.type === 'datetime' || question.survey_item.type === 'time' || question.survey_item.type === 'slider'
+									{question.survey_item.type === 'number' ||
+									question.survey_item.type === 'date' ||
+									question.survey_item.type === 'datetime' ||
+									question.survey_item.type === 'time' ||
+									question.survey_item.type === 'slider'
 										? question.survey_item.type
 										: `${question.survey_item.options.length} options (${question.survey_item.type})`}
 								</div>

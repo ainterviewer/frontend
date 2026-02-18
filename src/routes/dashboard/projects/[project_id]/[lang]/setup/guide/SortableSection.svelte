@@ -70,6 +70,9 @@
 <div
 	id={section.id}
 	class="group relative rounded-lg border border-black bg-secondary p-4 transition-all duration-200"
+	style:transition={(dragState.draggingType || dragState.keepTransitionsDisabled) && !isOverlay
+		? 'opacity 200ms, transform 200ms, box-shadow 200ms'
+		: undefined}
 	class:opacity-50={isDragging.current && !isOverlay}
 	class:shadow-xl={isOverlay}
 	class:rotate-1={isOverlay}
