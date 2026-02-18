@@ -16,7 +16,8 @@
 
 		const form = event.target as HTMLFormElement;
 		const formData = new FormData(form);
-		const name = formData.get('name') as string;
+		const firstName = formData.get('first_name') as string;
+		const lastName = (formData.get('last_name') as string) || undefined;
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
 		const confirmPassword = formData.get('confirm_password') as string;
@@ -40,7 +41,8 @@
 				body: {
 					email,
 					password,
-					name,
+					first_name: firstName,
+					last_name: lastName,
 					invite_token: inviteToken
 				}
 			});
@@ -78,16 +80,33 @@
 						</div>
 					{/if}
 
-					<div>
-						<label for="name" class="block text-sm font-medium text-gray-700"> Full Name </label>
-						<div class="mt-1">
-							<input
-								id="name"
-								name="name"
-								type="text"
-								required
-								class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm transition-all focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
-							/>
+					<div class="flex gap-4">
+						<div class="flex-1">
+							<label for="first_name" class="block text-sm font-medium text-gray-700">
+								First Name
+							</label>
+							<div class="mt-1">
+								<input
+									id="first_name"
+									name="first_name"
+									type="text"
+									required
+									class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm transition-all focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+								/>
+							</div>
+						</div>
+						<div class="flex-1">
+							<label for="last_name" class="block text-sm font-medium text-gray-700">
+								Last Name <span class="text-gray-400">(optional)</span>
+							</label>
+							<div class="mt-1">
+								<input
+									id="last_name"
+									name="last_name"
+									type="text"
+									class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm transition-all focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+								/>
+							</div>
 						</div>
 					</div>
 

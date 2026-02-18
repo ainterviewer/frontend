@@ -80,7 +80,7 @@
 							<div
 								class="relative inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-secondary hover:bg-secondary hover:brightness-85"
 							>
-								<span class="text-body font-medium">{data.user?.name?.[0] ?? ''}</span>
+								<span class="text-body font-medium">{data.user?.first_name?.[0] ?? ''}</span>
 							</div>
 						</button>
 						<div
@@ -95,7 +95,7 @@
 								aria-labelledby="options-menu"
 							>
 								<div class="block px-4 py-2 text-sm font-semibold text-gray-700">
-									{data.user.name}
+									{data.user.first_name}
 								</div>
 								<div class="block px-4 pb-2 text-xs text-gray-500">
 									{data.user.email}
