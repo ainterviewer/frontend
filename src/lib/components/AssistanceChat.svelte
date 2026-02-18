@@ -113,7 +113,7 @@
 
 		// Add empty model placeholder for streaming into
 		messages.push({ role: 'model', timestamp: new Date().toISOString(), content: '' });
-		const modelIdx = messages.length - 1;
+		let modelIdx = messages.length - 1;
 
 		await tick();
 		scrollToBottom();
@@ -139,6 +139,8 @@
 			const decoder = new TextDecoder();
 			let buffer = '';
 			let firstChunk = true;
+			let seenFirstModelChunk = false;
+			let currentMsgType: string | undefined;
 
 			while (true) {
 				const { done, value } = await reader.read();
@@ -158,8 +160,16 @@
 							continue;
 						}
 						if (msg.role === 'model') {
-							// Each chunk is the full accumulated response so far — replace in place
-							messages[modelIdx] = msg;
+							if (seenFirstModelChunk && msg.type !== currentMsgType) {
+								// New distinct message — append a new slot rather than overwriting
+								messages.push(msg);
+								modelIdx = messages.length - 1;
+							} else {
+								// Same message, accumulating — replace in place
+								messages[modelIdx] = msg;
+							}
+							seenFirstModelChunk = true;
+							currentMsgType = msg.type;
 							await tick();
 							scrollToBottom();
 						}
