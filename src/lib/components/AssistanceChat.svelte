@@ -9,7 +9,9 @@
 		project_id: string;
 		lang?: string;
 		questionMessage?: Snippet<[item: GuideQuestion, index: number]>;
-		sectionMessage?: Snippet<[item: { section: GuideSection; questions: GuideQuestion[] }, index: number]>;
+		sectionMessage?: Snippet<
+			[item: { section: GuideSection; questions: GuideQuestion[] }, index: number]
+		>;
 	}
 
 	let { project_id, lang, questionMessage, sectionMessage }: Props = $props();
@@ -236,7 +238,9 @@
 		transition:fly={{ y: 16, duration: 200 }}
 	>
 		<!-- Header -->
-		<div class="flex h-10 shrink-0 items-center gap-2 bg-primary px-4 py-3 text-white">
+		<div
+			class="z-99 flex h-10 shrink-0 items-center gap-2 bg-primary px-4 py-3 text-white shadow-sm shadow-dark"
+		>
 			<i class="fa-solid fa-robot h-full text-sm"></i>
 			<span class="flex-1 text-sm font-semibold">AInterviewer Assistant</span>
 			{#if confirmReset}
@@ -256,7 +260,7 @@
 			{:else}
 				<button
 					onclick={() => (confirmReset = true)}
-					aria-label="Reset session"
+					title="Reset session"
 					class="ml-auto rounded p-1 opacity-70 transition-opacity hover:opacity-100"
 				>
 					<i class="fa-solid fa-rotate-right text-xs"></i>
