@@ -10,22 +10,13 @@
 	} from '$lib/api/types.gen';
 	import { toast } from 'svelte-sonner';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import {
-		DragDropProvider,
-		DragOverlay,
-		KeyboardSensor,
-		PointerSensor
-	} from '@dnd-kit-svelte/svelte';
-	import { dragState } from './dragState.svelte';
-	import { move } from '@dnd-kit/helpers';
+	import { guideStore } from '$lib/stores/guideStore.svelte';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 	import { generateId, mapFromLocal, mapToLocal, saveGuide } from './utils';
-
-	const sensors = [KeyboardSensor, PointerSensor];
 
 	let { guide: initialGuide, lang } = $props<{
 		guide: InterviewGuideOutput | null;
@@ -62,15 +53,15 @@
 		mapped.questions[newId] = [];
 	}
 
-	// Split state for DnD (Required for dnd-kit-svelte move helper)
-	let localSections = $state<GuideSection[]>(mapped.sections);
-	let localQuestions = $state<Record<string, GuideQuestion[]>>(mapped.questions);
+	// Initialize the shared store
+	guideStore.localSections = mapped.sections;
+	guideStore.localQuestions = mapped.questions;
 
 	function getSnapshot() {
 		return JSON.stringify({
 			guide,
-			sections: localSections,
-			questions: localQuestions
+			sections: guideStore.localSections,
+			questions: guideStore.localQuestions
 		});
 	}
 
@@ -85,12 +76,6 @@
 	});
 
 	let projectId = $state(page.params.project_id ?? '');
-
-	let activeItem = $state<GuideSection | GuideQuestion | null>(null);
-	let activeDragType = $state<'section' | 'question' | null>(null);
-	$effect(() => {
-		dragState.draggingType = activeDragType;
-	});
 
 	// Modal state
 	let showGenerateGuideModal = $state(false);
@@ -131,8 +116,8 @@
 				shuffle: section.shuffle ?? false
 			};
 
-			localSections.push(newSection);
-			localQuestions[newId] = (section.questions || []).map((q) => ({
+			guideStore.localSections.push(newSection);
+			guideStore.localQuestions[newId] = (section.questions || []).map((q) => ({
 				...q,
 				id: generateId(),
 				alternative_main_questions: q.alternative_main_questions || [],
@@ -193,10 +178,10 @@
 				can_answer: q.can_answer ?? true
 			};
 
-			if (!localQuestions[generatingQuestionSectionId]) {
-				localQuestions[generatingQuestionSectionId] = [];
+			if (!guideStore.localQuestions[generatingQuestionSectionId]) {
+				guideStore.localQuestions[generatingQuestionSectionId] = [];
 			}
-			localQuestions[generatingQuestionSectionId].push(newQuestion);
+			guideStore.localQuestions[generatingQuestionSectionId].push(newQuestion);
 		}
 
 		generatingQuestionSectionId = null;
@@ -218,26 +203,26 @@
 
 	function addSection() {
 		const newId = generateId();
-		localSections.push({
+		guideStore.localSections.push({
 			id: newId,
 			description: '',
 			questions: [],
 			shuffle: false
 		});
-		localQuestions[newId] = [];
+		guideStore.localQuestions[newId] = [];
 	}
 
 	function removeSection(index: number) {
 		if (confirm('Are you sure you want to delete this section?')) {
-			const [removed] = localSections.splice(index, 1);
-			delete localQuestions[removed.id];
+			const [removed] = guideStore.localSections.splice(index, 1);
+			delete guideStore.localQuestions[removed.id];
 		}
 	}
 
 	function exportJson() {
 		const data = {
 			...guide,
-			question_sections: mapFromLocal(localSections, localQuestions)
+			question_sections: mapFromLocal(guideStore.localSections, guideStore.localQuestions)
 		};
 		const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
 		const url = URL.createObjectURL(blob);
@@ -250,55 +235,10 @@
 		URL.revokeObjectURL(url);
 	}
 
-	function arrayMove<T>(array: T[], from: number, to: number): T[] {
-		const newArray = array.slice();
-		newArray.splice(to, 0, newArray.splice(from, 1)[0]);
-		return newArray;
-	}
-
-	function handleDragOver(event: any) {
-		const { source, target } = event.operation;
-		if (!target) return;
-
-		// Section reordering
-		if (source.type === 'section') {
-			if (target.type === 'section' && source.id !== target.id) {
-				const oldIndex = localSections.findIndex((s) => s.id === source.id);
-				const newIndex = localSections.findIndex((s) => s.id === target.id);
-				if (oldIndex !== -1 && newIndex !== -1) {
-					localSections = arrayMove(localSections, oldIndex, newIndex);
-				}
-			}
-			return;
-		}
-
-		// Question reordering (using move helper for nested/record structure)
-		localQuestions = move(localQuestions as any, event);
-	}
-
-	function handleDragStart(event: any) {
-		const source = event.operation?.source;
-		const data = source?.data ?? source?.current?.data;
-		const type = source?.type ?? source?.current?.type;
-		activeDragType = type ?? null;
-		if (type === 'section') {
-			activeItem = data?.section;
-		} else if (type === 'question') {
-			activeItem = data?.question;
-		}
-	}
-
-	function handleDragEnd() {
-		activeItem = null;
-		activeDragType = null;
-	}
-
-	let observer: IntersectionObserver;
-
 	$effect(() => {
 		// Track dependencies so effect re-runs on changes
-		localSections;
-		localQuestions;
+		guideStore.localSections;
+		guideStore.localQuestions;
 
 		if (observer) observer.disconnect();
 
@@ -322,10 +262,10 @@
 		});
 
 		// Observe sections and questions
-		localSections.forEach((s) => {
+		guideStore.localSections.forEach((s) => {
 			const el = document.getElementById(s.id);
 			if (el) observer.observe(el);
-			const questions = localQuestions[s.id] || [];
+			const questions = guideStore.localQuestions[s.id] || [];
 			questions.forEach((q) => {
 				const qEl = document.getElementById(q.id);
 				if (qEl) observer.observe(qEl);
@@ -334,6 +274,8 @@
 
 		return () => observer.disconnect();
 	});
+
+	let observer: IntersectionObserver;
 </script>
 
 <svelte:window
@@ -363,7 +305,11 @@
 
 <div class="relative flex items-start gap-8">
 	<!-- Navigation Sidebar -->
-	<InterviewGuideSidebar {activeId} {localSections} {localQuestions} />
+	<InterviewGuideSidebar
+		{activeId}
+		localSections={guideStore.localSections}
+		localQuestions={guideStore.localQuestions}
+	/>
 
 	<div class="min-w-0 flex-1 space-y-8">
 		<!-- Framing -->
@@ -402,70 +348,38 @@
 				Group your questions into multiple relevant sections.
 			</p>
 
-			<DragDropProvider
-				{sensors}
-				onDragOver={handleDragOver}
-				onDragStart={handleDragStart}
-				onDragEnd={handleDragEnd}
-			>
-				<div class="space-y-6">
-					{#each localSections as section, sIdx (section.id)}
-						<SortableSection
-							{section}
-							questions={localQuestions[section.id]}
-							sectionIndex={sIdx}
-							allSections={localSections}
-							allQuestions={localQuestions}
-							onRemove={() => removeSection(sIdx)}
-							onGenerateQuestion={() => {
-								generatingQuestionSectionId = section.id;
-								generatingQuestionSectionIdx = sIdx;
-								showGenerateQuestionModal = true;
-							}}
-						/>
-					{/each}
-				</div>
+			<div class="space-y-6">
+				{#each guideStore.localSections as section, sIdx (section.id)}
+					<SortableSection
+						{section}
+						questions={guideStore.localQuestions[section.id]}
+						sectionIndex={sIdx}
+						allSections={guideStore.localSections}
+						allQuestions={guideStore.localQuestions}
+						onRemove={() => removeSection(sIdx)}
+						onGenerateQuestion={() => {
+							generatingQuestionSectionId = section.id;
+							generatingQuestionSectionIdx = sIdx;
+							showGenerateQuestionModal = true;
+						}}
+					/>
+				{/each}
+			</div>
 
-				<div class="mt-6 grid grid-cols-2 gap-4">
-					<button
-						class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
-						onclick={addSection}
-					>
-						<i class="fa-solid fa-plus"></i> Add Section
-					</button>
-					<button
-						class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
-						onclick={() => (showGenerateSectionModal = true)}
-					>
-						<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Section
-					</button>
-				</div>
-
-				<DragOverlay>
-					{#snippet children(active)}
-						{#if activeItem}
-							{#if active.data.current?.type === 'section'}
-								<SortableSection
-									section={activeItem as GuideSection}
-									questions={localQuestions[(activeItem as GuideSection).id] || []}
-									sectionIndex={localSections.findIndex((s) => s.id === activeItem?.id) ?? 0}
-									onRemove={() => {}}
-									isOverlay
-								/>
-							{:else if active.data.current?.type === 'question'}
-								<SortableQuestion
-									question={activeItem as GuideQuestion}
-									sectionId={active.data.current?.sectionId}
-									index={0}
-									sectionIndex={0}
-									onRemove={() => {}}
-									isOverlay
-								/>
-							{/if}
-						{/if}
-					{/snippet}
-				</DragOverlay>
-			</DragDropProvider>
+			<div class="mt-6 grid grid-cols-2 gap-4">
+				<button
+					class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
+					onclick={addSection}
+				>
+					<i class="fa-solid fa-plus"></i> Add Section
+				</button>
+				<button
+					class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
+					onclick={() => (showGenerateSectionModal = true)}
+				>
+					<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Section
+				</button>
+			</div>
 		</div>
 
 		<!-- Outro -->
@@ -598,7 +512,7 @@
 				class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark"
 				onclick={async () => {
 					saving = true;
-					await saveGuide(projectId, lang, guide, localSections, localQuestions);
+					await saveGuide(projectId, lang, guide, guideStore.localSections, guideStore.localQuestions);
 					savedSnapshot = getSnapshot();
 					saving = false;
 				}}

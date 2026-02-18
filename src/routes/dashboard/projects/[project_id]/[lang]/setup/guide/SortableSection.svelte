@@ -14,6 +14,7 @@
 		onRemove: () => void;
 		onGenerateQuestion?: () => void;
 		isOverlay?: boolean;
+		source?: 'guide' | 'chat';
 	}
 
 	let {
@@ -24,7 +25,8 @@
 		allQuestions = {},
 		onRemove,
 		onGenerateQuestion,
-		isOverlay = false
+		isOverlay = false,
+		source = 'guide'
 	}: Props = $props();
 
 	const { ref, handleRef, isDragging } = useSortable({
@@ -33,11 +35,17 @@
 		type: 'section',
 		data: {
 			type: 'section',
-			section
+			section,
+			questions,
+			source
 		},
 		accept: ['question', 'section'],
 		collisionPriority: CollisionPriority.Low
 	});
+
+	let chatDropTarget = $derived(
+		dragState.chatDropTarget?.id === section.id ? dragState.chatDropTarget : null
+	);
 
 	function addQuestion() {
 		const newId = crypto.randomUUID();
@@ -65,6 +73,11 @@
 	class:opacity-50={isDragging.current && !isOverlay}
 	class:shadow-xl={isOverlay}
 	class:rotate-1={isOverlay}
+	style:box-shadow={chatDropTarget && !isOverlay
+		? chatDropTarget.dragType === 'section'
+			? '0 -3px 0 0 var(--color-primary)'
+			: '0 3px 0 0 var(--color-primary)'
+		: undefined}
 	style:max-height={dragState.draggingType === 'section' && !isOverlay ? '19rem' : 'none'}
 	style:overflow={dragState.draggingType === 'section' && !isOverlay ? 'hidden' : 'visible'}
 	{@attach ref}

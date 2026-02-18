@@ -20,10 +20,11 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
 		return {
 			guide: response.data,
-			lang
+			lang,
+			project_id
 		};
 	} catch (error) {
 		console.error('Exception fetching guide:', error);
-		return { guide: null, lang };
+		return { guide: null, lang, project_id };
 	}
 };

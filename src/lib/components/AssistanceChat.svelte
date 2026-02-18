@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import { tick } from 'svelte';
+	import { tick, type Snippet } from 'svelte';
 	import type { ChatMessage } from '$lib/api/types.gen';
 	import { Assistance } from '$lib/api/sdk.gen';
+	import type { GuideQuestion, GuideSection } from '$lib/stores/guideStore.svelte';
 
 	interface Props {
 		project_id: string;
 		lang?: string;
+		questionMessage?: Snippet<[item: GuideQuestion, index: number]>;
+		sectionMessage?: Snippet<[item: { section: GuideSection; questions: GuideQuestion[] }, index: number]>;
 	}
 
-	let { project_id, lang }: Props = $props();
+	let { project_id, lang, questionMessage, sectionMessage }: Props = $props();
 
 	let isOpen = $state(false);
 	let messages = $state<ChatMessage[]>([]);
@@ -19,6 +22,46 @@
 	let messagesEl: HTMLDivElement | undefined = $state();
 	let textareaEl: HTMLTextAreaElement | undefined = $state();
 	let confirmReset = $state(false);
+
+	// Parsed state for typed messages (question/section). Keyed by message index.
+	// Stored separately so edits are preserved even as new messages arrive.
+	let parsedItems = $state<
+		Record<number, GuideQuestion | { section: GuideSection; questions: GuideQuestion[] }>
+	>({});
+
+	$effect(() => {
+		// Reset parsed items when the session is cleared
+		if (messages.length === 0) {
+			parsedItems = {};
+			return;
+		}
+		// Parse any new typed messages that haven't been parsed yet
+		messages.forEach((msg, i) => {
+			if ((msg.type === 'question' || msg.type === 'section') && parsedItems[i] === undefined) {
+				try {
+					const data = JSON.parse(msg.content);
+					if (msg.type === 'question') {
+						parsedItems[i] = { ...data, id: data.id ?? crypto.randomUUID() } as GuideQuestion;
+					} else {
+						const { questions, ...sectionData } = data;
+						parsedItems[i] = {
+							section: {
+								...sectionData,
+								id: sectionData.id ?? crypto.randomUUID(),
+								questions: []
+							} as GuideSection,
+							questions: ((questions as any[]) || []).map((q: any) => ({
+								...q,
+								id: q.id ?? crypto.randomUUID()
+							})) as GuideQuestion[]
+						};
+					}
+				} catch {
+					// Ignore unparseable content
+				}
+			}
+		});
+	});
 
 	function scrollToBottom() {
 		if (messagesEl) {
@@ -150,6 +193,7 @@
 			path: { project_id, lang: lang ?? '' }
 		});
 		messages = [];
+		parsedItems = {};
 		historyLoaded = false;
 		confirmReset = false;
 	}
@@ -219,24 +263,37 @@
 			{:else}
 				<div class="flex flex-col gap-3">
 					{#each messages as msg, i (i)}
-						<div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'}">
-							<div
-								class="max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap {msg.role ===
-								'user'
-									? 'rounded-tr-sm bg-primary text-white'
-									: 'rounded-tl-sm bg-gray-100 text-gray-800'}"
-							>
-								{#if msg.role === 'model' && msg.content === '' && isStreaming}
-									<div class="flex items-center gap-1 py-0.5">
-										<span class="typing-dot"></span>
-										<span class="typing-dot" style="animation-delay: 0.15s"></span>
-										<span class="typing-dot" style="animation-delay: 0.3s"></span>
-									</div>
-								{:else}
-									{msg.content}
-								{/if}
+						{#if msg.type === 'question' && questionMessage && parsedItems[i]}
+							<div class="w-full">
+								{@render questionMessage(parsedItems[i] as GuideQuestion, i)}
 							</div>
-						</div>
+						{:else if msg.type === 'section' && sectionMessage && parsedItems[i]}
+							<div class="w-full">
+								{@render sectionMessage(
+									parsedItems[i] as { section: GuideSection; questions: GuideQuestion[] },
+									i
+								)}
+							</div>
+						{:else}
+							<div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'}">
+								<div
+									class="max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap {msg.role ===
+									'user'
+										? 'rounded-tr-sm bg-primary text-white'
+										: 'rounded-tl-sm bg-gray-100 text-gray-800'}"
+								>
+									{#if msg.role === 'model' && msg.content === '' && isStreaming}
+										<div class="flex items-center gap-1 py-0.5">
+											<span class="typing-dot"></span>
+											<span class="typing-dot" style="animation-delay: 0.15s"></span>
+											<span class="typing-dot" style="animation-delay: 0.3s"></span>
+										</div>
+									{:else}
+										{msg.content}
+									{/if}
+								</div>
+							</div>
+						{/if}
 					{/each}
 				</div>
 			{/if}

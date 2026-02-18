@@ -14,6 +14,7 @@
 		allQuestions?: Record<string, GuideQuestion[]>;
 		onRemove: () => void;
 		isOverlay?: boolean;
+		source?: 'guide' | 'chat';
 	}
 
 	let {
@@ -24,7 +25,8 @@
 		allSections = [],
 		allQuestions = {},
 		onRemove,
-		isOverlay = false
+		isOverlay = false,
+		source = 'guide'
 	}: Props = $props();
 
 	let showSettings = $state(false);
@@ -41,9 +43,12 @@
 		data: {
 			type: 'question',
 			question,
-			sectionId
+			sectionId,
+			source
 		}
 	});
+
+	let isChatDropTarget = $derived(dragState.chatDropTarget?.id === question.id);
 
 	function handleImageUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -69,6 +74,9 @@
 	class:rotate-1={isOverlay}
 	class:border-l-4={!isOverlay}
 	class:border-l-primary={!isOverlay}
+	style:box-shadow={isChatDropTarget && !isOverlay
+		? '0 -3px 0 0 var(--color-primary)'
+		: undefined}
 	style:max-height={dragState.draggingType === 'question' && !isOverlay ? '19rem' : 'none'}
 	style:overflow={dragState.draggingType === 'question' && !isOverlay ? 'hidden' : 'visible'}
 	{@attach ref}
