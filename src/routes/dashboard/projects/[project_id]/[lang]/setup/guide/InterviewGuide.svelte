@@ -345,7 +345,16 @@
 	}}
 />
 
-<h1 class="page-title">Interview Guide</h1>
+<div class="flex justify-between">
+	<h1 class="page-title">Interview Guide</h1>
+	<button
+		class="mb-2 rounded-full bg-secondary px-6 font-medium text-gray-700 hover:brightness-95"
+		onclick={() => (showGenerateGuideModal = true)}
+	>
+		<i class="fa-solid fa-wand-magic-sparkles"></i>
+		Generate
+	</button>
+</div>
 
 <p class="mb-6 text-gray-600">
 	On this page, you can create an interview guide that will be used by AInterviewer to conduct the
@@ -413,7 +422,7 @@
 								generatingQuestionSectionIdx = sIdx;
 								showGenerateQuestionModal = true;
 							}}
-					/>
+						/>
 					{/each}
 				</div>
 
@@ -584,13 +593,6 @@
 			>
 				<i class="fa-solid fa-file-export"></i>
 				Export JSON
-			</button>
-			<button
-				class="rounded-full bg-secondary px-6 py-2 font-medium text-gray-700 hover:brightness-95"
-				onclick={() => (showGenerateGuideModal = true)}
-			>
-				<i class="fa-solid fa-wand-magic-sparkles"></i>
-				Generate
 			</button>
 			<button
 				class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark"
