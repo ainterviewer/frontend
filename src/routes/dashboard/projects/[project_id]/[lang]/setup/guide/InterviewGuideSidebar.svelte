@@ -145,9 +145,12 @@
 				: ''}">Question sections</a
 		>
 		<div
-			class="ml-3 space-y-1 border-l-2 border-gray-100 pl-4"
+			class="ml-3 space-y-1 border-l-2 border-gray-100 pb-2 pl-4"
 			ondragover={(e) => {
-				if (draggingType === 'section') e.preventDefault();
+				if (draggingType !== 'section') return;
+				e.preventDefault();
+				// Only reaches here when cursor is below all section wrappers
+				sectionInsertBefore = localSections.length;
 			}}
 			ondrop={onSectionDrop}
 		>
@@ -157,8 +160,20 @@
 					<div class="pointer-events-none mx-1 h-0.5 rounded-full bg-primary"></div>
 				{/if}
 
-				<div class="space-y-1" class:opacity-40={draggingSectionIdx === i}>
-					<!-- Section header row – draggable for section reordering -->
+				<!-- Section wrapper: handles section drags over the entire section area
+				     (header row's handler stops propagation when it fires, so this only
+				     fires when the cursor is over the questions sub-area) -->
+				<div
+					class="space-y-1"
+					class:opacity-40={draggingSectionIdx === i}
+					ondragover={(e) => {
+						if (draggingType !== 'section') return;
+						e.preventDefault();
+						e.stopPropagation(); // prevent outer container from setting insertBefore=length
+						sectionInsertBefore = i + 1;
+					}}
+				>
+					<!-- Section header row – draggable; upper/lower half refines the position -->
 					<div
 						draggable="true"
 						class="group/section flex items-center rounded-md transition-colors hover:bg-gray-100
@@ -188,11 +203,19 @@
 						</a>
 					</div>
 
-					<!-- Questions for this section (always rendered for drop targeting) -->
+					<!-- Questions container: always rendered for drop targeting.
+					     Question rows stop propagation, so this handler only fires when
+					     the cursor is on the container background (below/between rows).
+					     That maps naturally to "insert at end". -->
 					<div
-						class="ml-2 space-y-0.5 border-l border-gray-200 pl-3"
+						class="ml-2 min-h-3 space-y-0.5 border-l border-gray-200 pb-1 pl-3"
 						ondragover={(e) => {
-							if (draggingType === 'question') e.preventDefault();
+							if (draggingType !== 'question') return;
+							e.preventDefault();
+							questionInsert = {
+								sectionId: section.id,
+								insertBefore: (localQuestions[section.id] || []).length
+							};
 						}}
 						ondrop={onQuestionDrop}
 					>
@@ -231,39 +254,18 @@
 							</div>
 						{/each}
 
-						<!-- Drop indicator + catch zone at END of questions list -->
+						<!-- Drop indicator at END of questions list -->
 						{#if showQuestionIndicator(section.id, (localQuestions[section.id] || []).length)}
 							<div class="pointer-events-none mx-1 h-0.5 rounded-full bg-primary"></div>
 						{/if}
-						<div
-							class="h-2"
-							ondragover={(e) => {
-								if (draggingType !== 'question') return;
-								e.preventDefault();
-								e.stopPropagation();
-								questionInsert = {
-									sectionId: section.id,
-									insertBefore: (localQuestions[section.id] || []).length
-								};
-							}}
-						></div>
 					</div>
 				</div>
 			{/each}
 
-			<!-- Drop indicator + catch zone at END of sections list -->
+			<!-- Drop indicator at END of sections list -->
 			{#if showSectionIndicator(localSections.length)}
 				<div class="pointer-events-none mx-1 h-0.5 rounded-full bg-primary"></div>
 			{/if}
-			<div
-				class="h-2"
-				ondragover={(e) => {
-					if (draggingType !== 'section') return;
-					e.preventDefault();
-					e.stopPropagation();
-					sectionInsertBefore = localSections.length;
-				}}
-			></div>
 		</div>
 		<a
 			href="#outro"
