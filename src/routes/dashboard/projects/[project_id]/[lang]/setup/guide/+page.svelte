@@ -225,7 +225,7 @@
 		<InterviewGuide guide={data.guide} lang={data.lang} />
 	{/key}
 
-	<AssistanceChat project_id={data.project_id} lang={data.lang}>
+	<AssistanceChat project_id={data.project_id} lang={data.lang} guide={data.guide}>
 		{#snippet questionMessage(item: GuideQuestion, msgIndex: number)}
 			<SortableQuestion
 				question={item}
