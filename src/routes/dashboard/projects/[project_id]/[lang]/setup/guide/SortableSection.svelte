@@ -78,7 +78,9 @@
 	class:rotate-1={isOverlay}
 	style:box-shadow={chatDropTarget && !isOverlay
 		? chatDropTarget.dragType === 'section'
-			? '0 -3px 0 0 var(--color-primary)'
+			? chatDropTarget.position === 'before'
+				? '0 -3px 0 0 var(--color-primary)'
+				: '0 3px 0 0 var(--color-primary)'
 			: '0 3px 0 0 var(--color-primary)'
 		: undefined}
 	style:max-height={dragState.draggingType === 'section' && !isOverlay ? '19rem' : 'none'}

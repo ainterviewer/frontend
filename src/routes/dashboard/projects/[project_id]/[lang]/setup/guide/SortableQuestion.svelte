@@ -48,7 +48,9 @@
 		}
 	});
 
-	let isChatDropTarget = $derived(dragState.chatDropTarget?.id === question.id);
+	let chatTargetInfo = $derived(
+		dragState.chatDropTarget?.id === question.id ? dragState.chatDropTarget : null
+	);
 
 	function handleImageUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -77,7 +79,11 @@
 	class:rotate-1={isOverlay}
 	class:border-l-4={!isOverlay}
 	class:border-l-primary={!isOverlay}
-	style:box-shadow={isChatDropTarget && !isOverlay ? '0 -3px 0 0 var(--color-primary)' : undefined}
+	style:box-shadow={chatTargetInfo && !isOverlay
+		? chatTargetInfo.position === 'before'
+			? '0 -3px 0 0 var(--color-primary)'
+			: '0 3px 0 0 var(--color-primary)'
+		: undefined}
 	style:max-height={dragState.draggingType === 'question' && !isOverlay ? '19rem' : 'none'}
 	style:overflow={dragState.draggingType === 'question' && !isOverlay ? 'hidden' : 'visible'}
 	{@attach ref}

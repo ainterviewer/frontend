@@ -6,6 +6,7 @@ export type ChatDropTarget = {
 	id: string;
 	targetType: 'section' | 'question';
 	dragType: 'section' | 'question';
+	position: 'before' | 'after';
 } | null;
 
 let _chatDropTarget = $state<ChatDropTarget>(null);

@@ -20,6 +20,7 @@
 
 	let activeItem = $state<GuideSection | GuideQuestion | null>(null);
 	let activeDragType = $state<'section' | 'question' | null>(null);
+	let pointerY = 0;
 
 	$effect(() => {
 		dragState.draggingType = activeDragType;
@@ -36,9 +37,32 @@
 
 		// Chat-sourced items: track hover target for visual feedback, skip move logic
 		if (source.data?.source === 'chat') {
-			dragState.chatDropTarget = target
-				? { id: target.id, targetType: target.type, dragType: source.type }
-				: null;
+			if (!target) {
+				dragState.chatDropTarget = null;
+				return;
+			}
+
+			// Determine before/after based on pointer Y vs element midpoint.
+			// Only applies for question-on-question and section-on-section drops;
+			// question-on-section always appends (position unused for that case).
+			let position: 'before' | 'after' = 'before';
+			const needsPosition =
+				(source.type === 'question' && target.type === 'question') ||
+				(source.type === 'section' && target.type === 'section');
+			if (needsPosition) {
+				const el = document.getElementById(target.id);
+				if (el) {
+					const rect = el.getBoundingClientRect();
+					position = pointerY > rect.top + rect.height / 2 ? 'after' : 'before';
+				}
+			}
+
+			dragState.chatDropTarget = {
+				id: target.id,
+				targetType: target.type,
+				dragType: source.type,
+				position
+			};
 			return;
 		}
 
@@ -95,7 +119,10 @@
 						const idx = guideStore.localQuestions[targetSectionId]?.findIndex(
 							(q) => q.id === target.id
 						);
-						if (idx !== undefined && idx !== -1) insertIdx = idx;
+						if (idx !== undefined && idx !== -1) {
+							const position = dragState.chatDropTarget?.position ?? 'before';
+							insertIdx = position === 'after' ? idx + 1 : idx;
+						}
 					}
 				} else if (target.type === 'section') {
 					targetSectionId = target.id;
@@ -122,7 +149,10 @@
 				let insertIdx = guideStore.localSections.length;
 				if (target.type === 'section') {
 					const idx = guideStore.localSections.findIndex((s) => s.id === target.id);
-					if (idx !== -1) insertIdx = idx;
+					if (idx !== -1) {
+						const position = dragState.chatDropTarget?.position ?? 'before';
+						insertIdx = position === 'after' ? idx + 1 : idx;
+					}
 				}
 
 				guideStore.localSections.splice(insertIdx, 0, newSection);
@@ -182,6 +212,8 @@
 		}
 	}
 </script>
+
+<svelte:window onpointermove={(e) => (pointerY = e.clientY)} />
 
 <DragDropProvider
 	{sensors}
