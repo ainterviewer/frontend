@@ -55,6 +55,11 @@
 	// Initialize the shared store
 	guideStore.localSections = mapped.sections;
 	guideStore.localQuestions = mapped.questions;
+	guideStore.guide = guide;
+
+	$effect(() => {
+		guide.question_sections = mapFromLocal(guideStore.localSections, guideStore.localQuestions);
+	});
 
 	function getSnapshot() {
 		return JSON.stringify({

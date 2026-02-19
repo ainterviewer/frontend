@@ -18,7 +18,7 @@
 
 	const sensors = [KeyboardSensor, PointerSensor];
 
-	let activeItem = $state<GuideSection | GuideQuestion | null>(null);
+let activeItem = $state<GuideSection | GuideQuestion | null>(null);
 	let activeDragType = $state<'section' | 'question' | null>(null);
 	let pointerY = 0;
 
@@ -225,7 +225,7 @@
 		<InterviewGuide guide={data.guide} lang={data.lang} />
 	{/key}
 
-	<AssistanceChat project_id={data.project_id} lang={data.lang} guide={data.guide}>
+	<AssistanceChat project_id={data.project_id} lang={data.lang} guide={guideStore.guide ?? data.guide}>
 		{#snippet questionMessage(item: GuideQuestion, msgIndex: number)}
 			<SortableQuestion
 				question={item}
