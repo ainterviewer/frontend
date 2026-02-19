@@ -1,20 +1,21 @@
 <script lang="ts">
 	import { Assistance } from '$lib/api/sdk.gen';
-	import type { ChatMessage } from '$lib/api/types.gen';
+	import type { ChatMessage, InterviewGuideOutput } from '$lib/api/types.gen';
 	import type { GuideQuestion, GuideSection } from '$lib/stores/guideStore.svelte';
 	import { tick, type Snippet } from 'svelte';
 	import { fly } from 'svelte/transition';
 
 	interface Props {
 		project_id: string;
-		lang?: string;
+		lang: string;
+		guide: InterviewGuideOutput;
 		questionMessage?: Snippet<[item: GuideQuestion, index: number]>;
 		sectionMessage?: Snippet<
 			[item: { section: GuideSection; questions: GuideQuestion[] }, index: number]
 		>;
 	}
 
-	let { project_id, lang, questionMessage, sectionMessage }: Props = $props();
+	let { project_id, lang, guide, questionMessage, sectionMessage }: Props = $props();
 
 	let isOpen = $state(false);
 	let messages = $state<ChatMessage[]>([]);
@@ -122,14 +123,13 @@
 		scrollToBottom();
 
 		try {
-			const res = await fetch(`/api/assistance/${project_id}/${lang}/chat/`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-				body: new URLSearchParams({ prompt }),
+			let response = await Assistance.sendChat({
+				path: { project_id, lang },
+				body: { prompt: prompt, guide: guide },
 				credentials: 'include'
 			});
 
-			if (!res.ok || !res.body) {
+			if (!response.ok || !response.body) {
 				messages[modelIdx] = {
 					role: 'model',
 					timestamp: new Date().toISOString(),
@@ -138,7 +138,7 @@
 				return;
 			}
 
-			const reader = res.body.getReader();
+			const reader = response.body.getReader();
 			const decoder = new TextDecoder();
 			let buffer = '';
 			let firstChunk = true;
