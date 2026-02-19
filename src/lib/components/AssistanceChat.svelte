@@ -237,7 +237,7 @@
 	<div
 		class="fixed z-50 flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 transition-all duration-300 ease-in-out {isMaximized
 			? 'right-4 bottom-4 h-200 w-300'
-			: 'right-6 bottom-24 h-125 w-96'}"
+			: 'right-6 bottom-24 h-125 w-100'}"
 		transition:fly={{ y: 16, duration: 200 }}
 	>
 		<!-- Header -->
