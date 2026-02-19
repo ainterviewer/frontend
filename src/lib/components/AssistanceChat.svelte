@@ -76,16 +76,16 @@
 	async function loadHistory() {
 		if (historyLoaded) return;
 		try {
-			const res = await fetch(`/api/assistance/${project_id}/${lang}/chat/`, {
-				credentials: 'include'
+			const { data, error } = await Assistance.getChat({
+				path: { project_id, lang },
+				credentials: 'include',
+				parseAs: 'text'
 			});
-			if (res.ok) {
-				const text = await res.text();
-				const parsed = text
+			if (!error && data) {
+				messages = (data as string)
 					.split('\n')
 					.filter((l) => l.trim())
 					.map((l) => JSON.parse(l) as ChatMessage);
-				messages = parsed;
 			}
 		} catch {
 			// Ignore — no session yet or network error
@@ -123,13 +123,14 @@
 		scrollToBottom();
 
 		try {
-			let response = await Assistance.sendChat({
+			const { data, error } = await Assistance.sendChat({
 				path: { project_id, lang },
 				body: { prompt: prompt, guide: guide },
-				credentials: 'include'
+				credentials: 'include',
+				parseAs: 'stream'
 			});
 
-			if (!response.ok || !response.body) {
+			if (error || !data) {
 				messages[modelIdx] = {
 					role: 'model',
 					timestamp: new Date().toISOString(),
@@ -138,7 +139,7 @@
 				return;
 			}
 
-			const reader = response.body.getReader();
+			const reader = data.getReader();
 			const decoder = new TextDecoder();
 			let buffer = '';
 			let firstChunk = true;
