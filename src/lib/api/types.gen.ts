@@ -208,6 +208,17 @@ export type AnnotationValuePublic = {
 export type AnswerLength = 'short' | 'medium' | 'long';
 
 /**
+ * AssistanceChatRequest
+ */
+export type AssistanceChatRequest = {
+    /**
+     * Prompt
+     */
+    prompt: string;
+    guide: InterviewGuideInput;
+};
+
+/**
  * BackgroundInfoOptions
  *
  * Dataclass representing the possible values for the background info of the synthetic agents
@@ -331,16 +342,6 @@ export type BodyCreateWelcome = {
      * Video
      */
     video?: Blob | File | null;
-};
-
-/**
- * Body_send_chat
- */
-export type BodySendChat = {
-    /**
-     * Prompt
-     */
-    prompt: string;
 };
 
 /**
@@ -1386,23 +1387,7 @@ export type MessagePublic = {
     /**
      * Survey Item
      */
-    survey_item?: ({
-        type: 'radio';
-    } & RadioItem) | ({
-        type: 'checkbox';
-    } & CheckboxItem) | ({
-        type: 'likert';
-    } & LikertItem) | ({
-        type: 'slider';
-    } & SliderItem) | ({
-        type: 'number';
-    } & NumberItem) | ({
-        type: 'date';
-    } & DateItem) | ({
-        type: 'datetime';
-    } & DatetimeItem) | ({
-        type: 'time';
-    } & TimeItem) | null;
+    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
     /**
      * Skipped By Condition
      */
@@ -1717,6 +1702,10 @@ export type QuestionInput = {
      */
     max_probes_time?: number | null;
     /**
+     * Survey Item
+     */
+    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    /**
      * Can Answer
      *
      * Should the user be able to answer the question? Disable this to make the question into a message
@@ -1764,26 +1753,6 @@ export type QuestionInput = {
      * Variables that can be used in the question, ie. uuid. In case they are supplied, they will be filled in before the question is asked. The question should be formatted with Jinja2 style templating.
      */
     variables?: Array<string> | null;
-    /**
-     * Survey Item
-     */
-    survey_item?: ({
-        type: 'radio';
-    } & RadioItem) | ({
-        type: 'checkbox';
-    } & CheckboxItem) | ({
-        type: 'likert';
-    } & LikertItem) | ({
-        type: 'slider';
-    } & SliderItem) | ({
-        type: 'number';
-    } & NumberItem) | ({
-        type: 'date';
-    } & DateItem) | ({
-        type: 'datetime';
-    } & DatetimeItem) | ({
-        type: 'time';
-    } & TimeItem) | null;
     /**
      * References
      */
@@ -1836,6 +1805,10 @@ export type QuestionOutput = {
      */
     max_probes_time?: number | null;
     /**
+     * Survey Item
+     */
+    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    /**
      * Can Answer
      *
      * Should the user be able to answer the question? Disable this to make the question into a message
@@ -1883,26 +1856,6 @@ export type QuestionOutput = {
      * Variables that can be used in the question, ie. uuid. In case they are supplied, they will be filled in before the question is asked. The question should be formatted with Jinja2 style templating.
      */
     variables?: Array<string> | null;
-    /**
-     * Survey Item
-     */
-    survey_item?: ({
-        type: 'radio';
-    } & RadioItem) | ({
-        type: 'checkbox';
-    } & CheckboxItem) | ({
-        type: 'likert';
-    } & LikertItem) | ({
-        type: 'slider';
-    } & SliderItem) | ({
-        type: 'number';
-    } & NumberItem) | ({
-        type: 'date';
-    } & DateItem) | ({
-        type: 'datetime';
-    } & DatetimeItem) | ({
-        type: 'time';
-    } & TimeItem) | null;
     /**
      * References
      */
@@ -2523,6 +2476,10 @@ export type AuthToken = {
  */
 export type ChatMessage = {
     /**
+     * Type
+     */
+    type?: 'message' | 'question' | 'section';
+    /**
      * Role
      */
     role: 'user' | 'model';
@@ -2534,10 +2491,6 @@ export type ChatMessage = {
      * Content
      */
     content: string;
-    /**
-     * Type
-     */
-    type?: 'message' | 'question' | 'section';
 };
 
 /**
@@ -2613,23 +2566,7 @@ export type OutgoingHistoryMessage = {
     /**
      * Survey Item
      */
-    survey_item?: ({
-        type: 'radio';
-    } & RadioItem) | ({
-        type: 'checkbox';
-    } & CheckboxItem) | ({
-        type: 'likert';
-    } & LikertItem) | ({
-        type: 'slider';
-    } & SliderItem) | ({
-        type: 'number';
-    } & NumberItem) | ({
-        type: 'date';
-    } & DateItem) | ({
-        type: 'datetime';
-    } & DatetimeItem) | ({
-        type: 'time';
-    } & TimeItem) | null;
+    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
 };
 
 /**
@@ -2657,23 +2594,7 @@ export type OutgoingMessage = {
     /**
      * Survey Item
      */
-    survey_item?: ({
-        type: 'radio';
-    } & RadioItem) | ({
-        type: 'checkbox';
-    } & CheckboxItem) | ({
-        type: 'likert';
-    } & LikertItem) | ({
-        type: 'slider';
-    } & SliderItem) | ({
-        type: 'number';
-    } & NumberItem) | ({
-        type: 'date';
-    } & DateItem) | ({
-        type: 'datetime';
-    } & DatetimeItem) | ({
-        type: 'time';
-    } & TimeItem) | null;
+    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
     /**
      * Can Answer
      */
@@ -3329,7 +3250,7 @@ export type GetChatResponses = {
 };
 
 export type SendChatData = {
-    body: BodySendChat;
+    body: AssistanceChatRequest;
     path: {
         /**
          * Project Id
