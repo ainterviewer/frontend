@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
 		if (response.error) {
 			console.error('Error fetching guide:', response.error);
-			return { guide: null };
+			return { guide: null, lang, project_id };
 		}
 
 		return {
