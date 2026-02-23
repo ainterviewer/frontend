@@ -13,9 +13,17 @@
 		sectionMessage?: Snippet<
 			[item: { section: GuideSection; questions: GuideQuestion[] }, index: number]
 		>;
+		isMaximized?: boolean;
 	}
 
-	let { project_id, lang, guide, questionMessage, sectionMessage }: Props = $props();
+	let {
+		project_id,
+		lang,
+		guide,
+		questionMessage,
+		sectionMessage,
+		isMaximized = $bindable(false)
+	}: Props = $props();
 
 	let isOpen = $state(false);
 	let messages = $state<ChatMessage[]>([]);
@@ -25,7 +33,6 @@
 	let messagesEl: HTMLDivElement | undefined = $state();
 	let textareaEl: HTMLTextAreaElement | undefined = $state();
 	let confirmReset = $state(false);
-	let isMaximized = $state(false);
 
 	// Parsed state for typed messages (question/section). Keyed by message index.
 	// Stored separately so edits are preserved even as new messages arrive.
@@ -274,6 +281,13 @@
 					class="rounded p-1 opacity-70 transition-opacity hover:opacity-100"
 				>
 					<i class="fa-solid {isMaximized ? 'fa-compress' : 'fa-expand'} text-xs"></i>
+				</button>
+				<button
+					onclick={toggle}
+					title="Close"
+					class="rounded p-1 opacity-70 transition-opacity hover:opacity-100"
+				>
+					<i class="fa-solid fa-window-minimize text-xs"></i>
 				</button>
 			{/if}
 		</div>

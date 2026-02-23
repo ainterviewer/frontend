@@ -18,8 +18,9 @@
 
 	const sensors = [KeyboardSensor, PointerSensor];
 
-let activeItem = $state<GuideSection | GuideQuestion | null>(null);
+	let activeItem = $state<GuideSection | GuideQuestion | null>(null);
 	let activeDragType = $state<'section' | 'question' | null>(null);
+	let isChatMaximized = $state(false);
 	let pointerY = 0;
 
 	$effect(() => {
@@ -90,6 +91,9 @@ let activeItem = $state<GuideSection | GuideQuestion | null>(null);
 		const sourceId = source?.id ?? source?.current?.id;
 		if (sourceId) {
 			dragState.draggingId = sourceId;
+		}
+		if (data?.source === 'chat') {
+			isChatMaximized = false;
 		}
 		if (type === 'section') {
 			activeItem = data?.section;
@@ -225,7 +229,12 @@ let activeItem = $state<GuideSection | GuideQuestion | null>(null);
 		<InterviewGuide guide={data.guide} lang={data.lang} />
 	{/key}
 
-	<AssistanceChat project_id={data.project_id} lang={data.lang} guide={guideStore.guide ?? data.guide}>
+	<AssistanceChat
+		project_id={data.project_id}
+		lang={data.lang}
+		guide={guideStore.guide ?? data.guide}
+		bind:isMaximized={isChatMaximized}
+	>
 		{#snippet questionMessage(item: GuideQuestion, msgIndex: number)}
 			<SortableQuestion
 				question={item}
