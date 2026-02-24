@@ -370,46 +370,66 @@
 							bars: { motion: { type: 'tween', duration: 300 } }
 						}}
 					/>
+				{:else}
+					<div class="flex h-full items-center justify-center">
+						<span class="text-muted-foreground text-sm">No data available</span>
+					</div>
 				{/if}
 			</div>
 		</div>
 
 		<!-- 4. Interviews by Time of Day -->
-		{#if timeOfDayHistogram.length > 0}
-			<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm">
-				<h3 class="mb-4 text-lg font-medium">Interviews by Time of Day</h3>
+		<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm">
+			<h3 class="mb-4 text-lg font-medium">Interviews by Time of Day</h3>
+			{#if timeOfDayHistogram.length > 0}
 				<HistogramChart data={timeOfDayHistogram} />
-			</div>
-		{/if}
+			{:else}
+				<div class="flex h-75 w-full items-center justify-center">
+					<span class="text-muted-foreground text-sm">No data available</span>
+				</div>
+			{/if}
+		</div>
 		<!-- 5. Duration Histogram -->
-		{#if durationHistogram.length > 0}
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<h3 class="mb-4 text-lg font-medium">Duration (seconds)</h3>
+		<div class="bg-card rounded-lg border p-6 shadow-sm">
+			<h3 class="mb-4 text-lg font-medium">Duration (seconds)</h3>
+			{#if durationHistogram.length > 0}
 				<HistogramChart data={durationHistogram} />
-			</div>
-		{/if}
+			{:else}
+				<div class="flex h-75 w-full items-center justify-center">
+					<span class="text-muted-foreground text-sm">No data available</span>
+				</div>
+			{/if}
+		</div>
 
 		<!-- 6. Message Count Histogram -->
-		{#if messageCountHistogram.length > 0}
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<h3 class="mb-4 text-lg font-medium">Message Count</h3>
+		<div class="bg-card rounded-lg border p-6 shadow-sm">
+			<h3 class="mb-4 text-lg font-medium">Message Count</h3>
+			{#if messageCountHistogram.length > 0}
 				<HistogramChart data={messageCountHistogram} />
-			</div>
-		{/if}
+			{:else}
+				<div class="flex h-75 w-full items-center justify-center">
+					<span class="text-muted-foreground text-sm">No data available</span>
+				</div>
+			{/if}
+		</div>
 
 		<!-- 7. Message Length Histogram -->
-		{#if messageLengthHistogram.length > 0}
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<h3 class="mb-4 text-lg font-medium">Message Length (characters)</h3>
+		<div class="bg-card rounded-lg border p-6 shadow-sm">
+			<h3 class="mb-4 text-lg font-medium">Message Length (characters)</h3>
+			{#if messageLengthHistogram.length > 0}
 				<HistogramChart data={messageLengthHistogram} tooltipLabel="Messages" />
-			</div>
-		{/if}
+			{:else}
+				<div class="flex h-75 w-full items-center justify-center">
+					<span class="text-muted-foreground text-sm">No data available</span>
+				</div>
+			{/if}
+		</div>
 
 		<!-- 8. Dropout Stats -->
-		{#if dropoutStats.length > 0}
-			<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
-				<h3 class="mb-4 text-lg font-medium">Dropout Analysis</h3>
-				<div class="h-75 w-full">
+		<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
+			<h3 class="mb-4 text-lg font-medium">Dropout Analysis</h3>
+			<div class="h-75 w-full">
+				{#if dropoutStats.length > 0}
 					<BarChart
 						data={dropoutStats}
 						x="label"
@@ -433,8 +453,12 @@
 							bars: { motion: { type: 'tween', duration: 300 } }
 						}}
 					/>
-				</div>
+				{:else}
+					<div class="flex h-full items-center justify-center">
+						<span class="text-muted-foreground text-sm">No data available</span>
+					</div>
+				{/if}
 			</div>
-		{/if}
+		</div>
 	</div>
 {/if}
