@@ -57,6 +57,11 @@
 	guideStore.localQuestions = mapped.questions;
 	guideStore.guide = guide;
 
+	// Normalize question_sections synchronously so the initial snapshot
+	// matches what the $effect will produce (mapToLocal → mapFromLocal
+	// round-trip adds defaults / strips ids, changing the JSON).
+	guide.question_sections = mapFromLocal(guideStore.localSections, guideStore.localQuestions);
+
 	$effect(() => {
 		guide.question_sections = mapFromLocal(guideStore.localSections, guideStore.localQuestions);
 	});
