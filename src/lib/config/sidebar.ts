@@ -112,7 +112,7 @@ export const projectSidebarItems: SidebarItem[] = [
 	},
 	{
 		label: 'Analysis',
-		href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
+		// href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
 		icon: 'fas fa-chart-pie',
 		children: [
 			{
