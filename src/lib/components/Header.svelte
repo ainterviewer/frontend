@@ -6,6 +6,7 @@
 	import type { ProjectPublic, UserPublic } from '$lib/api/types.gen';
 	import Wave from '$lib/components/Wave.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls.js';
+	import HoverInfo from './HoverInfo.svelte';
 
 	interface HeaderProps {
 		data: {
@@ -52,13 +53,13 @@
 		</div>
 		<nav>
 			<ul class="m-0 flex items-center">
-				<li>
-					<a
-						href={resolve('/dashboard')}
-						class="m-2 block p-2 text-center text-sm text-gray-200 no-underline hover:text-light"
-						>Dashboard</a
-					>
-				</li>
+				<!-- <li> -->
+				<!-- 	<a -->
+				<!-- 		href={resolve('/dashboard')} -->
+				<!-- 		class="m-2 block p-2 text-center text-sm text-gray-200 no-underline hover:text-light" -->
+				<!-- 		>Dashboard</a -->
+				<!-- 	> -->
+				<!-- </li> -->
 				<!-- FIXME: -->
 				<!-- <li> -->
 				<!-- 	<a -->
@@ -67,6 +68,16 @@
 				<!-- 		>Docs</a -->
 				<!-- 	> -->
 				<!-- </li> -->
+				{#if data.user?.scope === 'demo'}
+					<li class="m-2 block p-2 text-center text-sm text-gray-200 no-underline hover:text-light">
+						<HoverInfo
+							text="You're currently active as a demo user, which means that you have restricted access to parts of the platform.
+            <br><br>
+            Please get <a class='text-primary underline' href='mailto:contact@ainterviewer.dk'>in contact</a> with us if you need an upgrade, allowing you to use all features of the platform."
+							>Demo Access</HoverInfo
+						>
+					</li>
+				{/if}
 				<li>
 					<div class="relative">
 						<button
