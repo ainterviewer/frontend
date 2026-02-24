@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
+	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import SortableHeader from './SortableHeader.svelte';
 	import TablePaginationFooter from './TablePaginationFooter.svelte';
+
+	let isDemo = $derived(page.data.user?.scope === 'demo');
 
 	// State
 	let interviews = $state<any[]>([]);
@@ -228,6 +231,13 @@
 		};
 	});
 </script>
+
+{#if isDemo}
+	<DemoRestrictionOverlay
+		title="Interviews unavailable"
+		description="You cannot view interviews with your current demo access."
+	/>
+{/if}
 
 <div class="mb-2 flex items-end justify-between">
 	<h1 class="page-title">Interviews</h1>
