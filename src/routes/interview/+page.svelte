@@ -18,11 +18,13 @@
 		interviewType?: InterviewType;
 		experimentID?: string;
 		interviewConfig: InterviewConfig;
+		isProjectOwnerDemoUser: boolean;
 		help_title?: string;
 		help_text?: string;
 		exit_title?: string;
 		exit_text?: string;
 		exit_button?: string;
+		authError?: boolean;
 	}
 
 	let { data }: { data: PageData } = $props();
@@ -30,7 +32,11 @@
 	let projectId = $derived(data.project_id);
 	let lang = $derived(data.lang);
 	let interviewType = $derived(data.interviewType);
+	console.log('interviewType: ', interviewType);
 	const interviewConfig = $derived(data.interviewConfig);
+	const isDemoBlocked = $derived(data.isProjectOwnerDemoUser && interviewType === 'distributed');
+	const isAuthBlocked = $derived(data.authError === true);
+	console.log('is demo blocked? : ', isDemoBlocked);
 
 	// Help/Exit data
 	let helpTitle = $derived(data.help_title || 'Help');
@@ -59,6 +65,11 @@
 	let consentAccepting = $state(false);
 
 	onMount(() => {
+		if (isDemoBlocked || isAuthBlocked) {
+			isInitializing = false;
+			return;
+		}
+
 		const existingProjectId = getProjectIdFromCookie();
 		const existingInterviewId = getInterviewIdFromCookie();
 
@@ -219,7 +230,15 @@
 		AInterviewer
 	</h1>
 
-	{#if chat}
+	{#if isDemoBlocked}
+		<div class="flex flex-1 items-center justify-center px-6">
+			<p class="text-center text-gray-600">This interview is not available for demo projects.</p>
+		</div>
+	{:else if isAuthBlocked}
+		<div class="flex flex-1 items-center justify-center px-6">
+			<p class="text-center text-gray-600">You must be logged in to access this interview.</p>
+		</div>
+	{:else if chat}
 		<InterviewChat
 			{chat}
 			{lang}
