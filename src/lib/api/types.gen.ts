@@ -341,7 +341,7 @@ export type BodyCreateWelcome = {
     /**
      * Video
      */
-    video?: Blob | File | null;
+    video?: string | null;
 };
 
 /**
@@ -359,7 +359,7 @@ export type BodyUploadAudio = {
     /**
      * File
      */
-    file: Blob | File;
+    file: string;
 };
 
 /**
@@ -1609,6 +1609,10 @@ export type ProjectPublic = {
     status?: ProjectStatus;
     config: InterviewConfig;
     /**
+     * Owner Id
+     */
+    owner_id: string;
+    /**
      * N Interviews
      */
     n_interviews?: number | null;
@@ -2009,7 +2013,7 @@ export type Reference = {
 /**
  * Scope
  */
-export type Scope = 'admin' | 'user' | 'guest';
+export type Scope = 'admin' | 'user' | 'demo' | 'guest';
 
 /**
  * SecurityConfig
@@ -2282,7 +2286,7 @@ export type UserCreate = {
     /**
      * Last Name
      */
-    last_name: string | null;
+    last_name?: string | null;
     /**
      * Created At
      */
@@ -2325,7 +2329,7 @@ export type UserPublic = {
     /**
      * Last Name
      */
-    last_name: string | null;
+    last_name?: string | null;
     /**
      * Created At
      */
@@ -2437,7 +2441,7 @@ export type FastapiCompatV2BodyUploadImage1 = {
     /**
      * File
      */
-    file: Blob | File;
+    file: string;
 };
 
 /**
@@ -2455,7 +2459,7 @@ export type FastapiCompatV2BodyUploadImage2 = {
     /**
      * File
      */
-    file: Blob | File;
+    file: string;
 };
 
 /**
@@ -4735,6 +4739,38 @@ export type GenerateProjectQrResponses = {
      */
     200: unknown;
 };
+
+export type CheckProjectOwnerData = {
+    body: ExportMessagesRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/owner';
+};
+
+export type CheckProjectOwnerErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CheckProjectOwnerError = CheckProjectOwnerErrors[keyof CheckProjectOwnerErrors];
+
+export type CheckProjectOwnerResponses = {
+    /**
+     * Response Check Project Owner
+     *
+     * Successful Response
+     */
+    200: boolean;
+};
+
+export type CheckProjectOwnerResponse = CheckProjectOwnerResponses[keyof CheckProjectOwnerResponses];
 
 export type GetBackgroundInfoData = {
     body?: never;
