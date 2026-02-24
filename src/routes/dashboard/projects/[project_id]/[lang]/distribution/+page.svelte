@@ -66,6 +66,7 @@
 					class="flex w-fit cursor-pointer items-center transition-transform active:scale-105"
 					title="Copy link"
 					type="button"
+					disabled={page.data.user?.scope === 'demo'}
 				>
 					<span
 						class="mr-2 inline-block rounded-[5px] border border-[#e0e0e0] bg-[#f5f5f5] px-[7px] py-[5px]"

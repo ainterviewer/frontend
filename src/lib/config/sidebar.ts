@@ -100,7 +100,7 @@ export const projectSidebarItems: SidebarItem[] = [
 		children: [
 			{
 				label: 'Monitor',
-				href: '/dashboard/projects/{projectId}/{languageCode}/monitor',
+				href: '/dashboard/projects/{projectId}/{languageCode}/distribution/monitor',
 				icon: 'fa-solid fa-tower-cell'
 			}
 		]
