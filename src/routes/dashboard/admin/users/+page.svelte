@@ -10,6 +10,13 @@
 	let loading = $state(false);
 	let error = $state<string | null>(data.error);
 
+	const scopeColors: Record<string, string> = {
+		admin: 'bg-purple-100 text-purple-800',
+		user: 'bg-blue-100 text-blue-800',
+		demo: 'bg-amber-100 text-amber-800',
+		guest: 'bg-gray-100 text-gray-800'
+	};
+
 	$effect(() => {
 		users = data.users;
 		error = data.error;
@@ -97,12 +104,14 @@
 				{#each users as user (user.id)}
 					<tr>
 						<td class="py-4 pr-3 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-6">
-							{user.name}
+							{user.first_name}{user.last_name ? ` ${user.last_name}` : ''}
 						</td>
 						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">{user.email}</td>
 						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
 							<span
-								class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800"
+								class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {scopeColors[
+									user.scope
+								] ?? 'bg-green-100 text-green-800'}"
 							>
 								{user.scope}
 							</span>
