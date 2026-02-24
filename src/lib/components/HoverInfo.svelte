@@ -9,6 +9,7 @@
 		iconColor = 'gray-400',
 		iconHoverColor = 'gray-600',
 		asChild = false,
+		delay = 100,
 		children
 	}: {
 		text?: string;
@@ -17,6 +18,7 @@
 		iconColor?: string;
 		iconHoverColor?: string;
 		asChild?: boolean;
+		delay?: integer;
 		children?: Snippet<[{ props?: Record<string, unknown> }]>;
 	} = $props();
 
@@ -24,7 +26,7 @@
 </script>
 
 <Tooltip.Provider>
-	<Tooltip.Root delayDuration={300} disabled={isDisabled}>
+	<Tooltip.Root delayDuration={delay} disabled={isDisabled}>
 		{#if asChild}
 			<Tooltip.Trigger asChild>
 				{#snippet child({ props })}
@@ -44,11 +46,11 @@
 		{/if}
 		<Tooltip.Portal>
 			<Tooltip.Content
-				class="animate-in fade-in-0 zoom-in-95 z-50 max-w-xs rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 shadow-md outline-none"
+				class="animate-in fade-in-0 zoom-in-95 z-1001 max-w-xs rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 shadow-md outline-none"
 				sideOffset={4}
 			>
 				{#if text}
-					{text}
+					{@html text}
 				{:else if content}
 					{@render content()}
 				{/if}
