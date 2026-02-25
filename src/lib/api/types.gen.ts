@@ -1174,6 +1174,47 @@ export type InvitationCreate = {
     title?: string | null;
 };
 
+/**
+ * InvitationPublic
+ */
+export type InvitationPublic = {
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Reuseable
+     */
+    reuseable?: boolean;
+    user_scope?: Scope;
+    /**
+     * User Expires
+     */
+    user_expires?: string | null;
+    /**
+     * Title
+     */
+    title?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Invitation Link
+     */
+    readonly invitation_link: string;
+};
+
+/**
+ * InvitationsDeleteRequest
+ */
+export type InvitationsDeleteRequest = {
+    /**
+     * Ids
+     */
+    ids: Array<string>;
+};
+
 export type LanguageCode = string;
 
 /**
@@ -2660,6 +2701,33 @@ export type ReceivedData = {
      * filename for media asset
      */
     filename?: string | null;
+};
+
+/**
+ * InvitationPublic
+ */
+export type InvitationPublicWritable = {
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Reuseable
+     */
+    reuseable?: boolean;
+    user_scope?: Scope;
+    /**
+     * User Expires
+     */
+    user_expires?: string | null;
+    /**
+     * Title
+     */
+    title?: string | null;
+    /**
+     * Id
+     */
+    id: string;
 };
 
 export type GetAnalysisCategoriesData = {
@@ -5558,10 +5626,14 @@ export type GetReuseableInvitationsData = {
 
 export type GetReuseableInvitationsResponses = {
     /**
+     * Response Get Reuseable Invitations
+     *
      * Successful Response
      */
-    200: unknown;
+    200: Array<InvitationPublic>;
 };
+
+export type GetReuseableInvitationsResponse = GetReuseableInvitationsResponses[keyof GetReuseableInvitationsResponses];
 
 export type CreateInvitationData = {
     body: InvitationCreate;
@@ -5580,6 +5652,29 @@ export type CreateInvitationErrors = {
 export type CreateInvitationError = CreateInvitationErrors[keyof CreateInvitationErrors];
 
 export type CreateInvitationResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type DeleteInvitationsData = {
+    body: InvitationsDeleteRequest;
+    path?: never;
+    query?: never;
+    url: '/api/admin/admin/invitations/delete';
+};
+
+export type DeleteInvitationsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteInvitationsError = DeleteInvitationsErrors[keyof DeleteInvitationsErrors];
+
+export type DeleteInvitationsResponses = {
     /**
      * Successful Response
      */
