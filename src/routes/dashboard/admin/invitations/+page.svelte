@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { Admin } from '$lib/api/sdk.gen';
-	import type { InvitationPublic, InvitationCreate, Scope } from '$lib/api';
+	import type { InvitationPublic, InvitationCreate, Scope, TimeDelta } from '$lib/api';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -19,6 +19,10 @@
 	let newReuseable = $state(true);
 	let newUserScope = $state<Scope>('user');
 	let newUserExpires = $state('');
+	let userExpiresMode = $state<'absolute' | 'relative'>('relative');
+	let newUserExpiresDays = $state(0);
+	let newUserExpiresHours = $state(0);
+	let newUserExpiresMinutes = $state(0);
 
 	let allSelected = $derived(invitations.length > 0 && selectedIds.size === invitations.length);
 
@@ -96,19 +100,29 @@
 	}
 
 	async function handleCreate() {
-		if (!newExpiresAt) {
-			toast.error('Expiration date is required.');
-			return;
-		}
-
 		isLoading = true;
 		try {
+			let userExpires: string | TimeDelta | null = null;
+			if (userExpiresMode === 'absolute' && newUserExpires) {
+				userExpires = new Date(newUserExpires).toISOString();
+			} else if (userExpiresMode === 'relative') {
+				const hasDuration =
+					newUserExpiresDays > 0 || newUserExpiresHours > 0 || newUserExpiresMinutes > 0;
+				if (hasDuration) {
+					userExpires = {
+						days: newUserExpiresDays || undefined,
+						hours: newUserExpiresHours || undefined,
+						minutes: newUserExpiresMinutes || undefined
+					};
+				}
+			}
+
 			const body: InvitationCreate = {
-				expires_at: new Date(newExpiresAt).toISOString(),
+				expires_at: newExpiresAt ? new Date(newExpiresAt).toISOString() : null,
 				reuseable: newReuseable,
 				user_scope: newUserScope,
 				title: newTitle || null,
-				user_expires: newUserExpires ? new Date(newUserExpires).toISOString() : null
+				user_expires: userExpires
 			};
 
 			const response = await Admin.createInvitation({ body });
@@ -133,6 +147,10 @@
 		newReuseable = true;
 		newUserScope = 'user';
 		newUserExpires = '';
+		userExpiresMode = 'relative';
+		newUserExpiresDays = 0;
+		newUserExpiresHours = 0;
+		newUserExpiresMinutes = 0;
 	}
 
 	async function copyLink(link: string) {
@@ -210,14 +228,11 @@
 				/>
 			</div>
 			<div>
-				<label for="expires_at" class="block text-sm font-medium text-gray-700"
-					>Expires At <span class="text-red-500">*</span></label
-				>
+				<label for="expires_at" class="block text-sm font-medium text-gray-700">Expires At</label>
 				<input
 					id="expires_at"
 					type="datetime-local"
 					bind:value={newExpiresAt}
-					required
 					class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
 				/>
 			</div>
@@ -234,16 +249,72 @@
 					<option value="guest">Guest</option>
 				</select>
 			</div>
-			<div>
-				<label for="user_expires" class="block text-sm font-medium text-gray-700"
-					>User Expires</label
-				>
-				<input
-					id="user_expires"
-					type="datetime-local"
-					bind:value={newUserExpires}
-					class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
-				/>
+			<div class="sm:col-span-2">
+				<div class="mb-2 flex items-center gap-3">
+					<label class="block text-sm font-medium text-gray-700">User Expires</label>
+					<div class="flex rounded-md border border-gray-300 text-xs">
+						<button
+							type="button"
+							class="cursor-pointer rounded-l-md px-2 py-1 transition {userExpiresMode ===
+							'relative'
+								? 'bg-primary text-white'
+								: 'bg-white text-gray-600 hover:bg-gray-50'}"
+							onclick={() => (userExpiresMode = 'relative')}
+						>
+							Duration
+						</button>
+						<button
+							type="button"
+							class="cursor-pointer rounded-r-md px-2 py-1 transition {userExpiresMode ===
+							'absolute'
+								? 'bg-primary text-white'
+								: 'bg-white text-gray-600 hover:bg-gray-50'}"
+							onclick={() => (userExpiresMode = 'absolute')}
+						>
+							Date
+						</button>
+					</div>
+				</div>
+				{#if userExpiresMode === 'absolute'}
+					<input
+						id="user_expires"
+						type="datetime-local"
+						bind:value={newUserExpires}
+						class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+					/>
+				{:else}
+					<div class="mt-1 flex gap-3">
+						<div class="flex items-center gap-1">
+							<input
+								type="number"
+								min="0"
+								bind:value={newUserExpiresDays}
+								class="w-20 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+							/>
+							<span class="text-sm text-gray-500">days</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<input
+								type="number"
+								min="0"
+								max="23"
+								bind:value={newUserExpiresHours}
+								class="w-20 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+							/>
+							<span class="text-sm text-gray-500">hours</span>
+						</div>
+						<div class="flex items-center gap-1">
+							<input
+								type="number"
+								min="0"
+								max="59"
+								bind:value={newUserExpiresMinutes}
+								class="w-20 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+							/>
+							<span class="text-sm text-gray-500">min</span>
+						</div>
+					</div>
+				{/if}
 			</div>
 			<div class="flex items-center sm:col-span-2">
 				<input
@@ -257,7 +328,7 @@
 			<div class="flex gap-2 sm:col-span-2">
 				<button
 					type="submit"
-					class="rounded bg-primary px-4 py-2 text-white transition hover:bg-opacity-90 disabled:opacity-50"
+					class="hover:bg-opacity-90 rounded bg-primary px-4 py-2 text-white transition disabled:opacity-50"
 					disabled={isLoading}
 				>
 					Create
@@ -312,15 +383,11 @@
 		<tbody class="divide-y divide-gray-200 bg-white">
 			{#if isLoading && invitations.length === 0}
 				<tr>
-					<td colspan="7" class="px-6 py-4 text-center text-gray-500">
-						Loading invitations...
-					</td>
+					<td colspan="7" class="px-6 py-4 text-center text-gray-500"> Loading invitations... </td>
 				</tr>
 			{:else if invitations.length === 0}
 				<tr>
-					<td colspan="7" class="px-6 py-4 text-center text-gray-500">
-						No invitations found.
-					</td>
+					<td colspan="7" class="px-6 py-4 text-center text-gray-500"> No invitations found. </td>
 				</tr>
 			{:else}
 				{#each invitations as invitation (invitation.id)}
@@ -360,12 +427,22 @@
 							{invitation.reuseable ? 'Yes' : 'No'}
 						</td>
 						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-							{new Date(invitation.expires_at).toLocaleString()}
+							{invitation.expires_at ? new Date(invitation.expires_at).toLocaleString() : '-'}
 						</td>
 						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-							{invitation.user_expires
-								? new Date(invitation.user_expires).toLocaleString()
-								: '-'}
+							{#if !invitation.user_expires}
+								-
+							{:else if typeof invitation.user_expires === 'string'}
+								{new Date(invitation.user_expires).toLocaleString()}
+							{:else}
+								{[
+									invitation.user_expires.days ? `${invitation.user_expires.days}d` : '',
+									invitation.user_expires.hours ? `${invitation.user_expires.hours}h` : '',
+									invitation.user_expires.minutes ? `${invitation.user_expires.minutes}m` : ''
+								]
+									.filter(Boolean)
+									.join(' ') || '-'}
+							{/if}
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap">
 							<button
