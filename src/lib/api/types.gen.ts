@@ -341,7 +341,7 @@ export type BodyCreateWelcome = {
     /**
      * Video
      */
-    video?: string | null;
+    video?: Blob | File | null;
 };
 
 /**
@@ -359,7 +359,7 @@ export type BodyUploadAudio = {
     /**
      * File
      */
-    file: string;
+    file: Blob | File;
 };
 
 /**
@@ -1151,6 +1151,29 @@ export type IntervieweeCreate = {
  */
 export type Interviewer = 'human' | 'ai';
 
+/**
+ * InvitationCreate
+ */
+export type InvitationCreate = {
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Reuseable
+     */
+    reuseable?: boolean;
+    user_scope?: Scope;
+    /**
+     * User Expires
+     */
+    user_expires?: string | null;
+    /**
+     * Title
+     */
+    title?: string | null;
+};
+
 export type LanguageCode = string;
 
 /**
@@ -1624,6 +1647,7 @@ export type ProjectPublic = {
      * Tests
      */
     tests?: Array<TestSetupPublic> | null;
+    owner: UserPublic;
 };
 
 /**
@@ -2347,6 +2371,10 @@ export type UserPublic = {
      * Id
      */
     id: string;
+    /**
+     * Invite Token
+     */
+    invite_token: string | null;
 };
 
 /**
@@ -2441,7 +2469,7 @@ export type FastapiCompatV2BodyUploadImage1 = {
     /**
      * File
      */
-    file: string;
+    file: Blob | File;
 };
 
 /**
@@ -2459,7 +2487,7 @@ export type FastapiCompatV2BodyUploadImage2 = {
     /**
      * File
      */
-    file: string;
+    file: Blob | File;
 };
 
 /**
@@ -3144,7 +3172,7 @@ export type GetProjectMonitoringStatsData = {
         /**
          * Interview Types
          */
-        interview_types?: Array<InterviewType> | null;
+        interview_types?: Array<InterviewType>;
         /**
          * Start Date
          */
@@ -4741,7 +4769,7 @@ export type GenerateProjectQrResponses = {
 };
 
 export type CheckProjectOwnerData = {
-    body: ExportMessagesRequest;
+    body?: never;
     path: {
         /**
          * Project Id
@@ -5515,6 +5543,43 @@ export type DeleteAccessRequestsErrors = {
 export type DeleteAccessRequestsError = DeleteAccessRequestsErrors[keyof DeleteAccessRequestsErrors];
 
 export type DeleteAccessRequestsResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetReuseableInvitationsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/admin/admin/invitations';
+};
+
+export type GetReuseableInvitationsResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type CreateInvitationData = {
+    body: InvitationCreate;
+    path?: never;
+    query?: never;
+    url: '/api/admin/admin/invitations';
+};
+
+export type CreateInvitationErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateInvitationError = CreateInvitationErrors[keyof CreateInvitationErrors];
+
+export type CreateInvitationResponses = {
     /**
      * Successful Response
      */
