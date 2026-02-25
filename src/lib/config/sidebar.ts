@@ -34,6 +34,11 @@ export const mainSidebarItems: SidebarItem[] = [
 				icon: 'fas fa-user-plus'
 			},
 			{
+				label: 'Invitations',
+				href: '/dashboard/admin/invitations',
+				icon: 'fas fa-envelope-open-text'
+			},
+			{
 				label: 'Users',
 				href: '/dashboard/admin/users',
 				icon: 'fas fa-users'
