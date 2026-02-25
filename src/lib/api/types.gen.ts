@@ -1158,7 +1158,7 @@ export type InvitationCreate = {
     /**
      * Expires At
      */
-    expires_at: string;
+    expires_at?: string | null;
     /**
      * Reuseable
      */
@@ -1167,7 +1167,7 @@ export type InvitationCreate = {
     /**
      * User Expires
      */
-    user_expires?: string | null;
+    user_expires?: string | TimeDelta | null;
     /**
      * Title
      */
@@ -1181,7 +1181,7 @@ export type InvitationPublic = {
     /**
      * Expires At
      */
-    expires_at: string;
+    expires_at?: string | null;
     /**
      * Reuseable
      */
@@ -1190,7 +1190,7 @@ export type InvitationPublic = {
     /**
      * User Expires
      */
-    user_expires?: string | null;
+    user_expires?: string | TimeDelta | null;
     /**
      * Title
      */
@@ -2256,6 +2256,40 @@ export type TestSetupPublic = {
 export type TestType = 'shuffled_ai' | 'fixed_ai' | 'fixed_answers';
 
 /**
+ * TimeDelta
+ */
+export type TimeDelta = {
+    /**
+     * Days
+     */
+    days?: number;
+    /**
+     * Seconds
+     */
+    seconds?: number;
+    /**
+     * Microseconds
+     */
+    microseconds?: number;
+    /**
+     * Milliseconds
+     */
+    milliseconds?: number;
+    /**
+     * Minutes
+     */
+    minutes?: number;
+    /**
+     * Hours
+     */
+    hours?: number;
+    /**
+     * Weeks
+     */
+    weeks?: number;
+};
+
+/**
  * TimeItem
  */
 export type TimeItem = {
@@ -2413,9 +2447,9 @@ export type UserPublic = {
      */
     id: string;
     /**
-     * Invite Token
+     * Invite Title
      */
-    invite_token: string | null;
+    invite_title?: string | null;
 };
 
 /**
@@ -2710,7 +2744,7 @@ export type InvitationPublicWritable = {
     /**
      * Expires At
      */
-    expires_at: string;
+    expires_at?: string | null;
     /**
      * Reuseable
      */
@@ -2719,7 +2753,7 @@ export type InvitationPublicWritable = {
     /**
      * User Expires
      */
-    user_expires?: string | null;
+    user_expires?: string | TimeDelta | null;
     /**
      * Title
      */
