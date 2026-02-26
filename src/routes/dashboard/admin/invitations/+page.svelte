@@ -24,7 +24,17 @@
 	let newUserExpiresHours = $state(0);
 	let newUserExpiresMinutes = $state(0);
 
-	let allSelected = $derived(invitations.length > 0 && selectedIds.size === invitations.length);
+	let reusableInvitations = $derived(invitations.filter((invitation) => invitation.reuseable));
+	let singleUseInvitations = $derived(invitations.filter((invitation) => !invitation.reuseable));
+
+	let reusableAllSelected = $derived(
+		reusableInvitations.length > 0 &&
+			reusableInvitations.every((invitation) => selectedIds.has(invitation.id))
+	);
+	let singleUseAllSelected = $derived(
+		singleUseInvitations.length > 0 &&
+			singleUseInvitations.every((invitation) => selectedIds.has(invitation.id))
+	);
 
 	const scopeColors: Record<string, string> = {
 		admin: 'bg-purple-100 text-purple-800',
@@ -62,12 +72,14 @@
 		selectedIds = newSet;
 	}
 
-	function toggleAll(checked: boolean) {
+	function toggleGroup(ids: string[], checked: boolean) {
+		const newSet = new Set(selectedIds);
 		if (checked) {
-			selectedIds = new Set(invitations.map((i) => i.id));
+			ids.forEach((id) => newSet.add(id));
 		} else {
-			selectedIds = new Set();
+			ids.forEach((id) => newSet.delete(id));
 		}
+		selectedIds = newSet;
 	}
 
 	async function handleDelete() {
@@ -348,118 +360,254 @@
 	</div>
 {/if}
 
-<div class="overflow-hidden rounded-lg bg-white shadow-md">
-	<table class="min-w-full divide-y divide-gray-200">
-		<thead class="bg-gray-50">
-			<tr>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-					<input
-						type="checkbox"
-						checked={allSelected}
-						onchange={(e) => toggleAll(e.currentTarget.checked)}
-						class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
-					/>
-				</th>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Title</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Scope</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Reuseable</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Expires At</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>User Expires</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Link</th
-				>
-			</tr>
-		</thead>
-		<tbody class="divide-y divide-gray-200 bg-white">
-			{#if isLoading && invitations.length === 0}
+<div class="space-y-6">
+	<div class="overflow-hidden rounded-lg bg-white shadow-md">
+		<div class="border-b border-gray-200 bg-gray-50 px-6 py-3">
+			<h3 class="text-sm font-semibold text-gray-700">Reusable Invitations</h3>
+		</div>
+		<table class="min-w-full divide-y divide-gray-200">
+			<thead class="bg-gray-50">
 				<tr>
-					<td colspan="7" class="px-6 py-4 text-center text-gray-500"> Loading invitations... </td>
-				</tr>
-			{:else if invitations.length === 0}
-				<tr>
-					<td colspan="7" class="px-6 py-4 text-center text-gray-500"> No invitations found. </td>
-				</tr>
-			{:else}
-				{#each invitations as invitation (invitation.id)}
-					<tr
-						class="cursor-pointer hover:bg-gray-50"
-						tabindex="0"
-						onclick={() => toggleSelection(invitation.id)}
-						onkeydown={(e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
-								e.preventDefault();
-								toggleSelection(invitation.id);
-							}
-						}}
+					<th
+						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 					>
-						<td class="px-6 py-4 whitespace-nowrap">
-							<input
-								type="checkbox"
-								checked={selectedIds.has(invitation.id)}
-								onchange={() => toggleSelection(invitation.id)}
-								onclick={(e) => e.stopPropagation()}
-								class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
-							/>
-						</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-							{invitation.title || '-'}
-						</td>
-						<td class="px-6 py-4 whitespace-nowrap">
-							<span
-								class="inline-flex rounded-full px-2 text-xs leading-5 font-semibold {scopeColors[
-									invitation.user_scope ?? 'user'
-								] ?? 'bg-gray-100 text-gray-800'}"
-							>
-								{invitation.user_scope ?? 'user'}
-							</span>
-						</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-							{invitation.reuseable ? 'Yes' : 'No'}
-						</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-							{invitation.expires_at ? new Date(invitation.expires_at).toLocaleString() : '-'}
-						</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-							{#if !invitation.user_expires}
-								-
-							{:else if typeof invitation.user_expires === 'string'}
-								{new Date(invitation.user_expires).toLocaleString()}
-							{:else}
-								{[
-									invitation.user_expires.days ? `${invitation.user_expires.days}d` : '',
-									invitation.user_expires.hours ? `${invitation.user_expires.hours}h` : '',
-									invitation.user_expires.minutes ? `${invitation.user_expires.minutes}m` : ''
-								]
-									.filter(Boolean)
-									.join(' ') || '-'}
-							{/if}
-						</td>
-						<td class="px-6 py-4 whitespace-nowrap">
-							<button
-								onclick={(e) => {
-									e.stopPropagation();
-									copyLink(invitation.invitation_link);
-								}}
-								class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
-								title={invitation.invitation_link}
-							>
-								<i class="fa-solid fa-copy"></i>
-								Copy link
-							</button>
+						<input
+							type="checkbox"
+							checked={reusableAllSelected}
+							onchange={(e) =>
+								toggleGroup(
+									reusableInvitations.map((invitation) => invitation.id),
+									e.currentTarget.checked
+								)}
+							class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
+						/>
+					</th>
+					<th
+						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+					>
+						<span class="inline-block w-64">Title</span>
+					</th>
+					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>Scope</th
+					>
+					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>Expires At</th
+					>
+					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>User Expires</th
+					>
+					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>Link</th
+					>
+				</tr>
+			</thead>
+			<tbody class="divide-y divide-gray-200 bg-white">
+				{#if isLoading && invitations.length === 0}
+					<tr>
+						<td colspan="6" class="px-6 py-4 text-center text-gray-500">
+							Loading invitations...
 						</td>
 					</tr>
-				{/each}
-			{/if}
-		</tbody>
-	</table>
+				{:else if reusableInvitations.length === 0}
+					<tr>
+						<td colspan="6" class="px-6 py-4 text-center text-gray-500">
+							No reusable invitations found.
+						</td>
+					</tr>
+				{:else}
+					{#each reusableInvitations as invitation (invitation.id)}
+						<tr
+							class="cursor-pointer hover:bg-gray-50"
+							tabindex="0"
+							onclick={() => toggleSelection(invitation.id)}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									toggleSelection(invitation.id);
+								}
+							}}
+						>
+							<td class="px-6 py-4 whitespace-nowrap">
+								<input
+									type="checkbox"
+									checked={selectedIds.has(invitation.id)}
+									onchange={() => toggleSelection(invitation.id)}
+									onclick={(e) => e.stopPropagation()}
+									class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
+								/>
+							</td>
+							<td class="w-64 px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+								{invitation.title || '-'}
+							</td>
+							<td class="px-6 py-4 whitespace-nowrap">
+								<span
+									class="inline-flex rounded-full px-2 text-xs leading-5 font-semibold {scopeColors[
+										invitation.user_scope ?? 'user'
+									] ?? 'bg-gray-100 text-gray-800'}"
+								>
+									{invitation.user_scope ?? 'user'}
+								</span>
+							</td>
+							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+								{invitation.expires_at ? new Date(invitation.expires_at).toLocaleString() : '-'}
+							</td>
+							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+								{#if !invitation.user_expires}
+									-
+								{:else if typeof invitation.user_expires === 'string'}
+									{new Date(invitation.user_expires).toLocaleString()}
+								{:else}
+									{[
+										invitation.user_expires.days ? `${invitation.user_expires.days}d` : '',
+										invitation.user_expires.hours ? `${invitation.user_expires.hours}h` : '',
+										invitation.user_expires.minutes ? `${invitation.user_expires.minutes}m` : ''
+									]
+										.filter(Boolean)
+										.join(' ') || '-'}
+								{/if}
+							</td>
+							<td class="px-6 py-4 whitespace-nowrap">
+								<button
+									onclick={(e) => {
+										e.stopPropagation();
+										copyLink(invitation.invitation_link);
+									}}
+									class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
+									title={invitation.invitation_link}
+								>
+									<i class="fa-solid fa-copy"></i>
+									Copy link
+								</button>
+							</td>
+						</tr>
+					{/each}
+				{/if}
+			</tbody>
+		</table>
+	</div>
+
+	<div class="overflow-hidden rounded-lg bg-white shadow-md">
+		<div class="border-b border-gray-200 bg-gray-50 px-6 py-3">
+			<h3 class="text-sm font-semibold text-gray-700">Single-Use Invitations</h3>
+		</div>
+		<table class="min-w-full divide-y divide-gray-200">
+			<thead class="bg-gray-50">
+				<tr>
+					<th
+						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+					>
+						<input
+							type="checkbox"
+							checked={singleUseAllSelected}
+							onchange={(e) =>
+								toggleGroup(
+									singleUseInvitations.map((invitation) => invitation.id),
+									e.currentTarget.checked
+								)}
+							class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
+						/>
+					</th>
+					<th
+						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+					>
+						<span class="inline-block w-64">Email</span>
+					</th>
+					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>Scope</th
+					>
+					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>Expires At</th
+					>
+					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>User Expires</th
+					>
+					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>Link</th
+					>
+				</tr>
+			</thead>
+			<tbody class="divide-y divide-gray-200 bg-white">
+				{#if isLoading && invitations.length === 0}
+					<tr>
+						<td colspan="6" class="px-6 py-4 text-center text-gray-500">
+							Loading invitations...
+						</td>
+					</tr>
+				{:else if singleUseInvitations.length === 0}
+					<tr>
+						<td colspan="6" class="px-6 py-4 text-center text-gray-500">
+							No single-use invitations found.
+						</td>
+					</tr>
+				{:else}
+					{#each singleUseInvitations as invitation (invitation.id)}
+						<tr
+							class="cursor-pointer hover:bg-gray-50"
+							tabindex="0"
+							onclick={() => toggleSelection(invitation.id)}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									toggleSelection(invitation.id);
+								}
+							}}
+						>
+							<td class="px-6 py-4 whitespace-nowrap">
+								<input
+									type="checkbox"
+									checked={selectedIds.has(invitation.id)}
+									onchange={() => toggleSelection(invitation.id)}
+									onclick={(e) => e.stopPropagation()}
+									class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
+								/>
+							</td>
+							<td class="w-64 px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+								{invitation.email || '-'}
+							</td>
+							<td class="px-6 py-4 whitespace-nowrap">
+								<span
+									class="inline-flex rounded-full px-2 text-xs leading-5 font-semibold {scopeColors[
+										invitation.user_scope ?? 'user'
+									] ?? 'bg-gray-100 text-gray-800'}"
+								>
+									{invitation.user_scope ?? 'user'}
+								</span>
+							</td>
+							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+								{invitation.expires_at ? new Date(invitation.expires_at).toLocaleString() : '-'}
+							</td>
+							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+								{#if !invitation.user_expires}
+									-
+								{:else if typeof invitation.user_expires === 'string'}
+									{new Date(invitation.user_expires).toLocaleString()}
+								{:else}
+									{[
+										invitation.user_expires.days ? `${invitation.user_expires.days}d` : '',
+										invitation.user_expires.hours ? `${invitation.user_expires.hours}h` : '',
+										invitation.user_expires.minutes ? `${invitation.user_expires.minutes}m` : ''
+									]
+										.filter(Boolean)
+										.join(' ') || '-'}
+								{/if}
+							</td>
+							<td class="px-6 py-4 whitespace-nowrap">
+								<button
+									onclick={(e) => {
+										e.stopPropagation();
+										copyLink(invitation.invitation_link);
+									}}
+									class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
+									title={invitation.invitation_link}
+								>
+									<i class="fa-solid fa-copy"></i>
+									Copy link
+								</button>
+							</td>
+						</tr>
+					{/each}
+				{/if}
+			</tbody>
+		</table>
+	</div>
 </div>
