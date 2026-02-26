@@ -7,6 +7,7 @@
 		frequency?: number;
 		animate?: boolean;
 		title?: string;
+		outline?: boolean;
 	}
 
 	let {
@@ -16,7 +17,8 @@
 		amplitude = 1,
 		frequency = 1,
 		animate = false,
-		title = ''
+		title = '',
+		outline = false
 	}: Props = $props();
 
 	let offset = $state(0);
@@ -96,7 +98,16 @@
 
 <div class={className + ' .wave-container'} {title}>
 	<svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-		<circle class="z-0" xmlns="http://www.w3.org/2000/svg" cx="400" r="400" cy="400" fill="white" />
+		<circle
+			class="z-0"
+			xmlns="http://www.w3.org/2000/svg"
+			cx="400"
+			r={outline ? 390 : 400}
+			cy="400"
+			fill="white"
+			stroke={outline ? 'black' : 'none'}
+			stroke-width={outline ? 5 : 0}
+		/>
 		<g
 			class="z-10"
 			stroke-width="20"
