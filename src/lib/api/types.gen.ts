@@ -51,6 +51,16 @@ export type AccessRequestsProcessRequest = {
 };
 
 /**
+ * AdminNoteUpdate
+ */
+export type AdminNoteUpdate = {
+    /**
+     * Note
+     */
+    note?: string | null;
+};
+
+/**
  * AgentConfig
  */
 export type AgentConfig = {
@@ -1172,6 +1182,10 @@ export type InvitationCreate = {
      * Title
      */
     title?: string | null;
+    /**
+     * Access Request Id
+     */
+    access_request_id?: string | null;
 };
 
 /**
@@ -1195,6 +1209,10 @@ export type InvitationPublic = {
      * Title
      */
     title?: string | null;
+    /**
+     * Access Request Id
+     */
+    access_request_id?: string | null;
     /**
      * Id
      */
@@ -2371,9 +2389,70 @@ export type UpdateFixedPersonasRequest = {
 };
 
 /**
- * UserCreate
+ * UserAdmin
  */
-export type UserCreate = {
+export type UserAdmin = {
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * First Name
+     */
+    first_name: string;
+    /**
+     * Last Name
+     */
+    last_name?: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Last Active
+     */
+    last_active: string;
+    /**
+     * Last Login
+     */
+    last_login: string;
+    scope?: Scope;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Invitation Title
+     */
+    invitation_title?: string | null;
+    /**
+     * Expires At
+     */
+    expires_at?: string | null;
+    /**
+     * Access Request Message
+     */
+    access_request_message?: string | null;
+    /**
+     * Organization
+     */
+    organization?: string | null;
+    /**
+     * Admin Note
+     */
+    admin_note?: string | null;
+    /**
+     * Admin Note Updated At
+     */
+    admin_note_updated_at?: string | null;
+};
+
+/**
+ * UserCreateRequest
+ *
+ * API request model for user registration.
+ */
+export type UserCreateRequest = {
     /**
      * Email
      */
@@ -2447,9 +2526,13 @@ export type UserPublic = {
      */
     id: string;
     /**
-     * Invite Title
+     * Invitation Title
      */
-    invite_title?: string | null;
+    invitation_title?: string | null;
+    /**
+     * Expires At
+     */
+    expires_at?: string | null;
 };
 
 /**
@@ -2758,6 +2841,10 @@ export type InvitationPublicWritable = {
      * Title
      */
     title?: string | null;
+    /**
+     * Access Request Id
+     */
+    access_request_id?: string | null;
     /**
      * Id
      */
@@ -5504,7 +5591,7 @@ export type MeResponses = {
 export type MeResponse = MeResponses[keyof MeResponses];
 
 export type RegisterData = {
-    body: UserCreate;
+    body: UserCreateRequest;
     path?: never;
     query?: never;
     url: '/api/register';
@@ -5892,10 +5979,44 @@ export type GetUsersData = {
 
 export type GetUsersResponses = {
     /**
+     * Response Get Users
+     *
      * Successful Response
      */
-    200: unknown;
+    200: Array<UserAdmin>;
 };
+
+export type GetUsersResponse = GetUsersResponses[keyof GetUsersResponses];
+
+export type UpdateAdminNoteData = {
+    body: AdminNoteUpdate;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/admin/users/{user_id}/note';
+};
+
+export type UpdateAdminNoteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateAdminNoteError = UpdateAdminNoteErrors[keyof UpdateAdminNoteErrors];
+
+export type UpdateAdminNoteResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserAdmin;
+};
+
+export type UpdateAdminNoteResponse = UpdateAdminNoteResponses[keyof UpdateAdminNoteResponses];
 
 export type GetModelsData = {
     body?: never;
