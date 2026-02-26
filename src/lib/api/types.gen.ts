@@ -45,6 +45,10 @@ export type AccessRequestsProcessRequest = {
      */
     ids: Array<string>;
     /**
+     * Scopes
+     */
+    scopes: Array<Scope>;
+    /**
      * Action
      */
     action: 'approve' | 'deny';
