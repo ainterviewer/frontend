@@ -34,9 +34,10 @@
 	let allSelected = $derived(requests.length > 0 && selectedIds.size === requests.length);
 
 	$effect(() => {
-		requests = data.requests;
+		const nextRequests = data.requests;
+		requests = nextRequests;
 		error = data.error;
-		scopeByRequest = Object.fromEntries(requests.map((r) => [r.id, 'user' as Scope]));
+		scopeByRequest = Object.fromEntries(nextRequests.map((r) => [r.id, 'user' as Scope]));
 	});
 
 	async function loadRequests() {
@@ -286,9 +287,15 @@
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap">
 							<select
-								bind:value={scopeByRequest[request.id]}
+								value={scopeByRequest[request.id] ?? 'user'}
 								onclick={(e) => e.stopPropagation()}
-								class="w-24 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium {scopeColors[scopeByRequest[request.id] ?? 'user']} focus:border-primary focus:ring-primary focus:outline-none"
+								onchange={(e) => {
+									const value = e.currentTarget.value as Scope;
+									scopeByRequest = { ...scopeByRequest, [request.id]: value };
+								}}
+								class="w-24 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium {scopeColors[
+									scopeByRequest[request.id] ?? 'user'
+								]} focus:border-primary focus:ring-primary focus:outline-none"
 							>
 								{#each scopeOptions as scope}
 									<option value={scope}>{scope}</option>
