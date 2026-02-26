@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { backOut } from 'svelte/easing';
 	import { scale } from 'svelte/transition';
+	import BackgroundWaves from '$lib/components/BackgroundWaves.svelte';
 
 	let { children } = $props();
 
@@ -22,6 +23,7 @@
 			<div class:opacity-0={!animationDone} class="transition-opacity duration-200">
 				{@render children()}
 			</div>
+	<BackgroundWaves opacity={1} speed={0.4} />
 		</div>
 	{/if}
 </div>
