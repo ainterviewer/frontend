@@ -1,29 +1,14 @@
 <script lang="ts">
-	import { backOut } from 'svelte/easing';
-	import { scale } from 'svelte/transition';
 	import BackgroundWaves from '$lib/components/BackgroundWaves.svelte';
 
 	let { children } = $props();
-
-	let mounted = $state(false);
-	let animationDone = $state(false);
-
-	$effect(() => {
-		mounted = true;
-	});
 </script>
 
-<div class="flex min-h-[calc(100vh)] bg-dark">
-	{#if mounted}
-		<div
-			class="m-auto size-200 content-center rounded-full bg-white p-25"
-			in:scale={{ duration: 500, easing: backOut, start: 0 }}
-			onintroend={() => (animationDone = true)}
-		>
-			<div class:opacity-0={!animationDone} class="transition-opacity duration-200">
-				{@render children()}
-			</div>
+<div class="relative flex min-h-[calc(100vh)] overflow-hidden bg-dark">
 	<BackgroundWaves opacity={1} speed={0.4} />
+	<div class="z-10 m-auto size-200 content-center rounded-full bg-white p-25">
+		<div class="transition-opacity duration-200">
+			{@render children()}
 		</div>
-	{/if}
+	</div>
 </div>
