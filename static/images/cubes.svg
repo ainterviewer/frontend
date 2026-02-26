@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="400" viewBox="-210 -180 420 400">
+  <defs>
+    <pattern
+      id="hatch"
+      patternUnits="userSpaceOnUse"
+      width="6"
+      height="6"
+      patternTransform="rotate(45)"
+    >
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#777" stroke-width="1" />
+    </pattern>
+    <pattern
+      id="hatch2"
+      patternUnits="userSpaceOnUse"
+      width="6"
+      height="6"
+      patternTransform="rotate(30)"
+    >
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#999" stroke-width="1.5" />
+    </pattern>
+
+    <!-- Normal cube -->
+    <g id="cube">
+      <polygon
+        points="0,-40 40,-20 0,0 -40,-20"
+        fill="url(#hatch)"
+        stroke="#333"
+        stroke-width="1"
+      />
+      <polygon points="-40,-20 0,0 0,40 -40,20" fill="url(#hatch)" stroke="#333" stroke-width="1" />
+      <polygon points="40,-20 0,0 0,40 40,20" fill="url(#hatch)" stroke="#333" stroke-width="1" />
+    </g>
+
+    <!-- Small cube (0.6x) -->
+    <g id="cube-sm">
+      <polygon
+        points="0,-24 24,-12 0,0 -24,-12"
+        fill="url(#hatch)"
+        stroke="#333"
+        stroke-width="0.8"
+      />
+      <polygon
+        points="-24,-12 0,0 0,24 -24,12"
+        fill="url(#hatch)"
+        stroke="#333"
+        stroke-width="0.8"
+      />
+      <polygon points="24,-12 0,0 0,24 24,12" fill="url(#hatch)" stroke="#333" stroke-width="0.8" />
+    </g>
+
+    <!-- Large cube (1.4x) -->
+    <g id="cube-lg">
+      <polygon
+        points="0,-56 56,-28 0,0 -56,-28"
+        fill="url(#hatch2)"
+        stroke="#222"
+        stroke-width="1.2"
+      />
+      <polygon
+        points="-56,-28 0,0 0,56 -56,28"
+        fill="url(#hatch2)"
+        stroke="#222"
+        stroke-width="1.2"
+      />
+      <polygon
+        points="56,-28 0,0 0,56 56,28"
+        fill="url(#hatch2)"
+        stroke="#222"
+        stroke-width="1.2"
+      />
+    </g>
+  </defs>
+
+  <!-- Scattered, overlapping, off-grid cubes -->
+  <use href="#cube-lg" x="-90" y="-90" />
+  <use href="#cube" x="30" y="-130" />
+  <use href="#cube-sm" x="110" y="-105" />
+  <use href="#cube" x="-155" y="-30" />
+  <use href="#cube-sm" x="-55" y="-55" />
+  <use href="#cube-lg" x="70" y="-55" />
+  <use href="#cube" x="155" y="-20" />
+  <use href="#cube-sm" x="-130" y="55" />
+  <use href="#cube" x="-20" y="10" />
+  <use href="#cube-lg" x="-75" y="80" />
+  <use href="#cube-sm" x="50" y="30" />
+  <use href="#cube" x="130" y="60" />
+  <use href="#cube-sm" x="175" y="90" />
+  <use href="#cube" x="-160" y="120" />
+  <use href="#cube-lg" x="20" y="110" />
+  <use href="#cube-sm" x="100" y="130" />
+  <use href="#cube" x="-40" y="155" />
+  <use href="#cube-sm" x="-105" y="-130" />
+  <use href="#cube" x="165" y="-100" />
+  <use href="#cube-sm" x="10" y="-65" />
+</svg>
