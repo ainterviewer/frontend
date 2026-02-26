@@ -5742,23 +5742,23 @@ export type DeleteAccessRequestsResponses = {
     200: unknown;
 };
 
-export type GetReuseableInvitationsData = {
+export type GetInvitationsData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/api/admin/admin/invitations';
 };
 
-export type GetReuseableInvitationsResponses = {
+export type GetInvitationsResponses = {
     /**
-     * Response Get Reuseable Invitations
+     * Response Get Invitations
      *
      * Successful Response
      */
     200: Array<InvitationPublic>;
 };
 
-export type GetReuseableInvitationsResponse = GetReuseableInvitationsResponses[keyof GetReuseableInvitationsResponses];
+export type GetInvitationsResponse = GetInvitationsResponses[keyof GetInvitationsResponses];
 
 export type CreateInvitationData = {
     body: InvitationCreate;

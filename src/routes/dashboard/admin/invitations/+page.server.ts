@@ -5,7 +5,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 	const token = cookies.get('token');
 
 	try {
-		const response = await Admin.getReuseableInvitations({
+		const response = await Admin.getInvitations({
 			headers: {
 				Cookie: `token=${token}`
 			}
