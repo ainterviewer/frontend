@@ -1,4 +1,4 @@
-import { Admin, type UserPublic } from '$lib/api';
+import { Admin, type UserAdmin } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ cookies }) => {
@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		}
 
 		return {
-			users: (response.data as unknown as UserPublic[]) || [],
+			users: (response.data as unknown as UserAdmin[]) || [],
 			error: null
 		};
 	} catch (e) {
