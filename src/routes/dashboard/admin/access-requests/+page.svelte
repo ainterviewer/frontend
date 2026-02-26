@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { Admin } from '$lib/api/sdk.gen';
+	import { Admin, type Scope } from '$lib/api';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -21,12 +21,22 @@
 	let isLoading = $state(false);
 	let error = $state<string | null>(data.error);
 	let selectedIds = $state<Set<string>>(new Set());
+	let scopeByRequest = $state<Record<string, Scope>>({});
+
+	const scopeOptions: Scope[] = ['admin', 'user', 'demo', 'guest'];
+	const scopeColors: Record<string, string> = {
+		admin: 'bg-purple-100 text-purple-800',
+		user: 'bg-blue-100 text-blue-800',
+		demo: 'bg-amber-100 text-amber-800',
+		guest: 'bg-gray-100 text-gray-800'
+	};
 
 	let allSelected = $derived(requests.length > 0 && selectedIds.size === requests.length);
 
 	$effect(() => {
 		requests = data.requests;
 		error = data.error;
+		scopeByRequest = Object.fromEntries(requests.map((r) => [r.id, 'user' as Scope]));
 	});
 
 	async function loadRequests() {
@@ -73,6 +83,7 @@
 			const response = await Admin.processAccessRequests({
 				body: {
 					ids: ids,
+					scopes: ids.map((id) => scopeByRequest[id] ?? 'user'),
 					action: action
 				}
 			});
@@ -182,6 +193,7 @@
 			<col style="width: 220px" />
 			<col style="width: 120px" />
 			<col style="width: 100px" />
+			<col style="width: 120px" />
 			<col style="width: auto" />
 			<col style="width: 160px" />
 			<col style="width: 160px" />
@@ -209,6 +221,9 @@
 					>Status</th
 				>
 				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+					>Scope</th
+				>
+				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 					>Message</th
 				>
 				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
@@ -222,11 +237,11 @@
 		<tbody class="divide-y divide-gray-200 bg-white">
 			{#if isLoading && requests.length === 0}
 				<tr>
-					<td colspan="8" class="px-6 py-4 text-center text-gray-500"> Loading requests... </td>
+					<td colspan="9" class="px-6 py-4 text-center text-gray-500"> Loading requests... </td>
 				</tr>
 			{:else if requests.length === 0}
 				<tr>
-					<td colspan="8" class="px-6 py-4 text-center text-gray-500">
+					<td colspan="9" class="px-6 py-4 text-center text-gray-500">
 						No access requests found.
 					</td>
 				</tr>
@@ -268,6 +283,17 @@
 							>
 								{request.status}
 							</span>
+						</td>
+						<td class="px-6 py-4 whitespace-nowrap">
+							<select
+								bind:value={scopeByRequest[request.id]}
+								onclick={(e) => e.stopPropagation()}
+								class="w-24 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium {scopeColors[scopeByRequest[request.id] ?? 'user']} focus:border-primary focus:ring-primary focus:outline-none"
+							>
+								{#each scopeOptions as scope}
+									<option value={scope}>{scope}</option>
+								{/each}
+							</select>
 						</td>
 						<td
 							class="max-w-xs truncate px-6 py-4 text-sm text-gray-500"
