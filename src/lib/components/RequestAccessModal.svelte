@@ -87,8 +87,8 @@
 				<div class="text-center">
 					<h3 class="text-2xl font-extrabold tracking-tight text-dark">Request Access</h3>
 					<p class="mt-4 text-sm text-gray-700">
-						We are currently onboarding select partners at a slow pace - so don't be discouraged if
-						our response is delayed.
+						We are currently onboarding select academic partners at a slow pace - so don't be
+						discouraged if our response is delayed.
 						<br />
 						You can join the waitlist by signing up below.
 					</p>
@@ -96,7 +96,9 @@
 
 				<form class="mt-8 space-y-6" onsubmit={handleSubmit}>
 					<div>
-						<label for="name" class="block text-sm font-medium text-dark"> Full Name </label>
+						<label for="name" class="required block text-sm font-medium text-dark">
+							Full Name
+						</label>
 						<div class="mt-1">
 							<input
 								id="name"
@@ -109,7 +111,9 @@
 					</div>
 
 					<div>
-						<label for="email" class="block text-sm font-medium text-dark"> Email address </label>
+						<label for="email" class="required block text-sm font-medium text-dark">
+							Email address
+						</label>
 						<div class="mt-1">
 							<input
 								id="email"
@@ -123,16 +127,16 @@
 					</div>
 
 					<div>
-						<label for="organization" class="block text-sm font-medium text-dark">
+						<label for="organization" class="required block text-sm font-medium text-dark">
 							Organization / Institution
 						</label>
-						<div class="mt-1">
+						<div class="mt">
 							<input
 								id="organization"
 								name="organization"
 								type="text"
 								required
-								class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+								class="mt-1 block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
 							/>
 						</div>
 					</div>
