@@ -1222,9 +1222,43 @@ export type InvitationPublic = {
      */
     id: string;
     /**
+     * Email
+     */
+    email: string | null;
+    /**
      * Invitation Link
      */
     readonly invitation_link: string;
+};
+
+/**
+ * InvitationUpdate
+ */
+export type InvitationUpdate = {
+    /**
+     * Email
+     */
+    email?: string | Unset | null;
+    /**
+     * Expires At
+     */
+    expires_at?: string | Unset | null;
+    /**
+     * Reuseable
+     */
+    reuseable?: boolean | Unset;
+    /**
+     * User Scope
+     */
+    user_scope?: Scope | Unset;
+    /**
+     * User Expires
+     */
+    user_expires?: string | TimeDelta | Unset | null;
+    /**
+     * Title
+     */
+    title?: string | Unset | null;
 };
 
 /**
@@ -2613,6 +2647,11 @@ export type Welcome = {
 };
 
 /**
+ * _Unset
+ */
+export type Unset = 'UNSET';
+
+/**
  * Body_upload_image
  */
 export type FastapiCompatV2BodyUploadImage1 = {
@@ -2853,6 +2892,10 @@ export type InvitationPublicWritable = {
      * Id
      */
     id: string;
+    /**
+     * Email
+     */
+    email: string | null;
 };
 
 export type GetAnalysisCategoriesData = {
@@ -5782,6 +5825,36 @@ export type CreateInvitationResponses = {
      */
     200: unknown;
 };
+
+export type UpdateInvitationData = {
+    body: InvitationUpdate;
+    path: {
+        /**
+         * Invitation Id
+         */
+        invitation_id: string;
+    };
+    query?: never;
+    url: '/api/admin/admin/invitations/{invitation_id}';
+};
+
+export type UpdateInvitationErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateInvitationError = UpdateInvitationErrors[keyof UpdateInvitationErrors];
+
+export type UpdateInvitationResponses = {
+    /**
+     * Successful Response
+     */
+    200: InvitationPublic;
+};
+
+export type UpdateInvitationResponse = UpdateInvitationResponses[keyof UpdateInvitationResponses];
 
 export type DeleteInvitationsData = {
     body: InvitationsDeleteRequest;
