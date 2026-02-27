@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { Admin } from '$lib/api/sdk.gen';
-	import type { InvitationPublic, InvitationCreate, Scope, TimeDelta } from '$lib/api';
+	import type { InvitationPublic, InvitationCreate, InvitationUpdate, Scope, TimeDelta } from '$lib/api';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -12,9 +12,11 @@
 	let error = $state<string | null>(data.error);
 	let selectedIds = $state<Set<string>>(new Set());
 	let showCreateForm = $state(false);
+	let editingInvitation = $state<InvitationPublic | null>(null);
 
 	// Create form fields
 	let newTitle = $state('');
+	let newEmail = $state('');
 	let newExpiresAt = $state('');
 	let newReuseable = $state(true);
 	let newUserScope = $state<Scope>('user');
@@ -155,6 +157,7 @@
 
 	function resetForm() {
 		newTitle = '';
+		newEmail = '';
 		newExpiresAt = '';
 		newReuseable = true;
 		newUserScope = 'user';
@@ -163,6 +166,92 @@
 		newUserExpiresDays = 0;
 		newUserExpiresHours = 0;
 		newUserExpiresMinutes = 0;
+		editingInvitation = null;
+	}
+
+	function startEdit(invitation: InvitationPublic) {
+		editingInvitation = invitation;
+		newTitle = invitation.title ?? '';
+		newEmail = invitation.email ?? '';
+		newReuseable = invitation.reuseable ?? true;
+		newUserScope = invitation.user_scope ?? 'user';
+
+		if (invitation.expires_at) {
+			const d = new Date(invitation.expires_at);
+			newExpiresAt = d.toISOString().slice(0, 16);
+		} else {
+			newExpiresAt = '';
+		}
+
+		if (!invitation.user_expires) {
+			userExpiresMode = 'relative';
+			newUserExpires = '';
+			newUserExpiresDays = 0;
+			newUserExpiresHours = 0;
+			newUserExpiresMinutes = 0;
+		} else if (typeof invitation.user_expires === 'string') {
+			userExpiresMode = 'absolute';
+			const d = new Date(invitation.user_expires);
+			newUserExpires = d.toISOString().slice(0, 16);
+			newUserExpiresDays = 0;
+			newUserExpiresHours = 0;
+			newUserExpiresMinutes = 0;
+		} else {
+			userExpiresMode = 'relative';
+			newUserExpires = '';
+			newUserExpiresDays = invitation.user_expires.days ?? 0;
+			newUserExpiresHours = invitation.user_expires.hours ?? 0;
+			newUserExpiresMinutes = invitation.user_expires.minutes ?? 0;
+		}
+
+		showCreateForm = true;
+	}
+
+	async function handleUpdate() {
+		if (!editingInvitation) return;
+		isLoading = true;
+		try {
+			let userExpires: string | TimeDelta | null = null;
+			if (userExpiresMode === 'absolute' && newUserExpires) {
+				userExpires = new Date(newUserExpires).toISOString();
+			} else if (userExpiresMode === 'relative') {
+				const hasDuration =
+					newUserExpiresDays > 0 || newUserExpiresHours > 0 || newUserExpiresMinutes > 0;
+				if (hasDuration) {
+					userExpires = {
+						days: newUserExpiresDays || undefined,
+						hours: newUserExpiresHours || undefined,
+						minutes: newUserExpiresMinutes || undefined
+					};
+				}
+			}
+
+			const body: InvitationUpdate = {
+				expires_at: newExpiresAt ? new Date(newExpiresAt).toISOString() : null,
+				reuseable: newReuseable,
+				user_scope: newUserScope,
+				title: newTitle || null,
+				user_expires: userExpires,
+				email: !newReuseable ? (newEmail || null) : undefined
+			};
+
+			const response = await Admin.updateInvitation({
+				path: { invitation_id: editingInvitation.id },
+				body
+			});
+			if (response.error) {
+				throw new Error(String(response.error));
+			}
+			isLoading = false;
+			showCreateForm = false;
+			resetForm();
+			await loadInvitations();
+			toast.success('Invitation updated');
+		} catch (e: any) {
+			error = `Failed to update invitation: ${e.message}`;
+			toast.error(error);
+			isLoading = false;
+		}
 	}
 
 	async function copyLink(link: string) {
@@ -184,7 +273,15 @@
 	<div class="flex gap-2">
 		<button
 			class="cursor-pointer rounded bg-green-600 p-2 text-white transition hover:bg-green-700 disabled:opacity-50"
-			onclick={() => (showCreateForm = !showCreateForm)}
+			onclick={() => {
+				if (showCreateForm) {
+					showCreateForm = false;
+					resetForm();
+				} else {
+					resetForm();
+					showCreateForm = true;
+				}
+			}}
 			title="Create new invitation"
 			disabled={isLoading}
 		>
@@ -221,11 +318,11 @@
 
 {#if showCreateForm}
 	<div class="mb-4 rounded-lg bg-white p-6 shadow-md">
-		<h3 class="mb-4 text-lg font-semibold text-gray-900">Create Invitation</h3>
+		<h3 class="mb-4 text-lg font-semibold text-gray-900">{editingInvitation ? 'Edit Invitation' : 'Create Invitation'}</h3>
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
-				handleCreate();
+				editingInvitation ? handleUpdate() : handleCreate();
 			}}
 			class="grid grid-cols-1 gap-4 sm:grid-cols-2"
 		>
@@ -239,6 +336,18 @@
 					class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
 				/>
 			</div>
+			{#if editingInvitation && !editingInvitation.reuseable}
+				<div>
+					<label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+					<input
+						id="email"
+						type="email"
+						bind:value={newEmail}
+						placeholder="Optional email"
+						class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+					/>
+				</div>
+			{/if}
 			<div>
 				<label for="expires_at" class="block text-sm font-medium text-gray-700">Expires At</label>
 				<input
@@ -343,7 +452,7 @@
 					class="hover:bg-opacity-90 rounded bg-primary px-4 py-2 text-white transition disabled:opacity-50"
 					disabled={isLoading}
 				>
-					Create
+					{editingInvitation ? 'Save' : 'Create'}
 				</button>
 				<button
 					type="button"
@@ -397,7 +506,7 @@
 						>User Expires</th
 					>
 					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>Link</th
+						>Actions</th
 					>
 				</tr>
 			</thead>
@@ -467,17 +576,29 @@
 								{/if}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
-								<button
-									onclick={(e) => {
-										e.stopPropagation();
-										copyLink(invitation.invitation_link);
-									}}
-									class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
-									title={invitation.invitation_link}
-								>
-									<i class="fa-solid fa-copy"></i>
-									Copy link
-								</button>
+								<div class="flex gap-1">
+									<button
+										onclick={(e) => {
+											e.stopPropagation();
+											startEdit(invitation);
+										}}
+										class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
+										title="Edit invitation"
+									>
+										<i class="fa-solid fa-pencil"></i>
+									</button>
+									<button
+										onclick={(e) => {
+											e.stopPropagation();
+											copyLink(invitation.invitation_link);
+										}}
+										class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
+										title={invitation.invitation_link}
+									>
+										<i class="fa-solid fa-copy"></i>
+										Copy link
+									</button>
+								</div>
 							</td>
 						</tr>
 					{/each}
@@ -522,7 +643,7 @@
 						>User Expires</th
 					>
 					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>Link</th
+						>Actions</th
 					>
 				</tr>
 			</thead>
@@ -592,17 +713,29 @@
 								{/if}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
-								<button
-									onclick={(e) => {
-										e.stopPropagation();
-										copyLink(invitation.invitation_link);
-									}}
-									class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
-									title={invitation.invitation_link}
-								>
-									<i class="fa-solid fa-copy"></i>
-									Copy link
-								</button>
+								<div class="flex gap-1">
+									<button
+										onclick={(e) => {
+											e.stopPropagation();
+											startEdit(invitation);
+										}}
+										class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
+										title="Edit invitation"
+									>
+										<i class="fa-solid fa-pencil"></i>
+									</button>
+									<button
+										onclick={(e) => {
+											e.stopPropagation();
+											copyLink(invitation.invitation_link);
+										}}
+										class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
+										title={invitation.invitation_link}
+									>
+										<i class="fa-solid fa-copy"></i>
+										Copy link
+									</button>
+								</div>
 							</td>
 						</tr>
 					{/each}
