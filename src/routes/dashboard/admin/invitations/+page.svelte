@@ -448,10 +448,10 @@
 									{invitation.user_scope ?? 'user'}
 								</span>
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+							<td class="px-6 py-4 text-sm whitespace-nowrap {invitation.expires_at && new Date(invitation.expires_at) < new Date() ? 'text-red-500' : 'text-gray-500'}">
 								{invitation.expires_at ? new Date(invitation.expires_at).toLocaleString() : '-'}
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+							<td class="px-6 py-4 text-sm whitespace-nowrap {invitation.user_expires && typeof invitation.user_expires === 'string' && new Date(invitation.user_expires) < new Date() ? 'text-red-500' : 'text-gray-500'}">
 								{#if !invitation.user_expires}
 									-
 								{:else if typeof invitation.user_expires === 'string'}
@@ -573,10 +573,10 @@
 									{invitation.user_scope ?? 'user'}
 								</span>
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+							<td class="px-6 py-4 text-sm whitespace-nowrap {invitation.expires_at && new Date(invitation.expires_at) < new Date() ? 'text-red-500' : 'text-gray-500'}">
 								{invitation.expires_at ? new Date(invitation.expires_at).toLocaleString() : '-'}
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+							<td class="px-6 py-4 text-sm whitespace-nowrap {invitation.user_expires && typeof invitation.user_expires === 'string' && new Date(invitation.user_expires) < new Date() ? 'text-red-500' : 'text-gray-500'}">
 								{#if !invitation.user_expires}
 									-
 								{:else if typeof invitation.user_expires === 'string'}
