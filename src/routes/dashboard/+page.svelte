@@ -8,12 +8,12 @@
 		ProjectPublic
 	} from '$lib/api';
 	import { Default, Folders, Projects } from '$lib/api';
-	import { toast } from 'svelte-sonner';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -340,7 +340,7 @@
 	<h2 class="page-title">Project Folders</h2>
 	<div class="ml-auto flex rounded-lg transition-shadow hover:shadow-lg">
 		<button
-			class="flex border-none bg-transparent px-4 py-2 transition-transform active:translate-y-0.5"
+			class="flex items-center border-none bg-transparent px-4 py-2 transition-transform active:translate-y-0.5"
 			onclick={() => (isCreateFolderModalOpen = true)}
 			title="Create new folder"
 			aria-label="Create new folder"
