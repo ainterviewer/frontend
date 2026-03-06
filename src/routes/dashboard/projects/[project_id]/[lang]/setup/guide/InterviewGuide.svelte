@@ -543,8 +543,8 @@
 					onclick={() => (showExportMenu = !showExportMenu)}
 					disabled={exporting}
 				>
-					<i class="fa-solid fa-file-pdf"></i>
-					{exporting ? 'Exporting...' : 'Export PDF'}
+					<i class="fa-solid fa-file-export"></i>
+					{exporting ? 'Exporting...' : 'Export'}
 				</button>
 				{#if showExportMenu}
 					<div
@@ -555,14 +555,21 @@
 							onclick={() => exportPdf(false)}
 						>
 							<i class="fa-solid fa-file-lines"></i>
-							Simple
+							Simple PDF
 						</button>
 						<button
 							class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
 							onclick={() => exportPdf(true)}
 						>
 							<i class="fa-solid fa-file-circle-check"></i>
-							Detailed
+							Detailed PDF
+						</button>
+						<button
+							class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+							onclick={() => { exportJson(); showExportMenu = false; }}
+						>
+							<i class="fa-solid fa-file-code"></i>
+							JSON
 						</button>
 					</div>
 				{/if}
