@@ -6,25 +6,32 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 	const token = cookies.get('token');
 
 	try {
-		const response = await Projects.getGuide({
-			path: { project_id, lang },
-			headers: {
-				Cookie: `token=${token}`
-			}
-		});
+		const [response, projectRes] = await Promise.all([
+			Projects.getGuide({
+				path: { project_id, lang },
+				headers: {
+					Cookie: `token=${token}`
+				}
+			}),
+			Projects.getProject({
+				auth: token,
+				path: { project_id }
+			})
+		]);
 
 		if (response.error) {
 			console.error('Error fetching guide:', response.error);
-			return { guide: null, lang, project_id };
+			return { guide: null, lang, project_id, project_name: projectRes.data?.title ?? '' };
 		}
 
 		return {
 			guide: response.data,
 			lang,
-			project_id
+			project_id,
+			project_name: projectRes.data?.title ?? ''
 		};
 	} catch (error) {
 		console.error('Exception fetching guide:', error);
-		return { guide: null, lang, project_id };
+		return { guide: null, lang, project_id, project_name: '' };
 	}
 };

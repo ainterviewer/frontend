@@ -226,7 +226,7 @@
 	onDragEnd={handleDragEnd}
 >
 	{#key data.guide}
-		<InterviewGuide guide={data.guide} lang={data.lang} />
+		<InterviewGuide guide={data.guide} lang={data.lang} projectName={data.project_name} />
 	{/key}
 
 	<AssistanceChat

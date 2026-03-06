@@ -15,15 +15,19 @@
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
+	import { downloadGuidePdf } from './exportPdf';
 	import { generateId, mapFromLocal, mapToLocal, saveGuide } from './utils';
 
-	let { guide: initialGuide, lang } = $props<{
+	let { guide: initialGuide, lang, projectName = '' } = $props<{
 		guide: InterviewGuideOutput | null;
 		lang: string;
+		projectName?: string;
 	}>();
 
 	// State
 	let saving = $state(false);
+	let exporting = $state(false);
+	let showExportMenu = $state(false);
 	// svelte-ignore state_referenced_locally
 	let guide = $state<InterviewGuideOutput>(
 		initialGuide ?? {
@@ -228,6 +232,25 @@
 		}
 	}
 
+	async function exportPdf(detailed: boolean) {
+		exporting = true;
+		showExportMenu = false;
+		try {
+			await downloadGuidePdf({
+				guide,
+				sections: guideStore.localSections,
+				questions: guideStore.localQuestions,
+				projectName: projectName || 'Interview Guide',
+				detailed
+			});
+		} catch (e) {
+			console.error('Failed to export PDF', e);
+			toast.error('Failed to export PDF');
+		} finally {
+			exporting = false;
+		}
+	}
+
 	function exportJson() {
 		const data = {
 			...guide,
@@ -292,6 +315,11 @@
 		if (getSnapshot() !== savedSnapshot) {
 			e.preventDefault();
 			e.returnValue = '';
+		}
+	}}
+	onclick={(e) => {
+		if (showExportMenu && !(e.target as HTMLElement)?.closest('.export-pdf-menu')) {
+			showExportMenu = false;
 		}
 	}}
 />
@@ -509,14 +537,36 @@
 				<i class="fa-solid fa-person-circle-question"></i>
 				Try Interview
 			</a>
-			<!-- FIXME: -->
-			<button
-				class="hidden rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
-				onclick={exportJson}
-			>
-				<i class="fa-solid fa-file-export"></i>
-				Export JSON
-			</button>
+			<div class="export-pdf-menu relative">
+				<button
+					class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+					onclick={() => (showExportMenu = !showExportMenu)}
+					disabled={exporting}
+				>
+					<i class="fa-solid fa-file-pdf"></i>
+					{exporting ? 'Exporting...' : 'Export PDF'}
+				</button>
+				{#if showExportMenu}
+					<div
+						class="absolute bottom-full left-0 mb-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+					>
+						<button
+							class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+							onclick={() => exportPdf(false)}
+						>
+							<i class="fa-solid fa-file-lines"></i>
+							Simple
+						</button>
+						<button
+							class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+							onclick={() => exportPdf(true)}
+						>
+							<i class="fa-solid fa-file-circle-check"></i>
+							Detailed
+						</button>
+					</div>
+				{/if}
+			</div>
 			<button
 				class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark"
 				onclick={async () => {
