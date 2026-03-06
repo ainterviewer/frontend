@@ -59,3 +59,125 @@
 		background-image: url('/src/lib/assets/squiggly_big.svg');
 	}
 }
+
+/* Print styles – show only interview guide content */
+@media print {
+	/* Hide shell: header, sidebar, floating elements */
+	header,
+	#sidebar,
+	.fixed {
+		display: none !important;
+	}
+
+	/* Reset dashboard layout */
+	main {
+		margin: 0 !important;
+		padding: 0 !important;
+		height: auto !important;
+		overflow: visible !important;
+		border: none !important;
+		border-radius: 0 !important;
+	}
+
+	main > div {
+		width: 100% !important;
+		padding: 1cm !important;
+		box-sizing: border-box !important;
+	}
+
+	body,
+	html,
+	.bg-dark {
+		background: white !important;
+	}
+
+	/* Hide interactive/edit-only elements */
+	[title='Move Section'],
+	[title='Move Question'],
+	button:has(.fa-trash),
+	button:has(.fa-wand-magic-sparkles),
+	button:has(.fa-plus),
+	button:has(.fa-floppy-disk),
+	button:has(.fa-file-export),
+	button:has(.fa-person-circle-question),
+	button:has(.fa-gear),
+	.grid.grid-cols-2 {
+		display: none !important;
+	}
+
+	/* Hide guide sidebar nav & sticky action bar */
+	.sticky {
+		display: none !important;
+	}
+
+	/* Hide helper description texts */
+	.page-title + p {
+		display: none !important;
+	}
+
+	h3 + p.text-sm {
+		display: none !important;
+	}
+
+	/* Allow content to flow across pages */
+	* {
+		overflow: visible !important;
+	}
+
+	/* Avoid page breaks inside questions; allow sections to break */
+	.scroll-mt-24 {
+		break-inside: avoid;
+		page-break-inside: avoid;
+	}
+
+	/* Replace textareas with plain text appearance */
+	textarea {
+		border: none !important;
+		background: transparent !important;
+		resize: none !important;
+		height: auto !important;
+		min-height: 0 !important;
+		padding: 0 !important;
+		font-size: inherit !important;
+		field-sizing: content;
+	}
+
+	/* Hide empty textareas (placeholder-only) */
+	textarea:placeholder-shown {
+		display: none !important;
+	}
+
+	/* Clean up section and question card styling for print */
+	.bg-secondary {
+		background: #f9f7f2 !important;
+		border-color: #d1d5db !important;
+	}
+
+	/* Remove the thick left border on questions (drag indicator) */
+	.border-l-primary {
+		border-left-color: #d1d5db !important;
+	}
+
+	.border-l-4 {
+		border-left-width: 2px !important;
+	}
+
+	/* Checkboxes - preserve colors */
+	input[type='checkbox'] {
+		print-color-adjust: exact;
+		-webkit-print-color-adjust: exact;
+	}
+
+	/* Tighten spacing */
+	.space-y-8 > * + * {
+		margin-top: 1rem !important;
+	}
+
+	.space-y-6 > * + * {
+		margin-top: 0.75rem !important;
+	}
+
+	.space-y-4 > * + * {
+		margin-top: 0.5rem !important;
+	}
+}
