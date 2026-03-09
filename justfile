@@ -2,6 +2,10 @@ export PATH := "./node_modules/.bin:" + env_var('PATH')
 export OPENAPI_PATH := "../backend/openapi.json"
 export SDK_OUTPUT_PATH := "src/lib/api"
 
+[private]
+default:
+    @just --list
+
 [doc("Generate TypeScript SDK from openapi.json created by FastAPI:
 https://fastapi.tiangolo.com/advanced/generate-clients/")]
 [group("Frontend")]
