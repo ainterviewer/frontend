@@ -326,6 +326,7 @@
 	}}
 />
 
+<form autocomplete="off" onsubmit={(e) => e.preventDefault()}>
 <div class="flex justify-between">
 	<h1 class="page-title">Interview Guide</h1>
 	<button
@@ -598,6 +599,7 @@
 		</div>
 	</div>
 </div>
+</form>
 
 <GenerateModal
 	bind:open={showGenerateGuideModal}
