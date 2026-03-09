@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { DragDropProvider, KeyboardSensor, PointerSensor } from '@dnd-kit-svelte/svelte';
-	import { guideStore } from '$lib/stores/guideStore.svelte';
+	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import SidebarSortableSection from './SidebarSortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
+
+	const guideStore = getGuideStore();
 
 	let { activeId, localSections, localQuestions } = $props<{
 		activeId: string;

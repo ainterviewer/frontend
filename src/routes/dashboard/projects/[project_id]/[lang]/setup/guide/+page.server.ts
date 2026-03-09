@@ -1,7 +1,7 @@
 import { Projects } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, cookies }) => {
+export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 	const { project_id, lang } = params;
 	const token = cookies.get('token');
 
@@ -9,13 +9,13 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		const [response, projectRes] = await Promise.all([
 			Projects.getGuide({
 				path: { project_id, lang },
-				headers: {
-					Cookie: `token=${token}`
-				}
+				auth: token,
+				fetch
 			}),
 			Projects.getProject({
 				auth: token,
-				path: { project_id }
+				path: { project_id },
+				fetch
 			})
 		]);
 

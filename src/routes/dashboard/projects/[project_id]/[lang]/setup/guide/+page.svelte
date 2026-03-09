@@ -1,6 +1,11 @@
 <script lang="ts">
 	import AssistanceChat from '$lib/components/AssistanceChat.svelte';
-	import { guideStore, type GuideQuestion, type GuideSection } from '$lib/stores/guideStore.svelte';
+	import {
+		createGuideStore,
+		setGuideStore,
+		type GuideQuestion,
+		type GuideSection
+	} from '$lib/stores/guideStore.svelte';
 	import {
 		DragDropProvider,
 		DragOverlay,
@@ -15,6 +20,8 @@
 	import SortableSection from './SortableSection.svelte';
 
 	let { data } = $props();
+
+	const guideStore = setGuideStore(createGuideStore());
 
 	const sensors = [KeyboardSensor, PointerSensor];
 
@@ -219,73 +226,73 @@
 
 <svelte:window onpointermove={(e) => (pointerY = e.clientY)} />
 
-<DragDropProvider
-	{sensors}
-	onDragOver={handleDragOver}
-	onDragStart={handleDragStart}
-	onDragEnd={handleDragEnd}
->
-	{#key data.guide}
-		<InterviewGuide guide={data.guide} lang={data.lang} projectName={data.project_name} />
-	{/key}
-
-	<AssistanceChat
-		project_id={data.project_id}
-		lang={data.lang}
-		guide={guideStore.guide ?? data.guide}
-		bind:isMaximized={isChatMaximized}
+{#key `${data.project_id}-${data.lang}`}
+	<DragDropProvider
+		{sensors}
+		onDragOver={handleDragOver}
+		onDragStart={handleDragStart}
+		onDragEnd={handleDragEnd}
 	>
-		{#snippet questionMessage(item: GuideQuestion, msgIndex: number)}
-			<SortableQuestion
-				question={item}
-				sectionId="chat"
-				sectionIndex={0}
-				index={msgIndex}
-				source="chat"
-				allSections={guideStore.localSections}
-				allQuestions={guideStore.localQuestions}
-				onRemove={() => {}}
-			/>
-		{/snippet}
+		<InterviewGuide guide={data.guide} lang={data.lang} projectName={data.project_name} />
 
-		{#snippet sectionMessage(
-			item: { section: GuideSection; questions: GuideQuestion[] },
-			msgIndex: number
-		)}
-			<SortableSection
-				section={item.section}
-				questions={item.questions}
-				sectionIndex={msgIndex}
-				source="chat"
-				allSections={guideStore.localSections}
-				allQuestions={guideStore.localQuestions}
-				onRemove={() => {}}
-			/>
-		{/snippet}
-	</AssistanceChat>
+		<AssistanceChat
+			project_id={data.project_id}
+			lang={data.lang}
+			guide={guideStore.guide ?? data.guide}
+			bind:isMaximized={isChatMaximized}
+		>
+			{#snippet questionMessage(item: GuideQuestion, msgIndex: number)}
+				<SortableQuestion
+					question={item}
+					sectionId="chat"
+					sectionIndex={0}
+					index={msgIndex}
+					source="chat"
+					allSections={guideStore.localSections}
+					allQuestions={guideStore.localQuestions}
+					onRemove={() => {}}
+				/>
+			{/snippet}
 
-	<DragOverlay>
-		{#snippet children(active)}
-			{#if activeItem}
-				{#if active.data.current?.type === 'section'}
-					<SortableSection
-						section={activeItem as GuideSection}
-						questions={guideStore.localQuestions[(activeItem as GuideSection).id] || []}
-						sectionIndex={guideStore.localSections.findIndex((s) => s.id === activeItem?.id) ?? 0}
-						onRemove={() => {}}
-						isOverlay
-					/>
-				{:else if active.data.current?.type === 'question'}
-					<SortableQuestion
-						question={activeItem as GuideQuestion}
-						sectionId={active.data.current?.sectionId}
-						index={0}
-						sectionIndex={0}
-						onRemove={() => {}}
-						isOverlay
-					/>
+			{#snippet sectionMessage(
+				item: { section: GuideSection; questions: GuideQuestion[] },
+				msgIndex: number
+			)}
+				<SortableSection
+					section={item.section}
+					questions={item.questions}
+					sectionIndex={msgIndex}
+					source="chat"
+					allSections={guideStore.localSections}
+					allQuestions={guideStore.localQuestions}
+					onRemove={() => {}}
+				/>
+			{/snippet}
+		</AssistanceChat>
+
+		<DragOverlay>
+			{#snippet children(active)}
+				{#if activeItem}
+					{#if active.data.current?.type === 'section'}
+						<SortableSection
+							section={activeItem as GuideSection}
+							questions={guideStore.localQuestions[(activeItem as GuideSection).id] || []}
+							sectionIndex={guideStore.localSections.findIndex((s) => s.id === activeItem?.id) ?? 0}
+							onRemove={() => {}}
+							isOverlay
+						/>
+					{:else if active.data.current?.type === 'question'}
+						<SortableQuestion
+							question={activeItem as GuideQuestion}
+							sectionId={active.data.current?.sectionId}
+							index={0}
+							sectionIndex={0}
+							onRemove={() => {}}
+							isOverlay
+						/>
+					{/if}
 				{/if}
-			{/if}
-		{/snippet}
-	</DragOverlay>
-</DragDropProvider>
+			{/snippet}
+		</DragOverlay>
+	</DragDropProvider>
+{/key}

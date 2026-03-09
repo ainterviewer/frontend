@@ -9,7 +9,7 @@
 		QuestionSectionQuestionOutput
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { guideStore } from '$lib/stores/guideStore.svelte';
+	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { toast } from 'svelte-sonner';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
@@ -23,6 +23,8 @@
 		lang: string;
 		projectName?: string;
 	}>();
+
+	const guideStore = getGuideStore();
 
 	// State
 	let saving = $state(false);
