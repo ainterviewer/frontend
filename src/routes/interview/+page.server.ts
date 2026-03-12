@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 
 	const cookieHeader = request.headers.get('cookie');
 
-	const interviewConfig: InterviewConfig = Projects.getInterviewConfig({
+	const { data: interviewConfig } = await Projects.getInterviewConfig({
 		headers: { cookie: cookieHeader },
 		path: { project_id }
 	});
@@ -42,6 +42,17 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	const lang = url.searchParams.get('lang') || 'en';
 	const experimentID = url.searchParams.get('x');
 
+	// Collect extra query params (exclude known ones)
+	const knownParams = new Set(['id', 'interview_type', 'lang', 'x']);
+	const externalParams: Record<string, string> = {};
+	for (const [key, value] of url.searchParams.entries()) {
+		if (!knownParams.has(key)) {
+			externalParams[key] = value;
+		}
+	}
+
+	const referer = request.headers.get('referer') || null;
+
 	return {
 		project_id,
 		lang,
@@ -49,6 +60,8 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 		experimentID,
 		interviewConfig,
 		isProjectOwnerDemoUser: isProjectOwnerDemoUser ?? false,
-		authError
+		authError,
+		externalParams: Object.keys(externalParams).length > 0 ? externalParams : null,
+		referer
 	};
 };

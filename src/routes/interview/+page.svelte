@@ -25,18 +25,20 @@
 		exit_text?: string;
 		exit_button?: string;
 		authError?: boolean;
+		externalParams?: Record<string, string> | null;
+		referer?: string | null;
 	}
 
 	let { data }: { data: PageData } = $props();
 
+	console.log(data.externalParams);
+
 	let projectId = $derived(data.project_id);
 	let lang = $derived(data.lang);
 	let interviewType = $derived(data.interviewType);
-	console.log('interviewType: ', interviewType);
 	const interviewConfig = $derived(data.interviewConfig);
 	const isDemoBlocked = $derived(data.isProjectOwnerDemoUser && interviewType === 'distributed');
 	const isAuthBlocked = $derived(data.authError === true);
-	console.log('is demo blocked? : ', isDemoBlocked);
 
 	// Help/Exit data
 	let helpTitle = $derived(data.help_title || 'Help');
@@ -87,7 +89,14 @@
 	});
 
 	async function createInterviewAndGetId(): Promise<string | null> {
-		const token = await createInterview(projectId, lang, data.interviewType, data.experimentID);
+		const token = await createInterview(
+			projectId,
+			lang,
+			data.interviewType,
+			data.experimentID,
+			data.externalParams,
+			data.referer
+		);
 
 		if (token) {
 			const parsedId = parseInterviewIdFromToken(token);
