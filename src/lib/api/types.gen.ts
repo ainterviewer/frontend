@@ -612,6 +612,20 @@ export type CreateInterviewRequest = {
      */
     experiment_id?: string | null;
     synthetic_test_type?: TestType | null;
+    /**
+     * External Params
+     *
+     * Extra query parameters, can include external user-id or the like.
+     */
+    external_params?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Referer
+     *
+     * The referer of original request
+     */
+    referer?: string | null;
 };
 
 /**
