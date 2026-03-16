@@ -788,6 +788,56 @@ export type ExportMessagesRequest = {
 };
 
 /**
+ * ExternalParam
+ *
+ * Definition of a single external URL query parameter.
+ */
+export type ExternalParam = {
+    /**
+     * Name
+     *
+     * Query parameter name (valid identifier)
+     */
+    name: string;
+    /**
+     * Type
+     *
+     * Value type for the parameter
+     */
+    type: 'str' | 'int' | 'float' | 'bool' | 'enum';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Default
+     */
+    default?: string | number | number | boolean | null;
+    /**
+     * Options
+     *
+     * Allowed values (required when type='enum')
+     */
+    options?: Array<string> | null;
+    /**
+     * Description
+     *
+     * Human-readable description of the parameter's purpose
+     */
+    description?: string | null;
+};
+
+/**
+ * ExternalParamsRequest
+ */
+export type ExternalParamsRequest = {
+    /**
+     * Params
+     */
+    params: Array<ExternalParam>;
+};
+
+/**
  * Feedback
  */
 export type Feedback = 'positive' | 'negative';
@@ -874,7 +924,7 @@ export type Image = {
     /**
      * Data
      */
-    data: string | null;
+    data: string | Blob | File | null;
     /**
      * Primer
      *
@@ -918,12 +968,6 @@ export type InterviewConfig = {
      * Allows the respondents to record their answers as audio messages which are transcribed before send as answers to the AInterviewer.
      */
     with_audio?: boolean;
-    /**
-     * Referer Id Key
-     *
-     * Key for the value of the id sent in the referer header
-     */
-    referer_id_key?: string | null;
 };
 
 /**
@@ -1742,6 +1786,10 @@ export type ProjectPublic = {
     last_updated?: string | null;
     status?: ProjectStatus;
     config: InterviewConfig;
+    /**
+     * External Params
+     */
+    external_params?: Array<ExternalParam> | null;
     /**
      * Owner Id
      */
@@ -4548,6 +4596,39 @@ export type CreateInterviewConfigErrors = {
 export type CreateInterviewConfigError = CreateInterviewConfigErrors[keyof CreateInterviewConfigErrors];
 
 export type CreateInterviewConfigResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type UpdateExternalParamsData = {
+    body: ExternalParamsRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/external_params';
+};
+
+export type UpdateExternalParamsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateExternalParamsError = UpdateExternalParamsErrors[keyof UpdateExternalParamsErrors];
+
+export type UpdateExternalParamsResponses = {
     /**
      * Successful Response
      */
