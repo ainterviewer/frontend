@@ -85,7 +85,7 @@
 <div
 	id="sidebar"
 	class={[
-		'fixed top-0 left-0 z-900 h-full overflow-visible bg-dark px-0 py-[100px] transition-all duration-500',
+		'fixed top-0 left-0 z-900 h-full overflow-visible bg-dark px-0 py-25 transition-all duration-500',
 		collapsed ? 'w-[70px]' : 'w-[250px]'
 	].join(' ')}
 >
