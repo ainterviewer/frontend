@@ -1,11 +1,65 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
+	import { Projects } from '$lib/api';
+	import type { ExternalParam } from '$lib/api/types.gen';
+	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	let projectId = $derived(page.params.project_id);
 	let lang = $derived(page.params.lang);
+
+	// Advanced settings state
+	let advancedOpen = $state(false);
+	let savingParams = $state(false);
+
+	function createEmptyParam(): ExternalParam {
+		return {
+			name: '',
+			type: 'str',
+			required: false,
+			default: null,
+			options: null,
+			description: null
+		};
+	}
+
+	let externalParams: ExternalParam[] = $state(
+		structuredClone(data.project?.external_params ?? [])
+	);
+
+	$effect(() => {
+		externalParams = structuredClone(data.project?.external_params ?? []);
+	});
+
+	const paramCount = $derived(externalParams.length);
+
+	function addParam() {
+		externalParams.push(createEmptyParam());
+	}
+
+	function removeParam(index: number) {
+		externalParams.splice(index, 1);
+	}
+
+	async function saveExternalParams() {
+		savingParams = true;
+		try {
+			await Projects.updateExternalParams({
+				path: { project_id: projectId },
+				body: { params: externalParams }
+			});
+			await invalidateAll();
+			toast.success('External parameters saved');
+		} catch (e) {
+			console.error(e);
+			toast.error('Failed to save external parameters');
+		} finally {
+			savingParams = false;
+		}
+	}
 
 	const steps = $derived([
 		{
@@ -71,7 +125,7 @@
 
 	<!-- Steps -->
 	<div class="space-y-4">
-		{#each steps as step}
+		{#each steps as step (step.number)}
 			<a
 				href={step.href}
 				class="group flex items-start gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-primary/30 hover:shadow-md"
@@ -124,6 +178,196 @@
 				</div>
 			</a>
 		{/each}
+	</div>
+
+	<!-- Advanced Settings -->
+	<div class="mt-8 rounded-lg border border-gray-200 bg-white shadow-sm">
+		<button
+			type="button"
+			onclick={() => (advancedOpen = !advancedOpen)}
+			class="flex w-full items-center justify-between p-5 text-left"
+		>
+			<div class="flex items-center gap-3">
+				<i class="fa-solid fa-gear text-gray-500"></i>
+				<h2 class="text-lg font-semibold text-gray-900">Advanced Settings</h2>
+				{#if paramCount > 0}
+					<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+						{paramCount}
+						{paramCount === 1 ? 'param' : 'params'}
+					</span>
+				{/if}
+			</div>
+			<i
+				class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-200"
+				class:rotate-180={advancedOpen}
+			></i>
+		</button>
+
+		{#if advancedOpen}
+			<div class="border-t border-gray-200 p-6">
+				<p class="mb-4 text-sm text-gray-600">
+					Define URL query parameters that will be validated and captured when respondents access
+					the interview link.
+				</p>
+
+				{#if externalParams.length > 0}
+					<div class="space-y-4">
+						{#each externalParams as param, i (param)}
+							<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+								<div class="mb-3 flex items-center justify-between">
+									<span class="text-sm font-medium text-gray-700">Parameter {i + 1}</span>
+									<button
+										type="button"
+										onclick={() => removeParam(i)}
+										class="rounded p-1 text-gray-400 transition-colors hover:text-red-500"
+										title="Remove parameter"
+									>
+										<i class="fa-solid fa-trash-can text-sm"></i>
+									</button>
+								</div>
+
+								<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+									<!-- Name -->
+									<div>
+										<label for="param-name-{i}" class="mb-1 block text-xs font-medium text-gray-600"
+											>Name *</label
+										>
+										<input
+											id="param-name-{i}"
+											type="text"
+											bind:value={param.name}
+											placeholder="e.g. respondent_id"
+											required
+											class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+										/>
+									</div>
+
+									<!-- Type -->
+									<div>
+										<label for="param-type-{i}" class="mb-1 block text-xs font-medium text-gray-600"
+											>Type</label
+										>
+										<select
+											id="param-type-{i}"
+											bind:value={param.type}
+											class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+										>
+											<option value="str">String</option>
+											<option value="int">Integer</option>
+											<option value="float">Float</option>
+											<option value="bool">Boolean</option>
+											<option value="enum">Enum</option>
+										</select>
+									</div>
+
+									<!-- Default -->
+									<div>
+										<label
+											for="param-default-{i}"
+											class="mb-1 block text-xs font-medium text-gray-600">Default</label
+										>
+										<input
+											id="param-default-{i}"
+											type="text"
+											value={param.default ?? ''}
+											oninput={(e) => {
+												const val = e.currentTarget.value;
+												param.default = val === '' ? null : val;
+											}}
+											placeholder="Optional"
+											class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+										/>
+									</div>
+
+									<!-- Description -->
+									<div class="sm:col-span-2">
+										<label for="param-desc-{i}" class="mb-1 block text-xs font-medium text-gray-600"
+											>Description</label
+										>
+										<input
+											id="param-desc-{i}"
+											type="text"
+											value={param.description ?? ''}
+											oninput={(e) => {
+												const val = e.currentTarget.value;
+												param.description = val === '' ? null : val;
+											}}
+											placeholder="What is this parameter for?"
+											class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+										/>
+									</div>
+
+									<!-- Required -->
+									<div class="flex items-end">
+										<label class="flex items-center gap-2 text-sm text-gray-700">
+											<input
+												type="checkbox"
+												bind:checked={param.required}
+												class="rounded border-gray-300 text-primary focus:ring-blue-500"
+											/>
+											Required
+										</label>
+									</div>
+								</div>
+
+								<!-- Options (only for enum type) -->
+								{#if param.type === 'enum'}
+									<div class="mt-3">
+										<label
+											for="param-options-{i}"
+											class="mb-1 block text-xs font-medium text-gray-600"
+											>Options (comma-separated)</label
+										>
+										<input
+											id="param-options-{i}"
+											type="text"
+											value={param.options?.join(', ') ?? ''}
+											oninput={(e) => {
+												const val = e.currentTarget.value;
+												param.options =
+													val.trim() === ''
+														? null
+														: val
+																.split(',')
+																.map((s) => s.trim())
+																.filter(Boolean);
+											}}
+											placeholder="e.g. option1, option2, option3"
+											class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+										/>
+									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<div class="rounded-lg border border-dashed border-gray-300 p-6 text-center">
+						<i class="fa-solid fa-link text-2xl text-gray-300"></i>
+						<p class="mt-2 text-sm text-gray-500">No external parameters configured.</p>
+					</div>
+				{/if}
+
+				<div class="mt-4 flex items-center justify-between">
+					<button
+						type="button"
+						onclick={addParam}
+						class="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						<i class="fa-solid fa-plus"></i>
+						Add parameter
+					</button>
+
+					<button
+						type="button"
+						onclick={saveExternalParams}
+						disabled={savingParams}
+						class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-dark disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						Save
+					</button>
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Quick actions -->

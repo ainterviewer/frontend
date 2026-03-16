@@ -65,6 +65,7 @@
 	let consentData = $state<Consent | null>(null);
 	let isInitializing = $state(true);
 	let consentAccepting = $state(false);
+	let validationErrors = $state<Array<{ loc: string; msg: string }> | null>(null);
 
 	onMount(() => {
 		if (isDemoBlocked || isAuthBlocked) {
@@ -89,7 +90,7 @@
 	});
 
 	async function createInterviewAndGetId(): Promise<string | null> {
-		const token = await createInterview(
+		const result = await createInterview(
 			projectId,
 			lang,
 			data.interviewType,
@@ -98,8 +99,8 @@
 			data.referer
 		);
 
-		if (token) {
-			const parsedId = parseInterviewIdFromToken(token);
+		if (result.ok) {
+			const parsedId = parseInterviewIdFromToken(result.token);
 			if (parsedId) {
 				interviewId = parsedId;
 				return parsedId;
@@ -108,6 +109,9 @@
 				return null;
 			}
 		} else {
+			if (result.validationErrors) {
+				validationErrors = result.validationErrors;
+			}
 			console.error('Failed to create interview');
 			return null;
 		}
@@ -246,6 +250,30 @@
 	{:else if isAuthBlocked}
 		<div class="flex flex-1 items-center justify-center px-6">
 			<p class="text-center text-gray-600">You must be logged in to access this interview.</p>
+		</div>
+	{:else if validationErrors}
+		<div class="flex flex-1 items-center justify-center px-6">
+			<div class="max-w-md text-center">
+				<div
+					class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100"
+				>
+					<i class="fa-solid fa-triangle-exclamation text-xl text-red-600"></i>
+				</div>
+				<h2 class="mb-2 text-lg font-semibold text-gray-900">Missing required parameters</h2>
+				<p class="mb-4 text-sm text-gray-600">
+					This interview link is missing required URL parameters. Please make sure that you used the
+					exact link provided to you and try again. If the error persists contact the entity who
+					shared the interview with you.
+				</p>
+				<ul class="mb-4 space-y-1 text-left text-sm">
+					{#each validationErrors as err}
+						<li class="rounded bg-red-50 px-3 py-2 text-red-700">
+							<!-- TODO: Maybe msg should not be displayed? -->
+							<span class="font-medium">{err.loc}</span> &mdash; {err.msg}
+						</li>
+					{/each}
+				</ul>
+			</div>
 		</div>
 	{:else if chat}
 		<InterviewChat

@@ -57,6 +57,10 @@ function getTokenFromCookie(): string | null {
 	return cookie.split('=')[1] || null;
 }
 
+export type CreateInterviewResult =
+	| { ok: true; token: string }
+	| { ok: false; validationErrors?: Array<{ loc: string; msg: string }> };
+
 /**
  * Create a new interview for the given project
  */
@@ -67,7 +71,7 @@ export async function createInterview(
 	experimentID: string | undefined,
 	externalParams: Record<string, unknown> | null | undefined,
 	referer: string | null | undefined
-): Promise<string | null> {
+): Promise<CreateInterviewResult> {
 	try {
 		const { data, error, response } = await Interviews.createInterview({
 			path: {
@@ -82,13 +86,26 @@ export async function createInterview(
 			}
 		});
 		if (error || !response.ok) {
+			// Try to extract validation errors from the response
+			try {
+				const body = error as any;
+				if (body?.detail && Array.isArray(body.detail)) {
+					const validationErrors = body.detail.map((d: any) => ({
+						loc: Array.isArray(d.loc) ? d.loc.join('.') : String(d.loc),
+						msg: d.msg
+					}));
+					return { ok: false, validationErrors };
+				}
+			} catch {
+				// ignore parse errors
+			}
 			console.error('Failed to create interview');
-			return null;
+			return { ok: false };
 		}
-		return data || null;
+		return data ? { ok: true, token: data } : { ok: false };
 	} catch (e) {
 		console.error('Error creating interview', e);
-		return null;
+		return { ok: false };
 	}
 }
 
