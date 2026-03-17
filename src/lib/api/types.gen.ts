@@ -1028,6 +1028,10 @@ export type InterviewGuideInput = {
      * Messages that are displayed to the interviewee after a certain amount of time
      */
     timed_messages?: Array<TimedMessage> | null;
+    /**
+     * Ai Generated Sections
+     */
+    ai_generated_sections?: number;
 };
 
 /**
@@ -1064,6 +1068,10 @@ export type InterviewGuideOutput = {
      * Messages that are displayed to the interviewee after a certain amount of time
      */
     timed_messages?: Array<TimedMessage> | null;
+    /**
+     * Ai Generated Sections
+     */
+    ai_generated_sections?: number;
 };
 
 /**
@@ -2136,6 +2144,10 @@ export type QuestionSectionQuestionInput = {
      * Should the section be included in shuffling?
      */
     shuffle?: boolean;
+    /**
+     * Ai Generated Questions
+     */
+    ai_generated_questions?: number;
 };
 
 /**
@@ -2158,6 +2170,10 @@ export type QuestionSectionQuestionOutput = {
      * Should the section be included in shuffling?
      */
     shuffle?: boolean;
+    /**
+     * Ai Generated Questions
+     */
+    ai_generated_questions?: number;
 };
 
 /**
