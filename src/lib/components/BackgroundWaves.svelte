@@ -76,7 +76,7 @@
 		xmlns="http://www.w3.org/2000/svg"
 	>
 		<g fill="none" stroke={color} stroke-width="6" stroke-linecap="round">
-			{#each lineOffsets as yPos, i}
+			{#each lineOffsets as yPos, i (i)}
 				<path d={generatePath(yPos, i)} />
 			{/each}
 		</g>
