@@ -3,6 +3,7 @@
 	import { CollisionPriority } from '@dnd-kit/abstract';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import { dragState } from './dragState.svelte';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 
 	interface Props {
@@ -153,5 +154,21 @@
 				<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Question
 			</button>
 		</div>
+	</div>
+
+	<div class="mt-4 flex items-center gap-3 pl-4">
+		<label class="text-sm font-medium text-gray-700" for="ai-generated-questions-{section.id}">
+			AI Generated Questions
+		</label>
+		<input
+			id="ai-generated-questions-{section.id}"
+			type="number"
+			min="0"
+			class="w-20 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+			bind:value={section.ai_generated_questions}
+		/>
+		<HoverInfo
+			text="Specifies the number of questions that will be automatically generated once the predefined ones are finished."
+		/>
 	</div>
 </div>

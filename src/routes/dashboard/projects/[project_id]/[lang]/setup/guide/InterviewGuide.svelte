@@ -46,6 +46,10 @@
 		guide.timed_messages = [];
 	}
 
+	if (guide.ai_generated_sections === undefined) {
+		guide.ai_generated_sections = 0;
+	}
+
 	let mapped = mapToLocal(guide);
 	if (mapped.sections.length === 0) {
 		const newId = generateId();
@@ -419,6 +423,25 @@
 				>
 					<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Section
 				</button>
+			</div>
+		</div>
+
+		<!-- AI Generated Sections -->
+		<div class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+			<div class="flex items-center gap-3">
+				<label class="text-sm font-medium text-gray-700" for="ai-generated-sections">
+					AI Generated Sections
+				</label>
+				<input
+					id="ai-generated-sections"
+					type="number"
+					min="0"
+					class="w-20 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+					bind:value={guide.ai_generated_sections}
+				/>
+				<HoverInfo
+					text="Specifies the number of sections that will be automatically generated once the predefined ones are finished."
+				/>
 			</div>
 		</div>
 
