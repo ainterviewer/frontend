@@ -3,26 +3,26 @@ import type { ProjectPublic } from '$lib/api/types.gen';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ cookies, params, fetch }) => {
-	const token = cookies.get('token') || '';
+export const load: PageServerLoad = async ({ request, params, fetch }) => {
+	const cookieHeader = request.headers.get('cookie');
 	const { project_id, test_id, lang } = params;
 
 	const [modelsRes, languagesRes, testsResponse, projectRes] = await Promise.all([
 		Default.getModels({
-			auth: token,
+			headers: { cookie: cookieHeader },
 			fetch
 		}),
 		Default.getLanguages({
-			auth: token,
+			headers: { cookie: cookieHeader },
 			fetch
 		}),
 		Synthesize.getTestSetups({
 			path: { project_id },
-			auth: token,
+			headers: { cookie: cookieHeader },
 			fetch
 		}),
 		Projects.getProject({
-			auth: token,
+			headers: { cookie: cookieHeader },
 			path: { project_id: project_id },
 			fetch
 		})

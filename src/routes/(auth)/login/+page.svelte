@@ -18,10 +18,11 @@
 		const formData = new FormData(form);
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
+		const rememberMe = formData.get('remember-me') === 'on';
 
 		try {
 			const { error } = await Auth.login({
-				body: { email, password }
+				body: { email, password, extended: rememberMe }
 			});
 
 			if (error) {

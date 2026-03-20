@@ -1,23 +1,23 @@
 import { Default, Projects } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ cookies, params, fetch }) => {
-	const token = cookies.get('token') || '';
+export const load: PageServerLoad = async ({ request, params, fetch }) => {
+	const cookieHeader = request.headers.get('cookie');
 	const { project_id, lang } = params;
 
 	const [modelsRes, agentsRes, promptsRes] = await Promise.all([
 		Default.getModels({
-			auth: token,
+			headers: { cookie: cookieHeader },
 			fetch
 		}),
 		Projects.getInterviewAgents({
 			path: { project_id, lang },
-			auth: token,
+			headers: { cookie: cookieHeader },
 			fetch
 		}),
 		Projects.getPrompts({
 			path: { project_id, lang },
-			auth: token,
+			headers: { cookie: cookieHeader },
 			fetch
 		})
 	]);

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '$lib/api-extra/toast-interceptor';
+	import '$lib/api-extra/refresh-interceptor';
 	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from 'svelte-sonner';
 	import '../app.css';

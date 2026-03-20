@@ -3,13 +3,13 @@ import type { ProjectPublic } from '$lib/api/types.gen';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ cookies, params }) => {
-	const token = cookies.get('token') || '';
+export const load: PageServerLoad = async ({ request, params }) => {
+	const cookieHeader = request.headers.get('cookie');
 	const { project_id } = params;
 
 	const [projectRes] = await Promise.all([
 		Projects.getProject({
-			auth: token,
+			headers: { cookie: cookieHeader },
 			path: { project_id: project_id }
 		})
 	]);

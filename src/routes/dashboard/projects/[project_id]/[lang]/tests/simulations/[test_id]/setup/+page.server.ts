@@ -2,19 +2,19 @@ import { Experiments, Projects, Synthesize, type BackgroundInfoOptionsOutput } f
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
+export const load: PageServerLoad = async ({ params, request, fetch }) => {
 	const { project_id, test_id, lang } = params;
-	const token = cookies.get('token');
+	const cookieHeader = request.headers.get('cookie');
 
 	try {
 		const [testsResponse, guideResponse] = await Promise.all([
 			Synthesize.getTestSetups({
-				auth: token,
+				headers: { cookie: cookieHeader },
 				fetch,
 				path: { project_id }
 			}),
 			Projects.getGuide({
-				auth: token,
+				headers: { cookie: cookieHeader },
 				fetch,
 				path: { project_id, lang }
 			})
@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 		if (test.type === 'fixed_answers') {
 			try {
 				const answersResponse = await Synthesize.getFixedAnswers({
-					auth: token,
+					headers: { cookie: cookieHeader },
 					fetch,
 					path: { project_id, test_id }
 				});
@@ -43,7 +43,7 @@ export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 		} else if (test.type === 'fixed_ai') {
 			try {
 				const personasResponse = await Synthesize.getFixedPersonas({
-					auth: token,
+					headers: { cookie: cookieHeader },
 					fetch,
 					path: { project_id, test_id }
 				});
@@ -56,7 +56,7 @@ export const load: PageServerLoad = async ({ params, cookies, fetch }) => {
 		} else if (test.type === 'shuffled_ai') {
 			try {
 				const bgInfoResponse = await Synthesize.getBackgroundInfo({
-					auth: token,
+					headers: { cookie: cookieHeader },
 					fetch,
 					path: { project_id, test_id }
 				});

@@ -1,12 +1,12 @@
 import { Experiments, Folders } from '$lib/api/sdk.gen';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ cookies }) => {
-	const token = cookies.get('token');
+export const load: PageServerLoad = async ({ request }) => {
+	const cookieHeader = request.headers.get('cookie');
 
 	const options = {
 		headers: {
-			Cookie: `token=${token}`
+			cookie: cookieHeader
 		}
 	};
 

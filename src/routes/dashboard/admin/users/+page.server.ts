@@ -1,13 +1,13 @@
 import { Admin, type UserAdmin } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ cookies }) => {
-	const token = cookies.get('token');
+export const load: PageServerLoad = async ({ request }) => {
+	const cookieHeader = request.headers.get('cookie');
 
 	try {
 		const response = await Admin.getUsers({
 			headers: {
-				Cookie: `token=${token}`
+				cookie: cookieHeader
 			}
 		});
 

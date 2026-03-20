@@ -12,13 +12,13 @@ interface AccessRequest {
 	updated_at: string;
 }
 
-export const load: PageServerLoad = async ({ cookies }) => {
-	const token = cookies.get('token');
+export const load: PageServerLoad = async ({ request }) => {
+	const cookieHeader = request.headers.get('cookie');
 
 	try {
 		const response = await Admin.getAccessRequests({
 			headers: {
-				Cookie: `token=${token}`
+				cookie: cookieHeader
 			}
 		});
 

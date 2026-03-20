@@ -15,8 +15,7 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	// Auth check for test interview types
 	let authError = false;
 	if (interviewType === 'manual_test' || interviewType === 'synthetic_test') {
-		const token = cookies.get('token');
-		if (!token) {
+		if (!cookies.get('access_token') && !cookies.get('refresh_token')) {
 			authError = true;
 		} else {
 			const cookieHeader = request.headers.get('cookie');

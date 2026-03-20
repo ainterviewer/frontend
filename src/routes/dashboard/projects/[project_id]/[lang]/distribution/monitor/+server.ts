@@ -2,10 +2,10 @@ import { Monitoring } from '$lib/api';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ cookies, params }) => {
-	const token = cookies.get('token') || '';
+export const GET: RequestHandler = async ({ request, params }) => {
+	const cookieHeader = request.headers.get('cookie');
 	const { data, error } = await Monitoring.getProjectMonitoringStats({
-		auth: token,
+		headers: { cookie: cookieHeader },
 		path: {
 			project_id: params.project_id
 		}
