@@ -6,7 +6,7 @@ export default {
 	plugins: [
 		{
 			name: '@hey-api/sdk',
-			asClass: true
+			operations: { strategy: 'byTags' }
 		}
 	]
 };
