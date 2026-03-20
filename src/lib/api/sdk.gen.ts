@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ActiveWebsocketsWsConnectionsGetData, ActiveWebsocketsWsConnectionsGetResponses, AddCollaboratorData, AddCollaboratorErrors, AddCollaboratorResponses, AddMessageAnnotationData, AddMessageAnnotationErrors, AddMessageAnnotationResponses, AddProjectLanguagesData, AddProjectLanguagesErrors, AddProjectLanguagesResponses, BroadcastWsBroadcastPostData, BroadcastWsBroadcastPostErrors, BroadcastWsBroadcastPostResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CheckProjectOwnerData, CheckProjectOwnerErrors, CheckProjectOwnerResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ConnectWsConnectProjectIdInterviewIdGetData, ConnectWsConnectProjectIdInterviewIdGetErrors, ConnectWsConnectProjectIdInterviewIdGetResponses, CreateAnalysisCategoryData, CreateAnalysisCategoryErrors, CreateAnalysisCategoryResponses, CreateConsentData, CreateConsentErrors, CreateConsentResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateGuideData, CreateGuideErrors, CreateGuideResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateInvitationData, CreateInvitationErrors, CreateInvitationResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreatePromptsData, CreatePromptsErrors, CreatePromptsResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, CreateWelcomeData, CreateWelcomeErrors, CreateWelcomeResponses, DeleteAccessRequestsData, DeleteAccessRequestsErrors, DeleteAccessRequestsResponses, DeleteAnalysisCategoryData, DeleteAnalysisCategoryErrors, DeleteAnalysisCategoryResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteInvitationsData, DeleteInvitationsErrors, DeleteInvitationsResponses, DeleteMessageAnnotationData, DeleteMessageAnnotationErrors, DeleteMessageAnnotationResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, DeleteTestSetupData, DeleteTestSetupErrors, DeleteTestSetupResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, EditFolderData, EditFolderErrors, EditFolderResponses, ExitData, ExitResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateGuideSectionData, GenerateGuideSectionErrors, GenerateGuideSectionResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GenerateSectionQuestionData, GenerateSectionQuestionErrors, GenerateSectionQuestionResponses, GetAccessRequestsData, GetAccessRequestsResponses, GetAnalysisCategoriesData, GetAnalysisCategoriesErrors, GetAnalysisCategoriesResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetChatData, GetChatErrors, GetChatResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetExperimentsData, GetExperimentsResponses, GetFilteredMessagesCountData, GetFilteredMessagesCountErrors, GetFilteredMessagesCountResponses, GetFilteredMessagesData, GetFilteredMessagesErrors, GetFilteredMessagesResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFixedPersonasData, GetFixedPersonasErrors, GetFixedPersonasResponses, GetFoldersData, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetIntervieweeData, GetIntervieweeErrors, GetIntervieweeResponses, GetInterviewMessagesData, GetInterviewMessagesErrors, GetInterviewMessagesResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetInvitationsData, GetInvitationsResponses, GetLanguagesData, GetLanguagesResponses, GetMessageAnnotationsData, GetMessageAnnotationsErrors, GetMessageAnnotationsResponses, GetMessageContextAfterData, GetMessageContextAfterErrors, GetMessageContextAfterResponses, GetMessageContextBeforeData, GetMessageContextBeforeErrors, GetMessageContextBeforeResponses, GetMessageData, GetMessageErrors, GetMessageResponses, GetModelsData, GetModelsResponses, GetProjectData, GetProjectErrors, GetProjectMonitoringStatsData, GetProjectMonitoringStatsErrors, GetProjectMonitoringStatsResponses, GetProjectResponses, GetPromptsData, GetPromptsErrors, GetPromptsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetUsersData, GetUsersResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthResponses, LoginData2, LoginErrors, LoginResponses, LogoutData, LogoutResponses, MeData, MeResponses, ProcessAccessRequestsData, ProcessAccessRequestsErrors, ProcessAccessRequestsResponses, ProxyToEc2Manager2Data, ProxyToEc2Manager2Errors, ProxyToEc2Manager2Responses, ProxyToEc2Manager3Data, ProxyToEc2Manager3Errors, ProxyToEc2Manager3Responses, ProxyToEc2Manager4Data, ProxyToEc2Manager4Errors, ProxyToEc2Manager4Responses, ProxyToEc2Manager5Data, ProxyToEc2Manager5Errors, ProxyToEc2Manager5Responses, ProxyToEc2ManagerData, ProxyToEc2ManagerErrors, ProxyToEc2ManagerResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, QueueStatusData, QueueStatusErrors, QueueStatusResponses, RefreshTokenData, RefreshTokenResponses, RegisterData, RegisterErrors, RegisterResponses, RemoveCollaboratorData, RemoveCollaboratorErrors, RemoveCollaboratorResponses, RemoveProjectLanguagesData, RemoveProjectLanguagesErrors, RemoveProjectLanguagesResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, ResetSessionData, ResetSessionErrors, ResetSessionResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SemanticSearchData, SemanticSearchErrors, SemanticSearchResponses, SendChatData, SendChatErrors, SendChatResponses, UpdateAdminNoteData, UpdateAdminNoteErrors, UpdateAdminNoteResponses, UpdateAnalysisCategoryData, UpdateAnalysisCategoryErrors, UpdateAnalysisCategoryResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateCollaboratorRoleData, UpdateCollaboratorRoleErrors, UpdateCollaboratorRoleResponses, UpdateExternalParamsData, UpdateExternalParamsErrors, UpdateExternalParamsResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateFixedPersonasData, UpdateFixedPersonasErrors, UpdateFixedPersonasResponses, UpdateInvitationData, UpdateInvitationErrors, UpdateInvitationResponses, UpdateMessageAnnotationData, UpdateMessageAnnotationErrors, UpdateMessageAnnotationResponses, UploadAudioData, UploadAudioErrors, UploadAudioResponses, UploadImage2Data, UploadImage2Errors, UploadImage2Responses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
+import type { ActiveWebsocketsWsConnectionsGetData, ActiveWebsocketsWsConnectionsGetResponses, AddCollaboratorData, AddCollaboratorErrors, AddCollaboratorResponses, AddMessageAnnotationData, AddMessageAnnotationErrors, AddMessageAnnotationResponses, AddProjectLanguagesData, AddProjectLanguagesErrors, AddProjectLanguagesResponses, BroadcastWsBroadcastPostData, BroadcastWsBroadcastPostErrors, BroadcastWsBroadcastPostResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CheckProjectOwnerData, CheckProjectOwnerErrors, CheckProjectOwnerResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ConnectWsConnectProjectIdInterviewIdGetData, ConnectWsConnectProjectIdInterviewIdGetErrors, ConnectWsConnectProjectIdInterviewIdGetResponses, CreateAnalysisCategoryData, CreateAnalysisCategoryErrors, CreateAnalysisCategoryResponses, CreateConsentData, CreateConsentErrors, CreateConsentResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateGuideData, CreateGuideErrors, CreateGuideResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateInvitationData, CreateInvitationErrors, CreateInvitationResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreatePromptsData, CreatePromptsErrors, CreatePromptsResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, CreateWelcomeData, CreateWelcomeErrors, CreateWelcomeResponses, DeleteAccessRequestsData, DeleteAccessRequestsErrors, DeleteAccessRequestsResponses, DeleteAnalysisCategoryData, DeleteAnalysisCategoryErrors, DeleteAnalysisCategoryResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteInvitationsData, DeleteInvitationsErrors, DeleteInvitationsResponses, DeleteMessageAnnotationData, DeleteMessageAnnotationErrors, DeleteMessageAnnotationResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, DeleteTestSetupData, DeleteTestSetupErrors, DeleteTestSetupResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, EditFolderData, EditFolderErrors, EditFolderResponses, ExitData, ExitResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateGuideSectionData, GenerateGuideSectionErrors, GenerateGuideSectionResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GenerateSectionQuestionData, GenerateSectionQuestionErrors, GenerateSectionQuestionResponses, GetAccessRequestsData, GetAccessRequestsResponses, GetAnalysisCategoriesData, GetAnalysisCategoriesErrors, GetAnalysisCategoriesResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetChatData, GetChatErrors, GetChatResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetExperimentsData, GetExperimentsResponses, GetFilteredMessagesCountData, GetFilteredMessagesCountErrors, GetFilteredMessagesCountResponses, GetFilteredMessagesData, GetFilteredMessagesErrors, GetFilteredMessagesResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFixedPersonasData, GetFixedPersonasErrors, GetFixedPersonasResponses, GetFoldersData, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetIntervieweeData, GetIntervieweeErrors, GetIntervieweeResponses, GetInterviewMessagesData, GetInterviewMessagesErrors, GetInterviewMessagesResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetInvitationsData, GetInvitationsResponses, GetLanguagesData, GetLanguagesResponses, GetMessageAnnotationsData, GetMessageAnnotationsErrors, GetMessageAnnotationsResponses, GetMessageContextAfterData, GetMessageContextAfterErrors, GetMessageContextAfterResponses, GetMessageContextBeforeData, GetMessageContextBeforeErrors, GetMessageContextBeforeResponses, GetMessageData, GetMessageErrors, GetMessageResponses, GetModelsData, GetModelsResponses, GetProjectData, GetProjectErrors, GetProjectMonitoringStatsData, GetProjectMonitoringStatsErrors, GetProjectMonitoringStatsResponses, GetProjectResponses, GetPromptsData, GetPromptsErrors, GetPromptsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetUsersData, GetUsersResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthResponses, LoginData2, LoginErrors, LoginResponses, LogoutData, LogoutEverywhereData, LogoutEverywhereResponses, LogoutResponses, MeData, MeResponses, ProcessAccessRequestsData, ProcessAccessRequestsErrors, ProcessAccessRequestsResponses, ProxyToEc2Manager2Data, ProxyToEc2Manager2Errors, ProxyToEc2Manager2Responses, ProxyToEc2Manager3Data, ProxyToEc2Manager3Errors, ProxyToEc2Manager3Responses, ProxyToEc2Manager4Data, ProxyToEc2Manager4Errors, ProxyToEc2Manager4Responses, ProxyToEc2Manager5Data, ProxyToEc2Manager5Errors, ProxyToEc2Manager5Responses, ProxyToEc2ManagerData, ProxyToEc2ManagerErrors, ProxyToEc2ManagerResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, QueueStatusData, QueueStatusErrors, QueueStatusResponses, RefreshData, RefreshResponses, RegisterData, RegisterErrors, RegisterResponses, RemoveCollaboratorData, RemoveCollaboratorErrors, RemoveCollaboratorResponses, RemoveProjectLanguagesData, RemoveProjectLanguagesErrors, RemoveProjectLanguagesResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, ResetSessionData, ResetSessionErrors, ResetSessionResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SemanticSearchData, SemanticSearchErrors, SemanticSearchResponses, SendChatData, SendChatErrors, SendChatResponses, UpdateAdminNoteData, UpdateAdminNoteErrors, UpdateAdminNoteResponses, UpdateAnalysisCategoryData, UpdateAnalysisCategoryErrors, UpdateAnalysisCategoryResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateCollaboratorRoleData, UpdateCollaboratorRoleErrors, UpdateCollaboratorRoleResponses, UpdateExternalParamsData, UpdateExternalParamsErrors, UpdateExternalParamsResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateFixedPersonasData, UpdateFixedPersonasErrors, UpdateFixedPersonasResponses, UpdateInvitationData, UpdateInvitationErrors, UpdateInvitationResponses, UpdateMessageAnnotationData, UpdateMessageAnnotationErrors, UpdateMessageAnnotationResponses, UploadAudioData, UploadAudioErrors, UploadAudioResponses, UploadImage2Data, UploadImage2Errors, UploadImage2Responses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -26,7 +26,7 @@ export class Analysis {
         return (options.client ?? client).get<GetAnalysisCategoriesResponses, GetAnalysisCategoriesErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/analysis/categories',
@@ -41,7 +41,7 @@ export class Analysis {
         return (options.client ?? client).post<CreateAnalysisCategoryResponses, CreateAnalysisCategoryErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/analysis/categories',
@@ -60,7 +60,7 @@ export class Analysis {
         return (options.client ?? client).delete<DeleteAnalysisCategoryResponses, DeleteAnalysisCategoryErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/analysis/categories/{category_id}',
@@ -75,7 +75,7 @@ export class Analysis {
         return (options.client ?? client).put<UpdateAnalysisCategoryResponses, UpdateAnalysisCategoryErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/analysis/categories/{category_id}',
@@ -94,7 +94,7 @@ export class Analysis {
         return (options.client ?? client).get<GetMessageAnnotationsResponses, GetMessageAnnotationsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/messages/{message_id}/annotations',
@@ -109,7 +109,7 @@ export class Analysis {
         return (options.client ?? client).post<AddMessageAnnotationResponses, AddMessageAnnotationErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/messages/{message_id}/annotations',
@@ -128,7 +128,7 @@ export class Analysis {
         return (options.client ?? client).delete<DeleteMessageAnnotationResponses, DeleteMessageAnnotationErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/analysis/annotations/{annotation_id}',
@@ -143,7 +143,7 @@ export class Analysis {
         return (options.client ?? client).put<UpdateMessageAnnotationResponses, UpdateMessageAnnotationErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/analysis/annotations/{annotation_id}',
@@ -162,7 +162,7 @@ export class Analysis {
         return (options.client ?? client).post<GetFilteredMessagesCountResponses, GetFilteredMessagesCountErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/analysis/{project_id}/messages/count',
@@ -181,7 +181,7 @@ export class Analysis {
         return (options.client ?? client).post<GetFilteredMessagesResponses, GetFilteredMessagesErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/analysis/{project_id}/messages',
@@ -200,7 +200,7 @@ export class Analysis {
         return (options.client ?? client).post<GetMessageContextBeforeResponses, GetMessageContextBeforeErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/analysis/{project_id}/interviews/{interview_id}/messages/{message_id}/context_before',
@@ -215,7 +215,7 @@ export class Analysis {
         return (options.client ?? client).post<GetMessageContextAfterResponses, GetMessageContextAfterErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/analysis/{project_id}/interviews/{interview_id}/messages/{message_id}/context_after',
@@ -255,7 +255,7 @@ export class Analysis {
         return (options.client ?? client).get<GetProjectMonitoringStatsResponses, GetProjectMonitoringStatsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/monitoring/projects/{project_id}/stats',
@@ -274,7 +274,7 @@ export class Monitoring {
         return (options.client ?? client).get<GetProjectMonitoringStatsResponses, GetProjectMonitoringStatsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/monitoring/projects/{project_id}/stats',
@@ -291,7 +291,7 @@ export class Assistance {
         return (options.client ?? client).post<ResetSessionResponses, ResetSessionErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/assistance/{project_id}/{lang}/chat/new',
@@ -306,7 +306,7 @@ export class Assistance {
         return (options.client ?? client).get<GetChatResponses, GetChatErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/assistance/{project_id}/{lang}/chat',
@@ -321,7 +321,7 @@ export class Assistance {
         return (options.client ?? client).post<SendChatResponses, SendChatErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/assistance/{project_id}/{lang}/chat',
@@ -342,7 +342,7 @@ export class Experiments {
         return (options?.client ?? client).get<GetExperimentsResponses, unknown, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/experiments',
@@ -357,7 +357,7 @@ export class Experiments {
         return (options.client ?? client).post<CreateExperimentResponses, CreateExperimentErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/experiments',
@@ -376,7 +376,7 @@ export class Experiments {
         return (options.client ?? client).delete<DeleteExperimentResponses, DeleteExperimentErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/experiments/{experiment_id}',
@@ -391,7 +391,7 @@ export class Experiments {
         return (options.client ?? client).get<GenerateExperimentQrResponses, GenerateExperimentQrErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/experiments/{experiment_id}/qr.png',
@@ -410,7 +410,7 @@ export class Folders {
         return (options?.client ?? client).get<GetFoldersResponses, unknown, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/folders',
@@ -427,7 +427,7 @@ export class Folders {
         return (options.client ?? client).post<CreateFolderResponses, CreateFolderErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/folders',
@@ -448,7 +448,7 @@ export class Folders {
         return (options.client ?? client).delete<DeleteFolderResponses, DeleteFolderErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/folders/{folder_id}',
@@ -465,7 +465,7 @@ export class Folders {
         return (options.client ?? client).patch<EditFolderResponses, EditFolderErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/folders/{folder_id}',
@@ -484,7 +484,7 @@ export class Folders {
         return (options.client ?? client).delete<RemoveCollaboratorResponses, RemoveCollaboratorErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/folders/{folder_id}/collaborators',
@@ -499,7 +499,7 @@ export class Folders {
         return (options.client ?? client).get<GetCollaboratorsResponses, GetCollaboratorsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/folders/{folder_id}/collaborators',
@@ -514,7 +514,7 @@ export class Folders {
         return (options.client ?? client).patch<UpdateCollaboratorRoleResponses, UpdateCollaboratorRoleErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/folders/{folder_id}/collaborators',
@@ -529,7 +529,7 @@ export class Folders {
         return (options.client ?? client).post<AddCollaboratorResponses, AddCollaboratorErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/folders/{folder_id}/collaborators',
@@ -550,7 +550,7 @@ export class Folders {
         return (options.client ?? client).post<CreateProjectResponses, CreateProjectErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/folders/{folder_id}/projects',
@@ -571,7 +571,7 @@ export class Projects {
         return (options.client ?? client).delete<DeleteProjectResponses, DeleteProjectErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}',
@@ -588,7 +588,7 @@ export class Projects {
         return (options.client ?? client).get<GetProjectResponses, GetProjectErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}',
@@ -603,7 +603,7 @@ export class Projects {
         return (options.client ?? client).post<CloneProjectResponses, CloneProjectErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/clone',
@@ -620,7 +620,7 @@ export class Projects {
         return (options.client ?? client).delete<RemoveProjectLanguagesResponses, RemoveProjectLanguagesErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/available_languages',
@@ -641,7 +641,7 @@ export class Projects {
         return (options.client ?? client).post<AddProjectLanguagesResponses, AddProjectLanguagesErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/available_languages',
@@ -662,7 +662,7 @@ export class Projects {
         return (options.client ?? client).patch<ChangeProjectStatusResponses, ChangeProjectStatusErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/status',
@@ -683,7 +683,7 @@ export class Projects {
         return (options.client ?? client).patch<ChangeProjectTitleResponses, ChangeProjectTitleErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/title',
@@ -702,7 +702,7 @@ export class Projects {
         return (options.client ?? client).get<GetGuideResponses, GetGuideErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/{lang}/guide',
@@ -717,7 +717,7 @@ export class Projects {
         return (options.client ?? client).post<CreateGuideResponses, CreateGuideErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/{lang}/guide',
@@ -736,7 +736,7 @@ export class Projects {
         return (options.client ?? client).post<GenerateGuideResponses, GenerateGuideErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/{lang}/guide/generate',
@@ -755,7 +755,7 @@ export class Projects {
         return (options.client ?? client).post<GenerateGuideSectionResponses, GenerateGuideSectionErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/{lang}/guide/section/generate',
@@ -774,7 +774,7 @@ export class Projects {
         return (options.client ?? client).post<GenerateSectionQuestionResponses, GenerateSectionQuestionErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/{lang}/guide/section/question/generate',
@@ -794,7 +794,7 @@ export class Projects {
             ...formDataBodySerializer,
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/image',
@@ -813,7 +813,7 @@ export class Projects {
         return (options.client ?? client).get<GetInterviewAgentsResponses, GetInterviewAgentsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/{lang}/agents',
@@ -828,7 +828,7 @@ export class Projects {
         return (options.client ?? client).post<CreateInterviewAgentsResponses, CreateInterviewAgentsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/{lang}/agents',
@@ -854,7 +854,7 @@ export class Projects {
         return (options.client ?? client).post<CreateInterviewConfigResponses, CreateInterviewConfigErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/config',
@@ -873,7 +873,7 @@ export class Projects {
         return (options.client ?? client).patch<UpdateExternalParamsResponses, UpdateExternalParamsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/external_params',
@@ -892,7 +892,7 @@ export class Projects {
         return (options.client ?? client).get<GetPromptsResponses, GetPromptsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/{lang}/prompts',
@@ -907,7 +907,7 @@ export class Projects {
         return (options.client ?? client).post<CreatePromptsResponses, CreatePromptsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/{lang}/prompts',
@@ -933,7 +933,7 @@ export class Projects {
         return (options.client ?? client).post<CreateConsentResponses, CreateConsentErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/guide/consent/{language}',
@@ -960,7 +960,7 @@ export class Projects {
             ...formDataBodySerializer,
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/guide/welcome/{language}',
@@ -979,7 +979,7 @@ export class Projects {
         return (options.client ?? client).delete<DeleteInterviewsResponses, DeleteInterviewsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/interviews',
@@ -998,7 +998,7 @@ export class Projects {
         return (options.client ?? client).get<GetInterviewsResponses, GetInterviewsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/interviews',
@@ -1013,7 +1013,7 @@ export class Projects {
         return (options.client ?? client).get<GetMessageResponses, GetMessageErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/interviews/{interview_id}/messages/{message_id}',
@@ -1028,7 +1028,7 @@ export class Projects {
         return (options.client ?? client).get<GetInterviewMessagesResponses, GetInterviewMessagesErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/interviews/{interview_id}/messages',
@@ -1043,7 +1043,7 @@ export class Projects {
         return (options.client ?? client).post<ExportMessagesResponses, ExportMessagesErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/interviews/messages/export',
@@ -1062,7 +1062,7 @@ export class Projects {
         return (options.client ?? client).get<GenerateProjectQrResponses, GenerateProjectQrErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/qr.png',
@@ -1086,7 +1086,7 @@ export class Synthesize {
         return (options.client ?? client).get<GetBackgroundInfoResponses, GetBackgroundInfoErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests/{test_id}/background_info',
@@ -1101,7 +1101,7 @@ export class Synthesize {
         return (options.client ?? client).post<UpdateBackgroundInfoResponses, UpdateBackgroundInfoErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests/{test_id}/background_info',
@@ -1120,7 +1120,7 @@ export class Synthesize {
         return (options.client ?? client).get<GetFixedPersonasResponses, GetFixedPersonasErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests/{test_id}/fixed_personas',
@@ -1135,7 +1135,7 @@ export class Synthesize {
         return (options.client ?? client).post<UpdateFixedPersonasResponses, UpdateFixedPersonasErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests/{test_id}/fixed_personas',
@@ -1154,7 +1154,7 @@ export class Synthesize {
         return (options.client ?? client).get<GetFixedAnswersResponses, GetFixedAnswersErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers',
@@ -1169,7 +1169,7 @@ export class Synthesize {
         return (options.client ?? client).post<UpdateFixedAnswersResponses, UpdateFixedAnswersErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests/{test_id}/fixed_answers',
@@ -1188,7 +1188,7 @@ export class Synthesize {
         return (options.client ?? client).get<GetTestSetupsResponses, GetTestSetupsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests',
@@ -1203,7 +1203,7 @@ export class Synthesize {
         return (options.client ?? client).post<CreateTestSetupResponses, CreateTestSetupErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests',
@@ -1222,7 +1222,7 @@ export class Synthesize {
         return (options.client ?? client).delete<DeleteTestSetupResponses, DeleteTestSetupErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests/{test_id}',
@@ -1237,7 +1237,7 @@ export class Synthesize {
         return (options.client ?? client).post<GetIntervieweeResponses, GetIntervieweeErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/interviewee',
@@ -1252,7 +1252,7 @@ export class Synthesize {
         return (options.client ?? client).get<GetTestStatusResponses, GetTestStatusErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests/{test_id}/status',
@@ -1267,7 +1267,7 @@ export class Synthesize {
         return (options.client ?? client).post<RunSyntheticTestResponses, RunSyntheticTestErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/tests/{test_id}/run',
@@ -1302,7 +1302,7 @@ export class Interviews {
         return (options.client ?? client).patch<PutFeedbackResponses, PutFeedbackErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/feedback',
@@ -1322,7 +1322,7 @@ export class Interviews {
             ...formDataBodySerializer,
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/image',
@@ -1342,7 +1342,7 @@ export class Interviews {
             ...formDataBodySerializer,
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/audio',
@@ -1361,7 +1361,7 @@ export class Interviews {
         return (options?.client ?? client).get<ActiveWebsocketsWsConnectionsGetResponses, unknown, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/ws/connections',
@@ -1376,7 +1376,7 @@ export class Interviews {
         return (options.client ?? client).get<ConnectWsConnectProjectIdInterviewIdGetResponses, ConnectWsConnectProjectIdInterviewIdGetErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/ws/connect/{project_id}/{interview_id}',
@@ -1391,7 +1391,7 @@ export class Interviews {
         return (options.client ?? client).post<BroadcastWsBroadcastPostResponses, BroadcastWsBroadcastPostErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/ws/broadcast',
@@ -1426,7 +1426,7 @@ export class Auth {
         return (options?.client ?? client).get<MeResponses, unknown, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/me',
@@ -1466,7 +1466,32 @@ export class Auth {
      * Logout
      */
     public static logout<ThrowOnError extends boolean = false>(options?: Options<LogoutData, ThrowOnError>) {
-        return (options?.client ?? client).post<LogoutResponses, unknown, ThrowOnError>({ url: '/api/logout', ...options });
+        return (options?.client ?? client).post<LogoutResponses, unknown, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/logout',
+            ...options
+        });
+    }
+    
+    /**
+     * Logout Everywhere
+     *
+     * Revoke ALL refresh tokens for the authenticated user.
+     */
+    public static logoutEverywhere<ThrowOnError extends boolean = false>(options?: Options<LogoutEverywhereData, ThrowOnError>) {
+        return (options?.client ?? client).post<LogoutEverywhereResponses, unknown, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/logout-everywhere',
+            ...options
+        });
     }
     
     /**
@@ -1479,15 +1504,15 @@ export class Auth {
     }
     
     /**
-     * Refresh Token
+     * Refresh
      *
-     * Validate the current token and issue a new one if valid.
+     * Rotate the refresh token and issue a new access token.
      */
-    public static refreshToken<ThrowOnError extends boolean = false>(options?: Options<RefreshTokenData, ThrowOnError>) {
-        return (options?.client ?? client).post<RefreshTokenResponses, unknown, ThrowOnError>({
+    public static refresh<ThrowOnError extends boolean = false>(options?: Options<RefreshData, ThrowOnError>) {
+        return (options?.client ?? client).post<RefreshResponses, unknown, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/refresh',
@@ -1504,7 +1529,7 @@ export class Admin {
         return (options?.client ?? client).get<GetAccessRequestsResponses, unknown, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/admin/access-requests',
@@ -1519,7 +1544,7 @@ export class Admin {
         return (options.client ?? client).post<ProcessAccessRequestsResponses, ProcessAccessRequestsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/admin/access-requests/process',
@@ -1538,7 +1563,7 @@ export class Admin {
         return (options.client ?? client).post<DeleteAccessRequestsResponses, DeleteAccessRequestsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/admin/access-requests/delete',
@@ -1557,7 +1582,7 @@ export class Admin {
         return (options?.client ?? client).get<GetInvitationsResponses, unknown, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/admin/invitations',
@@ -1572,7 +1597,7 @@ export class Admin {
         return (options.client ?? client).post<CreateInvitationResponses, CreateInvitationErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/admin/invitations',
@@ -1591,7 +1616,7 @@ export class Admin {
         return (options.client ?? client).put<UpdateInvitationResponses, UpdateInvitationErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/admin/invitations/{invitation_id}',
@@ -1610,7 +1635,7 @@ export class Admin {
         return (options.client ?? client).post<DeleteInvitationsResponses, DeleteInvitationsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/admin/invitations/delete',
@@ -1632,7 +1657,7 @@ export class Admin {
         return (options.client ?? client).delete<ProxyToEc2ManagerResponses, ProxyToEc2ManagerErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/aws/ec2/{full_path}',
@@ -1650,7 +1675,7 @@ export class Admin {
         return (options.client ?? client).get<ProxyToEc2Manager2Responses, ProxyToEc2Manager2Errors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/aws/ec2/{full_path}',
@@ -1668,7 +1693,7 @@ export class Admin {
         return (options.client ?? client).patch<ProxyToEc2Manager3Responses, ProxyToEc2Manager3Errors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/aws/ec2/{full_path}',
@@ -1686,7 +1711,7 @@ export class Admin {
         return (options.client ?? client).post<ProxyToEc2Manager4Responses, ProxyToEc2Manager4Errors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/aws/ec2/{full_path}',
@@ -1704,7 +1729,7 @@ export class Admin {
         return (options.client ?? client).put<ProxyToEc2Manager5Responses, ProxyToEc2Manager5Errors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/aws/ec2/{full_path}',
@@ -1719,7 +1744,7 @@ export class Admin {
         return (options.client ?? client).delete<DeleteUserResponses, DeleteUserErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/users',
@@ -1734,7 +1759,7 @@ export class Admin {
         return (options?.client ?? client).get<GetUsersResponses, unknown, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/users',
@@ -1749,7 +1774,7 @@ export class Admin {
         return (options.client ?? client).patch<UpdateAdminNoteResponses, UpdateAdminNoteErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/admin/users/{user_id}/note',
@@ -1772,7 +1797,7 @@ export class Default {
         return (options?.client ?? client).get<GetModelsResponses, unknown, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/models',
@@ -1789,7 +1814,7 @@ export class Default {
         return (options?.client ?? client).get<GetLanguagesResponses, unknown, ThrowOnError>({
             security: [{
                     in: 'cookie',
-                    name: 'token',
+                    name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/languages',

@@ -89,6 +89,7 @@ export type AgentConfig = {
 export type AgentConfigsInput = {
     probing?: ProbingAgentConfig;
     classification?: AgentConfig;
+    guide?: AgentConfig;
     history?: AgentConfig;
     security?: SecurityConfig;
     visual?: VisualConfig;
@@ -102,6 +103,7 @@ export type AgentConfigsInput = {
 export type AgentConfigsOutput = {
     probing?: ProbingAgentConfig;
     classification?: AgentConfig;
+    guide?: AgentConfig;
     history?: AgentConfig;
     security?: SecurityConfig;
     visual?: VisualConfig;
@@ -1907,11 +1909,11 @@ export type QuestionInput = {
      */
     can_answer?: boolean;
     /**
-     * Exclude From History
+     * Alternative Main Questions
      *
-     * Exclude from the interview history. This means that the model will not use this question or the response as a context when it asks further questions.
+     * List of alternative formulations of the main question, will be chosen at random.
      */
-    exclude_from_history?: boolean;
+    alternative_main_questions?: Array<string> | null;
     /**
      * Check If Answered
      *
@@ -1943,6 +1945,12 @@ export type QuestionInput = {
      */
     create_segue?: boolean;
     /**
+     * Exclude From History
+     *
+     * Exclude from the interview history. This means that the model will not use this question or the response as a context when it asks further questions.
+     */
+    exclude_from_history?: boolean;
+    /**
      * Variables
      *
      * Variables that can be used in the question, ie. uuid. In case they are supplied, they will be filled in before the question is asked. The question should be formatted with Jinja2 style templating.
@@ -1961,6 +1969,15 @@ export type QuestionInput = {
     user_image?: boolean;
     conditions?: ConditionsInput | null;
     probing_context?: ContextType | null;
+    /**
+     * Index
+     *
+     * The index of the question in the interview, ie (section, question) = (2, 2) (for 3rd section 3rd question). Used to keep track of questions initial position after shuffling.
+     */
+    index?: [
+        number,
+        number
+    ] | null;
 };
 
 /**
@@ -2010,11 +2027,11 @@ export type QuestionOutput = {
      */
     can_answer?: boolean;
     /**
-     * Exclude From History
+     * Alternative Main Questions
      *
-     * Exclude from the interview history. This means that the model will not use this question or the response as a context when it asks further questions.
+     * List of alternative formulations of the main question, will be chosen at random.
      */
-    exclude_from_history?: boolean;
+    alternative_main_questions?: Array<string> | null;
     /**
      * Check If Answered
      *
@@ -2046,6 +2063,12 @@ export type QuestionOutput = {
      */
     create_segue?: boolean;
     /**
+     * Exclude From History
+     *
+     * Exclude from the interview history. This means that the model will not use this question or the response as a context when it asks further questions.
+     */
+    exclude_from_history?: boolean;
+    /**
      * Variables
      *
      * Variables that can be used in the question, ie. uuid. In case they are supplied, they will be filled in before the question is asked. The question should be formatted with Jinja2 style templating.
@@ -2064,6 +2087,15 @@ export type QuestionOutput = {
     user_image?: boolean;
     conditions?: ConditionsOutput | null;
     probing_context?: ContextType | null;
+    /**
+     * Index
+     *
+     * The index of the question in the interview, ie (section, question) = (2, 2) (for 3rd section 3rd question). Used to keep track of questions initial position after shuffling.
+     */
+    index?: [
+        number,
+        number
+    ] | null;
 };
 
 /**
@@ -5808,6 +5840,20 @@ export type LogoutResponses = {
     200: unknown;
 };
 
+export type LogoutEverywhereData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/logout-everywhere';
+};
+
+export type LogoutEverywhereResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type ExitData = {
     body?: never;
     path?: never;
@@ -5822,14 +5868,14 @@ export type ExitResponses = {
     200: unknown;
 };
 
-export type RefreshTokenData = {
+export type RefreshData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/api/refresh';
 };
 
-export type RefreshTokenResponses = {
+export type RefreshResponses = {
     /**
      * Successful Response
      */
