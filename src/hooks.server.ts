@@ -94,5 +94,23 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
+	// For authenticated interview types, attempt a token refresh if needed.
+	// On failure, let the request through — the page will handle authError.
+	if (event.url.pathname === '/interview') {
+		const interviewType = event.url.searchParams.get('interview_type');
+		if (interviewType === 'manual_test' || interviewType === 'synthetic_test') {
+			const accessToken = event.cookies.get('access_token');
+			const hasRefresh = event.cookies.get('refresh_token');
+			const needsRefresh = !accessToken || isTokenExpired(accessToken);
+
+			if (needsRefresh && hasRefresh) {
+				const ok = await serverSideRefresh(event.cookies);
+				if (ok) {
+					throw redirect(303, event.url.pathname + event.url.search);
+				}
+			}
+		}
+	}
+
 	return resolve(event);
 };
