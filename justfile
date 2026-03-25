@@ -1,4 +1,4 @@
-export PATH := "./node_modules/.bin:" + env_var('PATH')
+export PATH := "./node_modules/.bin:" + env('PATH')
 export OPENAPI_PATH := "../backend/openapi.json"
 export SDK_OUTPUT_PATH := "src/lib/api"
 
