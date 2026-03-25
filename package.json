@@ -4,7 +4,7 @@
 	"devDependencies": {
 		"@eslint/compat": "^1.4.1",
 		"@eslint/js": "^9.39.4",
-		"@hey-api/openapi-ts": "0.88.1",
+		"@hey-api/openapi-ts": "0.94.4",
 		"@playwright/test": "^1.58.2",
 		"@sveltejs/adapter-node": "^5.5.4",
 		"@sveltejs/kit": "^2.55.0",
