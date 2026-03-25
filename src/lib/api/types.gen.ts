@@ -76,7 +76,6 @@ export type AgentConfig = {
      * Temperature
      */
     temperature?: number;
-    lang?: LanguageCode;
     /**
      * Include
      */
@@ -86,21 +85,7 @@ export type AgentConfig = {
 /**
  * AgentConfigs
  */
-export type AgentConfigsInput = {
-    probing?: ProbingAgentConfig;
-    classification?: AgentConfig;
-    guide?: AgentConfig;
-    history?: AgentConfig;
-    security?: SecurityConfig;
-    visual?: VisualConfig;
-    answering?: AgentConfig;
-    reformulation?: AgentConfig;
-};
-
-/**
- * AgentConfigs
- */
-export type AgentConfigsOutput = {
+export type AgentConfigs = {
     probing?: ProbingAgentConfig;
     classification?: AgentConfig;
     guide?: AgentConfig;
@@ -1699,7 +1684,6 @@ export type ProbingAgentConfig = {
      * Temperature
      */
     temperature?: number;
-    lang?: LanguageCode;
     /**
      * Include
      */
@@ -1853,6 +1837,7 @@ export type PromptTemplates = {
      * Instruction Prompt
      */
     instruction_prompt: string;
+    [key: string]: unknown;
 };
 
 /**
@@ -1970,14 +1955,9 @@ export type QuestionInput = {
     conditions?: ConditionsInput | null;
     probing_context?: ContextType | null;
     /**
-     * Index
-     *
      * The index of the question in the interview, ie (section, question) = (2, 2) (for 3rd section 3rd question). Used to keep track of questions initial position after shuffling.
      */
-    index?: [
-        number,
-        number
-    ] | null;
+    index?: QuestionIndex | null;
 };
 
 /**
@@ -2088,14 +2068,9 @@ export type QuestionOutput = {
     conditions?: ConditionsOutput | null;
     probing_context?: ContextType | null;
     /**
-     * Index
-     *
      * The index of the question in the interview, ie (section, question) = (2, 2) (for 3rd section 3rd question). Used to keep track of questions initial position after shuffling.
      */
-    index?: [
-        number,
-        number
-    ] | null;
+    index?: QuestionIndex | null;
 };
 
 /**
@@ -2258,7 +2233,6 @@ export type SecurityConfig = {
      * Temperature
      */
     temperature?: number;
-    lang?: LanguageCode;
     /**
      * Include
      */
@@ -2723,7 +2697,6 @@ export type VisualConfig = {
      * Temperature
      */
     temperature?: number;
-    lang?: LanguageCode;
     /**
      * Include
      */
@@ -4545,13 +4518,13 @@ export type GetInterviewAgentsResponses = {
     /**
      * Successful Response
      */
-    200: AgentConfigsOutput;
+    200: AgentConfigs;
 };
 
 export type GetInterviewAgentsResponse = GetInterviewAgentsResponses[keyof GetInterviewAgentsResponses];
 
 export type CreateInterviewAgentsData = {
-    body: AgentConfigsInput;
+    body: AgentConfigs;
     path: {
         /**
          * Project Id
