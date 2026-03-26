@@ -120,7 +120,7 @@
 		<a
 			{...item.href && { href: getResolvedHref(item.href) }}
 			class={[
-				'peer relative block w-full whitespace-nowrap text-light no-underline transition-colors select-none',
+				'peer relative block w-full whitespace-nowrap text-light no-underline select-none',
 				item.href && 'hover:bg-light hover:text-dark',
 				active && 'active'
 			].join(' ')}
