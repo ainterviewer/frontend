@@ -61,18 +61,14 @@
 
 	async function loadData() {
 		isLoading = true;
-		try {
-			const [foldersRes, langRes] = await Promise.all([
-				Folders.getFolders(),
-				Default.getLanguages()
-			]);
-			folders = (foldersRes as unknown as { data: ProjectFolderWithProjects[] }).data || foldersRes;
-			languages = (langRes as unknown as { data: LanguageDict[] }).data || langRes;
-		} catch (error) {
-			console.error('Failed to load data:', error);
-		} finally {
-			isLoading = false;
+		const [foldersRes, langRes] = await Promise.all([Folders.getFolders(), Default.getLanguages()]);
+		if (foldersRes.error || langRes.error) {
+			console.error('Failed to load data:', foldersRes.error || langRes.error);
+		} else {
+			folders = foldersRes.data;
+			languages = langRes.data;
 		}
+		isLoading = false;
 	}
 
 	onMount(() => {
@@ -96,47 +92,45 @@
 			toast.error('Please select a folder to create a project in.');
 			return;
 		}
-		try {
-			await Folders.createProject({
-				path: {
-					folder_id: createProjectFolderId
-				},
-				body: {
-					title: createProjectName,
-					default_language: createProjectLanguage
-				}
-			});
-
-			// Reset and refresh
-			createProjectName = '';
-			createProjectLanguage = 'EN';
-			isCreateProjectModalOpen = false;
-			createProjectFolderId = null; // Clear the selected folder ID
-			await loadData();
-		} catch (error) {
+		const { error } = await Folders.createProject({
+			path: {
+				folder_id: createProjectFolderId
+			},
+			body: {
+				title: createProjectName,
+				default_language: createProjectLanguage
+			}
+		});
+		if (error) {
 			console.error('Failed to create project:', error);
 			toast.error('Failed to create project');
+			return;
 		}
+		// Reset and refresh
+		createProjectName = '';
+		createProjectLanguage = 'EN';
+		isCreateProjectModalOpen = false;
+		createProjectFolderId = null;
+		await loadData();
 	}
 
 	async function handleCreateFolder() {
-		try {
-			await Folders.createFolder({
-				body: {
-					title: createFolderName,
-					collaborators: createFolderCollaborators.filter((c) => c.email.trim() !== '') as any
-				}
-			});
-
-			// Reset and refresh
-			createFolderName = '';
-			createFolderCollaborators = [];
-			isCreateFolderModalOpen = false;
-			await loadData();
-		} catch (error) {
+		const { error } = await Folders.createFolder({
+			body: {
+				title: createFolderName,
+				collaborators: createFolderCollaborators.filter((c) => c.email.trim() !== '') as any
+			}
+		});
+		if (error) {
 			console.error('Failed to create folder:', error);
 			toast.error('Failed to create folder');
+			return;
 		}
+		// Reset and refresh
+		createFolderName = '';
+		createFolderCollaborators = [];
+		isCreateFolderModalOpen = false;
+		await loadData();
 	}
 
 	function openEditFolderModal(folder: ProjectFolderWithProjects) {
@@ -150,94 +144,93 @@
 
 	async function handleEditFolder() {
 		if (!selectedFolder) return;
-		try {
-			await Folders.editFolder({
-				path: {
-					folder_id: selectedFolder.id
-				},
-				body: {
-					title: editFolderName
-				}
-			});
-
-			// Reset and refresh
-			editFolderName = '';
-			isEditFolderModalOpen = false;
-			selectedFolder = null;
-			await loadData();
-		} catch (error) {
+		const { error } = await Folders.editFolder({
+			path: {
+				folder_id: selectedFolder.id
+			},
+			body: {
+				title: editFolderName
+			}
+		});
+		if (error) {
 			console.error('Failed to edit folder:', error);
 			toast.error('Failed to edit folder');
+			return;
 		}
+		// Reset and refresh
+		editFolderName = '';
+		isEditFolderModalOpen = false;
+		selectedFolder = null;
+		await loadData();
 	}
 
 	async function handleAddCollaborator(folderId: string) {
 		if (!editCollaboratorEmail) return;
-		try {
-			await Folders.addCollaborator({
-				path: {
-					folder_id: folderId
-				},
-				body: {
-					email: editCollaboratorEmail,
-					role: editCollaboratorRole
-				}
-			});
-			editCollaboratorEmail = '';
-			editCollaboratorRole = 'viewer';
-			await loadData();
-			if (selectedFolder) {
-				const updatedFolder = folders.find((f) => f.id === selectedFolder!.id);
-				if (updatedFolder) selectedFolder = updatedFolder;
+		const { error } = await Folders.addCollaborator({
+			path: {
+				folder_id: folderId
+			},
+			body: {
+				email: editCollaboratorEmail,
+				role: editCollaboratorRole
 			}
-		} catch (error) {
+		});
+		if (error) {
 			console.error('Failed to add collaborator:', error);
 			toast.error('Failed to add collaborator');
+			return;
+		}
+		editCollaboratorEmail = '';
+		editCollaboratorRole = 'viewer';
+		await loadData();
+		if (selectedFolder) {
+			const updatedFolder = folders.find((f) => f.id === selectedFolder!.id);
+			if (updatedFolder) selectedFolder = updatedFolder;
 		}
 	}
 
 	async function handleRemoveCollaborator(userId: string) {
 		if (!selectedFolder) return;
-		try {
-			await Folders.removeCollaborator({
-				path: {
-					folder_id: selectedFolder.id
-				},
-				query: {
-					user_id: userId
-				}
-			});
-			await loadData();
-			if (selectedFolder) {
-				const updatedFolder = folders.find((f) => f.id === selectedFolder!.id);
-				if (updatedFolder) selectedFolder = updatedFolder;
+		const { error } = await Folders.removeCollaborator({
+			path: {
+				folder_id: selectedFolder.id
+			},
+			query: {
+				user_id: userId
 			}
-		} catch (error) {
+		});
+		if (error) {
 			console.error('Failed to remove collaborator:', error);
 			toast.error('Failed to remove collaborator');
+			return;
+		}
+		await loadData();
+		if (selectedFolder) {
+			const updatedFolder = folders.find((f) => f.id === selectedFolder!.id);
+			if (updatedFolder) selectedFolder = updatedFolder;
 		}
 	}
 
 	async function handleUpdateCollaboratorRole(userId: string, role: CollaboratorRole) {
 		if (!selectedFolder) return;
-		try {
-			await Folders.updateCollaboratorRole({
-				path: {
-					folder_id: selectedFolder.id
-				},
-				query: {
-					user_id: userId,
-					role
-				}
-			});
-			await loadData();
-			if (selectedFolder) {
-				const updatedFolder = folders.find((f) => f.id === selectedFolder!.id);
-				if (updatedFolder) selectedFolder = updatedFolder;
+		const { error } = await Folders.updateCollaboratorRole({
+			path: {
+				folder_id: selectedFolder.id
+			},
+			query: {
+				user_id: userId,
+				role
 			}
-		} catch (error) {
+		});
+		if (error) {
 			console.error('Failed to update role:', error);
 			toast.error('Failed to update role');
+			return;
+		}
+		await loadData();
+		if (selectedFolder) {
+			const updatedFolder = folders.find((f) => f.id === selectedFolder!.id);
+			if (updatedFolder) selectedFolder = updatedFolder;
 		}
 	}
 
@@ -251,17 +244,17 @@
 	async function handleDeleteFolder() {
 		if (!selectedFolder || deleteFolderConfirmation !== selectedFolder.title) return;
 
-		try {
-			await Folders.deleteFolder({
-				path: { folder_id: selectedFolder.id }
-			});
-			isDeleteFolderModalOpen = false;
-			selectedFolder = null;
-			await loadData();
-		} catch (error) {
+		const { error } = await Folders.deleteFolder({
+			path: { folder_id: selectedFolder.id }
+		});
+		if (error) {
 			console.error('Failed to delete folder:', error);
 			toast.error('Failed to delete folder');
+			return;
 		}
+		isDeleteFolderModalOpen = false;
+		selectedFolder = null;
+		await loadData();
 	}
 
 	function openDeleteModal(project: ProjectPublic) {
@@ -274,31 +267,30 @@
 	async function handleDeleteProject() {
 		if (!selectedProject || deleteConfirmation !== selectedProject.title) return;
 
-		try {
-			await Projects.deleteProject({
-				path: { project_id: selectedProject.id }
-			});
-			isDeleteProjectModalOpen = false;
-			selectedProject = null;
-			await loadData();
-		} catch (error) {
+		const { error } = await Projects.deleteProject({
+			path: { project_id: selectedProject.id }
+		});
+		if (error) {
 			console.error('Failed to delete project:', error);
 			toast.error('Failed to delete project');
+			return;
 		}
+		isDeleteProjectModalOpen = false;
+		selectedProject = null;
+		await loadData();
 	}
 
 	async function handleCloneProject(project: ProjectPublic) {
-		try {
-			await Projects.cloneProject({
-				path: { project_id: project.id }
-			});
-			activeDropdown = null;
-			await loadData();
-			// Could show success notification here
-		} catch (error) {
+		const { error } = await Projects.cloneProject({
+			path: { project_id: project.id }
+		});
+		if (error) {
 			console.error('Failed to clone project:', error);
 			toast.error('Failed to clone project');
+			return;
 		}
+		activeDropdown = null;
+		await loadData();
 	}
 
 	function handleRowClick(projectId: string, defaultLanguage: string) {

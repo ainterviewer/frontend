@@ -25,17 +25,16 @@
 
 	async function loadTestRuns() {
 		loading = true;
-		try {
-			const response = await Synthesize.getTestStatus({
-				path: { project_id: projectId, test_id: testId }
-			});
-			testRuns = (response.data as any) || [];
-		} catch (e) {
-			console.error('Failed to load test runs', e);
+		const { data: statusData, error: statusError } = await Synthesize.getTestStatus({
+			path: { project_id: projectId, test_id: testId }
+		});
+		if (statusError) {
+			console.error('Failed to load test runs', statusError);
 			testRuns = [];
-		} finally {
-			loading = false;
+		} else {
+			testRuns = (statusData as any) || [];
 		}
+		loading = false;
 	}
 
 	async function runTest() {
@@ -45,28 +44,28 @@
 		}
 
 		running = true;
-		try {
-			const body: SynthesizeRequest = {
-				n_interviews: nInterviews,
-				answering_model: answeringModel || null,
-				language: language as any,
-				delay_before_answers: delayBeforeAnswers
-					? [delayBeforeAnswers, delayBeforeAnswersRandom]
-					: null
-			};
+		const body: SynthesizeRequest = {
+			n_interviews: nInterviews,
+			answering_model: answeringModel || null,
+			language: language as any,
+			delay_before_answers: delayBeforeAnswers
+				? [delayBeforeAnswers, delayBeforeAnswersRandom]
+				: null
+		};
 
-			await Synthesize.runSyntheticTest({
-				path: { project_id: projectId, test_id: testId },
-				body
-			});
-
-			await loadTestRuns();
-		} catch (e) {
-			console.error('Failed to run test', e);
+		const { error: runError } = await Synthesize.runSyntheticTest({
+			path: { project_id: projectId, test_id: testId },
+			body
+		});
+		if (runError) {
+			console.error('Failed to run test', runError);
 			toast.error('Failed to run test');
-		} finally {
 			running = false;
+			return;
 		}
+
+		await loadTestRuns();
+		running = false;
 	}
 
 	function formatDate(dateStr: string) {

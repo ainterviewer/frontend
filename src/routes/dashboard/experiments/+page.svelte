@@ -87,28 +87,30 @@
 		isDeleteModalOpen = true;
 	}
 
-	function openQRModal(experiment: Experiment) {
+	async function openQRModal(experiment: Experiment) {
 		selectedExperiment = experiment;
 		qrCodeUrl = null;
 
 		// Fetch QR Code
-		Experiments.generateExperimentQr({
+		const { data, error: fetchErr } = await Experiments.generateExperimentQr({
 			path: { experiment_id: experiment.id }
-		})
-			.then((response) => {
-				if (response.data) {
-					const blob = response.data as unknown as Blob;
-					qrCodeUrl = URL.createObjectURL(blob);
-				}
-			})
-			.catch((err) => {
-				console.error('Failed to fetch QR', err);
-				fetch(`/api/experiments/${experiment.id}/qr.png`)
-					.then((res) => res.blob())
-					.then((blob) => {
-						qrCodeUrl = URL.createObjectURL(blob);
-					});
-			});
+		});
+
+		if (fetchErr) {
+			console.error('Failed to fetch QR', fetchErr);
+			// Fallback: try fetching from static endpoint
+			try {
+				const res = await fetch(`/api/experiments/${experiment.id}/qr.png`);
+				const blob = await res.blob();
+				qrCodeUrl = URL.createObjectURL(blob);
+			} catch (fallbackErr) {
+				console.error('Fallback QR fetch also failed', fallbackErr);
+				toast.error('Failed to load QR code');
+			}
+		} else if (data) {
+			const blob = data as unknown as Blob;
+			qrCodeUrl = URL.createObjectURL(blob);
+		}
 
 		isQRModalOpen = true;
 	}
@@ -126,40 +128,41 @@
 	async function handleCreate() {
 		const weights = selectedProjectIds.map((id) => projectWeights[id] || 0);
 
-		try {
-			const response = await Experiments.createExperiment({
-				body: {
-					title: newExperimentTitle,
-					projects: selectedProjectIds.map(function (project_id, i) {
-						return { project_id: project_id, weight: weights[i] };
-					})
-				}
-			});
-
-			if (response.data) {
-				experiments = [...experiments, response.data as unknown as Experiment];
-				isCreateModalOpen = false;
+		const response = await Experiments.createExperiment({
+			body: {
+				title: newExperimentTitle,
+				projects: selectedProjectIds.map(function (project_id, i) {
+					return { project_id: project_id, weight: weights[i] };
+				})
 			}
-		} catch (error) {
-			console.error('Failed to create experiment', error);
+		});
+
+		if (response.error) {
+			console.error('Failed to create experiment', response.error);
 			toast.error('Failed to create experiment');
+			return;
+		}
+
+		if (response.data) {
+			experiments = [...experiments, response.data as unknown as Experiment];
+			isCreateModalOpen = false;
 		}
 	}
 
 	async function handleDelete() {
 		if (!selectedExperiment) return;
 
-		try {
-			await Experiments.deleteExperiment({
-				path: { experiment_id: selectedExperiment.id }
-			});
-			experiments = experiments.filter((e) => e.id !== selectedExperiment!.id);
-			isDeleteModalOpen = false;
-			selectedExperiment = null;
-		} catch (error) {
+		const { error } = await Experiments.deleteExperiment({
+			path: { experiment_id: selectedExperiment.id }
+		});
+		if (error) {
 			console.error('Failed to delete experiment', error);
 			toast.error('Failed to delete experiment');
+			return;
 		}
+		experiments = experiments.filter((e) => e.id !== selectedExperiment!.id);
+		isDeleteModalOpen = false;
+		selectedExperiment = null;
 	}
 
 	function copyLink(experiment: Experiment) {

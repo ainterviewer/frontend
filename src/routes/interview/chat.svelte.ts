@@ -276,17 +276,16 @@ export class ChatClient {
 
 		if (!this.project_id || !this.interview_id) return;
 
-		try {
-			await Interviews.putFeedback({
-				body: {
-					message_id: Number(messageId),
-					feedback: feedback,
-					project_id: this.project_id,
-					interview_id: this.interview_id
-				}
-			});
-		} catch (e) {
-			console.error('Error sending feedback', e);
+		const { error } = await Interviews.putFeedback({
+			body: {
+				message_id: Number(messageId),
+				feedback: feedback,
+				project_id: this.project_id,
+				interview_id: this.interview_id
+			}
+		});
+		if (error) {
+			console.error('Error sending feedback', error);
 		}
 	}
 
@@ -575,7 +574,10 @@ export class ChatClient {
 				if (data.content === '<|endofinterview|>') {
 					this.disableReconnect();
 
-					await Auth.exit();
+					const { error: exitError } = await Auth.exit();
+					if (exitError) {
+						console.error('Error during exit', exitError);
+					}
 					// NOTE:
 					// Type received to have styling applied, consider styling special
 					// tokens for system as well

@@ -1,5 +1,4 @@
 import { Default, Projects, Synthesize } from '$lib/api';
-import type { ProjectPublic } from '$lib/api/types.gen';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -28,14 +27,20 @@ export const load: PageServerLoad = async ({ request, params, fetch }) => {
 		})
 	]);
 
-	const project: ProjectPublic | undefined = projectRes.data;
-
-	if (!project) {
+	if (projectRes.error || !projectRes.data) {
 		error(404, 'Project not found');
 	}
 
-	const models = (modelsRes.data as unknown as string[]) || [];
-	const languages = (languagesRes.data as unknown as Array<{ code: string; name: string }>) || [];
+	if (testsResponse.error) {
+		console.error('Failed to load test setups', testsResponse.error);
+		throw error(500, 'Failed to load test setups');
+	}
+
+	const models = (modelsRes.error ? [] : (modelsRes.data as unknown as string[])) || [];
+	const languages =
+		(languagesRes.error
+			? []
+			: (languagesRes.data as unknown as Array<{ code: string; name: string }>)) || [];
 
 	const test = testsResponse.data?.find((t) => t.id === test_id);
 
@@ -47,6 +52,6 @@ export const load: PageServerLoad = async ({ request, params, fetch }) => {
 		models,
 		languages,
 		test,
-		project
+		project: projectRes.data
 	};
 };

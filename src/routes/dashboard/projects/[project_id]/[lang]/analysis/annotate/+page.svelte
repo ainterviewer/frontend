@@ -28,34 +28,28 @@
 	async function loadCategories() {
 		if (!projectId) return;
 		loading = true;
-		try {
-			const res = await Analysis.getAnalysisCategories({
-				path: { project_id: projectId }
-			});
-			if (res.data) {
-				categories = res.data;
-				const counts: Record<string, number> = {};
-				await Promise.all(
-					categories.map(async (c) => {
-						try {
-							const { data } = await Analysis.getFilteredMessagesCount({
-								path: { project_id: projectId },
-								body: { category_ids: [c.id] }
-							});
-							if (data !== undefined) counts[c.id] = data;
-						} catch (e) {
-							console.error(`Failed to load count for category ${c.id}`, e);
-						}
-					})
-				);
-				categoryCounts = counts;
-			}
-		} catch (e) {
-			console.error('Failed to load categories', e);
+		const res = await Analysis.getAnalysisCategories({
+			path: { project_id: projectId }
+		});
+		if (res.error) {
+			console.error('Failed to load categories', res.error);
 			toast.error('Failed to load categories');
-		} finally {
 			loading = false;
+			return;
 		}
+		categories = res.data;
+		const counts: Record<string, number> = {};
+		await Promise.all(
+			categories.map(async (c) => {
+				const { data } = await Analysis.getFilteredMessagesCount({
+					path: { project_id: projectId },
+					body: { category_ids: [c.id] }
+				});
+				if (data !== undefined) counts[c.id] = data;
+			})
+		);
+		categoryCounts = counts;
+		loading = false;
 	}
 
 	function openCreateModal(type: AnnotationType) {
@@ -72,15 +66,15 @@
 
 	async function deleteCategory(id: string) {
 		if (!confirm('Are you sure you want to delete this category?')) return;
-		try {
-			await Analysis.deleteAnalysisCategory({
-				path: { category_id: id }
-			});
-			await loadCategories();
-		} catch (e) {
-			console.error('Failed to delete category', e);
+		const { error } = await Analysis.deleteAnalysisCategory({
+			path: { category_id: id }
+		});
+		if (error) {
+			console.error('Failed to delete category', error);
 			toast.error('Failed to delete category');
+			return;
 		}
+		await loadCategories();
 	}
 
 	function toggleDropdown(e: MouseEvent, id: string) {

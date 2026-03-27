@@ -4,30 +4,22 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ request }) => {
 	const cookieHeader = request.headers.get('cookie');
 
-	try {
-		const response = await Admin.getUsers({
-			headers: {
-				cookie: cookieHeader
-			}
-		});
-
-		if (response.error) {
-			console.error(response.error);
-			return {
-				users: [],
-				error: 'Failed to load users'
-			};
+	const response = await Admin.getUsers({
+		headers: {
+			cookie: cookieHeader
 		}
+	});
 
-		return {
-			users: (response.data as unknown as UserAdmin[]) || [],
-			error: null
-		};
-	} catch (e) {
-		console.error(e);
+	if (response.error) {
+		console.error(response.error);
 		return {
 			users: [],
-			error: 'An unexpected error occurred'
+			error: 'Failed to load users'
 		};
 	}
+
+	return {
+		users: (response.data as unknown as UserAdmin[]) || [],
+		error: null
+	};
 };

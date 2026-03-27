@@ -28,15 +28,19 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 
 	const cookieHeader = request.headers.get('cookie');
 
-	const { data: interviewConfig } = await Projects.getInterviewConfig({
+	const { data: interviewConfig, error: configError } = await Projects.getInterviewConfig({
 		headers: { cookie: cookieHeader },
 		path: { project_id }
 	});
 
-	const { data: isProjectOwnerDemoUser } = await Projects.checkProjectOwner({
+	const { data: isProjectOwnerDemoUser, error: ownerError } = await Projects.checkProjectOwner({
 		headers: { cookie: cookieHeader },
 		path: { project_id }
 	});
+
+	if (configError) {
+		console.error('Failed to load interview config', configError);
+	}
 
 	const lang = url.searchParams.get('lang') || 'en';
 	const experimentID = url.searchParams.get('x');

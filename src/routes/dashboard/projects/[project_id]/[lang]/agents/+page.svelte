@@ -34,24 +34,23 @@
 
 	async function saveConfig() {
 		saving = true;
-		try {
-			await Promise.all([
-				Projects.createInterviewAgents({
-					path: { project_id: projectId, lang: lang },
-					body: agents as AgentConfigsInput
-				}),
-				Projects.createPrompts({
-					path: { project_id: projectId, lang: lang },
-					body: prompts as PromptsUpdateRequest
-				})
-			]);
-			toast.success('Configuration saved');
-		} catch (e) {
-			console.error('Failed to save config', e);
+		const [agentsRes, promptsRes] = await Promise.all([
+			Projects.createInterviewAgents({
+				path: { project_id: projectId, lang: lang },
+				body: agents as AgentConfigsInput
+			}),
+			Projects.createPrompts({
+				path: { project_id: projectId, lang: lang },
+				body: prompts as PromptsUpdateRequest
+			})
+		]);
+		if (agentsRes.error || promptsRes.error) {
+			console.error('Failed to save config', agentsRes.error || promptsRes.error);
 			toast.error('Failed to save configuration');
-		} finally {
-			saving = false;
+		} else {
+			toast.success('Configuration saved');
 		}
+		saving = false;
 	}
 
 	function replaceTextNodes(node: Node, regex: RegExp, color: string, brackets: string) {

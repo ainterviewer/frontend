@@ -20,54 +20,51 @@
 
 	async function saveTitle() {
 		savingTitle = true;
-		try {
-			await Projects.changeProjectTitle({
-				path: { project_id: project.id },
-				body: { title }
-			});
+		const { error } = await Projects.changeProjectTitle({
+			path: { project_id: project.id },
+			body: { title }
+		});
+		if (error) {
+			console.error(error);
+			toast.error('Failed to update title');
+		} else {
 			await invalidateAll();
 			toast.success('Title updated');
-		} catch (e) {
-			console.error(e);
-			toast.error('Failed to update title');
-		} finally {
-			savingTitle = false;
 		}
+		savingTitle = false;
 	}
 
 	async function saveLanguage() {
 		savingLanguage = true;
-		try {
-			await Projects.createInterviewConfig({
-				path: { project_id: project.id },
-				body: { default_language: defaultLanguage }
-			});
+		const { error } = await Projects.createInterviewConfig({
+			path: { project_id: project.id },
+			body: { default_language: defaultLanguage }
+		});
+		if (error) {
+			console.error(error);
+			toast.error('Failed to update language');
+		} else {
 			await invalidateAll();
 			toast.success('Default language updated');
-		} catch (e) {
-			console.error(e);
-			toast.error('Failed to update language');
-		} finally {
-			savingLanguage = false;
 		}
+		savingLanguage = false;
 	}
 
 	async function toggleStatus() {
 		changingStatus = true;
 		const newStatus = project.status === 'active' ? 'inactive' : 'active';
-		try {
-			await Projects.changeProjectStatus({
-				path: { project_id: project.id },
-				body: { status: newStatus }
-			});
+		const { error } = await Projects.changeProjectStatus({
+			path: { project_id: project.id },
+			body: { status: newStatus }
+		});
+		if (error) {
+			console.error(error);
+			toast.error('Failed to change status');
+		} else {
 			await invalidateAll();
 			toast.success(`Project status changed to ${newStatus}`);
-		} catch (e) {
-			console.error(e);
-			toast.error('Failed to change status');
-		} finally {
-			changingStatus = false;
 		}
+		changingStatus = false;
 	}
 </script>
 

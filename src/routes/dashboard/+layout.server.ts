@@ -24,7 +24,9 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
 			headers: { cookie: cookieHeader },
 			path: { project_id: projectId }
 		});
-		if (projectResponse.data) {
+		if (projectResponse.error) {
+			console.error('Failed to load project:', projectResponse.error);
+		} else if (projectResponse.data) {
 			project = projectResponse.data;
 		}
 	}

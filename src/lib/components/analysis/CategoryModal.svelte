@@ -58,44 +58,46 @@
 		if (!newName || !projectId) return;
 
 		isSaving = true;
-		try {
-			if (category) {
-				// Update
-				await Analysis.updateAnalysisCategory({
-					path: { category_id: category.id },
-					body: {
-						project_id: projectId,
-						name: newName,
-						description: newDescription || null,
-						type: newType,
-						color: newColor,
-						min_value: newType === 'score' ? newMin : null,
-						max_value: newType === 'score' ? newMax : null
-					}
-				});
-			} else {
-				// Create
-				await Analysis.createAnalysisCategory({
-					path: { project_id: projectId },
-					body: {
-						project_id: projectId,
-						name: newName,
-						description: newDescription || null,
-						type: newType,
-						color: newColor,
-						min_value: newType === 'score' ? newMin : null,
-						max_value: newType === 'score' ? newMax : null
-					}
-				});
-			}
+		let saveError;
+		if (category) {
+			// Update
+			const res = await Analysis.updateAnalysisCategory({
+				path: { category_id: category.id },
+				body: {
+					project_id: projectId,
+					name: newName,
+					description: newDescription || null,
+					type: newType,
+					color: newColor,
+					min_value: newType === 'score' ? newMin : null,
+					max_value: newType === 'score' ? newMax : null
+				}
+			});
+			saveError = res.error;
+		} else {
+			// Create
+			const res = await Analysis.createAnalysisCategory({
+				path: { project_id: projectId },
+				body: {
+					project_id: projectId,
+					name: newName,
+					description: newDescription || null,
+					type: newType,
+					color: newColor,
+					min_value: newType === 'score' ? newMin : null,
+					max_value: newType === 'score' ? newMax : null
+				}
+			});
+			saveError = res.error;
+		}
+		if (saveError) {
+			console.error('Failed to save category', saveError);
+			toast.error('Failed to save category');
+		} else {
 			onSave();
 			onClose();
-		} catch (e) {
-			console.error('Failed to save category', e);
-			toast.error('Failed to save category');
-		} finally {
-			isSaving = false;
 		}
+		isSaving = false;
 	}
 </script>
 

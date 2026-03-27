@@ -65,44 +65,44 @@
 		if (!confirm(`Are you sure you want to delete the test?\n\nThis action cannot be undone.`))
 			return;
 
-		try {
-			await Synthesize.deleteTestSetup({
-				path: {
-					project_id: projectId,
-					test_id: testId
-				},
-				headers: { 'Content-Type': 'application/json' }
-			});
-			await invalidateAll();
-		} catch (e) {
-			console.error('Failed to delete tests', e);
+		const { error } = await Synthesize.deleteTestSetup({
+			path: {
+				project_id: projectId,
+				test_id: testId
+			},
+			headers: { 'Content-Type': 'application/json' }
+		});
+		if (error) {
+			console.error('Failed to delete tests', error);
 			toast.error('Failed to delete test');
+			return;
 		}
+		await invalidateAll();
 	}
 
 	async function createTest() {
 		if (!projectId) return;
 		isCreating = true;
-		try {
-			const response = await Synthesize.createTestSetup({
-				path: {
-					project_id: projectId
-				},
-				body: {
-					name: newTestName,
-					type: newTestType as any,
-					project_id: projectId
-				}
-			});
-			isModalOpen = false;
-			newTestName = '';
-			await invalidateAll();
-		} catch (e) {
-			console.error('Failed to create test', e);
+		const { error } = await Synthesize.createTestSetup({
+			path: {
+				project_id: projectId
+			},
+			body: {
+				name: newTestName,
+				type: newTestType as any,
+				project_id: projectId
+			}
+		});
+		if (error) {
+			console.error('Failed to create test', error);
 			toast.error('Failed to create test');
-		} finally {
 			isCreating = false;
+			return;
 		}
+		isModalOpen = false;
+		newTestName = '';
+		isCreating = false;
+		await invalidateAll();
 	}
 
 	function toggleDropdown(e: MouseEvent, id: string) {

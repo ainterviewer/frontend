@@ -6,18 +6,18 @@ export const load: PageServerLoad = async ({ params, request, fetch }) => {
 	const { project_id } = params;
 	const cookieHeader = request.headers.get('cookie');
 
-	try {
-		const response = await Synthesize.getTestSetups({
-			headers: { cookie: cookieHeader },
-			fetch,
-			path: { project_id }
-		});
+	const { data, error: fetchError } = await Synthesize.getTestSetups({
+		headers: { cookie: cookieHeader },
+		fetch,
+		path: { project_id }
+	});
 
-		return {
-			tests: response.data || []
-		};
-	} catch (e) {
-		console.error('Failed to load tests', e);
+	if (fetchError) {
+		console.error('Failed to load tests', fetchError);
 		throw error(500, 'Failed to load tests');
 	}
+
+	return {
+		tests: data || []
+	};
 };

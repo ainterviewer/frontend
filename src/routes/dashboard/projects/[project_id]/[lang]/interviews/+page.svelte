@@ -43,18 +43,23 @@
 	async function loadInterviews() {
 		loading = true;
 		error = null;
-		try {
-			const offset = (currentPage - 1) * itemsPerPage;
-			const response = await Api.getInterviews({
-				path: { project_id },
-				query: {
-					offset,
-					limit: itemsPerPage,
-					column: sortColumn,
-					order: sortOrder
-				}
-			});
+		const offset = (currentPage - 1) * itemsPerPage;
+		const response = await Api.getInterviews({
+			path: { project_id },
+			query: {
+				offset,
+				limit: itemsPerPage,
+				column: sortColumn,
+				order: sortOrder
+			}
+		});
 
+		if (response.error) {
+			console.error('Error fetching interviews:', response.error);
+			error = 'Failed to load interviews';
+			interviews = [];
+			totalItems = 0;
+		} else {
 			const data = response.data as any;
 			if (data) {
 				interviews = data.items || [];
@@ -63,14 +68,8 @@
 				interviews = [];
 				totalItems = 0;
 			}
-		} catch (e) {
-			console.error('Error fetching interviews:', e);
-			error = 'Failed to load interviews';
-			interviews = [];
-			totalItems = 0;
-		} finally {
-			loading = false;
 		}
+		loading = false;
 	}
 
 	function handleSort(column: string) {
@@ -125,54 +124,51 @@
 		)
 			return;
 
-		try {
-			await Api.deleteInterviews({
-				path: { project_id },
-				body: { interview_ids: Array.from(selectedInterviews) }
-			});
-			selectedInterviews = new Set();
-			loadInterviews();
-		} catch (e) {
-			console.error('Error deleting interviews:', e);
+		const { error } = await Api.deleteInterviews({
+			path: { project_id },
+			body: { interview_ids: Array.from(selectedInterviews) }
+		});
+		if (error) {
+			console.error('Error deleting interviews:', error);
 			toast.error('Failed to delete interviews');
+			return;
 		}
+		selectedInterviews = new Set();
+		loadInterviews();
 	}
 
 	async function handleDownloadSelected() {
-		try {
-			const ids = Array.from(selectedInterviews);
-			downloadFile(ids, 'xlsx');
-		} catch (e) {
-			console.error('Error downloading interviews:', e);
-			toast.error('Failed to download interviews');
-		}
+		const ids = Array.from(selectedInterviews);
+		downloadFile(ids, 'xlsx');
 	}
 
 	async function downloadFile(ids: string[], format: 'csv' | 'xlsx') {
-		try {
-			const response = await Api.exportMessages({
-				path: {
-					project_id
-				},
-				body: {
-					interview_ids: ids,
-					format: format
-				},
-				parseAs: 'blob'
-			});
+		const response = await Api.exportMessages({
+			path: {
+				project_id
+			},
+			body: {
+				interview_ids: ids,
+				format: format
+			},
+			parseAs: 'blob'
+		});
 
-			if (response.data) {
-				const url = window.URL.createObjectURL(response.data as Blob);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = `interview_${project_id}.${format}`;
-				document.body.appendChild(a);
-				a.click();
-				window.URL.revokeObjectURL(url);
-				document.body.removeChild(a);
-			}
-		} catch (error) {
-			console.error('Error downloading file:', error);
+		if (response.error) {
+			console.error('Error downloading file:', response.error);
+			toast.error('Failed to download file');
+			return;
+		}
+
+		if (response.data) {
+			const url = window.URL.createObjectURL(response.data as Blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `interview_${project_id}.${format}`;
+			document.body.appendChild(a);
+			a.click();
+			window.URL.revokeObjectURL(url);
+			document.body.removeChild(a);
 		}
 	}
 
@@ -188,7 +184,14 @@
 				Api.deleteInterviews({
 					path: { project_id },
 					body: { interview_ids: [id] }
-				}).then(() => loadInterviews());
+				}).then((res) => {
+					if (res.error) {
+						console.error('Failed to delete interview:', res.error);
+						toast.error('Failed to delete interview');
+						return;
+					}
+					loadInterviews();
+				});
 			}
 		}
 	}

@@ -5,33 +5,28 @@ export const load: PageServerLoad = async ({ params, request, fetch }) => {
 	const { project_id, lang } = params;
 	const cookieHeader = request.headers.get('cookie');
 
-	try {
-		const [response, projectRes] = await Promise.all([
-			Projects.getGuide({
-				path: { project_id, lang },
-				headers: { cookie: cookieHeader },
-				fetch
-			}),
-			Projects.getProject({
-				headers: { cookie: cookieHeader },
-				path: { project_id },
-				fetch
-			})
-		]);
+	const [response, projectRes] = await Promise.all([
+		Projects.getGuide({
+			path: { project_id, lang },
+			headers: { cookie: cookieHeader },
+			fetch
+		}),
+		Projects.getProject({
+			headers: { cookie: cookieHeader },
+			path: { project_id },
+			fetch
+		})
+	]);
 
-		if (response.error) {
-			console.error('Error fetching guide:', response.error);
-			return { guide: null, lang, project_id, project_name: projectRes.data?.title ?? '' };
-		}
-
-		return {
-			guide: response.data,
-			lang,
-			project_id,
-			project_name: projectRes.data?.title ?? ''
-		};
-	} catch (error) {
-		console.error('Exception fetching guide:', error);
-		return { guide: null, lang, project_id, project_name: '' };
+	if (response.error) {
+		console.error('Error fetching guide:', response.error);
+		return { guide: null, lang, project_id, project_name: projectRes.data?.title ?? '' };
 	}
+
+	return {
+		guide: response.data,
+		lang,
+		project_id,
+		project_name: projectRes.data?.title ?? ''
+	};
 };

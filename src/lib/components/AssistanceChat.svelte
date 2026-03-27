@@ -210,9 +210,13 @@
 	}
 
 	async function resetSession() {
-		await Assistance.resetSession({
+		const { error } = await Assistance.resetSession({
 			path: { project_id, lang: lang ?? '' }
 		});
+		if (error) {
+			console.error('Failed to reset session', error);
+			return;
+		}
 		messages = [];
 		parsedItems = {};
 		historyLoaded = false;

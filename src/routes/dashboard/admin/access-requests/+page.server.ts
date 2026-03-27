@@ -15,30 +15,22 @@ interface AccessRequest {
 export const load: PageServerLoad = async ({ request }) => {
 	const cookieHeader = request.headers.get('cookie');
 
-	try {
-		const response = await Admin.getAccessRequests({
-			headers: {
-				cookie: cookieHeader
-			}
-		});
-
-		if (response.error) {
-			console.error(response.error);
-			return {
-				requests: [],
-				error: String(response.error)
-			};
+	const response = await Admin.getAccessRequests({
+		headers: {
+			cookie: cookieHeader
 		}
+	});
 
-		return {
-			requests: (response.data as unknown as AccessRequest[]) ?? [],
-			error: null
-		};
-	} catch (e: any) {
-		console.error(e);
+	if (response.error) {
+		console.error(response.error);
 		return {
 			requests: [],
-			error: e.message || 'Failed to fetch requests'
+			error: String(response.error)
 		};
 	}
+
+	return {
+		requests: (response.data as unknown as AccessRequest[]) ?? [],
+		error: null
+	};
 };

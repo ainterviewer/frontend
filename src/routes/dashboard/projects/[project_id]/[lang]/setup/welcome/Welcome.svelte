@@ -55,6 +55,11 @@
 		const { data, error } = await Projects.getWelcome({
 			path: { project_id: projectId, language: language }
 		});
+		if (error) {
+			console.error('Failed to load welcome data:', error);
+			toast.error('Failed to load welcome data.');
+			return;
+		}
 		if (data) {
 			title = data.title;
 			text = data.text;

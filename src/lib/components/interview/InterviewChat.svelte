@@ -95,16 +95,18 @@
 		}
 	}
 
-	function exitInterview() {
-		Auth.exit().then(({ response }) => {
-			if (response.ok) {
-				if (interviewType === 'manual_test' && window.opener) {
-					window.close();
-				} else {
-					window.location.href = '/';
-				}
-			}
-		});
+	async function exitInterview() {
+		const { error } = await Auth.exit();
+		if (error) {
+			console.error('Failed to exit interview:', error);
+			return;
+		}
+
+		if (interviewType === 'manual_test' && window.opener) {
+			window.close();
+		} else {
+			window.location.href = '/';
+		}
 	}
 
 	function handleAudioSend(blob: Blob, duration: number) {

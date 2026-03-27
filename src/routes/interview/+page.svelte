@@ -124,52 +124,54 @@
 	}
 
 	async function loadWelcome() {
-		try {
-			const { data: welcome } = await Projects.getWelcome({
-				path: {
-					project_id: projectId,
-					language: lang
-				}
-			});
-
-			if (welcome && (welcome.title || welcome.text)) {
-				welcomeData = welcome;
-				showWelcome = true;
-				isInitializing = false;
-			} else {
-				startInterview();
+		const { data: welcome, error: welcomeError } = await Projects.getWelcome({
+			path: {
+				project_id: projectId,
+				language: lang
 			}
-		} catch (e) {
-			console.error('Error loading welcome', e);
+		});
+
+		if (welcomeError) {
+			console.error('Error loading welcome', welcomeError);
+			startInterview();
+			return;
+		}
+
+		if (welcome && (welcome.title || welcome.text)) {
+			welcomeData = welcome;
+			showWelcome = true;
+			isInitializing = false;
+		} else {
 			startInterview();
 		}
 	}
 
 	async function loadConsent() {
-		try {
-			const { data: consent } = await Projects.getConsent({
-				path: {
-					project_id: projectId,
-					language: lang
-				}
-			});
-
-			if (consent && consent.title && consent.text) {
-				consentData = consent;
-				showConsent = true;
-				isInitializing = false;
-			} else {
-				// No consent configured - create interview and proceed to welcome
-				const newInterviewId = await createInterviewAndGetId();
-				if (newInterviewId) {
-					await loadWelcome();
-				} else {
-					isInitializing = false;
-				}
+		const { data: consent, error: consentError } = await Projects.getConsent({
+			path: {
+				project_id: projectId,
+				language: lang
 			}
-		} catch (e) {
-			console.error('Error loading consent', e);
+		});
+
+		if (consentError) {
+			console.error('Error loading consent', consentError);
 			// Error loading consent - create interview and proceed to welcome
+			const newInterviewId = await createInterviewAndGetId();
+			if (newInterviewId) {
+				await loadWelcome();
+			} else {
+				isInitializing = false;
+			}
+			return;
+		}
+
+		if (consent && consent.title && consent.text) {
+			consentData = consent;
+			showConsent = true;
+			isInitializing = false;
+		} else {
+			// No consent configured - create interview and proceed to welcome
 			const newInterviewId = await createInterviewAndGetId();
 			if (newInterviewId) {
 				await loadWelcome();
@@ -205,24 +207,22 @@
 			return;
 		}
 
-		try {
-			const { data: welcome } = await Projects.getWelcome({
-				path: {
-					project_id: projectId,
-					language: lang
-				}
-			});
-
-			if (welcome && (welcome.title || welcome.text)) {
-				welcomeData = welcome;
-				showWelcome = true;
-				showConsent = false;
-			} else {
-				startInterview();
-				showConsent = false;
+		const { data: welcome, error: welcomeError } = await Projects.getWelcome({
+			path: {
+				project_id: projectId,
+				language: lang
 			}
-		} catch (e) {
-			console.error('Error loading welcome', e);
+		});
+
+		if (welcomeError) {
+			console.error('Error loading welcome', welcomeError);
+			startInterview();
+			showConsent = false;
+		} else if (welcome && (welcome.title || welcome.text)) {
+			welcomeData = welcome;
+			showWelcome = true;
+			showConsent = false;
+		} else {
 			startInterview();
 			showConsent = false;
 		}

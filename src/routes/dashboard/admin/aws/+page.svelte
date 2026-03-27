@@ -47,29 +47,28 @@
 	}
 
 	async function getSettings() {
-		try {
-			const response = await Admin.proxyToEc2Manager2({
-				path: { full_path: 'settings/min-instances' }
-			});
-			if (response.data !== undefined) {
-				minInstances = Number(response.data);
-			}
-		} catch (err) {
-			console.error('Failed to fetch settings:', err);
+		const response = await Admin.proxyToEc2Manager2({
+			path: { full_path: 'settings/min-instances' }
+		});
+		if (response.error) {
+			console.error('Failed to fetch settings:', response.error);
+			return;
+		}
+		if (response.data !== undefined) {
+			minInstances = Number(response.data);
 		}
 	}
 
 	async function updateSettings() {
-		try {
-			await Admin.proxyToEc2Manager4({
-				path: { full_path: 'settings/min-instances' },
-				body: minInstances
-			});
-
-			toast.success('Min instances updated');
-		} catch (err: any) {
-			toast.error('Failed to update settings: ' + err.message);
+		const { error: updateError } = await Admin.proxyToEc2Manager4({
+			path: { full_path: 'settings/min-instances' },
+			body: minInstances
+		});
+		if (updateError) {
+			toast.error('Failed to update settings');
+			return;
 		}
+		toast.success('Min instances updated');
 	}
 
 	function toggleInstance(id: string) {
@@ -93,53 +92,65 @@
 	async function startSelected() {
 		if (selectedInstances.size === 0) return;
 
-		try {
-			if (selectedInstances.size === instances.length) {
-				await Admin.proxyToEc2Manager4({
-					path: { full_path: 'instances/start-all' }
-				});
-			} else {
-				await Promise.all(
-					Array.from(selectedInstances).map((id) =>
-						Admin.proxyToEc2Manager4({
-							path: { full_path: `instances/start/${id}` }
-						})
-					)
-				);
+		if (selectedInstances.size === instances.length) {
+			const { error: startError } = await Admin.proxyToEc2Manager4({
+				path: { full_path: 'instances/start-all' }
+			});
+			if (startError) {
+				error = 'Failed to start instances';
+				toast.error(error);
+				return;
 			}
-			await getInstanceStatus();
-			selectedInstances = new Set();
-			toast.success('Instances starting');
-		} catch (err: any) {
-			error = 'Failed to start instances: ' + err.message;
-			toast.error(error);
+		} else {
+			const results = await Promise.all(
+				Array.from(selectedInstances).map((id) =>
+					Admin.proxyToEc2Manager4({
+						path: { full_path: `instances/start/${id}` }
+					})
+				)
+			);
+			const failed = results.filter((r) => r.error);
+			if (failed.length > 0) {
+				error = `Failed to start ${failed.length} instance(s)`;
+				toast.error(error);
+				return;
+			}
 		}
+		await getInstanceStatus();
+		selectedInstances = new Set();
+		toast.success('Instances starting');
 	}
 
 	async function stopSelected() {
 		if (selectedInstances.size === 0) return;
 
-		try {
-			if (selectedInstances.size === instances.length) {
-				await Admin.proxyToEc2Manager4({
-					path: { full_path: 'instances/stop-all' }
-				});
-			} else {
-				await Promise.all(
-					Array.from(selectedInstances).map((id) =>
-						Admin.proxyToEc2Manager4({
-							path: { full_path: `instances/stop/${id}` }
-						})
-					)
-				);
+		if (selectedInstances.size === instances.length) {
+			const { error: stopError } = await Admin.proxyToEc2Manager4({
+				path: { full_path: 'instances/stop-all' }
+			});
+			if (stopError) {
+				error = 'Failed to stop instances';
+				toast.error(error);
+				return;
 			}
-			await getInstanceStatus();
-			selectedInstances = new Set();
-			toast.success('Instances stopping');
-		} catch (err: any) {
-			error = 'Failed to stop instances: ' + err.message;
-			toast.error(error);
+		} else {
+			const results = await Promise.all(
+				Array.from(selectedInstances).map((id) =>
+					Admin.proxyToEc2Manager4({
+						path: { full_path: `instances/stop/${id}` }
+					})
+				)
+			);
+			const failed = results.filter((r) => r.error);
+			if (failed.length > 0) {
+				error = `Failed to stop ${failed.length} instance(s)`;
+				toast.error(error);
+				return;
+			}
 		}
+		await getInstanceStatus();
+		selectedInstances = new Set();
+		toast.success('Instances stopping');
 	}
 
 	function getStatusColor(status: string) {

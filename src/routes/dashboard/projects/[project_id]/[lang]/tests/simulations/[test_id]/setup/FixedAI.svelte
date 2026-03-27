@@ -23,28 +23,29 @@
 		}
 
 		isSaving = true;
-		try {
-			await Synthesize.updateFixedPersonas({
-				path: {
-					project_id: test.project_id,
-					test_id: test.id
-				},
-				body: {
-					fixed_personas: nonEmpty
-				}
-			});
-			toast.success('Personas saved');
-		} catch (e) {
-			console.error(e);
+		const { error } = await Synthesize.updateFixedPersonas({
+			path: {
+				project_id: test.project_id,
+				test_id: test.id
+			},
+			body: {
+				fixed_personas: nonEmpty
+			}
+		});
+		isSaving = false;
+		if (error) {
+			console.error(error);
 			toast.error('Failed to save personas');
-		} finally {
-			isSaving = false;
+			return;
 		}
+		toast.success('Personas saved');
 	}
 </script>
 
 <h1 class="page-title">Setup - Fixed AI Personas</h1>
-<p class="text-gray-600">Define one persona per text area. Each persona will be used as-is for the AI respondent.</p>
+<p class="text-gray-600">
+	Define one persona per text area. Each persona will be used as-is for the AI respondent.
+</p>
 
 <div class="mt-6 flex flex-col gap-4">
 	{#each personas as _, index}

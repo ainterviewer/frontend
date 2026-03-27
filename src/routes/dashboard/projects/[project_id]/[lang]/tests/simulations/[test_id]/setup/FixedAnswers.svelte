@@ -17,23 +17,22 @@
 
 	async function saveSetup() {
 		isSaving = true;
-		try {
-			await Synthesize.updateFixedAnswers({
-				path: {
-					project_id: test.project_id,
-					test_id: test.id
-				},
-				body: {
-					answers: answers
-				}
-			});
-			toast.success('Answers saved');
-		} catch (e) {
-			console.error(e);
+		const { error } = await Synthesize.updateFixedAnswers({
+			path: {
+				project_id: test.project_id,
+				test_id: test.id
+			},
+			body: {
+				answers: answers
+			}
+		});
+		isSaving = false;
+		if (error) {
+			console.error(error);
 			toast.error('Failed to save setup');
-		} finally {
-			isSaving = false;
+			return;
 		}
+		toast.success('Answers saved');
 	}
 </script>
 

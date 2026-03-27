@@ -76,42 +76,41 @@
 
 	async function saveSetup() {
 		isSaving = true;
-		try {
-			// Filter out empty strings/pairs
-			const cleanList = (list: string[]) => list.filter((item) => item && item.trim() !== '');
-			const cleanPairs = (list: [string, string][]) =>
-				list.filter((pair) => pair[0] && pair[0].trim() !== ''); // Check name at least
+		// Filter out empty strings/pairs
+		const cleanList = (list: string[]) => list.filter((item) => item && item.trim() !== '');
+		const cleanPairs = (list: [string, string][]) =>
+			list.filter((pair) => pair[0] && pair[0].trim() !== ''); // Check name at least
 
-			await Synthesize.updateBackgroundInfo({
-				path: {
-					project_id: test.project_id,
-					test_id: test.id
-				},
-				body: {
-					background_info: {
-						names_gender: cleanPairs($state.snapshot(names_gender)),
-						age_range: $state.snapshot(age_range) as [number, number],
-						educations: cleanList($state.snapshot(educations)),
-						occupations: cleanList($state.snapshot(occupations)),
-						locations: cleanList($state.snapshot(locations)),
-						personalities: cleanList($state.snapshot(personalities)),
-						communication_traits: {
-							length: cleanList($state.snapshot(comm_length)) as any[],
-							style: cleanList($state.snapshot(comm_style)),
-							tone: cleanList($state.snapshot(comm_tone))
-						},
-						extra_traits: cleanList($state.snapshot(extra_traits)),
-						refusal_rate: [refusal_rate[0] / 100, refusal_rate[1] / 100]
-					}
+		const { error } = await Synthesize.updateBackgroundInfo({
+			path: {
+				project_id: test.project_id,
+				test_id: test.id
+			},
+			body: {
+				background_info: {
+					names_gender: cleanPairs($state.snapshot(names_gender)),
+					age_range: $state.snapshot(age_range) as [number, number],
+					educations: cleanList($state.snapshot(educations)),
+					occupations: cleanList($state.snapshot(occupations)),
+					locations: cleanList($state.snapshot(locations)),
+					personalities: cleanList($state.snapshot(personalities)),
+					communication_traits: {
+						length: cleanList($state.snapshot(comm_length)) as any[],
+						style: cleanList($state.snapshot(comm_style)),
+						tone: cleanList($state.snapshot(comm_tone))
+					},
+					extra_traits: cleanList($state.snapshot(extra_traits)),
+					refusal_rate: [refusal_rate[0] / 100, refusal_rate[1] / 100]
 				}
-			});
-			toast.success('Background information saved');
-		} catch (e) {
-			console.error(e);
+			}
+		});
+		isSaving = false;
+		if (error) {
+			console.error(error);
 			toast.error('Failed to save setup');
-		} finally {
-			isSaving = false;
+			return;
 		}
+		toast.success('Background information saved');
 	}
 </script>
 

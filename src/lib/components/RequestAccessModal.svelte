@@ -32,9 +32,11 @@
 
 			if (error) {
 				errorMessage = 'Invalid request';
+				return;
 			}
 		} catch (e) {
 			errorMessage = 'An unexpected error occurred';
+			return;
 		} finally {
 			isLoading = false;
 		}

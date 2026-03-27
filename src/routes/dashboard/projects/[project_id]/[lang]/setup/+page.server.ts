@@ -21,8 +21,8 @@ export const load: PageServerLoad = async ({ params, request }) => {
 	]);
 
 	return {
-		consent: consentRes.data ?? null,
-		welcome: welcomeRes.data ?? null,
-		guide: guideRes.data ?? null
+		consent: consentRes.error ? null : (consentRes.data ?? null),
+		welcome: welcomeRes.error ? null : (welcomeRes.data ?? null),
+		guide: guideRes.error ? null : (guideRes.data ?? null)
 	};
 };

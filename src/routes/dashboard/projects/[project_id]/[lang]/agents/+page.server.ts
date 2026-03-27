@@ -1,4 +1,5 @@
 import { Default, Projects } from '$lib/api';
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ request, params, fetch }) => {
@@ -21,6 +22,19 @@ export const load: PageServerLoad = async ({ request, params, fetch }) => {
 			fetch
 		})
 	]);
+
+	if (modelsRes.error) {
+		console.error('Failed to load models', modelsRes.error);
+		throw error(500, 'Failed to load models');
+	}
+	if (agentsRes.error) {
+		console.error('Failed to load agents', agentsRes.error);
+		throw error(500, 'Failed to load agents');
+	}
+	if (promptsRes.error) {
+		console.error('Failed to load prompts', promptsRes.error);
+		throw error(500, 'Failed to load prompts');
+	}
 
 	const models = (modelsRes.data as unknown as string[]) || [];
 	const agents = agentsRes.data || {};

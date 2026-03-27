@@ -22,7 +22,10 @@
 	let menuOpen = $state(false);
 
 	export async function signOut() {
-		await Auth.logout();
+		const { error } = await Auth.logout();
+		if (error) {
+			console.error('Logout failed', error);
+		}
 		goto(resolve('/login'));
 	}
 </script>

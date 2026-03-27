@@ -46,20 +46,25 @@
 	async function loadInterviews() {
 		loading = true;
 		error = null;
-		try {
-			const offset = (currentPage - 1) * itemsPerPage;
-			const response = await Api.getInterviews({
-				path: { project_id },
-				query: {
-					offset,
-					limit: itemsPerPage,
-					column: sortColumn,
-					order: sortOrder,
-					interview_types: ['manual_test', 'synthetic_test']
-				}
-			});
+		const offset = (currentPage - 1) * itemsPerPage;
+		const { data: responseData, error: fetchError } = await Api.getInterviews({
+			path: { project_id },
+			query: {
+				offset,
+				limit: itemsPerPage,
+				column: sortColumn,
+				order: sortOrder,
+				interview_types: ['manual_test', 'synthetic_test']
+			}
+		});
 
-			const data = response.data as any;
+		if (fetchError) {
+			console.error('Error fetching test results:', fetchError);
+			error = 'Failed to load test results';
+			interviews = [];
+			totalItems = 0;
+		} else {
+			const data = responseData as any;
 			if (data) {
 				interviews = data.items || [];
 				totalItems = data.total || 0;
@@ -67,14 +72,8 @@
 				interviews = [];
 				totalItems = 0;
 			}
-		} catch (e) {
-			console.error('Error fetching test results:', e);
-			error = 'Failed to load test results';
-			interviews = [];
-			totalItems = 0;
-		} finally {
-			loading = false;
 		}
+		loading = false;
 	}
 
 	function handleSort(column: string) {
@@ -129,54 +128,51 @@
 		)
 			return;
 
-		try {
-			await Api.deleteInterviews({
-				path: { project_id },
-				body: { interview_ids: Array.from(selectedInterviews) }
-			});
-			selectedInterviews = new Set();
-			loadInterviews();
-		} catch (e) {
-			console.error('Error deleting test results:', e);
+		const { error: deleteError } = await Api.deleteInterviews({
+			path: { project_id },
+			body: { interview_ids: Array.from(selectedInterviews) }
+		});
+		if (deleteError) {
+			console.error('Error deleting test results:', deleteError);
 			toast.error('Failed to delete test results');
+			return;
 		}
+		selectedInterviews = new Set();
+		loadInterviews();
 	}
 
 	async function handleDownloadSelected() {
-		try {
-			const ids = Array.from(selectedInterviews);
-			downloadFile(ids, 'xlsx');
-		} catch (e) {
-			console.error('Error downloading test results:', e);
-			toast.error('Failed to download test results');
-		}
+		const ids = Array.from(selectedInterviews);
+		downloadFile(ids, 'xlsx');
 	}
 
 	async function downloadFile(ids: string[], format: 'csv' | 'xlsx') {
-		try {
-			const response = await Api.exportMessages({
-				path: {
-					project_id
-				},
-				body: {
-					interview_ids: ids,
-					format: format
-				},
-				parseAs: 'blob'
-			});
+		const { data: fileData, error: downloadError } = await Api.exportMessages({
+			path: {
+				project_id
+			},
+			body: {
+				interview_ids: ids,
+				format: format
+			},
+			parseAs: 'blob'
+		});
 
-			if (response.data) {
-				const url = window.URL.createObjectURL(response.data as Blob);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = `test_results_${project_id}.${format}`;
-				document.body.appendChild(a);
-				a.click();
-				window.URL.revokeObjectURL(url);
-				document.body.removeChild(a);
-			}
-		} catch (error) {
-			console.error('Error downloading file:', error);
+		if (downloadError) {
+			console.error('Error downloading file:', downloadError);
+			toast.error('Failed to download file');
+			return;
+		}
+
+		if (fileData) {
+			const url = window.URL.createObjectURL(fileData as Blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `test_results_${project_id}.${format}`;
+			document.body.appendChild(a);
+			a.click();
+			window.URL.revokeObjectURL(url);
+			document.body.removeChild(a);
 		}
 	}
 
@@ -194,7 +190,14 @@
 				Api.deleteInterviews({
 					path: { project_id },
 					body: { interview_ids: [id] }
-				}).then(() => loadInterviews());
+				}).then((result) => {
+					if (result.error) {
+						console.error('Error deleting result:', result.error);
+						toast.error('Failed to delete result');
+						return;
+					}
+					loadInterviews();
+				});
 			}
 		}
 	}

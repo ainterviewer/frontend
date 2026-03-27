@@ -74,18 +74,18 @@ export async function saveGuide(
 	localSections: any,
 	localQuestions: any
 ) {
-	try {
-		const payload = {
-			...guide,
-			question_sections: mapFromLocal(localSections, localQuestions)
-		};
-		await Projects.createGuide({
-			path: { project_id: projectId, lang: lang },
-			body: payload as any
-		});
-		toast.success('Guide saved');
-	} catch (e) {
-		console.error('Failed to save guide', e);
+	const payload = {
+		...guide,
+		question_sections: mapFromLocal(localSections, localQuestions)
+	};
+	const { error } = await Projects.createGuide({
+		path: { project_id: projectId, lang: lang },
+		body: payload as any
+	});
+	if (error) {
+		console.error('Failed to save guide', error);
 		toast.error('Failed to save guide');
+		return;
 	}
+	toast.success('Guide saved');
 }

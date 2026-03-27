@@ -46,19 +46,18 @@
 
 	async function saveExternalParams() {
 		savingParams = true;
-		try {
-			await Projects.updateExternalParams({
-				path: { project_id: projectId },
-				body: { params: externalParams }
-			});
+		const { error } = await Projects.updateExternalParams({
+			path: { project_id: projectId },
+			body: { params: externalParams }
+		});
+		if (error) {
+			console.error(error);
+			toast.error('Failed to save external parameters');
+		} else {
 			await invalidateAll();
 			toast.success('External parameters saved');
-		} catch (e) {
-			console.error(e);
-			toast.error('Failed to save external parameters');
-		} finally {
-			savingParams = false;
 		}
+		savingParams = false;
 	}
 
 	const steps = $derived([

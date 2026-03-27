@@ -1,4 +1,5 @@
 import { Experiments, Folders } from '$lib/api/sdk.gen';
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ request }) => {
@@ -15,10 +16,18 @@ export const load: PageServerLoad = async ({ request }) => {
 		Experiments.getExperiments(options)
 	]);
 
-	const folders = foldersResponse.data || [];
+	if (foldersResponse.error) {
+		console.error('Failed to load folders', foldersResponse.error);
+		throw error(500, 'Failed to load folders');
+	}
+
+	if (experimentsResponse.error) {
+		console.error('Failed to load experiments', experimentsResponse.error);
+		throw error(500, 'Failed to load experiments');
+	}
 
 	return {
-		folders,
+		folders: foldersResponse.data || [],
 		experiments: experimentsResponse.data || []
 	};
 };
