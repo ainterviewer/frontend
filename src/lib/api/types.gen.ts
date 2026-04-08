@@ -498,7 +498,7 @@ export type Condition = {
 /**
  * ConditionAction
  */
-export type ConditionAction = 'end_interview' | 'skip_section' | 'skip_question' | 'ask_question';
+export type ConditionAction = 'end_interview' | 'skip_section' | 'skip_question' | 'skip_probes';
 
 /**
  * ConditionEvaluation
@@ -4124,7 +4124,7 @@ export type CloneProjectResponses = {
 
 export type CloneProjectResponse = CloneProjectResponses[keyof CloneProjectResponses];
 
-export type RemoveProjectLanguagesData = {
+export type RemoveProjectLanguageData = {
     body: LanguageCode;
     path: {
         /**
@@ -4141,27 +4141,27 @@ export type RemoveProjectLanguagesData = {
     url: '/api/projects/{project_id}/available_languages';
 };
 
-export type RemoveProjectLanguagesErrors = {
+export type RemoveProjectLanguageErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RemoveProjectLanguagesError = RemoveProjectLanguagesErrors[keyof RemoveProjectLanguagesErrors];
+export type RemoveProjectLanguageError = RemoveProjectLanguageErrors[keyof RemoveProjectLanguageErrors];
 
-export type RemoveProjectLanguagesResponses = {
+export type RemoveProjectLanguageResponses = {
     /**
-     * Response Remove Project Languages
+     * Response Remove Project Language
      *
      * Successful Response
      */
     200: Array<LanguageDict>;
 };
 
-export type RemoveProjectLanguagesResponse = RemoveProjectLanguagesResponses[keyof RemoveProjectLanguagesResponses];
+export type RemoveProjectLanguageResponse = RemoveProjectLanguageResponses[keyof RemoveProjectLanguageResponses];
 
-export type AddProjectLanguagesData = {
+export type AddProjectLanguageData = {
     body: LanguageCode;
     path: {
         /**
@@ -4178,25 +4178,25 @@ export type AddProjectLanguagesData = {
     url: '/api/projects/{project_id}/available_languages';
 };
 
-export type AddProjectLanguagesErrors = {
+export type AddProjectLanguageErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type AddProjectLanguagesError = AddProjectLanguagesErrors[keyof AddProjectLanguagesErrors];
+export type AddProjectLanguageError = AddProjectLanguageErrors[keyof AddProjectLanguageErrors];
 
-export type AddProjectLanguagesResponses = {
+export type AddProjectLanguageResponses = {
     /**
-     * Response Add Project Languages
+     * Response Add Project Language
      *
      * Successful Response
      */
     200: Array<LanguageDict>;
 };
 
-export type AddProjectLanguagesResponse = AddProjectLanguagesResponses[keyof AddProjectLanguagesResponses];
+export type AddProjectLanguageResponse = AddProjectLanguageResponses[keyof AddProjectLanguageResponses];
 
 export type ChangeProjectStatusData = {
     body: ProjectStatusChangeRequest;
