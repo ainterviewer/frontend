@@ -2,8 +2,8 @@ import { Default, Folders } from '$lib/api';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ request }) => {
-	const cookieHeader = request.headers.get('cookie');
+export const load: PageServerLoad = async ({ locals }) => {
+	const { cookieHeader } = locals;
 
 	const [foldersRes, langRes] = await Promise.all([
 		Folders.getFolders({ headers: { cookie: cookieHeader || '' } }),

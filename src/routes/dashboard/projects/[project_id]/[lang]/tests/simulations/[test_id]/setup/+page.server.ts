@@ -2,9 +2,9 @@ import { Experiments, Projects, Synthesize, type BackgroundInfoOptionsOutput } f
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, request, fetch }) => {
+export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 	const { project_id, test_id, lang } = params;
-	const cookieHeader = request.headers.get('cookie');
+	const { cookieHeader } = locals;
 
 	const [testsResponse, guideResponse] = await Promise.all([
 		Synthesize.getTestSetups({

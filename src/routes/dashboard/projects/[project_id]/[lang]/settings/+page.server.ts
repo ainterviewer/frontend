@@ -2,8 +2,8 @@ import { Projects } from '$lib/api';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ request, params }) => {
-	const cookieHeader = request.headers.get('cookie');
+export const load: PageServerLoad = async ({ locals, params }) => {
+	const { cookieHeader } = locals;
 	const { project_id } = params;
 
 	const projectRes = await Projects.getProject({

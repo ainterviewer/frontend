@@ -1,9 +1,9 @@
 import { Analysis, Projects } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, request }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 	const { project_id, interview_id, lang } = params;
-	const cookieHeader = request.headers.get('cookie');
+	const { cookieHeader } = locals;
 
 	// Fetch messages and categories in parallel
 	const [messagesRes, categoriesRes] = await Promise.all([

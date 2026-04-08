@@ -2,7 +2,7 @@ import { Auth, Projects, type InterviewType } from '$lib/api';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ url, cookies, request }) => {
+export const load: PageServerLoad = async ({ url, cookies, request, locals }) => {
 	const project_id = url.searchParams.get('id');
 
 	if (!project_id) {
@@ -18,15 +18,14 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 		if (!cookies.get('access_token') && !cookies.get('refresh_token')) {
 			authError = true;
 		} else {
-			const cookieHeader = request.headers.get('cookie');
-			const response = await Auth.me({ headers: { cookie: cookieHeader } });
+			const response = await Auth.me({ headers: { cookie: locals.cookieHeader } });
 			if (response.error) {
 				authError = true;
 			}
 		}
 	}
 
-	const cookieHeader = request.headers.get('cookie');
+	const { cookieHeader } = locals;
 
 	const { data: interviewConfig, error: configError } = await Projects.getInterviewConfig({
 		headers: { cookie: cookieHeader },

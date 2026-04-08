@@ -4,8 +4,8 @@ import { parseProjectRoute } from '$lib/utils/urls';
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
-	const cookieHeader = request.headers.get('cookie');
+export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
+	const { cookieHeader } = locals;
 
 	const response = await Auth.me({ headers: { cookie: cookieHeader } });
 

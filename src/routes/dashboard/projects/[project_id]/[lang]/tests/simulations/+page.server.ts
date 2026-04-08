@@ -2,9 +2,9 @@ import { Synthesize } from '$lib/api';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, request, fetch }) => {
+export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 	const { project_id } = params;
-	const cookieHeader = request.headers.get('cookie');
+	const { cookieHeader } = locals;
 
 	const { data, error: fetchError } = await Synthesize.getTestSetups({
 		headers: { cookie: cookieHeader },

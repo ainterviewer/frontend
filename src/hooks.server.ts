@@ -75,22 +75,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 			throw redirect(303, '/login');
 		}
 
-		// access_token missing or expired — try to refresh then redirect
-		// so all load functions see fresh cookies in request headers
 		const needsRefresh = !accessToken || isTokenExpired(accessToken);
-		if (needsRefresh && hasRefresh) {
+		if (needsRefresh) {
+			if (!hasRefresh) {
+				// Token expired and no refresh token — dead session
+				clearAuthCookies(event.cookies);
+				throw redirect(303, '/login');
+			}
 			const ok = await serverSideRefresh(event.cookies);
 			if (!ok) {
 				clearAuthCookies(event.cookies);
 				throw redirect(303, '/login');
 			}
-			throw redirect(303, event.url.pathname + event.url.search);
-		}
-
-		// Token present but expired and no refresh token — dead session
-		if (needsRefresh) {
-			clearAuthCookies(event.cookies);
-			throw redirect(303, '/login');
+			// Successfully refreshed — fall through; event.locals.cookieHeader
+			// will carry the new tokens to all server load functions.
 		}
 	}
 
@@ -104,13 +102,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 			const needsRefresh = !accessToken || isTokenExpired(accessToken);
 
 			if (needsRefresh && hasRefresh) {
-				const ok = await serverSideRefresh(event.cookies);
-				if (ok) {
-					throw redirect(303, event.url.pathname + event.url.search);
-				}
+				await serverSideRefresh(event.cookies);
+				// On failure, let the request through — the page will handle authError.
 			}
 		}
 	}
+
+	// Propagate cookies (including any freshly refreshed ones) to all server loads.
+	event.locals.cookieHeader = event.cookies
+		.getAll()
+		.map(({ name, value }) => `${name}=${value}`)
+		.join('; ');
 
 	return resolve(event);
 };

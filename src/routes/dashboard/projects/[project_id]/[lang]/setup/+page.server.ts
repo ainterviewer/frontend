@@ -1,9 +1,9 @@
 import { Projects } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, request }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 	const { project_id, lang } = params;
-	const cookieHeader = request.headers.get('cookie');
+	const { cookieHeader } = locals;
 
 	const [consentRes, welcomeRes, guideRes] = await Promise.all([
 		Projects.getConsent({
