@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { beforeNavigate, goto, invalidateAll } from '$app/navigation';
-	import { resolve } from '$app/paths';
+	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type {
@@ -12,10 +11,9 @@
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { toast } from 'svelte-sonner';
-	import AddLanguageModal from './AddLanguageModal.svelte';
+	import SetupActionBar from '../SetupActionBar.svelte';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
-	import LanguageSelector from './LanguageSelector.svelte';
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 	import { downloadGuidePdf } from './exportPdf';
@@ -38,7 +36,6 @@
 	// State
 	let saving = $state(false);
 	let exporting = $state(false);
-	let showExportMenu = $state(false);
 	// svelte-ignore state_referenced_locally
 	let guide = $state<InterviewGuideOutput>(
 		initialGuide ?? {
@@ -111,8 +108,6 @@
 	let showGenerateQuestionModal = $state(false);
 	let generatingQuestionSectionId = $state<string | null>(null);
 	let generatingQuestionSectionIdx = $state<number | null>(null);
-
-	let showAddLanguageModal = $state(false);
 
 	let activeId = $state('');
 
@@ -223,45 +218,6 @@
 		generatingQuestionSectionIdx = null;
 	}
 
-	function handleLanguageSwitch(code: string) {
-		const basePath = page.url.pathname.replace(`/${lang}/`, `/${code}/`);
-		goto(basePath);
-	}
-
-	async function handleAddLanguage(code: string) {
-		const { error } = await Projects.addProjectLanguage({
-			path: { project_id: projectId },
-			body: code
-		});
-		if (error) {
-			throw new Error('Failed to add language');
-		}
-		await invalidateAll();
-		toast.success('Language added');
-	}
-
-	async function handleRemoveLanguage(code: string) {
-		if (availableLanguages.length <= 1) return;
-		const { error } = await Projects.removeProjectLanguage({
-			path: { project_id: projectId },
-			body: code
-		});
-		if (error) {
-			console.error('Failed to remove language', error);
-			toast.error('Failed to remove language');
-			return;
-		}
-		toast.success('Language removed');
-		if (code === lang) {
-			const remaining = availableLanguages.find((l: LanguageDict) => l.code !== code);
-			if (remaining) {
-				handleLanguageSwitch(remaining.code);
-				return;
-			}
-		}
-		await invalidateAll();
-	}
-
 	function addTimedMessage() {
 		guide.timed_messages!.push({
 			message: '',
@@ -295,7 +251,6 @@
 
 	async function exportPdf(detailed: boolean) {
 		exporting = true;
-		showExportMenu = false;
 		try {
 			await downloadGuidePdf({
 				guide,
@@ -376,11 +331,6 @@
 		if (getSnapshot() !== savedSnapshot) {
 			e.preventDefault();
 			e.returnValue = '';
-		}
-	}}
-	onclick={(e) => {
-		if (showExportMenu && !(e.target as HTMLElement)?.closest('.export-pdf-menu')) {
-			showExportMenu = false;
 		}
 	}}
 />
@@ -608,86 +558,28 @@
 				</button>
 			</div>
 
-			<!-- Actions -->
-			<div
-				class="sticky bottom-0 ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
-			>
-				<LanguageSelector
-					currentLang={lang}
-					{availableLanguages}
-					onLanguageSwitch={handleLanguageSwitch}
-					onAddLanguage={() => (showAddLanguageModal = true)}
-					onRemoveLanguage={handleRemoveLanguage}
-				/>
-				<a
-					class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
-					href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
-					target="_blank"
-					rel="opener"
-				>
-					<i class="fa-solid fa-person-circle-question"></i>
-					Try Interview
-				</a>
-				<div class="export-pdf-menu relative">
-					<button
-						class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-						onclick={() => (showExportMenu = !showExportMenu)}
-						disabled={exporting}
-					>
-						<i class="fa-solid fa-file-export"></i>
-						{exporting ? 'Exporting...' : 'Export'}
-					</button>
-					{#if showExportMenu}
-						<div
-							class="absolute bottom-full left-0 mb-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
-						>
-							<button
-								class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-								onclick={() => exportPdf(false)}
-							>
-								<i class="fa-solid fa-file-lines"></i>
-								Simple PDF
-							</button>
-							<button
-								class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-								onclick={() => exportPdf(true)}
-							>
-								<i class="fa-solid fa-file-circle-check"></i>
-								Detailed PDF
-							</button>
-							<button
-								class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-								onclick={() => {
-									exportJson();
-									showExportMenu = false;
-								}}
-							>
-								<i class="fa-solid fa-file-code"></i>
-								JSON
-							</button>
-						</div>
-					{/if}
-				</div>
-				<button
-					class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark"
-					onclick={async () => {
-						saving = true;
-						await saveGuide(
-							projectId,
-							lang,
-							guide,
-							guideStore.localSections,
-							guideStore.localQuestions
-						);
-						savedSnapshot = getSnapshot();
-						saving = false;
-					}}
-					disabled={saving}
-				>
-					<i class="fa-solid fa-floppy-disk"></i>
-					Save Changes
-				</button>
-			</div>
+			<SetupActionBar
+				{projectId}
+				{lang}
+				{availableLanguages}
+				{saving}
+				{exporting}
+				onSave={async () => {
+					saving = true;
+					await saveGuide(
+						projectId,
+						lang,
+						guide,
+						guideStore.localSections,
+						guideStore.localQuestions
+					);
+					savedSnapshot = getSnapshot();
+					saving = false;
+				}}
+				onExportSimplePdf={() => exportPdf(false)}
+				onExportDetailedPdf={() => exportPdf(true)}
+				onExportJson={exportJson}
+			/>
 		</div>
 	</div>
 </form>
@@ -711,10 +603,4 @@
 	title="Generate Question"
 	placeholder="Describe the question you want to generate..."
 	onGenerate={handleGenerateQuestion}
-/>
-
-<AddLanguageModal
-	bind:open={showAddLanguageModal}
-	onAdd={handleAddLanguage}
-	existingLanguageCodes={availableLanguages.map((l: LanguageDict) => l.code)}
 />

@@ -5,4 +5,8 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<Consent initialData={data.consent} />
+<Consent
+	initialData={data.consent}
+	availableLanguages={data.available_languages}
+	projectName={data.project_name}
+/>

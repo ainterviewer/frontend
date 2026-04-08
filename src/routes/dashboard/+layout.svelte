@@ -22,7 +22,7 @@
 			sidebar.collapsed ? 'ml-[70px]' : 'ml-[250px]'
 		].join(' ')}
 	>
-		<div class="w-[90%]">
+		<div class="min-h-full w-[90%]">
 			{@render children()}
 		</div>
 	</main>

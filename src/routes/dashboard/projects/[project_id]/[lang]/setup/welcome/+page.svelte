@@ -5,4 +5,8 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<Welcome initialData={data.welcome} />
+<Welcome
+	initialData={data.welcome}
+	availableLanguages={data.available_languages}
+	projectName={data.project_name}
+/>
