@@ -50,11 +50,24 @@
 
 	// UI State
 	let activeAnnotationMessageId = $state<string | null>(null);
-	let activeCommentMessageId = $state<string | null>(null);
-	let commentText = $state('');
+	let openCommentIds = $state<Set<string>>(new Set());
+	let commentTexts = $state<Map<string, string>>(new Map());
 	let savingAnnotation = $state(false);
-	let savingComment = $state(false);
+	let savingCommentIds = $state<Set<string>>(new Set());
 	let showQuestionDropdown = $state(false);
+	let showCommentModal = $state(false);
+	let commentModalMessageId = $state<string | null>(null);
+
+	// Check if screen is wide enough for margin comments
+	let useMarginComments = $state(true);
+
+	function checkScreenWidth() {
+		useMarginComments = window.innerWidth >= 1280;
+	}
+
+	$effect(() => {
+		checkScreenWidth();
+	});
 
 	// Search State (local form state)
 	let searchText = $state('');
@@ -353,54 +366,11 @@
 		if (!projectId) return;
 		loading = true;
 		error = null;
-		try {
-			const [catsRes, guideRes, msgsRes] = await Promise.all([
-				Analysis.getAnalysisCategories({ path: { project_id: projectId } }),
-				Projects.getGuide({ path: { project_id: projectId, lang: lang } }).catch((err) => {
-					console.warn('Failed to load guide:', err);
-					return { data: null };
-				}),
-				Analysis.getFilteredMessages({
-					path: { project_id: projectId },
-					body: {
-						category_ids: categoryIdsParam.length > 0 ? categoryIdsParam : null,
-						search_text: searchTextParam || null,
-						exact_match: exactMatchParam || undefined,
-						case_sensitive: caseSensitiveParam || undefined,
-						questions: questionsParam.length > 0 ? questionsParam : null
-					},
-					query: {
-						limit,
-						skip: 0
-					}
-				})
-			]);
 
-			if (catsRes.data) categories = catsRes.data;
-			if (guideRes.data) guide = guideRes.data;
-			if (msgsRes.data) {
-				rawMessages = msgsRes.data;
-				hasMore = msgsRes.data.length === limit;
-			}
-		} catch (e) {
-			console.error('Failed to load data', e);
-			error = 'Failed to load data';
-		} finally {
-			loading = false;
-		}
-	}
-
-	$effect(() => {
-		if (projectId) loadData();
-	});
-
-	async function loadMore() {
-		if (loading || loadingMore || !hasMore || !projectId) return;
-
-		loadingMore = true;
-		try {
-			const skip = rawMessages.length;
-			const { data, error: err } = await Analysis.getFilteredMessages({
+		const [catsRes, guideRes, msgsRes] = await Promise.all([
+			Analysis.getAnalysisCategories({ path: { project_id: projectId } }),
+			Projects.getGuide({ path: { project_id: projectId, lang: lang } }),
+			Analysis.getFilteredMessages({
 				path: { project_id: projectId },
 				body: {
 					category_ids: categoryIdsParam.length > 0 ? categoryIdsParam : null,
@@ -411,20 +381,75 @@
 				},
 				query: {
 					limit,
-					skip
+					skip: 0
 				}
-			});
+			})
+		]);
 
-			if (err) throw err;
-			if (data) {
-				rawMessages = [...rawMessages, ...data];
-				hasMore = data.length === limit;
-			}
-		} catch (e) {
-			console.error('Failed to load more messages', e);
-		} finally {
-			loadingMore = false;
+		if (catsRes.error) {
+			console.error('Failed to load categories', catsRes.error);
+			error = 'Failed to load data';
+			loading = false;
+			return;
 		}
+		if (msgsRes.error) {
+			console.error('Failed to load messages', msgsRes.error);
+			error = 'Failed to load data';
+			loading = false;
+			return;
+		}
+
+		if (catsRes.data) categories = catsRes.data;
+		// Guide is non-critical — don't fail if it errors
+		if (guideRes.error) {
+			console.warn('Failed to load guide:', guideRes.error);
+		} else if (guideRes.data) {
+			guide = guideRes.data;
+		}
+		if (msgsRes.data) {
+			rawMessages = msgsRes.data;
+			hasMore = msgsRes.data.length === limit;
+		}
+
+		loading = false;
+	}
+
+	$effect(() => {
+		if (projectId) loadData();
+	});
+
+	async function loadMore() {
+		if (loading || loadingMore || !hasMore || !projectId) return;
+
+		loadingMore = true;
+
+		const skip = rawMessages.length;
+		const { data, error: err } = await Analysis.getFilteredMessages({
+			path: { project_id: projectId },
+			body: {
+				category_ids: categoryIdsParam.length > 0 ? categoryIdsParam : null,
+				search_text: searchTextParam || null,
+				exact_match: exactMatchParam || undefined,
+				case_sensitive: caseSensitiveParam || undefined,
+				questions: questionsParam.length > 0 ? questionsParam : null
+			},
+			query: {
+				limit,
+				skip
+			}
+		});
+
+		if (err) {
+			console.error('Failed to load more messages', err);
+			loadingMore = false;
+			return;
+		}
+		if (data) {
+			rawMessages = [...rawMessages, ...data];
+			hasMore = data.length === limit;
+		}
+
+		loadingMore = false;
 	}
 
 	// Handle search form submission
@@ -593,6 +618,7 @@
 			const existingAnnotation = messageAnnotations.get(messageId);
 			// Preserve existing comment when saving annotations
 			const existingComment = existingAnnotation?.comment || null;
+			console.log(existingComment);
 
 			if (existingAnnotation) {
 				const { data: updatedAnnotation, error } = await Analysis.updateMessageAnnotation({
@@ -645,10 +671,14 @@
 			return;
 		}
 
-		savingComment = true;
+		const newSaving = new Set(savingCommentIds);
+		newSaving.add(messageId);
+		savingCommentIds = newSaving;
+
 		try {
 			const existingAnnotation = messageAnnotations.get(messageId);
-			const newComment = commentText.trim() || null;
+			const text = commentTexts.get(messageId) ?? '';
+			const newComment = text.trim() || null;
 
 			if (existingAnnotation) {
 				const { data: updatedAnnotation, error } = await Analysis.updateMessageAnnotation({
@@ -687,20 +717,56 @@
 				}
 			}
 
-			activeCommentMessageId = null;
-			commentText = '';
+			closeCommentInput(messageId);
 		} catch (e) {
 			console.error('Error saving comment:', e);
 			toast.error('Error saving comment');
 		} finally {
-			savingComment = false;
+			const newSaving = new Set(savingCommentIds);
+			newSaving.delete(messageId);
+			savingCommentIds = newSaving;
 		}
 	}
 
 	function openCommentInput(messageId: string) {
 		const existingAnnotation = messageAnnotations.get(messageId);
-		commentText = existingAnnotation?.comment || '';
-		activeCommentMessageId = messageId;
+		const newTexts = new Map(commentTexts);
+		newTexts.set(messageId, existingAnnotation?.comment || '');
+		commentTexts = newTexts;
+
+		if (useMarginComments) {
+			const newOpen = new Set(openCommentIds);
+			newOpen.add(messageId);
+			openCommentIds = newOpen;
+		} else {
+			commentModalMessageId = messageId;
+			showCommentModal = true;
+		}
+	}
+
+	function closeCommentInput(messageId: string) {
+		const newOpen = new Set(openCommentIds);
+		newOpen.delete(messageId);
+		openCommentIds = newOpen;
+
+		const newTexts = new Map(commentTexts);
+		newTexts.delete(messageId);
+		commentTexts = newTexts;
+
+		if (commentModalMessageId === messageId) {
+			showCommentModal = false;
+			commentModalMessageId = null;
+		}
+	}
+
+	function getCommentText(messageId: string): string {
+		return commentTexts.get(messageId) ?? '';
+	}
+
+	function setCommentText(messageId: string, value: string) {
+		const newTexts = new Map(commentTexts);
+		newTexts.set(messageId, value);
+		commentTexts = newTexts;
 	}
 
 	async function handleDeleteAnnotation(messageId: string) {
@@ -739,23 +805,21 @@
 		newLoading.add(messageId);
 		messageContext = { ...messageContext, loadingBefore: newLoading };
 
-		try {
-			const response = await Analysis.getMessageContextBefore({
-				path: { project_id: projectId, interview_id: interviewId, message_id: messageId }
-			});
+		const { data, error: fetchErr } = await Analysis.getMessageContextBefore({
+			path: { project_id: projectId, interview_id: interviewId, message_id: messageId }
+		});
 
-			if (response.data) {
-				const newMap = new Map(messageContext.before);
-				newMap.set(messageId, response.data);
-				messageContext = { ...messageContext, before: newMap };
-			}
-		} catch (e) {
-			console.error('Error fetching context before:', e);
-		} finally {
-			const newLoading = new Set(messageContext.loadingBefore);
-			newLoading.delete(messageId);
-			messageContext = { ...messageContext, loadingBefore: newLoading };
+		if (fetchErr) {
+			console.error('Error fetching context before:', fetchErr);
+		} else if (data) {
+			const newMap = new Map(messageContext.before);
+			newMap.set(messageId, data);
+			messageContext = { ...messageContext, before: newMap };
 		}
+
+		const doneLoading = new Set(messageContext.loadingBefore);
+		doneLoading.delete(messageId);
+		messageContext = { ...messageContext, loadingBefore: doneLoading };
 	}
 
 	async function fetchContextAfter(messageId: string, interviewId: string) {
@@ -770,23 +834,21 @@
 		newLoading.add(messageId);
 		messageContext = { ...messageContext, loadingAfter: newLoading };
 
-		try {
-			const response = await Analysis.getMessageContextAfter({
-				path: { project_id: projectId, interview_id: interviewId, message_id: messageId }
-			});
+		const { data, error: fetchErr } = await Analysis.getMessageContextAfter({
+			path: { project_id: projectId, interview_id: interviewId, message_id: messageId }
+		});
 
-			if (response.data) {
-				const newMap = new Map(messageContext.after);
-				newMap.set(messageId, response.data);
-				messageContext = { ...messageContext, after: newMap };
-			}
-		} catch (e) {
-			console.error('Error fetching context after:', e);
-		} finally {
-			const newLoading = new Set(messageContext.loadingAfter);
-			newLoading.delete(messageId);
-			messageContext = { ...messageContext, loadingAfter: newLoading };
+		if (fetchErr) {
+			console.error('Error fetching context after:', fetchErr);
+		} else if (data) {
+			const newMap = new Map(messageContext.after);
+			newMap.set(messageId, data);
+			messageContext = { ...messageContext, after: newMap };
 		}
+
+		const doneLoading = new Set(messageContext.loadingAfter);
+		doneLoading.delete(messageId);
+		messageContext = { ...messageContext, loadingAfter: doneLoading };
 	}
 </script>
 
@@ -1130,7 +1192,8 @@
 
 	<!-- Content -->
 	<div
-		class="flex-1 overflow-y-auto bg-gray-50 p-4"
+		class="flex-1 overflow-y-auto bg-gray-50 p-4 xl:pr-[320px]"
+		style="overflow-x: clip;"
 		onscroll={(e) => {
 			const target = e.target as HTMLElement;
 			if (target.scrollTop + target.clientHeight >= target.scrollHeight - 100) {
@@ -1138,321 +1201,417 @@
 			}
 		}}
 	>
-		<div class="mx-auto min-h-full max-w-4xl space-y-6">
-			{#if loading}
-				<div class="flex justify-center py-8">
-					<i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
-				</div>
-			{:else if error}
-				<div class="rounded-md bg-red-50 p-4 text-center text-red-700">
-					<p>{error}</p>
-				</div>
-			{:else if groupedMessages.length === 0}
-				<div class="rounded-lg bg-white p-8 text-center shadow-sm">
-					<i class="fa-regular fa-comments mb-3 text-3xl text-gray-400"></i>
-					<p class="text-gray-500">
-						{#if searchTextParam || selectedCategories.length > 0}
-							No messages found matching your filters.
-						{:else}
-							No messages found.
-						{/if}
-					</p>
-				</div>
-			{:else}
-				{#each groupedMessages as group (group.interviewId)}
-					<div class="overflow-hidden rounded-lg bg-white shadow-sm">
-						<!-- Interview Header -->
-						<div
-							class="flex items-center justify-between border-b border-gray-200 bg-gray-100 px-4 py-3"
-						>
-							<h3 class="text-sm font-semibold text-gray-700">
-								<i class="fa-solid fa-file-lines mr-2"></i>
-								Interview {group.interviewId}
-							</h3>
-							<a
-								href={resolve(
-									`/dashboard/projects/${projectId}/${lang}/interviews/${group.interviewId}`
-								)}
-								class="text-xs text-blue-600 hover:text-blue-800 hover:underline"
-								target="_blank"
+		<div class="mx-auto min-h-full max-w-4xl">
+			<div class="space-y-6">
+				{#if loading}
+					<div class="flex justify-center py-8">
+						<i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+					</div>
+				{:else if error}
+					<div class="rounded-md bg-red-50 p-4 text-center text-red-700">
+						<p>{error}</p>
+					</div>
+				{:else if groupedMessages.length === 0}
+					<div class="rounded-lg bg-white p-8 text-center shadow-sm">
+						<i class="fa-regular fa-comments mb-3 text-3xl text-gray-400"></i>
+						<p class="text-gray-500">
+							{#if searchTextParam || selectedCategories.length > 0}
+								No messages found matching your filters.
+							{:else}
+								No messages found.
+							{/if}
+						</p>
+					</div>
+				{:else}
+					{#each groupedMessages as group (group.interviewId)}
+						<div class="rounded-lg bg-white shadow-sm xl:overflow-visible">
+							<!-- Interview Header -->
+							<div
+								class="flex items-center justify-between border-b border-gray-200 bg-gray-100 px-4 py-3"
 							>
-								View Full Interview <i class="fa-solid fa-external-link-alt ml-1"></i>
-							</a>
-						</div>
+								<h3 class="text-sm font-semibold text-gray-700">
+									<i class="fa-solid fa-file-lines mr-2"></i>
+									Interview {group.interviewId}
+								</h3>
+								<a
+									href={resolve(
+										`/dashboard/projects/${projectId}/${lang}/interviews/${group.interviewId}`
+									)}
+									class="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+									target="_blank"
+								>
+									View Full Interview <i class="fa-solid fa-external-link-alt ml-1"></i>
+								</a>
+							</div>
 
-						<div class="flex flex-col gap-4 p-4">
-							{#each group.items as item, itemIndex (item.type === 'message' ? item.data.id : `ctrl-${item.action}-${item.targetId}`)}
-								{#if item.type === 'message'}
-									{@const msg = item.data}
-									{@const messageId = msg.id}
-									{@const annotation = messageAnnotations.get(messageId)}
-									{@const annotationSummary = annotation ? getAnnotationSummary(annotation) : null}
+							<div class="flex flex-col gap-4 p-4">
+								{#each group.items as item, itemIndex (item.type === 'message' ? item.data.id : `ctrl-${item.action}-${item.targetId}`)}
+									{#if item.type === 'message'}
+										{@const msg = item.data}
+										{@const messageId = msg.id}
+										{@const annotation = messageAnnotations.get(messageId)}
+										{@const annotationSummary = annotation
+											? getAnnotationSummary(annotation)
+											: null}
+										{@const isCommentOpen = openCommentIds.has(messageId)}
+										{@const isSavingComment = savingCommentIds.has(messageId)}
+										{@const hasMarginContent =
+											useMarginComments && (isCommentOpen || annotation?.comment)}
 
-									<div
-										class={msg.type === 'system'
-											? 'my-2 text-center text-sm text-gray-500'
-											: `group relative ${msg.isContext ? 'opacity-60' : ''}`}
-									>
-										{#if msg.type === 'system'}
-											{msg.text}
-										{:else}
-											{@const isMainQuestion =
-												msg.raw.sub_question === null || msg.raw.sub_question === 0}
-											{@const hasContextBefore = messageContext.before.has(messageId)}
-											{@const hasContextAfter = messageContext.after.has(messageId)}
-											{@const isLoadingBefore = messageContext.loadingBefore.has(messageId)}
-											{@const isLoadingAfter = messageContext.loadingAfter.has(messageId)}
+										<div
+											class={msg.type === 'system'
+												? 'my-2 text-center text-sm text-gray-500'
+												: `group relative ${msg.isContext ? 'opacity-60' : ''}`}
+										>
+											{#if msg.type === 'system'}
+												{msg.text}
+											{:else}
+												{@const isMainQuestion =
+													msg.raw.sub_question === null || msg.raw.sub_question === 0}
+												{@const hasContextBefore = messageContext.before.has(messageId)}
+												{@const hasContextAfter = messageContext.after.has(messageId)}
+												{@const isLoadingBefore = messageContext.loadingBefore.has(messageId)}
+												{@const isLoadingAfter = messageContext.loadingAfter.has(messageId)}
 
-											<!-- Context Before Button (only if not loaded and has gap) -->
-											{#if !hasContextBefore && msg.hasGapBefore && (!isMainQuestion || msg.raw.role === 'user')}
-												<div class="mb-2 flex justify-center">
-													<button
-														type="button"
-														onclick={() => fetchContextBefore(messageId, group.interviewId)}
-														class="text-xs text-gray-500 transition-colors hover:text-gray-700"
-														disabled={isLoadingBefore}
-													>
-														{#if isLoadingBefore}
-															<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-															Loading context...
-														{:else}
-															<i class="fa-solid fa-plus mr-1"></i>
-															Show context before
-														{/if}
-													</button>
-												</div>
-											{/if}
+												<!-- Context Before Button (only if not loaded and has gap) -->
+												{#if !hasContextBefore && msg.hasGapBefore && (!isMainQuestion || msg.raw.role === 'user')}
+													<div class="mb-2 flex justify-center">
+														<button
+															type="button"
+															onclick={() => fetchContextBefore(messageId, group.interviewId)}
+															class="text-xs text-gray-500 transition-colors hover:text-gray-700"
+															disabled={isLoadingBefore}
+														>
+															{#if isLoadingBefore}
+																<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+																Loading context...
+															{:else}
+																<i class="fa-solid fa-plus mr-1"></i>
+																Show context before
+															{/if}
+														</button>
+													</div>
+												{/if}
 
-											<div class="flex items-start gap-2">
-												<div class="min-w-0 flex-1">
-													<InterviewMessage
-														message={msg}
-														lang={lang || 'en'}
-														isLast={false}
-														readonly={true}
-														onFeedback={() => {}}
-														onSkip={() => {}}
-														onSurveyAnswer={() => {}}
-													/>
+												<div class="flex items-start gap-2">
+													<div class="min-w-0 flex-1">
+														<InterviewMessage
+															message={msg}
+															lang={lang || 'en'}
+															isLast={false}
+															readonly={true}
+															onFeedback={() => {}}
+															onSkip={() => {}}
+															onSurveyAnswer={() => {}}
+														/>
 
-													<!-- Annotation Summary & Annotate Badge -->
-													<div
-														class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type === 'received'
-															? 'ml-2.5 sm:ml-[50px]'
-															: 'mr-2.5 justify-end sm:mr-[50px]'}"
-													>
-														{#if msg.type !== 'received'}
-															<!-- Annotate Badge (shown on hover) -->
-															<button
-																type="button"
-																class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
-																onclick={() => {
-																	activeAnnotationMessageId =
-																		activeAnnotationMessageId === messageId ? null : messageId;
-																}}
-															>
-																<i class="fa-solid fa-tag text-[8px]"></i>
-																Annotate
-															</button>
-														{/if}
-														{#if annotationSummary}
-															{#each annotationSummary.tags as tag}
-																<span
-																	class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-																	style="background-color: {tag.color}; color: {getContrastColor(
-																		tag.color
-																	)}"
+														<!-- Annotation Summary & Annotate Badge -->
+														<div
+															class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type ===
+															'received'
+																? 'ml-2.5 sm:ml-[50px]'
+																: 'mr-2.5 justify-end sm:mr-[50px]'}"
+														>
+															{#if msg.type !== 'received'}
+																<!-- Annotate Badge (shown on hover) -->
+																<button
+																	type="button"
+																	class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
+																	onclick={() => {
+																		activeAnnotationMessageId =
+																			activeAnnotationMessageId === messageId ? null : messageId;
+																	}}
 																>
-																	{tag.name}
-																</span>
-															{/each}
-															{#each annotationSummary.scores as score}
-																<span
-																	class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-																	style="background-color: {score.color}; color: {getContrastColor(
-																		score.color
-																	)}"
+																	<i class="fa-solid fa-tag text-[8px]"></i>
+																	Annotate
+																</button>
+															{/if}
+															{#if annotationSummary}
+																{#each annotationSummary.tags as tag}
+																	<span
+																		class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+																		style="background-color: {tag.color}; color: {getContrastColor(
+																			tag.color
+																		)}"
+																	>
+																		{tag.name}
+																	</span>
+																{/each}
+																{#each annotationSummary.scores as score}
+																	<span
+																		class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+																		style="background-color: {score.color}; color: {getContrastColor(
+																			score.color
+																		)}"
+																	>
+																		{score.name}: {score.value}
+																	</span>
+																{/each}
+															{/if}
+															{#if msg.type === 'received'}
+																<!-- Annotate Badge (shown on hover) -->
+																<button
+																	type="button"
+																	class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
+																	onclick={() => {
+																		activeAnnotationMessageId =
+																			activeAnnotationMessageId === messageId ? null : messageId;
+																	}}
 																>
-																	{score.name}: {score.value}
-																</span>
-															{/each}
-														{/if}
-														{#if msg.type === 'received'}
-															<!-- Annotate Badge (shown on hover) -->
-															<button
-																type="button"
-																class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
-																onclick={() => {
-																	activeAnnotationMessageId =
-																		activeAnnotationMessageId === messageId ? null : messageId;
-																}}
-															>
-																<i class="fa-solid fa-tag text-[8px]"></i>
-																Annotate
-															</button>
-														{/if}
+																	<i class="fa-solid fa-tag text-[8px]"></i>
+																	Annotate
+																</button>
+															{/if}
+														</div>
+													</div>
+
+													<!-- Comment Button -->
+													<div class="flex-shrink-0 self-start pt-2">
+														<button
+															type="button"
+															class="flex h-7 w-7 items-center justify-center rounded-full transition-all {annotation?.comment
+																? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
+																: 'bg-gray-100 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600'}"
+															onclick={() => openCommentInput(messageId)}
+															title={annotation?.comment ? 'Edit comment' : 'Add comment'}
+														>
+															<i class="fa-solid fa-comment text-xs"></i>
+														</button>
 													</div>
 												</div>
 
-												<!-- Comment Button with Margin Comment -->
-												<div class="relative flex-shrink-0 self-start pt-2">
+												<!-- Inline comment for small screens -->
+												{#if !useMarginComments && annotation?.comment}
 													<button
 														type="button"
-														class="flex h-7 w-7 items-center justify-center rounded-full transition-all {annotation?.comment
-															? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
-															: 'bg-gray-100 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600'}"
+														class="group/comment mt-2 w-full cursor-pointer rounded-lg border border-amber-200 bg-amber-50 p-2 text-left transition-shadow hover:shadow-sm"
 														onclick={() => openCommentInput(messageId)}
-														title={annotation?.comment ? 'Edit comment' : 'Add comment'}
 													>
-														<i class="fa-solid fa-comment text-xs"></i>
+														<p class="text-sm whitespace-pre-wrap text-gray-700">
+															{annotation.comment}
+														</p>
+														<div class="mt-1 flex items-center justify-end">
+															<i
+																class="fa-solid fa-pen text-[10px] text-gray-400 opacity-0 transition-opacity group-hover/comment:opacity-100"
+															></i>
+														</div>
 													</button>
+												{/if}
 
-													<!-- Margin Comment Input (Google Docs style) -->
-													{#if activeCommentMessageId === messageId}
-														<div
-															class="comment-input-container absolute top-0 left-full z-20 ml-2 w-72"
+												<!-- Annotation Panel -->
+												{#if activeAnnotationMessageId === messageId}
+													<div class="annotation-panel-container mt-2 max-w-2xl px-4 sm:px-12">
+														<MessageAnnotationPanel
+															{projectId}
+															{categories}
+															{annotation}
+															saving={savingAnnotation}
+															onSave={(values, shouldClose) =>
+																handleSaveAnnotation(messageId, values, shouldClose)}
+															onDelete={annotation
+																? () => handleDeleteAnnotation(messageId)
+																: undefined}
+															onCancel={() => (activeAnnotationMessageId = null)}
+															onCategoryCreated={() => loadData()}
+														/>
+													</div>
+												{/if}
+
+												<!-- Context After Button (only if not loaded and has gap) -->
+												{#if !hasContextAfter && msg.hasGapAfter && !msg.raw.is_introduction}
+													<div class="mt-2 flex justify-center">
+														<button
+															type="button"
+															onclick={() => fetchContextAfter(messageId, group.interviewId)}
+															class="text-xs text-gray-500 transition-colors hover:text-gray-700"
+															disabled={isLoadingAfter}
 														>
-															<div class="rounded-lg border border-gray-200 bg-white shadow-lg">
-																<div
-																	class="flex items-center justify-between border-b border-gray-100 px-3 py-2"
+															{#if isLoadingAfter}
+																<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+																Loading context...
+															{:else}
+																<i class="fa-solid fa-plus mr-1"></i>
+																Show context after
+															{/if}
+														</button>
+													</div>
+												{/if}
+											{/if}
+
+											<!-- Margin Comment (positioned in right margin on xl screens) -->
+											{#if hasMarginContent}
+												<div class="absolute top-0 left-full ml-4 hidden w-72 pl-4 xl:block">
+													{#if isCommentOpen}
+														<div class="rounded-lg border border-blue-200 bg-white shadow-md">
+															<div
+																class="flex items-center justify-between border-b border-gray-100 px-3 py-2"
+															>
+																<span class="text-xs font-medium text-gray-600">
+																	{annotation?.comment ? 'Edit Comment' : 'Add Comment'}
+																</span>
+																<button
+																	type="button"
+																	class="text-gray-400 hover:text-gray-600"
+																	onclick={() => closeCommentInput(messageId)}
 																>
-																	<span class="text-xs font-medium text-gray-600">
-																		{annotation?.comment ? 'Edit Comment' : 'Add Comment'}
-																	</span>
+																	<i class="fa-solid fa-times text-xs"></i>
+																</button>
+															</div>
+															<div class="p-3">
+																<textarea
+																	value={getCommentText(messageId)}
+																	oninput={(e) =>
+																		setCommentText(
+																			messageId,
+																			(e.target as HTMLTextAreaElement).value
+																		)}
+																	rows="3"
+																	class="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+																	placeholder="Add a comment..."
+																></textarea>
+																<div class="mt-2 flex justify-end gap-2">
 																	<button
 																		type="button"
-																		class="text-gray-400 hover:text-gray-600"
-																		onclick={() => {
-																			activeCommentMessageId = null;
-																			commentText = '';
-																		}}
+																		class="rounded px-3 py-1 text-xs text-gray-600 hover:bg-gray-100"
+																		onclick={() => closeCommentInput(messageId)}
 																	>
-																		<i class="fa-solid fa-times text-xs"></i>
+																		Cancel
+																	</button>
+																	<button
+																		type="button"
+																		class="rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+																		onclick={() => handleSaveComment(messageId)}
+																		disabled={isSavingComment}
+																	>
+																		{#if isSavingComment}
+																			<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+																		{/if}
+																		Save
 																	</button>
 																</div>
-																<div class="p-3">
-																	<textarea
-																		bind:value={commentText}
-																		rows="3"
-																		class="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-																		placeholder="Add a comment..."
-																	></textarea>
-																	<div class="mt-2 flex justify-end gap-2">
-																		<button
-																			type="button"
-																			class="rounded px-3 py-1 text-xs text-gray-600 hover:bg-gray-100"
-																			onclick={() => {
-																				activeCommentMessageId = null;
-																				commentText = '';
-																			}}
-																		>
-																			Cancel
-																		</button>
-																		<button
-																			type="button"
-																			class="rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-																			onclick={() => handleSaveComment(messageId)}
-																			disabled={savingComment}
-																		>
-																			{#if savingComment}
-																				<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-																			{/if}
-																			Save
-																		</button>
-																	</div>
-																</div>
+															</div>
+														</div>
+													{:else if annotation?.comment}
+														<div
+															class="group/comment cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
+															role="button"
+															tabindex="0"
+															onclick={() => openCommentInput(messageId)}
+															onkeydown={(e) => {
+																if (e.key === 'Enter') openCommentInput(messageId);
+															}}
+														>
+															<p class="text-sm whitespace-pre-wrap text-gray-700">
+																{annotation.comment}
+															</p>
+															<div class="mt-1 flex items-center justify-end">
+																<i
+																	class="fa-solid fa-pen text-[10px] text-gray-400 opacity-0 transition-opacity group-hover/comment:opacity-100"
+																></i>
 															</div>
 														</div>
 													{/if}
 												</div>
-											</div>
-
-											<!-- Annotation Panel -->
-											{#if activeAnnotationMessageId === messageId}
-												<div class="annotation-panel-container mt-2 max-w-2xl px-4 sm:px-12">
-													<MessageAnnotationPanel
-														{projectId}
-														{categories}
-														{annotation}
-														saving={savingAnnotation}
-														onSave={(values, shouldClose) =>
-															handleSaveAnnotation(messageId, values, shouldClose)}
-														onDelete={annotation
-															? () => handleDeleteAnnotation(messageId)
-															: undefined}
-														onCancel={() => (activeAnnotationMessageId = null)}
-														onCategoryCreated={() => loadData()}
-													/>
-												</div>
 											{/if}
-
-											<!-- Context After Button (only if not loaded and has gap) -->
-											{#if !hasContextAfter && msg.hasGapAfter && !msg.raw.is_introduction}
-												<div class="mt-2 flex justify-center">
-													<button
-														type="button"
-														onclick={() => fetchContextAfter(messageId, group.interviewId)}
-														class="text-xs text-gray-500 transition-colors hover:text-gray-700"
-														disabled={isLoadingAfter}
-													>
-														{#if isLoadingAfter}
-															<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-															Loading context...
-														{:else}
-															<i class="fa-solid fa-plus mr-1"></i>
-															Show context after
-														{/if}
-													</button>
-												</div>
-											{/if}
-										{/if}
-									</div>
-								{:else if item.type === 'context-control'}
-									<div class="my-2 flex justify-center">
-										<button
-											type="button"
-											onclick={() => {
-												if (item.action === 'hide-before') {
-													fetchContextBefore(item.targetId, item.interviewId);
-												} else {
-													fetchContextAfter(item.targetId, item.interviewId);
-												}
-											}}
-											class="flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-										>
-											<i class="fa-solid fa-minus text-[10px]"></i>
-											{item.action === 'hide-before' ? 'Hide context before' : 'Hide context after'}
-										</button>
-									</div>
-								{/if}
-							{/each}
+										</div>
+									{:else if item.type === 'context-control'}
+										<div class="my-2 flex justify-center">
+											<button
+												type="button"
+												onclick={() => {
+													if (item.action === 'hide-before') {
+														fetchContextBefore(item.targetId, item.interviewId);
+													} else {
+														fetchContextAfter(item.targetId, item.interviewId);
+													}
+												}}
+												class="flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+											>
+												<i class="fa-solid fa-minus text-[10px]"></i>
+												{item.action === 'hide-before'
+													? 'Hide context before'
+													: 'Hide context after'}
+											</button>
+										</div>
+									{/if}
+								{/each}
+							</div>
 						</div>
-					</div>
-				{/each}
+					{/each}
 
-				{#if loadingMore}
-					<div class="flex justify-center py-4">
-						<i class="fas fa-spinner fa-spin text-xl text-gray-400"></i>
-					</div>
+					{#if loadingMore}
+						<div class="flex justify-center py-4">
+							<i class="fas fa-spinner fa-spin text-xl text-gray-400"></i>
+						</div>
+					{/if}
 				{/if}
-			{/if}
+			</div>
 		</div>
 	</div>
 </div>
 
+<!-- Comment Modal (small screens) -->
+{#if showCommentModal && commentModalMessageId}
+	{@const modalMessageId = commentModalMessageId}
+	{@const modalAnnotation = messageAnnotations.get(modalMessageId)}
+	{@const isSaving = savingCommentIds.has(modalMessageId)}
+	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+		onclick={(e) => {
+			if (e.target === e.currentTarget) closeCommentInput(modalMessageId);
+		}}
+	>
+		<div class="w-full max-w-md rounded-lg bg-white shadow-xl">
+			<div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+				<h3 class="text-sm font-medium text-gray-800">
+					{modalAnnotation?.comment ? 'Edit Comment' : 'Add Comment'}
+				</h3>
+				<button
+					type="button"
+					class="text-gray-400 hover:text-gray-600"
+					onclick={() => closeCommentInput(modalMessageId)}
+				>
+					<i class="fa-solid fa-times"></i>
+				</button>
+			</div>
+			<div class="p-4">
+				<textarea
+					value={getCommentText(modalMessageId)}
+					oninput={(e) => setCommentText(modalMessageId, (e.target as HTMLTextAreaElement).value)}
+					rows="4"
+					class="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+					placeholder="Add a comment..."
+				></textarea>
+				<div class="mt-3 flex justify-end gap-2">
+					<button
+						type="button"
+						class="rounded px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+						onclick={() => closeCommentInput(modalMessageId)}
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						class="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+						onclick={() => handleSaveComment(modalMessageId)}
+						disabled={isSaving}
+					>
+						{#if isSaving}
+							<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+						{/if}
+						Save
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
 <svelte:window
+	onresize={checkScreenWidth}
 	onclick={(e) => {
 		const target = e.target as Element;
-
-		// Close comment input on outside click
-		if (
-			activeCommentMessageId &&
-			!target.closest('.comment-input-container') &&
-			!target.closest('button')
-		) {
-			activeCommentMessageId = null;
-			commentText = '';
-		}
 
 		// Close dropdowns on outside click
 		const clickedInside = target.closest('.relative');
