@@ -2,7 +2,7 @@
 	import type { InterviewConfig, InterviewType, Welcome } from '$lib/api';
 	import { Projects, type Consent } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
-	import { ConsentModal, WelcomeModal } from '$lib/components/modals';
+	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
 	import { onMount } from 'svelte';
 	import {
 		ChatClient,
@@ -19,6 +19,7 @@
 		experimentID?: string;
 		interviewConfig: InterviewConfig;
 		isProjectOwnerDemoUser: boolean;
+		availableLanguages: Array<{ name: string; code: string }>;
 		help_title?: string;
 		help_text?: string;
 		exit_title?: string;
@@ -34,7 +35,7 @@
 	console.log(data.externalParams);
 
 	let projectId = $derived(data.project_id);
-	let lang = $derived(data.lang);
+	let lang = $state(data.lang);
 	let interviewType = $derived(data.interviewType);
 	const interviewConfig = $derived(data.interviewConfig);
 	const isDemoBlocked = $derived(data.isProjectOwnerDemoUser && interviewType === 'distributed');
@@ -60,6 +61,10 @@
 	let showWelcome = $state(false);
 	let welcomeData = $state<Welcome | null>(null);
 
+	// Language picker state
+	let showLanguagePicker = $state(false);
+	const availableLanguages = $derived(data.availableLanguages);
+
 	// Consent flow state
 	let showConsent = $state(false);
 	let consentData = $state<Consent | null>(null);
@@ -82,6 +87,9 @@
 			!(interviewType === 'manual_test')
 		) {
 			initializeChat(existingInterviewId);
+		} else if (availableLanguages.length > 1) {
+			showLanguagePicker = true;
+			isInitializing = false;
 		} else {
 			loadConsent();
 		}
@@ -230,6 +238,13 @@
 		consentAccepting = false;
 	}
 
+	function selectLanguage(code: string) {
+		lang = code;
+		showLanguagePicker = false;
+		isInitializing = true;
+		loadConsent();
+	}
+
 	function declineConsent() {
 		window.location.href = '/';
 	}
@@ -290,6 +305,12 @@
 	{/if}
 </div>
 
+<LanguagePickerModal
+	show={showLanguagePicker}
+	languages={availableLanguages}
+	onSelect={selectLanguage}
+/>
+
 <ConsentModal
 	show={showConsent && !!consentData}
 	title={consentData?.title ?? ''}
@@ -312,7 +333,7 @@
 />
 
 <!-- Loading State -->
-{#if isInitializing && !showConsent && !showWelcome}
+{#if isInitializing && !showLanguagePicker && !showConsent && !showWelcome}
 	<div class="fixed inset-0 z-200 flex items-center justify-center bg-white">
 		<div class="flex flex-col items-center gap-4">
 			<div

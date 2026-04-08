@@ -42,8 +42,21 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 		console.error('Failed to load interview config', configError);
 	}
 
-	const lang = url.searchParams.get('lang') || 'en';
+	const langParam = url.searchParams.get('lang');
+	const lang = langParam || 'en';
 	const experimentID = url.searchParams.get('x');
+
+	// If no lang param, fetch available languages for language picker
+	let availableLanguages: Array<{ name: string; code: string }> = [];
+	if (!langParam) {
+		const { data: languages } = await Projects.getProjectLanguages({
+			headers: { cookie: cookieHeader },
+			path: { project_id }
+		});
+		if (languages && languages.length > 1) {
+			availableLanguages = languages;
+		}
+	}
 
 	// Collect extra query params (exclude known ones)
 	const knownParams = new Set(['id', 'interview_type', 'lang', 'x']);
@@ -65,6 +78,7 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 		isProjectOwnerDemoUser: isProjectOwnerDemoUser ?? false,
 		authError,
 		externalParams: Object.keys(externalParams).length > 0 ? externalParams : null,
-		referer
+		referer,
+		availableLanguages
 	};
 };
