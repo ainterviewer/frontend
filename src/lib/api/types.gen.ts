@@ -4161,6 +4161,38 @@ export type RemoveProjectLanguageResponses = {
 
 export type RemoveProjectLanguageResponse = RemoveProjectLanguageResponses[keyof RemoveProjectLanguageResponses];
 
+export type GetProjectLanguagesData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/available_languages';
+};
+
+export type GetProjectLanguagesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetProjectLanguagesError = GetProjectLanguagesErrors[keyof GetProjectLanguagesErrors];
+
+export type GetProjectLanguagesResponses = {
+    /**
+     * Response Get Project Languages
+     *
+     * Successful Response
+     */
+    200: Array<LanguageDict>;
+};
+
+export type GetProjectLanguagesResponse = GetProjectLanguagesResponses[keyof GetProjectLanguagesResponses];
+
 export type AddProjectLanguageData = {
     body: LanguageCode;
     path: {
