@@ -1,18 +1,21 @@
 <script lang="ts">
-	import { beforeNavigate, invalidateAll } from '$app/navigation';
+	import { beforeNavigate, goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type {
 		InterviewGuideOutput,
+		LanguageDict,
 		QuestionOutput,
 		QuestionSectionQuestionOutput
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { toast } from 'svelte-sonner';
+	import AddLanguageModal from './AddLanguageModal.svelte';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
+	import LanguageSelector from './LanguageSelector.svelte';
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 	import { downloadGuidePdf } from './exportPdf';
@@ -21,11 +24,13 @@
 	let {
 		guide: initialGuide,
 		lang,
-		projectName = ''
+		projectName = '',
+		availableLanguages = []
 	} = $props<{
 		guide: InterviewGuideOutput | null;
 		lang: string;
 		projectName?: string;
+		availableLanguages?: LanguageDict[];
 	}>();
 
 	const guideStore = getGuideStore();
@@ -106,6 +111,8 @@
 	let showGenerateQuestionModal = $state(false);
 	let generatingQuestionSectionId = $state<string | null>(null);
 	let generatingQuestionSectionIdx = $state<number | null>(null);
+
+	let showAddLanguageModal = $state(false);
 
 	let activeId = $state('');
 
@@ -214,6 +221,45 @@
 
 		generatingQuestionSectionId = null;
 		generatingQuestionSectionIdx = null;
+	}
+
+	function handleLanguageSwitch(code: string) {
+		const basePath = page.url.pathname.replace(`/${lang}/`, `/${code}/`);
+		goto(basePath);
+	}
+
+	async function handleAddLanguage(code: string) {
+		const { error } = await Projects.addProjectLanguage({
+			path: { project_id: projectId },
+			body: code
+		});
+		if (error) {
+			throw new Error('Failed to add language');
+		}
+		await invalidateAll();
+		toast.success('Language added');
+	}
+
+	async function handleRemoveLanguage(code: string) {
+		if (availableLanguages.length <= 1) return;
+		const { error } = await Projects.removeProjectLanguage({
+			path: { project_id: projectId },
+			body: code
+		});
+		if (error) {
+			console.error('Failed to remove language', error);
+			toast.error('Failed to remove language');
+			return;
+		}
+		toast.success('Language removed');
+		if (code === lang) {
+			const remaining = availableLanguages.find((l: LanguageDict) => l.code !== code);
+			if (remaining) {
+				handleLanguageSwitch(remaining.code);
+				return;
+			}
+		}
+		await invalidateAll();
 	}
 
 	function addTimedMessage() {
@@ -566,6 +612,13 @@
 			<div
 				class="sticky bottom-0 ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
 			>
+				<LanguageSelector
+					currentLang={lang}
+					{availableLanguages}
+					onLanguageSwitch={handleLanguageSwitch}
+					onAddLanguage={() => (showAddLanguageModal = true)}
+					onRemoveLanguage={handleRemoveLanguage}
+				/>
 				<a
 					class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
 					href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
@@ -658,4 +711,10 @@
 	title="Generate Question"
 	placeholder="Describe the question you want to generate..."
 	onGenerate={handleGenerateQuestion}
+/>
+
+<AddLanguageModal
+	bind:open={showAddLanguageModal}
+	onAdd={handleAddLanguage}
+	existingLanguageCodes={availableLanguages.map((l: LanguageDict) => l.code)}
 />

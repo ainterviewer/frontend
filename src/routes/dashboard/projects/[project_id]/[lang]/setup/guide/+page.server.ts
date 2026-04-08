@@ -20,13 +20,14 @@ export const load: PageServerLoad = async ({ params, request, fetch }) => {
 
 	if (response.error) {
 		console.error('Error fetching guide:', response.error);
-		return { guide: null, lang, project_id, project_name: projectRes.data?.title ?? '' };
+		return { guide: null, lang, project_id, project_name: projectRes.data?.title ?? '', available_languages: projectRes.data?.available_languages ?? [] };
 	}
 
 	return {
 		guide: response.data,
 		lang,
 		project_id,
-		project_name: projectRes.data?.title ?? ''
+		project_name: projectRes.data?.title ?? '',
+		available_languages: projectRes.data?.available_languages ?? []
 	};
 };
