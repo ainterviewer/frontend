@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import type {
+		InvitationCreate,
+		InvitationPublic,
+		InvitationUpdate,
+		Scope,
+		TimeDelta
+	} from '$lib/api';
 	import { Admin } from '$lib/api/sdk.gen';
-	import type { InvitationPublic, InvitationCreate, InvitationUpdate, Scope, TimeDelta } from '$lib/api';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -232,7 +238,7 @@
 				user_scope: newUserScope,
 				title: newTitle || null,
 				user_expires: userExpires,
-				email: !newReuseable ? (newEmail || null) : undefined
+				email: !newReuseable ? newEmail || null : undefined
 			};
 
 			const response = await Admin.updateInvitation({
@@ -318,7 +324,9 @@
 
 {#if showCreateForm}
 	<div class="mb-4 rounded-lg bg-white p-6 shadow-md">
-		<h3 class="mb-4 text-lg font-semibold text-gray-900">{editingInvitation ? 'Edit Invitation' : 'Create Invitation'}</h3>
+		<h3 class="mb-4 text-lg font-semibold text-gray-900">
+			{editingInvitation ? 'Edit Invitation' : 'Create Invitation'}
+		</h3>
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
@@ -557,10 +565,21 @@
 									{invitation.user_scope ?? 'user'}
 								</span>
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap {invitation.expires_at && new Date(invitation.expires_at) < new Date() ? 'text-red-500' : 'text-gray-500'}">
+							<td
+								class="px-6 py-4 text-sm whitespace-nowrap {invitation.expires_at &&
+								new Date(invitation.expires_at) < new Date()
+									? 'text-red-500'
+									: 'text-gray-500'}"
+							>
 								{invitation.expires_at ? new Date(invitation.expires_at).toLocaleString() : '-'}
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap {invitation.user_expires && typeof invitation.user_expires === 'string' && new Date(invitation.user_expires) < new Date() ? 'text-red-500' : 'text-gray-500'}">
+							<td
+								class="px-6 py-4 text-sm whitespace-nowrap {invitation.user_expires &&
+								typeof invitation.user_expires === 'string' &&
+								new Date(invitation.user_expires) < new Date()
+									? 'text-red-500'
+									: 'text-gray-500'}"
+							>
 								{#if !invitation.user_expires}
 									-
 								{:else if typeof invitation.user_expires === 'string'}
@@ -631,6 +650,11 @@
 					<th
 						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 					>
+						<span class="inline-block w-64">Title</span>
+					</th>
+					<th
+						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+					>
 						<span class="inline-block w-64">Email</span>
 					</th>
 					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
@@ -683,6 +707,9 @@
 								/>
 							</td>
 							<td class="w-64 px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+								{invitation.title || '-'}
+							</td>
+							<td class="w-64 px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 								{invitation.email || '-'}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
@@ -694,10 +721,21 @@
 									{invitation.user_scope ?? 'user'}
 								</span>
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap {invitation.expires_at && new Date(invitation.expires_at) < new Date() ? 'text-red-500' : 'text-gray-500'}">
+							<td
+								class="px-6 py-4 text-sm whitespace-nowrap {invitation.expires_at &&
+								new Date(invitation.expires_at) < new Date()
+									? 'text-red-500'
+									: 'text-gray-500'}"
+							>
 								{invitation.expires_at ? new Date(invitation.expires_at).toLocaleString() : '-'}
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap {invitation.user_expires && typeof invitation.user_expires === 'string' && new Date(invitation.user_expires) < new Date() ? 'text-red-500' : 'text-gray-500'}">
+							<td
+								class="px-6 py-4 text-sm whitespace-nowrap {invitation.user_expires &&
+								typeof invitation.user_expires === 'string' &&
+								new Date(invitation.user_expires) < new Date()
+									? 'text-red-500'
+									: 'text-gray-500'}"
+							>
 								{#if !invitation.user_expires}
 									-
 								{:else if typeof invitation.user_expires === 'string'}
