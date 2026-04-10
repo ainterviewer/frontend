@@ -21,8 +21,9 @@
 			sidebar.collapsed ? 'ml-[70px]' : 'ml-[250px]'
 		].join(' ')}
 	>
-		<div class="min-h-full w-[90%]">
+		<div class="flex min-h-full w-[90%] flex-col">
 			{@render children()}
+			<div aria-hidden="true" class="h-10 shrink-0"></div>
 		</div>
 	</main>
 </div>
