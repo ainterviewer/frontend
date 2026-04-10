@@ -565,10 +565,18 @@ export class ChatClient {
 				if (data.error) {
 					if (data.error === 'InstanceInitializing') {
 						this.messages.push({ type: 'system', text: 'System initializing. Please wait.' });
-						this.disableReconnect();
+					} else if (data.error === 'InferenceError') {
+						this.messages.push({
+							type: 'system',
+							text: `No server capacity. Please check back later.`
+						});
 					} else {
-						this.messages.push({ type: 'system', text: `Error: ${data.error}` });
+						this.messages.push({
+							type: 'system',
+							text: `An unexpected error has occured. Please try again later.`
+						});
 					}
+					this.disableReconnect();
 				}
 
 				if (data.content === '<|endofinterview|>') {
