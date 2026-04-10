@@ -2,13 +2,16 @@
 	import { Admin } from '$lib/api';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import type { Instance } from './types';
+	import { SvelteSet } from 'svelte/reactivity';
+	import type { Instance, SettingsData } from './types';
 
 	let instances: Instance[] = $state([]);
 	let selectedInstances: Set<string> = $state(new Set());
 	let isLoading = $state(false);
 	let error = $state('');
 	let minInstances = $state(0);
+	let startCheck = $state(false);
+	let stopCheck = $state(false);
 	let allSelected = $derived(instances.length > 0 && selectedInstances.size === instances.length);
 
 	function formatTimeEstimate(seconds: number) {
@@ -48,31 +51,34 @@
 
 	async function getSettings() {
 		const response = await Admin.proxyToEc2Manager2({
-			path: { full_path: 'settings/min-instances' }
+			path: { full_path: 'settings' }
 		});
 		if (response.error) {
 			console.error('Failed to fetch settings:', response.error);
 			return;
 		}
-		if (response.data !== undefined) {
-			minInstances = Number(response.data);
+		if (response.data && typeof response.data === 'object') {
+			const data = response.data as SettingsData;
+			minInstances = data.min_instances;
+			startCheck = data.start;
+			stopCheck = data.stop;
 		}
 	}
 
 	async function updateSettings() {
 		const { error: updateError } = await Admin.proxyToEc2Manager4({
-			path: { full_path: 'settings/min-instances' },
-			body: minInstances
+			path: { full_path: 'settings' },
+			body: { min_instances: minInstances, start: startCheck, stop: stopCheck }
 		});
 		if (updateError) {
 			toast.error('Failed to update settings');
 			return;
 		}
-		toast.success('Min instances updated');
+		toast.success('Settings updated');
 	}
 
 	function toggleInstance(id: string) {
-		const newSelected = new Set(selectedInstances);
+		const newSelected = new SvelteSet(selectedInstances);
 		if (newSelected.has(id)) {
 			newSelected.delete(id);
 		} else {
@@ -383,21 +389,50 @@
 
 <div class="mt-8 rounded-lg bg-gray-50 p-4 shadow-sm ring-1 ring-gray-900/5 sm:max-w-md">
 	<h3 class="text-base leading-7 font-semibold text-gray-900">Configuration</h3>
-	<div class="mt-4 flex items-center gap-x-4">
-		<label for="min-instances" class="block text-sm leading-6 font-medium text-gray-900"
-			>Minimum Instances</label
-		>
-		<div class="flex-none">
-			<input
-				type="number"
-				id="min-instances"
-				bind:value={minInstances}
-				class="block w-20 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
-			/>
+	<div class="mt-4 flex flex-col gap-4">
+		<div>
+			<label for="min-instances" class="mb-1 block text-sm leading-6 font-medium text-gray-900"
+				>Minimum Instances</label
+			>
+			<div class="flex-none">
+				<input
+					type="number"
+					id="min-instances"
+					bind:value={minInstances}
+					class="block w-20 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
+				/>
+			</div>
+		</div>
+
+		<div>
+			<label for="start-check" class="mb-1 block text-sm leading-6 font-medium text-gray-900"
+				>Start Check</label
+			>
+			<div class="flex-none">
+				<input
+					type="checkbox"
+					id="start-check"
+					bind:checked={startCheck}
+					class="h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 shadow-sm transition duration-150 ease-out hover:border-indigo-400 hover:bg-indigo-50 hover:shadow checked:hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-1"
+				/>
+			</div>
+		</div>
+		<div>
+			<label for="stop-check" class="mb-1 block text-sm leading-6 font-medium text-gray-900"
+				>Stop Check</label
+			>
+			<div class="flex-none">
+				<input
+					id="stop-check"
+					type="checkbox"
+					bind:checked={stopCheck}
+					class="h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 shadow-sm transition duration-150 ease-out hover:border-indigo-400 hover:bg-indigo-50 hover:shadow checked:hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-1"
+				/>
+			</div>
 		</div>
 		<button
 			type="button"
-			class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+			class="w-fit rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
 			onclick={updateSettings}
 		>
 			Update

@@ -11,3 +11,9 @@ export interface Instance {
 	connections: number;
 	idle_time: number;
 }
+
+export interface SettingsData {
+	min_instances: number;
+	start: boolean;
+	stop: boolean;
+}
