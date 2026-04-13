@@ -863,6 +863,24 @@ export type FilteredMessagesRequest = {
 };
 
 /**
+ * GitHashes
+ */
+export type GitHashes = {
+    /**
+     * Core Lib
+     */
+    core_lib: string;
+    /**
+     * Backend
+     */
+    backend: string;
+    /**
+     * Frontend
+     */
+    frontend: string;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -1670,6 +1688,33 @@ export type PaginatedResponseInterviewSummaryPublic = {
      * Items
      */
     items: Array<InterviewSummaryPublic>;
+};
+
+/**
+ * PlatformManifest
+ */
+export type PlatformManifest = {
+    /**
+     * Platform Version
+     */
+    platform_version: string;
+    /**
+     * Core Lib
+     */
+    core_lib: string;
+    /**
+     * Backend
+     */
+    backend: string;
+    /**
+     * Frontend
+     */
+    frontend: string;
+    /**
+     * Build Time
+     */
+    build_time: string;
+    git: GitHashes;
 };
 
 /**
@@ -2854,7 +2899,7 @@ export type OutgoingData = {
     /**
      * Error
      */
-    error?: 'InstanceInitializing' | null;
+    error?: 'InstanceInitializing' | 'InferenceError' | null;
 };
 
 /**
@@ -6297,6 +6342,50 @@ export type HealthData = {
 };
 
 export type HealthResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type VersionData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/version';
+};
+
+export type VersionResponses = {
+    /**
+     * Successful Response
+     */
+    200: PlatformManifest;
+};
+
+export type VersionResponse = VersionResponses[keyof VersionResponses];
+
+export type PlatformVersionData = {
+    body?: never;
+    path: {
+        /**
+         * Platform Version
+         */
+        platform_version: string;
+    };
+    query?: never;
+    url: '/api/version/{platform_version}';
+};
+
+export type PlatformVersionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PlatformVersionError = PlatformVersionErrors[keyof PlatformVersionErrors];
+
+export type PlatformVersionResponses = {
     /**
      * Successful Response
      */
