@@ -33,14 +33,22 @@
 		{ key: 'consent', label: 'Consent', description: 'Consent title and message.' },
 		{ key: 'welcome', label: 'Welcome', description: 'Welcome title, message, and contact email.' },
 		{ key: 'framing', label: 'Framing', description: 'AI-only context for the interview.' },
-		{ key: 'introduction', label: 'Introduction', description: 'First message shown to the interviewee.' },
+		{
+			key: 'introduction',
+			label: 'Introduction',
+			description: 'First message shown to the interviewee.'
+		},
 		{
 			key: 'questionSections',
 			label: 'Question sections',
 			description: 'All question sections with probes, survey items, and images.'
 		},
 		{ key: 'outro', label: 'Outro', description: 'Last message shown to the interviewee.' },
-		{ key: 'timedMessages', label: 'Timed messages', description: 'Scheduled messages during the interview.' },
+		{
+			key: 'timedMessages',
+			label: 'Timed messages',
+			description: 'Scheduled messages during the interview.'
+		},
 		{
 			key: 'behaviorFlags',
 			label: 'Behavior flags',

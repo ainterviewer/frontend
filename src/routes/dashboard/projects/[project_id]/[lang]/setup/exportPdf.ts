@@ -7,7 +7,7 @@ import type {
 	TimedMessage,
 	Welcome
 } from '$lib/api/types.gen';
-import type { GuideQuestion, GuideSection } from './types';
+import type { GuideQuestion, GuideSection } from './guide/types';
 
 // pdfmake doesn't ship type declarations — use a generic record type for doc nodes.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

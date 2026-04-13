@@ -6,8 +6,9 @@
 	import { WelcomeModal } from '$lib/components/modals';
 	import { toast } from 'svelte-sonner';
 	import SetupActionBar from '../SetupActionBar.svelte';
-	import ExportPdfModal from '../guide/ExportPdfModal.svelte';
-	import { downloadGuidePdf, type PdfToggles } from '../guide/exportPdf';
+	import { downloadUnifiedSetupJson } from '../exportJson';
+	import ExportPdfModal from '../ExportPdfModal.svelte';
+	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
 	import { mapToLocal } from '../guide/utils';
 
 	interface Props {
@@ -185,16 +186,25 @@
 
 	async function exportJson() {
 		try {
-			const guide = await getGuideForExport();
-			const blob = new Blob([JSON.stringify(guide, null, 2)], { type: 'application/json' });
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = 'interview_guide.json';
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
+			const [guideRes, consentRes] = await Promise.allSettled([
+				getGuideForExport(),
+				fetchConsent()
+			]);
+
+			downloadUnifiedSetupJson({
+				consent: consentRes.status === 'fulfilled' ? consentRes.value : null,
+				welcome:
+					title || text || email || videoFileName
+						? {
+								title,
+								text,
+								email,
+								video_file_name: videoFileName ?? null
+							}
+						: null,
+				interview_guide: guideRes.status === 'fulfilled' ? guideRes.value : null,
+				platform_version: platformVersion
+			});
 		} catch (e) {
 			console.error('Failed to export JSON', e);
 			toast.error('Failed to export JSON');

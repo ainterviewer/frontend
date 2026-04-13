@@ -14,12 +14,13 @@
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { toast } from 'svelte-sonner';
 	import SetupActionBar from '../SetupActionBar.svelte';
-	import ExportPdfModal from './ExportPdfModal.svelte';
+	import ExportPdfModal from '../ExportPdfModal.svelte';
+	import { downloadUnifiedSetupJson } from '../exportJson';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
-	import { downloadGuidePdf, type PdfToggles } from './exportPdf';
+	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
 	import { generateId, mapFromLocal, mapToLocal, saveGuide } from './utils';
 
 	let {
@@ -295,20 +296,22 @@
 		}
 	}
 
-	function exportJson() {
-		const data = {
-			...guide,
-			question_sections: mapFromLocal(guideStore.localSections, guideStore.localQuestions)
-		};
-		const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = 'interview_guide.json';
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
+	async function exportJson() {
+		try {
+			const [consentRes, welcomeRes] = await Promise.allSettled([fetchConsent(), fetchWelcome()]);
+			downloadUnifiedSetupJson({
+				consent: consentRes.status === 'fulfilled' ? consentRes.value : null,
+				welcome: welcomeRes.status === 'fulfilled' ? welcomeRes.value : null,
+				interview_guide: {
+					...guide,
+					question_sections: mapFromLocal(guideStore.localSections, guideStore.localQuestions)
+				},
+				platform_version: platformVersion
+			});
+		} catch (e) {
+			console.error('Failed to export JSON', e);
+			toast.error('Failed to export JSON');
+		}
 	}
 
 	$effect(() => {
