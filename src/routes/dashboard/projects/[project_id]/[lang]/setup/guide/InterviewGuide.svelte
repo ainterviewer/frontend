@@ -3,20 +3,23 @@
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type {
+		Consent,
 		InterviewGuideOutput,
 		LanguageDict,
 		QuestionOutput,
-		QuestionSectionQuestionOutput
+		QuestionSectionQuestionOutput,
+		Welcome
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { toast } from 'svelte-sonner';
 	import SetupActionBar from '../SetupActionBar.svelte';
+	import ExportPdfModal from './ExportPdfModal.svelte';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
-	import { downloadGuidePdf } from './exportPdf';
+	import { downloadGuidePdf, type PdfToggles } from './exportPdf';
 	import { generateId, mapFromLocal, mapToLocal, saveGuide } from './utils';
 
 	let {
@@ -249,16 +252,39 @@
 		}
 	}
 
-	async function exportPdf(detailed: boolean) {
+	let showExportPdfModal = $state(false);
+
+	async function fetchConsent(): Promise<Consent | null> {
+		const { data } = await Projects.getConsent({
+			path: { project_id: projectId, language: lang }
+		});
+		return data ?? null;
+	}
+
+	async function fetchWelcome(): Promise<Welcome | null> {
+		const { data } = await Projects.getWelcome({
+			path: { project_id: projectId, language: lang }
+		});
+		return data ?? null;
+	}
+
+	async function handleExportPdf(toggles: PdfToggles) {
 		exporting = true;
 		try {
+			const [consent, welcome] = await Promise.all([
+				toggles.consent ? fetchConsent() : Promise.resolve(null),
+				toggles.welcome ? fetchWelcome() : Promise.resolve(null)
+			]);
 			await downloadGuidePdf({
 				guide,
 				sections: guideStore.localSections,
 				questions: guideStore.localQuestions,
 				projectName: projectName || 'Interview Guide',
-				detailed
+				toggles,
+				consent,
+				welcome
 			});
+			showExportPdfModal = false;
 		} catch (e) {
 			console.error('Failed to export PDF', e);
 			toast.error('Failed to export PDF');
@@ -576,13 +602,20 @@
 					savedSnapshot = getSnapshot();
 					saving = false;
 				}}
-				onExportSimplePdf={() => exportPdf(false)}
-				onExportDetailedPdf={() => exportPdf(true)}
+				onExportPdf={() => {
+					showExportPdfModal = true;
+				}}
 				onExportJson={exportJson}
 			/>
 		</div>
 	</div>
 </form>
+
+<ExportPdfModal
+	bind:open={showExportPdfModal}
+	{exporting}
+	onExport={handleExportPdf}
+/>
 
 <GenerateModal
 	bind:open={showGenerateGuideModal}

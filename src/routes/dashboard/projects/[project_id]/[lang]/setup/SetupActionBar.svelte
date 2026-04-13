@@ -15,8 +15,7 @@
 		exporting = false,
 		saveLabel = 'Save Changes',
 		onSave,
-		onExportSimplePdf,
-		onExportDetailedPdf,
+		onExportPdf,
 		onExportJson
 	}: {
 		projectId: string;
@@ -26,15 +25,14 @@
 		exporting?: boolean;
 		saveLabel?: string;
 		onSave: () => Promise<void> | void;
-		onExportSimplePdf?: () => Promise<void> | void;
-		onExportDetailedPdf?: () => Promise<void> | void;
+		onExportPdf?: () => Promise<void> | void;
 		onExportJson?: () => void;
 	} = $props();
 
 	let showExportMenu = $state(false);
 	let showAddLanguageModal = $state(false);
 
-	const canExport = $derived(!!onExportSimplePdf || !!onExportDetailedPdf || !!onExportJson);
+	const canExport = $derived(!!onExportPdf || !!onExportJson);
 
 	function closeMenusOnWindowClick(e: MouseEvent) {
 		if (showExportMenu && !(e.target as HTMLElement)?.closest('.export-pdf-menu')) {
@@ -121,24 +119,17 @@
 			<div
 				class="absolute bottom-full left-0 mb-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
 			>
-				{#if onExportSimplePdf}
+				{#if onExportPdf}
 					<button
 						type="button"
 						class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-						onclick={() => onExportSimplePdf?.()}
+						onclick={() => {
+							onExportPdf?.();
+							showExportMenu = false;
+						}}
 					>
 						<i class="fa-solid fa-file-lines"></i>
-						Simple PDF
-					</button>
-				{/if}
-				{#if onExportDetailedPdf}
-					<button
-						type="button"
-						class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-						onclick={() => onExportDetailedPdf?.()}
-					>
-						<i class="fa-solid fa-file-circle-check"></i>
-						Detailed PDF
+						PDF
 					</button>
 				{/if}
 				{#if onExportJson}

@@ -1,9 +1,11 @@
 import type {
 	Condition,
 	ConditionsOutput,
+	Consent,
 	Image,
 	InterviewGuideOutput,
-	TimedMessage
+	TimedMessage,
+	Welcome
 } from '$lib/api/types.gen';
 import type { GuideQuestion, GuideSection } from './types';
 
@@ -13,12 +15,38 @@ type PdfNode = Record<string, any>;
 
 type SurveyItem = NonNullable<GuideQuestion['survey_item']>;
 
+export interface PdfToggles {
+	consent: boolean;
+	welcome: boolean;
+	framing: boolean;
+	introduction: boolean;
+	questionSections: boolean;
+	outro: boolean;
+	timedMessages: boolean;
+	behaviorFlags: boolean;
+	conditions: boolean;
+}
+
+export const defaultPdfToggles = (): PdfToggles => ({
+	consent: true,
+	welcome: true,
+	framing: true,
+	introduction: true,
+	questionSections: true,
+	outro: true,
+	timedMessages: true,
+	behaviorFlags: true,
+	conditions: true
+});
+
 interface ExportOptions {
 	guide: InterviewGuideOutput;
 	sections: GuideSection[];
 	questions: Record<string, GuideQuestion[]>;
 	projectName: string;
-	detailed: boolean;
+	toggles: PdfToggles;
+	consent?: Consent | null;
+	welcome?: Welcome | null;
 }
 
 function heading(text: string, level: 1 | 2 | 3 | 4): PdfNode {
@@ -204,7 +232,7 @@ function buildQuestionContent(
 	q: GuideQuestion,
 	qIdx: number,
 	sections: GuideSection[],
-	detailed: boolean
+	toggles: PdfToggles
 ): PdfNode[] {
 	const content: PdfNode[] = [];
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -263,8 +291,8 @@ function buildQuestionContent(
 		}
 	}
 
-	// Conditions (always visible per requirements)
-	if (q.conditions && q.conditions.conditions.length > 0) {
+	// Conditions (gated by toggle)
+	if (toggles.conditions && q.conditions && q.conditions.conditions.length > 0) {
 		const condContent = buildConditionsContent(q.conditions, sections);
 		for (const c of condContent) {
 			content.push(indentNode(c));
@@ -297,8 +325,8 @@ function buildQuestionContent(
 		content.push({ text: q.variables.join(', '), fontSize: 9, margin: [16, 0, 0, 4] });
 	}
 
-	// Detailed settings
-	if (detailed) {
+	// Behavior flags (gated by toggle)
+	if (toggles.behaviorFlags) {
 		const settings: string[] = [];
 		if (q.can_answer === false) settings.push('Message only (no answer)');
 		if (q.can_skip === false) settings.push('Cannot skip');
@@ -324,7 +352,7 @@ function buildQuestionContent(
 	return content;
 }
 
-function buildTimedMessageContent(tm: TimedMessage, idx: number, detailed: boolean): PdfNode[] {
+function buildTimedMessageContent(tm: TimedMessage, idx: number, toggles: PdfToggles): PdfNode[] {
 	const content: PdfNode[] = [];
 
 	content.push({
@@ -335,7 +363,7 @@ function buildTimedMessageContent(tm: TimedMessage, idx: number, detailed: boole
 	});
 	content.push(bodyText(tm.message));
 
-	if (detailed) {
+	if (toggles.behaviorFlags) {
 		const flags: string[] = [];
 		if (tm.include_in_history) flags.push('Include in history');
 		if (tm.as_modal) flags.push('Show as modal');
@@ -353,7 +381,7 @@ function buildTimedMessageContent(tm: TimedMessage, idx: number, detailed: boole
 }
 
 export function exportGuidePdf(options: ExportOptions): PdfNode {
-	const { guide, sections, questions, projectName, detailed } = options;
+	const { guide, sections, questions, projectName, toggles, consent, welcome } = options;
 
 	const content: PdfNode[] = [];
 
@@ -365,7 +393,7 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 		margin: [0, 0, 0, 4]
 	});
 	content.push({
-		text: `Interview Guide${detailed ? ' (Detailed)' : ''}`,
+		text: 'Interview Guide',
 		fontSize: 14,
 		color: '#666',
 		margin: [0, 0, 0, 4]
@@ -377,8 +405,44 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 		margin: [0, 0, 0, 16]
 	});
 
+	// Consent
+	if (toggles.consent && consent) {
+		content.push(heading('Consent', 2));
+		if (consent.title) {
+			content.push({ text: consent.title, fontSize: 12, bold: true, margin: [0, 0, 0, 4] });
+		}
+		if (consent.text) content.push(bodyText(consent.text));
+		content.push(separator());
+	}
+
+	// Welcome
+	if (toggles.welcome && welcome) {
+		content.push(heading('Welcome', 2));
+		if (welcome.title) {
+			content.push({ text: welcome.title, fontSize: 12, bold: true, margin: [0, 0, 0, 4] });
+		}
+		if (welcome.text) content.push(bodyText(welcome.text));
+		if (welcome.email) {
+			content.push({
+				text: `Contact: ${welcome.email}`,
+				fontSize: 9,
+				color: '#666',
+				margin: [0, 0, 0, 4]
+			});
+		}
+		if (welcome.video_file_name) {
+			content.push({
+				text: `Video: ${welcome.video_file_name}`,
+				fontSize: 9,
+				color: '#666',
+				margin: [0, 0, 0, 4]
+			});
+		}
+		content.push(separator());
+	}
+
 	// Framing
-	if (guide.framing) {
+	if (toggles.framing && guide.framing) {
 		content.push(heading('Framing', 2));
 		content.push({
 			text: 'Context for the AI model (not shown to interviewee)',
@@ -392,14 +456,14 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 	}
 
 	// Introduction
-	if (guide.introduction) {
+	if (toggles.introduction && guide.introduction) {
 		content.push(heading('Introduction', 2));
 		content.push(bodyText(guide.introduction));
 		content.push(separator());
 	}
 
 	// Question Sections
-	if (sections.length > 0) {
+	if (toggles.questionSections && sections.length > 0) {
 		content.push(heading('Question Sections', 2));
 
 		for (let sIdx = 0; sIdx < sections.length; sIdx++) {
@@ -413,7 +477,7 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 				content.push(bodyText(section.description));
 			}
 
-			if (detailed && section.shuffle) {
+			if (toggles.behaviorFlags && section.shuffle) {
 				content.push({
 					text: 'Shuffle: enabled',
 					fontSize: 8,
@@ -428,7 +492,7 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 					sectionQuestions[qIdx],
 					qIdx,
 					sections,
-					detailed
+					toggles
 				);
 				// Wrap question in a bordered box
 				content.push({
@@ -455,17 +519,17 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 	}
 
 	// Outro
-	if (guide.outro) {
+	if (toggles.outro && guide.outro) {
 		content.push(heading('Outro', 2));
 		content.push(bodyText(guide.outro));
 		content.push(separator());
 	}
 
 	// Timed Messages
-	if (guide.timed_messages && guide.timed_messages.length > 0) {
+	if (toggles.timedMessages && guide.timed_messages && guide.timed_messages.length > 0) {
 		content.push(heading('Timed Messages', 2));
 		for (let i = 0; i < guide.timed_messages.length; i++) {
-			const tmContent = buildTimedMessageContent(guide.timed_messages[i], i, detailed);
+			const tmContent = buildTimedMessageContent(guide.timed_messages[i], i, toggles);
 			content.push(...tmContent);
 		}
 	}

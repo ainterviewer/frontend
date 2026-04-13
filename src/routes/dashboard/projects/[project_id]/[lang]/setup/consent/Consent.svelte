@@ -2,11 +2,12 @@
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { LanguageDict } from '$lib/api/types.gen';
+	import type { LanguageDict, Welcome } from '$lib/api/types.gen';
 	import { ConsentModal } from '$lib/components/modals';
 	import { toast } from 'svelte-sonner';
 	import SetupActionBar from '../SetupActionBar.svelte';
-	import { downloadGuidePdf } from '../guide/exportPdf';
+	import ExportPdfModal from '../guide/ExportPdfModal.svelte';
+	import { downloadGuidePdf, type PdfToggles } from '../guide/exportPdf';
 	import { mapToLocal } from '../guide/utils';
 
 	interface Props {
@@ -73,18 +74,32 @@
 		return data;
 	}
 
-	async function exportPdf(detailed: boolean) {
+	let showExportPdfModal = $state(false);
+
+	async function fetchWelcome(): Promise<Welcome | null> {
+		const { data } = await Projects.getWelcome({
+			path: { project_id: projectId, language: language }
+		});
+		return data ?? null;
+	}
+
+	async function handleExportPdf(toggles: PdfToggles) {
 		exporting = true;
 		try {
 			const guide = await getGuideForExport();
 			const mapped = mapToLocal(guide);
+			const welcome = toggles.welcome ? await fetchWelcome() : null;
+			const consent = toggles.consent ? { title, text } : null;
 			await downloadGuidePdf({
 				guide,
 				sections: mapped.sections,
 				questions: mapped.questions,
 				projectName,
-				detailed
+				toggles,
+				consent,
+				welcome
 			});
+			showExportPdfModal = false;
 		} catch (e) {
 			console.error('Failed to export PDF', e);
 			toast.error('Failed to export PDF');
@@ -244,12 +259,19 @@
 			{saving}
 			{exporting}
 			onSave={saveConsent}
-			onExportSimplePdf={() => exportPdf(false)}
-			onExportDetailedPdf={() => exportPdf(true)}
+			onExportPdf={() => {
+				showExportPdfModal = true;
+			}}
 			onExportJson={exportJson}
 		/>
 	</div>
 </div>
+
+<ExportPdfModal
+	bind:open={showExportPdfModal}
+	{exporting}
+	onExport={handleExportPdf}
+/>
 
 <!-- Fullscreen Modal Preview -->
 <ConsentModal
