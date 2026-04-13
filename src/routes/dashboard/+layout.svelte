@@ -26,5 +26,4 @@
 			<div aria-hidden="true" class="h-10 shrink-0"></div>
 		</div>
 	</main>
-	<div></div>
 </div>
