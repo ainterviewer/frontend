@@ -530,6 +530,16 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 	}
 
 	return {
+		info: {
+			title: `${projectName} Interview Guide`,
+			subject: 'Interview guide export',
+			keywords: platformVersion
+				? `interview guide,platform-version:${platformVersion}`
+				: 'interview guide',
+			creator: platformVersion
+				? `AInterviewer platform ${platformVersion}`
+				: 'AInterviewer platform'
+		},
 		header: (_currentPage: number, _pageCount: number, pageSize: { width: number }) => ({
 			stack: [
 				{
