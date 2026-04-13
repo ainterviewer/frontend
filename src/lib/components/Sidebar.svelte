@@ -80,6 +80,8 @@
 	function isActive(href?: string) {
 		return !!href && href === activeItemHref;
 	}
+
+	let platformVersion = $derived(page.data.platformVersion);
 </script>
 
 <div
@@ -97,7 +99,7 @@
 		<i class={collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'}></i>
 	</button>
 
-	<div class="h-full overflow-x-hidden overflow-y-auto">
+	<div class="h-full overflow-x-hidden overflow-y-auto pb-12">
 		<ul class="m-0 list-none p-0">
 			{#each items as item (item.label || item.href || item)}
 				{#if !item.requiresAdmin || auth.isAdmin}
@@ -110,6 +112,27 @@
 			{/each}
 		</ul>
 	</div>
+
+	{#if platformVersion}
+		<div
+			class="group absolute bottom-0 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
+		>
+			<span class="cursor-default whitespace-nowrap">
+				{collapsed ? platformVersion.platform_version?.slice(2) : `v${platformVersion.platform_version}`}
+			</span>
+			<div
+				class="pointer-events-none invisible absolute bottom-full left-1/2 z-1000 mb-2 -translate-x-1/2 rounded bg-light px-3 py-2 text-left text-xs whitespace-nowrap text-dark opacity-0 shadow-lg transition-opacity duration-200 group-hover:visible group-hover:opacity-100"
+			>
+				<div><strong>Platform:</strong> {platformVersion.platform_version}</div>
+				<div><strong>Core lib:</strong> {platformVersion.core_lib} ({platformVersion.git?.core_lib})</div>
+				<div><strong>Backend:</strong> {platformVersion.backend} ({platformVersion.git?.backend})</div>
+				<div><strong>Frontend:</strong> {platformVersion.frontend} ({platformVersion.git?.frontend})</div>
+				{#if platformVersion.build_time}
+					<div><strong>Built:</strong> {platformVersion.build_time}</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
 </div>
 
 {#snippet listItem(item: SidebarItem, level = 0, isLast = false)}
