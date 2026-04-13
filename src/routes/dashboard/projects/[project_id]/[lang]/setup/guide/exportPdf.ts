@@ -39,11 +39,12 @@ export const defaultPdfToggles = (): PdfToggles => ({
 	conditions: true
 });
 
-interface ExportOptions {
+export interface ExportOptions {
 	guide: InterviewGuideOutput;
 	sections: GuideSection[];
 	questions: Record<string, GuideQuestion[]>;
 	projectName: string;
+	platformVersion?: string | null;
 	toggles: PdfToggles;
 	consent?: Consent | null;
 	welcome?: Welcome | null;
@@ -70,9 +71,7 @@ function bodyText(text: string | null | undefined): PdfNode {
 
 function separator(): PdfNode {
 	return {
-		canvas: [
-			{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#dddddd' }
-		],
+		canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#dddddd' }],
 		margin: [0, 8, 0, 8]
 	};
 }
@@ -381,7 +380,8 @@ function buildTimedMessageContent(tm: TimedMessage, idx: number, toggles: PdfTog
 }
 
 export function exportGuidePdf(options: ExportOptions): PdfNode {
-	const { guide, sections, questions, projectName, toggles, consent, welcome } = options;
+	const { guide, sections, questions, projectName, platformVersion, toggles, consent, welcome } =
+		options;
 
 	const content: PdfNode[] = [];
 
@@ -488,12 +488,7 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 
 			// Questions
 			for (let qIdx = 0; qIdx < sectionQuestions.length; qIdx++) {
-				const qContent = buildQuestionContent(
-					sectionQuestions[qIdx],
-					qIdx,
-					sections,
-					toggles
-				);
+				const qContent = buildQuestionContent(sectionQuestions[qIdx], qIdx, sections, toggles);
 				// Wrap question in a bordered box
 				content.push({
 					margin: [0, 4, 0, 4],
@@ -535,6 +530,29 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 	}
 
 	return {
+		header: (_currentPage: number, _pageCount: number, pageSize: { width: number }) => ({
+			stack: [
+				{
+					canvas: [
+						{
+							type: 'rect',
+							x: 0,
+							y: 0,
+							w: pageSize.width,
+							h: 24,
+							color: '#ffffff'
+						}
+					]
+				},
+				{
+					text: platformVersion ? `Platform ${platformVersion}` : '',
+					alignment: 'right',
+					fontSize: 9,
+					color: '#ffffff',
+					margin: [0, -18, 24, 0]
+				}
+			]
+		}),
 		content,
 		defaultStyle: {
 			font: 'Roboto'

@@ -30,6 +30,7 @@
 
 	let projectId = $derived(page.params.project_id ?? '');
 	let language = $derived(page.params.lang ?? '');
+	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
 	// svelte-ignore state_referenced_locally
 	let title = $state(initialData?.title || '');
@@ -168,6 +169,7 @@
 				sections: mapped.sections,
 				questions: mapped.questions,
 				projectName,
+				platformVersion,
 				toggles,
 				consent,
 				welcome
@@ -423,11 +425,7 @@
 	</div>
 </div>
 
-<ExportPdfModal
-	bind:open={showExportPdfModal}
-	{exporting}
-	onExport={handleExportPdf}
-/>
+<ExportPdfModal bind:open={showExportPdfModal} {exporting} onExport={handleExportPdf} />
 
 <!-- Fullscreen Modal Preview -->
 <WelcomeModal

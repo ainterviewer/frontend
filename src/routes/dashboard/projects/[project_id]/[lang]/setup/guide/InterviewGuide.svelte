@@ -104,6 +104,7 @@
 	});
 
 	let projectId = $state(page.params.project_id ?? '');
+	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
 	// Modal state
 	let showGenerateGuideModal = $state(false);
@@ -280,6 +281,7 @@
 				sections: guideStore.localSections,
 				questions: guideStore.localQuestions,
 				projectName: projectName || 'Interview Guide',
+				platformVersion,
 				toggles,
 				consent,
 				welcome
@@ -611,11 +613,7 @@
 	</div>
 </form>
 
-<ExportPdfModal
-	bind:open={showExportPdfModal}
-	{exporting}
-	onExport={handleExportPdf}
-/>
+<ExportPdfModal bind:open={showExportPdfModal} {exporting} onExport={handleExportPdf} />
 
 <GenerateModal
 	bind:open={showGenerateGuideModal}
