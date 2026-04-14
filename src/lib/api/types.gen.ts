@@ -324,6 +324,17 @@ export type BackgroundInfoOptionsOutput = {
 };
 
 /**
+ * Body_add_project_language
+ */
+export type BodyAddProjectLanguage = {
+    language: LanguageCode;
+    /**
+     * Translate
+     */
+    translate?: boolean;
+};
+
+/**
  * Body_create_welcome
  */
 export type BodyCreateWelcome = {
@@ -1907,25 +1918,25 @@ export type QuestionInput = {
     /**
      * Main Question
      *
-     * The question to ask the interviewee
+     * The question to ask the interviewee.
      */
     main_question: string;
     /**
      * Probes
      *
-     * A list of possible follow-up questions to ask after the main question
+     * A list of possible follow-up questions to ask after the main question. If provided set max_probes_n or max_probes_time to greater than 0.
      */
     probes?: Array<string> | null;
     /**
      * Max Probes N
      *
-     * Max number of probes
+     * Max number of probes.
      */
     max_probes_n?: number | null;
     /**
      * Max Probes Time
      *
-     * Max time to spend on probing, in seconds
+     * Max time to spend on probing, in seconds.
      */
     max_probes_time?: number | null;
     /**
@@ -2020,25 +2031,25 @@ export type QuestionOutput = {
     /**
      * Main Question
      *
-     * The question to ask the interviewee
+     * The question to ask the interviewee.
      */
     main_question: string;
     /**
      * Probes
      *
-     * A list of possible follow-up questions to ask after the main question
+     * A list of possible follow-up questions to ask after the main question. If provided set max_probes_n or max_probes_time to greater than 0.
      */
     probes?: Array<string> | null;
     /**
      * Max Probes N
      *
-     * Max number of probes
+     * Max number of probes.
      */
     max_probes_n?: number | null;
     /**
      * Max Probes Time
      *
-     * Max time to spend on probing, in seconds
+     * Max time to spend on probing, in seconds.
      */
     max_probes_time?: number | null;
     /**
@@ -4239,7 +4250,7 @@ export type GetProjectLanguagesResponses = {
 export type GetProjectLanguagesResponse = GetProjectLanguagesResponses[keyof GetProjectLanguagesResponses];
 
 export type AddProjectLanguageData = {
-    body: LanguageCode;
+    body: BodyAddProjectLanguage;
     path: {
         /**
          * Project Id
