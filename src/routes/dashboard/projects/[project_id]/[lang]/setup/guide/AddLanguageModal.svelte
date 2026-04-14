@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Default } from '$lib/api';
 	import type { LanguageDict } from '$lib/api';
+	import { Default } from '$lib/api';
 	import { toast } from 'svelte-sonner';
 
 	let {
@@ -9,7 +9,7 @@
 		existingLanguageCodes
 	}: {
 		open: boolean;
-		onAdd: (code: string) => Promise<void>;
+		onAdd: (code: string, translate: boolean) => Promise<void>;
 		existingLanguageCodes: string[];
 	} = $props();
 
@@ -18,6 +18,7 @@
 	let error: string | null = $state(null);
 	let search = $state('');
 	let addingCode: string | null = $state(null);
+	let translate = $state(true);
 
 	let filteredLanguages = $derived(
 		languages
@@ -31,6 +32,7 @@
 
 	$effect(() => {
 		if (open) {
+			translate = true;
 			fetchLanguages();
 		}
 	});
@@ -56,7 +58,7 @@
 	async function handleAdd(code: string) {
 		addingCode = code;
 		try {
-			await onAdd(code);
+			await onAdd(code, translate);
 			open = false;
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to add language.');
@@ -94,6 +96,17 @@
 					class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 					bind:value={search}
 				/>
+				<label
+					class="mt-3 flex w-fit cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-50"
+				>
+					<input
+						type="checkbox"
+						class="h-4 w-4 cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
+						bind:checked={translate}
+						disabled={addingCode !== null}
+					/>
+					Auto-translate content
+				</label>
 			</div>
 
 			<div class="max-h-80 overflow-y-auto px-4 pb-4">

@@ -45,10 +45,10 @@
 		goto(basePath);
 	}
 
-	async function handleAddLanguage(code: string) {
+	async function handleAddLanguage(code: string, translate: boolean) {
 		const { error } = await Projects.addProjectLanguage({
 			path: { project_id: projectId },
-			body: code
+			body: { language: code, translate }
 		});
 		if (error) {
 			throw new Error('Failed to add language');
