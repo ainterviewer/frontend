@@ -1,7 +1,7 @@
 # Stage 1: Build
 FROM oven/bun:1.2 AS builder
 
-LABEL org.opencontainers.image.source="https://github.com/gaardhus/ainterviewer-frontend"
+LABEL org.opencontainers.image.source="https://github.com/ainterviewer/frontend"
 
 WORKDIR /app
 
