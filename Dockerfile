@@ -24,6 +24,8 @@ FROM oven/bun:1.2-slim AS runner
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 # Copy the build output, package.json and lockfile
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package.json ./package.json
@@ -44,6 +46,7 @@ ENV API_URL=http://localhost:8666
 # ENV ORIGIN=https://example.com
 
 EXPOSE 3000
+HEALTHCHECK CMD curl -fsS http://127.0.0.1:3000/health/ready || exit 1
 
 # Start the application using bun
 CMD ["bun", "build/index.js"]
