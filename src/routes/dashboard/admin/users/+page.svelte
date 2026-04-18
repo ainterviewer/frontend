@@ -6,9 +6,9 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let users = $state<UserAdmin[]>(data.users);
+	let users = $derived(data.users as UserAdmin[]);
 	let loading = $state(false);
-	let error = $state<string | null>(data.error);
+	let error = $state<string | null>(null);
 	let expandedRows = $state(new Set<string>());
 	let savingNote = $state(new Set<string>());
 
@@ -20,7 +20,6 @@
 	};
 
 	$effect(() => {
-		users = data.users;
 		error = data.error;
 	});
 
@@ -71,7 +70,7 @@
 				toast.error('Failed to delete user');
 				console.error(response.error);
 			} else {
-				users = users.filter((u) => u.id !== id);
+				await invalidateAll();
 				toast.success('User deleted');
 			}
 		} catch (e) {
@@ -98,12 +97,7 @@
 				toast.error('Failed to save note');
 				console.error(response.error);
 			} else {
-				const updated = response.data as unknown as UserAdmin;
-				users = users.map((u) =>
-					u.id === user.id
-						? { ...u, admin_note: updated.admin_note, admin_note_updated_at: updated.admin_note_updated_at }
-						: u
-				);
+				await invalidateAll();
 				toast.success('Note saved');
 			}
 		} catch (e) {

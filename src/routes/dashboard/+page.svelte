@@ -1,13 +1,8 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import type {
-		CollaboratorRole,
-		LanguageDict,
-		ProjectFolderWithProjects,
-		ProjectPublic
-	} from '$lib/api';
-	import { Default, Folders, Projects } from '$lib/api';
+	import type { CollaboratorRole, ProjectFolderWithProjects, ProjectPublic } from '$lib/api';
+	import { Folders, Projects } from '$lib/api';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
@@ -18,9 +13,8 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let folders: ProjectFolderWithProjects[] = $state(data.folders);
-	let languages: LanguageDict[] = $state(data.languages);
-	let isLoading = $state(false);
+	let folders = $derived(data.folders ?? []);
+	let languages = $derived(data.languages ?? []);
 
 	// Modal States
 	let isCreateFolderModalOpen = $state(false);
@@ -60,15 +54,7 @@
 	let activeDropdown: string | null = $state(null);
 
 	async function loadData() {
-		isLoading = true;
-		const [foldersRes, langRes] = await Promise.all([Folders.getFolders(), Default.getLanguages()]);
-		if (foldersRes.error || langRes.error) {
-			console.error('Failed to load data:', foldersRes.error || langRes.error);
-		} else {
-			folders = foldersRes.data;
-			languages = langRes.data;
-		}
-		isLoading = false;
+		await invalidateAll();
 	}
 
 	onMount(() => {
@@ -481,7 +467,7 @@
 		</div>
 	</div>
 {/each}
-{#if folders.length === 0 && !isLoading}
+{#if folders.length === 0}
 	<div class="p-8 text-center text-gray-500">No folders found. Create one to get started!</div>
 {/if}
 
@@ -805,6 +791,7 @@
 		class="fixed inset-0 z-1000 flex items-center justify-center overflow-auto bg-black/40"
 		onclick={() => (isCreateFolderModalOpen = false)}
 		onkeydown={(e) => e.key === 'Escape' && (isCreateFolderModalOpen = false)}
+		role="presentation"
 	>
 		<div
 			class="relative m-auto w-1/2 max-w-2xl rounded border border-[#888] bg-white p-10 shadow-xl"

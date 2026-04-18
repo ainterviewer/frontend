@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { CollisionPriority } from '@dnd-kit/abstract';
 	import SortableQuestion from './SortableQuestion.svelte';
@@ -30,19 +31,21 @@
 		source = 'guide'
 	}: Props = $props();
 
-	const { ref, handleRef, isDragging } = useSortable({
-		id: section.id,
-		index: () => sectionIndex,
-		type: 'section',
-		data: {
+	const { ref, handleRef, isDragging } = useSortable(
+		untrack(() => ({
+			id: section.id,
+			index: () => sectionIndex,
 			type: 'section',
-			section,
-			questions,
-			source
-		},
-		accept: ['question', 'section'],
-		collisionPriority: CollisionPriority.Low
-	});
+			data: {
+				type: 'section',
+				section,
+				questions,
+				source
+			},
+			accept: ['question', 'section'],
+			collisionPriority: CollisionPriority.Low
+		}))
+	);
 
 	let chatDropTarget = $derived(
 		dragState.chatDropTarget?.id === section.id ? dragState.chatDropTarget : null
@@ -103,17 +106,20 @@
 		<button
 			class="cursor-pointer rounded p-2 text-gray-700 transition hover:text-red-500"
 			onclick={onRemove}
+			aria-label="Remove section"
 		>
 			<i class="fa-solid fa-trash"></i>
 		</button>
 	</div>
 
 	<div class="mb-4">
-		<label class="mb-1 block text-sm font-bold text-gray-700">Description</label>
-		<textarea
-			class="h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
-			bind:value={section.description}
-		></textarea>
+		<label class="mb-1 block text-sm font-bold text-gray-700">
+			Description
+			<textarea
+				class="h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+				bind:value={section.description}
+			></textarea>
+		</label>
 	</div>
 
 	<div class="mb-4 flex gap-4 text-sm">

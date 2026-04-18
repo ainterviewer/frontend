@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import type { GuideQuestion } from './types';
 
@@ -11,14 +12,16 @@
 
 	let { question, questionIndex, sectionId, activeId }: Props = $props();
 
-	const { ref, handleRef, isDragging } = useSortable({
-		id: question.id,
-		index: () => questionIndex,
-		group: sectionId,
-		type: 'sidebar-question',
-		accept: 'sidebar-question',
-		data: { type: 'sidebar-question', sectionId }
-	});
+	const { ref, handleRef, isDragging } = useSortable(
+		untrack(() => ({
+			id: question.id,
+			index: () => questionIndex,
+			group: sectionId,
+			type: 'sidebar-question',
+			accept: 'sidebar-question',
+			data: { type: 'sidebar-question', sectionId }
+		}))
+	);
 </script>
 
 <div

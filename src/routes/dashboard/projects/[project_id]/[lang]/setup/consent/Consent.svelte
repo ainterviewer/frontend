@@ -33,7 +33,7 @@
 	let showFullscreenModal = $state(false);
 	let saving = $state(false);
 	let exporting = $state(false);
-	const availableLanguages: LanguageDict[] = initialAvailableLanguages;
+	const availableLanguages = $derived<LanguageDict[]>(initialAvailableLanguages);
 
 	function getSnapshot() {
 		return JSON.stringify({ title, text });

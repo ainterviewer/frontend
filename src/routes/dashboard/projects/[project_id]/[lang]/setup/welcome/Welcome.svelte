@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
@@ -27,7 +28,7 @@
 		availableLanguages: initialAvailableLanguages = [],
 		projectName = 'Interview Guide'
 	}: Props = $props();
-	const initialVideoFileName = initialData?.video_file_name || null;
+	const initialVideoFileName = $derived(initialData?.video_file_name || null);
 
 	let projectId = $derived(page.params.project_id ?? '');
 	let language = $derived(page.params.lang ?? '');
@@ -40,13 +41,13 @@
 	// svelte-ignore state_referenced_locally
 	let email = $state(initialData?.email || '');
 
-	let videoFileName = $state<string | null>(initialVideoFileName);
+	let videoFileName = $state<string | null>(untrack(() => initialVideoFileName));
 	let videoFile = $state<File | null>(null);
 
 	let showFullscreenModal = $state(false);
 	let saving = $state(false);
 	let exporting = $state(false);
-	const availableLanguages: LanguageDict[] = initialAvailableLanguages;
+	const availableLanguages = $derived<LanguageDict[]>(initialAvailableLanguages);
 
 	let videoPreviewUrl = $state<string | null>(null);
 

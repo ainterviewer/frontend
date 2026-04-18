@@ -26,9 +26,7 @@
 		};
 	}
 
-	let externalParams: ExternalParam[] = $state(
-		structuredClone(data.project?.external_params ?? [])
-	);
+	let externalParams: ExternalParam[] = $state([]);
 
 	$effect(() => {
 		externalParams = structuredClone(data.project?.external_params ?? []);

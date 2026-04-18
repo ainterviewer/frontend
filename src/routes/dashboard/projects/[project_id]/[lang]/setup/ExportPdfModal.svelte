@@ -85,8 +85,12 @@
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
 		role="dialog"
 		aria-modal="true"
+		tabindex="-1"
 		onclick={(e) => {
 			if (e.target === e.currentTarget && !exporting) open = false;
+		}}
+		onkeydown={(e) => {
+			if (e.key === 'Escape' && !exporting) open = false;
 		}}
 	>
 		<div class="w-full max-w-lg overflow-hidden rounded-lg bg-white shadow-xl">

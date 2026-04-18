@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { slide } from 'svelte/transition';
@@ -34,19 +35,21 @@
 	let expandedSurvey = $state(false);
 	let expandedCondition = $state(false);
 
-	const { ref, handleRef, isDragging } = useSortable({
-		id: question.id,
-		index: () => index,
-		group: sectionId,
-		type: 'question',
-		accept: 'question',
-		data: {
+	const { ref, handleRef, isDragging } = useSortable(
+		untrack(() => ({
+			id: question.id,
+			index: () => index,
+			group: sectionId,
 			type: 'question',
-			question,
-			sectionId,
-			source
-		}
-	});
+			accept: 'question',
+			data: {
+				type: 'question',
+				question,
+				sectionId,
+				source
+			}
+		}))
+	);
 
 	let chatTargetInfo = $derived(
 		dragState.chatDropTarget?.id === question.id ? dragState.chatDropTarget : null
@@ -123,25 +126,25 @@
 	<div class="space-y-4">
 		<!-- Main Content -->
 		<div>
-			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase"
-				>Description</label
-			>
-			<textarea
-				class="h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
-				placeholder="Add some context or description..."
-				bind:value={question.description}
-			></textarea>
+			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase">
+				Description
+				<textarea
+					class="mt-1 h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm normal-case tracking-normal transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+					placeholder="Add some context or description..."
+					bind:value={question.description}
+				></textarea>
+			</label>
 		</div>
 
 		<div>
-			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase"
-				>Main Question</label
-			>
-			<textarea
-				class="h-18 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
-				placeholder="What would you like to ask?"
-				bind:value={question.main_question}
-			></textarea>
+			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase">
+				Main Question
+				<textarea
+					class="mt-1 h-18 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium normal-case tracking-normal transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+					placeholder="What would you like to ask?"
+					bind:value={question.main_question}
+				></textarea>
+			</label>
 		</div>
 
 		<!-- Accordion Panels for Image/Survey/Condition -->
@@ -277,10 +280,10 @@
 									<i class="fa-solid fa-trash text-sm"></i>
 								</button>
 								<div class="max-w-sm space-y-4 text-sm">
-									<div>
-										<label class="mb-2 block text-gray-500">Type</label>
+									<label class="mb-2 block text-gray-500">
+										Type
 										<select
-											class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+											class="mt-1 w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 											value={question.survey_item.type}
 											onchange={(e) => {
 												const type = (e.target as HTMLSelectElement).value;
@@ -310,10 +313,10 @@
 											<option value="datetime">Date & Time</option>
 											<option value="time">Time</option>
 										</select>
-									</div>
+									</label>
 									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox' || question.survey_item.type === 'likert'}
 										<div>
-											<label class="mb-2 block text-gray-500">Options</label>
+											<span class="mb-2 block text-gray-500">Options</span>
 											<div class="space-y-1">
 												{#each question.survey_item.options as _, oIdx}
 													<div class="flex gap-1">
@@ -354,155 +357,155 @@
 										</label>
 									{/if}
 									{#if question.survey_item.type === 'likert'}
-										<div>
-											<label class="mb-2 block text-gray-500">Display as</label>
+										<label class="mb-2 block text-gray-500">
+											Display as
 											<select
-												class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+												class="mt-1 w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 												bind:value={question.survey_item.ui}
 											>
 												<option value="radio">Radio buttons</option>
 												<option value="slider">Slider</option>
 											</select>
-										</div>
+										</label>
 									{/if}
 									{#if question.survey_item.type === 'number'}
 										<div class="grid grid-cols-3 gap-2">
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Min</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Min
 												<input
 													type="number"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No min"
 													bind:value={question.survey_item.min}
 												/>
-											</div>
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Max</label>
+											</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Max
 												<input
 													type="number"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No max"
 													bind:value={question.survey_item.max}
 												/>
-											</div>
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Step</label>
+											</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Step
 												<input
 													type="number"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No step"
 													bind:value={question.survey_item.step}
 												/>
-											</div>
+											</label>
 										</div>
 									{/if}
 									{#if question.survey_item.type === 'slider'}
 										<div class="grid grid-cols-2 gap-2">
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Min Label</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Min Label
 												<input
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="Min label..."
 													bind:value={question.survey_item.min_label}
 												/>
-											</div>
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Max Label</label>
+											</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Max Label
 												<input
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="Max label..."
 													bind:value={question.survey_item.max_label}
 												/>
-											</div>
+											</label>
 										</div>
 										<div class="grid grid-cols-3 gap-2">
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Min</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Min
 												<input
 													type="number"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No min"
 													bind:value={question.survey_item.min}
 												/>
-											</div>
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Max</label>
+											</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Max
 												<input
 													type="number"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No max"
 													bind:value={question.survey_item.max}
 												/>
-											</div>
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Step</label>
+											</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Step
 												<input
 													type="number"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No step"
 													bind:value={question.survey_item.step}
 												/>
-											</div>
+											</label>
 										</div>
 									{/if}
 									{#if question.survey_item.type === 'date'}
 										<div class="grid grid-cols-2 gap-2">
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Min</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Min
 												<input
 													type="date"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													bind:value={question.survey_item.min}
 												/>
-											</div>
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Max</label>
+											</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Max
 												<input
 													type="date"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													bind:value={question.survey_item.max}
 												/>
-											</div>
+											</label>
 										</div>
 									{/if}
 									{#if question.survey_item.type === 'datetime'}
 										<div class="grid grid-cols-2 gap-2">
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Min</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Min
 												<input
 													type="datetime-local"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													bind:value={question.survey_item.min}
 												/>
-											</div>
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Max</label>
+											</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Max
 												<input
 													type="datetime-local"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													bind:value={question.survey_item.max}
 												/>
-											</div>
+											</label>
 										</div>
 									{/if}
 									{#if question.survey_item.type === 'time'}
 										<div class="grid grid-cols-2 gap-2">
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Min</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Min
 												<input
 													type="time"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													bind:value={question.survey_item.min}
 												/>
-											</div>
-											<div>
-												<label class="mb-2 block text-sm text-gray-500">Max</label>
+											</label>
+											<label class="mb-2 block text-sm text-gray-500">
+												Max
 												<input
 													type="time"
-													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													bind:value={question.survey_item.max}
 												/>
-											</div>
+											</label>
 										</div>
 									{/if}
 								</div>
@@ -562,12 +565,10 @@
 								</button>
 								<div class="max-w-lg space-y-3">
 									<!-- Action -->
-									<div>
-										<label class="mb-2 block text-sm font-bold text-gray-500"
-											>Action when conditions are met</label
-										>
+									<label class="mb-2 block text-sm font-bold text-gray-500">
+										Action when conditions are met
 										<select
-											class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+											class="mt-1 w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm font-normal focus:border-primary focus:ring-primary/20"
 											bind:value={question.conditions.action}
 										>
 											<option value="ask_question">Ask this question</option>
@@ -575,11 +576,11 @@
 											<option value="skip_section">Skip entire section</option>
 											<option value="end_interview">End interview</option>
 										</select>
-									</div>
+									</label>
 
 									<!-- Condition Blocks -->
 									<div class="space-y-2">
-										<label class="block text-sm font-bold text-gray-500">Condition blocks</label>
+										<span class="block text-sm font-bold text-gray-500">Condition blocks</span>
 										{#each question.conditions.conditions as condition, condIdx}
 											{@const referencedQuestion = allSections[condition.question_context.section]
 												? (allQuestions[allSections[condition.question_context.section].id] || [])[
@@ -622,12 +623,10 @@
 
 												<div class="space-y-4">
 													<!-- Question Context -->
-													<div>
-														<label class="mb-2 block text-sm text-gray-500"
-															>Based on answer to</label
-														>
+													<label class="mb-2 block text-sm text-gray-500">
+														Based on answer to
 														<select
-															class="w-full rounded border-gray-200 bg-white p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+															class="mt-1 w-full rounded border-gray-200 bg-white p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 															value={`${condition.question_context.section}-${condition.question_context.question}`}
 															onchange={(e) => {
 																const [sIdx, qIdx] = (e.target as HTMLSelectElement).value
@@ -652,7 +651,7 @@
 																{/if}
 															{/each}
 														</select>
-													</div>
+													</label>
 
 													<!-- Negate Condition -->
 													<div class="flex items-center">
@@ -670,7 +669,7 @@
 
 													<!-- Evaluations -->
 													<div class="space-y-1">
-														<label class="mb-1 block text-sm text-gray-500">Trigger value(s)</label>
+														<span class="mb-1 block text-sm text-gray-500">Trigger value(s)</span>
 														{#each condition.evaluation as evaluation, evalIdx}
 															<div class="space-y-1">
 																<div
@@ -678,12 +677,10 @@
 																>
 																	<div class="flex-1 space-y-2">
 																		{#if isNumericOrDate}
-																			<div>
-																				<label class="mb-1 block text-sm text-gray-400"
-																					>Operator</label
-																				>
+																			<label class="mb-1 block text-sm text-gray-400">
+																				Operator
 																				<select
-																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+																					class="mt-1 w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 																					bind:value={evaluation.comparison_operator}
 																				>
 																					<option value="==">Equals (==)</option>
@@ -692,11 +689,11 @@
 																					<option value=">">Greater than (&gt;)</option>
 																					<option value=">=">Greater than or equal (&gt;=)</option>
 																				</select>
-																			</div>
+																			</label>
 																		{/if}
 
 																		<div>
-																			<label class="mb-1 block text-sm text-gray-400">Value</label>
+																			<span class="mb-1 block text-sm text-gray-400">Value</span>
 																			{#if referencedQuestion?.survey_item?.type === 'number'}
 																				<input
 																					type="number"
@@ -964,8 +961,8 @@
 
 				<!-- Alternative Main Questions -->
 				<div class="hidden">
-					<label class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase"
-						>Alternative Phrasings</label
+					<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase"
+						>Alternative Phrasings</span
 					>
 					{#if question.alternative_main_questions}
 						<div class="mb-2 space-y-2">
@@ -979,6 +976,7 @@
 									<button
 										class="px-2 text-gray-400 hover:text-red-500"
 										onclick={() => question.alternative_main_questions?.splice(aqIdx, 1)}
+										aria-label="Remove alternative question"
 										><i class="fa-solid fa-trash"></i></button
 									>
 								</div>
@@ -998,8 +996,8 @@
 
 				<!-- Probes -->
 				<div>
-					<label class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase"
-						>Follow-up Probes</label
+					<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase"
+						>Follow-up Probes</span
 					>
 					{#if question.probes}
 						<div class="mb-2 space-y-2">
@@ -1013,6 +1011,7 @@
 									<button
 										class="px-2 text-gray-400 hover:text-red-500"
 										onclick={() => question.probes?.splice(pIdx, 1)}
+										aria-label="Remove probe"
 										><i class="fa-solid fa-trash"></i></button
 									>
 								</div>
@@ -1034,8 +1033,8 @@
 				<div class="grid grid-cols-1 gap-20 border-t border-gray-200 pt-4 sm:grid-cols-3">
 					<!-- Probing Limits -->
 					<div class="space-y-3">
-						<label class="text-xs font-bold tracking-wider text-gray-700 uppercase"
-							>Probing Limits</label
+						<span class="text-xs font-bold tracking-wider text-gray-700 uppercase"
+							>Probing Limits</span
 						>
 						<div class="mt-2 space-y-2">
 							<div class="flex items-center justify-between">
@@ -1061,8 +1060,8 @@
 
 					<!-- Behavior Flags -->
 					<div class="col-span-2 space-y-3">
-						<label class="text-xs font-bold tracking-wider text-gray-700 uppercase"
-							>Behavior Flags</label
+						<span class="text-xs font-bold tracking-wider text-gray-700 uppercase"
+							>Behavior Flags</span
 						>
 						<div class="mt-2 grid grid-cols-2 gap-x-4 gap-y-3">
 							<div class="flex">

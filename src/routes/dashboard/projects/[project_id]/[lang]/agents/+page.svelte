@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type {
@@ -12,9 +13,9 @@
 	let { data }: { data: PageData } = $props();
 
 	let saving = $state(false);
-	let agents = $state<AgentConfigsOutput>(data.agents);
-	let prompts = $state<Record<string, any>>(data.prompts as Record<string, any>);
-	let models = $state<string[]>(data.models);
+	let agents = $state<AgentConfigsOutput>(untrack(() => data.agents));
+	let prompts = $state<Record<string, any>>(untrack(() => data.prompts as Record<string, any>));
+	let models = $state<string[]>(untrack(() => data.models));
 	let promptsContainer: HTMLDivElement;
 
 	$effect(() => {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { CollisionPriority } from '@dnd-kit/abstract';
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import SidebarSortableQuestion from './SidebarSortableQuestion.svelte';
@@ -13,15 +14,17 @@
 
 	let { section, sectionIndex, questions, activeId }: Props = $props();
 
-	const { ref, handleRef, isDragging } = useSortable({
-		id: section.id,
-		index: () => sectionIndex,
-		type: 'sidebar-section',
-		// Accept questions so sections serve as cross-section drop targets (low priority fallback)
-		accept: ['sidebar-section', 'sidebar-question'],
-		collisionPriority: CollisionPriority.Low,
-		data: { type: 'sidebar-section', sectionId: section.id }
-	});
+	const { ref, handleRef, isDragging } = useSortable(
+		untrack(() => ({
+			id: section.id,
+			index: () => sectionIndex,
+			type: 'sidebar-section',
+			// Accept questions so sections serve as cross-section drop targets (low priority fallback)
+			accept: ['sidebar-section', 'sidebar-question'],
+			collisionPriority: CollisionPriority.Low,
+			data: { type: 'sidebar-section', sectionId: section.id }
+		}))
+	);
 </script>
 
 <div class:opacity-40={isDragging.current} {@attach ref}>

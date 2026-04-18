@@ -13,9 +13,9 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let invitations = $state<InvitationPublic[]>(data.invitations);
+	let invitations = $derived(data.invitations as InvitationPublic[]);
 	let isLoading = $state(false);
-	let error = $state<string | null>(data.error);
+	let error = $state<string | null>(null);
 	let selectedIds = $state<Set<string>>(new Set());
 	let showCreateForm = $state(false);
 	let editingInvitation = $state<InvitationPublic | null>(null);
@@ -52,7 +52,6 @@
 	};
 
 	$effect(() => {
-		invitations = data.invitations;
 		error = data.error;
 	});
 
@@ -380,7 +379,7 @@
 			</div>
 			<div class="sm:col-span-2">
 				<div class="mb-2 flex items-center gap-3">
-					<label class="block text-sm font-medium text-gray-700">User Expires</label>
+					<span class="block text-sm font-medium text-gray-700">User Expires</span>
 					<div class="flex rounded-md border border-gray-300 text-xs">
 						<button
 							type="button"

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { Experiments } from '$lib/api/sdk.gen';
 	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
 	import Sidebar from '$lib/components/Sidebar.svelte';
@@ -17,16 +18,10 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// eslint-disable-next-line svelte/prefer-writable-derived
-	let experiments = $state<Experiment[]>(data.experiments as unknown as Experiment[]);
+	let experiments = $derived(data.experiments as unknown as Experiment[]);
 	let folders = $derived<ProjectFolderWithProjects[]>(
 		data.folders as unknown as ProjectFolderWithProjects[]
 	);
-
-	// Sync local state with data prop when it changes (e.g. navigation/invalidation)
-	$effect(() => {
-		experiments = data.experiments as unknown as Experiment[];
-	});
 
 	let isCreateModalOpen = $state(false);
 	let isDeleteModalOpen = $state(false);
@@ -144,7 +139,7 @@
 		}
 
 		if (response.data) {
-			experiments = [...experiments, response.data as unknown as Experiment];
+			await invalidateAll();
 			isCreateModalOpen = false;
 		}
 	}
@@ -160,7 +155,7 @@
 			toast.error('Failed to delete experiment');
 			return;
 		}
-		experiments = experiments.filter((e) => e.id !== selectedExperiment!.id);
+		await invalidateAll();
 		isDeleteModalOpen = false;
 		selectedExperiment = null;
 	}

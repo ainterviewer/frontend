@@ -17,9 +17,9 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let requests = $state<AccessRequest[]>(data.requests);
+	let requests = $derived(data.requests as AccessRequest[]);
 	let isLoading = $state(false);
-	let error = $state<string | null>(data.error);
+	let error = $state<string | null>(null);
 	let selectedIds = $state<Set<string>>(new Set());
 	let scopeByRequest = $state<Record<string, Scope>>({});
 
@@ -34,10 +34,8 @@
 	let allSelected = $derived(requests.length > 0 && selectedIds.size === requests.length);
 
 	$effect(() => {
-		const nextRequests = data.requests;
-		requests = nextRequests;
 		error = data.error;
-		scopeByRequest = Object.fromEntries(nextRequests.map((r) => [r.id, 'user' as Scope]));
+		scopeByRequest = Object.fromEntries(data.requests.map((r) => [r.id, 'user' as Scope]));
 	});
 
 	async function loadRequests() {
