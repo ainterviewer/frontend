@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
+	import { untrack } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import { dragState } from './dragState.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
@@ -129,7 +129,7 @@
 			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase">
 				Description
 				<textarea
-					class="mt-1 h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm normal-case tracking-normal transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+					class="mt-1 h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm tracking-normal normal-case transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 					placeholder="Add some context or description..."
 					bind:value={question.description}
 				></textarea>
@@ -140,7 +140,7 @@
 			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase">
 				Main Question
 				<textarea
-					class="mt-1 h-18 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium normal-case tracking-normal transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+					class="mt-1 h-18 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium tracking-normal normal-case transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 					placeholder="What would you like to ask?"
 					bind:value={question.main_question}
 				></textarea>
@@ -571,7 +571,7 @@
 											class="mt-1 w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm font-normal focus:border-primary focus:ring-primary/20"
 											bind:value={question.conditions.action}
 										>
-											<option value="ask_question">Ask this question</option>
+											<option value="skip_probes">Skip probes</option>
 											<option value="skip_question">Skip this question</option>
 											<option value="skip_section">Skip entire section</option>
 											<option value="end_interview">End interview</option>
@@ -1011,8 +1011,7 @@
 									<button
 										class="px-2 text-gray-400 hover:text-red-500"
 										onclick={() => question.probes?.splice(pIdx, 1)}
-										aria-label="Remove probe"
-										><i class="fa-solid fa-trash"></i></button
+										aria-label="Remove probe"><i class="fa-solid fa-trash"></i></button
 									>
 								</div>
 							{/each}
