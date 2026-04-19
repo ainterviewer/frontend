@@ -1,7 +1,7 @@
 import { Auth, Default, Projects } from '$lib/api';
 import { clearAuthCookies } from '../../hooks.server';
 import { parseProjectRoute } from '$lib/utils/urls';
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
@@ -13,6 +13,12 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 	]);
 
 	if (response.error) {
+		if (!response.response) {
+			throw error(503, 'Backend unavailable');
+		}
+		if (response.response?.status && response.response.status >= 500) {
+			throw error(503, 'Backend unavailable');
+		}
 		clearAuthCookies(cookies);
 		throw redirect(303, '/login');
 	}

@@ -1,6 +1,6 @@
 import { env } from '$env/dynamic/private';
 import { client } from '$lib/api/client.gen';
-import { redirect, type Handle } from '@sveltejs/kit';
+import { error, redirect, type Handle } from '@sveltejs/kit';
 import type { Cookies } from '@sveltejs/kit';
 
 const API_BASE = () => env.API_URL || 'http://localhost:8666';
@@ -12,20 +12,32 @@ client.setConfig({
 	baseUrl: API_BASE()
 });
 
+type RefreshResult = 'ok' | 'unauthorized' | 'unavailable';
+
 /**
  * Call the backend /api/refresh endpoint and forward the new cookies
- * to the browser. Returns true if the refresh succeeded.
+ * to the browser.
  */
-async function serverSideRefresh(fetchFn: typeof fetch, cookies: Cookies): Promise<boolean> {
+async function serverSideRefresh(fetchFn: typeof fetch, cookies: Cookies): Promise<RefreshResult> {
 	const refreshToken = cookies.get('refresh_token');
-	if (!refreshToken) return false;
+	if (!refreshToken) return 'unauthorized';
 
-	const res = await fetchFn(`${API_BASE()}/api/refresh`, {
-		method: 'POST',
-		headers: { cookie: `refresh_token=${refreshToken}` }
-	});
+	let res: Response;
+	try {
+		res = await fetchFn(`${API_BASE()}/api/refresh`, {
+			method: 'POST',
+			headers: { cookie: `refresh_token=${refreshToken}` }
+		});
+	} catch {
+		return 'unavailable';
+	}
 
-	if (!res.ok) return false;
+	if (!res.ok) {
+		if (res.status === 401 || res.status === 403 || (res.status >= 400 && res.status < 500)) {
+			return 'unauthorized';
+		}
+		return 'unavailable';
+	}
 
 	for (const header of res.headers.getSetCookie()) {
 		const [cookiePart, ...attrParts] = header.split(';');
@@ -47,7 +59,7 @@ async function serverSideRefresh(fetchFn: typeof fetch, cookies: Cookies): Promi
 		});
 	}
 
-	return true;
+	return 'ok';
 }
 
 function clearAuthCookies(cookies: Cookies) {
@@ -82,10 +94,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 				clearAuthCookies(event.cookies);
 				throw redirect(303, '/login');
 			}
-			const ok = await serverSideRefresh(event.fetch, event.cookies);
-			if (!ok) {
+			const refreshResult = await serverSideRefresh(event.fetch, event.cookies);
+			if (refreshResult === 'unauthorized') {
 				clearAuthCookies(event.cookies);
 				throw redirect(303, '/login');
+			}
+			if (refreshResult === 'unavailable') {
+				throw error(503, 'Backend unavailable');
 			}
 			// Successfully refreshed — fall through; event.locals.cookieHeader
 			// will carry the new tokens to all server load functions.
@@ -102,8 +117,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 			const needsRefresh = !accessToken || isTokenExpired(accessToken);
 
 			if (needsRefresh && hasRefresh) {
-				await serverSideRefresh(event.fetch, event.cookies);
-				// On failure, let the request through — the page will handle authError.
+				const refreshResult = await serverSideRefresh(event.fetch, event.cookies);
+				if (refreshResult === 'unavailable') {
+					throw error(503, 'Backend unavailable');
+				}
+				// On unauthorized refresh, let the request through — the page will handle authError.
 			}
 		}
 	}

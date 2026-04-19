@@ -1,5 +1,5 @@
 import { Auth, Projects, type InterviewType } from '$lib/api';
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, cookies, request, locals }) => {
@@ -20,6 +20,9 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 		} else {
 			const response = await Auth.me({ headers: { cookie: locals.cookieHeader } });
 			if (response.error) {
+				if (!response.response || response.response.status >= 500) {
+					throw error(503, 'Backend unavailable');
+				}
 				authError = true;
 			}
 		}
