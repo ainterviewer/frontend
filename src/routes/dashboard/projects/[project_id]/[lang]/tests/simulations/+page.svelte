@@ -196,7 +196,7 @@
 		{/each}
 
 		<div
-			class="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-primary hover:text-primary"
+			class="flex min-h-[150px] cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-primary hover:text-primary"
 			role="button"
 			tabindex="0"
 			onclick={() => {

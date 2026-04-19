@@ -362,7 +362,7 @@
 	<div class="mb-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 		{#each folder.projects as project (project.id)}
 			<div
-				class="flex flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-xl {activeDropdown !==
+				class="flex min-h-[190px] flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-xl {activeDropdown !==
 				project.id
 					? 'hover:scale-101'
 					: ''}"
@@ -448,7 +448,7 @@
 		{/each}
 
 		<div
-			class="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-primary hover:text-primary"
+			class="flex min-h-[190px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-primary hover:text-primary"
 			role="button"
 			tabindex="0"
 			onclick={() => {
