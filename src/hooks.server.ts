@@ -16,11 +16,11 @@ client.setConfig({
  * Call the backend /api/refresh endpoint and forward the new cookies
  * to the browser. Returns true if the refresh succeeded.
  */
-async function serverSideRefresh(cookies: Cookies): Promise<boolean> {
+async function serverSideRefresh(fetchFn: typeof fetch, cookies: Cookies): Promise<boolean> {
 	const refreshToken = cookies.get('refresh_token');
 	if (!refreshToken) return false;
 
-	const res = await fetch(`${API_BASE()}/api/refresh`, {
+	const res = await fetchFn(`${API_BASE()}/api/refresh`, {
 		method: 'POST',
 		headers: { cookie: `refresh_token=${refreshToken}` }
 	});
@@ -82,7 +82,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				clearAuthCookies(event.cookies);
 				throw redirect(303, '/login');
 			}
-			const ok = await serverSideRefresh(event.cookies);
+			const ok = await serverSideRefresh(event.fetch, event.cookies);
 			if (!ok) {
 				clearAuthCookies(event.cookies);
 				throw redirect(303, '/login');
@@ -102,7 +102,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			const needsRefresh = !accessToken || isTokenExpired(accessToken);
 
 			if (needsRefresh && hasRefresh) {
-				await serverSideRefresh(event.cookies);
+				await serverSideRefresh(event.fetch, event.cookies);
 				// On failure, let the request through — the page will handle authError.
 			}
 		}
