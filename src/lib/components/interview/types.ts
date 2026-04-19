@@ -18,4 +18,5 @@ export interface Message {
 	// For survey responses or other internal use
 	options?: any;
 	required?: boolean;
+	answer?: string;
 }

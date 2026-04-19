@@ -1,8 +1,17 @@
 <script lang="ts">
 	import type { SurveyItemUnion } from './types';
 
-	let { onAnswer, ...surveyItem } = $props<
-		SurveyItemUnion & { onAnswer?: (value: unknown) => void }
+	let {
+		onAnswer,
+		readonly = false,
+		answer = '',
+		...surveyItem
+	} = $props<
+		SurveyItemUnion & {
+			onAnswer?: (value: unknown) => void;
+			readonly?: boolean;
+			answer?: string;
+		}
 	>();
 
 	let sliderValue = $state(0);
@@ -19,7 +28,52 @@
 	let otherSelected = $state(false);
 	let otherText = $state('');
 
-	let disabled = $state(false);
+	let disabled = $state(readonly);
+
+	const uid = $props.id();
+	const groupName = `survey-option-${uid}`;
+
+	if (readonly && answer) {
+		if (surveyItem.type === 'slider') {
+			sliderValue = Number(answer);
+		} else if (surveyItem.type === 'likert') {
+			if (surveyItem.ui === 'slider') {
+				const idx = surveyItem.options.indexOf(answer);
+				if (idx >= 0) sliderValue = idx;
+			} else {
+				radioValue = answer;
+			}
+		} else if (surveyItem.type === 'radio') {
+			if (surveyItem.options.includes(answer)) {
+				radioValue = answer;
+			} else {
+				otherSelected = true;
+				otherText = answer;
+			}
+		} else if (surveyItem.type === 'number') {
+			numberValue = Number(answer);
+		} else if (surveyItem.type === 'date' || surveyItem.type === 'datetime') {
+			dateValue = answer;
+		} else if (surveyItem.type === 'time') {
+			timeValue = answer;
+		} else if (surveyItem.type === 'checkbox') {
+			const parts = answer
+				.split(',')
+				.map((s: string) => s.trim())
+				.filter(Boolean);
+			const opts = new Set(surveyItem.options);
+			const picked = new Set<string>();
+			for (const p of parts) {
+				if (opts.has(p)) {
+					picked.add(p);
+				} else {
+					otherSelected = true;
+					otherText = p;
+				}
+			}
+			selectedValues = picked;
+		}
+	}
 
 	// Slider defaults
 	let sliderMin = $derived(surveyItem.type === 'slider' ? (surveyItem.min ?? 0) : 0);
@@ -44,6 +98,10 @@
 	});
 
 	let likertOptions = $derived(surveyItem.type === 'likert' ? surveyItem.options : []);
+	let likertOptionWidthCh = $derived.by(() => {
+		if (surveyItem.type !== 'likert' || surveyItem.ui === 'slider') return 10;
+		return Math.max(10, ...surveyItem.options.map((opt: string) => opt.length + 0));
+	});
 
 	let selectOptions = $derived(
 		surveyItem.type === 'radio' || surveyItem.type === 'checkbox'
@@ -165,8 +223,10 @@
 
 <div class="mt-2 w-full max-w-full min-w-60">
 	<fieldset
+		aria-readonly={readonly}
 		class="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-gray-200 p-4
-            {['radio', 'checkbox'].includes(surveyItem.type) ? 'flex-col' : ''}"
+            {['radio', 'checkbox'].includes(surveyItem.type) ? 'flex-col' : ''}
+            {readonly ? 'pointer-events-none' : ''}"
 	>
 		<legend
 			class="mx-auto rounded-full bg-white px-3 py-1 text-xs font-semibold tracking-wide text-gray-500 shadow-sm"
@@ -182,7 +242,7 @@
 					max={sliderMax}
 					step={sliderStep}
 					bind:value={sliderValue}
-					{disabled}
+					disabled={disabled && !readonly}
 					class="my-6 w-full cursor-pointer accent-primary disabled:cursor-not-allowed"
 					list="slider-ticks"
 				/>
@@ -207,7 +267,7 @@
 					max={likertOptions.length - 1}
 					step="1"
 					bind:value={sliderValue}
-					{disabled}
+					disabled={disabled && !readonly}
 					class="my-6 w-full cursor-pointer accent-primary disabled:cursor-not-allowed"
 					list="tickmarks"
 				/>
@@ -218,32 +278,41 @@
 					{/each}
 				</datalist>
 				<div class="flex justify-between gap-4 text-xs font-medium text-gray-600">
-					{#each likertOptions as opt}
-						<span class="flex-1 text-center first:text-left last:text-right">
+					{#each likertOptions as opt, i}
+						<span
+							class="flex-1 text-center first:text-left last:text-right {i === sliderValue
+								? 'font-bold text-primary'
+								: ''}"
+						>
 							{opt}
 						</span>
 					{/each}
 				</div>
 			</div>
 		{:else if surveyItem.type === 'likert'}
-			<div class="flex w-full justify-between gap-2">
+			<div
+				class="flex w-full items-stretch justify-start overflow-x-auto pb-1"
+				style={`--likert-item-width: ${likertOptionWidthCh}ch`}
+			>
 				{#each likertOptions as opt, i (i)}
 					<label
-						class="flex flex-1 min-w-0 flex-col items-center gap-2 rounded-xl px-2 py-3 text-center text-xs font-medium text-gray-700 transition-all
-                  {disabled
+						class="flex w-(--likert-item-width) shrink-0 flex-col items-center gap-2 rounded-xl py-2 text-center text-xs font-medium text-gray-700 transition-all
+                  {disabled && !readonly
 							? 'cursor-not-allowed opacity-60 grayscale'
-							: 'cursor-pointer hover:border-primary/50 hover:bg-gray-300'}"
+							: disabled
+								? 'cursor-default'
+								: 'cursor-pointer hover:border-primary/50 hover:bg-gray-300'}"
 					>
 						<input
 							type="radio"
-							name="survey-option"
+							name={groupName}
 							value={opt}
 							checked={isChecked(opt)}
 							onchange={() => toggleOption(opt)}
-							{disabled}
-							class="h-4 w-4 border-gray-300 text-primary focus:ring-primary disabled:text-gray-400"
+							disabled={disabled && !readonly}
+							class="h-4 w-4 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
 						/>
-						{opt}
+						<span class="whitespace-nowrap">{opt}</span>
 					</label>
 				{/each}
 			</div>
@@ -255,17 +324,11 @@
 					min={surveyItem.min ?? undefined}
 					max={surveyItem.max ?? undefined}
 					step={surveyItem.step ?? undefined}
-					{disabled}
+					disabled={disabled && !readonly}
 					class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
 					class:focus:ring-red-500={numberError}
 					class:focus:border-red-500={numberError}
-					placeholder="Enter a number{surveyItem.min != null && surveyItem.max != null
-						? ` (${surveyItem.min}–${surveyItem.max})`
-						: surveyItem.min != null
-							? ` (min ${surveyItem.min})`
-							: surveyItem.max != null
-								? ` (max ${surveyItem.max})`
-								: ''}"
+					placeholder="Enter a number"
 				/>
 				{#if numberError}
 					<p class="mt-1 text-xs text-red-500">{numberError}</p>
@@ -278,7 +341,7 @@
 					bind:value={dateValue}
 					min={surveyItem.min ?? undefined}
 					max={surveyItem.max ?? undefined}
-					{disabled}
+					disabled={disabled && !readonly}
 					class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
 				/>
 			</div>
@@ -289,7 +352,7 @@
 					bind:value={dateValue}
 					min={surveyItem.min ?? undefined}
 					max={surveyItem.max ?? undefined}
-					{disabled}
+					disabled={disabled && !readonly}
 					class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
 				/>
 			</div>
@@ -300,7 +363,7 @@
 					bind:value={timeValue}
 					min={surveyItem.min ?? undefined}
 					max={surveyItem.max ?? undefined}
-					{disabled}
+					disabled={disabled && !readonly}
 					class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
 				/>
 			</div>
@@ -314,16 +377,20 @@
                    {isChecked(opt.value)
 							? 'border-primary bg-primary/10 text-dark ring-1 ring-primary'
 							: ''}
-                  {disabled ? 'cursor-not-allowed opacity-60 grayscale' : ''}"
+                  {disabled && !readonly
+							? 'cursor-not-allowed opacity-60 grayscale'
+							: disabled
+								? 'cursor-default'
+								: ''}"
 					>
 						<input
 							type={surveyItem.type}
-							name="survey-option"
+							name={groupName}
 							value={opt.value}
 							checked={isChecked(opt.value)}
 							onchange={() => toggleOption(opt.value)}
-							{disabled}
-							class="mr-3 h-4 w-4 border-gray-300 text-primary focus:ring-primary disabled:text-gray-400"
+							disabled={disabled && !readonly}
+							class="mr-3 h-4 w-4 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
 						/>
 						{opt.label}
 					</label>
@@ -337,16 +404,20 @@
                    {otherSelected
 							? 'border-primary bg-primary/10 text-dark ring-1 ring-primary'
 							: ''}
-                  {disabled ? 'cursor-not-allowed opacity-60 grayscale' : ''}"
+                  {disabled && !readonly
+							? 'cursor-not-allowed opacity-60 grayscale'
+							: disabled
+								? 'cursor-default'
+								: ''}"
 					>
 						<input
 							type={surveyItem.type}
-							name="survey-option"
+							name={groupName}
 							value="__other__"
 							checked={otherSelected}
 							onchange={selectOther}
-							{disabled}
-							class="mr-3 h-4 w-4 border-gray-300 text-primary focus:ring-primary disabled:text-gray-400"
+							disabled={disabled && !readonly}
+							class="mr-3 h-4 w-4 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
 						/>
 						Other
 					</label>
@@ -356,7 +427,7 @@
 						<input
 							type="text"
 							bind:value={otherText}
-							{disabled}
+							disabled={disabled && !readonly}
 							class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
 							placeholder="Please specify..."
 						/>
@@ -366,7 +437,7 @@
 		{/if}
 	</fieldset>
 
-	{#if !disabled}
+	{#if !disabled && !readonly}
 		<div class="mt-2 flex justify-end">
 			<button
 				class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-98 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 disabled:hover:shadow-md"

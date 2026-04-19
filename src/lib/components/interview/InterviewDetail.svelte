@@ -59,7 +59,7 @@
 	let messages = $derived.by(() => {
 		if (!data.messages) return [];
 
-		return data.messages.map((msg) => {
+		const transformed = data.messages.map((msg) => {
 			// Determine message type based on role
 			let type: 'sent' | 'received' | 'system' = 'system';
 			if (msg.role === 'user') type = 'sent';
@@ -120,6 +120,27 @@
 				options: undefined,
 				required: false
 			} as Message & { id: string };
+		});
+
+		// In the transcript, survey items belong to the user's answer bubble:
+		// move survey_item from the assistant question onto the following user message.
+		let pendingSurvey: Message['survey_item'] | null = null;
+		return transformed.map((m) => {
+			if (m.type === 'received' && m.survey_item) {
+				pendingSurvey = m.survey_item;
+				return { ...m, survey_item: undefined };
+			}
+			if (m.type === 'sent' && pendingSurvey) {
+				const withSurvey = {
+					...m,
+					survey_item: pendingSurvey,
+					answer: m.text,
+					text: undefined
+				};
+				pendingSurvey = null;
+				return withSurvey;
+			}
+			return m;
 		});
 	});
 

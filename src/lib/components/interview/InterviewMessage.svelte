@@ -152,6 +152,8 @@
 				<div class="mt-3 whitespace-normal">
 					<SurveyItem
 						{...message.survey_item}
+						{readonly}
+						answer={message.answer}
 						onAnswer={(ans: any) => onSurveyAnswer(ans, message.message_id)}
 					/>
 				</div>
