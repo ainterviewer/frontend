@@ -621,6 +621,7 @@
 <GenerateModal
 	bind:open={showGenerateGuideModal}
 	title="Generate Interview Guide"
+	description="Generate a full interview guide from a short brief."
 	placeholder="Describe the interview you want to generate..."
 	onGenerate={handleGenerateGuide}
 />
@@ -628,6 +629,7 @@
 <GenerateModal
 	bind:open={showGenerateSectionModal}
 	title="Generate Question Section"
+	description="Generate a new question section based on your description."
 	placeholder="Describe the section you want to generate..."
 	onGenerate={handleGenerateSection}
 />
@@ -635,6 +637,7 @@
 <GenerateModal
 	bind:open={showGenerateQuestionModal}
 	title="Generate Question"
+	description="Generate a single question to add to this section."
 	placeholder="Describe the question you want to generate..."
 	onGenerate={handleGenerateQuestion}
 />
