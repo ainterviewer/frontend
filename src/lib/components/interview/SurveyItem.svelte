@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import type { SurveyItemUnion } from './types';
 
 	let {
@@ -15,25 +17,22 @@
 	>();
 
 	let sliderValue = $state(0);
-	// We can use a set for multi-select (checkbox), single value for radio
-	let selectedValues = $state(new Set<string>());
-
-	// For radio, we can just use a string variable.
+	const selectedValues = new SvelteSet<string>();
 	let radioValue = $state('');
-
 	let numberValue = $state<number | null>(null);
 	let dateValue = $state('');
 	let timeValue = $state('');
-
 	let otherSelected = $state(false);
 	let otherText = $state('');
 
-	let disabled = $state(readonly);
+	let submitted = $state(false);
+	let disabled = $derived(readonly || submitted);
 
 	const uid = $props.id();
 	const groupName = `survey-option-${uid}`;
 
-	if (readonly && answer) {
+	untrack(() => {
+		if (!readonly || !answer) return;
 		if (surveyItem.type === 'slider') {
 			sliderValue = Number(answer);
 		} else if (surveyItem.type === 'likert') {
@@ -61,19 +60,17 @@
 				.split(',')
 				.map((s: string) => s.trim())
 				.filter(Boolean);
-			const opts = new Set(surveyItem.options);
-			const picked = new Set<string>();
+			const opts = new Set<string>(surveyItem.options);
 			for (const p of parts) {
 				if (opts.has(p)) {
-					picked.add(p);
+					selectedValues.add(p);
 				} else {
 					otherSelected = true;
 					otherText = p;
 				}
 			}
-			selectedValues = picked;
 		}
-	}
+	});
 
 	// Slider defaults
 	let sliderMin = $derived(surveyItem.type === 'slider' ? (surveyItem.min ?? 0) : 0);
@@ -139,7 +136,6 @@
 			} else {
 				selectedValues.add(value);
 			}
-			selectedValues = new Set(selectedValues);
 		}
 	}
 
@@ -195,8 +191,8 @@
 			return;
 		}
 
-		disabled = true;
-		onAnswer(answer.join(', '));
+		submitted = true;
+		onAnswer?.(answer.join(', '));
 	}
 
 	function getLegendText() {
@@ -223,7 +219,6 @@
 
 <div class="mt-2 w-full max-w-full min-w-60">
 	<fieldset
-		aria-readonly={readonly}
 		class="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-gray-200 p-4
             {['radio', 'checkbox'].includes(surveyItem.type) ? 'flex-col' : ''}
             {readonly ? 'pointer-events-none' : ''}"
@@ -248,7 +243,7 @@
 				/>
 				{#if sliderTicks.length <= 20}
 					<datalist id="slider-ticks">
-						{#each sliderTicks as tick}
+						{#each sliderTicks as tick (tick)}
 							<option value={tick}>{tick}</option>
 						{/each}
 					</datalist>
@@ -273,12 +268,12 @@
 				/>
 
 				<datalist id="tickmarks">
-					{#each likertOptions as opt, i}
+					{#each likertOptions as opt, i (i)}
 						<option value={i} label={opt}></option>
 					{/each}
 				</datalist>
 				<div class="flex justify-between gap-4 text-xs font-medium text-gray-600">
-					{#each likertOptions as opt, i}
+					{#each likertOptions as opt, i (i)}
 						<span
 							class="flex-1 text-center first:text-left last:text-right {i === sliderValue
 								? 'font-bold text-primary'
