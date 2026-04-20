@@ -147,14 +147,30 @@
 </div>
 
 <!-- Reconnection Indicator -->
-{#if chat.isConnecting && !chat.isConnected && chat.messages.length > 0}
+{#if !chat.reconnectFailed && chat.isReconnecting && chat.messages.length > 0}
 	<div
-		class="fixed top-20 right-4 z-50 flex items-center rounded-full bg-gray-900/90 px-4 py-2 text-sm font-medium text-white shadow-xl backdrop-blur-md transition-all"
+		class="fixed top-2 right-1/2 z-50 flex translate-x-[50%] items-center rounded-full bg-gray-900/90 px-4 py-2 text-sm font-medium text-white shadow-xl backdrop-blur-md transition-all lg:right-4 lg:translate-x-0"
 	>
 		<div
 			class="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"
 		></div>
 		Reconnecting...
+	</div>
+{/if}
+
+<!-- Reconnection Failure -->
+{#if chat.reconnectFailed}
+	<div
+		class="fixed top-2 right-1/2 z-50 flex translate-x-[50%] items-center gap-3 rounded-lg bg-red-600/95 px-4 py-2 text-sm font-medium text-white shadow-xl backdrop-blur-md lg:right-4 lg:translate-x-0"
+	>
+		<span>Connection lost. Unable to reconnect.</span>
+		<button
+			type="button"
+			class="rounded bg-white/15 px-2 py-1 text-xs font-semibold transition-colors hover:bg-white/25"
+			onclick={() => chat.manualReconnect()}
+		>
+			Retry
+		</button>
 	</div>
 {/if}
 

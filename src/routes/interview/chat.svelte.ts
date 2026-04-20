@@ -119,6 +119,8 @@ export class ChatClient {
 	showTypingIndicator = $state(false);
 	progress = $state(0);
 	reconnectEnabled = $state(true);
+	reconnectFailed = $state(false);
+	isReconnecting = $state(false);
 	reconnectAttempts = 0;
 	maxReconnectAttempts = 5;
 	reconnectTimeout: any = null;
@@ -178,7 +180,10 @@ export class ChatClient {
 			this.ws.onopen = () => {
 				this.isConnected = true;
 				this.isConnecting = false;
-				this.reconnectAttempts = 0;
+				// NOTE: do not reset reconnectAttempts here — a socket that opens
+				// but then closes before any message arrives (e.g. backend data
+				// handler crash) would otherwise loop forever with no backoff.
+				// Attempts reset in onmessage once the server actually speaks.
 				this.inputEnabled = false; // Initial state often disabled until server speaks
 				this.showTypingIndicator = false;
 
@@ -196,6 +201,8 @@ export class ChatClient {
 			this.ws.onmessage = (event) => {
 				try {
 					const data = JSON.parse(event.data);
+					this.reconnectAttempts = 0;
+					this.isReconnecting = false;
 					this.queueMessage(data);
 				} catch (e) {
 					console.error('Failed to parse message', e);
@@ -207,9 +214,12 @@ export class ChatClient {
 				this.isConnecting = false;
 
 				if (this.reconnectEnabled && this.reconnectAttempts < this.maxReconnectAttempts) {
+					this.isReconnecting = true;
 					this.attemptReconnect();
-				} else {
-					console.log('Max reconnects reached or disabled');
+				} else if (this.reconnectEnabled) {
+					console.log('Max reconnects reached');
+					this.isReconnecting = false;
+					this.reconnectFailed = true;
 				}
 			};
 
@@ -258,6 +268,16 @@ export class ChatClient {
 			this.isInitialized = true; // Mark as initialized for reconnect
 			this.connect();
 		}, delay);
+	}
+
+	manualReconnect() {
+		if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+		this.reconnectAttempts = 0;
+		this.reconnectFailed = false;
+		this.reconnectEnabled = true;
+		this.isReconnecting = true;
+		this.isInitialized = true;
+		this.connect();
 	}
 
 	disableReconnect() {
