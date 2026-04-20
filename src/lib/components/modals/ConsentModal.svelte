@@ -99,7 +99,7 @@
 				</h2>
 				<div class="mt-4 leading-relaxed text-gray-700">
 					{#if text}
-						{text}
+						{@html text}
 					{:else if isPreview}
 						<span class="text-gray-400 italic">No consent message configured yet.</span>
 					{/if}

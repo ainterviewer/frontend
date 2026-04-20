@@ -223,7 +223,7 @@
 								class="prose prose-sm max-w-none leading-relaxed whitespace-pre-wrap text-gray-700"
 							>
 								{#if text}
-									{text}
+									{@html text}
 								{:else}
 									<span class="text-gray-400 italic">
 										Your consent message will appear here...
