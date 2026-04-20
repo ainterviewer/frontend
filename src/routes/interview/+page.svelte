@@ -250,6 +250,10 @@
 	}
 </script>
 
+<svelte:head>
+	<base target="_blank" />
+</svelte:head>
+
 <div class="flex h-dvh w-full flex-col bg-white pb-[env(safe-area-inset-bottom)]">
 	<!-- Header -->
 	<h1
@@ -343,3 +347,20 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	:global(a) {
+		color: #2563eb;
+		text-decoration: underline;
+		font-weight: 500;
+		transition:
+			color 0.2s ease,
+			text-decoration-color 0.2s ease;
+	}
+	:global(a):hover {
+		color: #1547b0;
+	}
+	:global(a):active {
+		color: #0f2d6e;
+	}
+</style>
