@@ -115,7 +115,7 @@
 </script>
 
 <!-- Chat Area -->
-<div class="mb-8 flex flex-1 grow flex-col items-center overflow-y-auto">
+<div class="mb-2 flex flex-1 grow flex-col items-center overflow-y-auto lg:mb-8">
 	<div
 		id="messages"
 		bind:this={messagesContainer}
