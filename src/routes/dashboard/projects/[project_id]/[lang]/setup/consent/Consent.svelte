@@ -202,7 +202,7 @@
 		</div>
 
 		<!-- Live Preview Panel -->
-		<div class="w-[420px] shrink-0">
+		<div id="preview" class="w-[420px] shrink-0">
 			<div class="sticky top-6">
 				<div class="mb-3 flex items-center justify-between">
 					<h3 class="text-sm font-medium text-gray-500">
@@ -283,3 +283,21 @@
 	onClose={() => (showFullscreenModal = false)}
 	isPreview={true}
 />
+
+<style>
+	#preview :global(a) {
+		color: #2563eb;
+		text-decoration: underline;
+		font-weight: 500;
+		transition:
+			color 0.2s ease,
+			text-decoration-color 0.2s ease;
+	}
+	#preview :global(a):hover {
+		color: #1547b0;
+		cursor: pointer;
+	}
+	#preview :global(a):active {
+		color: #0f2d6e;
+	}
+</style>

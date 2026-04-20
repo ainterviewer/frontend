@@ -52,6 +52,7 @@
 
 {#if show}
 	<div
+		id="consent-modal"
 		class="fixed inset-0 z-200 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
 		role="dialog"
 		aria-modal="true"
@@ -127,3 +128,21 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	#consent-modal :global(a) {
+		color: #2563eb;
+		text-decoration: underline;
+		font-weight: 500;
+		transition:
+			color 0.2s ease,
+			text-decoration-color 0.2s ease;
+	}
+	#consent-modal :global(a):hover {
+		color: #1547b0;
+		cursor: pointer;
+	}
+	#consent-modal :global(a):active {
+		color: #0f2d6e;
+	}
+</style>

@@ -49,6 +49,7 @@
 {#if show}
 	<div
 		class="fixed inset-0 z-200 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+		id="welcome-modal"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="welcome-modal-title"
@@ -116,7 +117,10 @@
 					<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
 						<p class="mb-2">
 							If you wish to withdraw your consent or change your answers, please contact
-							<a href="mailto:{email}" class="font-medium text-primary hover:underline">
+							<a
+								href="mailto:{email}"
+								class="font-medium text-primary! hover:underline hover:brightness-80"
+							>
 								{email}
 							</a>
 							with a reference to the following code:
@@ -149,3 +153,21 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	#welcome-modal :global(a) {
+		color: #2563eb;
+		text-decoration: underline;
+		font-weight: 500;
+		transition:
+			color 0.2s ease,
+			text-decoration-color 0.2s ease;
+	}
+	#welcome-modal :global(a):hover {
+		color: #1547b0;
+		cursor: pointer;
+	}
+	#welcome-modal :global(a):active {
+		color: #0f2d6e;
+	}
+</style>
