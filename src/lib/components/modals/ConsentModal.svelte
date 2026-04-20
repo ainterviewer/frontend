@@ -97,7 +97,7 @@
 				<h2 id="consent-modal-title" class="text-2xl font-bold tracking-tight text-gray-900">
 					{title || 'Consent Title'}
 				</h2>
-				<div class="mt-4 leading-relaxed whitespace-pre-wrap text-gray-700">
+				<div class="mt-4 leading-relaxed text-gray-700">
 					{#if text}
 						{text}
 					{:else if isPreview}
