@@ -1,6 +1,6 @@
 {
 	"name": "frontend",
-	"version": "0.1.14",
+	"version": "0.1.15",
 	"devDependencies": {
 		"@eslint/compat": "^1.4.1",
 		"@eslint/js": "^9.39.4",
