@@ -309,32 +309,34 @@
 	{/if}
 </div>
 
-<LanguagePickerModal
-	show={showLanguagePicker}
-	languages={availableLanguages}
-	onSelect={selectLanguage}
-/>
+<div data-sveltekit-preload-data="off">
+	<LanguagePickerModal
+		show={showLanguagePicker}
+		languages={availableLanguages}
+		onSelect={selectLanguage}
+	/>
 
-<ConsentModal
-	show={showConsent && !!consentData}
-	title={consentData?.title ?? ''}
-	text={consentData?.text ?? ''}
-	onAccept={acceptConsent}
-	onDecline={declineConsent}
-	accepting={consentAccepting}
-	animate={false}
-/>
+	<ConsentModal
+		show={showConsent && !!consentData}
+		title={consentData?.title ?? ''}
+		text={consentData?.text ?? ''}
+		onAccept={acceptConsent}
+		onDecline={declineConsent}
+		accepting={consentAccepting}
+		animate={false}
+	/>
 
-<WelcomeModal
-	show={showWelcome && !!welcomeData}
-	title={welcomeData?.title ?? ''}
-	text={welcomeData?.text ?? ''}
-	videoUrl={welcomeData?.video_file_name ? `/assets/videos/${welcomeData.video_file_name}` : null}
-	email={welcomeData?.email ?? null}
-	{interviewId}
-	onProceed={proceedFromWelcome}
-	animate={false}
-/>
+	<WelcomeModal
+		show={showWelcome && !!welcomeData}
+		title={welcomeData?.title ?? ''}
+		text={welcomeData?.text ?? ''}
+		videoUrl={welcomeData?.video_file_name ? `/assets/videos/${welcomeData.video_file_name}` : null}
+		email={welcomeData?.email ?? null}
+		{interviewId}
+		onProceed={proceedFromWelcome}
+		animate={false}
+	/>
+</div>
 
 <!-- Loading State -->
 {#if isInitializing && !showLanguagePicker && !showConsent && !showWelcome}
