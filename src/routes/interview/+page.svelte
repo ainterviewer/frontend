@@ -257,7 +257,7 @@
 <div class="flex h-dvh w-full flex-col bg-white pb-[env(safe-area-inset-bottom)]">
 	<!-- Header -->
 	<h1
-		class="mx-auto mt-6 w-fit bg-[url('/svgs/underline-main.svg')] bg-bottom bg-center bg-no-repeat pb-12 text-center text-3xl font-bold text-dark"
+		class="mx-auto mt-2 w-fit bg-[url('/svgs/underline-main.svg')] bg-size-[100%_25px] bg-bottom bg-no-repeat pb-5 text-center text-3xl font-bold text-dark lg:mt-6 lg:pb-8"
 	>
 		AInterviewer
 	</h1>
