@@ -70,7 +70,7 @@
 		{/if}
 
 		<div
-			class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+			class="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl"
 			in:fly={{ y: 20, duration: 300 }}
 			out:fly={{ y: 20, duration: animate ? 300 : 0 }}
 		>
