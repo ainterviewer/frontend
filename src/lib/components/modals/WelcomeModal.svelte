@@ -104,7 +104,7 @@
 					</div>
 				{/if}
 
-				<div class="mt-4 leading-relaxed whitespace-pre-line text-gray-700">
+				<div class="mt-4 whitespace-pre-line text-gray-700">
 					{#if text}
 						{@html text}
 					{:else if isPreview}

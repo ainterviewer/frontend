@@ -319,7 +319,7 @@
 						{:else}
 							<div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'}">
 								<div
-									class="max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap {msg.role ===
+									class="max-w-[80%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap {msg.role ===
 									'user'
 										? 'rounded-tr-sm bg-primary text-white'
 										: 'rounded-tl-sm bg-gray-100 text-gray-800'}"

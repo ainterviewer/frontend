@@ -361,9 +361,7 @@
 								</div>
 							{/if}
 
-							<div
-								class="prose prose-sm max-w-none leading-relaxed whitespace-pre-wrap text-gray-700"
-							>
+							<div class="prose prose-sm max-w-none whitespace-pre-wrap text-gray-700">
 								{#if text}
 									{@html text}
 								{:else}
