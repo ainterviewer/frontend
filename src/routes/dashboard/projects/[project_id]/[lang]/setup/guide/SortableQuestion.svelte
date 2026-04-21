@@ -129,7 +129,7 @@
 			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase">
 				Description
 				<textarea
-					class="mt-1 h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm tracking-normal normal-case transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+					class="mt-1 h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium tracking-normal normal-case transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 					placeholder="Add some context or description..."
 					bind:value={question.description}
 				></textarea>
