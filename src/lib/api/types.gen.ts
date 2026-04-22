@@ -375,16 +375,6 @@ export type BodyUploadAudio = {
 };
 
 /**
- * BroadcastRequest
- */
-export type BroadcastRequest = {
-    /**
-     * Message
-     */
-    message: string;
-};
-
-/**
  * CheckboxItem
  */
 export type CheckboxItem = {
@@ -1019,13 +1009,13 @@ export type InterviewGuideInput = {
      *
      * A description of the interview and its purpose. Only used by the model.
      */
-    framing?: string | null;
+    framing?: string;
     /**
      * Introduction
      *
      * An introduction to the interview. Displayed to the interviewee as the first message. They whon't be able to respond to this message.
      */
-    introduction?: string | null;
+    introduction?: string;
     /**
      * Question Sections
      *
@@ -1059,13 +1049,13 @@ export type InterviewGuideOutput = {
      *
      * A description of the interview and its purpose. Only used by the model.
      */
-    framing?: string | null;
+    framing?: string;
     /**
      * Introduction
      *
      * An introduction to the interview. Displayed to the interviewee as the first message. They whon't be able to respond to this message.
      */
-    introduction?: string | null;
+    introduction?: string;
     /**
      * Question Sections
      *
@@ -2866,9 +2856,9 @@ export type ChatMessage = {
 };
 
 /**
- * CustomTokens
+ * CustomToken
  */
-export type CustomTokens = '<|endofprobe|>' | '<|endofsection|>' | '<|endofinterview|>' | '<|skipquestion|>' | '<|skipsection|>' | '<|noanswer|>' | '<|restartinterview|>';
+export type CustomToken = '<|endofprobe|>' | '<|endofsection|>' | '<|endofinterview|>' | '<|skipquestion|>' | '<|skipsection|>' | '<|noanswer|>' | '<|restartinterview|>';
 
 /**
  * InterviewRole
@@ -3475,65 +3465,6 @@ export type GetMessageContextAfterResponses = {
 };
 
 export type GetMessageContextAfterResponse = GetMessageContextAfterResponses[keyof GetMessageContextAfterResponses];
-
-export type SemanticSearchData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * Query
-         */
-        query: string;
-        /**
-         * Limit
-         */
-        limit?: number;
-    };
-    url: '/api/messages/search';
-};
-
-export type SemanticSearchErrors = {
-    /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type SemanticSearchError = SemanticSearchErrors[keyof SemanticSearchErrors];
-
-export type SemanticSearchResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type QueueStatusData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/emebeddings/queue/status';
-};
-
-export type QueueStatusErrors = {
-    /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-};
-
-export type QueueStatusError = QueueStatusErrors[keyof QueueStatusErrors];
-
-export type QueueStatusResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
 
 export type GetProjectMonitoringStatsData = {
     body?: never;
@@ -5352,7 +5283,7 @@ export type GetFixedPersonasResponses = {
      *
      * Successful Response
      */
-    200: Array<string>;
+    200: Array<string> | null;
 };
 
 export type GetFixedPersonasResponse = GetFixedPersonasResponses[keyof GetFixedPersonasResponses];
@@ -6397,81 +6328,6 @@ export type PlatformVersionErrors = {
 export type PlatformVersionError = PlatformVersionErrors[keyof PlatformVersionErrors];
 
 export type PlatformVersionResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type ActiveWebsocketsWsConnectionsGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/ws/connections';
-};
-
-export type ActiveWebsocketsWsConnectionsGetResponses = {
-    /**
-     * Response Active Websockets Ws Connections Get
-     *
-     * Successful Response
-     */
-    200: {
-        [key: string]: unknown;
-    };
-};
-
-export type ActiveWebsocketsWsConnectionsGetResponse = ActiveWebsocketsWsConnectionsGetResponses[keyof ActiveWebsocketsWsConnectionsGetResponses];
-
-export type ConnectWsConnectProjectIdInterviewIdGetData = {
-    body?: never;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string;
-        /**
-         * Interview Id
-         */
-        interview_id: string;
-    };
-    query?: never;
-    url: '/ws/connect/{project_id}/{interview_id}';
-};
-
-export type ConnectWsConnectProjectIdInterviewIdGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ConnectWsConnectProjectIdInterviewIdGetError = ConnectWsConnectProjectIdInterviewIdGetErrors[keyof ConnectWsConnectProjectIdInterviewIdGetErrors];
-
-export type ConnectWsConnectProjectIdInterviewIdGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type BroadcastWsBroadcastPostData = {
-    body: BroadcastRequest;
-    path?: never;
-    query?: never;
-    url: '/ws/broadcast';
-};
-
-export type BroadcastWsBroadcastPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type BroadcastWsBroadcastPostError = BroadcastWsBroadcastPostErrors[keyof BroadcastWsBroadcastPostErrors];
-
-export type BroadcastWsBroadcastPostResponses = {
     /**
      * Successful Response
      */
