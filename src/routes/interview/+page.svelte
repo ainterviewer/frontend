@@ -358,11 +358,23 @@
 		transition:
 			color 0.2s ease,
 			text-decoration-color 0.2s ease;
+
+		&:hover {
+			color: #1547b0;
+		}
+		&:active {
+			color: #0f2d6e;
+		}
 	}
-	:global(a):hover {
-		color: #1547b0;
-	}
-	:global(a):active {
-		color: #0f2d6e;
+
+	:global(a):visited {
+		color: #5203fc;
+
+		&:hover {
+			color: #1547b0;
+		}
+		&:active {
+			color: #0f2d6e;
+		}
 	}
 </style>
