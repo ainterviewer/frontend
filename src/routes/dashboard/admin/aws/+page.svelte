@@ -3,15 +3,18 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { SvelteSet } from 'svelte/reactivity';
-	import type { Instance, SettingsData } from './types';
+	import type { Instance } from './types';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	let instances: Instance[] = $state([]);
 	let selectedInstances: Set<string> = $state(new Set());
 	let isLoading = $state(false);
 	let error = $state('');
-	let minInstances = $state(0);
-	let startCheck = $state(false);
-	let stopCheck = $state(false);
+	let minInstances = $derived(data.settings.min_instances);
+	let startCheck = $derived(data.settings.start);
+	let stopCheck = $derived(data.settings.stop);
 	let allSelected = $derived(instances.length > 0 && selectedInstances.size === instances.length);
 
 	function formatTimeEstimate(seconds: number) {
@@ -46,22 +49,6 @@
 			error = 'Failed to fetch instance status: ' + (err.message || 'Unknown error');
 		} finally {
 			isLoading = false;
-		}
-	}
-
-	async function getSettings() {
-		const response = await Admin.proxyToEc2Manager2({
-			path: { full_path: 'settings' }
-		});
-		if (response.error) {
-			console.error('Failed to fetch settings:', response.error);
-			return;
-		}
-		if (response.data && typeof response.data === 'object') {
-			const data = response.data as SettingsData;
-			minInstances = data.min_instances;
-			startCheck = data.start;
-			stopCheck = data.stop;
 		}
 	}
 
@@ -169,7 +156,6 @@
 	}
 
 	onMount(() => {
-		getSettings();
 		getInstanceStatus();
 	});
 </script>
