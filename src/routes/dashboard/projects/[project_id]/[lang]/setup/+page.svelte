@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { ExternalParam } from '$lib/api/types.gen';
@@ -383,14 +384,14 @@
 			</div>
 			<div class="mt-4 flex gap-3">
 				<a
-					href="/dashboard/projects/{projectId}/{lang}/tests"
+					href={resolve(`/dashboard/projects/${projectId}/${lang}/tests/simulations`)}
 					class="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
 				>
 					<i class="fa-solid fa-flask-vial"></i>
 					Run tests
 				</a>
 				<a
-					href="/dashboard/projects/{projectId}/{lang}/distribution"
+					href={resolve(`/dashboard/projects/${projectId}/${lang}/distribution`)}
 					class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-dark"
 				>
 					<i class="fa-solid fa-paper-plane"></i>
