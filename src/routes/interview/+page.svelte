@@ -32,10 +32,8 @@
 
 	let { data }: { data: PageData } = $props();
 
-	console.log(data.externalParams);
-
 	let projectId = $derived(data.project_id);
-	let lang = $state(data.lang);
+	let lang = $derived(data.lang);
 	let interviewType = $derived(data.interviewType);
 	const interviewConfig = $derived(data.interviewConfig);
 	const isDemoBlocked = $derived(data.isProjectOwnerDemoUser && interviewType === 'distributed');
