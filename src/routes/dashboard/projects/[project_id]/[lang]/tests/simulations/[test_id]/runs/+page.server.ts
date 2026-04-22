@@ -6,12 +6,8 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 	const { cookieHeader } = locals;
 	const { project_id, test_id, lang } = params;
 
-	const [modelsRes, languagesRes, testsResponse, projectRes] = await Promise.all([
+	const [modelsRes, testsResponse, projectRes] = await Promise.all([
 		Default.getModels({
-			headers: { cookie: cookieHeader },
-			fetch
-		}),
-		Default.getLanguages({
 			headers: { cookie: cookieHeader },
 			fetch
 		}),
@@ -37,10 +33,7 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 	}
 
 	const models = (modelsRes.error ? [] : (modelsRes.data as unknown as string[])) || [];
-	const languages =
-		(languagesRes.error
-			? []
-			: (languagesRes.data as unknown as Array<{ code: string; name: string }>)) || [];
+	const languages = projectRes.data.available_languages;
 
 	const test = testsResponse.data?.find((t) => t.id === test_id);
 
