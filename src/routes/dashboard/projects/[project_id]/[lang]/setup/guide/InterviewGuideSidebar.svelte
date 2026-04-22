@@ -40,7 +40,9 @@
 			const fromSectionId: string = source.data?.sectionId;
 			// Target is either a question (use its sectionId) or a section (use its id directly)
 			const toSectionId: string =
-				target.type === 'sidebar-question' ? target.data?.sectionId : target.data?.sectionId ?? target.id;
+				target.type === 'sidebar-question'
+					? target.data?.sectionId
+					: (target.data?.sectionId ?? target.id);
 
 			if (!fromSectionId || !toSectionId) return;
 
@@ -83,7 +85,7 @@
 <!-- Sidebar has its own DragDropProvider, independent of the main guide's context -->
 <DragDropProvider {sensors} onDragOver={handleDragOver}>
 	<aside
-		class="sticky top-6 hidden max-h-[calc(100vh-4rem)] w-55 shrink-0 space-y-8 overflow-y-auto pr-4 xl:block"
+		class="sticky top-6 mb-5 hidden max-h-[calc(100vh-9rem)] w-55 shrink-0 space-y-8 overflow-y-auto pr-4 xl:block"
 	>
 		<nav class="space-y-1">
 			<a
