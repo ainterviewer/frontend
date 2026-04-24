@@ -123,7 +123,10 @@
 					: `v${platformVersion.platform_version}`}
 			</span>
 			<div
-				class="pointer-events-none invisible absolute bottom-full left-1/2 z-1000 mb-2 -translate-x-1/2 rounded bg-light px-3 py-2 text-left text-xs whitespace-nowrap text-dark opacity-0 shadow-lg transition-opacity duration-200 group-hover:visible group-hover:opacity-100"
+				class={[
+					'pointer-events-none invisible absolute bottom-full z-1000 mb-2 rounded bg-light px-3 py-2 text-left text-xs whitespace-nowrap text-dark opacity-0 shadow-lg transition-opacity duration-200 group-hover:visible group-hover:opacity-100',
+					collapsed ? 'left-2' : 'left-1/2 -translate-x-1/2'
+				].join(' ')}
 			>
 				<div><strong>Platform:</strong> {platformVersion.platform_version}</div>
 				<div>
