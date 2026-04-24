@@ -240,12 +240,13 @@
 					Edit Content
 				</h3>
 
-				<form class="space-y-5">
+				<div class="space-y-5">
 					<div>
 						<label for="welcome-title" class="mb-1.5 block text-sm font-medium text-gray-700">
 							Title
 						</label>
 						<input
+							autocomplete="off"
 							id="welcome-title"
 							bind:value={title}
 							placeholder="e.g., Thank you for participating!"
@@ -264,6 +265,7 @@
 								<i class="fa-solid fa-upload text-gray-400"></i>
 								Choose file
 								<input
+									autocomplete="off"
 									id="welcome-video"
 									type="file"
 									accept=".mp4"
@@ -294,6 +296,7 @@
 							Welcome Message
 						</label>
 						<textarea
+							autocomplete="off"
 							id="welcome-text"
 							bind:value={text}
 							placeholder="Write your welcome message here. This will be shown to participants before they start the interview..."
@@ -307,6 +310,7 @@
 							Contact Email
 						</label>
 						<input
+							autocomplete="email"
 							id="welcome-email"
 							type="email"
 							bind:value={email}
@@ -317,7 +321,7 @@
 							Participants can contact this email to withdraw consent or modify their data.
 						</p>
 					</div>
-				</form>
+				</div>
 
 				<!-- Actions -->
 				<div class="mt-6 flex items-center gap-3 border-t border-gray-100 pt-5">

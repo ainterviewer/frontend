@@ -157,12 +157,13 @@
 					Edit Content
 				</h3>
 
-				<form class="space-y-5">
+				<div class="space-y-5">
 					<div>
 						<label for="consent-title" class="mb-1.5 block text-sm font-medium text-gray-700">
 							Title
 						</label>
 						<input
+							autocomplete="off"
 							id="consent-title"
 							bind:value={title}
 							placeholder="e.g., Consent to Participate"
@@ -175,6 +176,7 @@
 							Message
 						</label>
 						<textarea
+							autocomplete="off"
 							id="consent-text"
 							bind:value={text}
 							placeholder="Write the consent information that participants must agree to before starting the interview..."
@@ -185,7 +187,7 @@
 							Supports plain text with line breaks preserved.
 						</p>
 					</div>
-				</form>
+				</div>
 
 				<!-- Actions -->
 				<div class="mt-6 flex items-center gap-3 border-t border-gray-100 pt-5">

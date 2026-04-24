@@ -366,7 +366,7 @@
 	}}
 />
 
-<form autocomplete="off" onsubmit={(e) => e.preventDefault()}>
+<div>
 	<div class="flex justify-between">
 		<h1 class="page-title">Interview Guide</h1>
 		<button
@@ -403,6 +403,7 @@
 					used by the model to help it ask more relevant questions.
 				</p>
 				<textarea
+					autocomplete="off"
 					class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
 					bind:value={guide.framing}
 				></textarea>
@@ -419,6 +420,7 @@
 					see in the chat and cannot be answered.
 				</p>
 				<textarea
+					autocomplete="off"
 					class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
 					bind:value={guide.introduction}
 				></textarea>
@@ -489,6 +491,7 @@
 				<h3 class="mb-2 text-lg font-medium">Outro</h3>
 				<p class="mb-4 text-sm text-gray-500">Last message in the interview.</p>
 				<textarea
+					autocomplete="off"
 					class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
 					bind:value={guide.outro}
 				></textarea>
@@ -525,6 +528,7 @@
 										Message
 									</label>
 									<textarea
+										autocomplete="off"
 										id="tm-message-{i}"
 										class="h-20 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
 										bind:value={tm.message}
@@ -614,7 +618,7 @@
 			/>
 		</div>
 	</div>
-</form>
+</div>
 
 <ExportPdfModal bind:open={showExportPdfModal} {exporting} onExport={handleExportPdf} />
 

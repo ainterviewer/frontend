@@ -129,6 +129,7 @@
 			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase">
 				Description
 				<textarea
+					autocomplete="off"
 					class="mt-1 h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium tracking-normal normal-case transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 					placeholder="Add some context or description..."
 					bind:value={question.description}
@@ -140,6 +141,7 @@
 			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase">
 				Main Question
 				<textarea
+					autocomplete="off"
 					class="mt-1 h-18 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium tracking-normal normal-case transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 					placeholder="What would you like to ask?"
 					bind:value={question.main_question}
@@ -212,6 +214,7 @@
 												onchange={handleImageUpload}
 											/>
 											<input
+												autocomplete="off"
 												class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 												placeholder="Description for AI..."
 												bind:value={question.image.description}
@@ -219,11 +222,13 @@
 										</div>
 									</div>
 									<input
+										autocomplete="off"
 										class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 										placeholder="Primer text..."
 										bind:value={question.image.primer}
 									/>
 									<input
+										autocomplete="off"
 										class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 										placeholder="Alt text (accessibility)"
 										bind:value={question.image.alt}
@@ -404,6 +409,7 @@
 											<label class="mb-2 block text-sm text-gray-500">
 												Min Label
 												<input
+													autocomplete="off"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="Min label..."
 													bind:value={question.survey_item.min_label}
@@ -412,6 +418,7 @@
 											<label class="mb-2 block text-sm text-gray-500">
 												Max Label
 												<input
+													autocomplete="off"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="Max label..."
 													bind:value={question.survey_item.max_label}
@@ -969,6 +976,7 @@
 							{#each question.alternative_main_questions as _, aqIdx}
 								<div class="flex gap-2">
 									<input
+										autocomplete="off"
 										class="flex-1 rounded border-gray-200 p-2 text-sm shadow-sm focus:border-primary focus:ring-primary/20"
 										bind:value={question.alternative_main_questions[aqIdx]}
 										placeholder="Another way to ask this..."
@@ -1004,6 +1012,7 @@
 							{#each question.probes as _, pIdx}
 								<div class="flex gap-2">
 									<input
+										autocomplete="off"
 										class="flex-1 rounded border-gray-200 p-2 text-sm shadow-sm focus:border-primary focus:ring-primary/20"
 										bind:value={question.probes[pIdx]}
 										placeholder="Follow-up question if needed..."
