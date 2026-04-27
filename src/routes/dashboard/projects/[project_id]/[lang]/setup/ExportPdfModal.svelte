@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import type { PdfToggles } from './exportPdf';
 
 	let {
@@ -23,10 +24,34 @@
 		conditions: true
 	});
 
+	const storageKey = $derived(`exportPdfToggles:${page.params.project_id ?? 'unknown'}`);
+
+	function loadToggles(key: string): PdfToggles {
+		if (typeof sessionStorage === 'undefined') return defaultToggles();
+		try {
+			const raw = sessionStorage.getItem(key);
+			if (!raw) return defaultToggles();
+			const parsed = JSON.parse(raw) as Partial<PdfToggles>;
+			return { ...defaultToggles(), ...parsed };
+		} catch {
+			return defaultToggles();
+		}
+	}
+
 	let toggles = $state<PdfToggles>(defaultToggles());
 
 	$effect(() => {
-		if (open) toggles = defaultToggles();
+		if (open) toggles = loadToggles(storageKey);
+	});
+
+	$effect(() => {
+		if (!open) return;
+		if (typeof sessionStorage === 'undefined') return;
+		try {
+			sessionStorage.setItem(storageKey, JSON.stringify(toggles));
+		} catch {
+			// ignore
+		}
 	});
 
 	const items: { key: keyof PdfToggles; label: string; description: string }[] = [
