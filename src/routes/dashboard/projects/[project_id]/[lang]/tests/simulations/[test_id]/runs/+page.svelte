@@ -211,7 +211,7 @@
 
 <h2 class="mt-8 mb-4 text-lg font-medium text-gray-800">Test Runs</h2>
 
-<div class="overflow-x-auto rounded-lg bg-white shadow">
+<div class="shrink-0 overflow-x-auto rounded-lg bg-white shadow">
 	<table class="min-w-full leading-normal">
 		<thead>
 			<tr
