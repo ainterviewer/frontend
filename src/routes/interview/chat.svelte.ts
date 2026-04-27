@@ -116,11 +116,26 @@ export class ChatClient {
 	isConnecting = $state(false);
 	isInitialized = $state(false);
 	inputEnabled = $state(false);
-	showTypingIndicator = $state(false);
+	forceTypingIndicator = $state(false);
 	progress = $state(0);
 	reconnectEnabled = $state(true);
 	reconnectFailed = $state(false);
 	isReconnecting = $state(false);
+
+	// Show the typing indicator whenever we're waiting on the server. The chat
+	// is turn-based: the last message being a user `sent` means a reply is
+	// pending. `forceTypingIndicator` covers cases where the server explicitly
+	// signals more is coming or where we run a mid-stream pause animation
+	// (e.g. between an image primer and the image itself, or after a survey
+	// submission that doesn't push a new message).
+	showTypingIndicator = $derived.by(() => {
+		if (!this.reconnectEnabled || this.reconnectFailed || this.isReconnecting) return false;
+		if (this.forceTypingIndicator) return true;
+		const last = this.messages[this.messages.length - 1];
+		if (!last || last.type !== 'sent') return false;
+		if (last.survey_item) return false;
+		return true;
+	});
 	reconnectAttempts = 0;
 	maxReconnectAttempts = 5;
 	reconnectTimeout: any = null;
@@ -185,7 +200,6 @@ export class ChatClient {
 				// handler crash) would otherwise loop forever with no backoff.
 				// Attempts reset in onmessage once the server actually speaks.
 				this.inputEnabled = false; // Initial state often disabled until server speaks
-				this.showTypingIndicator = false;
 
 				// Send initialized if needed or just handle open
 				if (!this.isInitialized) {
@@ -327,7 +341,6 @@ export class ChatClient {
 		reader.readAsDataURL(file);
 
 		this.inputEnabled = false;
-		this.showTypingIndicator = true;
 
 		const formData = new FormData();
 		formData.append('file', file);
@@ -359,7 +372,6 @@ export class ChatClient {
 			console.error('Error uploading image', error);
 			this.messages.push({ type: 'system', text: 'Error uploading image.' });
 			this.inputEnabled = true;
-			this.showTypingIndicator = false;
 		}
 	}
 
@@ -388,7 +400,6 @@ export class ChatClient {
 
 		if (this.role === 'respondent') {
 			this.inputEnabled = false;
-			this.showTypingIndicator = true;
 		}
 	}
 
@@ -408,7 +419,6 @@ export class ChatClient {
 
 		if (this.role === 'respondent') {
 			this.inputEnabled = false;
-			this.showTypingIndicator = true;
 		}
 
 		try {
@@ -428,7 +438,6 @@ export class ChatClient {
 			console.error('Error uploading audio', error);
 			this.messages.push({ type: 'system', text: 'Error uploading audio.' });
 			this.inputEnabled = true;
-			this.showTypingIndicator = false;
 		}
 	}
 
@@ -445,7 +454,6 @@ export class ChatClient {
 
 		if (this.role === 'respondent') {
 			this.inputEnabled = false;
-			this.showTypingIndicator = true;
 		}
 	}
 
@@ -464,7 +472,9 @@ export class ChatClient {
 		);
 
 		this.inputEnabled = false;
-		this.showTypingIndicator = true;
+		// No new message is pushed here, but a server reply is pending — force
+		// the indicator on until the server speaks.
+		this.forceTypingIndicator = true;
 	}
 
 	// Message Queue Processing
@@ -490,8 +500,8 @@ export class ChatClient {
 	}
 
 	async processSingleMessage(data: any) {
-		// Clear typing indicator before showing new message
-		this.showTypingIndicator = false;
+		// Server is speaking — drop any forced indicator from a prior send.
+		this.forceTypingIndicator = false;
 
 		switch (data.type) {
 			case 'message':
@@ -505,9 +515,9 @@ export class ChatClient {
 						});
 					}
 					await this.sleep(500);
-					this.showTypingIndicator = true;
+					this.forceTypingIndicator = true;
 					await this.sleep(1500);
-					this.showTypingIndicator = false;
+					this.forceTypingIndicator = false;
 
 					await this.addMessage({
 						type: 'received',
@@ -546,7 +556,9 @@ export class ChatClient {
 				} else if (data.message_id != 1 && data.can_answer !== false) {
 					this.inputEnabled = true;
 				} else {
-					this.showTypingIndicator = true;
+					// More server messages are coming — keep the indicator visible
+					// even though the last message in the list is `received`.
+					this.forceTypingIndicator = true;
 				}
 				break;
 
