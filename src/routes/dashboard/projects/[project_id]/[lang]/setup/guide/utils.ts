@@ -67,6 +67,16 @@ export function mapFromLocal(
 	});
 }
 
+function trimSurveyItemOptions(questionsMap: Record<string, GuideQuestion[]>) {
+	for (const questions of Object.values(questionsMap)) {
+		for (const question of questions) {
+			if (question.survey_item?.options) {
+				question.survey_item.options = question.survey_item.options.map((option) => option.trim());
+			}
+		}
+	}
+}
+
 export async function saveGuide(
 	projectId: string,
 	lang: string,
@@ -74,6 +84,8 @@ export async function saveGuide(
 	localSections: any,
 	localQuestions: any
 ) {
+	trimSurveyItemOptions(localQuestions);
+
 	const payload = {
 		...guide,
 		question_sections: mapFromLocal(localSections, localQuestions)
