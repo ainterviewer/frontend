@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Synthesize } from '$lib/api';
 	import { toast } from 'svelte-sonner';
@@ -21,7 +22,11 @@
 	let refreshInterval: ReturnType<typeof setInterval>;
 
 	const projectId = $derived(page.params.project_id);
+	const lang = $derived(page.params.lang);
 	const testId = $derived(page.params.test_id);
+	const simulationsHref = $derived(
+		resolve(`/dashboard/projects/${projectId}/${lang}/tests/simulations`)
+	);
 
 	async function loadTestRuns() {
 		loading = true;
@@ -108,6 +113,14 @@
 		};
 	});
 </script>
+
+<a
+	href={simulationsHref}
+	class="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
+>
+	<i class="fa-solid fa-arrow-left"></i>
+	Back to simulations
+</a>
 
 <h1 class="page-title">Run</h1>
 <p class="mb-8 text-gray-600">

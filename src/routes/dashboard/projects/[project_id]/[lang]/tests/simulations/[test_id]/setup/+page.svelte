@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import type { PageData } from './$types';
 	import FixedAnswers from './FixedAnswers.svelte';
 	import ShuffledAI from './ShuffledAI.svelte';
@@ -6,7 +8,20 @@
 
 	let { data }: { data: PageData } = $props();
 	let test = $derived(data.test);
+	let projectId = $derived(page.params.project_id);
+	let lang = $derived(page.params.lang);
+	let simulationsHref = $derived(
+		resolve(`/dashboard/projects/${projectId}/${lang}/tests/simulations`)
+	);
 </script>
+
+<a
+	href={simulationsHref}
+	class="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
+>
+	<i class="fa-solid fa-arrow-left"></i>
+	Back to simulations
+</a>
 
 {#if test.type === 'fixed_answers'}
 	<FixedAnswers {test} questions={data.questions} />
