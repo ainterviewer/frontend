@@ -1,4 +1,9 @@
-import { Experiments, Projects, Synthesize, type BackgroundInfoOptionsOutput } from '$lib/api';
+import {
+	Projects,
+	Synthesize,
+	type BackgroundInfoOptionsOutput,
+	type QuestionOutput
+} from '$lib/api';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -61,12 +66,15 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 	}
 
 	// Extract questions from the guide
-	const questions: string[] = [];
+	const questions: Array<Pick<QuestionOutput, 'main_question' | 'can_answer'>> = [];
 	if (!guideResponse.error && guideResponse.data?.question_sections) {
 		for (const section of guideResponse.data.question_sections) {
 			if (section.questions) {
 				for (const q of section.questions) {
-					questions.push(q.main_question);
+					questions.push({
+						main_question: q.main_question,
+						can_answer: q.can_answer
+					});
 				}
 			}
 		}

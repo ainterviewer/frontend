@@ -1,15 +1,38 @@
 <script lang="ts">
-	import { Synthesize, type TestSetupPublic } from '$lib/api';
+	import { Synthesize, type QuestionOutput, type TestSetupPublic } from '$lib/api';
 	import { toast } from 'svelte-sonner';
 
-	let { test, questions }: { test: TestSetupPublic; questions: string[] } = $props();
+	type SetupQuestion = Pick<QuestionOutput, 'main_question' | 'can_answer'>;
 
-	let answers = $state(test.fixed_answers ? [...test.fixed_answers] : []);
+	let { test, questions }: { test: TestSetupPublic; questions: SetupQuestion[] } = $props();
+	const initialFixedAnswers = test.fixed_answers ? [...test.fixed_answers] : [];
 
-	// Ensure answers array is same length as questions
+	const answerIndexesByQuestion = $derived.by(() => {
+		let answerIndex = 0;
+
+		return questions.map((question) => {
+			if (question.can_answer !== true) {
+				return -1;
+			}
+
+			const currentIndex = answerIndex;
+			answerIndex += 1;
+			return currentIndex;
+		});
+	});
+
+	const answerableQuestionCount = $derived(
+		answerIndexesByQuestion.filter((answerIndex) => answerIndex !== -1).length
+	);
+
+	let answers = $state(initialFixedAnswers);
+
+	// Ensure answers array is same length as answerable questions.
 	$effect(() => {
-		if (answers.length < questions.length) {
-			answers = [...answers, ...new Array(questions.length - answers.length).fill('')];
+		if (answers.length < answerableQuestionCount) {
+			answers = [...answers, ...new Array(answerableQuestionCount - answers.length).fill('')];
+		} else if (answers.length > answerableQuestionCount) {
+			answers = answers.slice(0, answerableQuestionCount);
 		}
 	});
 
@@ -23,7 +46,7 @@
 				test_id: test.id
 			},
 			body: {
-				answers: answers
+				answers
 			}
 		});
 		isSaving = false;
@@ -42,16 +65,18 @@
 {#each questions as question, index}
 	<div class="mb-6">
 		<h4 class="mt-8 mb-2.5 text-gray-500">Main question {index + 1}</h4>
-		<span class="italic">{question}</span>
-		<div class="mt-2.5 flex flex-col">
-			<label for="question-{index}-answer">Answer: </label>
-			<input
-				type="text"
-				id="question-{index}-answer"
-				bind:value={answers[index]}
-				class="w-full flex-1 rounded border border-gray-300 p-2"
-			/>
-		</div>
+		<span class="italic">{question.main_question}</span>
+		{#if question.can_answer === true}
+			<div class="mt-2.5 flex flex-col">
+				<label for="question-{index}-answer">Answer: </label>
+				<input
+					type="text"
+					id="question-{index}-answer"
+					bind:value={answers[answerIndexesByQuestion[index]]}
+					class="w-full flex-1 rounded border border-gray-300 p-2"
+				/>
+			</div>
+		{/if}
 	</div>
 {/each}
 
