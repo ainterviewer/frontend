@@ -110,6 +110,7 @@
 				text: msg.content,
 				type,
 				message_id: msg.message_id,
+				skipped_by_condition: msg.skipped_by_condition,
 				feedback: msg.feedback,
 				survey_item: msg.survey_item,
 				image: image,

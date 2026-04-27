@@ -106,7 +106,11 @@
 
 {#if customToken}
 	<!-- Custom Token Display (standalone token message) -->
-	<div class="mb-[15px] flex w-full justify-{customToken.justify} px-[10px] sm:px-[50px]">
+	<div
+		class="mb-[15px] flex w-full justify-{customToken.justify} px-[10px] sm:px-[50px] {message.skipped_by_condition
+			? 'opacity-50'
+			: ''}"
+	>
 		<div
 			class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium {customToken.color}"
 		>
@@ -118,7 +122,7 @@
 	<div
 		class="group relative mb-[15px] flex w-full px-[10px] sm:px-[50px] {isReceived
 			? 'items-start justify-start'
-			: 'flex-col items-end justify-end'}"
+			: 'flex-col items-end justify-end'} {message.skipped_by_condition ? 'opacity-50' : ''}"
 	>
 		<!-- Message Content -->
 		<div

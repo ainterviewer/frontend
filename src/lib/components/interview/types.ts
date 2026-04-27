@@ -7,6 +7,7 @@ export interface Message {
 	text?: string;
 	type: MessageType;
 	message_id?: number | string;
+	skipped_by_condition?: boolean;
 	feedback?: 'positive' | 'negative' | null;
 	survey_item?: SurveyItemUnion | null;
 	image?: { data: string; alt?: string; primer?: string };
