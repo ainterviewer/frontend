@@ -117,7 +117,7 @@
 			Description
 			<textarea
 				autocomplete="off"
-				class="h-22 w-full resize-none rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+				class="h-22 w-full resize-y rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 				bind:value={section.description}
 			></textarea>
 		</label>
