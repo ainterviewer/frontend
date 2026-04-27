@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
+	import type { InterviewSummaryPublic } from '$lib/api/types.gen';
 	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -10,7 +11,7 @@
 	let isDemo = $derived(page.data.user?.scope === 'demo');
 
 	// State
-	let interviews = $state<any[]>([]);
+	let interviews = $state<InterviewSummaryPublic[]>([]);
 	let loading = $state(false);
 	let totalItems = $state(0);
 	let currentPage = $state(1);
@@ -37,6 +38,7 @@
 		{ key: 'last_updated', label: 'Updated' },
 		{ key: 'n_messages', label: 'Messages' },
 		{ key: 'interviewer', label: 'Interviewer' },
+		{ key: 'language', label: 'Language' },
 		{ key: 'status', label: 'Status' }
 	];
 
@@ -59,15 +61,12 @@
 			error = 'Failed to load interviews';
 			interviews = [];
 			totalItems = 0;
+		} else if (response.data) {
+			interviews = response.data.items;
+			totalItems = response.data.total;
 		} else {
-			const data = response.data as any;
-			if (data) {
-				interviews = data.items || [];
-				totalItems = data.total || 0;
-			} else {
-				interviews = [];
-				totalItems = 0;
-			}
+			interviews = [];
+			totalItems = 0;
 		}
 		loading = false;
 	}
@@ -337,6 +336,7 @@
 						<td class="px-5 py-4">{formatDate(interview.last_updated)}</td>
 						<td class="px-5 py-4">{interview.n_messages}</td>
 						<td class="px-5 py-4">{interview.interviewer}</td>
+						<td class="px-5 py-4">{interview.language}</td>
 						<td class="px-5 py-4">
 							{#if interview.status === 'completed'}
 								<span
