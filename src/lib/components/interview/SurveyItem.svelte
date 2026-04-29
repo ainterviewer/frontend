@@ -95,10 +95,6 @@
 	});
 
 	let likertOptions = $derived(surveyItem.type === 'likert' ? surveyItem.options : []);
-	let likertOptionWidthCh = $derived.by(() => {
-		if (surveyItem.type !== 'likert' || surveyItem.ui === 'slider') return 10;
-		return Math.max(10, ...surveyItem.options.map((opt: string) => opt.length + 0));
-	});
 
 	let selectOptions = $derived(
 		surveyItem.type === 'radio' || surveyItem.type === 'checkbox'
@@ -285,13 +281,10 @@
 				</div>
 			</div>
 		{:else if surveyItem.type === 'likert'}
-			<div
-				class="flex w-full items-stretch justify-start overflow-x-auto pb-1"
-				style={`--likert-item-width: ${likertOptionWidthCh}ch`}
-			>
+			<div class="flex w-full items-stretch justify-start pb-1">
 				{#each likertOptions as opt, i (i)}
 					<label
-						class="flex w-(--likert-item-width) shrink-0 flex-col items-center gap-2 rounded-xl py-2 text-center text-xs font-medium text-gray-700 transition-all
+						class="flex flex-1 basis-0 flex-col items-center gap-2 rounded-xl px-1 py-2 text-center text-xs font-medium break-words text-gray-700 transition-all
                   {disabled && !readonly
 							? 'cursor-not-allowed opacity-60 grayscale'
 							: disabled
@@ -307,7 +300,7 @@
 							disabled={disabled && !readonly}
 							class="h-4 w-4 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
 						/>
-						<span class="whitespace-nowrap">{opt}</span>
+						<span>{opt}</span>
 					</label>
 				{/each}
 			</div>
