@@ -9,7 +9,7 @@
 	let { data } = $props();
 
 	let sortBy = $state('created_at');
-	let sortDesc = $state(true);
+	let sortDesc = $state(false);
 	let projectId = $derived(page.params.project_id);
 	let lang = $derived(page.params.lang);
 
