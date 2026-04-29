@@ -6,6 +6,7 @@
 	import type { SynthesizeRequest } from '$lib/api/types.gen';
 	import type { PageData } from './$types';
 	import { auth } from '$lib/auth.svelte';
+	import SimulationActionBar from '../SimulationActionBar.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -114,171 +115,176 @@
 	});
 </script>
 
-<a
-	href={simulationsHref}
-	class="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
->
-	<i class="fa-solid fa-arrow-left"></i>
-	Back to simulations
-</a>
-
-<h1 class="page-title">Run</h1>
-<p class="mb-8 text-gray-600">
-	Run a number of synthetic interviews to test your interview guide and configuration.
-</p>
-
-<h2 class="mb-4 text-lg font-medium text-gray-800">Settings</h2>
-
-<div class="mb-6 space-y-6">
-	<div>
-		<label for="n-interviews" class="mb-1 block text-sm font-medium text-gray-700"
-			>Number of synthetic interviews</label
+<div class="flex min-h-full flex-col pb-32">
+	<div class="flex-1">
+		<a
+			href={simulationsHref}
+			class="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
 		>
-		<input
-			id="n-interviews"
-			type="number"
-			bind:value={nInterviews}
-			min="1"
-			max="5"
-			class="w-20 rounded border-gray-300 focus:border-primary focus:ring-primary"
-		/>
-	</div>
+			<i class="fa-solid fa-arrow-left"></i>
+			Back to simulations
+		</a>
 
-	{#if auth.isAdmin}
-		<div>
-			<h3 class="mb-2 text-sm font-medium text-gray-700">Delay before answers</h3>
-			<div class="space-y-4">
-				<div>
-					<label for="delay-before-answers" class="mb-1 block text-sm text-gray-600">
-						Delay before the agent answers each question:
-					</label>
-					<input
-						id="delay-before-answers"
-						type="number"
-						bind:value={delayBeforeAnswers}
-						min="0"
-						class="w-20 rounded border-gray-300 focus:border-primary focus:ring-primary"
-					/>
-					<span class="ml-2 text-sm text-gray-600">seconds</span>
-				</div>
-				<div>
-					<label for="delay-random" class="mb-1 block text-sm text-gray-600">
-						Random variation in the delay before the agent answers each question:
-					</label>
-					<input
-						id="delay-random"
-						type="number"
-						bind:value={delayBeforeAnswersRandom}
-						min="0"
-						class="w-20 rounded border-gray-300 focus:border-primary focus:ring-primary"
-					/>
-					<span class="ml-2 text-sm text-gray-600">seconds</span>
-				</div>
+		<h1 class="page-title">Run</h1>
+		<p class="mb-8 text-gray-600">
+			Run a number of synthetic interviews to test your interview guide and configuration.
+		</p>
+
+		<h2 class="mb-4 text-lg font-medium text-gray-800">Settings</h2>
+
+		<div class="mb-6 space-y-6">
+			<div>
+				<label for="n-interviews" class="mb-1 block text-sm font-medium text-gray-700"
+					>Number of synthetic interviews</label
+				>
+				<input
+					id="n-interviews"
+					type="number"
+					bind:value={nInterviews}
+					min="1"
+					max="5"
+					class="w-20 rounded border-gray-300 focus:border-primary focus:ring-primary"
+				/>
 			</div>
-		</div>
-	{/if}
-	{#if data.models && data.models.length > 0}
-		<div>
-			<label for="answering-model" class="mb-1 block text-sm font-medium text-gray-700"
-				>Language model</label
-			>
-			<select
-				id="answering-model"
-				bind:value={answeringModel}
-				class="w-fit rounded border-gray-300 bg-white focus:border-primary focus:ring-primary"
-			>
-				{#each data.models as model}
-					<option value={model}>{model}</option>
-				{/each}
-			</select>
-		</div>
-	{/if}
 
-	<div>
-		<label for="interview-language" class="mb-1 block text-sm font-medium text-gray-700"
-			>Interview language</label
-		>
-		<select
-			id="interview-language"
-			bind:value={language}
-			class="w-64 rounded border-gray-300 bg-white focus:border-primary focus:ring-primary"
-		>
-			{#each data.languages as langOption}
-				<option value={langOption.code}>{langOption.name}</option>
-			{/each}
-		</select>
-	</div>
-
-	<button
-		onclick={runTest}
-		disabled={running}
-		class="mt-4 rounded bg-primary px-4 py-2 font-medium text-white shadow-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-	>
-		{#if running}
-			<i class="fas fa-spinner fa-spin mr-2"></i> Running...
-		{:else}
-			Run test
-		{/if}
-	</button>
-</div>
-
-<h2 class="mt-8 mb-4 text-lg font-medium text-gray-800">Test Runs</h2>
-
-<div class="shrink-0 overflow-x-auto rounded-lg bg-white shadow">
-	<table class="min-w-full leading-normal">
-		<thead>
-			<tr
-				class="border-b-2 border-gray-200 bg-secondary text-left text-[13px] font-bold tracking-wider text-gray-900 uppercase"
-			>
-				<th class="w-12 px-5 py-3">
-					<input type="checkbox" disabled class="form-checkbox h-4 w-4 text-primary opacity-50" />
-				</th>
-				<th class="px-5 py-3">Created</th>
-				<th class="px-5 py-3">Language</th>
-				<th class="px-5 py-3">N interviews</th>
-				<th class="px-5 py-3">Question model</th>
-				<th class="px-5 py-3">Answering model</th>
-				<th class="px-5 py-3">Status</th>
-				<th class="w-12 px-5 py-3"></th>
-			</tr>
-		</thead>
-		<tbody class="bg-white">
-			{#if loading}
-				<tr>
-					<td colspan="8" class="px-5 py-10 text-center text-gray-500">
-						<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading test runs...
-					</td>
-				</tr>
-			{:else if testRuns.length === 0}
-				<tr>
-					<td colspan="8" class="px-5 py-10 text-center text-gray-500"> No test runs found </td>
-				</tr>
-			{:else}
-				{#each testRuns as testRun (testRun.id)}
-					<tr class="border-b border-gray-200 text-sm hover:bg-gray-50">
-						<td class="px-5 py-4">
+			{#if auth.isAdmin}
+				<div>
+					<h3 class="mb-2 text-sm font-medium text-gray-700">Delay before answers</h3>
+					<div class="space-y-4">
+						<div>
+							<label for="delay-before-answers" class="mb-1 block text-sm text-gray-600">
+								Delay before the agent answers each question:
+							</label>
 							<input
-								type="checkbox"
-								disabled
-								class="form-checkbox h-4 w-4 cursor-not-allowed text-blue-600 opacity-50"
+								id="delay-before-answers"
+								type="number"
+								bind:value={delayBeforeAnswers}
+								min="0"
+								class="w-20 rounded border-gray-300 focus:border-primary focus:ring-primary"
 							/>
-						</td>
-						<td class="px-5 py-4">{formatDate(testRun.created_at)}</td>
-						<td class="px-5 py-4">{testRun.language}</td>
-						<td class="px-5 py-4">{testRun.n_interviews}</td>
-						<td class="px-5 py-4">-</td>
-						<td class="px-5 py-4">{testRun.answering_model || '-'}</td>
-						<td class="px-5 py-4">
-							<span
-								class="rounded-full px-2 py-1 text-xs font-semibold {getStatusClass(
-									testRun.status
-								)}">{testRun.status}</span
-							>
-						</td>
-						<td class="px-5 py-4"></td>
-					</tr>
-				{/each}
+							<span class="ml-2 text-sm text-gray-600">seconds</span>
+						</div>
+						<div>
+							<label for="delay-random" class="mb-1 block text-sm text-gray-600">
+								Random variation in the delay before the agent answers each question:
+							</label>
+							<input
+								id="delay-random"
+								type="number"
+								bind:value={delayBeforeAnswersRandom}
+								min="0"
+								class="w-20 rounded border-gray-300 focus:border-primary focus:ring-primary"
+							/>
+							<span class="ml-2 text-sm text-gray-600">seconds</span>
+						</div>
+					</div>
+				</div>
 			{/if}
-		</tbody>
-	</table>
+			{#if data.models && data.models.length > 0}
+				<div>
+					<label for="answering-model" class="mb-1 block text-sm font-medium text-gray-700"
+						>Language model</label
+					>
+					<select
+						id="answering-model"
+						bind:value={answeringModel}
+						class="w-fit rounded border-gray-300 bg-white focus:border-primary focus:ring-primary"
+					>
+						{#each data.models as model}
+							<option value={model}>{model}</option>
+						{/each}
+					</select>
+				</div>
+			{/if}
+
+			<div>
+				<label for="interview-language" class="mb-1 block text-sm font-medium text-gray-700"
+					>Interview language</label
+				>
+				<select
+					id="interview-language"
+					bind:value={language}
+					class="w-64 rounded border-gray-300 bg-white focus:border-primary focus:ring-primary"
+				>
+					{#each data.languages as langOption}
+						<option value={langOption.code}>{langOption.name}</option>
+					{/each}
+				</select>
+			</div>
+
+			<button
+				onclick={runTest}
+				disabled={running}
+				class="mt-4 rounded bg-primary px-4 py-2 font-medium text-white shadow-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				{#if running}
+					<i class="fas fa-spinner fa-spin mr-2"></i> Running...
+				{:else}
+					Run test
+				{/if}
+			</button>
+		</div>
+
+		<h2 class="mt-8 mb-4 text-lg font-medium text-gray-800">Test Runs</h2>
+
+		<div class="shrink-0 overflow-x-auto rounded-lg bg-white shadow">
+			<table class="min-w-full leading-normal">
+				<thead>
+					<tr
+						class="border-b-2 border-gray-200 bg-secondary text-left text-[13px] font-bold tracking-wider text-gray-900 uppercase"
+					>
+						<th class="w-12 px-5 py-3">
+							<input type="checkbox" disabled class="form-checkbox h-4 w-4 text-primary opacity-50" />
+						</th>
+						<th class="px-5 py-3">Created</th>
+						<th class="px-5 py-3">Language</th>
+						<th class="px-5 py-3">N interviews</th>
+						<th class="px-5 py-3">Question model</th>
+						<th class="px-5 py-3">Answering model</th>
+						<th class="px-5 py-3">Status</th>
+						<th class="w-12 px-5 py-3"></th>
+					</tr>
+				</thead>
+				<tbody class="bg-white">
+					{#if loading}
+						<tr>
+							<td colspan="8" class="px-5 py-10 text-center text-gray-500">
+								<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading test runs...
+							</td>
+						</tr>
+					{:else if testRuns.length === 0}
+						<tr>
+							<td colspan="8" class="px-5 py-10 text-center text-gray-500"> No test runs found </td>
+						</tr>
+					{:else}
+						{#each testRuns as testRun (testRun.id)}
+							<tr class="border-b border-gray-200 text-sm hover:bg-gray-50">
+								<td class="px-5 py-4">
+									<input
+										type="checkbox"
+										disabled
+										class="form-checkbox h-4 w-4 cursor-not-allowed text-blue-600 opacity-50"
+									/>
+								</td>
+								<td class="px-5 py-4">{formatDate(testRun.created_at)}</td>
+								<td class="px-5 py-4">{testRun.language}</td>
+								<td class="px-5 py-4">{testRun.n_interviews}</td>
+								<td class="px-5 py-4">-</td>
+								<td class="px-5 py-4">{testRun.answering_model || '-'}</td>
+								<td class="px-5 py-4">
+									<span
+										class="rounded-full px-2 py-1 text-xs font-semibold {getStatusClass(
+											testRun.status
+										)}">{testRun.status}</span
+									>
+								</td>
+								<td class="px-5 py-4"></td>
+							</tr>
+						{/each}
+					{/if}
+				</tbody>
+			</table>
+				</div>
+	</div>
+	<SimulationActionBar current="runs" />
 </div>

@@ -15,20 +15,22 @@
 	);
 </script>
 
-<a
-	href={simulationsHref}
-	class="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
->
-	<i class="fa-solid fa-arrow-left"></i>
-	Back to simulations
-</a>
+<div class="flex min-h-full flex-col">
+	<a
+		href={simulationsHref}
+		class="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
+	>
+		<i class="fa-solid fa-arrow-left"></i>
+		Back to simulations
+	</a>
 
-{#if test.type === 'fixed_answers'}
-	<FixedAnswers {test} questions={data.questions} />
-{:else if test.type === 'shuffled_ai'}
-	<ShuffledAI {test} />
-{:else if test.type === 'fixed_ai'}
-	<FixedAI {test} />
-{:else}
-	<p>Unknown test type: {test.type}</p>
-{/if}
+	{#if test.type === 'fixed_answers'}
+		<FixedAnswers {test} questions={data.questions} />
+	{:else if test.type === 'shuffled_ai'}
+		<ShuffledAI {test} />
+	{:else if test.type === 'fixed_ai'}
+		<FixedAI {test} />
+	{:else}
+		<p>Unknown test type: {test.type}</p>
+	{/if}
+</div>

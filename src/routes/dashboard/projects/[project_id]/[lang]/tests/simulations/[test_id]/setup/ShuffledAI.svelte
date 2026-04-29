@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Synthesize, type TestSetupPublic } from '$lib/api';
 	import { toast } from 'svelte-sonner';
+	import SimulationActionBar from '../SimulationActionBar.svelte';
 
 	let { test }: { test: TestSetupPublic } = $props();
 
@@ -114,244 +115,232 @@
 	}
 </script>
 
-<h2 class="page-title">Setup - Shuffled AI Respondents</h2>
-<p class="text-gray-600">
-	Define the background characteristics of the synthetic interviewees. These will be randomly mixed
-	for each synthetic interviewee.
-</p>
+<div class="pb-32">
+	<h2 class="page-title">Setup - Shuffled AI Respondents</h2>
+	<p class="text-gray-600">
+		Define the background characteristics of the synthetic interviewees. These will be randomly mixed
+		for each synthetic interviewee.
+	</p>
 
-<!-- Names and Gender -->
-<div class="my-6">
-	<h4 class="mb-2.5 font-bold text-gray-600">Names and Gender</h4>
-	{#each names_gender as pair, i}
-		<div class="mb-2.5 flex items-center gap-2.5">
-			<input
-				type="text"
-				placeholder="Name"
-				bind:value={pair[0]}
-				class="flex-1 rounded border border-gray-300 p-2"
-			/>
-			<input
-				type="text"
-				placeholder="Gender"
-				bind:value={pair[1]}
-				class="flex-1 rounded border border-gray-300 p-2"
-			/>
-			<button
-				class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
-				onclick={() => removeNameGender(i)}
-			>
-				<span class="text-lg font-bold">×</span>
-			</button>
-		</div>
-	{/each}
-	<button
-		class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
-		onclick={addNameGender}
-	>
-		<span class="text-lg font-bold">+</span>Add Name/Gender Pair
-	</button>
-</div>
-
-<!-- Age Range -->
-<div class="mb-6">
-	<h4 class="mb-2.5 font-bold text-gray-600">Age Range</h4>
-	<div class="mb-2.5 flex items-center gap-2.5">
-		<input
-			type="number"
-			min="18"
-			max="100"
-			bind:value={age_range[0]}
-			class="w-[70px] flex-none rounded border border-gray-300 p-2"
-		/>
-		<span>to</span>
-		<input
-			type="number"
-			min="18"
-			max="100"
-			bind:value={age_range[1]}
-			class="w-[70px] flex-none rounded border border-gray-300 p-2"
-		/>
+	<!-- Names and Gender -->
+	<div class="my-6">
+		<h4 class="mb-2.5 font-bold text-gray-600">Names and Gender</h4>
+		{#each names_gender as pair, i}
+			<div class="mb-2.5 flex items-center gap-2.5">
+				<input
+					type="text"
+					placeholder="Name"
+					bind:value={pair[0]}
+					class="flex-1 rounded border border-gray-300 p-2"
+				/>
+				<input
+					type="text"
+					placeholder="Gender"
+					bind:value={pair[1]}
+					class="flex-1 rounded border border-gray-300 p-2"
+				/>
+				<button
+					class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+					onclick={() => removeNameGender(i)}
+				>
+					<span class="text-lg font-bold">×</span>
+				</button>
+			</div>
+		{/each}
+		<button
+			class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+			onclick={addNameGender}
+		>
+			<span class="text-lg font-bold">+</span>Add Name/Gender Pair
+		</button>
 	</div>
-</div>
 
-<!-- Generic String Lists -->
-{#each [{ title: 'Education', list: educations }, { title: 'Occupations', list: occupations }, { title: 'Locations', list: locations }, { title: 'Personalities', list: personalities }] as group}
+	<!-- Age Range -->
 	<div class="mb-6">
-		<h4 class="mb-2.5 font-bold text-gray-600">{group.title}</h4>
-		{#each group.list as item, i}
-			<div class="mb-2.5 flex items-center gap-2.5">
-				<input
-					type="text"
-					placeholder={group.title}
-					bind:value={group.list[i]}
-					class="flex-1 rounded border border-gray-300 p-2"
-				/>
-				<button
-					class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
-					onclick={() => removeRow(group.list, i)}
-				>
-					<span class="text-lg font-bold">×</span>
-				</button>
-			</div>
-		{/each}
-		<button
-			class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
-			onclick={() => addRow(group.list)}
-		>
-			<span class="text-lg font-bold">+</span>Add {group.title}
-		</button>
-	</div>
-{/each}
-
-<!-- Communication Traits -->
-<div class="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-	<h4 class="mb-2.5 font-bold text-gray-600">Communication Traits</h4>
-
-	<div>
-		<h5 class="mt-2.5 mb-1.5 font-bold">Length</h5>
-		{#each comm_length as item, i}
-			<div class="mb-2.5 flex items-center gap-2.5">
-				<input
-					type="text"
-					placeholder="Length"
-					bind:value={comm_length[i]}
-					class="flex-1 rounded border border-gray-300 p-2"
-				/>
-				<button
-					class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
-					onclick={() => removeRow(comm_length, i)}
-				>
-					<span class="text-lg font-bold">×</span>
-				</button>
-			</div>
-		{/each}
-		<button
-			class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
-			onclick={() => addRow(comm_length)}
-		>
-			<span class="text-lg font-bold">+</span>Add Length
-		</button>
-	</div>
-
-	<div>
-		<h5 class="mt-2.5 mb-1.5 font-bold">Style</h5>
-		{#each comm_style as item, i}
-			<div class="mb-2.5 flex items-center gap-2.5">
-				<input
-					type="text"
-					placeholder="Style"
-					bind:value={comm_style[i]}
-					class="flex-1 rounded border border-gray-300 p-2"
-				/>
-				<button
-					class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
-					onclick={() => removeRow(comm_style, i)}
-				>
-					<span class="text-lg font-bold">×</span>
-				</button>
-			</div>
-		{/each}
-		<button
-			class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
-			onclick={() => addRow(comm_style)}
-		>
-			<span class="text-lg font-bold">+</span>Add Style
-		</button>
-	</div>
-
-	<div>
-		<h5 class="mt-2.5 mb-1.5 font-bold">Tone</h5>
-		{#each comm_tone as item, i}
-			<div class="mb-2.5 flex items-center gap-2.5">
-				<input
-					type="text"
-					placeholder="Tone"
-					bind:value={comm_tone[i]}
-					class="flex-1 rounded border border-gray-300 p-2"
-				/>
-				<button
-					class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
-					onclick={() => removeRow(comm_tone, i)}
-				>
-					<span class="text-lg font-bold">×</span>
-				</button>
-			</div>
-		{/each}
-		<button
-			class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
-			onclick={() => addRow(comm_tone)}
-		>
-			<span class="text-lg font-bold">+</span>Add Tone
-		</button>
-	</div>
-</div>
-
-<!-- Extra Traits -->
-<div class="mb-6">
-	<h4 class="mb-2.5 font-bold text-gray-600">Extra traits</h4>
-	{#each extra_traits as item, i}
+		<h4 class="mb-2.5 font-bold text-gray-600">Age Range</h4>
 		<div class="mb-2.5 flex items-center gap-2.5">
 			<input
-				type="text"
-				placeholder="Trait"
-				bind:value={extra_traits[i]}
-				class="flex-1 rounded border border-gray-300 p-2"
+				type="number"
+				min="18"
+				max="100"
+				bind:value={age_range[0]}
+				class="w-[70px] flex-none rounded border border-gray-300 p-2"
 			/>
+			<span>to</span>
+			<input
+				type="number"
+				min="18"
+				max="100"
+				bind:value={age_range[1]}
+				class="w-[70px] flex-none rounded border border-gray-300 p-2"
+			/>
+		</div>
+	</div>
+
+	<!-- Generic String Lists -->
+	{#each [{ title: 'Education', list: educations }, { title: 'Occupations', list: occupations }, { title: 'Locations', list: locations }, { title: 'Personalities', list: personalities }] as group}
+		<div class="mb-6">
+			<h4 class="mb-2.5 font-bold text-gray-600">{group.title}</h4>
+			{#each group.list as item, i}
+				<div class="mb-2.5 flex items-center gap-2.5">
+					<input
+						type="text"
+						placeholder={group.title}
+						bind:value={group.list[i]}
+						class="flex-1 rounded border border-gray-300 p-2"
+					/>
+					<button
+						class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+						onclick={() => removeRow(group.list, i)}
+					>
+						<span class="text-lg font-bold">×</span>
+					</button>
+				</div>
+			{/each}
 			<button
-				class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
-				onclick={() => removeRow(extra_traits, i)}
+				class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+				onclick={() => addRow(group.list)}
 			>
-				<span class="text-lg font-bold">×</span>
+				<span class="text-lg font-bold">+</span>Add {group.title}
 			</button>
 		</div>
 	{/each}
-	<button
-		class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
-		onclick={() => addRow(extra_traits)}
-	>
-		<span class="text-lg font-bold">+</span>Add Trait
-	</button>
-</div>
 
-<!-- Refusal Rate -->
-<div class="mb-6">
-	<h4 class="mb-2.5 font-bold text-gray-600">Refusal Rate (%)</h4>
-	<p>The chance that the subject will be explicitly told to refuse answering a given question.</p>
-	<div class="mb-2.5 flex items-center gap-2.5">
-		<label>Min:</label>
-		<input
-			type="number"
-			min="0"
-			max="100"
-			bind:value={refusal_rate[0]}
-			class="w-[70px] flex-none rounded border border-gray-300 p-2"
-		/>
-		<label>Max:</label>
-		<input
-			type="number"
-			min="0"
-			max="100"
-			bind:value={refusal_rate[1]}
-			class="w-[70px] flex-none rounded border border-gray-300 p-2"
-		/>
+	<!-- Communication Traits -->
+	<div class="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+		<h4 class="mb-2.5 font-bold text-gray-600">Communication Traits</h4>
+
+		<div>
+			<h5 class="mt-2.5 mb-1.5 font-bold">Length</h5>
+			{#each comm_length as item, i}
+				<div class="mb-2.5 flex items-center gap-2.5">
+					<input
+						type="text"
+						placeholder="Length"
+						bind:value={comm_length[i]}
+						class="flex-1 rounded border border-gray-300 p-2"
+					/>
+					<button
+						class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+						onclick={() => removeRow(comm_length, i)}
+					>
+						<span class="text-lg font-bold">×</span>
+					</button>
+				</div>
+			{/each}
+			<button
+				class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+				onclick={() => addRow(comm_length)}
+			>
+				<span class="text-lg font-bold">+</span>Add Length
+			</button>
+		</div>
+
+		<div>
+			<h5 class="mt-2.5 mb-1.5 font-bold">Style</h5>
+			{#each comm_style as item, i}
+				<div class="mb-2.5 flex items-center gap-2.5">
+					<input
+						type="text"
+						placeholder="Style"
+						bind:value={comm_style[i]}
+						class="flex-1 rounded border border-gray-300 p-2"
+					/>
+					<button
+						class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+						onclick={() => removeRow(comm_style, i)}
+					>
+						<span class="text-lg font-bold">×</span>
+					</button>
+				</div>
+			{/each}
+			<button
+				class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+				onclick={() => addRow(comm_style)}
+			>
+				<span class="text-lg font-bold">+</span>Add Style
+			</button>
+		</div>
+
+		<div>
+			<h5 class="mt-2.5 mb-1.5 font-bold">Tone</h5>
+			{#each comm_tone as item, i}
+				<div class="mb-2.5 flex items-center gap-2.5">
+					<input
+						type="text"
+						placeholder="Tone"
+						bind:value={comm_tone[i]}
+						class="flex-1 rounded border border-gray-300 p-2"
+					/>
+					<button
+						class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+						onclick={() => removeRow(comm_tone, i)}
+					>
+						<span class="text-lg font-bold">×</span>
+					</button>
+				</div>
+			{/each}
+			<button
+				class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+				onclick={() => addRow(comm_tone)}
+			>
+				<span class="text-lg font-bold">+</span>Add Tone
+			</button>
+		</div>
+	</div>
+
+	<!-- Extra Traits -->
+	<div class="mb-6">
+		<h4 class="mb-2.5 font-bold text-gray-600">Extra traits</h4>
+		{#each extra_traits as item, i}
+			<div class="mb-2.5 flex items-center gap-2.5">
+				<input
+					type="text"
+					placeholder="Trait"
+					bind:value={extra_traits[i]}
+					class="flex-1 rounded border border-gray-300 p-2"
+				/>
+				<button
+					class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-red-50 p-2 text-red-700"
+					onclick={() => removeRow(extra_traits, i)}
+				>
+					<span class="text-lg font-bold">×</span>
+				</button>
+			</div>
+		{/each}
+		<button
+			class="flex cursor-pointer items-center gap-1.5 rounded border-none bg-blue-50 px-4 py-2 text-blue-700"
+			onclick={() => addRow(extra_traits)}
+		>
+			<span class="text-lg font-bold">+</span>Add Trait
+		</button>
+	</div>
+
+	<!-- Refusal Rate -->
+	<div class="mb-6">
+		<h4 class="mb-2.5 font-bold text-gray-600">Refusal Rate (%)</h4>
+		<p>The chance that the subject will be explicitly told to refuse answering a given question.</p>
+		<div class="mb-2.5 flex items-center gap-2.5">
+			<label>Min:</label>
+			<input
+				type="number"
+				min="0"
+				max="100"
+				bind:value={refusal_rate[0]}
+				class="w-[70px] flex-none rounded border border-gray-300 p-2"
+			/>
+			<label>Max:</label>
+			<input
+				type="number"
+				min="0"
+				max="100"
+				bind:value={refusal_rate[1]}
+				class="w-[70px] flex-none rounded border border-gray-300 p-2"
+			/>
+		</div>
 	</div>
 </div>
 
-<div
-	class="sticky bottom-0 ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
->
-	<button
-		onclick={saveSetup}
-		disabled={isSaving}
-		class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark disabled:cursor-not-allowed disabled:opacity-50"
-	>
-		{#if isSaving}
-			<i class="fas fa-spinner fa-spin"></i> Saving...
-		{:else}
-			<i class="fa-solid fa-floppy-disk"></i> Save Setup
-		{/if}
-	</button>
-</div>
+<SimulationActionBar current="setup" saving={isSaving} onSave={saveSetup} />
 
 <!-- Export button not implemented yet as per request scope but present in HTML -->
