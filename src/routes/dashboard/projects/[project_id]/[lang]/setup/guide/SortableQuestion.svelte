@@ -55,6 +55,20 @@
 		dragState.chatDropTarget?.id === question.id ? dragState.chatDropTarget : null
 	);
 
+	$effect(() => {
+		if (!question.conditions) return;
+		for (const cond of question.conditions.conditions) {
+			const refSection = allSections[cond.question_context.section];
+			const refQ = refSection
+				? (allQuestions[refSection.id] || [])[cond.question_context.question]
+				: null;
+			const desired = refQ?.survey_item ? 'match' : 'classification';
+			if (cond.trigger_type !== desired) {
+				cond.trigger_type = desired;
+			}
+		}
+	});
+
 	function handleImageUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
 		if (input.files && input.files[0]) {
@@ -747,9 +761,14 @@
 																			{:else}
 																				<input
 																					class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-																					placeholder="Value to match..."
+																					placeholder="e.g. user expressed dissatisfaction"
 																					bind:value={evaluation.trigger_value}
 																				/>
+																				<p class="mt-1 text-xs text-gray-500">
+																					<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>
+																					Matched via classification &mdash; describe the answer
+																					pattern to detect.
+																				</p>
 																			{/if}
 																		</div>
 																	</div>
