@@ -1197,6 +1197,10 @@ export type InterviewSummaryPublic = {
      * Messages
      */
     messages: Array<MessagePublic>;
+    /**
+     * Test Name
+     */
+    test_name?: string | null;
 };
 
 /**
@@ -2969,6 +2973,10 @@ export type OutgoingMessage = {
      * Progress
      */
     progress?: number | null;
+    /**
+     * Is Probe
+     */
+    is_probe?: boolean;
 };
 
 /**

@@ -40,6 +40,7 @@
 		{ key: 'last_updated', label: 'Updated' },
 		{ key: 'n_messages', label: 'Messages' },
 		{ key: 'interview_type', label: 'Type' },
+		{ key: 'test_name', label: 'Test name' },
 		{ key: 'language', label: 'Language' },
 		{ key: 'status', label: 'Status' }
 	];
@@ -337,6 +338,7 @@
 						<td class="px-5 py-4">{formatDate(interview.last_updated)}</td>
 						<td class="px-5 py-4">{interview.n_messages}</td>
 						<td class="px-5 py-4">{interview.type}</td>
+						<td class="px-5 py-4">{interview.test_name}</td>
 						<td class="px-5 py-4">{interview.language}</td>
 						<td class="px-5 py-4">
 							{#if interview.status === 'completed'}
