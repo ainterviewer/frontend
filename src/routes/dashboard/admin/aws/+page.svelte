@@ -3,8 +3,8 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { SvelteSet } from 'svelte/reactivity';
-	import type { Instance } from './types';
 	import type { PageData } from './$types';
+	import type { Instance } from './types';
 
 	let { data }: { data: PageData } = $props();
 
