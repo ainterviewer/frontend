@@ -88,6 +88,14 @@
 		replaceTextNodes(promptsContainer, regexSingle, 'pink', 'single');
 	}
 
+	function setAllModels(model: string) {
+		for (const key of Object.keys(agents) as (keyof typeof agents)[]) {
+			if (agents[key]) {
+				agents[key]!.model = model;
+			}
+		}
+	}
+
 	function updatePromptValue(event: FocusEvent, agentKey: string, promptKey: string) {
 		const element = event.target as HTMLElement;
 		const plainText = element.innerText;
@@ -113,7 +121,23 @@
 			</p>
 		</div>
 
-		<div class="space-y-8">
+		<div class="w-fit space-y-8">
+			<p class="mb-2">
+				Change the individual agent models in the sections below, or change all here:
+			</p>
+
+			<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+				<select
+					id="all-models"
+					onchange={(e) => setAllModels((e.currentTarget as HTMLSelectElement).value)}
+					class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+				>
+					{#each models as model}
+						<option value={model}>{model}</option>
+					{/each}
+				</select>
+				<div></div>
+			</div>
 			<!-- Probing Agent -->
 			<div class="border-b border-gray-100 pb-6">
 				<h4 class="mb-4 font-medium text-gray-700">Probing Agent</h4>
@@ -185,6 +209,78 @@
 				</div>
 			</div>
 
+			<!-- Reformulation Agent -->
+			<div class="border-b border-gray-100 pb-6">
+				<h4 class="mb-4 font-medium text-gray-700">Reformulation Agent</h4>
+				<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+					<div>
+						<label for="classification-model" class="mb-1 block text-sm font-medium text-gray-700"
+							>Model</label
+						>
+						<select
+							id="classification-model"
+							bind:value={agents.reformulation!.model}
+							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+						>
+							{#each models as model}
+								<option value={model}>{model}</option>
+							{/each}
+						</select>
+					</div>
+					<div>
+						<label
+							for="classification-temperature"
+							class="mb-1 block text-sm font-medium text-gray-700">Temperature</label
+						>
+						<input
+							id="classification-temperature"
+							type="number"
+							step="0.1"
+							min="0"
+							max="1"
+							bind:value={agents.reformulation!.temperature}
+							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+						/>
+					</div>
+				</div>
+			</div>
+
+			<!-- Guide Agent -->
+			<div class="border-b border-gray-100 pb-6">
+				<h4 class="mb-4 font-medium text-gray-700">Guide Agent</h4>
+				<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+					<div>
+						<label for="classification-model" class="mb-1 block text-sm font-medium text-gray-700"
+							>Model</label
+						>
+						<select
+							id="classification-model"
+							bind:value={agents.guide!.model}
+							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+						>
+							{#each models as model}
+								<option value={model}>{model}</option>
+							{/each}
+						</select>
+					</div>
+					<div>
+						<label
+							for="classification-temperature"
+							class="mb-1 block text-sm font-medium text-gray-700">Temperature</label
+						>
+						<input
+							id="classification-temperature"
+							type="number"
+							step="0.1"
+							min="0"
+							max="1"
+							bind:value={agents.guide!.temperature}
+							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+						/>
+					</div>
+				</div>
+			</div>
+
 			<!-- Security Agent -->
 			<div class="hidden border-b border-gray-100 pb-6">
 				<div class="mb-4 flex items-center justify-between">
@@ -232,41 +328,6 @@
 						</div>
 					</div>
 				{/if}
-			</div>
-
-			<!-- Answering Agent -->
-			<div class="hidden">
-				<h4 class="mb-4 font-medium text-gray-700">Answering Agent</h4>
-				<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-					<div>
-						<label for="answering-model" class="mb-1 block text-sm font-medium text-gray-700"
-							>Model</label
-						>
-						<select
-							id="answering-model"
-							bind:value={agents.answering!.model}
-							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-						>
-							{#each models as model}
-								<option value={model}>{model}</option>
-							{/each}
-						</select>
-					</div>
-					<div>
-						<label for="answering-temperature" class="mb-1 block text-sm font-medium text-gray-700"
-							>Temperature</label
-						>
-						<input
-							id="answering-temperature"
-							type="number"
-							step="0.1"
-							min="0"
-							max="1"
-							bind:value={agents.answering!.temperature}
-							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-						/>
-					</div>
-				</div>
 			</div>
 		</div>
 	</section>
