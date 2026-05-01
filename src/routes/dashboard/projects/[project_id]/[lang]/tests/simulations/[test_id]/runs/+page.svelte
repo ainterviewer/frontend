@@ -142,7 +142,7 @@
 					type="number"
 					bind:value={nInterviews}
 					min="1"
-					max="5"
+					max="50"
 					class="w-20 rounded border-gray-300 focus:border-primary focus:ring-primary"
 				/>
 			</div>
@@ -234,7 +234,11 @@
 						class="border-b-2 border-gray-200 bg-secondary text-left text-[13px] font-bold tracking-wider text-gray-900 uppercase"
 					>
 						<th class="w-12 px-5 py-3">
-							<input type="checkbox" disabled class="form-checkbox h-4 w-4 text-primary opacity-50" />
+							<input
+								type="checkbox"
+								disabled
+								class="form-checkbox h-4 w-4 text-primary opacity-50"
+							/>
 						</th>
 						<th class="px-5 py-3">Created</th>
 						<th class="px-5 py-3">Language</th>
@@ -284,7 +288,7 @@
 					{/if}
 				</tbody>
 			</table>
-				</div>
+		</div>
 	</div>
 	<SimulationActionBar current="runs" />
 </div>
