@@ -93,7 +93,7 @@
 >
 	<button
 		onclick={() => sidebar.toggle()}
-		class="absolute top-[50%] right-0 flex h-8 w-8 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-none bg-white text-primary transition-transform hover:scale-110"
+		class="absolute top-[50%] right-0 z-99 flex h-8 w-8 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-none bg-white text-primary transition-transform hover:scale-110"
 		aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 	>
 		<i class={collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'}></i>
