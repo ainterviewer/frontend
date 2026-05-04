@@ -8,6 +8,7 @@
 		type?: 'link' | 'separator';
 		requiresAdmin?: boolean;
 		project_id?: string;
+		demoFeature?: boolean;
 	};
 </script>
 
@@ -21,6 +22,15 @@
 	let { items }: { items: SidebarItem[] } = $props();
 	let collapsed = $derived(sidebar.collapsed);
 	let expanded = $derived(!collapsed);
+
+	let user = $derived(page.data.user);
+	let hasDemoFeatures = $derived(!!user?.with_demo_features);
+
+	function canShow(item: SidebarItem) {
+		if (item.requiresAdmin && !isAdmin) return false;
+		if (item.demoFeature && !hasDemoFeatures) return false;
+		return true;
+	}
 
 	// Extract projectId from the current URL
 	let { projectId, languageCode } = $derived(parseProjectRoute(page.url.pathname));
@@ -102,7 +112,7 @@
 	<div class="h-full overflow-x-hidden overflow-y-auto pb-12">
 		<ul class="m-0 list-none p-0">
 			{#each items as item (item.label || item.href || item)}
-				{#if !item.requiresAdmin || auth.isAdmin}
+				{#if canShow(item)}
 					{#if item.type === 'separator'}
 						<hr class="mx-auto my-2.5 w-[90%] border-0 border-t border-primary" />
 					{:else}
@@ -194,9 +204,7 @@
 		</a>
 
 		{#if hasChildren}
-			{@const visibleChildren = item.children!.filter(
-				(child) => !child.requiresAdmin || auth.isAdmin
-			)}
+			{@const visibleChildren = item.children!.filter(canShow)}
 			<ul class="m-0 list-none p-0">
 				{#each visibleChildren as child, i (child.label || child.href || child)}
 					{@render listItem(child, level + 1, i === visibleChildren.length - 1)}

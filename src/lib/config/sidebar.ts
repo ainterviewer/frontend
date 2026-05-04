@@ -104,6 +104,12 @@ export const projectSidebarItems: SidebarItem[] = [
 		icon: 'fas fa-envelopes-bulk',
 		children: [
 			{
+				label: 'Participants',
+				href: '/dashboard/projects/{projectId}/{languageCode}/distribution/participants',
+				icon: 'fa-solid fa-person-circle-question',
+				demoFeature: true
+			},
+			{
 				label: 'Monitor',
 				href: '/dashboard/projects/{projectId}/{languageCode}/distribution/monitor',
 				icon: 'fa-solid fa-tower-cell'
