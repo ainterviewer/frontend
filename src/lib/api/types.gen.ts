@@ -2590,6 +2590,10 @@ export type UserAdmin = {
     last_login: string;
     scope?: Scope;
     /**
+     * With Demo Features
+     */
+    with_demo_features: boolean;
+    /**
      * Id
      */
     id: string;
@@ -2651,6 +2655,10 @@ export type UserCreateRequest = {
     last_login?: string;
     scope?: Scope;
     /**
+     * With Demo Features
+     */
+    with_demo_features: boolean;
+    /**
      * Invite Token
      */
     invite_token?: string | null;
@@ -2693,6 +2701,10 @@ export type UserPublic = {
      */
     last_login: string;
     scope?: Scope;
+    /**
+     * With Demo Features
+     */
+    with_demo_features: boolean;
     /**
      * Id
      */
@@ -6307,9 +6319,11 @@ export type VersionData = {
 
 export type VersionResponses = {
     /**
+     * Response Version
+     *
      * Successful Response
      */
-    200: PlatformManifest;
+    200: PlatformManifest | null;
 };
 
 export type VersionResponse = VersionResponses[keyof VersionResponses];
