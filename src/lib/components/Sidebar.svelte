@@ -14,7 +14,6 @@
 
 <script lang="ts">
 	import { page } from '$app/state';
-	import { auth } from '$lib/auth.svelte';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
 
@@ -24,6 +23,7 @@
 	let expanded = $derived(!collapsed);
 
 	let user = $derived(page.data.user);
+	let isAdmin = $derived(user?.scope === 'admin');
 	let hasDemoFeatures = $derived(!!user?.with_demo_features);
 
 	function canShow(item: SidebarItem) {

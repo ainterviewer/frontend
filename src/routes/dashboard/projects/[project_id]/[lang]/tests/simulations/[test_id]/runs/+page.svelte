@@ -5,8 +5,9 @@
 	import { toast } from 'svelte-sonner';
 	import type { SynthesizeRequest } from '$lib/api/types.gen';
 	import type { PageData } from './$types';
-	import { auth } from '$lib/auth.svelte';
 	import SimulationActionBar from '../SimulationActionBar.svelte';
+
+	let isAdmin = $derived(page.data.user?.scope === 'admin');
 
 	let { data }: { data: PageData } = $props();
 
@@ -147,7 +148,7 @@
 				/>
 			</div>
 
-			{#if auth.isAdmin}
+			{#if isAdmin}
 				<div>
 					<h3 class="mb-2 text-sm font-medium text-gray-700">Delay before answers</h3>
 					<div class="space-y-4">
