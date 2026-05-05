@@ -28,7 +28,7 @@
 
 	const dirty = $derived(templateHtml !== savedHtml || subject !== savedSubject);
 	const missingInterviewUrl = $derived(
-		!!templateHtml && !/\{interview_url\}/.test(templateHtml)
+		!!templateHtml && !/\{\{\s*interview_url\s*\}\}/.test(templateHtml)
 	);
 	const canSend = $derived(
 		!isDemo &&
@@ -60,7 +60,7 @@
 
 	const previewHtml = $derived(
 		templateHtml.replace(
-			/\{(name|email|pid|interview_url|opt_out_url)\}/g,
+			/\{\{\s*(name|email|pid|interview_url|opt_out_url)\s*\}\}/g,
 			(_, k) => sample[k as keyof typeof sample]
 		)
 	);
@@ -69,7 +69,7 @@
 		if (!editor) return;
 		const prev = editor.getAttributes('link').href ?? '';
 		const url = window.prompt(
-			'URL (use {interview_url} or {opt_out_url} for personal links)',
+			'URL (use {{ interview_url }} or {{ opt_out_url }} for personal links)',
 			prev
 		);
 		if (url === null) return;
@@ -81,7 +81,7 @@
 	}
 
 	function insertPlaceholder(key: string) {
-		editor?.chain().focus().insertContent(`{${key}}`).run();
+		editor?.chain().focus().insertContent(`{{ ${key} }}`).run();
 	}
 
 	async function load() {
@@ -172,7 +172,7 @@
 	});
 </script>
 
-<div class="w-[80%] max-w-[1200px]">
+<div class="">
 	<div class="mb-2">
 		<h1 class="page-title">Email template</h1>
 	</div>
@@ -191,7 +191,7 @@
 				onclick={() => insertPlaceholder(p.key)}
 				disabled={isDemo}
 			>
-				{`{${p.key}}`}
+				{`{{ ${p.key} }}`}
 			</button>
 		{/each}
 	</div>
@@ -254,7 +254,7 @@
 					aria-label="Heading 1"
 				>
 					<i class="fa-solid fa-heading"></i>
-					<span class="ml-0.5 text-[10px] font-semibold align-super">1</span>
+					<span class="ml-0.5 align-super text-[10px] font-semibold">1</span>
 				</button>
 				<button
 					type="button"
@@ -266,7 +266,7 @@
 					aria-label="Heading 2"
 				>
 					<i class="fa-solid fa-heading"></i>
-					<span class="ml-0.5 text-[10px] font-semibold align-super">2</span>
+					<span class="ml-0.5 align-super text-[10px] font-semibold">2</span>
 				</button>
 				<button
 					type="button"
@@ -278,7 +278,7 @@
 					aria-label="Heading 3"
 				>
 					<i class="fa-solid fa-heading"></i>
-					<span class="ml-0.5 text-[10px] font-semibold align-super">3</span>
+					<span class="ml-0.5 align-super text-[10px] font-semibold">3</span>
 				</button>
 				<button
 					type="button"
@@ -367,7 +367,7 @@
 	</div>
 
 	<div
-		class="sticky bottom-0 ml-auto mt-4 flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
+		class="sticky bottom-0 mt-4 ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
 	>
 		<ProjectLanguagePicker
 			projectId={project_id}
@@ -395,7 +395,7 @@
 				: !subject.trim()
 					? 'Subject is empty'
 					: missingInterviewUrl
-						? 'Template must include {interview_url}'
+						? 'Template must include {{ interview_url }}'
 						: !templateHtml.trim()
 							? 'Template is empty'
 							: 'Send to participants'}
