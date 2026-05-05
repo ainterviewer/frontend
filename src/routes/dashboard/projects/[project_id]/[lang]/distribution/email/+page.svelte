@@ -5,7 +5,6 @@
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 	import { Editor } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
-	import { onDestroy, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	let { data }: { data: { available_languages: LanguageDict[] } } = $props();
@@ -202,7 +201,7 @@
 		return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 	}
 
-	onMount(() => {
+	$effect(() => {
 		editor = new Editor({
 			element: editorEl,
 			extensions: [StarterKit.configure({ link: { openOnClick: false } })],
@@ -216,12 +215,18 @@
 				templateHtml = e.getHTML();
 			}
 		});
-		load();
-		loadAttachments();
+		return () => {
+			editor?.destroy();
+			editor = null;
+		};
 	});
 
-	onDestroy(() => {
-		editor?.destroy();
+	$effect(() => {
+		// re-fetch when project or language changes
+		void project_id;
+		void language;
+		load();
+		loadAttachments();
 	});
 </script>
 
@@ -399,9 +404,7 @@
 				</span>
 			</div>
 			<div class="px-3 py-2">
-				{#if loading}
-					<p class="text-sm text-gray-500">Loading...</p>
-				{:else if !subject && !templateHtml}
+				{#if !subject && !templateHtml}
 					<p class="text-sm text-gray-400">Nothing to preview yet.</p>
 				{:else}
 					{#if subject}
