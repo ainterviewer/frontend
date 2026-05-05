@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Participants } from '$lib/api';
-	import type { LanguageDict } from '$lib/api/types.gen';
+	import type { LanguageDict, ParticipantEmailAttachment } from '$lib/api/types.gen';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 	import { Editor } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
@@ -24,6 +24,13 @@
 	let loading = $state(true);
 	let saving = $state(false);
 	let sending = $state(false);
+
+	// Attachments
+	let attachments = $state<ParticipantEmailAttachment[]>([]);
+	let attachmentsLoading = $state(false);
+	let uploadingAttachments = $state(false);
+	let deletingAttachment = $state<string | null>(null);
+	let attachmentInput: HTMLInputElement;
 
 	const dirty = $derived(templateHtml !== savedHtml || subject !== savedSubject);
 	const missingInterviewUrl = $derived(
@@ -149,6 +156,52 @@
 		return confirm('You have unsaved changes. Discard them and switch language?');
 	}
 
+	async function loadAttachments() {
+		attachmentsLoading = true;
+		const res = await Participants.listParticipantEmailAttachments({
+			path: { project_id, language }
+		});
+		if (!res.error) {
+			attachments = res.data ?? [];
+		}
+		attachmentsLoading = false;
+	}
+
+	async function uploadAttachments(files: FileList) {
+		if (!files.length) return;
+		uploadingAttachments = true;
+		const res = await Participants.uploadParticipantEmailAttachments({
+			path: { project_id, language },
+			body: { files: Array.from(files) }
+		});
+		uploadingAttachments = false;
+		if (res.error) {
+			toast.error('Failed to upload attachments');
+			return;
+		}
+		attachments = res.data ?? [];
+		toast.success(`Uploaded ${files.length} attachment${files.length === 1 ? '' : 's'}`);
+	}
+
+	async function deleteAttachment(filename: string) {
+		deletingAttachment = filename;
+		const res = await Participants.deleteParticipantEmailAttachment({
+			path: { project_id, language, filename }
+		});
+		deletingAttachment = null;
+		if (res.error) {
+			toast.error('Failed to delete attachment');
+			return;
+		}
+		attachments = res.data ?? [];
+	}
+
+	function formatBytes(bytes: number) {
+		if (bytes < 1024) return `${bytes} B`;
+		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+		return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+	}
+
 	onMount(() => {
 		editor = new Editor({
 			element: editorEl,
@@ -164,6 +217,7 @@
 			}
 		});
 		load();
+		loadAttachments();
 	});
 
 	onDestroy(() => {
@@ -362,6 +416,69 @@
 					</div>
 				{/if}
 			</div>
+		</div>
+	</div>
+
+	<div class="mt-4 rounded-lg border border-gray-200 bg-white shadow">
+		<div class="flex items-center justify-between border-b border-gray-200 px-3 py-2">
+			<span class="text-sm font-semibold text-gray-700">Attachments</span>
+			<div class="flex items-center gap-2">
+				{#if attachmentsLoading}
+					<span class="text-xs text-gray-400">Loading...</span>
+				{/if}
+				<input
+					bind:this={attachmentInput}
+					type="file"
+					multiple
+					class="hidden"
+					onchange={(e) => {
+						const files = (e.currentTarget as HTMLInputElement).files;
+						if (files) uploadAttachments(files);
+					}}
+					disabled={isDemo || uploadingAttachments}
+				/>
+				<button
+					type="button"
+					class="flex items-center gap-1.5 rounded border border-gray-300 bg-gray-50 px-3 py-1 text-sm hover:bg-gray-100 disabled:opacity-50"
+					onclick={() => attachmentInput.click()}
+					disabled={isDemo || uploadingAttachments}
+				>
+					<i class="fa-solid fa-paperclip"></i>
+					{uploadingAttachments ? 'Uploading...' : 'Add files'}
+				</button>
+			</div>
+		</div>
+		<div class="px-3 py-2">
+			{#if attachments.length === 0 && !attachmentsLoading}
+				<p class="text-sm text-gray-400">
+					No attachments. Files added here will be included in every outgoing email.
+				</p>
+			{:else}
+				<ul class="divide-y divide-gray-100">
+					{#each attachments as attachment (attachment.filename)}
+						<li class="flex items-center justify-between py-1.5">
+							<div class="flex min-w-0 items-center gap-2">
+								<i class="fa-solid fa-file text-xs text-gray-400"></i>
+								<span class="truncate text-sm text-gray-800">{attachment.filename}</span>
+								<span class="shrink-0 text-xs text-gray-400">{formatBytes(attachment.size)}</span>
+								{#if attachment.content_type}
+									<span class="shrink-0 text-xs text-gray-400">{attachment.content_type}</span>
+								{/if}
+							</div>
+							<button
+								type="button"
+								class="ml-3 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+								onclick={() => deleteAttachment(attachment.filename)}
+								disabled={isDemo || deletingAttachment === attachment.filename}
+								title="Remove attachment"
+								aria-label="Remove attachment"
+							>
+								<i class="fa-solid fa-trash text-xs"></i>
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
 		</div>
 	</div>
 
