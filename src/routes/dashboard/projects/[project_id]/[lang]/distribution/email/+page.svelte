@@ -4,7 +4,6 @@
 	import type { LanguageDict } from '$lib/api/types.gen';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 	import { Editor } from '@tiptap/core';
-	import Link from '@tiptap/extension-link';
 	import StarterKit from '@tiptap/starter-kit';
 	import { onDestroy, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -153,7 +152,7 @@
 	onMount(() => {
 		editor = new Editor({
 			element: editorEl,
-			extensions: [StarterKit, Link.configure({ openOnClick: false, autolink: true })],
+			extensions: [StarterKit.configure({ link: { openOnClick: false } })],
 			content: '',
 			editorProps: {
 				attributes: {
