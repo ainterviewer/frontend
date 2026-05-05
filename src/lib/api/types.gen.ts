@@ -1745,6 +1745,21 @@ export type ParticipantCreate = {
      * Participating
      */
     participating?: boolean;
+    lang?: LanguageCode | null;
+};
+
+/**
+ * ParticipantEmailTemplateRequest
+ */
+export type ParticipantEmailTemplateRequest = {
+    /**
+     * Subject
+     */
+    subject?: string | null;
+    /**
+     * Template
+     */
+    template?: string | null;
 };
 
 /**
@@ -1767,6 +1782,7 @@ export type ParticipantPublic = {
      * Participating
      */
     participating?: boolean;
+    lang?: LanguageCode | null;
     /**
      * Id
      */
@@ -2399,6 +2415,30 @@ export type SecurityConfig = {
      * Sensitive Subjects
      */
     sensitive_subjects?: Array<unknown> | null;
+};
+
+/**
+ * SendParticipantEmailRequest
+ */
+export type SendParticipantEmailRequest = {
+    /**
+     * Participant Ids
+     */
+    participant_ids?: Array<string> | null;
+};
+
+/**
+ * SendParticipantEmailResponse
+ */
+export type SendParticipantEmailResponse = {
+    /**
+     * Sent
+     */
+    sent: Array<string>;
+    /**
+     * Skipped
+     */
+    skipped: Array<string>;
 };
 
 /**
@@ -4465,6 +4505,119 @@ export type UploadParticipantsResponses = {
 };
 
 export type UploadParticipantsResponse = UploadParticipantsResponses[keyof UploadParticipantsResponses];
+
+export type GetParticipantEmailTemplateData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-email-template';
+};
+
+export type GetParticipantEmailTemplateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetParticipantEmailTemplateError = GetParticipantEmailTemplateErrors[keyof GetParticipantEmailTemplateErrors];
+
+export type GetParticipantEmailTemplateResponses = {
+    /**
+     * Successful Response
+     */
+    200: ParticipantEmailTemplateRequest;
+};
+
+export type GetParticipantEmailTemplateResponse = GetParticipantEmailTemplateResponses[keyof GetParticipantEmailTemplateResponses];
+
+export type SetParticipantEmailTemplateData = {
+    body: ParticipantEmailTemplateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-email-template';
+};
+
+export type SetParticipantEmailTemplateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetParticipantEmailTemplateError = SetParticipantEmailTemplateErrors[keyof SetParticipantEmailTemplateErrors];
+
+export type SetParticipantEmailTemplateResponses = {
+    /**
+     * Successful Response
+     */
+    200: ParticipantEmailTemplateRequest;
+};
+
+export type SetParticipantEmailTemplateResponse = SetParticipantEmailTemplateResponses[keyof SetParticipantEmailTemplateResponses];
+
+export type SendParticipantEmailsData = {
+    body: SendParticipantEmailRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants/send-email';
+};
+
+export type SendParticipantEmailsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SendParticipantEmailsError = SendParticipantEmailsErrors[keyof SendParticipantEmailsErrors];
+
+export type SendParticipantEmailsResponses = {
+    /**
+     * Successful Response
+     */
+    200: SendParticipantEmailResponse;
+};
+
+export type SendParticipantEmailsResponse = SendParticipantEmailsResponses[keyof SendParticipantEmailsResponses];
 
 export type LinkParticipantToInterviewData = {
     body: LinkParticipantRequest;
