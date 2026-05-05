@@ -375,6 +375,16 @@ export type BodyUploadAudio = {
 };
 
 /**
+ * Body_upload_participants
+ */
+export type BodyUploadParticipants = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
  * CheckboxItem
  */
 export type CheckboxItem = {
@@ -699,6 +709,16 @@ export type DeleteInterviewRequest = {
      * Interview Ids
      */
     interview_ids: Array<string>;
+};
+
+/**
+ * DeleteParticipantsRequest
+ */
+export type DeleteParticipantsRequest = {
+    /**
+     * Participant Ids
+     */
+    participant_ids: Array<string>;
 };
 
 /**
@@ -1383,6 +1403,16 @@ export type LikertItem = {
 };
 
 /**
+ * LinkParticipantRequest
+ */
+export type LinkParticipantRequest = {
+    /**
+     * Participant Id
+     */
+    participant_id: string | null;
+};
+
+/**
  * LoginData
  */
 export type LoginData = {
@@ -1693,6 +1723,84 @@ export type PaginatedResponseInterviewSummaryPublic = {
      * Items
      */
     items: Array<InterviewSummaryPublic>;
+};
+
+/**
+ * ParticipantCreate
+ */
+export type ParticipantCreate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Pid
+     */
+    pid?: string | null;
+    /**
+     * Participating
+     */
+    participating?: boolean;
+};
+
+/**
+ * ParticipantPublic
+ */
+export type ParticipantPublic = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Pid
+     */
+    pid?: string | null;
+    /**
+     * Participating
+     */
+    participating?: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * ParticipantUpdate
+ */
+export type ParticipantUpdate = {
+    /**
+     * Name
+     */
+    name?: string | Unset | null;
+    /**
+     * Email
+     */
+    email?: string | Unset | null;
+    /**
+     * Pid
+     */
+    pid?: string | Unset | null;
+    /**
+     * Participating
+     */
+    participating?: boolean | Unset;
 };
 
 /**
@@ -4022,6 +4130,373 @@ export type CreateProjectErrors = {
 export type CreateProjectError = CreateProjectErrors[keyof CreateProjectErrors];
 
 export type CreateProjectResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type DeleteParticipantsData = {
+    body: DeleteParticipantsRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants';
+};
+
+export type DeleteParticipantsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteParticipantsError = DeleteParticipantsErrors[keyof DeleteParticipantsErrors];
+
+export type DeleteParticipantsResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetParticipantsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants';
+};
+
+export type GetParticipantsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetParticipantsError = GetParticipantsErrors[keyof GetParticipantsErrors];
+
+export type GetParticipantsResponses = {
+    /**
+     * Response Get Participants
+     *
+     * Successful Response
+     */
+    200: Array<ParticipantPublic>;
+};
+
+export type GetParticipantsResponse = GetParticipantsResponses[keyof GetParticipantsResponses];
+
+export type AddParticipantData = {
+    body: ParticipantCreate;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants';
+};
+
+export type AddParticipantErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddParticipantError = AddParticipantErrors[keyof AddParticipantErrors];
+
+export type AddParticipantResponses = {
+    /**
+     * Successful Response
+     */
+    200: ParticipantPublic;
+};
+
+export type AddParticipantResponse = AddParticipantResponses[keyof AddParticipantResponses];
+
+export type DeleteParticipantData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Participant Id
+         */
+        participant_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants/{participant_id}';
+};
+
+export type DeleteParticipantErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteParticipantError = DeleteParticipantErrors[keyof DeleteParticipantErrors];
+
+export type DeleteParticipantResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetParticipantData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Participant Id
+         */
+        participant_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants/{participant_id}';
+};
+
+export type GetParticipantErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetParticipantError = GetParticipantErrors[keyof GetParticipantErrors];
+
+export type GetParticipantResponses = {
+    /**
+     * Successful Response
+     */
+    200: ParticipantPublic;
+};
+
+export type GetParticipantResponse = GetParticipantResponses[keyof GetParticipantResponses];
+
+export type UpdateParticipantData = {
+    body: ParticipantUpdate;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Participant Id
+         */
+        participant_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants/{participant_id}';
+};
+
+export type UpdateParticipantErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateParticipantError = UpdateParticipantErrors[keyof UpdateParticipantErrors];
+
+export type UpdateParticipantResponses = {
+    /**
+     * Successful Response
+     */
+    200: ParticipantPublic;
+};
+
+export type UpdateParticipantResponse = UpdateParticipantResponses[keyof UpdateParticipantResponses];
+
+export type OptOutData = {
+    /**
+     * Reason
+     */
+    body?: string | null;
+    path: {
+        /**
+         * Participant Pid
+         */
+        participant_pid: string;
+    };
+    query?: never;
+    url: '/api/participants/{participant_pid}';
+};
+
+export type OptOutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OptOutError = OptOutErrors[keyof OptOutErrors];
+
+export type OptOutResponses = {
+    /**
+     * Successful Response
+     */
+    200: ParticipantPublic;
+};
+
+export type OptOutResponse = OptOutResponses[keyof OptOutResponses];
+
+export type AddParticipantsData = {
+    /**
+     * Participants
+     */
+    body: Array<ParticipantCreate>;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants/bulk';
+};
+
+export type AddParticipantsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddParticipantsError = AddParticipantsErrors[keyof AddParticipantsErrors];
+
+export type AddParticipantsResponses = {
+    /**
+     * Response Add Participants
+     *
+     * Successful Response
+     */
+    200: Array<ParticipantPublic>;
+};
+
+export type AddParticipantsResponse = AddParticipantsResponses[keyof AddParticipantsResponses];
+
+export type UploadParticipantsData = {
+    body: BodyUploadParticipants;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants/upload';
+};
+
+export type UploadParticipantsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UploadParticipantsError = UploadParticipantsErrors[keyof UploadParticipantsErrors];
+
+export type UploadParticipantsResponses = {
+    /**
+     * Response Upload Participants
+     *
+     * Successful Response
+     */
+    200: Array<ParticipantPublic>;
+};
+
+export type UploadParticipantsResponse = UploadParticipantsResponses[keyof UploadParticipantsResponses];
+
+export type LinkParticipantToInterviewData = {
+    body: LinkParticipantRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/interviews/{interview_id}/participant';
+};
+
+export type LinkParticipantToInterviewErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type LinkParticipantToInterviewError = LinkParticipantToInterviewErrors[keyof LinkParticipantToInterviewErrors];
+
+export type LinkParticipantToInterviewResponses = {
     /**
      * Successful Response
      */
