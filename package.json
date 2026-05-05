@@ -54,6 +54,9 @@
 	"dependencies": {
 		"@dnd-kit-svelte/svelte": "^0.1.6",
 		"@dnd-kit/helpers": "^0.3.2",
+		"@tiptap/core": "^3.22.5",
+		"@tiptap/extension-link": "^3.22.5",
+		"@tiptap/starter-kit": "^3.22.5",
 		"bits-ui": "^2.16.3",
 		"d3-array": "^3.2.4",
 		"d3-format": "^3.1.2",

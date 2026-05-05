@@ -110,6 +110,12 @@ export const projectSidebarItems: SidebarItem[] = [
 				demoFeature: true
 			},
 			{
+				label: 'Email',
+				href: '/dashboard/projects/{projectId}/{languageCode}/distribution/email',
+				icon: 'fa-solid fa-envelope-open-text',
+				demoFeature: true
+			},
+			{
 				label: 'Monitor',
 				href: '/dashboard/projects/{projectId}/{languageCode}/distribution/monitor',
 				icon: 'fa-solid fa-tower-cell'
