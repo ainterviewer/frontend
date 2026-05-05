@@ -375,6 +375,16 @@ export type BodyUploadAudio = {
 };
 
 /**
+ * Body_upload_participant_email_attachments
+ */
+export type BodyUploadParticipantEmailAttachments = {
+    /**
+     * Files
+     */
+    files: Array<Blob | File>;
+};
+
+/**
  * Body_upload_participants
  */
 export type BodyUploadParticipants = {
@@ -1749,6 +1759,24 @@ export type ParticipantCreate = {
 };
 
 /**
+ * ParticipantEmailAttachment
+ */
+export type ParticipantEmailAttachment = {
+    /**
+     * Filename
+     */
+    filename: string;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Content Type
+     */
+    content_type?: string | null;
+};
+
+/**
  * ParticipantEmailTemplateRequest
  */
 export type ParticipantEmailTemplateRequest = {
@@ -1777,7 +1805,7 @@ export type ParticipantPublic = {
     /**
      * Pid
      */
-    pid?: string | null;
+    pid: string;
     /**
      * Participating
      */
@@ -1812,7 +1840,7 @@ export type ParticipantUpdate = {
     /**
      * Pid
      */
-    pid?: string | Unset | null;
+    pid?: string | Unset;
     /**
      * Participating
      */
@@ -4583,6 +4611,133 @@ export type SetParticipantEmailTemplateResponses = {
 };
 
 export type SetParticipantEmailTemplateResponse = SetParticipantEmailTemplateResponses[keyof SetParticipantEmailTemplateResponses];
+
+export type ListParticipantEmailAttachmentsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-email-attachments';
+};
+
+export type ListParticipantEmailAttachmentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListParticipantEmailAttachmentsError = ListParticipantEmailAttachmentsErrors[keyof ListParticipantEmailAttachmentsErrors];
+
+export type ListParticipantEmailAttachmentsResponses = {
+    /**
+     * Response List Participant Email Attachments
+     *
+     * Successful Response
+     */
+    200: Array<ParticipantEmailAttachment>;
+};
+
+export type ListParticipantEmailAttachmentsResponse = ListParticipantEmailAttachmentsResponses[keyof ListParticipantEmailAttachmentsResponses];
+
+export type UploadParticipantEmailAttachmentsData = {
+    body: BodyUploadParticipantEmailAttachments;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-email-attachments';
+};
+
+export type UploadParticipantEmailAttachmentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UploadParticipantEmailAttachmentsError = UploadParticipantEmailAttachmentsErrors[keyof UploadParticipantEmailAttachmentsErrors];
+
+export type UploadParticipantEmailAttachmentsResponses = {
+    /**
+     * Response Upload Participant Email Attachments
+     *
+     * Successful Response
+     */
+    200: Array<ParticipantEmailAttachment>;
+};
+
+export type UploadParticipantEmailAttachmentsResponse = UploadParticipantEmailAttachmentsResponses[keyof UploadParticipantEmailAttachmentsResponses];
+
+export type DeleteParticipantEmailAttachmentData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+        /**
+         * Filename
+         */
+        filename: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-email-attachments/{filename}';
+};
+
+export type DeleteParticipantEmailAttachmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteParticipantEmailAttachmentError = DeleteParticipantEmailAttachmentErrors[keyof DeleteParticipantEmailAttachmentErrors];
+
+export type DeleteParticipantEmailAttachmentResponses = {
+    /**
+     * Response Delete Participant Email Attachment
+     *
+     * Successful Response
+     */
+    200: Array<ParticipantEmailAttachment>;
+};
+
+export type DeleteParticipantEmailAttachmentResponse = DeleteParticipantEmailAttachmentResponses[keyof DeleteParticipantEmailAttachmentResponses];
 
 export type SendParticipantEmailsData = {
     body: SendParticipantEmailRequest;
