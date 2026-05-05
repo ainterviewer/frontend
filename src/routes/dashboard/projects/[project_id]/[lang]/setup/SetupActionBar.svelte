@@ -1,11 +1,7 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Projects } from '$lib/api';
 	import type { LanguageDict } from '$lib/api/types.gen';
-	import { toast } from 'svelte-sonner';
-	import AddLanguageModal from './guide/AddLanguageModal.svelte';
-	import SetupLanguageSelector from './SetupLanguageSelector.svelte';
+	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 
 	let {
 		projectId,
@@ -30,7 +26,6 @@
 	} = $props();
 
 	let showExportMenu = $state(false);
-	let showAddLanguageModal = $state(false);
 
 	const canExport = $derived(!!onExportPdf || !!onExportJson);
 
@@ -39,45 +34,6 @@
 			showExportMenu = false;
 		}
 	}
-
-	function handleLanguageSwitch(code: string) {
-		const basePath = window.location.pathname.replace(`/${lang}/`, `/${code}/`);
-		goto(basePath);
-	}
-
-	async function handleAddLanguage(code: string, translate: boolean) {
-		const { error } = await Projects.addProjectLanguage({
-			path: { project_id: projectId },
-			body: { language: code, translate }
-		});
-		if (error) {
-			throw new Error('Failed to add language');
-		}
-		await invalidateAll();
-		toast.success('Language added');
-	}
-
-	async function handleRemoveLanguage(code: string) {
-		if (availableLanguages.length <= 1) return;
-		const { error } = await Projects.removeProjectLanguage({
-			path: { project_id: projectId },
-			body: code
-		});
-		if (error) {
-			console.error('Failed to remove language', error);
-			toast.error('Failed to remove language');
-			return;
-		}
-		toast.success('Language removed');
-		if (code === lang) {
-			const remaining = availableLanguages.find((l: LanguageDict) => l.code !== code);
-			if (remaining) {
-				handleLanguageSwitch(remaining.code);
-				return;
-			}
-		}
-		await invalidateAll();
-	}
 </script>
 
 <svelte:window onclick={closeMenusOnWindowClick} />
@@ -85,13 +41,7 @@
 <div
 	class="sticky bottom-0 ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
 >
-	<SetupLanguageSelector
-		currentLang={lang}
-		{availableLanguages}
-		onLanguageSwitch={handleLanguageSwitch}
-		onAddLanguage={() => (showAddLanguageModal = true)}
-		onRemoveLanguage={handleRemoveLanguage}
-	/>
+	<ProjectLanguagePicker {projectId} currentLang={lang} {availableLanguages} />
 	<a
 		class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
 		href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
@@ -158,9 +108,3 @@
 		{saveLabel}
 	</button>
 </div>
-
-<AddLanguageModal
-	bind:open={showAddLanguageModal}
-	onAdd={handleAddLanguage}
-	existingLanguageCodes={availableLanguages.map((l: LanguageDict) => l.code)}
-/>
