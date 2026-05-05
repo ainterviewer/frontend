@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { LanguageDict } from '$lib/api';
 	import { Default } from '$lib/api';
+	import { portal } from '$lib/utils/portal';
 	import { toast } from 'svelte-sonner';
 
 	let {
@@ -70,6 +71,7 @@
 
 {#if open}
 	<div
+		use:portal
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
 		role="dialog"
 		aria-modal="true"
