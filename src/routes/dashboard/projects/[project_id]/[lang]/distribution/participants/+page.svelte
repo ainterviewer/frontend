@@ -4,6 +4,7 @@
 	import type { ParticipantPublic } from '$lib/api/types.gen';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	const project_id = $derived(page.params.project_id as string);
 	const isDemo = $derived(page.data.user?.scope === 'demo');
@@ -45,7 +46,7 @@
 	}
 
 	function toggleOne(id: string) {
-		const next = new Set(selected);
+		const next = new SvelteSet(selected);
 		if (next.has(id)) next.delete(id);
 		else next.add(id);
 		selected = next;
@@ -53,7 +54,7 @@
 
 	function toggleAll(e: Event) {
 		const checked = (e.target as HTMLInputElement).checked;
-		const next = new Set(selected);
+		const next = new SvelteSet(selected);
 		for (const p of participants) {
 			if (checked) next.add(p.id);
 			else next.delete(p.id);
