@@ -4309,6 +4309,43 @@ export type AddParticipantResponses = {
 
 export type AddParticipantResponse = AddParticipantResponses[keyof AddParticipantResponses];
 
+export type ExportParticipantsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants/export';
+};
+
+export type ExportParticipantsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExportParticipantsError = ExportParticipantsErrors[keyof ExportParticipantsErrors];
+
+export type ExportParticipantsResponses = {
+    /**
+     * Response Export Participants
+     *
+     * Successful Response
+     */
+    200: string;
+};
+
+export type ExportParticipantsResponse = ExportParticipantsResponses[keyof ExportParticipantsResponses];
+
 export type DeleteParticipantData = {
     body?: never;
     path: {
