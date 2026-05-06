@@ -29,9 +29,7 @@
 	const allSelected = $derived(
 		participants.length > 0 && participants.every((p) => selected.has(p.id))
 	);
-	const isIndeterminate = $derived(
-		participants.some((p) => selected.has(p.id)) && !allSelected
-	);
+	const isIndeterminate = $derived(participants.some((p) => selected.has(p.id)) && !allSelected);
 
 	async function load() {
 		loading = true;
@@ -85,6 +83,26 @@
 	function cancelAdd() {
 		showAddPanel = false;
 		addRows = [blankRow()];
+	}
+
+	async function exportParticipants() {
+		const { data, error: exportError } = await Participants.exportParticipants({
+			path: { project_id },
+			parseAs: 'blob'
+		});
+		if (exportError) {
+			toast.error('Failed to export participants');
+			return;
+		}
+		if (!data) return;
+		const url = window.URL.createObjectURL(data as Blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `participants_${project_id}.csv`;
+		document.body.appendChild(a);
+		a.click();
+		window.URL.revokeObjectURL(url);
+		document.body.removeChild(a);
 	}
 
 	async function saveAdd() {
@@ -254,6 +272,14 @@
 			onchange={handleUpload}
 		/>
 		<button
+			class="p-2 text-gray-600 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30"
+			onclick={exportParticipants}
+			disabled={isDemo || participants.length === 0}
+			title="Export CSV"
+		>
+			<i class="fa-solid fa-file-arrow-down text-lg"></i>
+		</button>
+		<button
 			class="p-2 text-gray-600 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
 			onclick={deleteSelected}
 			disabled={isDemo || selected.size === 0}
@@ -395,9 +421,7 @@
 				</tr>
 			{:else if participants.length === 0}
 				<tr>
-					<td colspan="7" class="px-5 py-10 text-center text-gray-500">
-						No participants yet
-					</td>
+					<td colspan="7" class="px-5 py-10 text-center text-gray-500"> No participants yet </td>
 				</tr>
 			{:else}
 				{#each participants as p (p.id)}
