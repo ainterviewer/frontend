@@ -418,13 +418,13 @@
 		<tbody class="bg-white">
 			{#if loading}
 				<tr>
-					<td colspan="7" class="px-5 py-10 text-center text-gray-500">
+					<td colspan="9" class="px-5 py-10 text-center text-gray-500">
 						<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading participants...
 					</td>
 				</tr>
 			{:else if participants.length === 0}
 				<tr>
-					<td colspan="7" class="px-5 py-10 text-center text-gray-500"> No participants yet </td>
+					<td colspan="9" class="px-5 py-10 text-center text-gray-500"> No participants yet </td>
 				</tr>
 			{:else}
 				{#each participants as p (p.id)}
