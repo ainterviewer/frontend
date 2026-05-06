@@ -621,6 +621,10 @@ export type CreateInterviewRequest = {
     experiment_id?: string | null;
     synthetic_test_type?: TestType | null;
     /**
+     * Participant Id
+     */
+    participant_id?: string | null;
+    /**
      * External Params
      *
      * Extra query parameters, can include external user-id or the like.
@@ -1413,16 +1417,6 @@ export type LikertItem = {
 };
 
 /**
- * LinkParticipantRequest
- */
-export type LinkParticipantRequest = {
-    /**
-     * Participant Id
-     */
-    participant_id: string | null;
-};
-
-/**
  * LoginData
  */
 export type LoginData = {
@@ -1823,6 +1817,11 @@ export type ParticipantPublic = {
      * Created At
      */
     created_at: string;
+    /**
+     * Latest Interview At
+     */
+    latest_interview_at?: string | null;
+    latest_interview_status?: InterviewStatus | null;
 };
 
 /**
@@ -4337,14 +4336,10 @@ export type ExportParticipantsError = ExportParticipantsErrors[keyof ExportParti
 
 export type ExportParticipantsResponses = {
     /**
-     * Response Export Participants
-     *
      * Successful Response
      */
-    200: string;
+    200: unknown;
 };
-
-export type ExportParticipantsResponse = ExportParticipantsResponses[keyof ExportParticipantsResponses];
 
 export type DeleteParticipantData = {
     body?: never;
@@ -4810,43 +4805,6 @@ export type SendParticipantEmailsResponses = {
 };
 
 export type SendParticipantEmailsResponse = SendParticipantEmailsResponses[keyof SendParticipantEmailsResponses];
-
-export type LinkParticipantToInterviewData = {
-    body: LinkParticipantRequest;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string | null;
-        /**
-         * Interview Id
-         */
-        interview_id: string;
-    };
-    query?: {
-        /**
-         * Folder Id
-         */
-        folder_id?: string | null;
-    };
-    url: '/api/projects/{project_id}/interviews/{interview_id}/participant';
-};
-
-export type LinkParticipantToInterviewErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type LinkParticipantToInterviewError = LinkParticipantToInterviewErrors[keyof LinkParticipantToInterviewErrors];
-
-export type LinkParticipantToInterviewResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
 
 export type DeleteProjectData = {
     body?: never;
