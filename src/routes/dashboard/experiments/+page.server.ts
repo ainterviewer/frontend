@@ -22,6 +22,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	if (experimentsResponse.error) {
+		if (experimentsResponse.response?.status === 403) {
+			return {
+				folders: foldersResponse.data || [],
+				experiments: []
+			};
+		}
 		console.error('Failed to load experiments', experimentsResponse.error);
 		throw error(500, 'Failed to load experiments');
 	}

@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import { Experiments } from '$lib/api/sdk.gen';
 	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
+	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { toast } from 'svelte-sonner';
@@ -17,6 +19,8 @@
 	}
 
 	let { data }: { data: PageData } = $props();
+
+	let isDemo = $derived(page.data.user?.scope === 'demo');
 
 	let experiments = $derived(data.experiments as unknown as Experiment[]);
 	let folders = $derived<ProjectFolderWithProjects[]>(
@@ -196,6 +200,12 @@
 <svelte:window onclick={handleWindowClick} />
 
 <Sidebar items={mainSidebarItems} />
+{#if isDemo}
+	<DemoRestrictionOverlay
+		title="Experiments unavailable"
+		description="You cannot access experiments with your current demo access."
+	/>
+{/if}
 
 <div class="mb-4 flex items-end justify-between">
 	<div>
