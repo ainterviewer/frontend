@@ -191,7 +191,7 @@
 			toast.error('Failed to delete participant');
 			return;
 		}
-		const next = new Set(selected);
+		const next = new SvelteSet(selected);
 		next.delete(id);
 		selected = next;
 		await load();
@@ -410,6 +410,8 @@
 				<th class="px-5 py-3">PID</th>
 				<th class="px-5 py-3">Participating</th>
 				<th class="px-5 py-3">Created</th>
+				<th class="px-5 py-3">Latest interview activity</th>
+				<th class="px-5 py-3">Latest interview status</th>
 				<th class="px-5 py-3 text-right">Actions</th>
 			</tr>
 		</thead>
@@ -465,6 +467,8 @@
 								/>
 							</td>
 							<td class="px-5 py-2">{formatDate(p.created_at)}</td>
+							<td class="px-5 py-2">{formatDate(p.latest_interview_at)}</td>
+							<td class="px-5 py-2">{p.latest_interview_status}</td>
 							<td class="px-5 py-2 text-right">
 								<button
 									class="mr-2 text-green-600 hover:text-green-800"
@@ -501,6 +505,8 @@
 								{/if}
 							</td>
 							<td class="px-5 py-3">{formatDate(p.created_at)}</td>
+							<td class="px-5 py-3">{formatDate(p.latest_interview_at)}</td>
+							<td class="px-5 py-3">{p.latest_interview_status}</td>
 							<td class="px-5 py-3 text-right">
 								<button
 									class="mr-3 text-gray-500 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-30"
