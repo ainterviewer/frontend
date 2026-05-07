@@ -611,6 +611,16 @@ export class ChatClient {
 					this.disableReconnect();
 				}
 
+				if (data.content === '<|restartinterview|>') {
+					this.disableReconnect();
+					const { error: exitError } = await Auth.exit();
+					if (exitError) {
+						console.error('Error during exit', exitError);
+					}
+					window.location.reload();
+					return;
+				}
+
 				if (data.content === '<|endofinterview|>') {
 					this.disableReconnect();
 
