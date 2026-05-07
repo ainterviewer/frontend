@@ -542,7 +542,7 @@ export type ConditionEvaluation = {
      *
      * The pattern to match or value to compare against
      */
-    trigger_value: string;
+    trigger_value: string | number | number;
     /**
      * Comparison Operator
      *
@@ -793,6 +793,57 @@ export type ExperimentProjectCreate = {
      * Weight
      */
     weight?: number | null;
+};
+
+/**
+ * ExperimentProjectPublic
+ *
+ * Public model for experiment-project association.
+ */
+export type ExperimentProjectPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Weight
+     */
+    weight?: number | null;
+    /**
+     * Added At
+     */
+    added_at: string;
+};
+
+/**
+ * ExperimentPublic
+ */
+export type ExperimentPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    status?: ProjectStatus;
+    /**
+     * Projects
+     */
+    projects?: Array<ExperimentProjectPublic>;
 };
 
 /**
@@ -1814,6 +1865,14 @@ export type ParticipantPublic = {
      */
     project_id: string;
     /**
+     * Participant Id
+     */
+    participant_id: string;
+    /**
+     * Folder Id
+     */
+    folder_id: string;
+    /**
      * Created At
      */
     created_at: string;
@@ -2765,10 +2824,6 @@ export type UserAdmin = {
     last_login: string;
     scope?: Scope;
     /**
-     * With Demo Features
-     */
-    with_demo_features: boolean;
-    /**
      * Id
      */
     id: string;
@@ -2780,6 +2835,10 @@ export type UserAdmin = {
      * Expires At
      */
     expires_at?: string | null;
+    /**
+     * With Demo Features
+     */
+    with_demo_features: boolean;
     /**
      * Access Request Message
      */
@@ -2796,6 +2855,28 @@ export type UserAdmin = {
      * Admin Note Updated At
      */
     admin_note_updated_at?: string | null;
+};
+
+/**
+ * UserAdminUpdate
+ */
+export type UserAdminUpdate = {
+    /**
+     * Scope
+     */
+    scope?: Scope | Unset;
+    /**
+     * With Demo Features
+     */
+    with_demo_features?: boolean | Unset;
+    /**
+     * Organization
+     */
+    organization?: string | Unset | null;
+    /**
+     * Expires At
+     */
+    expires_at?: string | Unset | null;
 };
 
 /**
@@ -2829,10 +2910,6 @@ export type UserCreateRequest = {
      */
     last_login?: string;
     scope?: Scope;
-    /**
-     * With Demo Features
-     */
-    with_demo_features: boolean;
     /**
      * Invite Token
      */
@@ -2877,10 +2954,6 @@ export type UserPublic = {
     last_login: string;
     scope?: Scope;
     /**
-     * With Demo Features
-     */
-    with_demo_features: boolean;
-    /**
      * Id
      */
     id: string;
@@ -2892,6 +2965,10 @@ export type UserPublic = {
      * Expires At
      */
     expires_at?: string | null;
+    /**
+     * With Demo Features
+     */
+    with_demo_features: boolean;
 };
 
 /**
@@ -3828,10 +3905,14 @@ export type GetExperimentsData = {
 
 export type GetExperimentsResponses = {
     /**
+     * Response Get Experiments
+     *
      * Successful Response
      */
-    200: unknown;
+    200: Array<ExperimentPublic>;
 };
+
+export type GetExperimentsResponse = GetExperimentsResponses[keyof GetExperimentsResponses];
 
 export type CreateExperimentData = {
     body: ExperimentCreate;
@@ -3853,8 +3934,10 @@ export type CreateExperimentResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ExperimentPublic;
 };
+
+export type CreateExperimentResponse = CreateExperimentResponses[keyof CreateExperimentResponses];
 
 export type DeleteExperimentData = {
     body?: never;
@@ -4308,39 +4391,6 @@ export type AddParticipantResponses = {
 
 export type AddParticipantResponse = AddParticipantResponses[keyof AddParticipantResponses];
 
-export type ExportParticipantsData = {
-    body?: never;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string | null;
-    };
-    query?: {
-        /**
-         * Folder Id
-         */
-        folder_id?: string | null;
-    };
-    url: '/api/projects/{project_id}/participants/export';
-};
-
-export type ExportParticipantsErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ExportParticipantsError = ExportParticipantsErrors[keyof ExportParticipantsErrors];
-
-export type ExportParticipantsResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
 export type DeleteParticipantData = {
     body?: never;
     path: {
@@ -4456,6 +4506,39 @@ export type UpdateParticipantResponses = {
 
 export type UpdateParticipantResponse = UpdateParticipantResponses[keyof UpdateParticipantResponses];
 
+export type ExportParticipantsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants/export';
+};
+
+export type ExportParticipantsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExportParticipantsError = ExportParticipantsErrors[keyof ExportParticipantsErrors];
+
+export type ExportParticipantsResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type OptOutData = {
     /**
      * Reason
@@ -4463,12 +4546,12 @@ export type OptOutData = {
     body?: string | null;
     path: {
         /**
-         * Participant Pid
+         * Opt Out Token
          */
-        participant_pid: string;
+        opt_out_token: string;
     };
     query?: never;
-    url: '/api/participants/{participant_pid}';
+    url: '/api/participants/opt-out/{opt_out_token}';
 };
 
 export type OptOutErrors = {
@@ -7041,6 +7124,36 @@ export type UpdateAdminNoteResponses = {
 };
 
 export type UpdateAdminNoteResponse = UpdateAdminNoteResponses[keyof UpdateAdminNoteResponses];
+
+export type UpdateUserData = {
+    body: UserAdminUpdate;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/admin/users/{user_id}';
+};
+
+export type UpdateUserErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateUserError = UpdateUserErrors[keyof UpdateUserErrors];
+
+export type UpdateUserResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserAdmin;
+};
+
+export type UpdateUserResponse = UpdateUserResponses[keyof UpdateUserResponses];
 
 export type GetModelsData = {
     body?: never;
