@@ -20,7 +20,14 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 
 	if (response.error) {
 		console.error('Error fetching guide:', response.error);
-		return { guide: null, lang, project_id, project_name: projectRes.data?.title ?? '', available_languages: projectRes.data?.available_languages ?? [] };
+		return {
+			guide: null,
+			lang,
+			project_id,
+			project_name: projectRes.data?.title ?? '',
+			available_languages: projectRes.data?.available_languages ?? [],
+			external_params: projectRes.data?.external_params ?? []
+		};
 	}
 
 	return {
@@ -28,6 +35,7 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 		lang,
 		project_id,
 		project_name: projectRes.data?.title ?? '',
-		available_languages: projectRes.data?.available_languages ?? []
+		available_languages: projectRes.data?.available_languages ?? [],
+		external_params: projectRes.data?.external_params ?? []
 	};
 };

@@ -4,6 +4,7 @@
 	import { Projects } from '$lib/api';
 	import type {
 		Consent,
+		ExternalParam,
 		InterviewGuideOutput,
 		LanguageDict,
 		QuestionOutput,
@@ -27,12 +28,14 @@
 		guide: initialGuide,
 		lang,
 		projectName = '',
-		availableLanguages = []
+		availableLanguages = [],
+		externalParams = []
 	} = $props<{
 		guide: InterviewGuideOutput | null;
 		lang: string;
 		projectName?: string;
 		availableLanguages?: LanguageDict[];
+		externalParams?: ExternalParam[];
 	}>();
 
 	const guideStore = getGuideStore();
@@ -606,7 +609,8 @@
 						lang,
 						guide,
 						guideStore.localSections,
-						guideStore.localQuestions
+						guideStore.localQuestions,
+						externalParams
 					);
 					savedSnapshot = getSnapshot();
 					saving = false;
