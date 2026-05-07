@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { Admin, type UserAdmin } from '$lib/api';
+	import { Admin, type Scope, type UserAdmin } from '$lib/api';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -11,6 +11,55 @@
 	let error = $state<string | null>(null);
 	let expandedRows = $state(new Set<string>());
 	let savingNote = $state(new Set<string>());
+	let savingUser = $state(new Set<string>());
+
+	type UserEdit = {
+		scope: Scope;
+		with_demo_features: boolean;
+		organization: string;
+		expires_at: string;
+	};
+	let edits = $state<Record<string, UserEdit>>({});
+
+	const SCOPES: Scope[] = ['admin', 'user', 'demo', 'guest'];
+
+	function isoToLocalInput(iso: string | null | undefined): string {
+		if (!iso) return '';
+		const d = new Date(iso);
+		if (isNaN(d.getTime())) return '';
+		const pad = (n: number) => n.toString().padStart(2, '0');
+		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+	}
+
+	function localInputToIso(local: string): string | null {
+		if (!local) return null;
+		const d = new Date(local);
+		if (isNaN(d.getTime())) return null;
+		return d.toISOString();
+	}
+
+	function ensureEdit(user: UserAdmin): UserEdit {
+		if (!edits[user.id]) {
+			edits[user.id] = {
+				scope: (user.scope as Scope) ?? 'user',
+				with_demo_features: user.with_demo_features ?? false,
+				organization: user.organization ?? '',
+				expires_at: isoToLocalInput(user.expires_at)
+			};
+		}
+		return edits[user.id];
+	}
+
+	function isDirty(user: UserAdmin): boolean {
+		const e = edits[user.id];
+		if (!e) return false;
+		return (
+			e.scope !== ((user.scope as Scope) ?? 'user') ||
+			e.with_demo_features !== (user.with_demo_features ?? false) ||
+			e.organization !== (user.organization ?? '') ||
+			e.expires_at !== isoToLocalInput(user.expires_at)
+		);
+	}
 
 	const scopeColors: Record<string, string> = {
 		admin: 'bg-purple-100 text-purple-800',
@@ -23,14 +72,57 @@
 		error = data.error;
 	});
 
-	function toggleRow(id: string) {
+	function toggleRow(user: UserAdmin) {
 		const next = new Set(expandedRows);
-		if (next.has(id)) {
-			next.delete(id);
+		if (next.has(user.id)) {
+			next.delete(user.id);
 		} else {
-			next.add(id);
+			next.add(user.id);
+			ensureEdit(user);
 		}
 		expandedRows = next;
+	}
+
+	async function saveUser(user: UserAdmin) {
+		const e = edits[user.id];
+		if (!e) return;
+
+		const next = new Set(savingUser);
+		next.add(user.id);
+		savingUser = next;
+
+		try {
+			const response = await Admin.updateUser({
+				body: {
+					scope: e.scope,
+					with_demo_features: e.with_demo_features,
+					organization: e.organization.trim() || null,
+					expires_at: localInputToIso(e.expires_at)
+				},
+				path: { user_id: user.id }
+			});
+
+			if (response.error) {
+				toast.error('Failed to update user');
+				console.error(response.error);
+			} else {
+				delete edits[user.id];
+				await invalidateAll();
+				toast.success('User updated');
+			}
+		} catch (err) {
+			toast.error('An unexpected error occurred');
+			console.error(err);
+		} finally {
+			const n = new Set(savingUser);
+			n.delete(user.id);
+			savingUser = n;
+		}
+	}
+
+	function resetEdit(user: UserAdmin) {
+		delete edits[user.id];
+		ensureEdit(user);
 	}
 
 	function isExpired(expiresAt: string | null | undefined): boolean {
@@ -171,7 +263,7 @@
 				{#each users as user (user.id)}
 					<tr
 						class="cursor-pointer hover:bg-gray-50"
-						onclick={() => toggleRow(user.id)}
+						onclick={() => toggleRow(user)}
 					>
 						<td class="py-4 pl-3">
 							<svg
@@ -224,6 +316,9 @@
 						</td>
 					</tr>
 					{#if expandedRows.has(user.id)}
+						{@const edit = ensureEdit(user)}
+						{@const dirty = isDirty(user)}
+						{@const saving = savingUser.has(user.id)}
 						<tr class="bg-gray-50">
 							<td colspan="9" class="px-6 py-4">
 								<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -259,6 +354,70 @@
 												}
 											}}
 										></textarea>
+									</div>
+								</div>
+								<div class="mt-4 border-t border-gray-200 pt-4">
+									<div class="mb-2 flex items-center justify-between">
+										<h4 class="text-sm font-semibold text-gray-700">Edit User</h4>
+										<div class="flex items-center gap-2">
+											{#if dirty && !saving}
+												<button
+													onclick={(e) => { e.stopPropagation(); resetEdit(user); }}
+													class="rounded px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
+												>
+													Reset
+												</button>
+											{/if}
+											<button
+												disabled={!dirty || saving}
+												onclick={(e) => { e.stopPropagation(); saveUser(user); }}
+												class="hover:bg-opacity-90 rounded bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+											>
+												{saving ? 'Saving...' : 'Save'}
+											</button>
+										</div>
+									</div>
+									<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+										<label class="block text-sm">
+											<span class="text-xs font-medium text-gray-600">Scope</span>
+											<select
+												class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+												bind:value={edit.scope}
+												onclick={(e) => e.stopPropagation()}
+											>
+												{#each SCOPES as s (s)}
+													<option value={s}>{s}</option>
+												{/each}
+											</select>
+										</label>
+										<label class="block text-sm">
+											<span class="text-xs font-medium text-gray-600">Organization</span>
+											<input
+												type="text"
+												class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+												placeholder="-"
+												bind:value={edit.organization}
+												onclick={(e) => e.stopPropagation()}
+											/>
+										</label>
+										<label class="block text-sm">
+											<span class="text-xs font-medium text-gray-600">Expires At</span>
+											<input
+												type="datetime-local"
+												class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+												bind:value={edit.expires_at}
+												onclick={(e) => e.stopPropagation()}
+											/>
+										</label>
+										<label class="flex items-center gap-2 pt-5 text-sm">
+											<input
+												type="checkbox"
+												class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+												bind:checked={edit.with_demo_features}
+												onclick={(e) => e.stopPropagation()}
+											/>
+											<span class="text-xs font-medium text-gray-600">Demo features enabled</span>
+										</label>
 									</div>
 								</div>
 							</td>
