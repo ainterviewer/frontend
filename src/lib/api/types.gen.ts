@@ -625,6 +625,10 @@ export type CreateInterviewRequest = {
      */
     participant_id?: string | null;
     /**
+     * Pid
+     */
+    pid?: string | null;
+    /**
      * External Params
      *
      * Extra query parameters, can include external user-id or the like.

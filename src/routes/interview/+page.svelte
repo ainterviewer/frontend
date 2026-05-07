@@ -102,7 +102,8 @@
 			data.interviewType,
 			data.experimentID,
 			data.externalParams,
-			data.referer
+			data.referer,
+			data.externalParams?.pid ?? null
 		);
 
 		if (result.ok) {

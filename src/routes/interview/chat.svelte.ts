@@ -70,7 +70,8 @@ export async function createInterview(
 	interviewType: InterviewType | undefined,
 	experimentID: string | undefined,
 	externalParams: Record<string, unknown> | null | undefined,
-	referer: string | null | undefined
+	referer: string | null | undefined,
+	pid: string | null | undefined
 ): Promise<CreateInterviewResult> {
 	try {
 		const { data, error, response } = await Interviews.createInterview({
@@ -82,7 +83,8 @@ export async function createInterview(
 				...(interviewType != null && { interview_type: interviewType }),
 				experiment_id: experimentID,
 				...(externalParams != null && { external_params: externalParams }),
-				...(referer != null && { referer })
+				...(referer != null && { referer }),
+				...(pid != null && { pid })
 			}
 		});
 		if (error || !response.ok) {
