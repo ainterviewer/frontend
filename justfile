@@ -12,6 +12,11 @@ https://fastapi.tiangolo.com/advanced/generate-clients/")]
 generate-sdk:
     openapi-ts --input {{ OPENAPI_PATH }}  --output {{ SDK_OUTPUT_PATH }}
 
+[doc("Compile the static fallback error page (e.g. 502) for nginx to serve when the app is down. Renders the shared ErrorPage.svelte to a self-contained HTML file in deploy/setup/nginx/.")]
+[group("Frontend")]
+build-error-page:
+    bun run scripts/build-error-page.ts
+
 release VERSION:
     npm version {{ VERSION }} --no-git-tag-version
     just publish
