@@ -1114,6 +1114,12 @@ export type InterviewGuideInput = {
      */
     outro?: string | null;
     /**
+     * Extra Variables
+     *
+     * Names of variables (beyond the built-in project_id and interview_id) that this guide expects to be supplied via referable_values at runtime. Every {{ placeholder }} in user-facing templates must appear here or be a built-in.
+     */
+    extra_variables?: Array<string>;
+    /**
      * Timed Messages
      *
      * Messages that are displayed to the interviewee after a certain amount of time
@@ -1153,6 +1159,12 @@ export type InterviewGuideOutput = {
      * An outro message for the interview. Displayed to the interviewee as the last message they will see. They will not be able to answer this message.
      */
     outro?: string | null;
+    /**
+     * Extra Variables
+     *
+     * Names of variables (beyond the built-in project_id and interview_id) that this guide expects to be supplied via referable_values at runtime. Every {{ placeholder }} in user-facing templates must appear here or be a built-in.
+     */
+    extra_variables?: Array<string>;
     /**
      * Timed Messages
      *
@@ -2196,12 +2208,6 @@ export type QuestionInput = {
      */
     exclude_from_history?: boolean;
     /**
-     * Variables
-     *
-     * Variables that can be used in the question, ie. uuid. In case they are supplied, they will be filled in before the question is asked. The question should be formatted with Jinja2 style templating.
-     */
-    variables?: Array<string> | null;
-    /**
      * References
      */
     references?: Array<Reference> | null;
@@ -2308,12 +2314,6 @@ export type QuestionOutput = {
      * Exclude from the interview history. This means that the model will not use this question or the response as a context when it asks further questions.
      */
     exclude_from_history?: boolean;
-    /**
-     * Variables
-     *
-     * Variables that can be used in the question, ie. uuid. In case they are supplied, they will be filled in before the question is asked. The question should be formatted with Jinja2 style templating.
-     */
-    variables?: Array<string> | null;
     /**
      * References
      */
