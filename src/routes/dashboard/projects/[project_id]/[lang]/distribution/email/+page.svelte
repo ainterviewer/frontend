@@ -23,6 +23,7 @@
 	let loading = $state(true);
 	let saving = $state(false);
 	let sending = $state(false);
+	let exporting = $state(false);
 
 	// Attachments
 	let attachments = $state<ParticipantEmailAttachment[]>([]);
@@ -148,6 +149,27 @@
 		} else {
 			toast.success(`Sent ${sent} email${sent === 1 ? '' : 's'}${skippedSuffix}`);
 		}
+	}
+
+	async function exportBundle() {
+		exporting = true;
+		const res = await Participants.exportEmailBundle({
+			path: { project_id },
+			parseAs: 'blob'
+		});
+		exporting = false;
+		if (res.error || !res.data) {
+			toast.error('Failed to export bundle');
+			return;
+		}
+		const url = window.URL.createObjectURL(res.data as Blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `email-bundle-${project_id}.zip`;
+		document.body.appendChild(a);
+		a.click();
+		window.URL.revokeObjectURL(url);
+		document.body.removeChild(a);
 	}
 
 	function confirmDiscardIfDirty() {
@@ -494,6 +516,18 @@
 			{availableLanguages}
 			canSwitch={confirmDiscardIfDirty}
 		/>
+		<button
+			type="button"
+			class="flex items-center gap-2 rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+			onclick={exportBundle}
+			disabled={isDemo || exporting || dirty}
+			title={dirty
+				? 'Save your changes before exporting'
+				: 'Download a self-contained zip with participants, templates and attachments'}
+		>
+			<i class="fa-solid fa-file-zipper"></i>
+			{exporting ? 'Exporting...' : 'Export bundle'}
+		</button>
 		<button
 			type="button"
 			class="flex items-center gap-2 rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"

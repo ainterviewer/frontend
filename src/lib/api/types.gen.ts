@@ -4543,6 +4543,41 @@ export type ExportParticipantsResponses = {
     200: unknown;
 };
 
+export type ExportEmailBundleData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/email-bundle';
+};
+
+export type ExportEmailBundleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExportEmailBundleError = ExportEmailBundleErrors[keyof ExportEmailBundleErrors];
+
+export type ExportEmailBundleResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type ExportEmailBundleResponse = ExportEmailBundleResponses[keyof ExportEmailBundleResponses];
+
 export type OptOutData = {
     /**
      * Reason
