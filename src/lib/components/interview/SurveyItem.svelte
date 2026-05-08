@@ -213,7 +213,7 @@
 	}
 </script>
 
-<div class="mt-2 w-full max-w-full min-w-60">
+<div class="w-full max-w-full min-w-60">
 	<fieldset
 		class="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-gray-200 p-4
             {['radio', 'checkbox'].includes(surveyItem.type) ? 'flex-col' : ''}

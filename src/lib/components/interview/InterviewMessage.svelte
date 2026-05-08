@@ -126,12 +126,12 @@
 	>
 		<!-- Message Content -->
 		<div
-			class="relative inline-block max-w-[90%] rounded-xl p-[10px] break-words hyphens-auto sm:max-w-[80%]
+			class="relative inline-block max-w-[90%] rounded-xl break-words hyphens-auto sm:max-w-[80%]
       {isReceived
-				? 'rounded-bl-sm bg-[#eee] text-gray-900'
+				? 'rounded-bl-sm bg-[#eee] p-2.5 text-gray-900'
 				: message.survey_item
 					? ''
-					: 'rounded-br-sm bg-primary text-white'}"
+					: 'rounded-br-sm bg-primary p-2.5 text-white'}"
 			{lang}
 		>
 			{#if message.question_label}
@@ -153,7 +153,7 @@
 				{@html processedText}
 			{/if}
 			{#if message.survey_item}
-				<div class="mt-3 whitespace-normal">
+				<div class="whitespace-normal">
 					<SurveyItem
 						{...message.survey_item}
 						{readonly}
