@@ -43,6 +43,15 @@
 
 	let imageUpload = $state(false);
 
+	let surveyActive = $derived.by(() => {
+		for (let i = chat.messages.length - 1; i >= 0; i--) {
+			const m = chat.messages[i];
+			if (m.survey_item) return true;
+			if (m.type === 'received' && m.can_answer === true) return false;
+		}
+		return false;
+	});
+
 	// Auto-scroll logic
 	$effect(() => {
 		const _ = [chat.messages.length, chat.showTypingIndicator];
@@ -228,11 +237,13 @@
 			placeholder="Message"
 			{lang}
 			class="
-				min-h-25 w-full resize-none rounded border border-gray-300 p-2.5 shadow-sm transition-all
+				w-full resize-none rounded border border-gray-300 p-2.5 shadow-sm transition-all
 				focus:border-primary focus:ring-1 focus:ring-primary/50 focus:outline-none
 				disabled:text-[#666666]
 				sm:max-h-32 sm:w-[40%] sm:max-w-125 sm:min-w-85
 			"
+			class:min-h-25={!surveyActive}
+			class:min-h-10={surveyActive}
 			oninput={handleInput}
 			onkeydown={handleKeydown}
 		></textarea>
