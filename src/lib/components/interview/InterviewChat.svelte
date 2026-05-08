@@ -208,11 +208,11 @@
 		class="flex w-full flex-row items-center justify-center px-4 sm:px-0"
 	>
 		<!-- Controls Left -->
-		<div class="mr-2 flex flex-col gap-[7px]">
+		<div class="mr-2 flex flex-col gap-1.75">
 			{#if imageUpload}
 				<button
 					type="button"
-					class="flex h-[30px] w-[30px] items-center justify-center bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-100 disabled:opacity-50"
+					class="flex h-7.5 w-7.5 items-center justify-center bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-100 disabled:opacity-50"
 					onclick={triggerCamera}
 					disabled={!chat.inputEnabled}
 					title="Upload Image"
@@ -273,7 +273,7 @@
 				disabled={!chat.inputEnabled || !messageInput.trim()}
 				id="send-message"
 				class="
-					mt-[15px] cursor-pointer rounded bg-primary px-3 py-1.5 text-sm text-white transition-colors
+					mt-3.75 cursor-pointer rounded bg-primary px-3 py-1.5 text-sm text-white transition-colors
 					hover:bg-dark
 					disabled:cursor-not-allowed disabled:bg-[#cccccc] disabled:text-[#666666]
 				"
@@ -302,7 +302,7 @@
 		</div>
 	</form>
 
-	<div class="mt-2 w-full max-w-[25rem] px-4 sm:px-0">
+	<div class="mt-2 w-full max-w-100 px-4 sm:px-0">
 		<GradientProgressBar progress={chat.progress} />
 	</div>
 </div>
