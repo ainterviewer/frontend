@@ -5,6 +5,7 @@
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 	import { Editor } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
+	import Image from '@tiptap/extension-image';
 	import { toast } from 'svelte-sonner';
 
 	let { data }: { data: { available_languages: LanguageDict[] } } = $props();
@@ -226,7 +227,13 @@
 	$effect(() => {
 		editor = new Editor({
 			element: editorEl,
-			extensions: [StarterKit.configure({ link: { openOnClick: false } })],
+			extensions: [
+				StarterKit.configure({ link: { openOnClick: false } }),
+				Image.configure({
+					inline: true,
+					allowBase64: true
+				})
+			],
 			content: '',
 			editorProps: {
 				attributes: {

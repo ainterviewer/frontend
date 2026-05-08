@@ -55,6 +55,7 @@
 		"@dnd-kit-svelte/svelte": "^0.1.6",
 		"@dnd-kit/helpers": "^0.3.2",
 		"@tiptap/core": "^3.22.5",
+		"@tiptap/extension-image": "^3.22.5",
 		"@tiptap/extension-link": "^3.22.5",
 		"@tiptap/starter-kit": "^3.22.5",
 		"bits-ui": "^2.16.3",
