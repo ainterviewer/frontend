@@ -287,6 +287,7 @@
 					placeholder="Email subject"
 					bind:value={subject}
 					disabled={isDemo || loading}
+					autocomplete="off"
 				/>
 			</div>
 			<div class="flex flex-wrap items-center gap-1 border-b border-gray-200 px-2 py-1.5">
