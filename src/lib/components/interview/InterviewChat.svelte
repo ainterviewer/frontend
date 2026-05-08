@@ -60,9 +60,27 @@
 
 	async function scrollToBottom() {
 		await tick();
-		if (messagesContainer && messagesContainer.lastElementChild) {
-			messagesContainer.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+		if (!messagesContainer) return;
+		if (surveyActive) {
+			let surveyIdx = -1;
+			for (let i = chat.messages.length - 1; i >= 0; i--) {
+				if (chat.messages[i].survey_item) {
+					surveyIdx = i;
+					break;
+				}
+			}
+			let questionIdx = -1;
+			for (let i = surveyIdx - 1; i >= 0; i--) {
+				if (chat.messages[i].type === 'received') {
+					questionIdx = i;
+					break;
+				}
+			}
+			const target = messagesContainer.children[questionIdx] ?? messagesContainer.lastElementChild;
+			target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			return;
 		}
+		messagesContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
 	}
 
 	function handleInput(e: Event) {
