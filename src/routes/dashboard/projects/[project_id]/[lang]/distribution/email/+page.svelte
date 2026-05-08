@@ -4,8 +4,8 @@
 	import type { LanguageDict, ParticipantEmailAttachment } from '$lib/api/types.gen';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 	import { Editor } from '@tiptap/core';
-	import StarterKit from '@tiptap/starter-kit';
 	import Image from '@tiptap/extension-image';
+	import StarterKit from '@tiptap/starter-kit';
 	import { toast } from 'svelte-sonner';
 
 	let { data }: { data: { available_languages: LanguageDict[] } } = $props();
