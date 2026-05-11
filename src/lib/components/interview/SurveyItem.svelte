@@ -215,7 +215,7 @@
 
 <div class="w-full max-w-full min-w-60">
 	<fieldset
-		class="flex flex-wrap gap-2 rounded-2xl border border-gray-100 bg-gray-200 p-4
+		class="flex flex-wrap gap-1.5 rounded-2xl border border-gray-100 bg-gray-200 p-4 sm:gap-2
             {['radio', 'checkbox'].includes(surveyItem.type) ? 'flex-col' : ''}
             {readonly ? 'pointer-events-none' : ''}"
 	>
@@ -360,8 +360,8 @@
 			{#each selectOptions as opt, i (i)}
 				<div class="relative max-w-full min-w-min">
 					<label
-						class="flex w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all
-                   hover:border-primary/50 hover:bg-gray-200
+						class="flex w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-primary/50 hover:bg-gray-200
+                   sm:px-4 sm:py-3
                    {isChecked(opt.value)
 							? 'border-primary bg-primary/10 text-dark ring-1 ring-primary'
 							: ''}
@@ -387,8 +387,8 @@
 			{#if (surveyItem.type === 'radio' || surveyItem.type === 'checkbox') && surveyItem.with_other}
 				<div class="relative max-w-full min-w-min">
 					<label
-						class="flex w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all
-                   hover:border-primary/50 hover:bg-gray-200
+						class="flex w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-primary/50 hover:bg-gray-200
+                   sm:px-4 sm:py-3
                    {otherSelected
 							? 'border-primary bg-primary/10 text-dark ring-1 ring-primary'
 							: ''}
