@@ -385,6 +385,16 @@ export type BodyUploadParticipantEmailAttachments = {
 };
 
 /**
+ * Body_upload_participant_reminder_email_attachments
+ */
+export type BodyUploadParticipantReminderEmailAttachments = {
+    /**
+     * Files
+     */
+    files: Array<Blob | File>;
+};
+
+/**
  * Body_upload_participants
  */
 export type BodyUploadParticipants = {
@@ -4927,6 +4937,246 @@ export type SendParticipantEmailsResponses = {
 };
 
 export type SendParticipantEmailsResponse = SendParticipantEmailsResponses[keyof SendParticipantEmailsResponses];
+
+export type GetParticipantReminderEmailTemplateData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-reminder-email-template';
+};
+
+export type GetParticipantReminderEmailTemplateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetParticipantReminderEmailTemplateError = GetParticipantReminderEmailTemplateErrors[keyof GetParticipantReminderEmailTemplateErrors];
+
+export type GetParticipantReminderEmailTemplateResponses = {
+    /**
+     * Successful Response
+     */
+    200: ParticipantEmailTemplateRequest;
+};
+
+export type GetParticipantReminderEmailTemplateResponse = GetParticipantReminderEmailTemplateResponses[keyof GetParticipantReminderEmailTemplateResponses];
+
+export type SetParticipantReminderEmailTemplateData = {
+    body: ParticipantEmailTemplateRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-reminder-email-template';
+};
+
+export type SetParticipantReminderEmailTemplateErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetParticipantReminderEmailTemplateError = SetParticipantReminderEmailTemplateErrors[keyof SetParticipantReminderEmailTemplateErrors];
+
+export type SetParticipantReminderEmailTemplateResponses = {
+    /**
+     * Successful Response
+     */
+    200: ParticipantEmailTemplateRequest;
+};
+
+export type SetParticipantReminderEmailTemplateResponse = SetParticipantReminderEmailTemplateResponses[keyof SetParticipantReminderEmailTemplateResponses];
+
+export type ListParticipantReminderEmailAttachmentsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments';
+};
+
+export type ListParticipantReminderEmailAttachmentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListParticipantReminderEmailAttachmentsError = ListParticipantReminderEmailAttachmentsErrors[keyof ListParticipantReminderEmailAttachmentsErrors];
+
+export type ListParticipantReminderEmailAttachmentsResponses = {
+    /**
+     * Response List Participant Reminder Email Attachments
+     *
+     * Successful Response
+     */
+    200: Array<ParticipantEmailAttachment>;
+};
+
+export type ListParticipantReminderEmailAttachmentsResponse = ListParticipantReminderEmailAttachmentsResponses[keyof ListParticipantReminderEmailAttachmentsResponses];
+
+export type UploadParticipantReminderEmailAttachmentsData = {
+    body: BodyUploadParticipantReminderEmailAttachments;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments';
+};
+
+export type UploadParticipantReminderEmailAttachmentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UploadParticipantReminderEmailAttachmentsError = UploadParticipantReminderEmailAttachmentsErrors[keyof UploadParticipantReminderEmailAttachmentsErrors];
+
+export type UploadParticipantReminderEmailAttachmentsResponses = {
+    /**
+     * Response Upload Participant Reminder Email Attachments
+     *
+     * Successful Response
+     */
+    200: Array<ParticipantEmailAttachment>;
+};
+
+export type UploadParticipantReminderEmailAttachmentsResponse = UploadParticipantReminderEmailAttachmentsResponses[keyof UploadParticipantReminderEmailAttachmentsResponses];
+
+export type DeleteParticipantReminderEmailAttachmentData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+        /**
+         * Filename
+         */
+        filename: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments/{filename}';
+};
+
+export type DeleteParticipantReminderEmailAttachmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteParticipantReminderEmailAttachmentError = DeleteParticipantReminderEmailAttachmentErrors[keyof DeleteParticipantReminderEmailAttachmentErrors];
+
+export type DeleteParticipantReminderEmailAttachmentResponses = {
+    /**
+     * Response Delete Participant Reminder Email Attachment
+     *
+     * Successful Response
+     */
+    200: Array<ParticipantEmailAttachment>;
+};
+
+export type DeleteParticipantReminderEmailAttachmentResponse = DeleteParticipantReminderEmailAttachmentResponses[keyof DeleteParticipantReminderEmailAttachmentResponses];
+
+export type SendParticipantReminderEmailsData = {
+    body: SendParticipantEmailRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/participants/send-reminder-email';
+};
+
+export type SendParticipantReminderEmailsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SendParticipantReminderEmailsError = SendParticipantReminderEmailsErrors[keyof SendParticipantReminderEmailsErrors];
+
+export type SendParticipantReminderEmailsResponses = {
+    /**
+     * Successful Response
+     */
+    200: SendParticipantEmailResponse;
+};
+
+export type SendParticipantReminderEmailsResponse = SendParticipantReminderEmailsResponses[keyof SendParticipantReminderEmailsResponses];
 
 export type DeleteProjectData = {
     body?: never;
