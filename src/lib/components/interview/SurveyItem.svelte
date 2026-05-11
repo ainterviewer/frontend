@@ -7,14 +7,105 @@
 		onAnswer,
 		readonly = false,
 		answer = '',
+		lang = 'EN',
 		...surveyItem
 	} = $props<
 		SurveyItemUnion & {
 			onAnswer?: (value: unknown) => void;
 			readonly?: boolean;
 			answer?: string;
+			lang?: string;
 		}
 	>();
+
+	type StringKey =
+		| 'pickValue'
+		| 'chooseOne'
+		| 'enterNumber'
+		| 'pickDate'
+		| 'pickDateTime'
+		| 'pickTime'
+		| 'selectMultiple'
+		| 'other'
+		| 'pleaseSpecify'
+		| 'mustBeAtLeast'
+		| 'mustBeAtMost'
+		| 'pleaseProvideValue';
+
+	const TRANSLATIONS: Record<string, Record<StringKey, string>> = {
+		EN: {
+			pickValue: 'Pick a value',
+			chooseOne: 'Choose one',
+			enterNumber: 'Enter a number',
+			pickDate: 'Pick a date',
+			pickDateTime: 'Pick a date and time',
+			pickTime: 'Pick a time',
+			selectMultiple: 'Select multiple',
+			other: 'Other',
+			pleaseSpecify: 'Please specify...',
+			mustBeAtLeast: 'Must be at least',
+			mustBeAtMost: 'Must be at most',
+			pleaseProvideValue: 'Please provide a value'
+		},
+		DA: {
+			pickValue: 'Vælg en værdi',
+			chooseOne: 'Vælg én',
+			enterNumber: 'Indtast et tal',
+			pickDate: 'Vælg en dato',
+			pickDateTime: 'Vælg dato og tid',
+			pickTime: 'Vælg et tidspunkt',
+			selectMultiple: 'Vælg flere',
+			other: 'Andet',
+			pleaseSpecify: 'Angiv venligst...',
+			mustBeAtLeast: 'Skal mindst være',
+			mustBeAtMost: 'Må højst være',
+			pleaseProvideValue: 'Angiv venligst en værdi'
+		},
+		DE: {
+			pickValue: 'Wert auswählen',
+			chooseOne: 'Wähle eine Option',
+			enterNumber: 'Zahl eingeben',
+			pickDate: 'Datum auswählen',
+			pickDateTime: 'Datum und Uhrzeit auswählen',
+			pickTime: 'Uhrzeit auswählen',
+			selectMultiple: 'Mehrere auswählen',
+			other: 'Andere',
+			pleaseSpecify: 'Bitte angeben...',
+			mustBeAtLeast: 'Muss mindestens sein',
+			mustBeAtMost: 'Darf höchstens sein',
+			pleaseProvideValue: 'Bitte einen Wert angeben'
+		},
+		ES: {
+			pickValue: 'Elige un valor',
+			chooseOne: 'Elige una opción',
+			enterNumber: 'Introduce un número',
+			pickDate: 'Elige una fecha',
+			pickDateTime: 'Elige fecha y hora',
+			pickTime: 'Elige una hora',
+			selectMultiple: 'Selecciona varias',
+			other: 'Otro',
+			pleaseSpecify: 'Por favor, especifica...',
+			mustBeAtLeast: 'Debe ser al menos',
+			mustBeAtMost: 'Debe ser como máximo',
+			pleaseProvideValue: 'Por favor, introduce un valor'
+		},
+		FR: {
+			pickValue: 'Choisissez une valeur',
+			chooseOne: 'Choisissez une option',
+			enterNumber: 'Entrez un nombre',
+			pickDate: 'Choisissez une date',
+			pickDateTime: 'Choisissez une date et une heure',
+			pickTime: 'Choisissez une heure',
+			selectMultiple: 'Sélectionnez plusieurs',
+			other: 'Autre',
+			pleaseSpecify: 'Veuillez préciser...',
+			mustBeAtLeast: 'Doit être au moins',
+			mustBeAtMost: 'Doit être au plus',
+			pleaseProvideValue: 'Veuillez fournir une valeur'
+		}
+	};
+
+	let t = $derived(TRANSLATIONS[lang] ?? TRANSLATIONS.EN);
 
 	let sliderValue = $state(0);
 	const selectedValues = new SvelteSet<string>();
@@ -88,9 +179,9 @@
 	let numberError = $derived.by(() => {
 		if (surveyItem.type !== 'number' || numberValue === null) return '';
 		if (surveyItem.min != null && numberValue < surveyItem.min)
-			return `Must be at least ${surveyItem.min}`;
+			return `${t.mustBeAtLeast} ${surveyItem.min}`;
 		if (surveyItem.max != null && numberValue > surveyItem.max)
-			return `Must be at most ${surveyItem.max}`;
+			return `${t.mustBeAtMost} ${surveyItem.max}`;
 		return '';
 	});
 
@@ -183,7 +274,7 @@
 		}
 
 		if (surveyItem.required && answer.length === 0) {
-			alert('Please provide a value');
+			alert(t.pleaseProvideValue);
 			return;
 		}
 
@@ -194,21 +285,21 @@
 	function getLegendText() {
 		switch (surveyItem.type) {
 			case 'slider':
-				return 'Pick a value';
+				return t.pickValue;
 			case 'likert':
-				return surveyItem.ui === 'slider' ? 'Pick a value' : 'Choose one';
+				return surveyItem.ui === 'slider' ? t.pickValue : t.chooseOne;
 			case 'radio':
-				return 'Choose one';
+				return t.chooseOne;
 			case 'number':
-				return 'Enter a number';
+				return t.enterNumber;
 			case 'date':
-				return 'Pick a date';
+				return t.pickDate;
 			case 'datetime':
-				return 'Pick a date and time';
+				return t.pickDateTime;
 			case 'time':
-				return 'Pick a time';
+				return t.pickTime;
 			default:
-				return 'Select multiple';
+				return t.selectMultiple;
 		}
 	}
 </script>
@@ -316,7 +407,7 @@
 					class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
 					class:focus:ring-red-500={numberError}
 					class:focus:border-red-500={numberError}
-					placeholder="Enter a number"
+					placeholder={t.enterNumber}
 				/>
 				{#if numberError}
 					<p class="mt-1 text-xs text-red-500">{numberError}</p>
@@ -407,7 +498,7 @@
 							disabled={disabled && !readonly}
 							class="mr-3 h-4 w-4 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
 						/>
-						Other
+						{t.other}
 					</label>
 				</div>
 				{#if otherSelected}
@@ -417,7 +508,7 @@
 							bind:value={otherText}
 							disabled={disabled && !readonly}
 							class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-3"
-							placeholder="Please specify..."
+							placeholder={t.pleaseSpecify}
 						/>
 					</div>
 				{/if}

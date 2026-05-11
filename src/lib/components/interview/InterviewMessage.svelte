@@ -156,6 +156,7 @@
 				<div class="whitespace-normal">
 					<SurveyItem
 						{...message.survey_item}
+						{lang}
 						{readonly}
 						answer={message.answer}
 						onAnswer={(ans: any) => onSurveyAnswer(ans, message.message_id)}
