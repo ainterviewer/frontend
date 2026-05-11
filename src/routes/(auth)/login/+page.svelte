@@ -126,7 +126,9 @@
 					</div>
 				</div>
 
-				<div class="flex items-center justify-between">
+				<div
+					class="flex flex-col gap-3 max-md:items-start md:flex-row md:items-center md:justify-between"
+				>
 					<div class="flex items-center">
 						<input
 							id="remember-me"
