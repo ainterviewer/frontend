@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CustomTokens } from '$lib/api';
+	import type { CustomToken } from '$lib/api';
 	import AudioMessage from './AudioMessage.svelte';
 	import FeedbackToggle from './FeedbackToggle.svelte';
 	import SkipButton from './SkipButton.svelte';
@@ -7,7 +7,7 @@
 
 	// Custom token definitions with their display properties
 	const TOKEN_CONFIG: Record<
-		CustomTokens,
+		CustomToken,
 		{ icon: string; label: string; color: string; justify: string }
 	> = {
 		'<|endofprobe|>': {
@@ -78,7 +78,7 @@
 		if (!message.text) return null;
 		const trimmed = message.text.trim();
 		if (trimmed in TOKEN_CONFIG) {
-			return TOKEN_CONFIG[trimmed as CustomTokens];
+			return TOKEN_CONFIG[trimmed as CustomToken];
 		}
 		return null;
 	});
@@ -91,7 +91,7 @@
 	// Process text to replace embedded tokens with styled badges
 	function processTextWithTokens(text: string): string {
 		return text.replace(new RegExp(TOKEN_PATTERN.source, 'g'), (match) => {
-			const config = TOKEN_CONFIG[match as CustomTokens];
+			const config = TOKEN_CONFIG[match as CustomToken];
 			if (!config) return match;
 			return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.color}"><i class="${config.icon}"></i> ${config.label}</span>`;
 		});
