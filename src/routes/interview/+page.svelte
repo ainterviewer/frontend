@@ -251,7 +251,7 @@
 
 <svelte:head>
 	<base target="_blank" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 </svelte:head>
 
 <div class="flex h-dvh w-full flex-col bg-white pb-[env(safe-area-inset-bottom)]">
