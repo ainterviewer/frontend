@@ -416,7 +416,7 @@
 							type="text"
 							bind:value={otherText}
 							disabled={disabled && !readonly}
-							class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
+							class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-3"
 							placeholder="Please specify..."
 						/>
 					</div>
