@@ -502,7 +502,7 @@
 					</label>
 				</div>
 				{#if otherSelected}
-					<div class="w-full px-1">
+					<div class="w-full">
 						<input
 							type="text"
 							bind:value={otherText}
