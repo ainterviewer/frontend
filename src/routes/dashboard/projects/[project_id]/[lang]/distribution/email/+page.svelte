@@ -15,36 +15,71 @@
 	const isDemo = $derived(page.data.user?.scope === 'demo');
 	const availableLanguages = $derived(data.available_languages ?? []);
 
-	let editorEl: HTMLDivElement;
-	let editor = $state<Editor | null>(null);
-	let subject = $state('');
-	let savedSubject = $state('');
-	let templateHtml = $state('');
-	let savedHtml = $state('');
-	let loading = $state(true);
-	let saving = $state(false);
-	let sending = $state(false);
+	type Kind = 'invitation' | 'reminder';
+
+	type KindState = {
+		subject: string;
+		savedSubject: string;
+		templateHtml: string;
+		savedHtml: string;
+		attachments: ParticipantEmailAttachment[];
+		attachmentsLoading: boolean;
+		uploadingAttachments: boolean;
+		deletingAttachment: string | null;
+		loading: boolean;
+		saving: boolean;
+		sending: boolean;
+	};
+
+	function emptyKindState(): KindState {
+		return {
+			subject: '',
+			savedSubject: '',
+			templateHtml: '',
+			savedHtml: '',
+			attachments: [],
+			attachmentsLoading: false,
+			uploadingAttachments: false,
+			deletingAttachment: null,
+			loading: true,
+			saving: false,
+			sending: false
+		};
+	}
+
+	let kind = $state<Kind>('invitation');
+	let states = $state<Record<Kind, KindState>>({
+		invitation: emptyKindState(),
+		reminder: emptyKindState()
+	});
+
+	const current = $derived(states[kind]);
 	let exporting = $state(false);
 
-	// Attachments
-	let attachments = $state<ParticipantEmailAttachment[]>([]);
-	let attachmentsLoading = $state(false);
-	let uploadingAttachments = $state(false);
-	let deletingAttachment = $state<string | null>(null);
+	let editorEl: HTMLDivElement;
+	let editor = $state<Editor | null>(null);
 	let attachmentInput: HTMLInputElement;
 
-	const dirty = $derived(templateHtml !== savedHtml || subject !== savedSubject);
+	const dirty = $derived(
+		current.templateHtml !== current.savedHtml || current.subject !== current.savedSubject
+	);
+	const anyDirty = $derived(
+		states.invitation.templateHtml !== states.invitation.savedHtml ||
+			states.invitation.subject !== states.invitation.savedSubject ||
+			states.reminder.templateHtml !== states.reminder.savedHtml ||
+			states.reminder.subject !== states.reminder.savedSubject
+	);
 	const missingInterviewUrl = $derived(
-		!!templateHtml && !/\{\{\s*interview_url\s*\}\}/.test(templateHtml)
+		!!current.templateHtml && !/\{\{\s*interview_url\s*\}\}/.test(current.templateHtml)
 	);
 	const canSend = $derived(
 		!isDemo &&
-			!sending &&
-			!saving &&
-			!loading &&
+			!current.sending &&
+			!current.saving &&
+			!current.loading &&
 			!dirty &&
-			!!subject.trim() &&
-			!!templateHtml.trim() &&
+			!!current.subject.trim() &&
+			!!current.templateHtml.trim() &&
 			!missingInterviewUrl
 	);
 
@@ -66,10 +101,23 @@
 	];
 
 	const previewHtml = $derived(
-		templateHtml.replace(
+		current.templateHtml.replace(
 			/\{\{\s*(name|email|pid|interview_url|opt_out_url)\s*\}\}/g,
 			(_, k) => sample[k as keyof typeof sample]
 		)
+	);
+
+	const sendLabel = $derived(kind === 'reminder' ? 'Send reminders' : 'Send to participants');
+	const sendingLabel = $derived(kind === 'reminder' ? 'Sending...' : 'Sending...');
+	const confirmSendMessage = $derived(
+		kind === 'reminder'
+			? 'Send the reminder email to all eligible participants?'
+			: 'Send the invitation email to all eligible participants?'
+	);
+	const introText = $derived(
+		kind === 'reminder'
+			? 'Compose the reminder email sent to participants who have not yet completed the interview. Use placeholders below to insert each participant’s name, email, PID or personal interview URL.'
+			: 'Compose the invitation email sent to participants. Use placeholders below to insert each participant’s name, email, PID or personal interview URL.'
 	);
 
 	function setLink() {
@@ -91,51 +139,73 @@
 		editor?.chain().focus().insertContent(`{{ ${key} }}`).run();
 	}
 
-	async function load() {
-		loading = true;
-		const res = await Participants.getParticipantEmailTemplate({
-			path: { project_id, language }
-		});
+	async function loadTemplate(k: Kind) {
+		states[k].loading = true;
+		const res =
+			k === 'reminder'
+				? await Participants.getParticipantReminderEmailTemplate({
+						path: { project_id, language }
+					})
+				: await Participants.getParticipantEmailTemplate({
+						path: { project_id, language }
+					});
 		if (res.error) {
-			toast.error('Failed to load email template');
-			templateHtml = '';
-			savedHtml = '';
-			subject = '';
-			savedSubject = '';
+			toast.error(`Failed to load ${k} email template`);
+			states[k].templateHtml = '';
+			states[k].savedHtml = '';
+			states[k].subject = '';
+			states[k].savedSubject = '';
 		} else {
-			templateHtml = res.data?.template ?? '';
-			savedHtml = templateHtml;
-			subject = res.data?.subject ?? '';
-			savedSubject = subject;
+			states[k].templateHtml = res.data?.template ?? '';
+			states[k].savedHtml = states[k].templateHtml;
+			states[k].subject = res.data?.subject ?? '';
+			states[k].savedSubject = states[k].subject;
 		}
-		editor?.commands.setContent(templateHtml || '', { emitUpdate: false });
-		loading = false;
+		if (k === kind) {
+			editor?.commands.setContent(states[k].templateHtml || '', { emitUpdate: false });
+		}
+		states[k].loading = false;
 	}
 
 	async function save() {
-		saving = true;
-		const res = await Participants.setParticipantEmailTemplate({
-			path: { project_id, language },
-			body: { subject: subject || null, template: templateHtml || null }
-		});
-		saving = false;
+		const k = kind;
+		states[k].saving = true;
+		const body = { subject: states[k].subject || null, template: states[k].templateHtml || null };
+		const res =
+			k === 'reminder'
+				? await Participants.setParticipantReminderEmailTemplate({
+						path: { project_id, language },
+						body
+					})
+				: await Participants.setParticipantEmailTemplate({
+						path: { project_id, language },
+						body
+					});
+		states[k].saving = false;
 		if (res.error) {
 			toast.error('Failed to save template');
 			return;
 		}
-		savedHtml = templateHtml;
-		savedSubject = subject;
+		states[k].savedHtml = states[k].templateHtml;
+		states[k].savedSubject = states[k].subject;
 		toast.success('Template saved');
 	}
 
 	async function sendToParticipants() {
-		if (!confirm('Send the invitation email to all eligible participants?')) return;
-		sending = true;
-		const res = await Participants.sendParticipantEmails({
-			path: { project_id },
-			body: { participant_ids: null }
-		});
-		sending = false;
+		if (!confirm(confirmSendMessage)) return;
+		const k = kind;
+		states[k].sending = true;
+		const res =
+			k === 'reminder'
+				? await Participants.sendParticipantReminderEmails({
+						path: { project_id },
+						body: { participant_ids: null }
+					})
+				: await Participants.sendParticipantEmails({
+						path: { project_id },
+						body: { participant_ids: null }
+					});
+		states[k].sending = false;
 		if (res.error) {
 			toast.error('Failed to send emails');
 			return;
@@ -174,48 +244,72 @@
 	}
 
 	function confirmDiscardIfDirty() {
-		if (!dirty) return true;
+		if (!anyDirty) return true;
 		return confirm('You have unsaved changes. Discard them and switch language?');
 	}
 
-	async function loadAttachments() {
-		attachmentsLoading = true;
-		const res = await Participants.listParticipantEmailAttachments({
-			path: { project_id, language }
-		});
+	function switchKind(next: Kind) {
+		if (next === kind) return;
+		kind = next;
+		editor?.commands.setContent(states[next].templateHtml || '', { emitUpdate: false });
+	}
+
+	async function loadAttachments(k: Kind) {
+		states[k].attachmentsLoading = true;
+		const res =
+			k === 'reminder'
+				? await Participants.listParticipantReminderEmailAttachments({
+						path: { project_id, language }
+					})
+				: await Participants.listParticipantEmailAttachments({
+						path: { project_id, language }
+					});
 		if (!res.error) {
-			attachments = res.data ?? [];
+			states[k].attachments = res.data ?? [];
 		}
-		attachmentsLoading = false;
+		states[k].attachmentsLoading = false;
 	}
 
 	async function uploadAttachments(files: FileList) {
 		if (!files.length) return;
-		uploadingAttachments = true;
-		const res = await Participants.uploadParticipantEmailAttachments({
-			path: { project_id, language },
-			body: { files: Array.from(files) }
-		});
-		uploadingAttachments = false;
+		const k = kind;
+		states[k].uploadingAttachments = true;
+		const res =
+			k === 'reminder'
+				? await Participants.uploadParticipantReminderEmailAttachments({
+						path: { project_id, language },
+						body: { files: Array.from(files) }
+					})
+				: await Participants.uploadParticipantEmailAttachments({
+						path: { project_id, language },
+						body: { files: Array.from(files) }
+					});
+		states[k].uploadingAttachments = false;
 		if (res.error) {
 			toast.error('Failed to upload attachments');
 			return;
 		}
-		attachments = res.data ?? [];
+		states[k].attachments = res.data ?? [];
 		toast.success(`Uploaded ${files.length} attachment${files.length === 1 ? '' : 's'}`);
 	}
 
 	async function deleteAttachment(filename: string) {
-		deletingAttachment = filename;
-		const res = await Participants.deleteParticipantEmailAttachment({
-			path: { project_id, language, filename }
-		});
-		deletingAttachment = null;
+		const k = kind;
+		states[k].deletingAttachment = filename;
+		const res =
+			k === 'reminder'
+				? await Participants.deleteParticipantReminderEmailAttachment({
+						path: { project_id, language, filename }
+					})
+				: await Participants.deleteParticipantEmailAttachment({
+						path: { project_id, language, filename }
+					});
+		states[k].deletingAttachment = null;
 		if (res.error) {
 			toast.error('Failed to delete attachment');
 			return;
 		}
-		attachments = res.data ?? [];
+		states[k].attachments = res.data ?? [];
 	}
 
 	function formatBytes(bytes: number) {
@@ -241,7 +335,7 @@
 				}
 			},
 			onUpdate: ({ editor: e }) => {
-				templateHtml = e.getHTML();
+				states[kind].templateHtml = e.getHTML();
 			}
 		});
 		return () => {
@@ -254,20 +348,46 @@
 		// re-fetch when project or language changes
 		void project_id;
 		void language;
-		load();
-		loadAttachments();
+		loadTemplate('invitation');
+		loadTemplate('reminder');
+		loadAttachments('invitation');
+		loadAttachments('reminder');
 	});
 </script>
 
 <div class="">
 	<div class="mb-2">
-		<h1 class="page-title">Email template</h1>
+		<h1 class="page-title">Email templates</h1>
 	</div>
 
-	<p class="mb-4 text-gray-600">
-		Compose the invitation email sent to participants. Use placeholders below to insert each
-		participant's name, email, PID or personal interview URL.
-	</p>
+	<div class="mb-3 flex gap-1 border-b border-gray-200">
+		<button
+			type="button"
+			class="border-b-2 px-4 py-2 text-sm font-medium transition-colors"
+			class:border-primary={kind === 'invitation'}
+			class:text-primary={kind === 'invitation'}
+			class:border-transparent={kind !== 'invitation'}
+			class:text-gray-500={kind !== 'invitation'}
+			class:hover:text-gray-700={kind !== 'invitation'}
+			onclick={() => switchKind('invitation')}
+		>
+			Invitation
+		</button>
+		<button
+			type="button"
+			class="border-b-2 px-4 py-2 text-sm font-medium transition-colors"
+			class:border-primary={kind === 'reminder'}
+			class:text-primary={kind === 'reminder'}
+			class:border-transparent={kind !== 'reminder'}
+			class:text-gray-500={kind !== 'reminder'}
+			class:hover:text-gray-700={kind !== 'reminder'}
+			onclick={() => switchKind('reminder')}
+		>
+			Reminder
+		</button>
+	</div>
+
+	<p class="mb-4 text-gray-600">{introText}</p>
 
 	<div class="mb-3 flex flex-wrap items-center gap-2 text-sm">
 		<span class="text-gray-500">Insert:</span>
@@ -292,8 +412,8 @@
 					type="text"
 					class="flex-1 rounded border border-gray-300 px-2 py-1 text-sm focus:border-primary focus:outline-none disabled:bg-gray-50 disabled:opacity-60"
 					placeholder="Email subject"
-					bind:value={subject}
-					disabled={isDemo || loading}
+					bind:value={states[kind].subject}
+					disabled={isDemo || current.loading}
 					autocomplete="off"
 				/>
 			</div>
@@ -434,13 +554,13 @@
 				</span>
 			</div>
 			<div class="px-3 py-2">
-				{#if !subject && !templateHtml}
+				{#if !current.subject && !current.templateHtml}
 					<p class="text-sm text-gray-400">Nothing to preview yet.</p>
 				{:else}
-					{#if subject}
+					{#if current.subject}
 						<div class="mb-2 border-b border-gray-100 pb-2 text-sm">
 							<span class="font-semibold text-gray-700">Subject:</span>
-							<span class="text-gray-800">{subject}</span>
+							<span class="text-gray-800">{current.subject}</span>
 						</div>
 					{/if}
 					<div class="prose prose-sm max-w-none">
@@ -456,7 +576,7 @@
 		<div class="flex items-center justify-between border-b border-gray-200 px-3 py-2">
 			<span class="text-sm font-semibold text-gray-700">Attachments</span>
 			<div class="flex items-center gap-2">
-				{#if attachmentsLoading}
+				{#if current.attachmentsLoading}
 					<span class="text-xs text-gray-400">Loading...</span>
 				{/if}
 				<input
@@ -468,27 +588,27 @@
 						const files = (e.currentTarget as HTMLInputElement).files;
 						if (files) uploadAttachments(files);
 					}}
-					disabled={isDemo || uploadingAttachments}
+					disabled={isDemo || current.uploadingAttachments}
 				/>
 				<button
 					type="button"
 					class="flex items-center gap-1.5 rounded border border-gray-300 bg-gray-50 px-3 py-1 text-sm hover:bg-gray-100 disabled:opacity-50"
 					onclick={() => attachmentInput.click()}
-					disabled={isDemo || uploadingAttachments}
+					disabled={isDemo || current.uploadingAttachments}
 				>
 					<i class="fa-solid fa-paperclip"></i>
-					{uploadingAttachments ? 'Uploading...' : 'Add files'}
+					{current.uploadingAttachments ? 'Uploading...' : 'Add files'}
 				</button>
 			</div>
 		</div>
 		<div class="px-3 py-2">
-			{#if attachments.length === 0 && !attachmentsLoading}
+			{#if current.attachments.length === 0 && !current.attachmentsLoading}
 				<p class="text-sm text-gray-400">
-					No attachments. Files added here will be included in every outgoing email.
+					No attachments. Files added here will be included in every outgoing {kind} email.
 				</p>
 			{:else}
 				<ul class="divide-y divide-gray-100">
-					{#each attachments as attachment (attachment.filename)}
+					{#each current.attachments as attachment (attachment.filename)}
 						<li class="flex items-center justify-between py-1.5">
 							<div class="flex min-w-0 items-center gap-2">
 								<i class="fa-solid fa-file text-xs text-gray-400"></i>
@@ -502,7 +622,7 @@
 								type="button"
 								class="ml-3 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
 								onclick={() => deleteAttachment(attachment.filename)}
-								disabled={isDemo || deletingAttachment === attachment.filename}
+								disabled={isDemo || current.deletingAttachment === attachment.filename}
 								title="Remove attachment"
 								aria-label="Remove attachment"
 							>
@@ -528,8 +648,8 @@
 			type="button"
 			class="flex items-center gap-2 rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
 			onclick={exportBundle}
-			disabled={isDemo || exporting || dirty}
-			title={dirty
+			disabled={isDemo || exporting || anyDirty}
+			title={anyDirty
 				? 'Save your changes before exporting'
 				: 'Download a self-contained zip with participants, templates and attachments'}
 		>
@@ -540,11 +660,11 @@
 			type="button"
 			class="flex items-center gap-2 rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
 			onclick={save}
-			disabled={isDemo || saving || loading || !dirty}
+			disabled={isDemo || current.saving || current.loading || !dirty}
 			title="Save template"
 		>
 			<i class="fa-solid fa-floppy-disk"></i>
-			{saving ? 'Saving...' : 'Save'}
+			{current.saving ? 'Saving...' : 'Save'}
 		</button>
 		<button
 			type="button"
@@ -553,16 +673,16 @@
 			disabled={!canSend}
 			title={dirty
 				? 'Save your changes before sending'
-				: !subject.trim()
+				: !current.subject.trim()
 					? 'Subject is empty'
 					: missingInterviewUrl
 						? 'Template must include {{ interview_url }}'
-						: !templateHtml.trim()
+						: !current.templateHtml.trim()
 							? 'Template is empty'
-							: 'Send to participants'}
+							: sendLabel}
 		>
 			<i class="fa-solid fa-paper-plane"></i>
-			{sending ? 'Sending...' : 'Send to participants'}
+			{current.sending ? sendingLabel : sendLabel}
 		</button>
 	</div>
 </div>
