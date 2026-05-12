@@ -236,7 +236,7 @@
 		const url = window.URL.createObjectURL(res.data as Blob);
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = `email-bundle-${project_id}.zip`;
+		a.download = res.response.headers.get('x-filename') ?? '';
 		document.body.appendChild(a);
 		a.click();
 		window.URL.revokeObjectURL(url);
