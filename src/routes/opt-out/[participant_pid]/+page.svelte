@@ -85,13 +85,6 @@
 
 					<div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
 						<button
-							type="button"
-							onclick={() => window.close()}
-							class="inline-flex justify-center rounded-md px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:text-dark focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
-						>
-							Cancel
-						</button>
-						<button
 							type="submit"
 							disabled={isLoading}
 							class="inline-flex justify-center rounded-md bg-red-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-700 focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
