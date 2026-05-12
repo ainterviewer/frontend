@@ -875,6 +875,16 @@ export type ExportMessagesRequest = {
 };
 
 /**
+ * ExportParticipantsRequest
+ */
+export type ExportParticipantsRequest = {
+    /**
+     * Participant Ids
+     */
+    participant_ids?: Array<string> | null;
+};
+
+/**
  * ExternalParam
  *
  * Definition of a single external URL query parameter.
@@ -4521,7 +4531,7 @@ export type UpdateParticipantResponses = {
 export type UpdateParticipantResponse = UpdateParticipantResponses[keyof UpdateParticipantResponses];
 
 export type ExportParticipantsData = {
-    body?: never;
+    body: ExportParticipantsRequest;
     path: {
         /**
          * Project Id

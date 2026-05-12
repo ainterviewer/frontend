@@ -89,6 +89,7 @@
 	async function exportParticipants() {
 		const { data, error: exportError } = await Participants.exportParticipants({
 			path: { project_id },
+			body: { participant_ids: Array.from(selected) },
 			parseAs: 'blob'
 		});
 		if (exportError) {

@@ -647,14 +647,18 @@ export class Participants {
      * Export Participants
      */
     public static exportParticipants<ThrowOnError extends boolean = false>(options: Options<ExportParticipantsData, ThrowOnError>) {
-        return (options.client ?? client).get<ExportParticipantsResponses, ExportParticipantsErrors, ThrowOnError>({
+        return (options.client ?? client).post<ExportParticipantsResponses, ExportParticipantsErrors, ThrowOnError>({
             security: [{
                     in: 'cookie',
                     name: 'access_token',
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/participants/export',
-            ...options
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
         });
     }
     
