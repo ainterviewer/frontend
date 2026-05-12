@@ -86,7 +86,7 @@
 					<div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
 						<button
 							type="button"
-							onclick={() => history.back()}
+							onclick={() => window.close()}
 							class="inline-flex justify-center rounded-md px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:text-dark focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
 						>
 							Cancel
