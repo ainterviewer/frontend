@@ -17,7 +17,7 @@
 
 		const trimmedReason = reason.trim();
 		const { error: apiError } = await Participants.optOut({
-			path: { participant_pid: participantPid },
+			path: { opt_out_token: participantPid },
 			body: trimmedReason ? trimmedReason : null
 		});
 
