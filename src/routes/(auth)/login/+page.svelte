@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { Auth } from '$lib/api';
 	import RequestAccessModal from '$lib/components/RequestAccessModal.svelte';
 
 	let showPassword = $state(false);
-	let showModal = $state(false);
+	let showModal = $state(page.url.searchParams.has('request'));
 	let errorMessage = $state('');
 	let isLoading = $state(false);
 
