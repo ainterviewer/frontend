@@ -2,6 +2,7 @@ import { Projects } from '$lib/api';
 import type {
 	QuestionOutput as ApiQuestion,
 	ExternalParam,
+	GeneratedQuestions,
 	InterviewGuideOutput,
 	QuestionSectionQuestionOutput as QuestionSectionOutput
 } from '$lib/api/types.gen';
@@ -10,6 +11,21 @@ import type { GuideQuestion, GuideSection } from './types';
 
 export function generateId() {
 	return crypto.randomUUID();
+}
+
+// Normalize the AI-generated-questions config into the object shape used by the
+// editor. Legacy guides may store it as a plain number (the question count) or
+// leave it undefined.
+export function normalizeGeneratedQuestions(value: unknown): GeneratedQuestions {
+	if (typeof value === 'number') {
+		return { n: value, max_probes_n: null, max_probes_time: null };
+	}
+	const v = (value ?? {}) as GeneratedQuestions;
+	return {
+		n: v.n ?? 0,
+		max_probes_n: v.max_probes_n ?? null,
+		max_probes_time: v.max_probes_time ?? null
+	};
 }
 
 export function mapToLocal(data: InterviewGuideOutput): {
@@ -24,7 +40,8 @@ export function mapToLocal(data: InterviewGuideOutput): {
 		sections.push({
 			...section,
 			id: sId,
-			questions: [] // Not used in localSections state directly for rendering questions
+			questions: [], // Not used in localSections state directly for rendering questions
+			ai_generated_questions: normalizeGeneratedQuestions(section.ai_generated_questions)
 		});
 
 		questions[sId] = (section.questions || []).map((q) => ({

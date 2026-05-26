@@ -973,6 +973,24 @@ export type FilteredMessagesRequest = {
 };
 
 /**
+ * GeneratedQuestions
+ */
+export type GeneratedQuestions = {
+    /**
+     * N
+     */
+    n?: number;
+    /**
+     * Max Probes N
+     */
+    max_probes_n?: number | null;
+    /**
+     * Max Probes Time
+     */
+    max_probes_time?: number | null;
+};
+
+/**
  * GitHashes
  */
 export type GitHashes = {
@@ -1777,6 +1795,16 @@ export type MonitoringStats = {
 };
 
 /**
+ * NewsletterRequest
+ */
+export type NewsletterRequest = {
+    /**
+     * Email
+     */
+    email: string;
+};
+
+/**
  * NumberItem
  */
 export type NumberItem = {
@@ -2398,6 +2426,14 @@ export type QuestionGenerationRequest = {
      * Section Idx
      */
     section_idx: number;
+    /**
+     * Max Probes N
+     */
+    max_probes_n?: number | null;
+    /**
+     * Max Probes Time
+     */
+    max_probes_time?: number | null;
 };
 
 export type QuestionIndex = [
@@ -2435,10 +2471,7 @@ export type QuestionSectionQuestionInput = {
      * Should the section be included in shuffling?
      */
     shuffle?: boolean;
-    /**
-     * Ai Generated Questions
-     */
-    ai_generated_questions?: number;
+    ai_generated_questions?: GeneratedQuestions;
 };
 
 /**
@@ -2461,10 +2494,7 @@ export type QuestionSectionQuestionOutput = {
      * Should the section be included in shuffling?
      */
     shuffle?: boolean;
-    /**
-     * Ai Generated Questions
-     */
-    ai_generated_questions?: number;
+    ai_generated_questions?: GeneratedQuestions;
 };
 
 /**
@@ -7485,6 +7515,52 @@ export type GetLanguagesResponses = {
 };
 
 export type GetLanguagesResponse = GetLanguagesResponses[keyof GetLanguagesResponses];
+
+export type NewsletterUnsubscribeData = {
+    body: NewsletterRequest;
+    path?: never;
+    query?: never;
+    url: '/api/newsletter';
+};
+
+export type NewsletterUnsubscribeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NewsletterUnsubscribeError = NewsletterUnsubscribeErrors[keyof NewsletterUnsubscribeErrors];
+
+export type NewsletterUnsubscribeResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type NewsletterSubscribeData = {
+    body: NewsletterRequest;
+    path?: never;
+    query?: never;
+    url: '/api/newsletter';
+};
+
+export type NewsletterSubscribeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NewsletterSubscribeError = NewsletterSubscribeErrors[keyof NewsletterSubscribeErrors];
+
+export type NewsletterSubscribeResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type HealthData = {
     body?: never;

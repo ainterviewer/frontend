@@ -22,7 +22,13 @@
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
-	import { generateId, mapFromLocal, mapToLocal, saveGuide } from './utils';
+	import {
+		generateId,
+		mapFromLocal,
+		mapToLocal,
+		normalizeGeneratedQuestions,
+		saveGuide
+	} from './utils';
 
 	let {
 		guide: initialGuide,
@@ -70,7 +76,8 @@
 			id: newId,
 			description: '',
 			questions: [],
-			shuffle: false
+			shuffle: false,
+			ai_generated_questions: { n: 0, max_probes_n: null, max_probes_time: null }
 		});
 		mapped.questions[newId] = [];
 	}
@@ -151,7 +158,8 @@
 				id: newId,
 				description: section.description,
 				questions: [],
-				shuffle: section.shuffle ?? false
+				shuffle: section.shuffle ?? false,
+				ai_generated_questions: normalizeGeneratedQuestions(section.ai_generated_questions)
 			};
 
 			guideStore.localSections.push(newSection);
@@ -245,7 +253,8 @@
 			id: newId,
 			description: '',
 			questions: [],
-			shuffle: false
+			shuffle: false,
+			ai_generated_questions: { n: 0, max_probes_n: null, max_probes_time: null }
 		});
 		guideStore.localQuestions[newId] = [];
 	}

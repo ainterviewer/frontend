@@ -163,19 +163,55 @@
 		</div>
 	</div>
 
-	<div class="mt-4 flex items-center gap-3 pl-4">
-		<label class="text-sm font-medium text-gray-700" for="ai-generated-questions-{section.id}">
-			AI Generated Questions
-		</label>
-		<input
-			id="ai-generated-questions-{section.id}"
-			type="number"
-			min="0"
-			class="w-20 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
-			bind:value={section.ai_generated_questions}
-		/>
-		<HoverInfo
-			text="Specifies the number of questions that will be automatically generated once the predefined ones are finished."
-		/>
+	<div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 pl-4">
+		<div class="flex items-center gap-3">
+			<label class="text-sm font-medium text-gray-700" for="ai-generated-questions-{section.id}">
+				AI Generated Questions
+			</label>
+			<input
+				id="ai-generated-questions-{section.id}"
+				type="number"
+				min="0"
+				class="w-20 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+				bind:value={section.ai_generated_questions.n}
+			/>
+			<HoverInfo
+				text="Specifies the number of questions that will be automatically generated once the predefined ones are finished."
+			/>
+		</div>
+		{#if section.ai_generated_questions.n > 0}
+			<div class="flex items-center gap-3">
+				<label
+					class="text-sm font-medium text-gray-700"
+					for="ai-generated-max-probes-n-{section.id}"
+				>
+					Max Probes
+				</label>
+				<input
+					id="ai-generated-max-probes-n-{section.id}"
+					type="number"
+					min="0"
+					class="w-20 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+					bind:value={section.ai_generated_questions.max_probes_n}
+				/>
+				<HoverInfo text="Maximum number of follow-up probes for each AI-generated question." />
+			</div>
+			<div class="flex items-center gap-3">
+				<label
+					class="text-sm font-medium text-gray-700"
+					for="ai-generated-max-probes-time-{section.id}"
+				>
+					Time probing (seconds)
+				</label>
+				<input
+					id="ai-generated-max-probes-time-{section.id}"
+					type="number"
+					min="0"
+					class="w-20 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+					bind:value={section.ai_generated_questions.max_probes_time}
+				/>
+				<HoverInfo text="Maximum time (in seconds) spent probing each AI-generated question." />
+			</div>
+		{/if}
 	</div>
 </div>

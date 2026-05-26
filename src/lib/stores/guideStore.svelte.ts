@@ -1,4 +1,5 @@
 import type {
+	GeneratedQuestions,
 	InterviewGuideOutput,
 	QuestionOutput,
 	QuestionSectionQuestionOutput
@@ -6,9 +7,14 @@ import type {
 import { createContext } from 'svelte';
 
 export type GuideQuestion = QuestionOutput & { id: string };
-export type GuideSection = Omit<QuestionSectionQuestionOutput, 'questions'> & {
+export type GuideSection = Omit<
+	QuestionSectionQuestionOutput,
+	'questions' | 'ai_generated_questions'
+> & {
 	id: string;
 	questions: GuideQuestion[];
+	// Always normalized to an object in the editor (see normalizeGeneratedQuestions).
+	ai_generated_questions: GeneratedQuestions;
 };
 
 export type GuideStore = ReturnType<typeof createGuideStore>;
