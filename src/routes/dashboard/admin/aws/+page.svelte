@@ -15,6 +15,18 @@
 	let minInstances = $derived(data.settings.min_instances);
 	let startCheck = $derived(data.settings.start);
 	let stopCheck = $derived(data.settings.stop);
+
+	// HTML time inputs use "HH:MM"; the backend uses "HH:MM:SS".
+	const toInputTime = (t: string) => t.slice(0, 5);
+	const toBackendTime = (t: string) => (t.length === 5 ? `${t}:00` : t);
+
+	let downtimeEnabled = $derived(data.settings.ec2_downtime !== null);
+	let downtimeStart = $derived(
+		data.settings.ec2_downtime ? toInputTime(data.settings.ec2_downtime[0]) : '00:00'
+	);
+	let downtimeEnd = $derived(
+		data.settings.ec2_downtime ? toInputTime(data.settings.ec2_downtime[1]) : '00:00'
+	);
 	let allSelected = $derived(instances.length > 0 && selectedInstances.size === instances.length);
 
 	function formatTimeEstimate(seconds: number) {
@@ -55,7 +67,14 @@
 	async function updateSettings() {
 		const { error: updateError } = await Admin.proxyToEc2Manager4({
 			path: { full_path: 'settings' },
-			body: { min_instances: minInstances, start: startCheck, stop: stopCheck }
+			body: {
+				min_instances: minInstances,
+				start: startCheck,
+				stop: stopCheck,
+				ec2_downtime: downtimeEnabled
+					? [toBackendTime(downtimeStart), toBackendTime(downtimeEnd)]
+					: null
+			}
 		});
 		if (updateError) {
 			toast.error('Failed to update settings');
@@ -414,6 +433,49 @@
 					bind:checked={stopCheck}
 					class="h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 shadow-sm transition duration-150 ease-out hover:border-indigo-400 hover:bg-indigo-50 hover:shadow checked:hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-1"
 				/>
+			</div>
+		</div>
+		<div>
+			<div class="flex items-start gap-3">
+				<div class="flex-[1.2] py-1">
+					<label for="downtime-check" class="mb-1 block text-sm leading-6 font-medium text-gray-900"
+						>EC2 Downtime</label
+					>
+					<input
+						id="downtime-check"
+						type="checkbox"
+						bind:checked={downtimeEnabled}
+						class="mt-1.5 h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 shadow-sm transition duration-150 ease-out hover:border-indigo-400 hover:bg-indigo-50 hover:shadow checked:hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-1"
+					/>
+				</div>
+				{#if downtimeEnabled}
+					<div class="flex-1">
+						<label
+							for="downtime-start"
+							class="mb-1 block text-right text-sm leading-6 font-medium text-gray-900">From</label
+						>
+						<input
+							id="downtime-start"
+							type="time"
+							lang="en-GB"
+							bind:value={downtimeStart}
+							class="ml-auto block rounded-md border-0 py-1 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
+						/>
+					</div>
+					<div class="flex-1">
+						<label
+							for="downtime-end"
+							class="mb-1 block text-right text-sm leading-6 font-medium text-gray-900">To</label
+						>
+						<input
+							id="downtime-end"
+							type="time"
+							lang="en-GB"
+							bind:value={downtimeEnd}
+							class="ml-auto block rounded-md border-0 py-1 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
+						/>
+					</div>
+				{/if}
 			</div>
 		</div>
 		<button
