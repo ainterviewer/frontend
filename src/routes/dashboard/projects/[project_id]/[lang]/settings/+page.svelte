@@ -6,14 +6,10 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let project = $state(data.project);
+	let project = $derived(data.project);
 
-	$effect(() => {
-		project = data.project;
-	});
-
-	let title = $state(project.title);
-	let defaultLanguage = $state(project.config.default_language);
+	let title = $derived(project.title);
+	let defaultLanguage = $derived(project.config.default_language);
 	let savingTitle = $state(false);
 	let savingLanguage = $state(false);
 	let changingStatus = $state(false);
@@ -34,11 +30,11 @@
 		savingTitle = false;
 	}
 
-	async function saveLanguage() {
+	async function saveDefaultLanguage() {
 		savingLanguage = true;
 		const { error } = await Projects.createInterviewConfig({
 			path: { project_id: project.id },
-			body: { default_language: defaultLanguage }
+			body: { ...project.config, default_language: defaultLanguage }
 		});
 		if (error) {
 			console.error(error);
@@ -113,7 +109,7 @@
 					<select
 						id="default-language"
 						bind:value={defaultLanguage}
-						onchange={saveLanguage}
+						onchange={saveDefaultLanguage}
 						disabled={savingLanguage}
 						class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
 					>
