@@ -11,6 +11,7 @@
 
 	let projectId = $derived(page.params.project_id);
 	let lang = $derived(page.params.lang);
+	let hasDemoFeatures = $derived(!!page.data.user?.with_demo_features);
 
 	// Advanced settings state
 	let advancedOpen = $state(false);
@@ -21,10 +22,18 @@
 		{ value: 'standard', label: 'Standard' },
 		{ value: 'dice_master_to_one_probe', label: 'DICE: master to one probe' },
 		{ value: 'dice_ensemble_to_master_probe', label: 'DICE: ensemble to master probe' },
-		{ value: 'dice_master_to_ensemble_to_one_probe', label: 'DICE: master to ensemble to one probe' }
+		{
+			value: 'dice_master_to_ensemble_to_one_probe',
+			label: 'DICE: master to ensemble to one probe'
+		}
 	];
 
-	const configToggles: { key: 'with_consent' | 'with_welcome' | 'with_audio'; label: string; description: string }[] = [
+	const configToggles: {
+		key: 'with_consent' | 'with_welcome' | 'with_audio';
+		label: string;
+		description: string;
+		is_demo_feature?: boolean;
+	}[] = [
 		{
 			key: 'with_consent',
 			label: 'Ask for consent',
@@ -39,7 +48,8 @@
 			key: 'with_audio',
 			label: 'Allow audio answers',
 			description:
-				'Let respondents record answers as audio messages, which are transcribed before being sent to the AInterviewer.'
+				'Let respondents record answers as audio messages, which are transcribed before being sent to the AInterviewer.',
+			is_demo_feature: true
 		}
 	];
 
@@ -270,39 +280,43 @@
 
 				<div class="space-y-3">
 					{#each configToggles as toggle (toggle.key)}
-						<label class="flex items-start gap-3">
-							<input
-								type="checkbox"
-								bind:checked={config[toggle.key]}
-								class="mt-0.5 rounded border-gray-300 text-primary focus:ring-blue-500"
-							/>
-							<span class="min-w-0">
-								<span class="block text-sm font-medium text-gray-700">{toggle.label}</span>
-								<span class="block text-xs text-gray-500">{toggle.description}</span>
-							</span>
-						</label>
+						{#if toggle.is_demo_feature && !hasDemoFeatures}{:else}
+							<label class="flex items-start gap-3">
+								<input
+									type="checkbox"
+									bind:checked={config[toggle.key]}
+									class="mt-0.5 rounded border-gray-300 text-primary focus:ring-blue-500"
+								/>
+								<span class="min-w-0">
+									<span class="block text-sm font-medium text-gray-700">{toggle.label}</span>
+									<span class="block text-xs text-gray-500">{toggle.description}</span>
+								</span>
+							</label>
+						{/if}
 					{/each}
 				</div>
 
-				<div class="mt-5">
-					<span class="block text-sm font-medium text-gray-700">Probing strategy</span>
-					<p class="mb-2 text-xs text-gray-500">
-						Select which probing strategies are available for this interview.
-					</p>
-					<div class="space-y-2">
-						{#each probingOptions as option (option.value)}
-							<label class="flex items-center gap-2 text-sm text-gray-700">
-								<input
-									type="checkbox"
-									checked={config.probing_strategy?.includes(option.value) ?? false}
-									onchange={(e) => toggleProbing(option.value, e.currentTarget.checked)}
-									class="rounded border-gray-300 text-primary focus:ring-blue-500"
-								/>
-								{option.label}
-							</label>
-						{/each}
+				{#if hasDemoFeatures}
+					<div class="mt-5">
+						<span class="block text-sm font-medium text-gray-700">Probing strategy</span>
+						<p class="mb-2 text-xs text-gray-500">
+							Select which probing strategies are available for this interview.
+						</p>
+						<div class="space-y-2">
+							{#each probingOptions as option (option.value)}
+								<label class="flex items-center gap-2 text-sm text-gray-700">
+									<input
+										type="checkbox"
+										checked={config.probing_strategy?.includes(option.value) ?? false}
+										onchange={(e) => toggleProbing(option.value, e.currentTarget.checked)}
+										class="rounded border-gray-300 text-primary focus:ring-blue-500"
+									/>
+									{option.label}
+								</label>
+							{/each}
+						</div>
 					</div>
-				</div>
+				{/if}
 
 				<div class="mt-4 flex justify-end">
 					<button
