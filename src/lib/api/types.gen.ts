@@ -609,13 +609,6 @@ export type Consent = {
 };
 
 /**
- * ContextType
- *
- * Context to be upsed for probing
- */
-export type ContextType = 'section' | 'question';
-
-/**
  * CreateInterviewRequest
  */
 export type CreateInterviewRequest = {
@@ -2023,6 +2016,11 @@ export type ProbingAgentConfig = {
 };
 
 /**
+ * ProbingContext
+ */
+export type ProbingContext = 'section' | 'question';
+
+/**
  * ProbingStrategy
  */
 export type ProbingStrategy = 'standard' | 'dice_master_to_one_probe' | 'dice_ensemble_to_master_probe' | 'dice_master_to_ensemble_to_one_probe';
@@ -2280,7 +2278,7 @@ export type QuestionInput = {
      */
     user_image?: boolean;
     conditions?: ConditionsInput | null;
-    probing_context?: ContextType | null;
+    probing_context?: ProbingContext | null;
     /**
      * The index of the question in the interview, ie (section, question) = (2, 2) (for 3rd section 3rd question). Used to keep track of questions initial position after shuffling.
      */
@@ -2387,7 +2385,7 @@ export type QuestionOutput = {
      */
     user_image?: boolean;
     conditions?: ConditionsOutput | null;
-    probing_context?: ContextType | null;
+    probing_context?: ProbingContext | null;
     /**
      * The index of the question in the interview, ie (section, question) = (2, 2) (for 3rd section 3rd question). Used to keep track of questions initial position after shuffling.
      */
