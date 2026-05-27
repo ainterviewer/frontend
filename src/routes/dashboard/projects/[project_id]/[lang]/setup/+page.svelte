@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { ExternalParam } from '$lib/api/types.gen';
+	import type { ExternalParam, InterviewConfig, ProbingStrategy } from '$lib/api/types.gen';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -15,6 +15,65 @@
 	// Advanced settings state
 	let advancedOpen = $state(false);
 	let savingParams = $state(false);
+
+	// Interview config state
+	const probingOptions: { value: ProbingStrategy; label: string }[] = [
+		{ value: 'standard', label: 'Standard' },
+		{ value: 'dice_master_to_one_probe', label: 'DICE: master to one probe' },
+		{ value: 'dice_ensemble_to_master_probe', label: 'DICE: ensemble to master probe' },
+		{ value: 'dice_master_to_ensemble_to_one_probe', label: 'DICE: master to ensemble to one probe' }
+	];
+
+	const configToggles: { key: 'with_consent' | 'with_welcome' | 'with_audio'; label: string; description: string }[] = [
+		{
+			key: 'with_consent',
+			label: 'Ask for consent',
+			description: 'Show the consent message users must accept before starting the interview.'
+		},
+		{
+			key: 'with_welcome',
+			label: 'Show welcome message',
+			description: 'Display the welcome message before the interview begins.'
+		},
+		{
+			key: 'with_audio',
+			label: 'Allow audio answers',
+			description:
+				'Let respondents record answers as audio messages, which are transcribed before being sent to the AInterviewer.'
+		}
+	];
+
+	let savingConfig = $state(false);
+	let config: InterviewConfig = $state({});
+
+	$effect(() => {
+		config = structuredClone(data.config ?? {});
+	});
+
+	function toggleProbing(strategy: ProbingStrategy, checked: boolean) {
+		const current = config.probing_strategy ?? [];
+		if (checked) {
+			if (!current.includes(strategy)) config.probing_strategy = [...current, strategy];
+		} else {
+			config.probing_strategy = current.filter((s) => s !== strategy);
+		}
+	}
+
+	async function saveConfig() {
+		savingConfig = true;
+		const { error } = await Projects.createInterviewConfig({
+			path: { project_id: projectId },
+			body: config
+		});
+		if (error) {
+			console.error(error);
+			toast.error('Failed to save interview configuration');
+		} else {
+			await invalidateAll();
+			toast.success('Interview configuration saved');
+		}
+		savingConfig = false;
+	}
 
 	function createEmptyParam(): ExternalParam {
 		return {
@@ -203,7 +262,63 @@
 
 		{#if advancedOpen}
 			<div class="border-t border-gray-200 p-6">
-				<p class="mb-4 text-sm text-gray-600">
+				<!-- Interview configuration -->
+				<h3 class="text-sm font-semibold text-gray-900">Interview configuration</h3>
+				<p class="mt-1 mb-4 text-sm text-gray-600">
+					Control which features are enabled for this interview.
+				</p>
+
+				<div class="space-y-3">
+					{#each configToggles as toggle (toggle.key)}
+						<label class="flex items-start gap-3">
+							<input
+								type="checkbox"
+								bind:checked={config[toggle.key]}
+								class="mt-0.5 rounded border-gray-300 text-primary focus:ring-blue-500"
+							/>
+							<span class="min-w-0">
+								<span class="block text-sm font-medium text-gray-700">{toggle.label}</span>
+								<span class="block text-xs text-gray-500">{toggle.description}</span>
+							</span>
+						</label>
+					{/each}
+				</div>
+
+				<div class="mt-5">
+					<span class="block text-sm font-medium text-gray-700">Probing strategy</span>
+					<p class="mb-2 text-xs text-gray-500">
+						Select which probing strategies are available for this interview.
+					</p>
+					<div class="space-y-2">
+						{#each probingOptions as option (option.value)}
+							<label class="flex items-center gap-2 text-sm text-gray-700">
+								<input
+									type="checkbox"
+									checked={config.probing_strategy?.includes(option.value) ?? false}
+									onchange={(e) => toggleProbing(option.value, e.currentTarget.checked)}
+									class="rounded border-gray-300 text-primary focus:ring-blue-500"
+								/>
+								{option.label}
+							</label>
+						{/each}
+					</div>
+				</div>
+
+				<div class="mt-4 flex justify-end">
+					<button
+						type="button"
+						onclick={saveConfig}
+						disabled={savingConfig}
+						class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-dark disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						Save configuration
+					</button>
+				</div>
+
+				<hr class="my-6 border-gray-200" />
+
+				<h3 class="text-sm font-semibold text-gray-900">External parameters</h3>
+				<p class="mt-1 mb-4 text-sm text-gray-600">
 					Define URL query parameters that will be validated and captured when respondents access
 					the interview link.
 				</p>

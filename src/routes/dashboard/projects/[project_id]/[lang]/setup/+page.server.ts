@@ -5,7 +5,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const { project_id, lang } = params;
 	const { cookieHeader } = locals;
 
-	const [consentRes, welcomeRes, guideRes] = await Promise.all([
+	const [consentRes, welcomeRes, guideRes, configRes] = await Promise.all([
 		Projects.getConsent({
 			path: { project_id, language: lang },
 			headers: { cookie: cookieHeader || '' }
@@ -17,12 +17,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		Projects.getGuide({
 			path: { project_id, lang },
 			headers: { Cookie: cookieHeader || '' }
+		}),
+		Projects.getInterviewConfig({
+			path: { project_id },
+			headers: { cookie: cookieHeader || '' }
 		})
 	]);
 
 	return {
 		consent: consentRes.error ? null : (consentRes.data ?? null),
 		welcome: welcomeRes.error ? null : (welcomeRes.data ?? null),
-		guide: guideRes.error ? null : (guideRes.data ?? null)
+		guide: guideRes.error ? null : (guideRes.data ?? null),
+		config: configRes.error ? null : (configRes.data ?? null)
 	};
 };
