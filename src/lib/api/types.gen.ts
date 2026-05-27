@@ -1101,6 +1101,10 @@ export type InterviewConfig = {
      * Allows the respondents to record their answers as audio messages which are transcribed before send as answers to the AInterviewer.
      */
     with_audio?: boolean;
+    /**
+     * Probing Strategy
+     */
+    probing_strategy?: Array<ProbingStrategy>;
 };
 
 /**
@@ -2017,6 +2021,11 @@ export type ProbingAgentConfig = {
      */
     few_shot_examples?: Array<string> | null;
 };
+
+/**
+ * ProbingStrategy
+ */
+export type ProbingStrategy = 'standard' | 'dice_master_to_one_probe' | 'dice_ensemble_to_master_probe' | 'dice_master_to_ensemble_to_one_probe';
 
 /**
  * ProjectFolderCreate
