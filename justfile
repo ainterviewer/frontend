@@ -1,3 +1,5 @@
+set dotenv-load := true
+
 export PATH := "./node_modules/.bin:" + env('PATH')
 export OPENAPI_PATH := "../backend/openapi.json"
 export SDK_OUTPUT_PATH := "src/lib/api"
@@ -37,3 +39,25 @@ publish:
     git commit -m "Release v${VERSION}"
     git tag -a "v${VERSION}" -m "Release v${VERSION}"
     git push --follow-tags
+
+# Manually build & push the Docker image to ghcr.io (fallback for when CI is down).
+# Requires GHCR_TOKEN (write:packages) and GITHUB_USERNAME (env or .env).
+[group("Frontend")]
+publish-docker:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${GHCR_TOKEN:?set GHCR_TOKEN (PAT with write:packages)}"
+    : "${GITHUB_USERNAME:?set GITHUB_USERNAME}"
+
+    IMAGE="ghcr.io/ainterviewer/frontend"
+    VERSION="$(jq -r .version package.json)"
+
+    TAGS=(-t "${IMAGE}:v${VERSION}")
+    case "${VERSION}" in
+      *rc*) ;;                          # pre-release: skip 'latest'
+      *) TAGS+=(-t "${IMAGE}:latest") ;;
+    esac
+
+    echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GITHUB_USERNAME}" --password-stdin
+
+    docker buildx build "${TAGS[@]}" --push .
