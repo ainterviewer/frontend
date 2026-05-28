@@ -23,38 +23,62 @@ export function parseInterviewIdFromToken(token: string): string | null {
 	}
 }
 
-/**
- * Get interview ID from the interview_token cookie
- */
-export function getInterviewIdFromCookie(): string | null {
-	const token = getTokenFromCookie();
-	if (!token) return null;
-	return parseInterviewIdFromToken(token);
+// The credential is the httponly `interview_token` cookie, which the browser
+// sends automatically on the WebSocket handshake. JavaScript cannot (and must
+// not) read it. We persist only the interview/project identifiers needed to
+// decide whether to resume, with an expiry mirroring the token's lifetime
+// (APP jwt_interview_token_expiration, 3 days) so a stale entry doesn't outlive
+// the cookie.
+const SESSION_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+
+function sessionKey(projectId: string): string {
+	return `interview_session:${projectId}`;
 }
 
-/**
- * Get project ID from the interview_token cookie
- */
-export function getProjectIdFromCookie(): string | null {
-	const token = getTokenFromCookie();
-	if (!token) return null;
+interface StoredSession {
+	interview_id: string;
+	project_id: string;
+	expires_at: number;
+}
+
+export function saveInterviewSession(projectId: string, interviewId: string): void {
+	if (!browser) return;
 	try {
-		const payload = token.split('.')[1];
-		const decoded: InterviewToken = JSON.parse(atob(payload));
-		return decoded.project_id;
+		const session: StoredSession = {
+			interview_id: interviewId,
+			project_id: projectId,
+			expires_at: Date.now() + SESSION_TTL_MS
+		};
+		localStorage.setItem(sessionKey(projectId), JSON.stringify(session));
 	} catch (e) {
-		console.error('Failed to parse project ID from token', e);
+		console.error('Failed to persist interview session', e);
+	}
+}
+
+export function getStoredInterviewId(projectId: string): string | null {
+	if (!browser) return null;
+	try {
+		const raw = localStorage.getItem(sessionKey(projectId));
+		if (!raw) return null;
+		const session: StoredSession = JSON.parse(raw);
+		if (session.project_id !== projectId || session.expires_at <= Date.now()) {
+			localStorage.removeItem(sessionKey(projectId));
+			return null;
+		}
+		return session.interview_id;
+	} catch (e) {
+		console.error('Failed to read interview session', e);
 		return null;
 	}
 }
 
-function getTokenFromCookie(): string | null {
-	if (!browser) return null;
-	const cookie = document.cookie
-		.split(';')
-		.find((item) => item.trim().startsWith('interview_token='));
-	if (!cookie) return null;
-	return cookie.split('=')[1] || null;
+export function clearInterviewSession(projectId: string): void {
+	if (!browser) return;
+	try {
+		localStorage.removeItem(sessionKey(projectId));
+	} catch (e) {
+		console.error('Failed to clear interview session', e);
+	}
 }
 
 export type CreateInterviewResult =
@@ -619,6 +643,7 @@ export class ChatClient {
 					if (exitError) {
 						console.error('Error during exit', exitError);
 					}
+					clearInterviewSession(this.project_id);
 					window.location.reload();
 					return;
 				}
@@ -630,6 +655,7 @@ export class ChatClient {
 					if (exitError) {
 						console.error('Error during exit', exitError);
 					}
+					clearInterviewSession(this.project_id);
 					// NOTE:
 					// Type received to have styling applied, consider styling special
 					// tokens for system as well

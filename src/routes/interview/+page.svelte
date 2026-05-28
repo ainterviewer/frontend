@@ -7,9 +7,9 @@
 	import {
 		ChatClient,
 		createInterview,
-		getInterviewIdFromCookie,
-		getProjectIdFromCookie,
-		parseInterviewIdFromToken
+		getStoredInterviewId,
+		parseInterviewIdFromToken,
+		saveInterviewSession
 	} from './chat.svelte';
 
 	interface PageData {
@@ -76,14 +76,9 @@
 			return;
 		}
 
-		const existingProjectId = getProjectIdFromCookie();
-		const existingInterviewId = getInterviewIdFromCookie();
+		const existingInterviewId = getStoredInterviewId(projectId);
 
-		if (
-			existingInterviewId &&
-			existingProjectId === projectId &&
-			!(interviewType === 'manual_test')
-		) {
+		if (existingInterviewId && !(interviewType === 'manual_test')) {
 			initializeChat(existingInterviewId);
 		} else if (availableLanguages.length > 1) {
 			showLanguagePicker = true;
@@ -110,6 +105,7 @@
 			const parsedId = parseInterviewIdFromToken(result.token);
 			if (parsedId) {
 				interviewId = parsedId;
+				saveInterviewSession(projectId, parsedId);
 				return parsedId;
 			} else {
 				console.error('Failed to parse interview ID from token');

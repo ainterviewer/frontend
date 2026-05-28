@@ -2,7 +2,7 @@
 	import { Auth, type InterviewConfig, type InterviewType } from '$lib/api';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import { tick } from 'svelte';
-	import type { ChatClient } from '../../../routes/interview/chat.svelte';
+	import { clearInterviewSession, type ChatClient } from '../../../routes/interview/chat.svelte';
 	import AudioRecordingOverlay from './AudioRecordingOverlay.svelte';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
@@ -128,6 +128,8 @@
 			console.error('Failed to exit interview:', error);
 			return;
 		}
+
+		clearInterviewSession(chat.project_id);
 
 		if (interviewType === 'manual_test' && window.opener) {
 			window.close();
