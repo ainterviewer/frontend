@@ -183,7 +183,7 @@
 		if (action === 'view') {
 			const lang = page.params.lang || 'en';
 			window
-				.open(`/dashboard/projects/${project_id}/${lang}/tests/results/${id}`, '_blank')
+				.open(`/dashboard/projects/${project_id}/${lang}/tests/results/${id}`, '_self')
 				?.focus();
 		} else if (action === 'download') {
 			downloadFile([id], 'csv');
