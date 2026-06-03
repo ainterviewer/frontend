@@ -2,18 +2,15 @@
 	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type {
-		AgentConfigsInput,
-		AgentConfigsOutput,
-		PromptsUpdateRequest
-	} from '$lib/api/types.gen';
+	import type { PromptsUpdateRequest, AgentConfigs } from '$lib/api/types.gen';
+
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	let saving = $state(false);
-	let agents = $state<AgentConfigsOutput>(untrack(() => data.agents));
+	let agents = $state<AgentConfigs>(untrack(() => data.agents));
 	let prompts = $state<Record<string, any>>(untrack(() => data.prompts as Record<string, any>));
 	let models = $state<string[]>(untrack(() => data.models));
 	let promptsContainer: HTMLDivElement;
@@ -38,7 +35,7 @@
 		const [agentsRes, promptsRes] = await Promise.all([
 			Projects.createInterviewAgents({
 				path: { project_id: projectId, lang: lang },
-				body: agents as AgentConfigsInput
+				body: agents as AgentConfigs
 			}),
 			Projects.createPrompts({
 				path: { project_id: projectId, lang: lang },
@@ -89,6 +86,7 @@
 	}
 
 	function setAllModels(model: string) {
+		if (model === '') return;
 		for (const key of Object.keys(agents) as (keyof typeof agents)[]) {
 			if (agents[key]) {
 				agents[key]!.model = model;
@@ -131,7 +129,9 @@
 					id="all-models"
 					onchange={(e) => setAllModels((e.currentTarget as HTMLSelectElement).value)}
 					class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+					value=""
 				>
+					<option value="">---</option>
 					{#each models as model}
 						<option value={model}>{model}</option>
 					{/each}
