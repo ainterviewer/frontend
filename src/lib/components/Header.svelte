@@ -44,7 +44,7 @@
 				>
 					<Wave className="h-5 w-5 transition-transform group-hover:scale-120" animate={logoAnimate}
 					></Wave>
-					<b>AInterviewer</b>
+					<span class="font-[noto_sans] font-semibold">AInterviewer</span>
 				</a>
 			</div>
 			<div id="project-id-picker">
