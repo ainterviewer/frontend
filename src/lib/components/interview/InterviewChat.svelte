@@ -293,6 +293,7 @@
 			<button
 				type="button"
 				class="flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
+				class:hidden={!interviewConfig.with_audio}
 				onclick={toggleAutoPlay}
 				title={autoPlayAudio ? 'Stop reading questions aloud' : 'Read questions aloud'}
 			>
