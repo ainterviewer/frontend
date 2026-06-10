@@ -3,9 +3,9 @@
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import { tick } from 'svelte';
 	import { clearInterviewSession, type ChatClient } from '../../../routes/interview/chat.svelte';
-	import AudioRecordingOverlay from './AudioRecordingOverlay.svelte';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
+	import SpeechInput from './SpeechInput.svelte';
 	import { TtsPlayer } from './tts';
 	import TypingIndicator from './TypingIndicator.svelte';
 
@@ -40,7 +40,7 @@
 
 	let showHelp = $state(false);
 	let showExit = $state(false);
-	let showRecordingOverlay = $state(false);
+	let isRecording = $state(false);
 
 	let imageUpload = $state(false);
 
@@ -188,7 +188,8 @@
 	// Stop playback when the chat unmounts.
 	$effect(() => () => tts.stop());
 
-	function handleAudioSend(transcript: string) {
+	function handleTranscript(transcript: string) {
+		isRecording = false;
 		const text = transcript.trim();
 		if (text) {
 			chat.sendMessage(text);
@@ -319,25 +320,29 @@
 			</button>
 		</div>
 
-		<!-- Textarea -->
-		<textarea
-			bind:this={textarea}
-			bind:value={messageInput}
-			disabled={!chat.inputEnabled}
-			rows="1"
-			placeholder="Message"
-			{lang}
-			class="
-				w-full resize-none rounded border border-gray-300 p-2.5 shadow-sm transition-all
-				focus:border-primary focus:ring-1 focus:ring-primary/50 focus:outline-none
-				disabled:text-[#666666]
-				sm:max-h-32 sm:w-[40%] sm:max-w-125 sm:min-w-85
-			"
-			class:min-h-25={!surveyActive}
-			class:min-h-10={surveyActive}
-			oninput={handleInput}
-			onkeydown={handleKeydown}
-		></textarea>
+		<!-- Textarea / speech indicator while recording -->
+		{#if isRecording}
+			<SpeechInput onTranscript={handleTranscript} onCancel={() => (isRecording = false)} />
+		{:else}
+			<textarea
+				bind:this={textarea}
+				bind:value={messageInput}
+				disabled={!chat.inputEnabled}
+				rows="1"
+				placeholder="Message"
+				{lang}
+				class="
+					w-full resize-none rounded border border-gray-300 p-2.5 shadow-sm transition-all
+					focus:border-primary focus:ring-1 focus:ring-primary/50 focus:outline-none
+					disabled:text-[#666666]
+					sm:max-h-32 sm:w-[40%] sm:max-w-125 sm:min-w-85
+				"
+				class:min-h-25={!surveyActive}
+				class:min-h-10={surveyActive}
+				oninput={handleInput}
+				onkeydown={handleKeydown}
+			></textarea>
+		{/if}
 
 		<!-- Send Button -->
 		<div class="ml-1.5 flex flex-col">
@@ -365,8 +370,8 @@
           bg-no-repeat p-0 text-gray-600 transition-colors hover:bg-gray-200
 					disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-white
           "
-					onclick={() => (showRecordingOverlay = true)}
-					disabled={!chat.inputEnabled}
+					onclick={() => (isRecording = true)}
+					disabled={!chat.inputEnabled || isRecording}
 					title="Record audio"
 				>
 					<i class="fas fa-microphone-lines text-lg"></i>
@@ -399,5 +404,3 @@
 		</button>
 	</div>
 </Modal>
-
-<AudioRecordingOverlay bind:show={showRecordingOverlay} {lang} onSend={handleAudioSend} />

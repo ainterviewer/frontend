@@ -2,11 +2,8 @@
 	import Wave from '$lib/components/Wave.svelte';
 	import { createPcmCapture, TranscriptionClient, type PcmCapture } from './transcription';
 
-	let {
-		show = $bindable(false),
-		lang,
-		onSend
-	}: { show: boolean; lang: string; onSend: (transcript: string) => void } = $props();
+	let { show = $bindable(false), onSend }: { show: boolean; onSend: (transcript: string) => void } =
+		$props();
 
 	// Recording state. Audio is streamed live to the backend, which persists
 	// the recording (source of truth) and relays it for transcription.
@@ -41,7 +38,7 @@
 			if (!capture) {
 				// Without the socket nothing is recorded anywhere — don't
 				// pretend to record if it fails.
-				client = new TranscriptionClient(lang);
+				client = new TranscriptionClient();
 				client.onUnavailable = () => (transcriptionUnavailable = true);
 				await client.connect();
 
