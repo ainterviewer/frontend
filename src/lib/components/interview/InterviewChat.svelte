@@ -6,6 +6,7 @@
 	import AudioRecordingOverlay from './AudioRecordingOverlay.svelte';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
+	import { TtsPlayer } from './tts';
 	import TypingIndicator from './TypingIndicator.svelte';
 
 	interface Props {
@@ -138,6 +139,55 @@
 		}
 	}
 
+	// Auto-play: when enabled, each new interviewer message is read aloud,
+	// queued one at a time in arrival order.
+	let autoPlayAudio = $state(false);
+	const tts = new TtsPlayer();
+	// Messages up to this index have already been considered for speech.
+	let spokenUpTo = 0;
+
+	function speakableMessage(msg: (typeof chat.messages)[number] | undefined) {
+		return (
+			msg &&
+			msg.type === 'received' &&
+			msg.message_id != null &&
+			msg.text &&
+			!msg.text.startsWith('<|')
+		);
+	}
+
+	function toggleAutoPlay() {
+		autoPlayAudio = !autoPlayAudio;
+		if (!autoPlayAudio) {
+			tts.stop();
+			return;
+		}
+		// Only speak messages arriving from here on, plus the current question.
+		// Reading it right away also runs inside the click gesture, which
+		// unlocks audio playback under browser autoplay policies.
+		spokenUpTo = chat.messages.length;
+		for (let i = chat.messages.length - 1; i >= 0; i--) {
+			const msg = chat.messages[i];
+			if (speakableMessage(msg)) {
+				tts.enqueue(Number(msg.message_id));
+				return;
+			}
+		}
+	}
+
+	$effect(() => {
+		const count = chat.messages.length;
+		if (!autoPlayAudio) return;
+		for (let i = spokenUpTo; i < count; i++) {
+			const msg = chat.messages[i];
+			if (speakableMessage(msg)) tts.enqueue(Number(msg.message_id));
+		}
+		spokenUpTo = count;
+	});
+
+	// Stop playback when the chat unmounts.
+	$effect(() => () => tts.stop());
+
 	function handleAudioSend(transcript: string) {
 		const text = transcript.trim();
 		if (text) {
@@ -239,6 +289,18 @@
 					onchange={handleFileSelect}
 				/>
 			{/if}
+			<button
+				type="button"
+				class="flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
+				onclick={toggleAutoPlay}
+				title={autoPlayAudio ? 'Stop reading questions aloud' : 'Read questions aloud'}
+			>
+				{#if autoPlayAudio}
+					<i class="fa-solid fa-volume-high text-lg text-primary"></i>
+				{:else}
+					<i class="fa-solid fa-volume-xmark text-lg text-gray-600"></i>
+				{/if}
+			</button>
 			<button
 				type="button"
 				class="flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"

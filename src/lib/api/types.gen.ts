@@ -2623,6 +2623,16 @@ export type SliderItem = {
 };
 
 /**
+ * SpeechRequest
+ */
+export type SpeechRequest = {
+    /**
+     * Message Id
+     */
+    message_id: number;
+};
+
+/**
  * SynthesizeRequest
  */
 export type SynthesizeRequest = {
@@ -6949,6 +6959,31 @@ export type UploadAudioResponses = {
 };
 
 export type UploadAudioResponse = UploadAudioResponses[keyof UploadAudioResponses];
+
+export type SynthesizeSpeechData = {
+    body: SpeechRequest;
+    path?: never;
+    query?: never;
+    url: '/api/speech';
+};
+
+export type SynthesizeSpeechErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SynthesizeSpeechError = SynthesizeSpeechErrors[keyof SynthesizeSpeechErrors];
+
+export type SynthesizeSpeechResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type SynthesizeSpeechResponse = SynthesizeSpeechResponses[keyof SynthesizeSpeechResponses];
 
 export type LoginData2 = {
     body: LoginData;
