@@ -1,93 +1,75 @@
 <script lang="ts">
 	import Wave from '$lib/components/Wave.svelte';
+	import { createPcmCapture, TranscriptionClient, type PcmCapture } from './transcription';
 
 	let {
 		show = $bindable(false),
+		lang,
 		onSend
-	}: { show: boolean; onSend: (blob: Blob, duration: number) => void } = $props();
+	}: { show: boolean; lang: string; onSend: (transcript: string) => void } = $props();
 
-	// Audio recording state
+	// Recording state. Audio is streamed live to the backend, which persists
+	// the recording (source of truth) and relays it for transcription.
 	let isRecording = $state(false);
 	let isPaused = $state(false);
+	let isTranscribing = $state(false);
+	let hasRecordedContent = $state(false);
+	let connectionFailed = $state(false);
+	let transcriptionUnavailable = $state(false);
 	let audioAmplitude = $state(0);
-	let mediaRecorder: MediaRecorder | null = $state(null);
-	let audioContext: AudioContext | null = null;
-	let analyser: AnalyserNode | null = null;
+
+	let client: TranscriptionClient | null = null;
+	let capture: PcmCapture | null = null;
 	let audioStream: MediaStream | null = null;
 	let animationFrameId: number | null = null;
-	let recordedChunks: Blob[] = [];
-	let hasRecordedContent = $state(false);
-	let recordingStartTime: number | null = null;
-	let totalRecordingDuration = $state(0);
 
 	// Reset state when overlay opens
 	$effect(() => {
 		if (show) {
 			isRecording = false;
 			isPaused = false;
+			isTranscribing = false;
 			hasRecordedContent = false;
-			recordedChunks = [];
+			connectionFailed = false;
+			transcriptionUnavailable = false;
 			audioAmplitude = 0;
-			recordingStartTime = null;
-			totalRecordingDuration = 0;
 		}
 	});
 
 	async function startRecording() {
 		try {
-			if (!audioStream) {
+			if (!capture) {
+				// Without the socket nothing is recorded anywhere — don't
+				// pretend to record if it fails.
+				client = new TranscriptionClient(lang);
+				client.onUnavailable = () => (transcriptionUnavailable = true);
+				await client.connect();
+
 				audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-				// Set up audio analysis for amplitude
-				audioContext = new AudioContext();
-				const source = audioContext.createMediaStreamSource(audioStream);
-				analyser = audioContext.createAnalyser();
-				analyser.fftSize = 256;
-				analyser.smoothingTimeConstant = 0.8;
-				source.connect(analyser);
-
-				// Set up media recorder
-				mediaRecorder = new MediaRecorder(audioStream);
-
-				mediaRecorder.ondataavailable = (e) => {
-					if (e.data.size > 0) {
-						recordedChunks.push(e.data);
-						hasRecordedContent = true;
-					}
-				};
+				capture = await createPcmCapture(audioStream, (chunk) => {
+					client?.sendAudio(chunk);
+					hasRecordedContent = true;
+				});
 			}
 
-			if (mediaRecorder && mediaRecorder.state === 'inactive') {
-				mediaRecorder.start(100); // Collect data every 100ms for pause support
-			} else if (mediaRecorder && mediaRecorder.state === 'paused') {
-				mediaRecorder.resume();
-			}
-
+			capture.setActive(true);
 			isRecording = true;
 			isPaused = false;
-			recordingStartTime = Date.now();
 
-			// Start amplitude analysis loop
 			analyzeAmplitude();
 		} catch (err) {
 			console.error('Failed to start recording:', err);
+			connectionFailed = true;
+			cleanupRecording();
 		}
 	}
 
 	function pauseRecording() {
-		if (mediaRecorder && mediaRecorder.state === 'recording') {
-			mediaRecorder.pause();
-		}
+		capture?.setActive(false);
 
 		if (animationFrameId) {
 			cancelAnimationFrame(animationFrameId);
 			animationFrameId = null;
-		}
-
-		// Accumulate recording duration
-		if (recordingStartTime) {
-			totalRecordingDuration += Date.now() - recordingStartTime;
-			recordingStartTime = null;
 		}
 
 		isRecording = false;
@@ -96,10 +78,10 @@
 	}
 
 	function analyzeAmplitude() {
-		if (!analyser || !isRecording) return;
+		if (!capture || !isRecording) return;
 
-		const dataArray = new Uint8Array(analyser.frequencyBinCount);
-		analyser.getByteFrequencyData(dataArray);
+		const dataArray = new Uint8Array(capture.analyser.frequencyBinCount);
+		capture.analyser.getByteFrequencyData(dataArray);
 
 		// Calculate average amplitude and normalize to 0-2 range for Wave component
 		const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
@@ -114,22 +96,18 @@
 			animationFrameId = null;
 		}
 
-		if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-			mediaRecorder.stop();
-		}
+		capture?.setActive(false);
+		capture?.stop();
+		capture = null;
 
 		if (audioStream) {
 			audioStream.getTracks().forEach((track) => track.stop());
 			audioStream = null;
 		}
 
-		if (audioContext) {
-			audioContext.close();
-			audioContext = null;
-		}
+		client?.close();
+		client = null;
 
-		analyser = null;
-		mediaRecorder = null;
 		isRecording = false;
 		isPaused = false;
 		audioAmplitude = 0;
@@ -137,34 +115,25 @@
 
 	function deleteRecording() {
 		cleanupRecording();
-		recordedChunks = [];
 		hasRecordedContent = false;
 		show = false;
 	}
 
-	function sendRecording() {
-		// Calculate final duration (add any current recording segment)
-		let finalDuration = totalRecordingDuration;
-		if (recordingStartTime) {
-			finalDuration += Date.now() - recordingStartTime;
-		}
+	async function sendRecording() {
+		if (!client || isTranscribing) return;
 
-		if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-			mediaRecorder.stop();
-		}
+		if (isRecording) pauseRecording();
+		isTranscribing = true;
 
-		// Wait a moment for final data to be collected
-		setTimeout(() => {
-			if (recordedChunks.length > 0) {
-				const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
-				onSend(audioBlob, finalDuration);
-			}
-
+		try {
+			const transcript = await client.finish();
+			onSend(transcript);
+		} finally {
 			cleanupRecording();
-			recordedChunks = [];
+			isTranscribing = false;
 			hasRecordedContent = false;
 			show = false;
-		}, 100);
+		}
 	}
 
 	function toggleRecordPause() {
@@ -194,7 +163,14 @@
 			</div>
 
 			<div class="flex flex-col items-center gap-2">
-				{#if isRecording}
+				{#if isTranscribing}
+					<div class="flex items-center gap-2">
+						<div
+							class="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"
+						></div>
+						<span class="text-lg font-medium text-white">Transcribing...</span>
+					</div>
+				{:else if isRecording}
 					<div class="flex items-center gap-2">
 						<span class="h-3 w-3 animate-pulse rounded-full bg-red-500"></span>
 						<span class="text-lg font-medium text-white">Recording...</span>
@@ -208,8 +184,21 @@
 					<span class="text-lg font-medium text-white">Ready to record</span>
 				{/if}
 				<p class="text-sm text-gray-300">
-					{isRecording ? 'Speak clearly into your microphone' : 'Press record to start'}
+					{#if isTranscribing}
+						Converting your recording to text
+					{:else if isRecording}
+						Speak clearly into your microphone
+					{:else}
+						Press record to start
+					{/if}
 				</p>
+				{#if connectionFailed}
+					<p class="text-sm text-red-400">Could not connect to the recording service.</p>
+				{:else if transcriptionUnavailable}
+					<p class="text-sm text-yellow-400">
+						Transcription is currently unavailable. Your audio is still recorded.
+					</p>
+				{/if}
 			</div>
 
 			<!-- Control Buttons -->
@@ -219,6 +208,7 @@
 					type="button"
 					class="flex h-14 w-14 items-center justify-center rounded-full bg-gray-700 text-white shadow-lg transition-all hover:bg-gray-600 active:scale-95"
 					onclick={deleteRecording}
+					disabled={isTranscribing}
 					title="Delete recording"
 				>
 					<i class="fas fa-trash text-xl"></i>
@@ -233,6 +223,7 @@
 					class:bg-yellow-600={isRecording}
 					class:hover:bg-yellow-700={isRecording}
 					onclick={toggleRecordPause}
+					disabled={isTranscribing || connectionFailed}
 					title={isRecording ? 'Pause recording' : 'Start recording'}
 				>
 					{#if isRecording}
@@ -252,7 +243,7 @@
 					class:opacity-50={!hasRecordedContent}
 					class:cursor-not-allowed={!hasRecordedContent}
 					onclick={sendRecording}
-					disabled={!hasRecordedContent}
+					disabled={!hasRecordedContent || isTranscribing}
 					title="Send recording"
 				>
 					<i class="fas fa-paper-plane text-xl text-white"></i>

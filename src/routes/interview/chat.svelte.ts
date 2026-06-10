@@ -429,44 +429,6 @@ export class ChatClient {
 		}
 	}
 
-	async sendAudio(text: string, audioBlob: Blob, duration: number) {
-		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
-		if (!this.project_id || !this.interview_id) {
-			console.error('Missing session info');
-			return;
-		}
-
-		// Add audio message to UI optimistically
-		this.messages.push({
-			type: 'sent',
-			audio: { blob: audioBlob, duration },
-			message_id: Date.now()
-		});
-
-		if (this.role === 'respondent') {
-			this.inputEnabled = false;
-		}
-
-		try {
-			const { data, error, response } = await Interviews.uploadAudio({
-				body: {
-					project_id: this.project_id,
-					interview_id: this.interview_id,
-					file: audioBlob
-				}
-			});
-
-			if (error || !response.ok) throw new Error('Upload failed');
-
-			const msg: ReceivedData = { type: 'audio', content: text, filename: data.filename };
-			this.ws.send(JSON.stringify(msg));
-		} catch (error) {
-			console.error('Error uploading audio', error);
-			this.messages.push({ type: 'system', text: 'Error uploading audio.' });
-			this.inputEnabled = true;
-		}
-	}
-
 	sendSkip() {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 		this.ws.send(JSON.stringify({ type: 'message', content: '<|skipquestion|>' }));

@@ -138,8 +138,17 @@
 		}
 	}
 
-	function handleAudioSend(blob: Blob, duration: number) {
-		chat.sendAudio('', blob, duration);
+	function handleAudioSend(transcript: string) {
+		const text = transcript.trim();
+		if (text) {
+			chat.sendMessage(text);
+		} else {
+			// The recording is persisted server-side, but no transcript came back.
+			chat.messages.push({
+				type: 'system',
+				text: 'Your recording could not be transcribed. Please try again or type your answer.'
+			});
+		}
 	}
 </script>
 
@@ -286,7 +295,7 @@
 			<div class="mt-1 hidden text-center text-xs text-gray-400 sm:block">
 				<span class="font-sans">ctrl</span>+<span class="font-bold">↵</span>
 			</div>
-			<div class="flex" class:hidden={interviewConfig.with_audio}>
+			<div class="flex" class:hidden={!interviewConfig.with_audio}>
 				<button
 					type="button"
 					class="
@@ -329,4 +338,4 @@
 	</div>
 </Modal>
 
-<AudioRecordingOverlay bind:show={showRecordingOverlay} onSend={handleAudioSend} />
+<AudioRecordingOverlay bind:show={showRecordingOverlay} {lang} onSend={handleAudioSend} />
