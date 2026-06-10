@@ -1,6 +1,8 @@
 // Client for the backend /ws/transcribe endpoint. Streams raw PCM16 mic audio
 // (which the backend persists as the source-of-truth recording and forwards to
 // the OpenAI realtime transcription service) and accumulates transcript text.
+// The backend configures the upstream session (model, language, prompt); this
+// client only streams audio, commits the buffer, and collects transcripts.
 // The final transcript is submitted through the normal interview message path.
 
 // Backend + OpenAI expect 24 kHz mono PCM16.
@@ -24,7 +26,6 @@ export class TranscriptionClient {
 	private segments: string[] = [];
 	private pendingFinish: { resolve: (transcript: string) => void; timer: number } | null = null;
 	private bytesSinceCommit = 0;
-	private lang: string;
 
 	/** True when the backend reported the transcription service is down.
 	 *  Audio sent over the socket is still recorded server-side. */
@@ -32,10 +33,6 @@ export class TranscriptionClient {
 
 	/** Invoked when the backend reports the transcription service is down. */
 	onUnavailable: (() => void) | null = null;
-
-	constructor(lang: string) {
-		this.lang = lang;
-	}
 
 	/** Open the socket. Resolves once connected; rejects if the connection
 	 *  fails (in which case nothing is being recorded). */
@@ -115,30 +112,6 @@ export class TranscriptionClient {
 		}
 
 		switch (data.type) {
-			case 'ready':
-				// Backend connected upstream and handed us the model; configure
-				// the transcription session (we own the handshake).
-				this.ws?.send(
-					JSON.stringify({
-						type: 'session.update',
-						session: {
-							type: 'transcription',
-							audio: {
-								input: {
-									format: { type: 'audio/pcm', rate: SAMPLE_RATE },
-									transcription: {
-										model: data.model,
-										// OpenAI expects lowercase ISO-639-1 ('da', not 'DA' or 'da-DK')
-										language: this.lang.slice(0, 2).toLowerCase()
-									},
-									turn_detection: null
-								}
-							}
-						}
-					})
-				);
-				break;
-
 			case 'conversation.item.input_audio_transcription.completed':
 				if (data.transcript) this.segments.push(data.transcript);
 				this.resolveFinish();
