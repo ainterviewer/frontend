@@ -12,11 +12,6 @@ export const mainSidebarItems: SidebarItem[] = [
 		href: '/dashboard/experiments',
 		icon: 'fa-solid fa-vials'
 	},
-	{
-		label: 'Settings',
-		href: '/dashboard/settings',
-		icon: 'fas fa-cog'
-	},
 	{ type: 'separator', requiresAdmin: true },
 	{
 		label: 'Admin',

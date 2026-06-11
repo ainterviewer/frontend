@@ -723,6 +723,16 @@ export type DatetimeItem = {
 };
 
 /**
+ * DeleteAccountRequest
+ */
+export type DeleteAccountRequest = {
+    /**
+     * Password
+     */
+    password: string;
+};
+
+/**
  * DeleteInterviewRequest
  */
 export type DeleteInterviewRequest = {
@@ -1747,7 +1757,7 @@ export type MessageRole = 'system' | 'assistant' | 'user';
 /**
  * MessageType
  */
-export type MessageType = 'text' | 'image' | 'custom_token' | 'survey_item';
+export type MessageType = 'text' | 'image' | 'audio' | 'custom_token' | 'survey_item';
 
 /**
  * MonitoringStats
@@ -2850,6 +2860,20 @@ export type UpdateBackgroundInfoRequest = {
 };
 
 /**
+ * UpdateEmailRequest
+ */
+export type UpdateEmailRequest = {
+    /**
+     * Password
+     */
+    password: string;
+    /**
+     * New Email
+     */
+    new_email: string;
+};
+
+/**
  * UpdateFixedAnswersRequest
  */
 export type UpdateFixedAnswersRequest = {
@@ -2867,6 +2891,20 @@ export type UpdateFixedPersonasRequest = {
      * Fixed Personas
      */
     fixed_personas: Array<string>;
+};
+
+/**
+ * UpdatePasswordRequest
+ */
+export type UpdatePasswordRequest = {
+    /**
+     * Current Password
+     */
+    current_password: string;
+    /**
+     * New Password
+     */
+    new_password: string;
 };
 
 /**
@@ -2915,13 +2953,13 @@ export type UserAdmin = {
      */
     with_demo_features: boolean;
     /**
-     * Access Request Message
-     */
-    access_request_message?: string | null;
-    /**
      * Organization
      */
     organization?: string | null;
+    /**
+     * Access Request Message
+     */
+    access_request_message?: string | null;
     /**
      * Admin Note
      */
@@ -3044,6 +3082,30 @@ export type UserPublic = {
      * With Demo Features
      */
     with_demo_features: boolean;
+    /**
+     * Organization
+     */
+    organization?: string | null;
+};
+
+/**
+ * UserSelfUpdate
+ *
+ * Profile fields a user may change on their own account.
+ */
+export type UserSelfUpdate = {
+    /**
+     * First Name
+     */
+    first_name?: string | Unset;
+    /**
+     * Last Name
+     */
+    last_name?: string | Unset | null;
+    /**
+     * Organization
+     */
+    organization?: string | Unset | null;
 };
 
 /**
@@ -7053,6 +7115,29 @@ export type LoginResponses = {
     200: unknown;
 };
 
+export type DeleteMeData = {
+    body: DeleteAccountRequest;
+    path?: never;
+    query?: never;
+    url: '/api/me';
+};
+
+export type DeleteMeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteMeError = DeleteMeErrors[keyof DeleteMeErrors];
+
+export type DeleteMeResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type MeData = {
     body?: never;
     path?: never;
@@ -7068,6 +7153,79 @@ export type MeResponses = {
 };
 
 export type MeResponse = MeResponses[keyof MeResponses];
+
+export type UpdateMeData = {
+    body: UserSelfUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/me';
+};
+
+export type UpdateMeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateMeError = UpdateMeErrors[keyof UpdateMeErrors];
+
+export type UpdateMeResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserPublic;
+};
+
+export type UpdateMeResponse = UpdateMeResponses[keyof UpdateMeResponses];
+
+export type UpdateMyEmailData = {
+    body: UpdateEmailRequest;
+    path?: never;
+    query?: never;
+    url: '/api/me/email';
+};
+
+export type UpdateMyEmailErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateMyEmailError = UpdateMyEmailErrors[keyof UpdateMyEmailErrors];
+
+export type UpdateMyEmailResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserPublic;
+};
+
+export type UpdateMyEmailResponse = UpdateMyEmailResponses[keyof UpdateMyEmailResponses];
+
+export type UpdateMyPasswordData = {
+    body: UpdatePasswordRequest;
+    path?: never;
+    query?: never;
+    url: '/api/me/password';
+};
+
+export type UpdateMyPasswordErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateMyPasswordError = UpdateMyPasswordErrors[keyof UpdateMyPasswordErrors];
+
+export type UpdateMyPasswordResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type RegisterData = {
     body: UserCreateRequest;
