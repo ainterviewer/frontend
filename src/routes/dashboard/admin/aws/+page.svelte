@@ -47,7 +47,7 @@
 		error = '';
 
 		try {
-			const response = await Admin.proxyToEc2Manager2({
+			const response = await Admin.proxyToEc2ManagerGet({
 				path: { full_path: 'instances/status' }
 			});
 
@@ -65,7 +65,7 @@
 	}
 
 	async function updateSettings() {
-		const { error: updateError } = await Admin.proxyToEc2Manager4({
+		const { error: updateError } = await Admin.proxyToEc2ManagerPost({
 			path: { full_path: 'settings' },
 			body: {
 				min_instances: minInstances,
@@ -105,7 +105,7 @@
 		if (selectedInstances.size === 0) return;
 
 		if (selectedInstances.size === instances.length) {
-			const { error: startError } = await Admin.proxyToEc2Manager4({
+			const { error: startError } = await Admin.proxyToEc2ManagerPost({
 				path: { full_path: 'instances/start-all' }
 			});
 			if (startError) {
@@ -116,7 +116,7 @@
 		} else {
 			const results = await Promise.all(
 				Array.from(selectedInstances).map((id) =>
-					Admin.proxyToEc2Manager4({
+					Admin.proxyToEc2ManagerPost({
 						path: { full_path: `instances/start/${id}` }
 					})
 				)
@@ -137,7 +137,7 @@
 		if (selectedInstances.size === 0) return;
 
 		if (selectedInstances.size === instances.length) {
-			const { error: stopError } = await Admin.proxyToEc2Manager4({
+			const { error: stopError } = await Admin.proxyToEc2ManagerPost({
 				path: { full_path: 'instances/stop-all' }
 			});
 			if (stopError) {
@@ -148,7 +148,7 @@
 		} else {
 			const results = await Promise.all(
 				Array.from(selectedInstances).map((id) =>
-					Admin.proxyToEc2Manager4({
+					Admin.proxyToEc2ManagerPost({
 						path: { full_path: `instances/stop/${id}` }
 					})
 				)

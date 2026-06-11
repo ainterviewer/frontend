@@ -374,7 +374,7 @@ export class ChatClient {
 		formData.append('interview_id', this.interview_id); // This might be set later via 'data' message
 
 		try {
-			const { data, error, response } = await Interviews.uploadImage2({
+			const { data, error, response } = await Interviews.uploadInterviewImage({
 				body: {
 					project_id: this.project_id,
 					interview_id: this.interview_id!,

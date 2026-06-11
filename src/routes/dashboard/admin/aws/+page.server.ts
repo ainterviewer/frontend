@@ -5,7 +5,7 @@ import type { SettingsData } from './types';
 export const load: PageServerLoad = async ({ locals }) => {
 	const { cookieHeader } = locals;
 
-	const response = await Admin.proxyToEc2Manager2({
+	const response = await Admin.proxyToEc2ManagerGet({
 		path: { full_path: 'settings' },
 		headers: { cookie: cookieHeader }
 	});

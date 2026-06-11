@@ -375,6 +375,46 @@ export type BodyUploadAudio = {
 };
 
 /**
+ * Body_upload_image
+ */
+export type BodyUploadImage = {
+    /**
+     * Primer
+     */
+    primer: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Alt
+     */
+    alt: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
+ * Body_upload_interview_image
+ */
+export type BodyUploadInterviewImage = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
  * Body_upload_participant_email_attachments
  */
 export type BodyUploadParticipantEmailAttachments = {
@@ -3186,46 +3226,6 @@ export type Welcome = {
 export type Unset = 'UNSET';
 
 /**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage1 = {
-    /**
-     * Primer
-     */
-    primer: string;
-    /**
-     * Description
-     */
-    description: string;
-    /**
-     * Alt
-     */
-    alt: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
- * Body_upload_image
- */
-export type FastapiCompatV2BodyUploadImage2 = {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Interview Id
-     */
-    interview_id: string;
-    /**
-     * File
-     */
-    file: Blob | File;
-};
-
-/**
  * AuthToken
  */
 export type AuthToken = {
@@ -5764,7 +5764,7 @@ export type GenerateSectionQuestionResponses = {
 };
 
 export type UploadImageData = {
-    body: FastapiCompatV2BodyUploadImage1;
+    body: BodyUploadImage;
     path: {
         /**
          * Project Id
@@ -7017,30 +7017,30 @@ export type PutFeedbackResponses = {
 
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
-export type UploadImage2Data = {
-    body: FastapiCompatV2BodyUploadImage2;
+export type UploadInterviewImageData = {
+    body: BodyUploadInterviewImage;
     path?: never;
     query?: never;
     url: '/api/image';
 };
 
-export type UploadImage2Errors = {
+export type UploadInterviewImageErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type UploadImage2Error = UploadImage2Errors[keyof UploadImage2Errors];
+export type UploadInterviewImageError = UploadInterviewImageErrors[keyof UploadInterviewImageErrors];
 
-export type UploadImage2Responses = {
+export type UploadInterviewImageResponses = {
     /**
      * Successful Response
      */
     200: MediaUploadResponse;
 };
 
-export type UploadImage2Response = UploadImage2Responses[keyof UploadImage2Responses];
+export type UploadInterviewImageResponse = UploadInterviewImageResponses[keyof UploadInterviewImageResponses];
 
 export type UploadAudioData = {
     body: BodyUploadAudio;
@@ -7483,7 +7483,7 @@ export type DeleteInvitationsResponses = {
     200: unknown;
 };
 
-export type ProxyToEc2ManagerData = {
+export type ProxyToEc2ManagerDeleteData = {
     body?: never;
     path: {
         /**
@@ -7495,23 +7495,23 @@ export type ProxyToEc2ManagerData = {
     url: '/api/admin/aws/ec2/{full_path}';
 };
 
-export type ProxyToEc2ManagerErrors = {
+export type ProxyToEc2ManagerDeleteErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ProxyToEc2ManagerError = ProxyToEc2ManagerErrors[keyof ProxyToEc2ManagerErrors];
+export type ProxyToEc2ManagerDeleteError = ProxyToEc2ManagerDeleteErrors[keyof ProxyToEc2ManagerDeleteErrors];
 
-export type ProxyToEc2ManagerResponses = {
+export type ProxyToEc2ManagerDeleteResponses = {
     /**
      * Successful Response
      */
     200: unknown;
 };
 
-export type ProxyToEc2Manager2Data = {
+export type ProxyToEc2ManagerGetData = {
     body?: never;
     path: {
         /**
@@ -7523,23 +7523,23 @@ export type ProxyToEc2Manager2Data = {
     url: '/api/admin/aws/ec2/{full_path}';
 };
 
-export type ProxyToEc2Manager2Errors = {
+export type ProxyToEc2ManagerGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ProxyToEc2Manager2Error = ProxyToEc2Manager2Errors[keyof ProxyToEc2Manager2Errors];
+export type ProxyToEc2ManagerGetError = ProxyToEc2ManagerGetErrors[keyof ProxyToEc2ManagerGetErrors];
 
-export type ProxyToEc2Manager2Responses = {
+export type ProxyToEc2ManagerGetResponses = {
     /**
      * Successful Response
      */
     200: unknown;
 };
 
-export type ProxyToEc2Manager3Data = {
+export type ProxyToEc2ManagerPatchData = {
     body?: never;
     path: {
         /**
@@ -7551,23 +7551,23 @@ export type ProxyToEc2Manager3Data = {
     url: '/api/admin/aws/ec2/{full_path}';
 };
 
-export type ProxyToEc2Manager3Errors = {
+export type ProxyToEc2ManagerPatchErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ProxyToEc2Manager3Error = ProxyToEc2Manager3Errors[keyof ProxyToEc2Manager3Errors];
+export type ProxyToEc2ManagerPatchError = ProxyToEc2ManagerPatchErrors[keyof ProxyToEc2ManagerPatchErrors];
 
-export type ProxyToEc2Manager3Responses = {
+export type ProxyToEc2ManagerPatchResponses = {
     /**
      * Successful Response
      */
     200: unknown;
 };
 
-export type ProxyToEc2Manager4Data = {
+export type ProxyToEc2ManagerPostData = {
     body?: never;
     path: {
         /**
@@ -7579,23 +7579,23 @@ export type ProxyToEc2Manager4Data = {
     url: '/api/admin/aws/ec2/{full_path}';
 };
 
-export type ProxyToEc2Manager4Errors = {
+export type ProxyToEc2ManagerPostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ProxyToEc2Manager4Error = ProxyToEc2Manager4Errors[keyof ProxyToEc2Manager4Errors];
+export type ProxyToEc2ManagerPostError = ProxyToEc2ManagerPostErrors[keyof ProxyToEc2ManagerPostErrors];
 
-export type ProxyToEc2Manager4Responses = {
+export type ProxyToEc2ManagerPostResponses = {
     /**
      * Successful Response
      */
     200: unknown;
 };
 
-export type ProxyToEc2Manager5Data = {
+export type ProxyToEc2ManagerPutData = {
     body?: never;
     path: {
         /**
@@ -7607,16 +7607,16 @@ export type ProxyToEc2Manager5Data = {
     url: '/api/admin/aws/ec2/{full_path}';
 };
 
-export type ProxyToEc2Manager5Errors = {
+export type ProxyToEc2ManagerPutErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ProxyToEc2Manager5Error = ProxyToEc2Manager5Errors[keyof ProxyToEc2Manager5Errors];
+export type ProxyToEc2ManagerPutError = ProxyToEc2ManagerPutErrors[keyof ProxyToEc2ManagerPutErrors];
 
-export type ProxyToEc2Manager5Responses = {
+export type ProxyToEc2ManagerPutResponses = {
     /**
      * Successful Response
      */
