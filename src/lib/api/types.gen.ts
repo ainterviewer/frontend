@@ -1707,6 +1707,10 @@ export type MessagePublic = {
      * Attachment
      */
     attachment?: string | null;
+    /**
+     * Audio File
+     */
+    audio_file?: string | null;
     feedback?: Feedback | null;
     /**
      * Created At
@@ -6299,6 +6303,47 @@ export type GetInterviewMessagesResponses = {
 };
 
 export type GetInterviewMessagesResponse = GetInterviewMessagesResponses[keyof GetInterviewMessagesResponses];
+
+export type GetInterviewAudioData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id: string;
+        /**
+         * Filename
+         */
+        filename: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/interviews/{interview_id}/audio/{filename}';
+};
+
+export type GetInterviewAudioErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetInterviewAudioError = GetInterviewAudioErrors[keyof GetInterviewAudioErrors];
+
+export type GetInterviewAudioResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type ExportMessagesData = {
     body: ExportMessagesRequest;

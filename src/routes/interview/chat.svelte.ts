@@ -411,10 +411,13 @@ export class ChatClient {
 		this.isConnected = false;
 	}
 
-	sendMessage(text: string) {
+	sendMessage(text: string, audioFilename: string | null = null) {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 
-		const msg: ReceivedData = { type: 'message', content: text };
+		// A transcribed voice message references its server-side recording.
+		const msg: ReceivedData = audioFilename
+			? { type: 'audio', content: text, filename: audioFilename }
+			: { type: 'message', content: text };
 		this.ws.send(JSON.stringify(msg));
 
 		// Optimistically add to UI

@@ -31,6 +31,11 @@ export class TranscriptionClient {
 	 *  Audio sent over the socket is still recorded server-side. */
 	unavailable = false;
 
+	/** Filename of the server-side recording for this session, announced by
+	 *  the backend right after connecting. Sent along with the transcribed
+	 *  message so it can reference the original audio. */
+	recordingFilename: string | null = null;
+
 	/** Invoked when the backend reports the transcription service is down. */
 	onUnavailable: (() => void) | null = null;
 
@@ -112,6 +117,10 @@ export class TranscriptionClient {
 		}
 
 		switch (data.type) {
+			case 'recording':
+				this.recordingFilename = data.filename ?? null;
+				break;
+
 			case 'conversation.item.input_audio_transcription.completed':
 				if (data.transcript) this.segments.push(data.transcript);
 				this.resolveFinish();

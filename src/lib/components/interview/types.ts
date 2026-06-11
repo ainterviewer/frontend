@@ -12,6 +12,8 @@ export interface Message {
 	survey_item?: SurveyItemUnion | null;
 	image?: { data: string; alt?: string; primer?: string };
 	audio?: { blob: Blob; duration: number };
+	/** Server-side recording a transcribed voice message came from. */
+	audio_file?: string | null;
 	can_answer?: boolean;
 	user_image?: boolean;
 	question_label?: string;

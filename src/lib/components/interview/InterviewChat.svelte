@@ -188,11 +188,11 @@
 	// Stop playback when the chat unmounts.
 	$effect(() => () => tts.stop());
 
-	function handleTranscript(transcript: string) {
+	function handleTranscript(transcript: string, audioFilename: string | null) {
 		isRecording = false;
 		const text = transcript.trim();
 		if (text) {
-			chat.sendMessage(text);
+			chat.sendMessage(text, audioFilename);
 		} else {
 			// The recording is persisted server-side, but no transcript came back.
 			chat.messages.push({

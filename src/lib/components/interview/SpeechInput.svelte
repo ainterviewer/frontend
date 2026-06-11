@@ -5,7 +5,7 @@
 		onTranscript,
 		onCancel
 	}: {
-		onTranscript: (transcript: string) => void;
+		onTranscript: (transcript: string, audioFilename: string | null) => void;
 		onCancel: () => void;
 	} = $props();
 
@@ -80,7 +80,7 @@
 		isTranscribing = true;
 		try {
 			const transcript = await client.finish();
-			onTranscript(transcript);
+			onTranscript(transcript, client.recordingFilename);
 		} finally {
 			cleanup();
 		}

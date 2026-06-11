@@ -10,6 +10,7 @@
 	} from '$lib/api/types.gen';
 	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import AudioPlayer from '$lib/components/interview/AudioPlayer.svelte';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import { getContrastColor } from '$lib/utils/colors';
@@ -116,6 +117,7 @@
 				image: image,
 				can_answer: msg.can_answer,
 				user_image: false,
+				audio_file: msg.audio_file,
 				question_label,
 				section: msg.section,
 				options: undefined,
@@ -352,6 +354,19 @@
 											onSkip={() => {}}
 											onSurveyAnswer={() => {}}
 										/>
+
+										<!-- Original voice recording of a transcribed message -->
+										{#if msg.audio_file}
+											<div
+												class="mt-1 flex {msg.type === 'received'
+													? 'ml-2.5 sm:ml-[50px]'
+													: 'mr-2.5 justify-end sm:mr-[50px]'}"
+											>
+												<AudioPlayer
+													src="/api/projects/{data.project_id}/interviews/{data.interview_id}/audio/{msg.audio_file}"
+												/>
+											</div>
+										{/if}
 
 										<!-- Annotation Summary (shown below message) -->
 										{#if annotationSummary && (annotationSummary.tags.length > 0 || annotationSummary.scores.length > 0 || annotationSummary.hasComment)}
