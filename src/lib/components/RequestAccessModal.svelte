@@ -31,7 +31,7 @@
 			});
 
 			if (error) {
-				errorMessage = 'Invalid request';
+				errorMessage = error.details || 'Invalid request';
 				return;
 			}
 		} catch (e) {
@@ -155,12 +155,43 @@
 						</div>
 					</div>
 
+					{#if errorMessage}
+						<div class="rounded-md border border-red-300 bg-red-50 px-3 py-2" role="alert">
+							<p class="text-sm text-red-700">{errorMessage}</p>
+						</div>
+					{/if}
+
 					<div>
 						<button
 							type="submit"
-							class="flex w-full cursor-pointer justify-center rounded-md border border-transparent bg-primary px-4 py-3 text-sm font-medium text-light shadow-sm transition-colors hover:bg-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
+							disabled={isLoading}
+							class="flex w-full cursor-pointer justify-center rounded-md border border-transparent bg-primary px-4 py-3 text-sm font-medium text-light shadow-sm transition-colors hover:bg-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
 						>
-							Request Access
+							{#if isLoading}
+								<svg
+									class="mr-2 h-5 w-5 animate-spin"
+									fill="none"
+									viewBox="0 0 24 24"
+									aria-hidden="true"
+								>
+									<circle
+										class="opacity-25"
+										cx="12"
+										cy="12"
+										r="10"
+										stroke="currentColor"
+										stroke-width="4"
+									/>
+									<path
+										class="opacity-75"
+										fill="currentColor"
+										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+									/>
+								</svg>
+								Submitting...
+							{:else}
+								Request Access
+							{/if}
 						</button>
 					</div>
 				</form>
