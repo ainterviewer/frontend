@@ -49,48 +49,58 @@
 	// State
 	let saving = $state(false);
 	let exporting = $state(false);
-	// svelte-ignore state_referenced_locally
-	let guide = $state<InterviewGuideOutput>(
-		initialGuide ?? {
+	let guide = $state<InterviewGuideOutput>({
+		framing: '',
+		introduction: '',
+		question_sections: [],
+		outro: '',
+		timed_messages: []
+	});
+
+	function applyGuide(next: InterviewGuideOutput | null) {
+		guide = next ?? {
 			framing: '',
 			introduction: '',
 			question_sections: [],
 			outro: '',
 			timed_messages: []
+		};
+
+		// Ensure timed_messages is initialized
+		if (!guide.timed_messages) {
+			guide.timed_messages = [];
 		}
-	);
 
-	// Ensure timed_messages is initialized
-	if (!guide.timed_messages) {
-		guide.timed_messages = [];
+		if (guide.ai_generated_sections === undefined) {
+			guide.ai_generated_sections = 0;
+		}
+
+		const mapped = mapToLocal(guide);
+		if (mapped.sections.length === 0) {
+			const newId = generateId();
+			mapped.sections.push({
+				id: newId,
+				description: '',
+				questions: [],
+				shuffle: false,
+				ai_generated_questions: { n: 0, max_probes_n: null, max_probes_time: null }
+			});
+			mapped.questions[newId] = [];
+		}
+
+		// Initialize the shared store
+		guideStore.localSections = mapped.sections;
+		guideStore.localQuestions = mapped.questions;
+		guideStore.guide = guide;
+
+		// Normalize question_sections synchronously so the initial snapshot
+		// matches what the $effect will produce (mapToLocal → mapFromLocal
+		// round-trip adds defaults / strips ids, changing the JSON).
+		guide.question_sections = mapFromLocal(guideStore.localSections, guideStore.localQuestions);
 	}
 
-	if (guide.ai_generated_sections === undefined) {
-		guide.ai_generated_sections = 0;
-	}
-
-	let mapped = mapToLocal(guide);
-	if (mapped.sections.length === 0) {
-		const newId = generateId();
-		mapped.sections.push({
-			id: newId,
-			description: '',
-			questions: [],
-			shuffle: false,
-			ai_generated_questions: { n: 0, max_probes_n: null, max_probes_time: null }
-		});
-		mapped.questions[newId] = [];
-	}
-
-	// Initialize the shared store
-	guideStore.localSections = mapped.sections;
-	guideStore.localQuestions = mapped.questions;
-	guideStore.guide = guide;
-
-	// Normalize question_sections synchronously so the initial snapshot
-	// matches what the $effect will produce (mapToLocal → mapFromLocal
-	// round-trip adds defaults / strips ids, changing the JSON).
-	guide.question_sections = mapFromLocal(guideStore.localSections, guideStore.localQuestions);
+	// svelte-ignore state_referenced_locally
+	applyGuide(initialGuide);
 
 	$effect(() => {
 		guide.question_sections = mapFromLocal(guideStore.localSections, guideStore.localQuestions);
@@ -136,7 +146,11 @@
 			toast.error('Failed to generate guide');
 			return;
 		}
+		// Reload page data and replace the local editing state with the
+		// freshly generated guide (it is already persisted server-side).
 		await invalidateAll();
+		applyGuide(page.data.guide ?? null);
+		savedSnapshot = getSnapshot();
 	}
 
 	async function handleGenerateSection(prompt: string) {
