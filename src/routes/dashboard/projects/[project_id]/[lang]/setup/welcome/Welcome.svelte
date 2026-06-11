@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { Consent, LanguageDict } from '$lib/api/types.gen';
 	import { WelcomeModal } from '$lib/components/modals';
+	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import SetupActionBar from '../SetupActionBar.svelte';
 	import { downloadUnifiedSetupJson } from '../exportJson';
-	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
 	import { mapToLocal } from '../guide/utils';
 

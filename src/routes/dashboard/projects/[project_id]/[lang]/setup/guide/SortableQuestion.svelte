@@ -766,8 +766,8 @@
 																				/>
 																				<p class="mt-1 text-xs text-gray-500">
 																					<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>
-																					Matched via classification &mdash; describe the answer
-																					pattern to detect.
+																					Matched via classification &mdash; describe the answer pattern
+																					to detect.
 																				</p>
 																			{/if}
 																		</div>

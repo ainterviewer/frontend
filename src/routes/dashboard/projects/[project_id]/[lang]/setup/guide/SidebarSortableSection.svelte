@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
-	import { CollisionPriority } from '@dnd-kit/abstract';
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
+	import { CollisionPriority } from '@dnd-kit/abstract';
+	import { untrack } from 'svelte';
 	import SidebarSortableQuestion from './SidebarSortableQuestion.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 
@@ -56,12 +56,7 @@
 	<!-- Questions (always rendered so empty sections are valid drop targets) -->
 	<div class="ml-2 min-h-3 space-y-0.5 border-l border-gray-200 pl-3">
 		{#each questions as question, qIdx (question.id)}
-			<SidebarSortableQuestion
-				{question}
-				questionIndex={qIdx}
-				sectionId={section.id}
-				{activeId}
-			/>
+			<SidebarSortableQuestion {question} questionIndex={qIdx} sectionId={section.id} {activeId} />
 		{/each}
 	</div>
 </div>

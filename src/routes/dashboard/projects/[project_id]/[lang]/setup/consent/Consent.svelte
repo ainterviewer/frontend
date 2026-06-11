@@ -5,9 +5,9 @@
 	import type { LanguageDict, Welcome } from '$lib/api/types.gen';
 	import { ConsentModal } from '$lib/components/modals';
 	import { toast } from 'svelte-sonner';
+	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import SetupActionBar from '../SetupActionBar.svelte';
 	import { downloadUnifiedSetupJson } from '../exportJson';
-	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
 	import { mapToLocal } from '../guide/utils';
 

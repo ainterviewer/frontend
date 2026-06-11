@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { DragDropProvider, KeyboardSensor, PointerSensor } from '@dnd-kit-svelte/svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
+	import { DragDropProvider, KeyboardSensor, PointerSensor } from '@dnd-kit-svelte/svelte';
 	import SidebarSortableSection from './SidebarSortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 

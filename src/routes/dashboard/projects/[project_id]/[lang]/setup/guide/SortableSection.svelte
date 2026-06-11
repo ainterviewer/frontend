@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { CollisionPriority } from '@dnd-kit/abstract';
+	import { untrack } from 'svelte';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import { dragState } from './dragState.svelte';
-	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 
 	interface Props {
