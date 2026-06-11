@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Synthesize } from '$lib/api';
+	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { SynthesizeRequest } from '$lib/api/types.gen';
 	import type { PageData } from './$types';
@@ -15,11 +16,13 @@
 	let loading = $state(false);
 	let running = $state(false);
 
-	let nInterviews = $state(data.test.n_interviews ?? 1);
-	let delayBeforeAnswers = $state(data.test.delay_before_answers?.[0] ?? 0);
-	let delayBeforeAnswersRandom = $state(data.test.delay_before_answers?.[1] ?? 0);
-	let answeringModel = $state(data.test.answering_model ?? '');
-	let language = $state(data.test.language ?? page.params.lang);
+	// Form defaults seeded once from the loaded test; deliberately not reactive to prop updates.
+	const initialTest = untrack(() => data.test);
+	let nInterviews = $state(initialTest.n_interviews ?? 1);
+	let delayBeforeAnswers = $state(initialTest.delay_before_answers?.[0] ?? 0);
+	let delayBeforeAnswersRandom = $state(initialTest.delay_before_answers?.[1] ?? 0);
+	let answeringModel = $state(initialTest.answering_model ?? '');
+	let language = $state(initialTest.language ?? page.params.lang);
 
 	let refreshInterval: ReturnType<typeof setInterval>;
 
@@ -191,7 +194,7 @@
 						bind:value={answeringModel}
 						class="w-fit rounded border-gray-300 bg-white focus:border-primary focus:ring-primary"
 					>
-						{#each data.models as model}
+						{#each data.models as model (model)}
 							<option value={model}>{model}</option>
 						{/each}
 					</select>
@@ -207,7 +210,7 @@
 					bind:value={language}
 					class="w-64 rounded border-gray-300 bg-white focus:border-primary focus:ring-primary"
 				>
-					{#each data.languages as langOption}
+					{#each data.languages as langOption (langOption)}
 						<option value={langOption.code}>{langOption.name}</option>
 					{/each}
 				</select>

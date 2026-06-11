@@ -173,6 +173,7 @@
 		if (validStats.length === 0) return [];
 
 		// Create a map for quick lookup of existing data
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local to this computation, never escapes
 		const dataMap = new Map<string, number>();
 		for (const d of validStats) {
 			const key = `${d.main_question}-${d.sub_question ?? 0}`;
@@ -180,6 +181,7 @@
 		}
 
 		// Find the range of main questions and max sub_question per main question
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local to this computation, never escapes
 		const maxSubByMain = new Map<number, number>();
 		for (const d of validStats) {
 			const main = d.main_question!;
@@ -319,7 +321,7 @@
 			<!-- Legend -->
 			<div class="mt-4 flex flex-wrap justify-center gap-4">
 				{#if interviewsByStatus.length > 0}
-					{#each interviewsByStatus as item}
+					{#each interviewsByStatus as item (item.status)}
 						<div class="flex items-center gap-2">
 							<div
 								class="h-3 w-3 rounded-full"
@@ -332,7 +334,7 @@
 					{/each}
 				{:else}
 					<!-- Skeleton legend -->
-					{#each ['active', 'completed', 'inactive'] as status}
+					{#each ['active', 'completed', 'inactive'] as status (status)}
 						<div class="flex items-center gap-2">
 							<div
 								class="h-3 w-3 rounded-full"

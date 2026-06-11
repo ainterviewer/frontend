@@ -13,6 +13,7 @@
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import { getContrastColor } from '$lib/utils/colors';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 
 	// State
@@ -50,10 +51,10 @@
 
 	// UI State
 	let activeAnnotationMessageId = $state<string | null>(null);
-	let openCommentIds = $state<Set<string>>(new Set());
-	let commentTexts = $state<Map<string, string>>(new Map());
+	const openCommentIds = new SvelteSet<string>();
+	const commentTexts = new SvelteMap<string, string>();
 	let savingAnnotation = $state(false);
-	let savingCommentIds = $state<Set<string>>(new Set());
+	const savingCommentIds = new SvelteSet<string>();
 	let showQuestionDropdown = $state(false);
 	let showCommentModal = $state(false);
 	let commentModalMessageId = $state<string | null>(null);
@@ -78,17 +79,12 @@
 	let selectedQuestions = $state<[number, number][]>([]);
 
 	// Per-message context state (consolidated)
-	let messageContext = $state<{
-		before: Map<string, MessagePublic[]>;
-		after: Map<string, MessagePublic[]>;
-		loadingBefore: Set<string>;
-		loadingAfter: Set<string>;
-	}>({
-		before: new Map(),
-		after: new Map(),
-		loadingBefore: new Set(),
-		loadingAfter: new Set()
-	});
+	const messageContext = {
+		before: new SvelteMap<string, MessagePublic[]>(),
+		after: new SvelteMap<string, MessagePublic[]>(),
+		loadingBefore: new SvelteSet<string>(),
+		loadingAfter: new SvelteSet<string>()
+	};
 
 	// Helper to prevent default and stop propagation
 	function stopEvent(e: Event) {
@@ -157,6 +153,7 @@
 
 	// Map raw messages to UI messages and group by interview
 	let groupedMessages = $derived.by(() => {
+		/* eslint-disable svelte/prefer-svelte-reactivity -- locals of this pure computation, never escape */
 		if (rawMessages.length === 0) return [];
 
 		const activeMessages = new Map<string, MessagePublic>();
@@ -238,6 +235,7 @@
 		const items: Item[] = [];
 		const messageToIndex = new Map(sorted.map((m, i) => [m.id, i]));
 		const insertions = new Map<number, { before: Item[]; after: Item[] }>();
+		/* eslint-enable svelte/prefer-svelte-reactivity */
 
 		const addInsertion = (index: number, position: 'before' | 'after', item: Item) => {
 			if (!insertions.has(index)) insertions.set(index, { before: [], after: [] });
@@ -350,16 +348,15 @@
 	});
 
 	// Annotations Map
-	let messageAnnotations = $state<Map<string, MessageAnnotationPublic>>(new Map());
+	const messageAnnotations = new SvelteMap<string, MessageAnnotationPublic>();
 
 	$effect(() => {
-		const map = new Map<string, MessageAnnotationPublic>();
+		messageAnnotations.clear();
 		for (const msg of rawMessages) {
 			if (msg.annotations && msg.annotations.length > 0) {
-				map.set(msg.id, msg.annotations[0]);
+				messageAnnotations.set(msg.id, msg.annotations[0]);
 			}
 		}
-		messageAnnotations = map;
 	});
 
 	async function loadData() {
@@ -459,6 +456,7 @@
 	}
 
 	function updateSearchParams() {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- one-shot URL builder for goto()
 		const params = new URLSearchParams();
 		selectedCategoryIds.forEach((id) => params.append('category_id', id));
 		selectedQuestions.forEach(([section, question]) =>
@@ -476,6 +474,7 @@
 		searchText = '';
 		exactMatch = false;
 		caseSensitive = false;
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- one-shot URL builder for goto()
 		const params = new URLSearchParams();
 		selectedCategoryIds.forEach((id) => params.append('category_id', id));
 		selectedQuestions.forEach(([section, question]) =>
@@ -632,9 +631,7 @@
 				});
 				if (error) throw error;
 				if (updatedAnnotation) {
-					const newMap = new Map(messageAnnotations);
-					newMap.set(messageId, updatedAnnotation);
-					messageAnnotations = newMap;
+					messageAnnotations.set(messageId, updatedAnnotation);
 				}
 			} else {
 				const { data: newAnnotation, error } = await Analysis.addMessageAnnotation({
@@ -648,9 +645,7 @@
 				});
 				if (error) throw error;
 				if (newAnnotation) {
-					const newMap = new Map(messageAnnotations);
-					newMap.set(messageId, newAnnotation);
-					messageAnnotations = newMap;
+					messageAnnotations.set(messageId, newAnnotation);
 				}
 			}
 
@@ -671,9 +666,7 @@
 			return;
 		}
 
-		const newSaving = new Set(savingCommentIds);
-		newSaving.add(messageId);
-		savingCommentIds = newSaving;
+		savingCommentIds.add(messageId);
 
 		try {
 			const existingAnnotation = messageAnnotations.get(messageId);
@@ -695,9 +688,7 @@
 				});
 				if (error) throw error;
 				if (updatedAnnotation) {
-					const newMap = new Map(messageAnnotations);
-					newMap.set(messageId, updatedAnnotation);
-					messageAnnotations = newMap;
+					messageAnnotations.set(messageId, updatedAnnotation);
 				}
 			} else {
 				const { data: newAnnotation, error } = await Analysis.addMessageAnnotation({
@@ -711,9 +702,7 @@
 				});
 				if (error) throw error;
 				if (newAnnotation) {
-					const newMap = new Map(messageAnnotations);
-					newMap.set(messageId, newAnnotation);
-					messageAnnotations = newMap;
+					messageAnnotations.set(messageId, newAnnotation);
 				}
 			}
 
@@ -722,22 +711,16 @@
 			console.error('Error saving comment:', e);
 			toast.error('Error saving comment');
 		} finally {
-			const newSaving = new Set(savingCommentIds);
-			newSaving.delete(messageId);
-			savingCommentIds = newSaving;
+			savingCommentIds.delete(messageId);
 		}
 	}
 
 	function openCommentInput(messageId: string) {
 		const existingAnnotation = messageAnnotations.get(messageId);
-		const newTexts = new Map(commentTexts);
-		newTexts.set(messageId, existingAnnotation?.comment || '');
-		commentTexts = newTexts;
+		commentTexts.set(messageId, existingAnnotation?.comment || '');
 
 		if (useMarginComments) {
-			const newOpen = new Set(openCommentIds);
-			newOpen.add(messageId);
-			openCommentIds = newOpen;
+			openCommentIds.add(messageId);
 		} else {
 			commentModalMessageId = messageId;
 			showCommentModal = true;
@@ -745,13 +728,8 @@
 	}
 
 	function closeCommentInput(messageId: string) {
-		const newOpen = new Set(openCommentIds);
-		newOpen.delete(messageId);
-		openCommentIds = newOpen;
-
-		const newTexts = new Map(commentTexts);
-		newTexts.delete(messageId);
-		commentTexts = newTexts;
+		openCommentIds.delete(messageId);
+		commentTexts.delete(messageId);
 
 		if (commentModalMessageId === messageId) {
 			showCommentModal = false;
@@ -764,9 +742,7 @@
 	}
 
 	function setCommentText(messageId: string, value: string) {
-		const newTexts = new Map(commentTexts);
-		newTexts.set(messageId, value);
-		commentTexts = newTexts;
+		commentTexts.set(messageId, value);
 	}
 
 	async function handleDeleteAnnotation(messageId: string) {
@@ -780,9 +756,7 @@
 				path: { annotation_id: annotation.id }
 			});
 			if (error) throw error;
-			const newMap = new Map(messageAnnotations);
-			newMap.delete(messageId);
-			messageAnnotations = newMap;
+			messageAnnotations.delete(messageId);
 			activeAnnotationMessageId = null;
 			loadData();
 		} catch (e) {
@@ -795,15 +769,11 @@
 
 	async function fetchContextBefore(messageId: string, interviewId: string) {
 		if (messageContext.before.has(messageId)) {
-			const newMap = new Map(messageContext.before);
-			newMap.delete(messageId);
-			messageContext = { ...messageContext, before: newMap };
+			messageContext.before.delete(messageId);
 			return;
 		}
 
-		const newLoading = new Set(messageContext.loadingBefore);
-		newLoading.add(messageId);
-		messageContext = { ...messageContext, loadingBefore: newLoading };
+		messageContext.loadingBefore.add(messageId);
 
 		const { data, error: fetchErr } = await Analysis.getMessageContextBefore({
 			path: { project_id: projectId, interview_id: interviewId, message_id: messageId }
@@ -812,27 +782,19 @@
 		if (fetchErr) {
 			console.error('Error fetching context before:', fetchErr);
 		} else if (data) {
-			const newMap = new Map(messageContext.before);
-			newMap.set(messageId, data);
-			messageContext = { ...messageContext, before: newMap };
+			messageContext.before.set(messageId, data);
 		}
 
-		const doneLoading = new Set(messageContext.loadingBefore);
-		doneLoading.delete(messageId);
-		messageContext = { ...messageContext, loadingBefore: doneLoading };
+		messageContext.loadingBefore.delete(messageId);
 	}
 
 	async function fetchContextAfter(messageId: string, interviewId: string) {
 		if (messageContext.after.has(messageId)) {
-			const newMap = new Map(messageContext.after);
-			newMap.delete(messageId);
-			messageContext = { ...messageContext, after: newMap };
+			messageContext.after.delete(messageId);
 			return;
 		}
 
-		const newLoading = new Set(messageContext.loadingAfter);
-		newLoading.add(messageId);
-		messageContext = { ...messageContext, loadingAfter: newLoading };
+		messageContext.loadingAfter.add(messageId);
 
 		const { data, error: fetchErr } = await Analysis.getMessageContextAfter({
 			path: { project_id: projectId, interview_id: interviewId, message_id: messageId }
@@ -841,14 +803,10 @@
 		if (fetchErr) {
 			console.error('Error fetching context after:', fetchErr);
 		} else if (data) {
-			const newMap = new Map(messageContext.after);
-			newMap.set(messageId, data);
-			messageContext = { ...messageContext, after: newMap };
+			messageContext.after.set(messageId, data);
 		}
 
-		const doneLoading = new Set(messageContext.loadingAfter);
-		doneLoading.delete(messageId);
-		messageContext = { ...messageContext, loadingAfter: doneLoading };
+		messageContext.loadingAfter.delete(messageId);
 	}
 </script>
 
@@ -955,7 +913,7 @@
 							>
 								{#if guide?.question_sections && guide.question_sections.length > 0}
 									<div class="py-1">
-										{#each guide.question_sections as section, sectionIdx}
+										{#each guide.question_sections as section, sectionIdx (sectionIdx)}
 											{#if section.questions && section.questions.length > 0}
 												{@const isFullySelected = isSectionFullySelected(sectionIdx)}
 												<div class="border-b border-gray-100">
@@ -988,7 +946,7 @@
 													<!-- Individual Questions -->
 													<div class="px-4 py-2">
 														<div class="space-y-1">
-															{#each section.questions as question, questionIdx}
+															{#each section.questions as question, questionIdx (questionIdx)}
 																{@const isSelected = selectedQuestions.some(
 																	([s, q]) => s === sectionIdx && q === questionIdx
 																)}
@@ -1056,7 +1014,7 @@
 							<div class="flex items-start gap-2">
 								<span class="w-24 shrink-0 pt-1 text-xs text-gray-500">Tags:</span>
 								<div class="flex flex-wrap items-center gap-2">
-									{#each categories.filter((c) => c.type === 'tag') as category}
+									{#each categories.filter((c) => c.type === 'tag') as category (category.id)}
 										{@const isSelected = selectedCategoryIds.includes(category.id)}
 										<button
 											type="button"
@@ -1099,7 +1057,7 @@
 							<div class="flex items-start gap-2">
 								<span class="w-24 shrink-0 pt-1 text-xs text-gray-500">Categories:</span>
 								<div class="flex flex-wrap items-center gap-2">
-									{#each categories.filter((c) => c.type === 'score') as category}
+									{#each categories.filter((c) => c.type === 'score') as category (category.id)}
 										{@const isSelected = selectedCategoryIds.includes(category.id)}
 										<button
 											type="button"
@@ -1145,7 +1103,7 @@
 					<div class="flex flex-wrap items-center gap-2">
 						<span class="text-xs text-gray-500">Active filters:</span>
 						{#if selectedQuestions.length > 0}
-							{#each selectedQuestions as [section, question]}
+							{#each selectedQuestions as [section, question] (`${section}-${question}`)}
 								{@const questionText = getQuestionText(section, question)}
 								{@const sectionDesc = getSectionDescription(section)}
 								<button
@@ -1327,7 +1285,7 @@
 																</button>
 															{/if}
 															{#if annotationSummary}
-																{#each annotationSummary.tags as tag}
+																{#each annotationSummary.tags as tag (tag.name)}
 																	<span
 																		class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
 																		style="background-color: {tag.color}; color: {getContrastColor(
@@ -1337,7 +1295,7 @@
 																		{tag.name}
 																	</span>
 																{/each}
-																{#each annotationSummary.scores as score}
+																{#each annotationSummary.scores as score (score.name)}
 																	<span
 																		class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
 																		style="background-color: {score.color}; color: {getContrastColor(

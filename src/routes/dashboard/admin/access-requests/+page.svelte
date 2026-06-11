@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { Admin, type Scope } from '$lib/api';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -20,7 +21,7 @@
 	let requests = $derived(data.requests as AccessRequest[]);
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
-	let selectedIds = $state<Set<string>>(new Set());
+	const selectedIds = new SvelteSet<string>();
 	let scopeByRequest = $state<Record<string, Scope>>({});
 
 	const scopeOptions: Scope[] = ['admin', 'user', 'demo', 'guest'];
@@ -44,7 +45,7 @@
 		error = null;
 		try {
 			await invalidateAll();
-			selectedIds = new Set();
+			selectedIds.clear();
 		} catch (e: any) {
 			error = e.message || 'Failed to fetch requests';
 		} finally {
@@ -53,20 +54,17 @@
 	}
 
 	function toggleSelection(id: string) {
-		const newSet = new Set(selectedIds);
-		if (newSet.has(id)) {
-			newSet.delete(id);
+		if (selectedIds.has(id)) {
+			selectedIds.delete(id);
 		} else {
-			newSet.add(id);
+			selectedIds.add(id);
 		}
-		selectedIds = newSet;
 	}
 
 	function toggleAll(checked: boolean) {
+		selectedIds.clear();
 		if (checked) {
-			selectedIds = new Set(requests.map((r) => r.id));
-		} else {
-			selectedIds = new Set();
+			for (const r of requests) selectedIds.add(r.id);
 		}
 	}
 
@@ -295,7 +293,7 @@
 									scopeByRequest[request.id] ?? 'user'
 								]}  focus:outline-none"
 							>
-								{#each scopeOptions as scope}
+								{#each scopeOptions as scope (scope)}
 									<option value={scope}>{scope}</option>
 								{/each}
 							</select>

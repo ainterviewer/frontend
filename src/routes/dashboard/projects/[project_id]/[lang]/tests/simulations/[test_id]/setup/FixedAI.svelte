@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { Synthesize, type TestSetupPublic } from '$lib/api';
+	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 
 	let { test }: { test: TestSetupPublic } = $props();
 
-	let personas = $state(test.fixed_personas?.length ? [...test.fixed_personas] : ['']);
+	// Editable drafts seeded once from the test prop; deliberately not reactive to prop updates.
+	let personas = $state(
+		untrack(() => (test.fixed_personas?.length ? [...test.fixed_personas] : ['']))
+	);
 	let isSaving = $state(false);
 
 	function addPersona() {
@@ -50,7 +54,7 @@
 	</p>
 
 	<div class="mt-6 flex flex-col gap-4">
-		{#each personas as _, index}
+		{#each personas as _, index (index)}
 			<div class="flex gap-2">
 				<textarea
 					bind:value={personas[index]}

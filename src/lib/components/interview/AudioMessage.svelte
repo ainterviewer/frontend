@@ -46,7 +46,7 @@
 
 	<!-- Waveform visualization -->
 	<div class="flex h-8 flex-1 items-center gap-[2px]">
-		{#each Array(20) as _, i}
+		{#each Array(20) as _, i (i)}
 			<div
 				class="w-1 rounded-full bg-white/60"
 				style="height: {20 + Math.sin(i * 0.8) * 15 + Math.random() * 10}px"

@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { Synthesize, type QuestionOutput, type TestSetupPublic } from '$lib/api';
+	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 
 	type SetupQuestion = Pick<QuestionOutput, 'main_question' | 'can_answer'>;
 
 	let { test, questions }: { test: TestSetupPublic; questions: SetupQuestion[] } = $props();
-	const initialFixedAnswers = test.fixed_answers ? [...test.fixed_answers] : [];
+	// Seeded once from the test prop; deliberately not reactive to prop updates.
+	const initialFixedAnswers = untrack(() => (test.fixed_answers ? [...test.fixed_answers] : []));
 
 	const answerIndexesByQuestion = $derived.by(() => {
 		let answerIndex = 0;
@@ -64,7 +66,7 @@
 	<h1 class="page-title">Setup - Fixed Answers</h1>
 	<p class="text-gray-600">Define fixed answers for each main question.</p>
 
-	{#each questions as question, index}
+	{#each questions as question, index (index)}
 		<div class="mb-6">
 			<h4 class="mt-8 mb-2.5 text-gray-500">Main question {index + 1}</h4>
 			<span class="italic">{question.main_question}</span>

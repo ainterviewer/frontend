@@ -535,7 +535,7 @@
 				</p>
 
 				<div class="space-y-4">
-					{#each guide.timed_messages! as tm, i}
+					{#each guide.timed_messages! as tm, i (i)}
 						<div class="rounded-md border border-gray-200 bg-gray-50 p-4">
 							<div class="mb-3 flex items-center justify-between">
 								<span class="text-sm font-medium text-gray-700">Timed Message {i + 1}</span>

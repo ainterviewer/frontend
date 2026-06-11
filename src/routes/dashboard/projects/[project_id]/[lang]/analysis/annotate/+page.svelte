@@ -83,6 +83,7 @@
 	}
 
 	function navigateToCategory(id: string) {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- one-shot URL builder for goto()
 		const params = new URLSearchParams();
 		params.append('category_id', id);
 		goto(

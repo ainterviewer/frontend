@@ -8,6 +8,7 @@
 		TimeDelta
 	} from '$lib/api';
 	import { Admin } from '$lib/api/sdk.gen';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -16,7 +17,7 @@
 	let invitations = $derived(data.invitations as InvitationPublic[]);
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
-	let selectedIds = $state<Set<string>>(new Set());
+	const selectedIds = new SvelteSet<string>();
 	let showCreateForm = $state(false);
 	let editingInvitation = $state<InvitationPublic | null>(null);
 
@@ -61,7 +62,7 @@
 		error = null;
 		try {
 			await invalidateAll();
-			selectedIds = new Set();
+			selectedIds.clear();
 		} catch (e: any) {
 			error = e.message || 'Failed to fetch invitations';
 		} finally {
@@ -70,23 +71,19 @@
 	}
 
 	function toggleSelection(id: string) {
-		const newSet = new Set(selectedIds);
-		if (newSet.has(id)) {
-			newSet.delete(id);
+		if (selectedIds.has(id)) {
+			selectedIds.delete(id);
 		} else {
-			newSet.add(id);
+			selectedIds.add(id);
 		}
-		selectedIds = newSet;
 	}
 
 	function toggleGroup(ids: string[], checked: boolean) {
-		const newSet = new Set(selectedIds);
 		if (checked) {
-			ids.forEach((id) => newSet.add(id));
+			ids.forEach((id) => selectedIds.add(id));
 		} else {
-			ids.forEach((id) => newSet.delete(id));
+			ids.forEach((id) => selectedIds.delete(id));
 		}
-		selectedIds = newSet;
 	}
 
 	async function handleDelete() {

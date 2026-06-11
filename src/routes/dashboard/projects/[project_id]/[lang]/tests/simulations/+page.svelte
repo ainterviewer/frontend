@@ -126,7 +126,7 @@
 	test types, fill in the required information, and run any number of synthetic interviews.
 </p>
 
-{#each testTypes as typeInfo}
+{#each testTypes as typeInfo (typeInfo.type)}
 	<div class="relative mt-4 mb-4 flex items-center gap-2 border-t-2 border-primary pt-6">
 		<i class="fas {typeInfo.icon} text-4xl text-dark"></i>
 		<h2 class="text-lg">{typeInfo.label}</h2>

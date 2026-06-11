@@ -14,6 +14,7 @@
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import { getContrastColor } from '$lib/utils/colors';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	interface InterviewData {
 		messages: MessagePublic[];
@@ -33,20 +34,19 @@
 	} = $props();
 
 	// State for annotations - keyed by message id
-	let messageAnnotations = $state<Map<string, MessageAnnotationPublic>>(new Map());
+	const messageAnnotations = new SvelteMap<string, MessageAnnotationPublic>();
 
 	// Initialize annotations from server data
 	$effect(() => {
-		const annotationMap = new Map<string, MessageAnnotationPublic>();
+		messageAnnotations.clear();
 		if (data.messages) {
 			for (const msg of data.messages) {
 				if (msg.annotations && msg.annotations.length > 0) {
 					// Use the first annotation (or could show all)
-					annotationMap.set(msg.id, msg.annotations[0]);
+					messageAnnotations.set(msg.id, msg.annotations[0]);
 				}
 			}
 		}
-		messageAnnotations = annotationMap;
 	});
 
 	// UI state
@@ -182,9 +182,7 @@
 				}
 
 				if (updatedAnnotation) {
-					const newMap = new Map(messageAnnotations);
-					newMap.set(messageId, updatedAnnotation);
-					messageAnnotations = newMap;
+					messageAnnotations.set(messageId, updatedAnnotation);
 				}
 			} else {
 				// Create new annotation
@@ -205,9 +203,7 @@
 				}
 
 				if (newAnnotation) {
-					const newMap = new Map(messageAnnotations);
-					newMap.set(messageId, newAnnotation);
-					messageAnnotations = newMap;
+					messageAnnotations.set(messageId, newAnnotation);
 				}
 			}
 
@@ -240,9 +236,7 @@
 				return;
 			}
 
-			const newMap = new Map(messageAnnotations);
-			newMap.delete(messageId);
-			messageAnnotations = newMap;
+			messageAnnotations.delete(messageId);
 			activeAnnotationMessageId = null;
 		} catch (e) {
 			console.error('Error deleting annotation:', e);
@@ -375,7 +369,7 @@
 													? 'ml-2.5 sm:ml-[50px]'
 													: 'mr-2.5 justify-end sm:mr-[50px]'}"
 											>
-												{#each annotationSummary.tags as tag}
+												{#each annotationSummary.tags as tag (tag.name)}
 													<span
 														class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
 														style="background-color: {tag.color}; color: {getContrastColor(
@@ -385,7 +379,7 @@
 														{tag.name}
 													</span>
 												{/each}
-												{#each annotationSummary.scores as score}
+												{#each annotationSummary.scores as score (score.name)}
 													<span
 														class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
 														style="background-color: {score.color}; color: {getContrastColor(

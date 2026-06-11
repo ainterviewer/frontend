@@ -10,3 +10,6 @@ bun.lockb
 
 # Generated API client (hey-api codegen output)
 /src/lib/api/
+
+# Tool-managed settings (rewritten by Claude Code)
+/.claude/

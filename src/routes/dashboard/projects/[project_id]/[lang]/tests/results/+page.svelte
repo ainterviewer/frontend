@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
 	import type { InterviewSummaryPublic, InterviewType } from '$lib/api';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 	import TablePaginationFooter from '../../interviews/TablePaginationFooter.svelte';
@@ -20,7 +21,7 @@
 	let itemsPerPage = $state(10);
 	let sortColumn = $state('created_at');
 	let sortOrder = $state<'asc' | 'desc'>('desc');
-	let selectedInterviews = $state(new Set<string>());
+	const selectedInterviews = new SvelteSet<string>();
 	let activeDropdown = $state<string | null>(null);
 	let dropdownPosition = $state({ top: 0, right: 0 });
 	let error = $state<string | null>(null);
@@ -102,24 +103,20 @@
 	}
 
 	function toggleSelection(id: string) {
-		const newSet = new Set(selectedInterviews);
-		if (newSet.has(id)) {
-			newSet.delete(id);
+		if (selectedInterviews.has(id)) {
+			selectedInterviews.delete(id);
 		} else {
-			newSet.add(id);
+			selectedInterviews.add(id);
 		}
-		selectedInterviews = newSet;
 	}
 
 	function toggleSelectAll(event: Event) {
 		const checkbox = event.target as HTMLInputElement;
-		const newSet = new Set(selectedInterviews);
 		if (checkbox.checked) {
-			interviews.forEach((i) => newSet.add(i.id));
+			interviews.forEach((i) => selectedInterviews.add(i.id));
 		} else {
-			interviews.forEach((i) => newSet.delete(i.id));
+			interviews.forEach((i) => selectedInterviews.delete(i.id));
 		}
-		selectedInterviews = newSet;
 	}
 
 	async function handleDeleteSelected() {
@@ -139,7 +136,7 @@
 			toast.error('Failed to delete test results');
 			return;
 		}
-		selectedInterviews = new Set();
+		selectedInterviews.clear();
 		loadInterviews();
 	}
 
@@ -298,7 +295,7 @@
 						indeterminate={isIndeterminate}
 					/>
 				</th>
-				{#each columns as col}
+				{#each columns as col (col.key)}
 					<SortableHeader
 						column={col.key}
 						label={col.label}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { Admin, type Scope, type UserAdmin } from '$lib/api';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -9,9 +10,9 @@
 	let users = $derived(data.users as UserAdmin[]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
-	let expandedRows = $state(new Set<string>());
-	let savingNote = $state(new Set<string>());
-	let savingUser = $state(new Set<string>());
+	const expandedRows = new SvelteSet<string>();
+	const savingNote = new SvelteSet<string>();
+	const savingUser = new SvelteSet<string>();
 
 	type UserEdit = {
 		scope: Scope;
@@ -73,23 +74,19 @@
 	});
 
 	function toggleRow(user: UserAdmin) {
-		const next = new Set(expandedRows);
-		if (next.has(user.id)) {
-			next.delete(user.id);
+		if (expandedRows.has(user.id)) {
+			expandedRows.delete(user.id);
 		} else {
-			next.add(user.id);
+			expandedRows.add(user.id);
 			ensureEdit(user);
 		}
-		expandedRows = next;
 	}
 
 	async function saveUser(user: UserAdmin) {
 		const e = edits[user.id];
 		if (!e) return;
 
-		const next = new Set(savingUser);
-		next.add(user.id);
-		savingUser = next;
+		savingUser.add(user.id);
 
 		try {
 			const response = await Admin.updateUser({
@@ -114,9 +111,7 @@
 			toast.error('An unexpected error occurred');
 			console.error(err);
 		} finally {
-			const n = new Set(savingUser);
-			n.delete(user.id);
-			savingUser = n;
+			savingUser.delete(user.id);
 		}
 	}
 
@@ -175,9 +170,7 @@
 		const trimmed = note.trim() || null;
 		if (trimmed === (user.admin_note ?? null)) return;
 
-		const next = new Set(savingNote);
-		next.add(user.id);
-		savingNote = next;
+		savingNote.add(user.id);
 
 		try {
 			const response = await Admin.updateAdminNote({
@@ -196,9 +189,7 @@
 			toast.error('An unexpected error occurred');
 			console.error(e);
 		} finally {
-			const next = new Set(savingNote);
-			next.delete(user.id);
-			savingNote = next;
+			savingNote.delete(user.id);
 		}
 	}
 </script>

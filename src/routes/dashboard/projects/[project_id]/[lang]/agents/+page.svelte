@@ -132,7 +132,7 @@
 					value=""
 				>
 					<option value="">---</option>
-					{#each models as model}
+					{#each models as model (model)}
 						<option value={model}>{model}</option>
 					{/each}
 				</select>
@@ -151,7 +151,7 @@
 							bind:value={agents.probing!.model}
 							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
 						>
-							{#each models as model}
+							{#each models as model (model)}
 								<option value={model}>{model}</option>
 							{/each}
 						</select>
@@ -186,7 +186,7 @@
 							bind:value={agents.classification!.model}
 							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
 						>
-							{#each models as model}
+							{#each models as model (model)}
 								<option value={model}>{model}</option>
 							{/each}
 						</select>
@@ -222,7 +222,7 @@
 							bind:value={agents.reformulation!.model}
 							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
 						>
-							{#each models as model}
+							{#each models as model (model)}
 								<option value={model}>{model}</option>
 							{/each}
 						</select>
@@ -258,7 +258,7 @@
 							bind:value={agents.guide!.model}
 							class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
 						>
-							{#each models as model}
+							{#each models as model (model)}
 								<option value={model}>{model}</option>
 							{/each}
 						</select>
@@ -307,7 +307,7 @@
 								bind:value={agents.security!.model}
 								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
 							>
-								{#each models as model}
+								{#each models as model (model)}
 									<option value={model}>{model}</option>
 								{/each}
 							</select>
@@ -340,14 +340,14 @@
 
 		<div bind:this={promptsContainer} class="space-y-8">
 			{#if prompts}
-				{#each Object.entries(prompts) as [agentKey, agentData]}
+				{#each Object.entries(prompts) as [agentKey, agentData] (agentKey)}
 					{#if ['probing_agent'].includes(agentKey) && typeof agentData === 'object'}
 						<div class="rounded border border-gray-200 bg-gray-50 p-4">
 							<h3 class="mb-4 border-b border-gray-300 pb-2 font-medium text-gray-700 uppercase">
 								{agentKey.replace(/_/g, ' ')}
 							</h3>
 
-							{#each Object.entries(agentData) as [promptKey, promptValue]}
+							{#each Object.entries(agentData) as [promptKey, promptValue] (promptKey)}
 								{#if typeof promptValue === 'string'}
 									<div class="mb-6">
 										<label

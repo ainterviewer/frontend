@@ -9,6 +9,7 @@
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import Info from '$lib/components/Info.svelte';
 	import { getContrastColor } from '$lib/utils/colors';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 	interface Props {
 		categories: AnalysisCategoryPublic[];
@@ -37,8 +38,8 @@
 	let scores = $derived(categories.filter((c) => c.type === 'score'));
 
 	// Form state - initialize from existing annotation if present
-	let selectedTags = $state<Set<string>>(new Set());
-	let scoreValues = $state<Map<string, number>>(new Map());
+	const selectedTags = new SvelteSet<string>();
+	const scoreValues = new SvelteMap<string, number>();
 	let isInitialized = false;
 
 	let isCategoryModalOpen = $state(false);
@@ -48,28 +49,19 @@
 	$effect(() => {
 		if (!isInitialized) {
 			if (annotation) {
-				const tagIds = new Set<string>();
-				const scoreMap = new Map<string, number>();
-
 				for (const value of annotation.values) {
 					const category = categories.find((c) => c.id === value.category_id);
 					if (category) {
 						if (category.type === 'tag') {
 							// For tags, value_int = 1 means selected
 							if (value.value_int === 1) {
-								tagIds.add(value.category_id);
+								selectedTags.add(value.category_id);
 							}
 						} else if (category.type === 'score') {
-							scoreMap.set(value.category_id, value.value_int);
+							scoreValues.set(value.category_id, value.value_int);
 						}
 					}
 				}
-
-				selectedTags = tagIds;
-				scoreValues = scoreMap;
-			} else {
-				selectedTags = new Set();
-				scoreValues = new Map();
 			}
 			isInitialized = true;
 		}
@@ -98,13 +90,11 @@
 	}
 
 	function toggleTag(categoryId: string) {
-		const newSet = new Set(selectedTags);
-		if (newSet.has(categoryId)) {
-			newSet.delete(categoryId);
+		if (selectedTags.has(categoryId)) {
+			selectedTags.delete(categoryId);
 		} else {
-			newSet.add(categoryId);
+			selectedTags.add(categoryId);
 		}
-		selectedTags = newSet;
 		triggerSave(false);
 	}
 
@@ -113,16 +103,12 @@
 			clearScore(categoryId);
 			return;
 		}
-		const newMap = new Map(scoreValues);
-		newMap.set(categoryId, value);
-		scoreValues = newMap;
+		scoreValues.set(categoryId, value);
 		triggerSave(false);
 	}
 
 	function clearScore(categoryId: string) {
-		const newMap = new Map(scoreValues);
-		newMap.delete(categoryId);
-		scoreValues = newMap;
+		scoreValues.delete(categoryId);
 		triggerSave(false);
 	}
 
@@ -231,7 +217,7 @@
 								{/if}
 							</div>
 							<div class="flex items-center gap-1">
-								{#each { length: max - min + 1 } as _, i}
+								{#each { length: max - min + 1 } as _, i (i)}
 									{@const value = min + i}
 									<button
 										type="button"

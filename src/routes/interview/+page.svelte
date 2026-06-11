@@ -281,7 +281,7 @@
 					shared the interview with you.
 				</p>
 				<ul class="mb-4 space-y-1 text-left text-sm">
-					{#each validationErrors as err}
+					{#each validationErrors as err, errIdx (errIdx)}
 						<li class="rounded bg-red-50 px-3 py-2 text-red-700">
 							<!-- TODO: Maybe msg should not be displayed? -->
 							<span class="font-medium">{err.loc}</span> &mdash; {err.msg}

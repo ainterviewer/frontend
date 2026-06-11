@@ -51,7 +51,7 @@
 
 		<div class="mx-2 flex space-x-1">
 			{#if totalPages <= 7}
-				{#each Array(totalPages) as _, i}
+				{#each Array(totalPages) as _, i (i)}
 					<button
 						class="rounded border px-3 py-1 {currentPage === i + 1
 							? 'border-primary bg-primary text-white'

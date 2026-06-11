@@ -1,56 +1,40 @@
 <script lang="ts">
 	import { Synthesize, type TestSetupPublic } from '$lib/api';
+	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 
 	let { test }: { test: TestSetupPublic } = $props();
 
-	// Initialize state from test.background_info or defaults
-	let names_gender = $state(
-		test.background_info?.names_gender?.length ? test.background_info.names_gender : [['', '']]
-	);
-	let age_range = $state(test.background_info?.age_range || [18, 80]);
-	let educations = $state(
-		test.background_info?.educations?.length ? test.background_info.educations : ['']
-	);
-	let occupations = $state(
-		test.background_info?.occupations?.length ? test.background_info.occupations : ['']
-	);
-	let locations = $state(
-		test.background_info?.locations?.length ? test.background_info.locations : ['']
-	);
-	let personalities = $state(
-		test.background_info?.personalities?.length ? test.background_info.personalities : ['']
-	);
+	// Editable form drafts seeded once from the test prop;
+	// deliberately not kept in sync with later prop updates.
+	const bg = untrack(() => test.background_info);
+
+	let names_gender = $state(bg?.names_gender?.length ? bg.names_gender : [['', '']]);
+	let age_range = $state(bg?.age_range || [18, 80]);
+	let educations = $state(bg?.educations?.length ? bg.educations : ['']);
+	let occupations = $state(bg?.occupations?.length ? bg.occupations : ['']);
+	let locations = $state(bg?.locations?.length ? bg.locations : ['']);
+	let personalities = $state(bg?.personalities?.length ? bg.personalities : ['']);
 
 	// Communication traits
 	let comm_length = $state(
-		test.background_info?.communication_traits?.length?.length
-			? test.background_info.communication_traits.length
-			: ['']
+		bg?.communication_traits?.length?.length ? bg.communication_traits.length : ['']
 	);
 	let comm_style = $state(
-		test.background_info?.communication_traits?.style?.length
-			? test.background_info.communication_traits.style
-			: ['']
+		bg?.communication_traits?.style?.length ? bg.communication_traits.style : ['']
 	);
 	let comm_tone = $state(
-		test.background_info?.communication_traits?.tone?.length
-			? test.background_info.communication_traits.tone
-			: ['']
+		bg?.communication_traits?.tone?.length ? bg.communication_traits.tone : ['']
 	);
 
 	// Extra traits (assuming string[] based on HTML template)
 	let extra_traits = $state(
-		(test.background_info?.extra_traits as string[])?.length
-			? (test.background_info?.extra_traits as string[])
-			: ['']
+		(bg?.extra_traits as string[])?.length ? (bg?.extra_traits as string[]) : ['']
 	);
 
 	let refusal_rate = $state(
-		test.background_info?.refusal_rate
-			? [test.background_info.refusal_rate[0] * 100, test.background_info.refusal_rate[1] * 100]
-			: [0, 0]
+		bg?.refusal_rate ? [bg.refusal_rate[0] * 100, bg.refusal_rate[1] * 100] : [0, 0]
 	);
 
 	let isSaving = $state(false);
@@ -125,7 +109,7 @@
 	<!-- Names and Gender -->
 	<div class="my-6">
 		<h4 class="mb-2.5 font-bold text-gray-600">Names and Gender</h4>
-		{#each names_gender as pair, i}
+		{#each names_gender as pair, i (i)}
 			<div class="mb-2.5 flex items-center gap-2.5">
 				<input
 					type="text"
@@ -178,10 +162,10 @@
 	</div>
 
 	<!-- Generic String Lists -->
-	{#each [{ title: 'Education', list: educations }, { title: 'Occupations', list: occupations }, { title: 'Locations', list: locations }, { title: 'Personalities', list: personalities }] as group}
+	{#each [{ title: 'Education', list: educations }, { title: 'Occupations', list: occupations }, { title: 'Locations', list: locations }, { title: 'Personalities', list: personalities }] as group (group.title)}
 		<div class="mb-6">
 			<h4 class="mb-2.5 font-bold text-gray-600">{group.title}</h4>
-			{#each group.list as item, i}
+			{#each group.list as item, i (i)}
 				<div class="mb-2.5 flex items-center gap-2.5">
 					<input
 						type="text"
@@ -212,7 +196,7 @@
 
 		<div>
 			<h5 class="mt-2.5 mb-1.5 font-bold">Length</h5>
-			{#each comm_length as item, i}
+			{#each comm_length as item, i (i)}
 				<div class="mb-2.5 flex items-center gap-2.5">
 					<input
 						type="text"
@@ -238,7 +222,7 @@
 
 		<div>
 			<h5 class="mt-2.5 mb-1.5 font-bold">Style</h5>
-			{#each comm_style as item, i}
+			{#each comm_style as item, i (i)}
 				<div class="mb-2.5 flex items-center gap-2.5">
 					<input
 						type="text"
@@ -264,7 +248,7 @@
 
 		<div>
 			<h5 class="mt-2.5 mb-1.5 font-bold">Tone</h5>
-			{#each comm_tone as item, i}
+			{#each comm_tone as item, i (i)}
 				<div class="mb-2.5 flex items-center gap-2.5">
 					<input
 						type="text"
@@ -292,7 +276,7 @@
 	<!-- Extra Traits -->
 	<div class="mb-6">
 		<h4 class="mb-2.5 font-bold text-gray-600">Extra traits</h4>
-		{#each extra_traits as item, i}
+		{#each extra_traits as item, i (i)}
 			<div class="mb-2.5 flex items-center gap-2.5">
 				<input
 					type="text"

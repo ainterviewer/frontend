@@ -337,7 +337,7 @@
 										<div>
 											<span class="mb-2 block text-gray-500">Options</span>
 											<div class="space-y-1">
-												{#each question.survey_item.options as _, oIdx}
+												{#each question.survey_item.options as _, oIdx (oIdx)}
 													<div class="flex gap-1">
 														<input
 															class="flex-1 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
@@ -602,7 +602,7 @@
 									<!-- Condition Blocks -->
 									<div class="space-y-2">
 										<span class="block text-sm font-bold text-gray-500">Condition blocks</span>
-										{#each question.conditions.conditions as condition, condIdx}
+										{#each question.conditions.conditions as condition, condIdx (condIdx)}
 											{@const referencedQuestion = allSections[condition.question_context.section]
 												? (allQuestions[allSections[condition.question_context.section].id] || [])[
 														condition.question_context.question
@@ -657,9 +657,9 @@
 																condition.question_context.question = qIdx;
 															}}
 														>
-															{#each allSections as sec, sIdx}
+															{#each allSections as sec, sIdx (sec.id)}
 																{#if sIdx <= sectionIndex}
-																	{#each allQuestions[sec.id] || [] as q, qIdx}
+																	{#each allQuestions[sec.id] || [] as q, qIdx (q.id)}
 																		{#if sIdx < sectionIndex || qIdx <= index}
 																			<option value={`${sIdx}-${qIdx}`}>
 																				Section {sIdx + 1} > Question {qIdx + 1}
@@ -691,7 +691,7 @@
 													<!-- Evaluations -->
 													<div class="space-y-1">
 														<span class="mb-1 block text-sm text-gray-500">Trigger value(s)</span>
-														{#each condition.evaluation as evaluation, evalIdx}
+														{#each condition.evaluation as evaluation, evalIdx (evalIdx)}
 															<div class="space-y-1">
 																<div
 																	class="flex items-start gap-2 rounded border border-gray-100 bg-white p-2"
@@ -750,7 +750,7 @@
 																					bind:value={evaluation.trigger_value}
 																				>
 																					<option value="">Select an option...</option>
-																					{#each referencedQuestion.survey_item?.options || [] as option}
+																					{#each referencedQuestion.survey_item?.options || [] as option (option)}
 																						<option
 																							value={option}
 																							disabled={selectedValues.includes(option)}
@@ -992,7 +992,7 @@
 					>
 					{#if question.alternative_main_questions}
 						<div class="mb-2 space-y-2">
-							{#each question.alternative_main_questions as _, aqIdx}
+							{#each question.alternative_main_questions as _, aqIdx (aqIdx)}
 								<div class="flex gap-2">
 									<input
 										autocomplete="off"
@@ -1028,7 +1028,7 @@
 					>
 					{#if question.probes}
 						<div class="mb-2 space-y-2">
-							{#each question.probes as _, pIdx}
+							{#each question.probes as _, pIdx (pIdx)}
 								<div class="flex gap-2">
 									<input
 										autocomplete="off"
