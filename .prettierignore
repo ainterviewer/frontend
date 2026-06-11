@@ -7,3 +7,6 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Generated API client (hey-api codegen output)
+/src/lib/api/
