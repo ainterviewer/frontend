@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
-import type { LayoutServerLoad } from './$types';
+import type { PageLoad } from './$types';
 
-export const load: LayoutServerLoad = async () => {
+export const load: PageLoad = async () => {
 	redirect(303, '/login');
 };
