@@ -14,14 +14,14 @@
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { toast } from 'svelte-sonner';
-	import SetupActionBar from '../SetupActionBar.svelte';
 	import ExportPdfModal from '../ExportPdfModal.svelte';
+	import SetupActionBar from '../SetupActionBar.svelte';
 	import { downloadUnifiedSetupJson } from '../exportJson';
+	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
 	import SortableSection from './SortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
-	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
 	import {
 		generateId,
 		mapFromLocal,
