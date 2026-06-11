@@ -20,8 +20,7 @@
 <div
 	class="inline-flex max-w-full items-center gap-2.5 rounded-full border border-gray-200 bg-white py-1 pr-3 pl-1 shadow-sm"
 >
-	<audio {src} preload="metadata" bind:paused bind:currentTime bind:duration class="hidden"
-	></audio>
+	<audio {src} preload="metadata" bind:paused bind:currentTime bind:duration class="hidden"></audio>
 
 	<button
 		type="button"

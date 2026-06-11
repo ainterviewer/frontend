@@ -30,7 +30,13 @@
 			overflow: hidden;
 			background: #ffffff;
 			text-align: center;
-			font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+			font-family:
+				'Inter',
+				system-ui,
+				-apple-system,
+				'Segoe UI',
+				Roboto,
+				sans-serif;
 			color: #1c2826;
 			padding: 1rem;
 			margin: 0;

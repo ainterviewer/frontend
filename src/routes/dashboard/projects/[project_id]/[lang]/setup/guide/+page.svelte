@@ -233,7 +233,13 @@
 		onDragStart={handleDragStart}
 		onDragEnd={handleDragEnd}
 	>
-		<InterviewGuide guide={data.guide} lang={data.lang} projectName={data.project_name} availableLanguages={data.available_languages} externalParams={data.external_params} />
+		<InterviewGuide
+			guide={data.guide}
+			lang={data.lang}
+			projectName={data.project_name}
+			availableLanguages={data.available_languages}
+			externalParams={data.external_params}
+		/>
 
 		<AssistanceChat
 			project_id={data.project_id}

@@ -24,10 +24,7 @@
 			out:fly={{ y: 20, duration: animate ? 300 : 0 }}
 		>
 			<div class="max-h-[calc(100vh-120px)] overflow-y-auto px-6 py-8 sm:p-10">
-				<h2
-					id="language-picker-title"
-					class="text-2xl font-bold tracking-tight text-gray-900"
-				>
+				<h2 id="language-picker-title" class="text-2xl font-bold tracking-tight text-gray-900">
 					Select your language
 				</h2>
 				<div class="mt-6 flex flex-col gap-3">

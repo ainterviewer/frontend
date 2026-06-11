@@ -11,10 +11,7 @@ export const GET = async () => {
 			signal: AbortSignal.timeout(2000)
 		});
 		if (!res.ok) {
-			return json(
-				{ status: 'fail', reason: `backend responded ${res.status}` },
-				{ status: 503 }
-			);
+			return json({ status: 'fail', reason: `backend responded ${res.status}` }, { status: 503 });
 		}
 		return json({ status: 'ok' });
 	} catch (err) {

@@ -233,9 +233,8 @@
 					<th scope="col" class="w-8 py-3.5 pl-3">
 						<span class="sr-only">Expand</span>
 					</th>
-					<th
-						scope="col"
-						class="py-3.5 pr-3 pl-2 text-left text-sm font-semibold text-gray-900">Name</th
+					<th scope="col" class="py-3.5 pr-3 pl-2 text-left text-sm font-semibold text-gray-900"
+						>Name</th
 					>
 					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
 						>Email</th
@@ -261,10 +260,7 @@
 			</thead>
 			<tbody class="divide-y divide-gray-200 bg-white">
 				{#each users as user (user.id)}
-					<tr
-						class="cursor-pointer hover:bg-gray-50"
-						onclick={() => toggleRow(user)}
-					>
+					<tr class="cursor-pointer hover:bg-gray-50" onclick={() => toggleRow(user)}>
 						<td class="py-4 pl-3">
 							<svg
 								class="h-4 w-4 text-gray-400 transition-transform {expandedRows.has(user.id)
@@ -297,7 +293,11 @@
 						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
 							{user.organization ?? '-'}
 						</td>
-						<td class="px-3 py-4 text-sm whitespace-nowrap {isExpired(user.expires_at) ? 'text-red-600 font-medium' : 'text-gray-500'}">
+						<td
+							class="px-3 py-4 text-sm whitespace-nowrap {isExpired(user.expires_at)
+								? 'font-medium text-red-600'
+								: 'text-gray-500'}"
+						>
 							{formatDate(user.expires_at)}
 						</td>
 						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
@@ -308,7 +308,10 @@
 						>
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<button
-								onclick={(e) => { e.stopPropagation(); deleteUser(user.id); }}
+								onclick={(e) => {
+									e.stopPropagation();
+									deleteUser(user.id);
+								}}
 								class="rounded p-2 text-red-600 transition-colors hover:bg-red-200 hover:text-red-900"
 							>
 								Delete<span class="sr-only">, {user.first_name}</span>
@@ -362,7 +365,10 @@
 										<div class="flex items-center gap-2">
 											{#if dirty && !saving}
 												<button
-													onclick={(e) => { e.stopPropagation(); resetEdit(user); }}
+													onclick={(e) => {
+														e.stopPropagation();
+														resetEdit(user);
+													}}
 													class="rounded px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
 												>
 													Reset
@@ -370,7 +376,10 @@
 											{/if}
 											<button
 												disabled={!dirty || saving}
-												onclick={(e) => { e.stopPropagation(); saveUser(user); }}
+												onclick={(e) => {
+													e.stopPropagation();
+													saveUser(user);
+												}}
 												class="hover:bg-opacity-90 rounded bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
 											>
 												{saving ? 'Saving...' : 'Save'}

@@ -118,8 +118,8 @@
 <div class="pb-32">
 	<h2 class="page-title">Setup - Shuffled AI Respondents</h2>
 	<p class="text-gray-600">
-		Define the background characteristics of the synthetic interviewees. These will be randomly mixed
-		for each synthetic interviewee.
+		Define the background characteristics of the synthetic interviewees. These will be randomly
+		mixed for each synthetic interviewee.
 	</p>
 
 	<!-- Names and Gender -->

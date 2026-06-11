@@ -21,10 +21,7 @@
 	let barsData = $derived(data.length <= 1 ? [] : data.slice(0, -1));
 </script>
 
-<div
-	class="shifted-bar-chart h-75 w-full"
-	style="--tooltip-offset: {barBandwidth / 2}px"
->
+<div class="shifted-bar-chart h-75 w-full" style="--tooltip-offset: {barBandwidth / 2}px">
 	<BarChart
 		bind:context={chartContext}
 		{data}
