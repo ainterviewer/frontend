@@ -89,8 +89,9 @@ export function mapFromLocal(
 function trimSurveyItemOptions(questionsMap: Record<string, GuideQuestion[]>) {
 	for (const questions of Object.values(questionsMap)) {
 		for (const question of questions) {
-			if (question.survey_item?.options) {
-				question.survey_item.options = question.survey_item.options.map((option) => option.trim());
+			const surveyItem = question.survey_item;
+			if (surveyItem && 'options' in surveyItem && surveyItem.options) {
+				surveyItem.options = surveyItem.options.map((option: string) => option.trim());
 			}
 		}
 	}

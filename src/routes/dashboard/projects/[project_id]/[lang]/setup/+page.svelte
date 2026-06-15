@@ -9,7 +9,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let projectId = $derived(page.params.project_id);
+	let projectId = $derived(page.params.project_id as string);
 	let lang = $derived(page.params.lang);
 	let hasDemoFeatures = $derived(!!page.data.user?.with_demo_features);
 

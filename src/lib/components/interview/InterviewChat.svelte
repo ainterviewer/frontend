@@ -12,7 +12,7 @@
 	interface Props {
 		chat: ChatClient;
 		lang: string;
-		interviewType: InterviewType;
+		interviewType?: InterviewType;
 		interviewConfig: InterviewConfig;
 		helpTitle: string;
 		helpText: string;

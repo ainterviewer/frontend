@@ -38,8 +38,8 @@
 			}
 		}}
 	>
-		{#snippet marks({ getBarsProps })}
-			<Bars {...getBarsProps(0)} data={barsData} />
+		{#snippet marks({ getBarsProps, series })}
+			<Bars {...getBarsProps(series[0], 0)} data={barsData} />
 		{/snippet}
 		{#snippet tooltip({ context })}
 			<Tooltip.Root>

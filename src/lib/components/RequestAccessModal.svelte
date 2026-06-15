@@ -31,7 +31,8 @@
 			});
 
 			if (error) {
-				errorMessage = error.details || 'Invalid request';
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				errorMessage = (error as any).details || 'Invalid request';
 				return;
 			}
 		} catch {

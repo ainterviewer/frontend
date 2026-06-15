@@ -73,7 +73,7 @@
 					if (msg.image.length > 0) {
 						// Assuming first image if array
 						const img = msg.image[0];
-						if (img.data) {
+						if (typeof img.data === 'string') {
 							image = {
 								data: img.data,
 								alt: img.alt,
@@ -83,7 +83,7 @@
 					}
 				} else {
 					const img = msg.image as Image;
-					if (img.data) {
+					if (typeof img.data === 'string') {
 						image = {
 							data: img.data,
 							alt: img.alt,
@@ -278,7 +278,7 @@
 	<header class="flex items-center justify-between border-b px-6 py-4">
 		<div class="flex items-center gap-4">
 			<a
-				href={resolve(backLink)}
+				href={resolve(backLink as '/')}
 				class="text-gray-500 transition-colors hover:text-gray-700"
 				aria-label="Back"
 			>
@@ -439,8 +439,8 @@
 										categories={data.categories}
 										{annotation}
 										saving={savingAnnotation}
-										onSave={(values, comment, shouldClose) =>
-											handleSaveAnnotation(messageId, values, comment, shouldClose)}
+										onSave={(values, shouldClose) =>
+											handleSaveAnnotation(messageId, values, null, shouldClose)}
 										onDelete={annotation ? () => handleDeleteAnnotation(messageId) : undefined}
 										onCancel={() => (activeAnnotationMessageId = null)}
 										onCategoryCreated={() => invalidateAll()}

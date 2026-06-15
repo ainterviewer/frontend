@@ -1,1 +1,1 @@
-<h1 class="page-title"></h1>
+<h1 class="page-title">Visualizations</h1>

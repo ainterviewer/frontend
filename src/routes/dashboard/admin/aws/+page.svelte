@@ -69,6 +69,8 @@
 	async function updateSettings() {
 		const { error: updateError } = await Admin.proxyToEc2ManagerPost({
 			path: { full_path: 'settings' },
+			// The EC2 manager proxy passes the body through, but the generated
+			// OpenAPI spec declares no body schema (typed as `never`), so cast.
 			body: {
 				min_instances: minInstances,
 				start: startCheck,
@@ -76,7 +78,7 @@
 				ec2_downtime: downtimeEnabled
 					? [toBackendTime(downtimeStart), toBackendTime(downtimeEnd)]
 					: null
-			}
+			} as unknown as never
 		});
 		if (updateError) {
 			toast.error('Failed to update settings');
@@ -328,7 +330,8 @@
 										? 'bg-gray-50'
 										: ''}"
 									onclick={(e) => {
-										if (e.target.type !== 'checkbox') toggleInstance(instance.id);
+										if ((e.target as HTMLInputElement).type !== 'checkbox')
+											toggleInstance(instance.id);
 									}}
 								>
 									<td class="relative px-7 sm:w-12 sm:px-6">

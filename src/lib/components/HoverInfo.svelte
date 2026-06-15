@@ -18,7 +18,7 @@
 		iconColor?: string;
 		iconHoverColor?: string;
 		asChild?: boolean;
-		delay?: integer;
+		delay?: number;
 		children?: Snippet<[{ props?: Record<string, unknown> }]>;
 	} = $props();
 
@@ -28,7 +28,7 @@
 <Tooltip.Provider>
 	<Tooltip.Root delayDuration={delay} disabled={isDisabled}>
 		{#if asChild}
-			<Tooltip.Trigger asChild>
+			<Tooltip.Trigger>
 				{#snippet child({ props })}
 					{@render children?.({ props })}
 				{/snippet}

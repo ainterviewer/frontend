@@ -307,16 +307,18 @@
 		<h4 class="mb-2.5 font-bold text-gray-600">Refusal Rate (%)</h4>
 		<p>The chance that the subject will be explicitly told to refuse answering a given question.</p>
 		<div class="mb-2.5 flex items-center gap-2.5">
-			<label>Min:</label>
+			<label for="refusal-rate-min">Min:</label>
 			<input
+				id="refusal-rate-min"
 				type="number"
 				min="0"
 				max="100"
 				bind:value={refusal_rate[0]}
 				class="w-[70px] flex-none rounded border border-gray-300 p-2"
 			/>
-			<label>Max:</label>
+			<label for="refusal-rate-max">Max:</label>
 			<input
+				id="refusal-rate-max"
 				type="number"
 				min="0"
 				max="100"

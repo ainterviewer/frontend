@@ -8,7 +8,7 @@
 	let isSuccess = $state(false);
 	let errorMessage = $state('');
 
-	const participantPid = $derived(page.params.participant_pid);
+	const participantPid = $derived(page.params.participant_pid as string);
 
 	async function handleOptOut(event: Event) {
 		event.preventDefault();

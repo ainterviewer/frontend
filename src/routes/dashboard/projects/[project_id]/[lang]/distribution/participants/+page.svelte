@@ -171,7 +171,7 @@
 			body: {
 				name: trimOrNull(editDraft.name),
 				email: trimOrNull(editDraft.email),
-				pid: trimOrNull(editDraft.pid),
+				pid: trimOrNull(editDraft.pid) ?? undefined,
 				participating: editDraft.participating
 			}
 		});

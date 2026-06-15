@@ -130,7 +130,7 @@ export async function createInterview(
 				...(pid != null && { pid })
 			}
 		});
-		if (error || !response.ok) {
+		if (error || !response?.ok) {
 			// Try to extract validation errors from the response
 			try {
 				const body = error as HttpValidationError;
@@ -401,7 +401,7 @@ export class ChatClient {
 				}
 			});
 
-			if (error || !response.ok) throw new Error('Upload failed');
+			if (error || !response?.ok) throw new Error('Upload failed');
 
 			const result = data;
 

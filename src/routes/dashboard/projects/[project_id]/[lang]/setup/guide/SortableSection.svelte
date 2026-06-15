@@ -179,7 +179,7 @@
 				text="Specifies the number of questions that will be automatically generated once the predefined ones are finished."
 			/>
 		</div>
-		{#if section.ai_generated_questions.n > 0}
+		{#if (section.ai_generated_questions.n ?? 0) > 0}
 			<div class="flex items-center gap-3">
 				<label
 					class="text-sm font-medium text-gray-700"

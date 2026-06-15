@@ -175,6 +175,9 @@
 									<div
 										class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg"
 										onclick={(e) => e.stopPropagation()}
+										onkeydown={(e) => e.stopPropagation()}
+										role="menu"
+										tabindex="-1"
 									>
 										<button
 											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
@@ -255,6 +258,9 @@
 									<div
 										class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg"
 										onclick={(e) => e.stopPropagation()}
+										onkeydown={(e) => e.stopPropagation()}
+										role="menu"
+										tabindex="-1"
 									>
 										<button
 											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"

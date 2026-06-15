@@ -24,6 +24,9 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 	}
 
 	const me = response.data;
+	if (!me) {
+		throw error(503, 'Backend unavailable');
+	}
 
 	let project = null;
 	const { projectId } = parseProjectRoute(url.pathname);

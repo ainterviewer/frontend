@@ -30,6 +30,12 @@
 		source = 'guide'
 	}: Props = $props();
 
+	function surveyItemOptions(
+		item: NonNullable<GuideQuestion['survey_item']> | null | undefined
+	): string[] | undefined {
+		return item && 'options' in item ? item.options : undefined;
+	}
+
 	let showSettings = $state(false);
 	let expandedImage = $state(false);
 	let expandedSurvey = $state(false);
@@ -75,9 +81,11 @@
 			const file = input.files[0];
 			const reader = new FileReader();
 			reader.onload = (ev) => {
-				if (!question.image) question.image = { description: '', alt: '' };
-				question.image.data = ev.target?.result as string;
-				question.image.name = file.name;
+				question.image = {
+					...(question.image ?? { description: '', alt: '' }),
+					data: ev.target?.result as string,
+					name: file.name
+				};
 			};
 			reader.readAsDataURL(file);
 		}
@@ -175,7 +183,7 @@
 							onclick={() => (expandedImage = !expandedImage)}
 						>
 							<div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-gray-200">
-								{#if question.image.data}
+								{#if typeof question.image.data === 'string'}
 									<img src={question.image.data} alt="Preview" class="h-full w-full object-cover" />
 								{:else}
 									<div class="flex h-full w-full items-center justify-center bg-sky-50">
@@ -213,7 +221,7 @@
 								</button>
 								<div class="max-w-sm space-y-4">
 									<div class="flex gap-2">
-										{#if question.image.data}
+										{#if typeof question.image.data === 'string'}
 											<img
 												src={question.image.data}
 												alt="Preview"
@@ -254,6 +262,7 @@
 				{/if}
 
 				{#if question.survey_item}
+					{@const surveyItem = question.survey_item}
 					<div
 						class="w-full rounded-md border border-l-4 border-gray-200 border-l-indigo-500 bg-gray-50 text-sm"
 					>
@@ -269,13 +278,13 @@
 							<div class="min-w-0 flex-1 text-left">
 								<div class="font-medium text-gray-700">Survey Item</div>
 								<div class="text-xs text-gray-500">
-									{question.survey_item.type === 'number' ||
-									question.survey_item.type === 'date' ||
-									question.survey_item.type === 'datetime' ||
-									question.survey_item.type === 'time' ||
-									question.survey_item.type === 'slider'
-										? question.survey_item.type
-										: `${question.survey_item.options.length} options (${question.survey_item.type})`}
+									{surveyItem.type === 'number' ||
+									surveyItem.type === 'date' ||
+									surveyItem.type === 'datetime' ||
+									surveyItem.type === 'time' ||
+									surveyItem.type === 'slider'
+										? surveyItem.type
+										: `${surveyItemOptions(surveyItem)?.length ?? 0} options (${surveyItem.type})`}
 								</div>
 							</div>
 							<i
@@ -303,7 +312,7 @@
 										Type
 										<select
 											class="mt-1 w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-											value={question.survey_item.type}
+											value={surveyItem.type}
 											onchange={(e) => {
 												const type = (e.target as HTMLSelectElement).value;
 												if (type === 'radio' || type === 'checkbox') {
@@ -311,7 +320,7 @@
 												} else if (type === 'likert') {
 													question.survey_item = { type, options: ['Option 1'] };
 												} else if (type === 'slider') {
-													question.survey_item = { type };
+													question.survey_item = { type, min: 0, max: 10 };
 												} else if (type === 'number') {
 													question.survey_item = { type };
 												} else if (type === 'date') {
@@ -333,40 +342,39 @@
 											<option value="time">Time</option>
 										</select>
 									</label>
-									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox' || question.survey_item.type === 'likert'}
+									{#if surveyItem.type === 'radio' || surveyItem.type === 'checkbox' || surveyItem.type === 'likert'}
 										<div>
 											<span class="mb-2 block text-gray-500">Options</span>
 											<div class="space-y-1">
-												{#each question.survey_item.options as _, oIdx (oIdx)}
+												{#each surveyItem.options as _, oIdx (oIdx)}
 													<div class="flex gap-1">
 														<input
 															class="flex-1 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-															bind:value={question.survey_item.options[oIdx]}
+															bind:value={surveyItem.options[oIdx]}
 															placeholder={`Option ${oIdx + 1}`}
 														/>
 														<button
 															class="px-1 text-gray-400 hover:text-red-500"
-															onclick={() => question.survey_item?.options.splice(oIdx, 1)}
+															onclick={() => surveyItem.options.splice(oIdx, 1)}
 															title="Remove Survey Option"><i class="fa-solid fa-trash"></i></button
 														>
 													</div>
 												{/each}
 												<button
 													class="mt-1 text-sm font-medium text-primary hover:underline"
-													onclick={() => question.survey_item?.options.push('')}
-													>+ Add Option</button
+													onclick={() => surveyItem.options.push('')}>+ Add Option</button
 												>
 											</div>
 										</div>
 									{/if}
-									{#if question.survey_item.type === 'radio' || question.survey_item.type === 'checkbox'}
+									{#if surveyItem.type === 'radio' || surveyItem.type === 'checkbox'}
 										<label
 											class="mt-1 flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
 										>
 											<input
 												type="checkbox"
 												class="rounded border-gray-300 text-primary focus:ring-primary"
-												bind:checked={question.survey_item.with_other}
+												bind:checked={surveyItem.with_other}
 											/>
 											Include "Other" option
 											<HoverInfo
@@ -375,19 +383,19 @@
 											></HoverInfo>
 										</label>
 									{/if}
-									{#if question.survey_item.type === 'likert'}
+									{#if surveyItem.type === 'likert'}
 										<label class="mb-2 block text-gray-500">
 											Display as
 											<select
 												class="mt-1 w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-												bind:value={question.survey_item.ui}
+												bind:value={surveyItem.ui}
 											>
 												<option value="radio">Radio buttons</option>
 												<option value="slider">Slider</option>
 											</select>
 										</label>
 									{/if}
-									{#if question.survey_item.type === 'number'}
+									{#if surveyItem.type === 'number'}
 										<div class="grid grid-cols-3 gap-2">
 											<label class="mb-2 block text-sm text-gray-500">
 												Min
@@ -395,7 +403,7 @@
 													type="number"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No min"
-													bind:value={question.survey_item.min}
+													bind:value={surveyItem.min}
 												/>
 											</label>
 											<label class="mb-2 block text-sm text-gray-500">
@@ -404,7 +412,7 @@
 													type="number"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No max"
-													bind:value={question.survey_item.max}
+													bind:value={surveyItem.max}
 												/>
 											</label>
 											<label class="mb-2 block text-sm text-gray-500">
@@ -413,12 +421,12 @@
 													type="number"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No step"
-													bind:value={question.survey_item.step}
+													bind:value={surveyItem.step}
 												/>
 											</label>
 										</div>
 									{/if}
-									{#if question.survey_item.type === 'slider'}
+									{#if surveyItem.type === 'slider'}
 										<div class="grid grid-cols-2 gap-2">
 											<label class="mb-2 block text-sm text-gray-500">
 												Min Label
@@ -426,7 +434,7 @@
 													autocomplete="off"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="Min label..."
-													bind:value={question.survey_item.min_label}
+													bind:value={surveyItem.min_label}
 												/>
 											</label>
 											<label class="mb-2 block text-sm text-gray-500">
@@ -435,7 +443,7 @@
 													autocomplete="off"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="Max label..."
-													bind:value={question.survey_item.max_label}
+													bind:value={surveyItem.max_label}
 												/>
 											</label>
 										</div>
@@ -446,7 +454,7 @@
 													type="number"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No min"
-													bind:value={question.survey_item.min}
+													bind:value={surveyItem.min}
 												/>
 											</label>
 											<label class="mb-2 block text-sm text-gray-500">
@@ -455,7 +463,7 @@
 													type="number"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No max"
-													bind:value={question.survey_item.max}
+													bind:value={surveyItem.max}
 												/>
 											</label>
 											<label class="mb-2 block text-sm text-gray-500">
@@ -464,19 +472,19 @@
 													type="number"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 													placeholder="No step"
-													bind:value={question.survey_item.step}
+													bind:value={surveyItem.step}
 												/>
 											</label>
 										</div>
 									{/if}
-									{#if question.survey_item.type === 'date'}
+									{#if surveyItem.type === 'date'}
 										<div class="grid grid-cols-2 gap-2">
 											<label class="mb-2 block text-sm text-gray-500">
 												Min
 												<input
 													type="date"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-													bind:value={question.survey_item.min}
+													bind:value={surveyItem.min}
 												/>
 											</label>
 											<label class="mb-2 block text-sm text-gray-500">
@@ -484,19 +492,19 @@
 												<input
 													type="date"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-													bind:value={question.survey_item.max}
+													bind:value={surveyItem.max}
 												/>
 											</label>
 										</div>
 									{/if}
-									{#if question.survey_item.type === 'datetime'}
+									{#if surveyItem.type === 'datetime'}
 										<div class="grid grid-cols-2 gap-2">
 											<label class="mb-2 block text-sm text-gray-500">
 												Min
 												<input
 													type="datetime-local"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-													bind:value={question.survey_item.min}
+													bind:value={surveyItem.min}
 												/>
 											</label>
 											<label class="mb-2 block text-sm text-gray-500">
@@ -504,19 +512,19 @@
 												<input
 													type="datetime-local"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-													bind:value={question.survey_item.max}
+													bind:value={surveyItem.max}
 												/>
 											</label>
 										</div>
 									{/if}
-									{#if question.survey_item.type === 'time'}
+									{#if surveyItem.type === 'time'}
 										<div class="grid grid-cols-2 gap-2">
 											<label class="mb-2 block text-sm text-gray-500">
 												Min
 												<input
 													type="time"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-													bind:value={question.survey_item.min}
+													bind:value={surveyItem.min}
 												/>
 											</label>
 											<label class="mb-2 block text-sm text-gray-500">
@@ -524,7 +532,7 @@
 												<input
 													type="time"
 													class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-													bind:value={question.survey_item.max}
+													bind:value={surveyItem.max}
 												/>
 											</label>
 										</div>
@@ -614,7 +622,9 @@
 												referencedQuestion?.survey_item?.type === 'datetime' ||
 												referencedQuestion?.survey_item?.type === 'time' ||
 												referencedQuestion?.survey_item?.type === 'slider'}
-											{@const hasSurveyOptions = referencedQuestion?.survey_item?.options?.length}
+											{@const hasSurveyOptions = surveyItemOptions(
+												referencedQuestion?.survey_item
+											)?.length}
 
 											<div class="rounded-md border border-gray-300 bg-gray-50/50 p-3">
 												<div class="mb-2 flex items-center justify-between">
@@ -750,7 +760,7 @@
 																					bind:value={evaluation.trigger_value}
 																				>
 																					<option value="">Select an option...</option>
-																					{#each referencedQuestion.survey_item?.options || [] as option (option)}
+																					{#each surveyItemOptions(referencedQuestion?.survey_item) || [] as option (option)}
 																						<option
 																							value={option}
 																							disabled={selectedValues.includes(option)}
@@ -930,7 +940,7 @@
 								<button
 									class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
 									onclick={() => {
-										question.image = { description: '', alt: '' };
+										question.image = { description: '', alt: '', name: '', data: null };
 										expandedImage = true;
 									}}
 								>

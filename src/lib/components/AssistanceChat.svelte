@@ -8,7 +8,7 @@
 	interface Props {
 		project_id: string;
 		lang: string;
-		guide: InterviewGuideOutput;
+		guide: InterviewGuideOutput | null;
 		questionMessage?: Snippet<[item: GuideQuestion, index: number]>;
 		sectionMessage?: Snippet<
 			[item: { section: GuideSection; questions: GuideQuestion[] }, index: number]
@@ -113,7 +113,7 @@
 
 	async function send() {
 		const prompt = input.trim();
-		if (!prompt || isStreaming) return;
+		if (!prompt || isStreaming || !guide) return;
 
 		input = '';
 		resizeTextarea();
@@ -146,7 +146,7 @@
 				return;
 			}
 
-			const reader = data.getReader();
+			const reader = (data as ReadableStream<Uint8Array>).getReader();
 			const decoder = new TextDecoder();
 			let buffer = '';
 			let firstChunk = true;

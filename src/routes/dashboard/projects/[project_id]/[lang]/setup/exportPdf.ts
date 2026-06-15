@@ -201,7 +201,7 @@ function buildImageContent(image: Image): PdfNode[] {
 		});
 	}
 
-	if (image.data) {
+	if (typeof image.data === 'string') {
 		try {
 			const dataUri = image.data.startsWith('data:')
 				? image.data
@@ -316,12 +316,6 @@ function buildQuestionContent(
 				margin: [16, 0, 0, 1]
 			});
 		}
-	}
-
-	// Variables
-	if (q.variables && q.variables.length > 0) {
-		content.push(indentNode(label('Variables')));
-		content.push({ text: q.variables.join(', '), fontSize: 9, margin: [16, 0, 0, 4] });
 	}
 
 	// Behavior flags (gated by toggle)

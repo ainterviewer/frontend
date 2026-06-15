@@ -289,7 +289,6 @@
 						cornerRadius={5}
 						padAngle={0.02}
 						cRange={['#e8dcb9', '#196858', '#94a3b8']}
-						renderContext="svg"
 						props={{
 							arc: { motion: { type: 'spring', stiffness: 0.1, damping: 0.4 } }
 						}}

@@ -101,7 +101,7 @@
 		let image: { data: string; alt?: string; primer?: string } | undefined;
 		if (msg.image) {
 			const imgSource = Array.isArray(msg.image) ? msg.image[0] : (msg.image as Image);
-			if (imgSource?.data) {
+			if (typeof imgSource?.data === 'string') {
 				image = {
 					data: imgSource.data,
 					alt: imgSource.alt,
@@ -1409,6 +1409,7 @@
 																<button
 																	type="button"
 																	class="text-gray-400 hover:text-gray-600"
+																	aria-label="Close comment"
 																	onclick={() => closeCommentInput(messageId)}
 																>
 																	<i class="fa-solid fa-times text-xs"></i>
@@ -1512,12 +1513,13 @@
 	{@const modalMessageId = commentModalMessageId}
 	{@const modalAnnotation = messageAnnotations.get(modalMessageId)}
 	{@const isSaving = savingCommentIds.has(modalMessageId)}
-	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
 		onclick={(e) => {
 			if (e.target === e.currentTarget) closeCommentInput(modalMessageId);
 		}}
+		onkeydown={(e) => e.key === 'Escape' && closeCommentInput(modalMessageId)}
+		role="presentation"
 	>
 		<div class="w-full max-w-md rounded-lg bg-white shadow-xl">
 			<div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
@@ -1527,6 +1529,7 @@
 				<button
 					type="button"
 					class="text-gray-400 hover:text-gray-600"
+					aria-label="Close comment"
 					onclick={() => closeCommentInput(modalMessageId)}
 				>
 					<i class="fa-solid fa-times"></i>

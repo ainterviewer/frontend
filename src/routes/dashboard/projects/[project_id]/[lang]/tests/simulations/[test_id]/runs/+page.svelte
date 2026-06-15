@@ -37,9 +37,9 @@
 
 	let refreshInterval: ReturnType<typeof setInterval>;
 
-	const projectId = $derived(page.params.project_id);
+	const projectId = $derived(page.params.project_id as string);
 	const lang = $derived(page.params.lang);
-	const testId = $derived(page.params.test_id);
+	const testId = $derived(page.params.test_id as string);
 
 	async function loadTestRuns() {
 		loading = true;
