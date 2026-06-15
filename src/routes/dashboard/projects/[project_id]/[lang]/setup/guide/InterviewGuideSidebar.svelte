@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
-	import { DragDropProvider, KeyboardSensor, PointerSensor } from '@dnd-kit-svelte/svelte';
+	import {
+		DragDropProvider,
+		KeyboardSensor,
+		PointerSensor,
+		type DragDropEvents
+	} from '@dnd-kit-svelte/svelte';
 	import SidebarSortableSection from './SidebarSortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 
@@ -20,9 +25,9 @@
 		return result;
 	}
 
-	function handleDragOver(event: any) {
+	function handleDragOver(event: Parameters<DragDropEvents['dragover']>[0]) {
 		const { source, target } = event.operation;
-		if (!target) return;
+		if (!source || !target) return;
 
 		// Section reordering
 		if (source.type === 'sidebar-section') {
@@ -42,7 +47,7 @@
 			const toSectionId: string =
 				target.type === 'sidebar-question'
 					? target.data?.sectionId
-					: (target.data?.sectionId ?? target.id);
+					: (target.data?.sectionId ?? String(target.id));
 
 			if (!fromSectionId || !toSectionId) return;
 

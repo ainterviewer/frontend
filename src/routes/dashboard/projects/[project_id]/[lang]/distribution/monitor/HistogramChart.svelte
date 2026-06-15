@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { BarChart, Bars, Tooltip } from 'layerchart';
+	import { BarChart, Bars, Tooltip, type ChartContextValue } from 'layerchart';
 
 	let {
 		data,
@@ -9,7 +9,7 @@
 		tooltipLabel?: string;
 	} = $props();
 
-	let chartContext = $state<any>(null);
+	let chartContext = $state<ChartContextValue | undefined>(undefined);
 	let barBandwidth = $derived(
 		chartContext?.xScale?.bandwidth ? chartContext.xScale.bandwidth() : 0
 	);

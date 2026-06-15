@@ -221,9 +221,10 @@
 						message={msg}
 						{lang}
 						isLast={i === chat.messages.length - 1}
-						onFeedback={(f: any, id: any) => chat.sendFeedback(f, id)}
+						onFeedback={(f: 'positive' | 'negative' | null, id: string | number) =>
+							chat.sendFeedback(f, id)}
 						onSkip={() => chat.sendSkip()}
-						onSurveyAnswer={(ans: any, id: any) => chat.sendSurveyResponse(ans, id)}
+						onSurveyAnswer={(ans: unknown, id: string | number) => chat.sendSurveyResponse(ans, id)}
 					/>
 				{/if}
 			</div>

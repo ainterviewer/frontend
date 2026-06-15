@@ -109,7 +109,7 @@ export class TranscriptionClient {
 	private handleMessage(event: MessageEvent) {
 		if (typeof event.data !== 'string') return;
 
-		let data: any;
+		let data: { type?: string; filename?: string; transcript?: string; error?: string };
 		try {
 			data = JSON.parse(event.data);
 		} catch {

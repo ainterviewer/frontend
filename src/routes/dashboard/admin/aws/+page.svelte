@@ -56,9 +56,11 @@
 			}
 
 			instances = response.data as Instance[];
-		} catch (err: any) {
+		} catch (err) {
 			console.error(err);
-			error = 'Failed to fetch instance status: ' + (err.message || 'Unknown error');
+			error =
+				'Failed to fetch instance status: ' +
+				(err instanceof Error && err.message ? err.message : 'Unknown error');
 		} finally {
 			isLoading = false;
 		}

@@ -10,7 +10,8 @@
 		DragDropProvider,
 		DragOverlay,
 		KeyboardSensor,
-		PointerSensor
+		PointerSensor,
+		type DragDropEvents
 	} from '@dnd-kit-svelte/svelte';
 	import { move } from '@dnd-kit/helpers';
 	import { tick } from 'svelte';
@@ -24,6 +25,10 @@
 	const guideStore = setGuideStore(createGuideStore());
 
 	const sensors = [KeyboardSensor, PointerSensor];
+
+	type DragEventOf<K extends 'dragover' | 'dragstart' | 'dragend'> = Parameters<
+		DragDropEvents[K]
+	>[0];
 
 	let activeItem = $state<GuideSection | GuideQuestion | null>(null);
 	let activeDragType = $state<'section' | 'question' | null>(null);
@@ -40,8 +45,9 @@
 		return newArray;
 	}
 
-	function handleDragOver(event: any) {
+	function handleDragOver(event: DragEventOf<'dragover'>) {
 		const { source, target } = event.operation;
+		if (!source) return;
 
 		// Chat-sourced items: track hover target for visual feedback, skip move logic
 		if (source.data?.source === 'chat') {
@@ -58,7 +64,7 @@
 				(source.type === 'question' && target.type === 'question') ||
 				(source.type === 'section' && target.type === 'section');
 			if (needsPosition) {
-				const el = document.getElementById(target.id);
+				const el = document.getElementById(String(target.id));
 				if (el) {
 					const rect = el.getBoundingClientRect();
 					position = pointerY > rect.top + rect.height / 2 ? 'after' : 'before';
@@ -66,9 +72,9 @@
 			}
 
 			dragState.chatDropTarget = {
-				id: target.id,
-				targetType: target.type,
-				dragType: source.type,
+				id: String(target.id),
+				targetType: target.type as 'section' | 'question',
+				dragType: source.type as 'section' | 'question',
 				position
 			};
 			return;
@@ -87,17 +93,22 @@
 			return;
 		}
 
-		guideStore.localQuestions = move(guideStore.localQuestions as any, event);
+		// @dnd-kit/helpers ships its own copy of @dnd-kit/abstract, so its event
+		// type is nominally incompatible with ours despite being identical.
+		guideStore.localQuestions = move(
+			guideStore.localQuestions,
+			event as unknown as Parameters<typeof move>[1]
+		);
 	}
 
-	function handleDragStart(event: any) {
-		const source = event.operation?.source;
-		const data = source?.data ?? source?.current?.data;
-		const type = source?.type ?? source?.current?.type;
+	function handleDragStart(event: DragEventOf<'dragstart'>) {
+		const source = event.operation.source;
+		const data = source?.data;
+		const type = source?.type as 'section' | 'question' | undefined;
 		activeDragType = type ?? null;
-		const sourceId = source?.id ?? source?.current?.id;
+		const sourceId = source?.id;
 		if (sourceId) {
-			dragState.draggingId = sourceId;
+			dragState.draggingId = String(sourceId);
 		}
 		if (data?.source === 'chat') {
 			isChatMaximized = false;
@@ -109,8 +120,8 @@
 		}
 	}
 
-	async function handleDragEnd(event: any) {
-		const { source, target } = event.operation ?? {};
+	async function handleDragEnd(event: DragEventOf<'dragend'>) {
+		const { source, target } = event.operation;
 
 		// Track the id of the element to scroll to after the drop.
 		// For guide-sourced drags this is the original element; for chat-sourced
@@ -136,7 +147,7 @@
 						}
 					}
 				} else if (target.type === 'section') {
-					targetSectionId = target.id;
+					targetSectionId = String(target.id);
 				}
 
 				if (targetSectionId) {

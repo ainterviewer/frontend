@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Assistance } from '$lib/api/sdk.gen';
-	import type { ChatMessage, InterviewGuideOutput } from '$lib/api/types.gen';
+	import type { ChatMessage, InterviewGuideOutput, QuestionOutput } from '$lib/api/types.gen';
 	import type { GuideQuestion, GuideSection } from '$lib/stores/guideStore.svelte';
 	import { tick, type Snippet } from 'svelte';
 	import { fly } from 'svelte/transition';
@@ -61,10 +61,10 @@
 								id: sectionData.id ?? crypto.randomUUID(),
 								questions: []
 							} as GuideSection,
-							questions: ((questions as any[]) || []).map((q: any) => ({
+							questions: ((questions ?? []) as (QuestionOutput & { id?: string })[]).map((q) => ({
 								...q,
 								id: q.id ?? crypto.randomUUID()
-							})) as GuideQuestion[]
+							}))
 						};
 					}
 				} catch {

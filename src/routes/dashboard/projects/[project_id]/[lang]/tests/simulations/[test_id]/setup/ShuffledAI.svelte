@@ -10,7 +10,9 @@
 	// deliberately not kept in sync with later prop updates.
 	const bg = untrack(() => test.background_info);
 
-	let names_gender = $state(bg?.names_gender?.length ? bg.names_gender : [['', '']]);
+	let names_gender = $state<[string, string][]>(
+		bg?.names_gender?.length ? bg.names_gender : [['', '']]
+	);
 	let age_range = $state(bg?.age_range || [18, 80]);
 	let educations = $state(bg?.educations?.length ? bg.educations : ['']);
 	let occupations = $state(bg?.occupations?.length ? bg.occupations : ['']);
@@ -39,11 +41,11 @@
 
 	let isSaving = $state(false);
 
-	function addRow(list: any[], defaultVal: any = '') {
+	function addRow(list: string[], defaultVal = '') {
 		list.push(defaultVal);
 	}
 
-	function removeRow(list: any[], index: number) {
+	function removeRow(list: string[], index: number) {
 		if (list.length > 1) {
 			list.splice(index, 1);
 		}
@@ -80,7 +82,7 @@
 					locations: cleanList($state.snapshot(locations)),
 					personalities: cleanList($state.snapshot(personalities)),
 					communication_traits: {
-						length: cleanList($state.snapshot(comm_length)) as any[],
+						length: cleanList($state.snapshot(comm_length)),
 						style: cleanList($state.snapshot(comm_style)),
 						tone: cleanList($state.snapshot(comm_tone))
 					},

@@ -12,7 +12,18 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let testRuns = $state<any[]>([]);
+	// getTestStatus has no response model in the OpenAPI schema; this mirrors
+	// the backend's test run rows.
+	type TestRun = {
+		id: string;
+		status: string;
+		created_at: string;
+		language?: string | null;
+		n_interviews?: number | null;
+		answering_model?: string | null;
+	};
+
+	let testRuns = $state<TestRun[]>([]);
 	let loading = $state(false);
 	let running = $state(false);
 
@@ -42,7 +53,7 @@
 			console.error('Failed to load test runs', statusError);
 			testRuns = [];
 		} else {
-			testRuns = (statusData as any) || [];
+			testRuns = (statusData as TestRun[]) || [];
 		}
 		loading = false;
 	}
@@ -57,7 +68,7 @@
 		const body: SynthesizeRequest = {
 			n_interviews: nInterviews,
 			answering_model: answeringModel || null,
-			language: language as any,
+			language,
 			delay_before_answers: delayBeforeAnswers
 				? [delayBeforeAnswers, delayBeforeAnswersRandom]
 				: null

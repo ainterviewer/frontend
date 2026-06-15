@@ -8,6 +8,7 @@
 		TimeDelta
 	} from '$lib/api';
 	import { Admin } from '$lib/api/sdk.gen';
+	import { errorMessage } from '$lib/utils/errors';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
@@ -63,8 +64,8 @@
 		try {
 			await invalidateAll();
 			selectedIds.clear();
-		} catch (e: any) {
-			error = e.message || 'Failed to fetch invitations';
+		} catch (e) {
+			error = errorMessage(e) || 'Failed to fetch invitations';
 		} finally {
 			isLoading = false;
 		}
@@ -108,8 +109,8 @@
 			isLoading = false;
 			await loadInvitations();
 			toast.success('Invitations deleted');
-		} catch (e: any) {
-			error = `Failed to delete invitations: ${e.message}`;
+		} catch (e) {
+			error = `Failed to delete invitations: ${errorMessage(e)}`;
 			toast.error(error);
 			isLoading = false;
 		}
@@ -150,8 +151,8 @@
 			resetForm();
 			await loadInvitations();
 			toast.success('Invitation created');
-		} catch (e: any) {
-			error = `Failed to create invitation: ${e.message}`;
+		} catch (e) {
+			error = `Failed to create invitation: ${errorMessage(e)}`;
 			toast.error(error);
 			isLoading = false;
 		}
@@ -249,8 +250,8 @@
 			resetForm();
 			await loadInvitations();
 			toast.success('Invitation updated');
-		} catch (e: any) {
-			error = `Failed to update invitation: ${e.message}`;
+		} catch (e) {
+			error = `Failed to update invitation: ${errorMessage(e)}`;
 			toast.error(error);
 			isLoading = false;
 		}

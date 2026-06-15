@@ -104,7 +104,8 @@
 		const { error } = await Folders.createFolder({
 			body: {
 				title: createFolderName,
-				collaborators: createFolderCollaborators.filter((c) => c.email.trim() !== '') as any
+				// The API only accepts the `folder_collaborations` alias, not `collaborators`.
+				folder_collaborations: createFolderCollaborators.filter((c) => c.email.trim() !== '')
 			}
 		});
 		if (error) {

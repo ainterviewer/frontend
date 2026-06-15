@@ -159,7 +159,7 @@
 						{lang}
 						{readonly}
 						answer={message.answer}
-						onAnswer={(ans: any) => onSurveyAnswer(ans, message.message_id)}
+						onAnswer={(ans: unknown) => onSurveyAnswer(ans, message.message_id)}
 					/>
 				</div>
 			{/if}
@@ -191,7 +191,7 @@
 				{:else}
 					<FeedbackToggle
 						feedback={message.feedback}
-						onFeedback={(f: any) => onFeedback(f, message.message_id)}
+						onFeedback={(f: 'positive' | 'negative' | null) => onFeedback(f, message.message_id)}
 					/>
 					{#if isLast}
 						<SkipButton {onSkip} />

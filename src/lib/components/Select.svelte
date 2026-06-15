@@ -17,7 +17,7 @@
 		placeholder?: string;
 		class?: string;
 		disabled?: boolean;
-		[key: string]: any;
+		[key: string]: unknown;
 	} = $props();
 
 	const selectedLabel = $derived(items.find((i) => i.value === value)?.label || placeholder);

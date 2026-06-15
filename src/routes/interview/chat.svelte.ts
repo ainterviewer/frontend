@@ -2,11 +2,30 @@ import { browser } from '$app/environment';
 import {
 	Auth,
 	Interviews,
+	type HttpValidationError,
 	type InterviewToken,
 	type InterviewType,
+	type OutgoingData,
+	type OutgoingHistoryMessage,
+	type OutgoingMessage,
 	type ReceivedData
 } from '$lib/api';
 import { type Message } from '$lib/components/interview/types';
+
+// Messages arriving over the interview WebSocket. `OutgoingData` is extended
+// with the session identifiers the server includes on `data` frames.
+type ServerMessage =
+	| OutgoingMessage
+	| OutgoingHistoryMessage
+	| (OutgoingData & { interview_id?: string; project_id?: string });
+
+// The server schema allows a list of images, but interview messages carry at
+// most one. Over the WebSocket the image data is always a base64/URL string.
+function toMessageImage(image: OutgoingMessage['image']): Message['image'] {
+	const img = Array.isArray(image) ? image[0] : image;
+	if (!img) return undefined;
+	return { data: img.data as string, primer: img.primer ?? undefined };
+}
 
 /**
  * Parse interview ID from a JWT token
@@ -114,9 +133,9 @@ export async function createInterview(
 		if (error || !response.ok) {
 			// Try to extract validation errors from the response
 			try {
-				const body = error as any;
+				const body = error as HttpValidationError;
 				if (body?.detail && Array.isArray(body.detail)) {
-					const validationErrors = body.detail.map((d: any) => ({
+					const validationErrors = body.detail.map((d) => ({
 						loc: Array.isArray(d.loc) ? d.loc.join('.') : String(d.loc),
 						msg: d.msg
 					}));
@@ -164,7 +183,7 @@ export class ChatClient {
 	});
 	reconnectAttempts = 0;
 	maxReconnectAttempts = 5;
-	reconnectTimeout: any = null;
+	reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Context
 	project_id: string;
@@ -175,7 +194,7 @@ export class ChatClient {
 	is_synthetic: boolean;
 	ws_path: string | null;
 
-	messageQueue: any[] = [];
+	messageQueue: ServerMessage[] = [];
 	isProcessingQueue = false;
 
 	constructor(
@@ -384,9 +403,9 @@ export class ChatClient {
 
 			if (error || !response.ok) throw new Error('Upload failed');
 
-			const result: any = data;
+			const result = data;
 
-			if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+			if (result && this.ws && this.ws.readyState === WebSocket.OPEN) {
 				this.ws.send(
 					JSON.stringify({
 						type: 'image_uploaded',
@@ -448,7 +467,7 @@ export class ChatClient {
 		}
 	}
 
-	sendSurveyResponse(response: any, originalMessageId: string | number) {
+	sendSurveyResponse(response: unknown, originalMessageId: string | number) {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
 			console.error('Cannot send survey response');
 			return;
@@ -469,7 +488,7 @@ export class ChatClient {
 	}
 
 	// Message Queue Processing
-	queueMessage(data: any) {
+	queueMessage(data: ServerMessage) {
 		this.messageQueue.push(data);
 		this.processQueue();
 	}
@@ -481,7 +500,7 @@ export class ChatClient {
 		try {
 			while (this.messageQueue.length > 0) {
 				const data = this.messageQueue.shift();
-				await this.processSingleMessage(data);
+				if (data) await this.processSingleMessage(data);
 			}
 		} catch (e) {
 			console.error('Error processing queue', e);
@@ -490,7 +509,7 @@ export class ChatClient {
 		}
 	}
 
-	async processSingleMessage(data: any) {
+	async processSingleMessage(data: ServerMessage) {
 		// Server is speaking — drop any forced indicator from a prior send.
 		this.forceTypingIndicator = false;
 
@@ -498,10 +517,11 @@ export class ChatClient {
 			case 'message':
 				if (data.progress) this.progress = data.progress;
 				if (data.image) {
-					if (data.image.primer) {
+					const image = toMessageImage(data.image);
+					if (image?.primer) {
 						await this.addMessage({
 							type: 'received',
-							text: data.image.primer,
+							text: image.primer,
 							message_id: data.message_id
 						});
 					}
@@ -512,7 +532,7 @@ export class ChatClient {
 
 					await this.addMessage({
 						type: 'received',
-						image: data.image,
+						image,
 						message_id: data.message_id
 					});
 				}
@@ -565,7 +585,7 @@ export class ChatClient {
 					if (data.image) {
 						this.messages.push({
 							type: 'received',
-							image: data.image,
+							image: toMessageImage(data.image),
 							message_id: data.message_id
 						});
 					}

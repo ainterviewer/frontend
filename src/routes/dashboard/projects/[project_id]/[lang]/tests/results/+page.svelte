@@ -67,7 +67,7 @@
 			interviews = [];
 			totalItems = 0;
 		} else {
-			const data = responseData as any;
+			const data = responseData;
 			if (data) {
 				interviews = data.items || [];
 				totalItems = data.total || 0;

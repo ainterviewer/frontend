@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { Admin, type Scope } from '$lib/api';
+	import { errorMessage } from '$lib/utils/errors';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
@@ -46,8 +47,8 @@
 		try {
 			await invalidateAll();
 			selectedIds.clear();
-		} catch (e: any) {
-			error = e.message || 'Failed to fetch requests';
+		} catch (e) {
+			error = errorMessage(e) || 'Failed to fetch requests';
 		} finally {
 			isLoading = false;
 		}
@@ -91,8 +92,8 @@
 			isLoading = false;
 			await loadRequests();
 			toast.success(`Requests ${action === 'approve' ? 'approved' : 'denied'}`);
-		} catch (e: any) {
-			error = `Failed to ${action} requests: ${e.message}`;
+		} catch (e) {
+			error = `Failed to ${action} requests: ${errorMessage(e)}`;
 			toast.error(error);
 			isLoading = false;
 		}
@@ -122,8 +123,8 @@
 			isLoading = false;
 			await loadRequests();
 			toast.success('Requests deleted');
-		} catch (e: any) {
-			error = `Failed to delete requests: ${e.message}`;
+		} catch (e) {
+			error = `Failed to delete requests: ${errorMessage(e)}`;
 			toast.error(error);
 			isLoading = false;
 		}

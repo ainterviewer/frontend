@@ -3,6 +3,7 @@ import type {
 	QuestionOutput as ApiQuestion,
 	ExternalParam,
 	GeneratedQuestions,
+	InterviewGuideInput,
 	InterviewGuideOutput,
 	QuestionSectionQuestionOutput as QuestionSectionOutput
 } from '$lib/api/types.gen';
@@ -98,21 +99,21 @@ function trimSurveyItemOptions(questionsMap: Record<string, GuideQuestion[]>) {
 export async function saveGuide(
 	projectId: string,
 	lang: string,
-	guide: any,
-	localSections: any,
-	localQuestions: any,
+	guide: InterviewGuideOutput,
+	localSections: GuideSection[],
+	localQuestions: Record<string, GuideQuestion[]>,
 	externalParams: ExternalParam[] = []
 ) {
 	trimSurveyItemOptions(localQuestions);
 
-	const payload = {
+	const payload: InterviewGuideInput = {
 		...guide,
 		question_sections: mapFromLocal(localSections, localQuestions),
 		extra_variables: externalParams.map((p) => p.name)
 	};
 	const { error } = await Projects.createGuide({
 		path: { project_id: projectId, lang: lang },
-		body: payload as any
+		body: payload
 	});
 	if (error) {
 		console.error('Failed to save guide', error);

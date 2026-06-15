@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { PromptsUpdateRequest, AgentConfigs } from '$lib/api/types.gen';
+	import type { PromptsUpdateRequest, PromptTemplates, AgentConfigs } from '$lib/api/types.gen';
 
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
@@ -11,14 +11,17 @@
 
 	let saving = $state(false);
 	let agents = $state<AgentConfigs>(untrack(() => data.agents));
-	let prompts = $state<Record<string, any>>(untrack(() => data.prompts as Record<string, any>));
+	// getPrompts has no response model in the OpenAPI schema, so the page types it.
+	let prompts = $state<Record<string, PromptTemplates>>(
+		untrack(() => data.prompts as Record<string, PromptTemplates>)
+	);
 	let models = $state<string[]>(untrack(() => data.models));
 	let promptsContainer: HTMLDivElement;
 
 	$effect(() => {
 		agents = data.agents;
 		models = data.models;
-		prompts = data.prompts as Record<string, any>;
+		prompts = data.prompts as Record<string, PromptTemplates>;
 	});
 
 	$effect(() => {

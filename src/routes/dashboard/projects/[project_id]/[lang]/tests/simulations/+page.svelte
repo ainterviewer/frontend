@@ -2,7 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Synthesize } from '$lib/api';
+	import { Synthesize, type TestType } from '$lib/api';
 	import { toast } from 'svelte-sonner';
 	import Info from '$lib/components/Info.svelte';
 
@@ -14,15 +14,16 @@
 	let lang = $derived(page.params.lang);
 
 	let tests = $derived.by(() => {
-		return [...data.tests].sort((a: any, b: any) => {
-			let valA = a[sortBy];
-			let valB = b[sortBy];
+		const key = sortBy as keyof (typeof data.tests)[number];
+		return [...data.tests].sort((a, b) => {
+			let valA: unknown = a[key];
+			let valB: unknown = b[key];
 			if (sortBy === 'created_at' || sortBy === 'last_updated') {
-				valA = new Date(valA || 0).getTime();
-				valB = new Date(valB || 0).getTime();
+				valA = new Date((valA as string | null | undefined) || 0).getTime();
+				valB = new Date((valB as string | null | undefined) || 0).getTime();
 			}
-			if (valA < valB) return sortDesc ? 1 : -1;
-			if (valA > valB) return sortDesc ? -1 : 1;
+			if ((valA as string | number) < (valB as string | number)) return sortDesc ? 1 : -1;
+			if ((valA as string | number) > (valB as string | number)) return sortDesc ? -1 : 1;
 			return 0;
 		});
 	});
@@ -30,13 +31,13 @@
 	// Modal state
 	let isModalOpen = $state(false);
 	let newTestName = $state('');
-	let newTestType = $state('shuffled_ai');
+	let newTestType = $state<TestType>('shuffled_ai');
 	let isCreating = $state(false);
 
 	// Dropdown state
 	let activeDropdown: string | null = $state(null);
 
-	const testTypes = [
+	const testTypes: { type: TestType; label: string; icon: string; description: string }[] = [
 		{
 			type: 'fixed_answers',
 			label: 'Fixed Answers',
@@ -89,7 +90,7 @@
 			},
 			body: {
 				name: newTestName,
-				type: newTestType as any,
+				type: newTestType,
 				project_id: projectId
 			}
 		});

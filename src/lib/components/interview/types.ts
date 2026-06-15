@@ -19,7 +19,7 @@ export interface Message {
 	question_label?: string;
 	section?: number | null;
 	// For survey responses or other internal use
-	options?: any;
+	options?: unknown;
 	required?: boolean;
 	answer?: string;
 }
