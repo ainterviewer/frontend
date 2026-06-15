@@ -192,7 +192,7 @@
 		}
 	}
 
-	function handleConnect(id: string) {
+	function handleConnect(_id: string) {
 		alert('Not implemented');
 	}
 

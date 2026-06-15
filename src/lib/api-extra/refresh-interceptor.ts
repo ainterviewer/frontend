@@ -1,4 +1,5 @@
 import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 import { Auth } from '../api';
 import { client } from '../api/client.gen';
 
@@ -23,7 +24,7 @@ client.interceptors.response.use(async (response, request, _options) => {
 	// Don't retry refresh/login endpoints to avoid loops
 	const url = new URL(request.url);
 	if (url.pathname === '/api/refresh' || url.pathname === '/api/login') {
-		await goto('/login');
+		await goto(resolve('/login'));
 		return response;
 	}
 
@@ -44,7 +45,7 @@ client.interceptors.response.use(async (response, request, _options) => {
 
 	const ok = await refreshPromise;
 	if (!ok) {
-		await goto('/login');
+		await goto(resolve('/login'));
 		return response;
 	}
 

@@ -50,6 +50,7 @@
 				sideOffset={4}
 			>
 				{#if text}
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					{@html text}
 				{:else if content}
 					{@render content()}

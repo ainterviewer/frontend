@@ -52,7 +52,7 @@
 			} else {
 				await goto(resolve('/login'));
 			}
-		} catch (e) {
+		} catch {
 			errorMessage = 'An unexpected error occurred';
 		} finally {
 			isLoading = false;
@@ -252,8 +252,9 @@
 
 			<p class="mt-4 text-center text-sm text-gray-600">
 				Already have an account?
-				<a href="/login" class="font-medium text-primary transition-colors hover:text-primary/80"
-					>Sign in</a
+				<a
+					href={resolve('/login')}
+					class="font-medium text-primary transition-colors hover:text-primary/80">Sign in</a
 				>
 			</p>
 		</div>

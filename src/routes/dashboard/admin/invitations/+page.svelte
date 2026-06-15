@@ -17,7 +17,7 @@
 
 	let invitations = $derived(data.invitations as InvitationPublic[]);
 	let isLoading = $state(false);
-	let error = $state<string | null>(null);
+	let error = $derived<string | null>(data.error);
 	const selectedIds = new SvelteSet<string>();
 	let showCreateForm = $state(false);
 	let editingInvitation = $state<InvitationPublic | null>(null);
@@ -52,10 +52,6 @@
 		demo: 'bg-amber-100 text-amber-800',
 		guest: 'bg-gray-100 text-gray-800'
 	};
-
-	$effect(() => {
-		error = data.error;
-	});
 
 	async function loadInvitations() {
 		if (isLoading) return;
@@ -327,7 +323,8 @@
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
-				editingInvitation ? handleUpdate() : handleCreate();
+				if (editingInvitation) handleUpdate();
+				else handleCreate();
 			}}
 			class="grid grid-cols-1 gap-4 sm:grid-cols-2"
 		>

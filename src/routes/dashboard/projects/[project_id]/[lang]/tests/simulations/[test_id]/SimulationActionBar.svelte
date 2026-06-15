@@ -17,12 +17,6 @@
 	const projectId = $derived(page.params.project_id);
 	const lang = $derived(page.params.lang);
 	const testId = $derived(page.params.test_id);
-	const setupHref = $derived(
-		resolve(`/dashboard/projects/${projectId}/${lang}/tests/simulations/${testId}/setup`)
-	);
-	const runsHref = $derived(
-		resolve(`/dashboard/projects/${projectId}/${lang}/tests/simulations/${testId}/runs`)
-	);
 </script>
 
 <div
@@ -31,7 +25,7 @@
 	{#if current === 'setup'}
 		<a
 			class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
-			href={runsHref}
+			href={resolve(`/dashboard/projects/${projectId}/${lang}/tests/simulations/${testId}/runs`)}
 		>
 			Runs
 		</a>
@@ -52,7 +46,7 @@
 	{:else}
 		<a
 			class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
-			href={setupHref}
+			href={resolve(`/dashboard/projects/${projectId}/${lang}/tests/simulations/${testId}/setup`)}
 		>
 			Setup
 		</a>

@@ -104,6 +104,7 @@
 		<h1 class="ep-status">{status}</h1>
 		<h2 class="ep-heading">{heading}</h2>
 		<p class="ep-desc">{description}</p>
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 		<a class="ep-btn" href={homeHref}>Go back home</a>
 	</div>
 </div>

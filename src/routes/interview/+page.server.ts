@@ -35,7 +35,7 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 		path: { project_id }
 	});
 
-	const { data: isProjectOwnerDemoUser, error: ownerError } = await Projects.checkProjectOwner({
+	const { data: isProjectOwnerDemoUser } = await Projects.checkProjectOwner({
 		headers: { cookie: cookieHeader },
 		path: { project_id }
 	});

@@ -106,6 +106,7 @@
 
 				<div class="mt-4 whitespace-pre-line text-gray-700">
 					{#if text}
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html text}
 					{:else if isPreview}
 						<span class="text-gray-400 italic">No welcome message configured yet.</span>

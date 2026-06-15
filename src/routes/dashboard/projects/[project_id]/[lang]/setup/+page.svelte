@@ -54,11 +54,7 @@
 	];
 
 	let savingConfig = $state(false);
-	let config: InterviewConfig = $state({});
-
-	$effect(() => {
-		config = structuredClone(data.config ?? {});
-	});
+	let config: InterviewConfig = $derived(structuredClone(data.config ?? {}));
 
 	function toggleProbing(strategy: ProbingStrategy, checked: boolean) {
 		const current = config.probing_strategy ?? [];
@@ -96,11 +92,9 @@
 		};
 	}
 
-	let externalParams: ExternalParam[] = $state([]);
-
-	$effect(() => {
-		externalParams = structuredClone(data.project?.external_params ?? []);
-	});
+	let externalParams: ExternalParam[] = $derived(
+		structuredClone(data.project?.external_params ?? [])
+	);
 
 	const paramCount = $derived(externalParams.length);
 
@@ -193,6 +187,7 @@
 	<!-- Steps -->
 	<div class="space-y-4">
 		{#each steps as step (step.number)}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -- step.href is built from project route templates -->
 			<a
 				href={step.href}
 				class="group flex items-start gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-primary/30 hover:shadow-md"
@@ -244,6 +239,7 @@
 					<i class="fa-solid fa-chevron-right"></i>
 				</div>
 			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{/each}
 	</div>
 

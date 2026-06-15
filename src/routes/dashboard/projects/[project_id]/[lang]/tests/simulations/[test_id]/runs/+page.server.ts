@@ -4,7 +4,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 	const { cookieHeader } = locals;
-	const { project_id, test_id, lang } = params;
+	const { project_id, test_id } = params;
 
 	const [modelsRes, testsResponse, projectRes] = await Promise.all([
 		Default.getModels({

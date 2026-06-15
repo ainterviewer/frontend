@@ -389,12 +389,14 @@
 
 <Modal show={showHelp} title={helpTitle} onClose={() => (showHelp = false)}>
 	<div class="prose prose-sm max-w-none text-gray-600">
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html helpText}
 	</div>
 </Modal>
 
 <Modal show={showExit} title={exitTitle} onClose={() => (showExit = false)}>
 	<div class="prose prose-sm max-w-none text-gray-600">
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html exitText}
 	</div>
 	<div class="mt-6 flex justify-end">

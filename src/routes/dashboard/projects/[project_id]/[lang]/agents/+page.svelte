@@ -63,9 +63,9 @@
 				newNode.innerHTML = value.replace(regex, (match, innerText) => {
 					let innerHTML = '';
 					if (brackets === 'single') {
-						innerHTML = `\{<span class="highlight-syntax ${color}">${innerText}</span>\}`;
+						innerHTML = `{<span class="highlight-syntax ${color}">${innerText}</span>}`;
 					} else if (brackets === 'double') {
-						innerHTML = `\{\{<span class="highlight-syntax ${color}">${innerText}</span>\}\}`;
+						innerHTML = `{{<span class="highlight-syntax ${color}">${innerText}</span>}}`;
 					}
 					return innerHTML;
 				});
@@ -80,11 +80,11 @@
 		if (!promptsContainer) return;
 
 		// Regular expression to match text enclosed in double curly braces
-		var regexDouble = RegExp(`\{\{(\.*?)\}\}`, 'g');
+		var regexDouble = RegExp(`{{(.*?)}}`, 'g');
 		replaceTextNodes(promptsContainer, regexDouble, 'blue', 'double');
 
 		// Regular expression to match text enclosed in single curly braces
-		var regexSingle = RegExp(`\{(\.*?)\}`, 'g');
+		var regexSingle = RegExp(`{(.*?)}`, 'g');
 		replaceTextNodes(promptsContainer, regexSingle, 'pink', 'single');
 	}
 
@@ -359,13 +359,13 @@
 										>
 											{promptKey.replace(/_/g, ' ')}:
 										</label>
-										<!-- svelte-ignore a11y_role_has_required_aria_props -->
 										<div
 											id={`${agentKey}.${promptKey}`}
 											contenteditable="true"
 											class="prompt-template-textarea w-full rounded border border-gray-300 bg-white p-2 text-sm"
 											onblur={(e) => updatePromptValue(e, agentKey, promptKey)}
 										>
+											<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 											{@html promptValue.replace(/\n/g, '<br>')}
 										</div>
 									</div>

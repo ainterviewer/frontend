@@ -34,7 +34,7 @@
 				errorMessage = error.details || 'Invalid request';
 				return;
 			}
-		} catch (e) {
+		} catch {
 			errorMessage = 'An unexpected error occurred';
 			return;
 		} finally {

@@ -342,8 +342,8 @@
 
 	$effect(() => {
 		// Track dependencies so effect re-runs on changes
-		guideStore.localSections;
-		guideStore.localQuestions;
+		void guideStore.localSections;
+		void guideStore.localQuestions;
 
 		if (observer) observer.disconnect();
 

@@ -150,6 +150,7 @@
 				<AudioMessage blob={message.audio.blob} duration={message.audio.duration} />
 			{/if}
 			{#if processedText}
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html processedText}
 			{/if}
 			{#if message.survey_item}

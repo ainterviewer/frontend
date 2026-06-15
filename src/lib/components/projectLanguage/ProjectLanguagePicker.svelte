@@ -27,6 +27,7 @@
 			if (!ok) return;
 		}
 		const basePath = window.location.pathname.replace(`/${currentLang}/`, `/${code}/`);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- runtime-built path, not a static route
 		goto(basePath);
 	}
 
@@ -61,6 +62,7 @@
 					`/${currentLang}/`,
 					`/${remaining.code}/`
 				);
+				// eslint-disable-next-line svelte/no-navigation-without-resolve -- runtime-built path, not a static route
 				goto(basePath);
 				return;
 			}

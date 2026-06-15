@@ -467,7 +467,15 @@
 			if (exactMatch) params.set('exact_match', 'true');
 			if (caseSensitive) params.set('case_sensitive', 'true');
 		}
-		goto(`?${params.toString()}`, { replaceState: false, keepFocus: true });
+		goto(
+			resolve(
+				`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?${params.toString()}`
+			),
+			{
+				replaceState: false,
+				keepFocus: true
+			}
+		);
 	}
 
 	function clearSearch() {
@@ -480,7 +488,14 @@
 		selectedQuestions.forEach(([section, question]) =>
 			params.append('question', `${section},${question}`)
 		);
-		goto(`?${params.toString()}`, { replaceState: false });
+		goto(
+			resolve(
+				`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?${params.toString()}`
+			),
+			{
+				replaceState: false
+			}
+		);
 	}
 
 	function toggleCategoryFilter(categoryId: string) {
@@ -489,21 +504,6 @@
 		} else {
 			selectedCategoryIds = [...selectedCategoryIds, categoryId];
 		}
-		updateSearchParams();
-	}
-
-	function addCategoryFilter(categoryId: string) {
-		selectedCategoryIds = [...selectedCategoryIds, categoryId];
-		updateSearchParams();
-	}
-
-	function removeCategoryFilter(categoryId: string) {
-		selectedCategoryIds = selectedCategoryIds.filter((id) => id !== categoryId);
-		updateSearchParams();
-	}
-
-	function clearAllCategoryFilters() {
-		selectedCategoryIds = [];
 		updateSearchParams();
 	}
 
@@ -954,9 +954,8 @@
 																	type="button"
 																	onclick={(e) => {
 																		stopEvent(e);
-																		isSelected
-																			? removeQuestionFilter(sectionIdx, questionIdx)
-																			: addQuestionFilter(sectionIdx, questionIdx);
+																		if (isSelected) removeQuestionFilter(sectionIdx, questionIdx);
+																		else addQuestionFilter(sectionIdx, questionIdx);
 																	}}
 																	class="flex w-full items-center gap-2 px-2 py-1 text-left text-xs transition-colors hover:bg-gray-100 {isSelected
 																		? 'bg-blue-50'
@@ -1203,7 +1202,7 @@
 							</div>
 
 							<div class="flex flex-col gap-4 p-4">
-								{#each group.items as item, itemIndex (item.type === 'message' ? item.data.id : `ctrl-${item.action}-${item.targetId}`)}
+								{#each group.items as item, _itemIndex (item.type === 'message' ? item.data.id : `ctrl-${item.action}-${item.targetId}`)}
 									{#if item.type === 'message'}
 										{@const msg = item.data}
 										{@const messageId = msg.id}

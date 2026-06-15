@@ -9,7 +9,7 @@
 
 	let users = $derived(data.users as UserAdmin[]);
 	let loading = $state(false);
-	let error = $state<string | null>(null);
+	let error = $derived<string | null>(data.error);
 	const expandedRows = new SvelteSet<string>();
 	const savingNote = new SvelteSet<string>();
 	const savingUser = new SvelteSet<string>();
@@ -68,10 +68,6 @@
 		demo: 'bg-amber-100 text-amber-800',
 		guest: 'bg-gray-100 text-gray-800'
 	};
-
-	$effect(() => {
-		error = data.error;
-	});
 
 	function toggleRow(user: UserAdmin) {
 		if (expandedRows.has(user.id)) {
@@ -297,7 +293,6 @@
 						<td
 							class="relative py-2 pr-2 pl-1 text-right text-sm font-medium whitespace-nowrap sm:pr-6"
 						>
-							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<button
 								onclick={(e) => {
 									e.stopPropagation();
@@ -333,7 +328,6 @@
 												</span>
 											{/if}
 										</div>
-										<!-- svelte-ignore a11y_click_events_have_key_events -->
 										<textarea
 											class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
 											rows="2"

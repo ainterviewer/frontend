@@ -31,7 +31,7 @@
 			} else {
 				await goto(resolve('/dashboard'));
 			}
-		} catch (e) {
+		} catch {
 			errorMessage = 'An unexpected error occurred';
 		} finally {
 			isLoading = false;
@@ -142,7 +142,7 @@
 
 					<div class="text-sm">
 						<a
-							href="/forgot-password"
+							href={resolve('/forgot-password')}
 							class="font-medium text-primary transition-colors hover:text-primary/80"
 						>
 							Forgot your password?

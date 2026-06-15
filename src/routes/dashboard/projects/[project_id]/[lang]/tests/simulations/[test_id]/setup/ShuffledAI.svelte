@@ -167,7 +167,7 @@
 	{#each [{ title: 'Education', list: educations }, { title: 'Occupations', list: occupations }, { title: 'Locations', list: locations }, { title: 'Personalities', list: personalities }] as group (group.title)}
 		<div class="mb-6">
 			<h4 class="mb-2.5 font-bold text-gray-600">{group.title}</h4>
-			{#each group.list as item, i (i)}
+			{#each group.list as _item, i (i)}
 				<div class="mb-2.5 flex items-center gap-2.5">
 					<input
 						type="text"
@@ -198,7 +198,7 @@
 
 		<div>
 			<h5 class="mt-2.5 mb-1.5 font-bold">Length</h5>
-			{#each comm_length as item, i (i)}
+			{#each comm_length as _item, i (i)}
 				<div class="mb-2.5 flex items-center gap-2.5">
 					<input
 						type="text"
@@ -224,7 +224,7 @@
 
 		<div>
 			<h5 class="mt-2.5 mb-1.5 font-bold">Style</h5>
-			{#each comm_style as item, i (i)}
+			{#each comm_style as _item, i (i)}
 				<div class="mb-2.5 flex items-center gap-2.5">
 					<input
 						type="text"
@@ -250,7 +250,7 @@
 
 		<div>
 			<h5 class="mt-2.5 mb-1.5 font-bold">Tone</h5>
-			{#each comm_tone as item, i (i)}
+			{#each comm_tone as _item, i (i)}
 				<div class="mb-2.5 flex items-center gap-2.5">
 					<input
 						type="text"
@@ -278,7 +278,7 @@
 	<!-- Extra Traits -->
 	<div class="mb-6">
 		<h4 class="mb-2.5 font-bold text-gray-600">Extra traits</h4>
-		{#each extra_traits as item, i (i)}
+		{#each extra_traits as _item, i (i)}
 			<div class="mb-2.5 flex items-center gap-2.5">
 				<input
 					type="text"

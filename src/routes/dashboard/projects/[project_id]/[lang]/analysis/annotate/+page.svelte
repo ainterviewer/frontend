@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Analysis } from '$lib/api';
 	import type { AnalysisCategoryPublic, AnnotationType } from '$lib/api/types.gen';
@@ -87,7 +88,9 @@
 		const params = new URLSearchParams();
 		params.append('category_id', id);
 		goto(
-			`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?${params.toString()}`
+			resolve(
+				`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?${params.toString()}`
+			)
 		);
 	}
 
@@ -110,7 +113,7 @@
 <div class="mb-6 flex items-center justify-between">
 	<h1 class="text-2xl font-semibold text-gray-800">Annotate</h1>
 	<a
-		href={`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages`}
+		href={resolve(`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages`)}
 		class="rounded-md bg-primary px-4 py-2 text-sm text-white transition-colors hover:bg-dark"
 	>
 		<i class="fa-solid fa-search mr-2"></i>

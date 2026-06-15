@@ -223,6 +223,7 @@
 							</h2>
 							<div class="prose prose-sm max-w-none whitespace-pre-wrap text-gray-700">
 								{#if text}
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 									{@html text}
 								{:else}
 									<span class="text-gray-400 italic">

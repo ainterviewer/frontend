@@ -10,14 +10,11 @@
 	let test = $derived(data.test);
 	let projectId = $derived(page.params.project_id);
 	let lang = $derived(page.params.lang);
-	let simulationsHref = $derived(
-		resolve(`/dashboard/projects/${projectId}/${lang}/tests/simulations`)
-	);
 </script>
 
 <div class="flex min-h-full flex-col">
 	<a
-		href={simulationsHref}
+		href={resolve(`/dashboard/projects/${projectId}/${lang}/tests/simulations`)}
 		class="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
 	>
 		<i class="fa-solid fa-arrow-left"></i>

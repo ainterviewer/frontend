@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+
 	let email = $state('');
 	let isLoading = $state(false);
 	let isSuccess = $state(false);
@@ -11,9 +13,9 @@
 
 		// Mock API call since endpoint is missing
 		try {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
+			await new Promise((res) => setTimeout(res, 1000));
 			isSuccess = true;
-		} catch (e) {
+		} catch {
 			errorMessage = 'An unexpected error occurred';
 		} finally {
 			isLoading = false;
@@ -40,7 +42,7 @@
 						</h3>
 						<div class="mt-4">
 							<a
-								href="/login"
+								href={resolve('/login')}
 								class="text-sm font-medium text-green-800 underline hover:text-green-700"
 							>
 								Return to sign in
@@ -91,7 +93,10 @@
 				</div>
 
 				<div class="text-center">
-					<a href="/login" class="text-sm font-medium text-primary hover:text-primary/80">
+					<a
+						href={resolve('/login')}
+						class="text-sm font-medium text-primary hover:text-primary/80"
+					>
 						Back to sign in
 					</a>
 				</div>
