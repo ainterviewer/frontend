@@ -123,6 +123,14 @@
 		</ul>
 	</div>
 
+	<div
+		class="group absolute bottom-6 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
+	>
+		<a href="https://docs.ainterviewer.dk" target="_blank" title="Documentation">
+			<span class="fa-regular fa-question-circle text-2xl text-gray-300 hover:text-gray-100"></span>
+		</a>
+	</div>
+
 	{#if platformVersion}
 		<div
 			class="group absolute bottom-0 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
