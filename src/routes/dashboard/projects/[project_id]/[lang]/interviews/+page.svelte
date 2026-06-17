@@ -4,8 +4,8 @@
 	import type { InterviewSummaryPublic } from '$lib/api/types.gen';
 	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
 	import { onMount } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
+	import { SvelteSet } from 'svelte/reactivity';
 	import SortableHeader from './SortableHeader.svelte';
 	import TablePaginationFooter from './TablePaginationFooter.svelte';
 
@@ -38,7 +38,6 @@
 		{ key: 'created_at', label: 'Created' },
 		{ key: 'last_updated', label: 'Updated' },
 		{ key: 'n_messages', label: 'Messages' },
-		{ key: 'interviewer', label: 'Interviewer' },
 		{ key: 'language', label: 'Language' },
 		{ key: 'status', label: 'Status' }
 	];
@@ -303,7 +302,6 @@
 					/>
 				{/each}
 				<th class="px-5 py-3"></th>
-				<th class="px-5 py-3"></th>
 			</tr>
 		</thead>
 		<tbody class="bg-white">
@@ -332,7 +330,6 @@
 						<td class="px-5 py-4">{formatDate(interview.created_at)}</td>
 						<td class="px-5 py-4">{formatDate(interview.last_updated)}</td>
 						<td class="px-5 py-4">{interview.n_messages}</td>
-						<td class="px-5 py-4">{interview.interviewer}</td>
 						<td class="px-5 py-4">{interview.language}</td>
 						<td class="px-5 py-4">
 							{#if interview.status === 'completed'}
@@ -350,16 +347,6 @@
 									class="rounded-full bg-gray-100 px-2 py-1 text-xs leading-tight font-semibold text-gray-700"
 									>Inactive</span
 								>
-							{/if}
-						</td>
-						<td class="px-5 py-4">
-							{#if interview.interviewer !== 'ai' && interview.status === 'active'}
-								<button
-									class="rounded bg-blue-500 px-3 py-1 text-xs font-bold text-white transition duration-150 hover:bg-blue-600"
-									onclick={() => handleConnect(interview.id)}
-								>
-									Join
-								</button>
 							{/if}
 						</td>
 						<td class="px-5 py-4 text-right">

@@ -35,10 +35,14 @@
 		interviews.some((i) => selectedInterviews.has(i.id)) && !allSelected
 	);
 
+	const InterviewTypeMap = new Map<InterviewType, string>([
+		['manual_test', 'Manual'],
+		['synthetic_test', 'Synthetic']
+	]);
+
 	const columns = [
 		{ key: 'id', label: 'ID' },
 		{ key: 'created_at', label: 'Created' },
-		{ key: 'last_updated', label: 'Updated' },
 		{ key: 'n_messages', label: 'Messages' },
 		{ key: 'interview_type', label: 'Type' },
 		{ key: 'test_name', label: 'Test name' },
@@ -332,9 +336,8 @@
 						</td>
 						<td class="px-5 py-4 font-mono text-xs">{interview.id}</td>
 						<td class="px-5 py-4">{formatDate(interview.created_at)}</td>
-						<td class="px-5 py-4">{formatDate(interview.last_updated)}</td>
 						<td class="px-5 py-4">{interview.n_messages}</td>
-						<td class="px-5 py-4">{interview.type}</td>
+						<td class="px-5 py-4">{InterviewTypeMap.get(interview.type)}</td>
 						<td class="px-5 py-4">{interview.test_name}</td>
 						<td class="px-5 py-4">{interview.language}</td>
 						<td class="px-5 py-4">
