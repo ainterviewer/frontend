@@ -1084,7 +1084,7 @@
 								/>
 							</div>
 							<div class="flex items-center justify-between">
-								<span class="text-sm text-gray-700">Time spend probing (seconds)</span>
+								<span class="text-sm text-gray-700">Max Time (seconds)</span>
 								<input
 									type="number"
 									min="0"
