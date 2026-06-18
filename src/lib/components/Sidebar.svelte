@@ -16,6 +16,7 @@
 	import { page } from '$app/state';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
+	import HoverInfo from './HoverInfo.svelte';
 
 	//  TODO: Align text after icons
 	let { items }: { items: SidebarItem[] } = $props();
@@ -126,9 +127,12 @@
 	<div
 		class="group absolute bottom-6 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
 	>
-		<a href="https://docs.ainterviewer.dk" target="_blank" title="Documentation">
-			<span class="fa-regular fa-question-circle text-2xl text-gray-300 hover:text-gray-100"></span>
-		</a>
+		<HoverInfo class="pt-1" text="Documentation">
+			<a href="https://docs.ainterviewer.dk" target="_blank" aria-label="Documentation">
+				<span class="fa-regular fa-question-circle text-2xl text-gray-300 hover:text-gray-100"
+				></span>
+			</a>
+		</HoverInfo>
 	</div>
 
 	{#if platformVersion}
