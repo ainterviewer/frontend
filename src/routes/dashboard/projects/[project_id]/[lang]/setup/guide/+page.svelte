@@ -14,11 +14,166 @@
 		type DragDropEvents
 	} from '@dnd-kit-svelte/svelte';
 	import { move } from '@dnd-kit/helpers';
-	import { tick } from 'svelte';
+	import { driver } from 'driver.js';
+	import 'driver.js/dist/driver.css';
+	import { onMount, tick } from 'svelte';
 	import { dragState } from './dragState.svelte';
 	import InterviewGuide from './InterviewGuide.svelte';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import SortableSection from './SortableSection.svelte';
+
+	function startOnboarding() {
+		const tour = driver({
+			showProgress: true,
+			steps: [
+				{
+					popover: {
+						title: 'Interview Guide',
+						description:
+							'The interview guide is the heart of your interviews. Configure and tweak the different elements to your own needs.'
+					}
+				},
+				{
+					element: '[data-tour="generate"]',
+					popover: {
+						title: 'Generate<br>Interview Guide',
+						description:
+							'Describe your theme and requirements, and have the AI draft an interview guide you can use as a inspiration for your interviews.'
+					}
+				},
+				{
+					element: '[data-tour="assistant-chat"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+					}
+				},
+				{
+					element: '[data-tour="framing"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+					}
+				},
+				{
+					element: '[data-tour="introduction"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+					}
+				},
+				{
+					element: '[data-tour="section"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+					}
+				},
+				{
+					element: '[data-tour="question"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+					}
+				},
+				{
+					element: '[data-tour="question-settings"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.',
+						onNextClick: () => {
+							// The settings menu element only renders once the settings panel is
+							// open, so open it before advancing to the next step.
+							if (!document.querySelector('[data-tour="question-settings-menu"]')) {
+								(
+									document.querySelector('[data-tour="question-settings"]') as HTMLElement | null
+								)?.click();
+							}
+							// Wait for the slide transition (200ms) to settle so driver.js can
+							// measure the element correctly.
+							setTimeout(() => tour.moveNext(), 300);
+						}
+					}
+				},
+				{
+					element: '[data-tour="question-settings-menu"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+					}
+				},
+				{
+					element: '[data-tour="question-extras"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+					}
+				},
+				{
+					element: '[data-tour="probes"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+					}
+				},
+				{
+					element: '[data-tour="probing-limits"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+					}
+				},
+				{
+					element: '[data-tour="behavior-flags"]',
+					popover: {
+						title: 'AI Assistant (experimental)',
+						description:
+							'You can also use our interactive AI assistant to iterate and develop your interview guide.',
+						onNextClick: () => {
+							// The settings menu element only renders once the settings panel is
+							// open, so open it before advancing to the next step.
+							if (document.querySelector('[data-tour="question-settings-menu"]')) {
+								(
+									document.querySelector('[data-tour="question-settings"]') as HTMLElement | null
+								)?.click();
+							}
+							// Wait for the slide transition (200ms) to settle so driver.js can
+							// measure the element correctly.
+							setTimeout(() => tour.moveNext(), 300);
+						}
+					}
+				},
+				{
+					element: '[data-tour="documentation"]',
+					popover: {
+						title: "That's it for the interview guide!",
+						description:
+							"We'll let you poke around now on your own. Remember you can always consult our documentation through the question mark in the bottom of the sidebar.",
+						popoverClass: 'driver-centered'
+					}
+				}
+			]
+		});
+		tour.drive();
+	}
+
+	onMount(() => {
+		// Show the onboarding tour once per user.
+		// if (!localStorage.getItem('guide-onboarded')) {
+		startOnboarding();
+		// 	localStorage.setItem('guide-onboarded', 'true');
+		// }
+	});
 
 	let { data } = $props();
 

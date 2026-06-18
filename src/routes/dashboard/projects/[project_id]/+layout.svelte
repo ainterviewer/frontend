@@ -79,7 +79,7 @@
 				{
 					element: '[data-tour="documentation"]',
 					popover: {
-						title: "That's it project sidebar!",
+						title: "That's it for the project sidebar!",
 						description:
 							"We'll let you poke around now on your own. Remember you can always consult our documentation through the question mark in the bottom of the sidebar.",
 						popoverClass: 'driver-centered'

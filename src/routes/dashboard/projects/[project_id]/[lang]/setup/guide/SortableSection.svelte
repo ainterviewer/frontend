@@ -17,11 +17,13 @@
 		onGenerateQuestion?: () => void;
 		isOverlay?: boolean;
 		source?: 'guide' | 'chat';
+		dataTour?: string;
 	}
 
 	let {
 		section,
 		questions,
+		dataTour,
 		sectionIndex,
 		allSections = [],
 		allQuestions = {},
@@ -72,6 +74,7 @@
 </script>
 
 <div
+	data-tour={dataTour}
 	id={section.id}
 	class="group relative rounded-lg border border-black bg-secondary p-4 transition-all duration-200"
 	style:transition={(dragState.draggingType || dragState.keepTransitionsDisabled) && !isOverlay
@@ -139,6 +142,7 @@
 		{#each questions as question, qIdx (question.id)}
 			<SortableQuestion
 				{question}
+				dataTour={qIdx === 0 ? 'question' : undefined}
 				index={qIdx}
 				sectionId={section.id}
 				{sectionIndex}

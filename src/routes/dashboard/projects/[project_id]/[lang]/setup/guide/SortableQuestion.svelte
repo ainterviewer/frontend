@@ -16,6 +16,7 @@
 		onRemove: () => void;
 		isOverlay?: boolean;
 		source?: 'guide' | 'chat';
+		dataTour?: string;
 	}
 
 	let {
@@ -27,7 +28,8 @@
 		allQuestions = {},
 		onRemove,
 		isOverlay = false,
-		source = 'guide'
+		source = 'guide',
+		dataTour
 	}: Props = $props();
 
 	function surveyItemOptions(
@@ -93,6 +95,7 @@
 </script>
 
 <div
+	data-tour={dataTour}
 	id={question.id}
 	class="group relative scroll-mt-24 rounded-lg border border-black bg-secondary p-5 brightness-105 transition-all duration-200 hover:shadow-md"
 	style:transition={(dragState.draggingType || dragState.keepTransitionsDisabled) && !isOverlay
@@ -128,6 +131,7 @@
 
 		<div class="flex gap-2">
 			<button
+				data-tour={dataTour ? 'question-settings' : undefined}
 				class="cursor-pointer rounded-md p-1.5 text-gray-700 transition-colors hover:text-primary"
 				onclick={() => (showSettings = !showSettings)}
 				title={showSettings ? 'Hide Settings' : 'Show Settings'}
@@ -929,11 +933,12 @@
 		<!-- Collapsible Settings -->
 		{#if showSettings}
 			<div
+				data-tour={dataTour ? 'question-settings-menu' : undefined}
 				transition:slide={{ duration: 200 }}
 				class="-mx-5 space-y-6 border-t border-gray-100 bg-gray-50/30 px-5 pt-4 pb-4"
 			>
 				<!-- Add buttons for Image/Survey/Condition -->
-				<div class="space-y-4">
+				<div data-tour={dataTour ? 'question-extras' : undefined} class="space-y-4">
 					{#if !question.image || !question.survey_item || !question.conditions}
 						<div class="flex flex-wrap gap-4">
 							{#if !question.image}
@@ -1032,7 +1037,7 @@
 				</div>
 
 				<!-- Probes -->
-				<div>
+				<div data-tour={dataTour ? 'probes' : undefined}>
 					<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase"
 						>Follow-up Probes</span
 					>
@@ -1069,7 +1074,7 @@
 				<!-- Configuration Grid -->
 				<div class="grid grid-cols-1 gap-20 border-t border-gray-200 pt-4 sm:grid-cols-3">
 					<!-- Probing Limits -->
-					<div class="space-y-3">
+					<div data-tour={dataTour ? 'probing-limits' : undefined} class="space-y-3">
 						<span class="text-xs font-bold tracking-wider text-gray-700 uppercase"
 							>Probing Limits</span
 						>
@@ -1096,7 +1101,7 @@
 					</div>
 
 					<!-- Behavior Flags -->
-					<div class="col-span-2 space-y-3">
+					<div data-tour={dataTour ? 'behavior-flags' : undefined} class="col-span-2 space-y-3">
 						<span class="text-xs font-bold tracking-wider text-gray-700 uppercase"
 							>Behavior Flags</span
 						>

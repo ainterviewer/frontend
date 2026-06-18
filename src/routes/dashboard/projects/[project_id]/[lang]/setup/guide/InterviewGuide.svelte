@@ -396,6 +396,7 @@
 	<div class="flex justify-between">
 		<h1 class="page-title">Interview Guide</h1>
 		<button
+			data-tour="generate"
 			class="mb-2 rounded-full bg-secondary px-6 font-medium text-gray-700 hover:brightness-95"
 			onclick={() => (showGenerateGuideModal = true)}
 		>
@@ -420,6 +421,7 @@
 		<div class="min-w-0 flex-1 space-y-8">
 			<!-- Framing -->
 			<div
+				data-tour="framing"
 				id="framing"
 				class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
 			>
@@ -437,6 +439,7 @@
 
 			<!-- Introduction -->
 			<div
+				data-tour="introduction"
 				id="introduction"
 				class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
 			>
@@ -463,6 +466,7 @@
 					{#each guideStore.localSections as section, sIdx (section.id)}
 						<SortableSection
 							{section}
+							dataTour={sIdx === 0 ? 'section' : undefined}
 							questions={guideStore.localQuestions[section.id]}
 							sectionIndex={sIdx}
 							allSections={guideStore.localSections}
