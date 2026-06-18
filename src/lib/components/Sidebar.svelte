@@ -116,7 +116,9 @@
 	>
 		<HoverInfo class="pt-1" text="Documentation">
 			<a href="https://docs.ainterviewer.dk" target="_blank" aria-label="Documentation">
-				<span class="fa-regular fa-question-circle text-2xl text-gray-300 hover:text-gray-100"
+				<span
+					data-tour="documentation"
+					class="fa-regular fa-question-circle text-2xl text-gray-300 hover:text-gray-100"
 				></span>
 			</a>
 		</HoverInfo>
@@ -126,7 +128,7 @@
 		<div
 			class="group absolute bottom-0 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
 		>
-			<span class="cursor-default whitespace-nowrap">
+			<span data-tour="platform-version" class="cursor-default whitespace-nowrap">
 				{collapsed
 					? platformVersion.platform_version?.slice(2)
 					: `v${platformVersion.platform_version}`}
@@ -162,7 +164,10 @@
 	{@const active = isActive(item.href)}
 	{@const hasChildren = !!item.children?.length}
 
-	<li class={['w-full leading-loose', hasChildren && 'group main'].join(' ')}>
+	<li
+		data-tour={item.dataTour}
+		class={['w-full leading-loose', hasChildren && 'group main'].join(' ')}
+	>
 		<a
 			{...item.href && { href: getResolvedHref(item.href) }}
 			class={[

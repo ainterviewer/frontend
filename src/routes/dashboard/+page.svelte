@@ -7,6 +7,8 @@
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
+	import { driver } from 'driver.js';
+	import 'driver.js/dist/driver.css';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
@@ -57,7 +59,52 @@
 		await invalidateAll();
 	}
 
+	function startOnboarding() {
+		const tour = driver({
+			showProgress: true,
+			steps: [
+				{
+					element: '[data-tour="new-folder"]',
+					popover: {
+						title: 'Create a folder',
+						description: 'Folders group related projects and let you invite collaborators.',
+						side: 'bottom',
+						align: 'start'
+					}
+				},
+				{
+					element: '[data-tour="new-project"]',
+					popover: {
+						title: 'Add a project',
+						description: 'Inside a folder, create projects to start collecting interviews.'
+					}
+				},
+				{
+					element: '[data-tour="documentation"]',
+					popover: {
+						title: 'Read the documentation',
+						description:
+							'Consult our documentation site for more elaborate descriptions of the platform features and best practices.'
+					}
+				},
+				{
+					popover: {
+						title: "That's it for the main dashboard",
+						description: 'Enter a project to continue the introduction.'
+					}
+				}
+			]
+		});
+		tour.drive();
+	}
+
 	onMount(() => {
+		// Show the onboarding tour once per user.
+		if (!localStorage.getItem('dashboard-onboarded')) {
+			startOnboarding();
+			localStorage.setItem('dashboard-onboarded', 'true');
+		}
+
 		// Close dropdowns when clicking outside
 		const handleClickOutside = (e: MouseEvent) => {
 			if (activeDropdown && !(e.target as Element).closest('.dropdown-container')) {
@@ -319,6 +366,7 @@
 	<h2 class="page-title">Folders</h2>
 	<div class="ml-auto flex rounded-lg transition-shadow hover:shadow-lg">
 		<button
+			data-tour="new-folder"
 			class="flex items-center border-none bg-transparent px-4 py-2 transition-transform active:translate-y-0.5"
 			onclick={() => (isCreateFolderModalOpen = true)}
 			title="Create new folder"
@@ -330,7 +378,7 @@
 	</div>
 </div>
 
-{#each folders as folder (folder.id)}
+{#each folders as folder, folderIndex (folder.id)}
 	<div class="relative mt-4 mb-2 flex items-center gap-2 border-t-2 border-primary pt-6">
 		<i class="fa-solid fa-folder text-4xl text-secondary"></i>
 		<h2 class="text-lg">{folder.title}</h2>
@@ -379,7 +427,7 @@
 				<div class="grow p-4">
 					<div class="flex">
 						<h3 class="mb-1 w-full text-lg font-semibold">{project.title}</h3>
-						<i class="fas fa-clipboard-list text-xl"></i>
+						<i class="fas fa-clipboard-list ml-1 text-xl"></i>
 					</div>
 
 					<div class="flex flex-col gap-1 text-sm text-gray-500">
@@ -449,6 +497,7 @@
 		{/each}
 
 		<div
+			data-tour={folderIndex === 0 ? 'new-project' : undefined}
 			class="flex min-h-[190px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-primary hover:text-primary"
 			role="button"
 			tabindex="0"
@@ -906,3 +955,15 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	/*
+	 * driver.js forces `overflow: hidden !important` on the direct parent of the
+	 * highlighted element (`:not(body):has(> .driver-active-element)`), which
+	 * collapses sibling cards inside our project grid during the tour. Override
+	 * it with a higher-specificity rule so the grid keeps its normal overflow.
+	 */
+	:global(:not(body):not(html):has(> .driver-active-element)) {
+		overflow: visible !important;
+	}
+</style>

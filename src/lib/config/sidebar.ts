@@ -7,6 +7,7 @@ export type SidebarItem = {
 	requiresAdmin?: boolean;
 	project_id?: string;
 	demoFeature?: boolean;
+	dataTour?: string;
 };
 
 export const mainSidebarItems: SidebarItem[] = [
@@ -19,7 +20,8 @@ export const mainSidebarItems: SidebarItem[] = [
 	{
 		label: 'Experiments',
 		href: '/dashboard/experiments',
-		icon: 'fa-solid fa-vials'
+		icon: 'fa-solid fa-vials',
+		dataTour: 'experiments'
 	},
 	{ type: 'separator', requiresAdmin: true },
 	{
@@ -62,6 +64,7 @@ export const projectSidebarItems: SidebarItem[] = [
 		label: 'Setup',
 		href: '/dashboard/projects/{projectId}/{languageCode}/setup',
 		icon: 'fas fa-file-lines',
+		dataTour: 'setup',
 		children: [
 			{
 				label: 'Consent',
@@ -83,11 +86,13 @@ export const projectSidebarItems: SidebarItem[] = [
 	{
 		label: 'Agents',
 		href: '/dashboard/projects/{projectId}/{languageCode}/agents',
-		icon: 'fas fa-people-group'
+		icon: 'fas fa-people-group',
+		dataTour: 'agents'
 	},
 	{
 		label: 'Pilot Interviews',
 		// href: '/dashboard/projects/{projectId}/{languageCode}/tests',
+		dataTour: 'pilot-interviews',
 		icon: 'fas fa-flask-vial',
 		children: [
 			{
@@ -106,6 +111,7 @@ export const projectSidebarItems: SidebarItem[] = [
 		label: 'Distribute',
 		href: '/dashboard/projects/{projectId}/{languageCode}/distribution',
 		icon: 'fas fa-envelopes-bulk',
+		dataTour: 'distribute',
 		children: [
 			{
 				label: 'Participants',
@@ -129,12 +135,14 @@ export const projectSidebarItems: SidebarItem[] = [
 	{
 		label: 'Interview Data',
 		href: '/dashboard/projects/{projectId}/{languageCode}/interviews',
-		icon: 'fas fa-comments'
+		icon: 'fas fa-comments',
+		dataTour: 'interview-data'
 	},
 	{
 		label: 'Analysis',
 		// href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
 		icon: 'fas fa-chart-pie',
+		dataTour: 'analysis',
 		children: [
 			{
 				label: 'Annotate',
@@ -152,6 +160,7 @@ export const projectSidebarItems: SidebarItem[] = [
 	{
 		label: 'Settings',
 		href: '/dashboard/projects/{projectId}/{languageCode}/settings',
-		icon: 'fas fa-gears'
+		icon: 'fas fa-gears',
+		dataTour: 'settings'
 	}
 ];
