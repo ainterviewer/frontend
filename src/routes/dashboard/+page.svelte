@@ -309,14 +309,14 @@
 </h1>
 
 <p class="mb-8 text-gray-600">
-	On this page you can create and manage project folders and interview projects.
+	On this page you can create and manage folders and projects.
 	<!-- FIXME:  -->
 	<!-- When you create a folder you can choose other users you want to collaborate with. The users your -->
 	<!-- choose wil be able to access all projects in the folder. -->
 </p>
 
 <div class="flex justify-between">
-	<h2 class="page-title">Project Folders</h2>
+	<h2 class="page-title">Folders</h2>
 	<div class="ml-auto flex rounded-lg transition-shadow hover:shadow-lg">
 		<button
 			class="flex items-center border-none bg-transparent px-4 py-2 transition-transform active:translate-y-0.5"
