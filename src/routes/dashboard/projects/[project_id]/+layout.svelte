@@ -12,6 +12,16 @@
 			showProgress: true,
 			stagePadding: 0,
 			stageRadius: 0,
+			// stagePadding/stageRadius are global, so give only the last step (the
+			// small documentation icon) some breathing room around its highlight.
+			onHighlightStarted: (_element, _step, { driver }) => {
+				const last = driver.isLastStep();
+				driver.setConfig({
+					...driver.getConfig(),
+					stagePadding: last ? 8 : 0,
+					stageRadius: last ? 5 : 0
+				});
+			},
 			steps: [
 				{
 					element: '[data-tour="setup"]',
@@ -56,8 +66,7 @@
 					element: '[data-tour="analysis"]',
 					popover: {
 						title: 'Analysis',
-						description:
-							'Consult our documentation site for more elaborate descriptions of the platform features and best practices.'
+						description: 'Analyse your interviews through tags and scores.'
 					}
 				},
 				{
@@ -68,14 +77,12 @@
 					}
 				},
 				{
+					element: '[data-tour="documentation"]',
 					popover: {
 						title: "That's it project sidebar!",
 						description:
 							"We'll let you poke around now on your own. Remember you can always consult our documentation through the question mark in the bottom of the sidebar.",
-
-						onPopoverRender: (config, state, driver) => {
-							driver.highlight({ element: '[data-tour="documentation"' });
-						}
+						popoverClass: 'driver-centered'
 					}
 				}
 			]
@@ -94,3 +101,16 @@
 
 <Sidebar items={projectSidebarItems} />
 {@render children()}
+
+<style>
+	:global(.driver-popover.driver-centered) {
+		top: 50% !important;
+		left: 50% !important;
+		right: auto !important;
+		bottom: auto !important;
+		transform: translate(-50%, -50%) !important;
+	}
+	:global(.driver-popover.driver-centered .driver-popover-arrow) {
+		display: none !important;
+	}
+</style>
