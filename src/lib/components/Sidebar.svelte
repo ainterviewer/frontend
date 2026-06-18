@@ -1,19 +1,6 @@
-<script module lang="ts">
-	import '../../app.css';
-	export type SidebarItem = {
-		label?: string;
-		href?: string;
-		icon?: string;
-		children?: SidebarItem[];
-		type?: 'link' | 'separator';
-		requiresAdmin?: boolean;
-		project_id?: string;
-		demoFeature?: boolean;
-	};
-</script>
-
 <script lang="ts">
 	import { page } from '$app/state';
+	import { type SidebarItem } from '$lib/config/sidebar';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
 	import HoverInfo from './HoverInfo.svelte';

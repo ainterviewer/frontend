@@ -1,4 +1,13 @@
-import type { SidebarItem } from '$lib/components/Sidebar.svelte';
+export type SidebarItem = {
+	label?: string;
+	href?: string;
+	icon?: string;
+	children?: SidebarItem[];
+	type?: 'link' | 'separator';
+	requiresAdmin?: boolean;
+	project_id?: string;
+	demoFeature?: boolean;
+};
 
 export const mainSidebarItems: SidebarItem[] = [
 	{
