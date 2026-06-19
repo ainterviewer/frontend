@@ -1,13 +1,59 @@
+# Dependencies
 node_modules
+
+# Build output / SvelteKit
 .svelte-kit
 build
+.output
+.vercel
+.netlify
+.wrangler
+
+# Env
 .env
 .env.*
 !.env.example
+
+# Git
 .git
 .gitignore
+.gitattributes
+
+# Editor / tool config
 .vscode
+.idea
+.claude
+.gemini
 .npmrc
-*.log
-tests-results
+
+# Tests (build is just `vite build`; test sources/artifacts aren't needed)
+e2e
+test-results
 playwright-report
+coverage
+playwright.config.ts
+
+# Caches
+.ruff_cache
+*.log
+vite.config.*.timestamp-*
+
+# CI
+.github
+
+# Docs (not needed at build time)
+docs
+*.md
+
+# Lint / format config (not needed at build time)
+eslint.config.js
+.prettierrc
+.prettierignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
