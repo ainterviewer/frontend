@@ -18,7 +18,7 @@
 	}
 </script>
 
-<div class="relative" onmouseleave={handleMouseLeave} role="menu" tabindex="0">
+<div class="relative hidden" onmouseleave={handleMouseLeave} role="menu" tabindex="0">
 	<!-- Toggle Button -->
 	<button
 		type="button"
