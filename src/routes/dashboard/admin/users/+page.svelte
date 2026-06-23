@@ -19,6 +19,7 @@
 		with_demo_features: boolean;
 		organization: string;
 		expires_at: string;
+		two_factor_enabled: boolean;
 	};
 	let edits = $state<Record<string, UserEdit>>({});
 
@@ -45,7 +46,8 @@
 				scope: (user.scope as Scope) ?? 'user',
 				with_demo_features: user.with_demo_features ?? false,
 				organization: user.organization ?? '',
-				expires_at: isoToLocalInput(user.expires_at)
+				expires_at: isoToLocalInput(user.expires_at),
+				two_factor_enabled: user.two_factor_enabled ?? false
 			};
 		}
 		return edits[user.id];
@@ -58,7 +60,8 @@
 			e.scope !== ((user.scope as Scope) ?? 'user') ||
 			e.with_demo_features !== (user.with_demo_features ?? false) ||
 			e.organization !== (user.organization ?? '') ||
-			e.expires_at !== isoToLocalInput(user.expires_at)
+			e.expires_at !== isoToLocalInput(user.expires_at) ||
+			e.two_factor_enabled !== (user.two_factor_enabled ?? false)
 		);
 	}
 
@@ -90,7 +93,8 @@
 					scope: e.scope,
 					with_demo_features: e.with_demo_features,
 					organization: e.organization.trim() || null,
-					expires_at: localInputToIso(e.expires_at)
+					expires_at: localInputToIso(e.expires_at),
+					two_factor_enabled: e.two_factor_enabled
 				},
 				path: { user_id: user.id }
 			});
@@ -228,6 +232,7 @@
 					>
 					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th
 					>
+					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">2FA</th>
 					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
 						>Invitation</th
 					>
@@ -275,6 +280,15 @@
 							</span>
 						</td>
 						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
+							<span
+								class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {user.two_factor_enabled
+									? 'bg-green-100 text-green-800'
+									: 'bg-gray-100 text-gray-600'}"
+							>
+								{user.two_factor_enabled ? 'On' : 'Off'}
+							</span>
+						</td>
+						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
 							{user.invitation_title ?? '-'}
 						</td>
 						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
@@ -309,7 +323,7 @@
 						{@const dirty = isDirty(user)}
 						{@const saving = savingUser.has(user.id)}
 						<tr class="bg-gray-50">
-							<td colspan="9" class="px-6 py-4">
+							<td colspan="10" class="px-6 py-4">
 								<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 									<div>
 										<h4 class="text-sm font-semibold text-gray-700">Access Request Message</h4>
@@ -403,7 +417,9 @@
 												onclick={(e) => e.stopPropagation()}
 											/>
 										</label>
-										<label class="flex items-center gap-2 pt-5 text-sm">
+									</div>
+									<div class="mt-5 mb-1 flex flex-wrap gap-x-6 gap-y-2">
+										<label class="flex items-center gap-2 text-sm">
 											<input
 												type="checkbox"
 												class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
@@ -411,6 +427,17 @@
 												onclick={(e) => e.stopPropagation()}
 											/>
 											<span class="text-xs font-medium text-gray-600">Demo features enabled</span>
+										</label>
+										<label class="flex items-center gap-2 text-sm">
+											<input
+												type="checkbox"
+												class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+												bind:checked={edit.two_factor_enabled}
+												onclick={(e) => e.stopPropagation()}
+											/>
+											<span class="text-xs font-medium text-gray-600"
+												>Two-factor authentication enabled</span
+											>
 										</label>
 									</div>
 								</div>
