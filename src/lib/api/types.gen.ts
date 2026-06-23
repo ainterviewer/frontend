@@ -3018,6 +3018,10 @@ export type UserAdmin = {
      * Admin Note Updated At
      */
     admin_note_updated_at?: string | null;
+    /**
+     * Two Factor Enabled
+     */
+    two_factor_enabled?: boolean;
 };
 
 /**
@@ -3040,6 +3044,10 @@ export type UserAdminUpdate = {
      * Expires At
      */
     expires_at?: string | Unset | null;
+    /**
+     * Two Factor Enabled
+     */
+    two_factor_enabled?: boolean | Unset;
 };
 
 /**
