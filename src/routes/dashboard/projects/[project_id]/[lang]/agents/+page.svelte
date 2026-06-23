@@ -40,7 +40,7 @@
 				path: { project_id: projectId, lang: lang },
 				body: agents as AgentConfigs
 			}),
-			Projects.createPrompts({
+			Projects.updatePrompts({
 				path: { project_id: projectId, lang: lang },
 				body: prompts as PromptsUpdateRequest
 			})

@@ -6051,7 +6051,7 @@ export type GetPromptsResponses = {
     200: unknown;
 };
 
-export type CreatePromptsData = {
+export type UpdatePromptsData = {
     body: PromptsUpdateRequest;
     path: {
         /**
@@ -6072,16 +6072,16 @@ export type CreatePromptsData = {
     url: '/api/projects/{project_id}/{lang}/prompts';
 };
 
-export type CreatePromptsErrors = {
+export type UpdatePromptsErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type CreatePromptsError = CreatePromptsErrors[keyof CreatePromptsErrors];
+export type UpdatePromptsError = UpdatePromptsErrors[keyof UpdatePromptsErrors];
 
-export type CreatePromptsResponses = {
+export type UpdatePromptsResponses = {
     /**
      * Successful Response
      */
