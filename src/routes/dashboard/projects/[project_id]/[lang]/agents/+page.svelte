@@ -250,7 +250,7 @@
 				<select
 					id="all-models"
 					onchange={(e) => setAllModels((e.currentTarget as HTMLSelectElement).value)}
-					class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+					class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 					value={sharedModel}
 				>
 					<option value="">---</option>
@@ -268,7 +268,7 @@
 					<select
 						id="all-models-advanced"
 						onchange={(e) => setAllModels((e.currentTarget as HTMLSelectElement).value)}
-						class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+						class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 						value={sharedModel}
 					>
 						<option value="">---</option>
@@ -289,7 +289,7 @@
 							<select
 								id="probing-model"
 								bind:value={agents.probing!.model}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							>
 								{#each models as model (model)}
 									<option value={model}>{model}</option>
@@ -307,7 +307,7 @@
 								min="0"
 								max="1"
 								bind:value={agents.probing!.temperature}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							/>
 						</div>
 					</div>
@@ -324,7 +324,7 @@
 							<select
 								id="classification-model"
 								bind:value={agents.classification!.model}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							>
 								{#each models as model (model)}
 									<option value={model}>{model}</option>
@@ -343,7 +343,7 @@
 								min="0"
 								max="1"
 								bind:value={agents.classification!.temperature}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							/>
 						</div>
 					</div>
@@ -360,7 +360,7 @@
 							<select
 								id="reformulation-model"
 								bind:value={agents.reformulation!.model}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							>
 								{#each models as model (model)}
 									<option value={model}>{model}</option>
@@ -379,7 +379,7 @@
 								min="0"
 								max="1"
 								bind:value={agents.reformulation!.temperature}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							/>
 						</div>
 					</div>
@@ -396,7 +396,7 @@
 							<select
 								id="guide-model"
 								bind:value={agents.guide!.model}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							>
 								{#each models as model (model)}
 									<option value={model}>{model}</option>
@@ -414,7 +414,7 @@
 								min="0"
 								max="1"
 								bind:value={agents.guide!.temperature}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							/>
 						</div>
 					</div>
