@@ -43,6 +43,30 @@
 	let expandedSurvey = $state(false);
 	let expandedCondition = $state(false);
 
+	let settingsPanel = $state<HTMLDivElement | null>(null);
+
+	function toggleSettings() {
+		showSettings = !showSettings;
+		if (!showSettings) return;
+		// The action bar floats (sticky) at the bottom of the scroll container, so a
+		// freshly opened settings panel can end up partly hidden behind it. Once the
+		// slide-open transition (200ms) has settled, scroll the panel up just enough
+		// for its bottom to clear the bar.
+		setTimeout(() => {
+			const panel = settingsPanel;
+			const scroller = panel?.closest('main');
+			if (!panel || !scroller) return;
+			const bar = scroller.querySelector<HTMLElement>('[data-action-bar]');
+			const barClearance = (bar?.offsetHeight ?? 72) + 56;
+			const overflow =
+				panel.getBoundingClientRect().bottom -
+				(scroller.getBoundingClientRect().bottom - barClearance);
+			if (overflow > 0) {
+				scroller.scrollBy({ top: overflow, behavior: 'smooth' });
+			}
+		}, 220);
+	}
+
 	const { ref, handleRef, isDragging } = useSortable(
 		untrack(() => ({
 			id: question.id,
@@ -133,7 +157,7 @@
 			<button
 				data-tour={dataTour ? 'question-settings' : undefined}
 				class="cursor-pointer rounded-md p-1.5 text-gray-700 transition-colors hover:text-primary"
-				onclick={() => (showSettings = !showSettings)}
+				onclick={toggleSettings}
 				title={showSettings ? 'Hide Settings' : 'Show Settings'}
 			>
 				Settings
@@ -933,6 +957,7 @@
 		<!-- Collapsible Settings -->
 		{#if showSettings}
 			<div
+				bind:this={settingsPanel}
 				data-tour={dataTour ? 'question-settings-menu' : undefined}
 				transition:slide={{ duration: 200 }}
 				class="-mx-5 space-y-6 border-t border-gray-100 bg-gray-50/30 px-5 pt-4 pb-4"
