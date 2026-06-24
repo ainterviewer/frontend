@@ -167,7 +167,10 @@
 		</div>
 	</div>
 
-	<div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 pl-4">
+	<div
+		data-tour={dataTour ? 'ai-generated-questions' : undefined}
+		class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 pl-4"
+	>
 		<div class="flex items-center gap-3">
 			<label class="text-sm font-medium text-gray-700" for="ai-generated-questions-{section.id}">
 				AI Generated Questions

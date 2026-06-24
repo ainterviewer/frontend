@@ -154,7 +154,84 @@
 					}
 				},
 				{
+					element: '[data-tour="ai-generated-questions"]',
+					popover: {
+						title: 'AI Generated Questions',
+						description:
+							'Once a section\'s predefined questions are done, the AInterviewer can generate extra questions on the fly. Set how many, and cap the probing for each.'
+					}
+				},
+				{
+					element: '[data-tour="ai-generated-sections"]',
+					popover: {
+						title: 'AI Generated Sections',
+						description:
+							'After all your predefined sections are finished, the AInterviewer can spin up additional sections automatically. Set how many to allow.'
+					}
+				},
+				{
+					element: '[data-tour="outro"]',
+					popover: {
+						title: 'Outro',
+						description:
+							'Write the closing message your interviewee sees when the interview ends. Use it to thank them and wrap things up.'
+					}
+				},
+				{
+					element: '[data-tour="timed-messages"]',
+					popover: {
+						title: 'Timed Messages',
+						description:
+							'Schedule messages to appear during the interview after a set number of seconds — handy for gentle nudges, reminders, or extra context.'
+					}
+				},
+				{
+					element: '[data-action-bar]',
+					popover: {
+						title: 'Action Bar',
+						description:
+							'This bar stays within reach as you scroll. From here you can switch language, preview the interview, export your guide, and save your changes.'
+					}
+				},
+				{
+					element: '[data-tour="language"]',
+					popover: {
+						title: 'Language',
+						description:
+							'Switch between the languages your project supports, or add a new one. Each language has its own interview guide.'
+					}
+				},
+				{
+					element: '[data-tour="try-interview"]',
+					popover: {
+						title: 'Try Interview',
+						description:
+							'Launch a test run in a new tab to experience the interview exactly as your interviewee would, without affecting your real data.'
+					}
+				},
+				{
+					element: '[data-tour="export"]',
+					popover: {
+						title: 'Export',
+						description:
+							'Download your interview guide as a PDF for sharing or review, or as JSON to back it up and move it between projects.'
+					}
+				},
+				{
+					element: '[data-tour="save"]',
+					popover: {
+						title: 'Save Changes',
+						description:
+							"Persist your edits. Don't forget to save — you'll be warned if you try to leave the page with unsaved changes."
+					}
+				},
+				{
 					element: '[data-tour="documentation"]',
+					onHighlightStarted: () => {
+						// Scroll back to the top for the final, centered step. The page
+						// content scrolls inside the dashboard <main>, not the window.
+						document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+					},
 					popover: {
 						title: "That's it for the interview guide!",
 						description:

@@ -42,8 +42,11 @@
 	data-action-bar
 	class="sticky bottom-0 ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
 >
-	<ProjectLanguagePicker {projectId} currentLang={lang} {availableLanguages} />
+	<div data-tour="language" class="flex">
+		<ProjectLanguagePicker {projectId} currentLang={lang} {availableLanguages} />
+	</div>
 	<a
+		data-tour="try-interview"
 		class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
 		href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
 		target="_blank"
@@ -52,7 +55,7 @@
 		<i class="fa-solid fa-person-circle-question"></i>
 		Try Interview
 	</a>
-	<div class="export-pdf-menu relative">
+	<div data-tour="export" class="export-pdf-menu relative">
 		<button
 			type="button"
 			class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
@@ -100,6 +103,7 @@
 		{/if}
 	</div>
 	<button
+		data-tour="save"
 		type="button"
 		class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark disabled:opacity-50"
 		onclick={() => onSave()}

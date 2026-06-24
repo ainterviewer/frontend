@@ -498,7 +498,10 @@
 			</div>
 
 			<!-- AI Generated Sections -->
-			<div class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+			<div
+				data-tour="ai-generated-sections"
+				class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+			>
 				<div class="flex items-center gap-3">
 					<label class="text-sm font-medium text-gray-700" for="ai-generated-sections">
 						AI Generated Sections
@@ -517,7 +520,11 @@
 			</div>
 
 			<!-- Outro -->
-			<div id="outro" class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+			<div
+				data-tour="outro"
+				id="outro"
+				class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+			>
 				<h3 class="mb-2 text-lg font-medium">Outro</h3>
 				<p class="mb-4 text-sm text-gray-500">Last message in the interview.</p>
 				<textarea
@@ -529,6 +536,7 @@
 
 			<!-- Timed Messages -->
 			<div
+				data-tour="timed-messages"
 				id="timed_messages"
 				class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
 			>
