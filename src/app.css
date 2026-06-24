@@ -182,3 +182,7 @@
 		margin-top: 0.5rem !important;
 	}
 }
+
+.onboarding-skip-btn:hover {
+	color: var(--color-red-500) !important;
+}

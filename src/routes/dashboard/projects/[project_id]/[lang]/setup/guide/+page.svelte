@@ -14,6 +14,7 @@
 		type DragDropEvents
 	} from '@dnd-kit-svelte/svelte';
 	import { move } from '@dnd-kit/helpers';
+	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
 	import { driver } from 'driver.js';
 	import 'driver.js/dist/driver.css';
 	import { onMount, tick } from 'svelte';
@@ -25,6 +26,7 @@
 	function startOnboarding() {
 		const tour = driver({
 			showProgress: true,
+			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
 			steps: [
 				{
 					popover: {
@@ -245,11 +247,11 @@
 	}
 
 	onMount(() => {
-		// Show the onboarding tour once per user.
-		// if (!localStorage.getItem('guide-onboarded')) {
-		startOnboarding();
-		// 	localStorage.setItem('guide-onboarded', 'true');
-		// }
+		// Show the onboarding tour once per user, unless they opted out of all tours.
+		if (!isOnboardingDisabled() && !localStorage.getItem('guide-onboarded')) {
+			startOnboarding();
+			localStorage.setItem('guide-onboarded', 'true');
+		}
 	});
 
 	let { data } = $props();

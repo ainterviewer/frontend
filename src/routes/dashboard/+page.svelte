@@ -7,6 +7,7 @@
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
+	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
 	import { driver } from 'driver.js';
 	import 'driver.js/dist/driver.css';
 	import { onMount } from 'svelte';
@@ -62,6 +63,7 @@
 	function startOnboarding() {
 		const tour = driver({
 			showProgress: true,
+			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
 			steps: [
 				{
 					element: '[data-tour="new-folder"]',
@@ -99,8 +101,8 @@
 	}
 
 	onMount(() => {
-		// Show the onboarding tour once per user.
-		if (!localStorage.getItem('dashboard-onboarded')) {
+		// Show the onboarding tour once per user, unless they opted out of all tours.
+		if (!isOnboardingDisabled() && !localStorage.getItem('dashboard-onboarded')) {
 			startOnboarding();
 			localStorage.setItem('dashboard-onboarded', 'true');
 		}

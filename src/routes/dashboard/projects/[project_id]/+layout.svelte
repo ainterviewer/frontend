@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { projectSidebarItems } from '$lib/config/sidebar';
+	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
 	import { driver } from 'driver.js';
 	import 'driver.js/dist/driver.css';
 	import { onMount } from 'svelte';
@@ -12,6 +13,7 @@
 			showProgress: true,
 			stagePadding: 0,
 			stageRadius: 0,
+			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
 			// stagePadding/stageRadius are global, so give only the last step (the
 			// small documentation icon) some breathing room around its highlight.
 			onHighlightStarted: (_element, _step, { driver }) => {
@@ -92,11 +94,11 @@
 	}
 
 	onMount(() => {
-		// Show the onboarding tour once per user.
-		// if (!localStorage.getItem('project-onboarded')) {
-		startOnboarding();
-		// 	localStorage.setItem('project-onboarded', 'true');
-		// }
+		// Show the onboarding tour once per user, unless they opted out of all tours.
+		if (!isOnboardingDisabled() && !localStorage.getItem('project-onboarded')) {
+			startOnboarding();
+			localStorage.setItem('project-onboarded', 'true');
+		}
 	});
 </script>
 

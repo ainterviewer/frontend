@@ -4,6 +4,8 @@
 	import { Auth } from '$lib/api';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
+	import { enableOnboarding, isOnboardingDisabled } from '$lib/onboarding';
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -33,6 +35,18 @@
 	// Delete account
 	let deletePassword = $state('');
 	let isDeleting = $state(false);
+
+	// Onboarding — localStorage isn't reactive, so read it on mount.
+	let onboardingDisabled = $state(false);
+	onMount(() => {
+		onboardingDisabled = isOnboardingDisabled();
+	});
+
+	function reenableOnboarding() {
+		enableOnboarding();
+		onboardingDisabled = false;
+		toast.success('Onboarding tours reset');
+	}
 
 	const inputClass =
 		'block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm transition-all focus:border-primary focus:ring-primary focus:outline-none sm:text-sm';
@@ -254,6 +268,18 @@
 				{isSavingPassword ? 'Saving...' : 'Update password'}
 			</button>
 		</form>
+	</section>
+
+	<section>
+		<h2 class="text-lg font-semibold text-dark">Onboarding</h2>
+		<p class="mt-1 text-sm text-gray-500">
+			Guided tours introduce features as you navigate the app. They are currently
+			<span class="font-medium">{onboardingDisabled ? 'turned off' : 'on'}</span>. Resetting turns them
+			back on and replays every tour the next time you visit each page.
+		</p>
+		<button type="button" class="mt-4 {buttonClass}" onclick={reenableOnboarding}>
+			Reset onboarding tours
+		</button>
 	</section>
 
 	<section class="rounded-md border border-red-300 p-4">
