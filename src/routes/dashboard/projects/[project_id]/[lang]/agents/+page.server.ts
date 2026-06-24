@@ -6,7 +6,7 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 	const { cookieHeader } = locals;
 	const { project_id, lang } = params;
 
-	const [modelsRes, agentsRes, promptsRes] = await Promise.all([
+	const [modelsRes, agentsRes, defaultsRes] = await Promise.all([
 		Default.getModels({
 			headers: { cookie: cookieHeader },
 			fetch
@@ -16,8 +16,7 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 			headers: { cookie: cookieHeader },
 			fetch
 		}),
-		Projects.getPrompts({
-			path: { project_id, lang },
+		Projects.getPromptDefaults({
 			headers: { cookie: cookieHeader },
 			fetch
 		})
@@ -31,18 +30,18 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 		console.error('Failed to load agents', agentsRes.error);
 		throw error(500, 'Failed to load agents');
 	}
-	if (promptsRes.error) {
-		console.error('Failed to load prompts', promptsRes.error);
-		throw error(500, 'Failed to load prompts');
+	if (defaultsRes.error) {
+		console.error('Failed to load prompt defaults', defaultsRes.error);
+		throw error(500, 'Failed to load prompt defaults');
 	}
 
 	const models = (modelsRes.data as unknown as string[]) || [];
 	const agents = agentsRes.data || {};
-	const prompts = promptsRes.data || {};
+	const promptDefaults = defaultsRes.data || {};
 
 	return {
 		models,
 		agents,
-		prompts
+		promptDefaults
 	};
 };
