@@ -1,5 +1,6 @@
 <script lang="ts">
 	import AssistanceChat from '$lib/components/AssistanceChat.svelte';
+	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
 	import {
 		createGuideStore,
 		setGuideStore,
@@ -14,7 +15,6 @@
 		type DragDropEvents
 	} from '@dnd-kit-svelte/svelte';
 	import { move } from '@dnd-kit/helpers';
-	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
 	import { driver } from 'driver.js';
 	import 'driver.js/dist/driver.css';
 	import { onMount, tick } from 'svelte';
@@ -88,7 +88,7 @@
 					popover: {
 						title: 'Question Settings',
 						description:
-							'Open a question\'s settings to add follow-up probes, attach media or survey items, set probing limits, and tweak its behavior.',
+							"Open a question's settings to add follow-up probes, attach media or survey items, set probing limits, and tweak its behavior.",
 						onNextClick: () => {
 							// The settings menu element only renders once the settings panel is
 							// open, so open it before advancing to the next step.
@@ -108,7 +108,7 @@
 					popover: {
 						title: 'Question Settings',
 						description:
-							'This panel holds all the advanced options for a single question. Let\'s walk through what you can configure here.'
+							"This panel holds all the advanced options for a single question. Let's walk through what you can configure here."
 					}
 				},
 				{
@@ -160,7 +160,7 @@
 					popover: {
 						title: 'AI Generated Questions',
 						description:
-							'Once a section\'s predefined questions are done, the AInterviewer can generate extra questions on the fly. Set how many, and cap the probing for each.'
+							"Once a section's predefined questions are done, the AInterviewer can generate extra questions on the fly. Set how many, and cap the probing for each."
 					}
 				},
 				{

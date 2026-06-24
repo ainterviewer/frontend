@@ -66,12 +66,41 @@
 			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
 			steps: [
 				{
+					popover: {
+						title: 'Welcome to the AInterviewer platform',
+						description:
+							'This interactive tour will guide you through the platforms features, and help you get started.',
+						onNextClick: () => {
+							if (!document.querySelector('[data-tour="header-menu-dropdown"].visible')) {
+								(
+									document.querySelector('[data-tour="header-menu"]') as HTMLElement | null
+								)?.click();
+							}
+							tour.moveNext();
+						}
+					}
+				},
+				{
+					element: '[data-tour="header-menu-dropdown"]',
+					popover: {
+						title: 'Global menu',
+						description:
+							'In the global dropdown menu you can logout at any time. in <u>Your Profile</u> you can edit your user information, and manage how you see these interactive tours.',
+						onNextClick: () => {
+							if (document.querySelector('[data-tour="header-menu-dropdown"].visible')) {
+								(
+									document.querySelector('[data-tour="header-menu"]') as HTMLElement | null
+								)?.click();
+							}
+							tour.moveNext();
+						}
+					}
+				},
+				{
 					element: '[data-tour="new-folder"]',
 					popover: {
 						title: 'Create a folder',
-						description: 'Folders group related projects and let you invite collaborators.',
-						side: 'bottom',
-						align: 'start'
+						description: 'Folders group related projects and let you invite collaborators.'
 					}
 				},
 				{

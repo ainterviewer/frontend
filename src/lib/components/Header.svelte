@@ -84,6 +84,7 @@
 				<li>
 					<div class="relative">
 						<button
+							data-tour="header-menu"
 							type="button"
 							onclick={(e) => {
 								e.stopPropagation();
@@ -98,6 +99,7 @@
 							</div>
 						</button>
 						<div
+							data-tour="header-menu-dropdown"
 							class="ring-opacity-5 absolute right-0 z-50 mt-2 min-w-48 rounded-md bg-white shadow-lg ring-1 ring-black transition-all duration-200 {menuOpen
 								? 'visible opacity-100'
 								: 'invisible opacity-0'}"

@@ -49,7 +49,7 @@ export function addSkipOnboardingButton(popover: PopoverDOM, tour: Driver): void
 
 	const button = document.createElement('button');
 	button.type = 'button';
-	button.innerText = "Don't show tours again";
+	button.innerText = "Don't show any tours again";
 	// NOTE: avoid a class containing "driver-popover" — driver.js swallows such
 	// clicks in its capture-phase listener, so our handler would never fire.
 	button.className = 'onboarding-skip-btn';
