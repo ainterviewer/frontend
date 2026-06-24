@@ -90,7 +90,7 @@
 				{
 					popover: {
 						title: "That's it for the main dashboard",
-						description: 'Enter a project to continue the introduction.'
+						description: 'Create and view a project to continue the introduction.'
 					}
 				}
 			]

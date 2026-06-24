@@ -52,41 +52,41 @@
 				{
 					element: '[data-tour="framing"]',
 					popover: {
-						title: 'AI Assistant (experimental)',
+						title: 'Framing',
 						description:
-							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+							'Set the scene and provide background for your interview. This is never shown to the interviewee — it only helps the AI ask more relevant questions.'
 					}
 				},
 				{
 					element: '[data-tour="introduction"]',
 					popover: {
-						title: 'AI Assistant (experimental)',
+						title: 'Introduction',
 						description:
-							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+							'Write the opening message your interviewee will see. It welcomes them to the interview and cannot be replied to.'
 					}
 				},
 				{
 					element: '[data-tour="section"]',
 					popover: {
-						title: 'AI Assistant (experimental)',
+						title: 'Sections',
 						description:
-							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+							'Organize your questions into sections. Each section has its own description, can be shuffled, and can be topped up with AI-generated questions.'
 					}
 				},
 				{
 					element: '[data-tour="question"]',
 					popover: {
-						title: 'AI Assistant (experimental)',
+						title: 'Questions',
 						description:
-							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+							'These are the questions the AInterviewer will ask. Drag them to reorder, and expand the settings to fine-tune how each one behaves.'
 					}
 				},
 				{
 					element: '[data-tour="question-settings"]',
 					popover: {
-						title: 'AI Assistant (experimental)',
+						title: 'Question Settings',
 						description:
-							'You can also use our interactive AI assistant to iterate and develop your interview guide.',
+							'Open a question\'s settings to add follow-up probes, attach media or survey items, set probing limits, and tweak its behavior.',
 						onNextClick: () => {
 							// The settings menu element only renders once the settings panel is
 							// open, so open it before advancing to the next step.
@@ -104,41 +104,41 @@
 				{
 					element: '[data-tour="question-settings-menu"]',
 					popover: {
-						title: 'AI Assistant (experimental)',
+						title: 'Question Settings',
 						description:
-							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+							'This panel holds all the advanced options for a single question. Let\'s walk through what you can configure here.'
 					}
 				},
 				{
 					element: '[data-tour="question-extras"]',
 					popover: {
-						title: 'AI Assistant (experimental)',
+						title: 'Add Extras',
 						description:
-							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+							'Enrich a question by attaching an image, adding a survey item for structured answers, or setting a condition that controls when the question is shown.'
 					}
 				},
 				{
 					element: '[data-tour="probes"]',
 					popover: {
-						title: 'AI Assistant (experimental)',
+						title: 'Follow-up Probes',
 						description:
-							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+							'Add follow-up questions the AInterviewer can use to dig deeper when an answer needs more detail.'
 					}
 				},
 				{
 					element: '[data-tour="probing-limits"]',
 					popover: {
-						title: 'AI Assistant (experimental)',
+						title: 'Probing Limits',
 						description:
-							'You can also use our interactive AI assistant to iterate and develop your interview guide.'
+							'Keep probing in check by capping the number of follow-ups and the time spent on a single question.'
 					}
 				},
 				{
 					element: '[data-tour="behavior-flags"]',
 					popover: {
-						title: 'AI Assistant (experimental)',
+						title: 'Behavior Flags',
 						description:
-							'You can also use our interactive AI assistant to iterate and develop your interview guide.',
+							'Toggle how a question behaves — exclude it from history, create a transition from the previous question, check whether it was already answered, and more.',
 						onNextClick: () => {
 							// The settings menu element only renders once the settings panel is
 							// open, so open it before advancing to the next step.

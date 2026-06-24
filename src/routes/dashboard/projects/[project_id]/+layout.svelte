@@ -35,7 +35,8 @@
 					element: '[data-tour="agents"]',
 					popover: {
 						title: 'Agents',
-						description: 'In the agents tab, you can modify the AI agent(s) behavior.'
+						description:
+							'In the agents tab, you can modify the AI agent(s) configuration and behavior.'
 					}
 				},
 				{
