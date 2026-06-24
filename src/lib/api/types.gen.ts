@@ -85,7 +85,21 @@ export type AgentConfig = {
 /**
  * AgentConfigs
  */
-export type AgentConfigs = {
+export type AgentConfigsInput = {
+    probing?: ProbingAgentConfig;
+    classification?: AgentConfig;
+    guide?: AgentConfig;
+    history?: AgentConfig;
+    security?: SecurityConfig;
+    visual?: VisualConfig;
+    answering?: AgentConfig;
+    reformulation?: AgentConfig;
+};
+
+/**
+ * AgentConfigs
+ */
+export type AgentConfigsOutput = {
     probing?: ProbingAgentConfig;
     classification?: AgentConfig;
     guide?: AgentConfig;
@@ -2067,12 +2081,60 @@ export type ProbingAgentConfig = {
      * Few Shot Examples
      */
     few_shot_examples?: Array<string> | null;
+    prompt_slots?: ProbingPromptSlots;
 };
 
 /**
  * ProbingContext
  */
 export type ProbingContext = 'section' | 'question';
+
+/**
+ * ProbingPromptPreview
+ *
+ * Rendered probing-agent prompts with the project's editable slots injected.
+ *
+ * Interview-time context (transcript, framing, etc.) is shown as labelled
+ * placeholders since those values only exist while an interview is running.
+ */
+export type ProbingPromptPreview = {
+    /**
+     * System
+     */
+    system: string;
+    /**
+     * Instruction
+     */
+    instruction: string;
+};
+
+/**
+ * ProbingPromptSlots
+ *
+ * User-editable regions of the probing agent's system and instruction prompts.
+ *
+ * Each field is an override: when left as ``None`` the corresponding default
+ * from ``DEFAULT_PROBING_SLOTS`` is used at render time, so improvements to the
+ * defaults flow through to projects that have not customized that slot.
+ */
+export type ProbingPromptSlots = {
+    /**
+     * Persona
+     */
+    persona?: string | null;
+    /**
+     * Question Qualities
+     */
+    question_qualities?: Array<string> | null;
+    /**
+     * Guidelines
+     */
+    guidelines?: Array<string> | null;
+    /**
+     * Instructions
+     */
+    instructions?: Array<string> | null;
+};
 
 /**
  * ProbingStrategy
@@ -2208,28 +2270,6 @@ export type ProjectTitleUpdateRequest = {
      * Title
      */
     title: string;
-};
-
-/**
- * PromptTemplates
- */
-export type PromptTemplates = {
-    /**
-     * System Prompt
-     */
-    system_prompt: string;
-    /**
-     * Instruction Prompt
-     */
-    instruction_prompt: string;
-    [key: string]: unknown;
-};
-
-/**
- * PromptsUpdateRequest
- */
-export type PromptsUpdateRequest = {
-    probing_agent: PromptTemplates;
 };
 
 /**
@@ -5876,13 +5916,13 @@ export type GetInterviewAgentsResponses = {
     /**
      * Successful Response
      */
-    200: AgentConfigs;
+    200: AgentConfigsOutput;
 };
 
 export type GetInterviewAgentsResponse = GetInterviewAgentsResponses[keyof GetInterviewAgentsResponses];
 
 export type CreateInterviewAgentsData = {
-    body: AgentConfigs;
+    body: AgentConfigsInput;
     path: {
         /**
          * Project Id
@@ -5917,6 +5957,45 @@ export type CreateInterviewAgentsResponses = {
      */
     200: unknown;
 };
+
+export type PreviewProbingPromptsData = {
+    body: ProbingAgentConfig;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Lang
+         */
+        lang: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{lang}/agents/prompts/preview';
+};
+
+export type PreviewProbingPromptsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PreviewProbingPromptsError = PreviewProbingPromptsErrors[keyof PreviewProbingPromptsErrors];
+
+export type PreviewProbingPromptsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProbingPromptPreview;
+};
+
+export type PreviewProbingPromptsResponse = PreviewProbingPromptsResponses[keyof PreviewProbingPromptsResponses];
 
 export type GetInterviewConfigData = {
     body?: never;
@@ -6014,79 +6093,21 @@ export type UpdateExternalParamsResponses = {
     200: unknown;
 };
 
-export type GetPromptsData = {
+export type GetPromptDefaultsData = {
     body?: never;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string | null;
-        /**
-         * Lang
-         */
-        lang: string;
-    };
-    query?: {
-        /**
-         * Folder Id
-         */
-        folder_id?: string | null;
-    };
-    url: '/api/projects/{project_id}/{lang}/prompts';
+    path?: never;
+    query?: never;
+    url: '/api/prompt-defaults';
 };
 
-export type GetPromptsErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetPromptsError = GetPromptsErrors[keyof GetPromptsErrors];
-
-export type GetPromptsResponses = {
+export type GetPromptDefaultsResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ProbingPromptSlots;
 };
 
-export type UpdatePromptsData = {
-    body: PromptsUpdateRequest;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string | null;
-        /**
-         * Lang
-         */
-        lang: string;
-    };
-    query?: {
-        /**
-         * Folder Id
-         */
-        folder_id?: string | null;
-    };
-    url: '/api/projects/{project_id}/{lang}/prompts';
-};
-
-export type UpdatePromptsErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type UpdatePromptsError = UpdatePromptsErrors[keyof UpdatePromptsErrors];
-
-export type UpdatePromptsResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
+export type GetPromptDefaultsResponse = GetPromptDefaultsResponses[keyof GetPromptDefaultsResponses];
 
 export type GetConsentData = {
     body?: never;
