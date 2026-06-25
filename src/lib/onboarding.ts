@@ -33,19 +33,15 @@ export function enableOnboarding(): void {
 }
 
 /**
- * Inject a "Don't show tours again" link into a driver.js popover, on its own
- * row beneath the navigation buttons so it doesn't crowd the footer. Clicking it
- * disables all onboarding tours globally and closes the current one. Wire it up
- * through the tour's `onPopoverRender` hook, passing the same `tour` instance.
+ * Inject a "Don't show tours again" link into a driver.js popover footer, where
+ * CSS (see app.css) places it in the bottom-right corner. Clicking it disables
+ * all onboarding tours globally and closes the current one. Wire it up through
+ * the tour's `onPopoverRender` hook, passing the same `tour` instance.
  */
 export function addSkipOnboardingButton(popover: PopoverDOM, tour: Driver): void {
-	// driver.js may reuse the popover wrapper across steps; don't add it twice.
-	if (popover.wrapper.querySelector('.onboarding-skip-row')) return;
-
-	const row = document.createElement('div');
-	row.className = 'onboarding-skip-row';
-	row.style.textAlign = 'center';
-	row.style.paddingTop = '8px';
+	// driver.js reuses the popover DOM across steps; don't add the button twice.
+	const host = popover.footer ?? popover.wrapper;
+	if (host.querySelector('.onboarding-skip-btn')) return;
 
 	const button = document.createElement('button');
 	button.type = 'button';
@@ -60,11 +56,11 @@ export function addSkipOnboardingButton(popover: PopoverDOM, tour: Driver): void
 	button.style.color = '#6b7280';
 	button.style.fontSize = '12px';
 	button.style.cursor = 'pointer';
+	button.style.padding = '0';
 	button.addEventListener('click', () => {
 		disableOnboarding();
 		tour.destroy();
 	});
 
-	row.appendChild(button);
-	popover.wrapper.appendChild(row);
+	host.appendChild(button);
 }

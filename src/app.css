@@ -207,3 +207,32 @@
 	font-size: 1rem;
 	line-height: 1.5;
 }
+
+/*
+ * Footer layout: prev/next centered on their own row up top, then the progress
+ * "x of N" bottom-left and the "Don't show any tours" link bottom-right.
+ */
+.driver-popover .driver-popover-footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	row-gap: 12px;
+	margin-top: 16px;
+}
+
+.driver-popover .driver-popover-navigation-btns {
+	order: 1;
+	flex: 0 0 100%;
+	display: flex;
+	justify-content: center;
+}
+
+.driver-popover .driver-popover-progress-text {
+	order: 2;
+	margin: 0;
+}
+
+.driver-popover .onboarding-skip-btn {
+	order: 3;
+	margin-left: auto;
+}
