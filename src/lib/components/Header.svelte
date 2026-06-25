@@ -82,53 +82,60 @@
 					</li>
 				{/if}
 				<li>
-					<div class="relative">
-						<button
-							data-tour="header-menu"
-							type="button"
-							onclick={(e) => {
-								e.stopPropagation();
-								menuOpen = !menuOpen;
-							}}
-							class="font-inherit m-4 block cursor-pointer border-none bg-transparent text-center text-base font-normal text-black"
-						>
-							<div
-								class="relative inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-secondary hover:bg-secondary hover:brightness-85"
-							>
-								<span class="text-body font-medium">{data.user?.first_name?.[0] ?? ''}</span>
-							</div>
-						</button>
+					<!-- placeholder reserves the avatar's footprint in the nav flow -->
+					<div class="relative m-4 h-7 w-7">
+						<!-- absolute wrapper bounds BOTH the button and the dropdown so driver.js can highlight them together -->
 						<div
-							data-tour="header-menu-dropdown"
-							class="ring-opacity-5 absolute right-0 z-50 mt-2 min-w-48 rounded-md bg-white shadow-lg ring-1 ring-black transition-all duration-200 {menuOpen
-								? 'visible opacity-100'
-								: 'invisible opacity-0'}"
+							data-tour="header-menu-container"
+							class="pointer-events-none absolute top-0 right-0 z-50 flex flex-col items-end"
 						>
-							<div
-								class="py-1"
-								role="menu"
-								aria-orientation="vertical"
-								aria-labelledby="options-menu"
+							<button
+								data-tour="header-menu"
+								type="button"
+								onclick={(e) => {
+									e.stopPropagation();
+									menuOpen = !menuOpen;
+								}}
+								class="font-inherit pointer-events-auto block cursor-pointer border-none bg-transparent text-center text-base font-normal text-black"
 							>
-								<div class="block px-4 py-2 text-sm font-semibold text-gray-700">
-									{data.user.first_name}
-								</div>
-								<div class="block px-4 pb-2 text-xs text-gray-500">
-									{data.user.email}
-								</div>
-								<a
-									href={resolve('/dashboard/settings/profile')}
-									class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
-									role="menuitem">Your profile</a
+								<div
+									class="relative inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-secondary hover:bg-secondary hover:brightness-85"
 								>
-								<button
-									type="button"
-									onclick={signOut}
-									class="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
-									role="menuitem"
+									<span class="text-body font-medium">{data.user?.first_name?.[0] ?? ''}</span>
+								</div>
+							</button>
+							<div
+								data-tour="header-menu-dropdown"
+								class="ring-opacity-5 pointer-events-auto mt-3 min-w-48 rounded-md bg-white shadow-lg ring-1 ring-black transition-all duration-200 {menuOpen
+									? 'visible opacity-100'
+									: 'invisible opacity-0'}"
+							>
+								<div
+									class="py-1"
+									role="menu"
+									aria-orientation="vertical"
+									aria-labelledby="options-menu"
 								>
-									Logout
-								</button>
+									<div class="block px-4 py-2 text-sm font-semibold text-gray-700">
+										{data.user.first_name}
+									</div>
+									<div class="block px-4 pb-2 text-xs text-gray-500">
+										{data.user.email}
+									</div>
+									<a
+										href={resolve('/dashboard/settings/profile')}
+										class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
+										role="menuitem">Your profile</a
+									>
+									<button
+										type="button"
+										onclick={signOut}
+										class="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
+										role="menuitem"
+									>
+										Logout
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
