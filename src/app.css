@@ -186,3 +186,24 @@
 .onboarding-skip-btn:hover {
 	color: var(--color-red-500) !important;
 }
+
+/*
+ * Enlarge driver.js onboarding popovers globally. Doubled-class / descendant
+ * selectors raise specificity above driver.css's single-class defaults so these
+ * win regardless of stylesheet import order.
+ */
+.driver-popover.driver-popover {
+	max-width: 420px;
+	padding: 20px 24px;
+}
+
+.driver-popover .driver-popover-title {
+	font-size: 1.25rem;
+	line-height: 1.4;
+	margin-bottom: 0.5rem;
+}
+
+.driver-popover .driver-popover-description {
+	font-size: 1rem;
+	line-height: 1.5;
+}
