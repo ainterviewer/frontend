@@ -87,7 +87,7 @@
 					popover: {
 						title: 'Global menu',
 						description:
-							'In the global dropdown menu you can logout at any time. in <u>Your Profile</u> you can edit your user information, and manage how you see these interactive tours.'
+							'In the global dropdown menu you can logout at any time. in <u>Your profile</u> you can edit your user information, and manage how you see these interactive tours.'
 					}
 				},
 				{
@@ -115,7 +115,7 @@
 				{
 					popover: {
 						title: "That's it for the main dashboard",
-						description: 'Create and view a project to continue the introduction.'
+						description: 'Create and view a project to continue the guided tour.'
 					}
 				}
 			]

@@ -33,34 +33,26 @@ export function enableOnboarding(): void {
 }
 
 /**
- * Inject a "Don't show tours again" link into a driver.js popover footer, where
- * CSS (see app.css) places it in the bottom-right corner. Clicking it disables
- * all onboarding tours globally and closes the current one. Wire it up through
- * the tour's `onPopoverRender` hook, passing the same `tour` instance.
+ * Inject a "Don't show tours again" link into a driver.js popover. It's appended
+ * to the popover box and floated just below it via CSS (see app.css).
+ * Clicking it disables all onboarding tours globally and closes the current one.
+ * Wire it up through the tour's `onPopoverRender` hook, passing the same `tour`.
  */
 export function addSkipOnboardingButton(popover: PopoverDOM, tour: Driver): void {
 	// driver.js reuses the popover DOM across steps; don't add the button twice.
-	const host = popover.footer ?? popover.wrapper;
-	if (host.querySelector('.onboarding-skip-btn')) return;
+	if (popover.wrapper.querySelector('.onboarding-skip-btn')) return;
 
 	const button = document.createElement('button');
 	button.type = 'button';
-	button.innerText = "Don't show any tours again";
+	button.innerText = "Don't show any guided tours";
 	// NOTE: avoid a class containing "driver-popover" — driver.js swallows such
 	// clicks in its capture-phase listener, so our handler would never fire.
 	button.className = 'onboarding-skip-btn';
-	// Render as a muted text link rather than a chunky driver button.
-	button.style.background = 'transparent';
-	button.style.border = 'none';
-	button.style.textShadow = 'none';
-	button.style.color = '#6b7280';
-	button.style.fontSize = '12px';
-	button.style.cursor = 'pointer';
-	button.style.padding = '0';
 	button.addEventListener('click', () => {
 		disableOnboarding();
 		tour.destroy();
 	});
 
-	host.appendChild(button);
+	// Anchored to the popover box; positioned/styled in app.css.
+	popover.wrapper.appendChild(button);
 }
