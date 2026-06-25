@@ -67,33 +67,27 @@
 			steps: [
 				{
 					popover: {
-						title: 'Welcome to the AInterviewer platform',
+						title: 'Welcome to the AInterviewer platform 👋',
 						description:
-							'This interactive tour will guide you through the platforms features, and help you get started.',
-						onNextClick: () => {
-							if (!document.querySelector('[data-tour="header-menu-dropdown"].visible')) {
-								(
-									document.querySelector('[data-tour="header-menu"]') as HTMLElement | null
-								)?.click();
-							}
-							tour.moveNext();
-						}
+							'This interactive tour will guide you through the platforms features, and help you get started.'
 					}
 				},
 				{
-					element: '[data-tour="header-menu-dropdown"]',
+					element: '[data-tour="header-menu-container"]',
+					onHighlightStarted: () => {
+						if (!document.querySelector('[data-tour="header-menu-dropdown"].visible')) {
+							(document.querySelector('[data-tour="header-menu"]') as HTMLElement | null)?.click();
+						}
+					},
+					onDeselected: () => {
+						if (document.querySelector('[data-tour="header-menu-dropdown"].visible')) {
+							(document.querySelector('[data-tour="header-menu"]') as HTMLElement | null)?.click();
+						}
+					},
 					popover: {
 						title: 'Global menu',
 						description:
-							'In the global dropdown menu you can logout at any time. in <u>Your Profile</u> you can edit your user information, and manage how you see these interactive tours.',
-						onNextClick: () => {
-							if (document.querySelector('[data-tour="header-menu-dropdown"].visible')) {
-								(
-									document.querySelector('[data-tour="header-menu"]') as HTMLElement | null
-								)?.click();
-							}
-							tour.moveNext();
-						}
+							'In the global dropdown menu you can logout at any time. in <u>Your Profile</u> you can edit your user information, and manage how you see these interactive tours.'
 					}
 				},
 				{
