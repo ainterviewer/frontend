@@ -235,9 +235,9 @@
 						document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
 					},
 					popover: {
-						title: "That's it for the interview guide!",
+						title: "That's it for the Interview Guide!",
 						description:
-							"We'll let you poke around now on your own. Remember you can always consult our documentation through the question mark in the bottom of the sidebar.",
+							"We'll let you poke around now on your own now. Remember you can always consult our documentation through the question mark in the bottom of the sidebar.",
 						popoverClass: 'driver-centered'
 					}
 				}

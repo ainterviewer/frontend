@@ -67,7 +67,7 @@
 			steps: [
 				{
 					popover: {
-						title: 'Welcome to the AInterviewer platform 👋',
+						title: 'Welcome to the AInterviewer Platform 👋',
 						description:
 							"This interactive tour will guide you through the platform's features, and help you get started. Navigate the tour with the buttons below or with the arrow keys on your keyboard."
 					}
@@ -85,7 +85,7 @@
 						}
 					},
 					popover: {
-						title: 'Global menu',
+						title: 'Global Menu',
 						description:
 							'In the global dropdown menu you can logout at any time. In <u>Your profile</u> you can edit your user information, and manage how you see these interactive tours.'
 					}
@@ -109,7 +109,7 @@
 				{
 					element: '[data-tour="new-folder"]',
 					popover: {
-						title: 'Create a folder',
+						title: 'Create a Folder',
 						description:
 							'Folders group related projects and let you invite and manage collaborators.'
 					}
@@ -117,7 +117,7 @@
 				{
 					element: '[data-tour="new-project"]',
 					popover: {
-						title: 'Add a project',
+						title: 'Add a Project',
 						description:
 							'Inside a folder, you can create interview projects to get started on your interview guide and setup.'
 					}
@@ -125,7 +125,7 @@
 				{
 					element: '[data-tour="documentation"]',
 					popover: {
-						title: 'Read the documentation',
+						title: 'Read the Documentation',
 						description:
 							'Consult our documentation site for more elaborate descriptions of the platform features and best practices.',
 						side: 'top'
@@ -133,7 +133,7 @@
 				},
 				{
 					popover: {
-						title: "That's it for the main dashboard! 🎉",
+						title: "That's it for the Main Dashboard! 🎉",
 						description: 'Create and view a project to get started with your own AI-led interviews.'
 					}
 				}
