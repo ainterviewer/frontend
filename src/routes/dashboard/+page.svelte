@@ -109,7 +109,8 @@
 					popover: {
 						title: 'Read the documentation',
 						description:
-							'Consult our documentation site for more elaborate descriptions of the platform features and best practices.'
+							'Consult our documentation site for more elaborate descriptions of the platform features and best practices.',
+						side: 'top'
 					}
 				},
 				{
