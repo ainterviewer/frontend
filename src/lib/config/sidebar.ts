@@ -14,14 +14,15 @@ export const mainSidebarItems: SidebarItem[] = [
 	{
 		label: 'Home',
 		href: '/dashboard',
-		icon: 'fas fa-house'
+		icon: 'fas fa-house',
+		dataTour: 'sidebar-home'
 	},
 	{ type: 'separator' },
 	{
 		label: 'Experiments',
 		href: '/dashboard/experiments',
 		icon: 'fa-solid fa-vials',
-		dataTour: 'experiments'
+		dataTour: 'sidebar-experiments'
 	},
 	{ type: 'separator', requiresAdmin: true },
 	{

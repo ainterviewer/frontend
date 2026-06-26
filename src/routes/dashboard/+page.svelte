@@ -91,17 +91,35 @@
 					}
 				},
 				{
+					element: '[data-tour="sidebar-home"]',
+					popover: {
+						title: 'Home',
+						description:
+							'Home is where your projects live. You group related projects under folders and can see the status of each project.'
+					}
+				},
+				{
+					element: '[data-tour="sidebar-experiments"]',
+					popover: {
+						title: 'Experiments',
+						description:
+							'The experiments tab is for an advanced feature, useful when you want to compare multiple different existing interview projects through random distribution.'
+					}
+				},
+				{
 					element: '[data-tour="new-folder"]',
 					popover: {
 						title: 'Create a folder',
-						description: 'Folders group related projects and let you invite collaborators.'
+						description:
+							'Folders group related projects and let you invite and manage collaborators.'
 					}
 				},
 				{
 					element: '[data-tour="new-project"]',
 					popover: {
 						title: 'Add a project',
-						description: 'Inside a folder, create projects to start collecting interviews.'
+						description:
+							'Inside a folder, create projects to get started on your interview guide and setup.'
 					}
 				},
 				{
@@ -115,8 +133,8 @@
 				},
 				{
 					popover: {
-						title: "That's it for the main dashboard",
-						description: 'Create and view a project to continue the guided tour.'
+						title: "That's it for the main dashboard!",
+						description: 'Create and view a project to get started with your own AI-led interviews.'
 					}
 				}
 			]
