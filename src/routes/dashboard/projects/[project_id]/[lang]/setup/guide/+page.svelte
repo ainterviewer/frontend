@@ -192,7 +192,7 @@
 					popover: {
 						title: 'Action Bar',
 						description:
-							'This bar stays within reach as you scroll. From here you can switch language, preview the interview, export your guide, and save your changes.'
+							'This bar stays within reach as you scroll. Each action is explained in the next steps.'
 					}
 				},
 				{
