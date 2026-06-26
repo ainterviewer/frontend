@@ -69,7 +69,7 @@
 					popover: {
 						title: 'Welcome to the AInterviewer platform 👋',
 						description:
-							'This interactive tour will guide you through the platforms features, and help you get started. Navigate the tour with the buttons below or with the arrow keys on your keyboard.'
+							"This interactive tour will guide you through the platform's features, and help you get started. Navigate the tour with the buttons below or with the arrow keys on your keyboard."
 					}
 				},
 				{
