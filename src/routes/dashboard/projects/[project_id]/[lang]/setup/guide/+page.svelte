@@ -32,15 +32,15 @@
 					popover: {
 						title: 'Interview Guide',
 						description:
-							'The interview guide is the heart of your interviews. Configure and tweak the different elements to your own needs.'
+							'The interview guide is the heart of your interview project. Configure and tweak the different elements to match your own needs.'
 					}
 				},
 				{
 					element: '[data-tour="generate"]',
 					popover: {
-						title: 'Generate<br>Interview Guide',
+						title: 'Generate Interview Guide',
 						description:
-							'Describe your theme and requirements, and have the AI draft an interview guide you can use as a inspiration for your interviews.'
+							'Describe your theme and requirements, and have the AI draft an interview guide you can use as an inspiration for your interview guide.'
 					}
 				},
 				{
@@ -64,7 +64,7 @@
 					popover: {
 						title: 'Introduction',
 						description:
-							'Write the opening message your interviewee will see. It welcomes them to the interview and cannot be replied to.'
+							'Here you write the first message the interviewees will receive in the chat. Use the message to welcome the interviewee and introduce your study. The message cannot be replied to.'
 					}
 				},
 				{
@@ -72,7 +72,7 @@
 					popover: {
 						title: 'Sections',
 						description:
-							'Organize your questions into sections. Each section has its own description, can be shuffled, and can be topped up with AI-generated questions.'
+							'Organize your questions into sections. Each section has its own description, can be shuffled, and can be extended with AI-generated questions.'
 					}
 				},
 				{
@@ -80,7 +80,7 @@
 					popover: {
 						title: 'Questions',
 						description:
-							'These are the questions the AInterviewer will ask. Drag them to reorder, and expand the settings to fine-tune how each one behaves.'
+							'These are the questions the AInterviewer will ask. Each question consists of a description, which is helps the AInterviewer to formulate relevant follow-up probes, and a main question, which is a primary question of interest. Drag them to reorder, and expand the settings to fine-tune how each one behaves.'
 					}
 				},
 				{
@@ -160,7 +160,7 @@
 					popover: {
 						title: 'AI Generated Questions',
 						description:
-							"Once a section's predefined questions are done, the AInterviewer can generate extra questions on the fly. Set how many, and cap the probing for each."
+							"Once a section's predefined questions are done, the AInterviewer can generate extra questions on the fly. Specify how many you want, and cap the probing for each."
 					}
 				},
 				{
