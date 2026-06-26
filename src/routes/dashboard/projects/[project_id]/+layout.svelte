@@ -30,7 +30,7 @@
 					popover: {
 						title: 'Setup',
 						description:
-							'The setup includes creating a <u>consent</u> and <u>welcome</u> message, and filling out the <u>interview guide</u>.'
+							'The setup includes creating a <u>consent</u> and <u>welcome</u> message, and create your <u>interview guide</u>.'
 					}
 				},
 				{
@@ -38,7 +38,7 @@
 					popover: {
 						title: 'Agents',
 						description:
-							'In the agents tab, you can modify the AI agent(s) configuration and behavior.'
+							'In the <u>agents</u> tab, you can modify the AI agent(s) configuration and behavior.'
 					}
 				},
 				{
@@ -46,15 +46,15 @@
 					popover: {
 						title: 'Pilot Interviews',
 						description:
-							'Pilot Interviews includes the possability to configure and run simulations, and read through test interviews.'
+							'In <u>pilot interviews</u> you can configure and run simulations, as well as read through test interviews.'
 					}
 				},
 				{
 					element: '[data-tour="distribute"]',
 					popover: {
-						title: 'distribute',
+						title: 'Distribute',
 						description:
-							'The distribute tab lets you share your interview with respondents, either via a URL or a QR code. You can also <u>monitor</u> your ongoing data collection.'
+							'The <u>distribute</u> tab lets you share your interview with respondents, either via a URL or a QR code. You can also <u>monitor</u> your ongoing data collection.'
 					}
 				},
 				{
@@ -62,7 +62,7 @@
 					popover: {
 						title: 'Interview Data',
 						description:
-							'A table of your collected interview data, with the ability to view or export them.'
+							'A table of your collected <u>interview data</u>, with the ability to view or export them.'
 					}
 				},
 				{

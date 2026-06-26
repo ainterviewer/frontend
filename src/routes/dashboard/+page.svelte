@@ -87,7 +87,7 @@
 					popover: {
 						title: 'Global menu',
 						description:
-							'In the global dropdown menu you can logout at any time. in <u>Your profile</u> you can edit your user information, and manage how you see these interactive tours.'
+							'In the global dropdown menu you can logout at any time. In <u>Your profile</u> you can edit your user information, and manage how you see these interactive tours.'
 					}
 				},
 				{
@@ -95,7 +95,7 @@
 					popover: {
 						title: 'Home',
 						description:
-							'Home is where your projects live. You group related projects under folders and can see the status of each project.'
+							'<u>Home</u> is where your projects live. Organize your projects under folders and see the status of individual each project.'
 					}
 				},
 				{
@@ -103,7 +103,7 @@
 					popover: {
 						title: 'Experiments',
 						description:
-							'The experiments tab is for an advanced feature, useful when you want to compare multiple different existing interview projects through random distribution.'
+							'The <u>Experiments</u> tab is for an advanced feature, only useful when you have two or more projects created under the same folder. The feature allows you to assign respondents to different existing interview projects at random.'
 					}
 				},
 				{
@@ -119,7 +119,7 @@
 					popover: {
 						title: 'Add a project',
 						description:
-							'Inside a folder, create projects to get started on your interview guide and setup.'
+							'Inside a folder, you can create interview projects to get started on your interview guide and setup.'
 					}
 				},
 				{
@@ -133,7 +133,7 @@
 				},
 				{
 					popover: {
-						title: "That's it for the main dashboard!",
+						title: "That's it for the main dashboard! 🎉",
 						description: 'Create and view a project to get started with your own AI-led interviews.'
 					}
 				}
@@ -394,7 +394,8 @@
 
 <Sidebar items={mainSidebarItems} />
 <h1 class="page-title mb-8 text-5xl">
-	Welcome to <span class="bg-linear-to-r from-dark to-primary bg-clip-text text-transparent"
+	Welcome to <span
+		class="bg-linear-to-r from-dark to-primary bg-clip-text font-[noto_sans] font-semibold text-transparent"
 		>AInterviewer</span
 	>
 </h1>
@@ -408,10 +409,10 @@
 
 <div class="flex justify-between">
 	<h2 class="page-title">Folders</h2>
-	<div class="ml-auto flex rounded-lg transition-shadow hover:shadow-lg">
+	<div class="ml-auto flex">
 		<button
 			data-tour="new-folder"
-			class="flex items-center border-none bg-transparent px-4 py-2 transition-transform active:translate-y-0.5"
+			class="flex items-center rounded-full border-none bg-secondary px-4 py-2 text-dark hover:brightness-95"
 			onclick={() => (isCreateFolderModalOpen = true)}
 			title="Create new folder"
 			aria-label="Create new folder"
@@ -424,7 +425,7 @@
 
 {#each folders as folder, folderIndex (folder.id)}
 	<div class="relative mt-4 mb-2 flex items-center gap-2 border-t-2 border-primary pt-6">
-		<i class="fa-solid fa-folder text-4xl text-secondary"></i>
+		<i class="fa-solid fa-folder text-4xl text-primary"></i>
 		<h2 class="text-lg">{folder.title}</h2>
 		<div class="dropdown-container relative">
 			<button
