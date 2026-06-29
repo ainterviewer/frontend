@@ -47,7 +47,7 @@
 		},
 		{
 			type: 'fixed_ai',
-			label: 'Fixed AI Personas',
+			label: 'Fixed AI Respondents',
 			icon: 'fa-user-pen',
 			description:
 				'Define different personas based on our template, which will then be used to generate the answers.'

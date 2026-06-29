@@ -48,7 +48,7 @@
 </script>
 
 <div class="pb-32">
-	<h1 class="page-title">Setup - Fixed AI Personas</h1>
+	<h1 class="page-title">Setup - Fixed AI Respondents</h1>
 	<p class="text-gray-600">
 		Define one persona per text area. Each persona will be used as-is for the AI respondent.
 	</p>
