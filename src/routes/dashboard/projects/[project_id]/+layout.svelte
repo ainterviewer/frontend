@@ -65,13 +65,13 @@
 							'A table of your collected <u>interview data</u>, with the ability to view or export them.'
 					}
 				},
-				{
-					element: '[data-tour="analysis"]',
-					popover: {
-						title: 'Analysis',
-						description: 'Analyse your interviews through tags and scores.'
-					}
-				},
+				// {
+				// 	element: '[data-tour="analysis"]',
+				// 	popover: {
+				// 		title: 'Analysis',
+				// 		description: 'Analyse your interviews through tags and scores.'
+				// 	}
+				// },
 				{
 					element: '[data-tour="settings"]',
 					popover: {

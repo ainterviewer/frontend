@@ -139,25 +139,25 @@ export const projectSidebarItems: SidebarItem[] = [
 		icon: 'fas fa-comments',
 		dataTour: 'interview-data'
 	},
-	{
-		label: 'Analysis',
-		// href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
-		icon: 'fas fa-chart-pie',
-		dataTour: 'analysis',
-		children: [
-			{
-				label: 'Annotate',
-				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
-				icon: 'fas fa-tags'
-			}
-			// FIXME:
-			// {
-			// 	label: 'Visualizations',
-			// 	href: '/dashboard/projects/{projectId}/{languageCode}/analysis/visualizations',
-			// 	icon: 'fas fa-chart-line'
-			// }
-		]
-	},
+	// {
+	// label: 'Analysis',
+	// href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
+	// icon: 'fas fa-chart-pie',
+	// dataTour: 'analysis',
+	// children: [
+	// 	{
+	// 		label: 'Annotate',
+	// 		href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
+	// 		icon: 'fas fa-tags'
+	// 	}
+	// FIXME:
+	// {
+	// 	label: 'Visualizations',
+	// 	href: '/dashboard/projects/{projectId}/{languageCode}/analysis/visualizations',
+	// 	icon: 'fas fa-chart-line'
+	// }
+	// ]
+	// },
 	{
 		label: 'Settings',
 		href: '/dashboard/projects/{projectId}/{languageCode}/settings',
