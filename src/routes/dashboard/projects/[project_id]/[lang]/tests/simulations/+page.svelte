@@ -3,8 +3,8 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Synthesize, type TestType } from '$lib/api';
-	import { toast } from 'svelte-sonner';
 	import Info from '$lib/components/Info.svelte';
+	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
 
