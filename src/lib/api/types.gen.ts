@@ -2487,6 +2487,44 @@ export type QuestionOutput = {
 };
 
 /**
+ * QuestionBase
+ *
+ * A question that can be asked to the interviewee
+ */
+export type QuestionBase = {
+    /**
+     * Description
+     *
+     * A description of the question, may be used to reformulate the question and improve the relevance of the probes.
+     */
+    description?: string | null;
+    /**
+     * Main Question
+     *
+     * The question to ask the interviewee.
+     */
+    main_question: string;
+    /**
+     * Probes
+     *
+     * A list of possible follow-up questions to ask after the main question. If provided set max_probes_n or max_probes_time to greater than 0.
+     */
+    probes?: Array<string> | null;
+    /**
+     * Max Probes N
+     *
+     * Max number of probes.
+     */
+    max_probes_n?: number | null;
+    /**
+     * Max Probes Time
+     *
+     * Max time to spend on probing, in seconds.
+     */
+    max_probes_time?: number | null;
+};
+
+/**
  * QuestionContext
  *
  * The index of a question in a section
@@ -2541,6 +2579,31 @@ export type QuestionIndex = [
     number,
     number
 ];
+
+/**
+ * QuestionSection
+ *
+ * A section of questions that all revolve around the same topic
+ */
+export type QuestionSection = {
+    /**
+     * Description
+     *
+     * A description of the section, used as context for the prober to limit its scope.
+     */
+    description: string;
+    /**
+     * Questions
+     */
+    questions: Array<QuestionBase>;
+    /**
+     * Shuffle
+     *
+     * Should the section be included in shuffling?
+     */
+    shuffle?: boolean;
+    ai_generated_questions?: GeneratedQuestions;
+};
 
 /**
  * QuestionSectionGenerationRequest
@@ -5772,8 +5835,10 @@ export type GenerateGuideResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: InterviewGuideOutput;
 };
+
+export type GenerateGuideResponse = GenerateGuideResponses[keyof GenerateGuideResponses];
 
 export type GenerateGuideSectionData = {
     body: QuestionSectionGenerationRequest;
@@ -5809,8 +5874,10 @@ export type GenerateGuideSectionResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: QuestionSection;
 };
+
+export type GenerateGuideSectionResponse = GenerateGuideSectionResponses[keyof GenerateGuideSectionResponses];
 
 export type GenerateSectionQuestionData = {
     body: QuestionGenerationRequest;
@@ -5846,8 +5913,10 @@ export type GenerateSectionQuestionResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: QuestionOutput;
 };
+
+export type GenerateSectionQuestionResponse = GenerateSectionQuestionResponses[keyof GenerateSectionQuestionResponses];
 
 export type UploadImageData = {
     body: BodyUploadImage;

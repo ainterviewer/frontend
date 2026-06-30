@@ -7,6 +7,8 @@ export default {
 		{
 			name: '@hey-api/sdk',
 			operations: { strategy: 'byTags' }
-		}
+		},
+		'@hey-api/typescript',
+		'zod'
 	]
 };
