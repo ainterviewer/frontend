@@ -43,10 +43,6 @@
 	.underline-main {
 		position: relative;
 	}
-	.required::after {
-		content: ' *';
-		color: #ef4444;
-	}
 
 	.underline-main:after {
 		background-size: 100% 100%;
@@ -58,6 +54,12 @@
 		content: ' ';
 		left: 0px;
 		background-image: url('/src/lib/assets/squiggly_big.svg');
+	}
+
+	.required::after {
+		content: '*';
+		color: #ef4444;
+		padding-left: 1px;
 	}
 }
 
