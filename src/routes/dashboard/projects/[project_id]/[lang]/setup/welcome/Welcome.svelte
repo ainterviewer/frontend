@@ -306,10 +306,14 @@
 					</div>
 
 					<div>
-						<label for="welcome-email" class="mb-1.5 block text-sm font-medium text-gray-700">
+						<label
+							for="welcome-email"
+							class="required mb-1.5 block text-sm font-medium text-gray-700"
+						>
 							Contact Email
 						</label>
 						<input
+							required
 							autocomplete="email"
 							id="welcome-email"
 							type="email"
