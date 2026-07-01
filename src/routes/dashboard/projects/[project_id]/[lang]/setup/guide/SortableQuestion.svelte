@@ -256,33 +256,44 @@
 												class="h-16 w-16 rounded border bg-gray-100 object-cover"
 											/>
 										{/if}
-										<div class="w-full flex-1 space-y-2">
+										<div class="w-full flex-1 space-y-3">
 											<input
 												type="file"
 												accept=".png,.jpg,.webp"
 												class="w-full text-sm text-gray-500 file:mr-2 file:rounded-full file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
 												onchange={handleImageUpload}
 											/>
-											<input
-												autocomplete="off"
-												class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-												placeholder="Description for AI..."
-												bind:value={question.image.description}
-											/>
+											<div class="flex flex-col">
+												<label class="pb-1 text-sm font-semibold text-gray-500">Description</label>
+												<input
+													autocomplete="off"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													placeholder="Description for AI..."
+													bind:value={question.image.description}
+												/>
+											</div>
+											<div class="flex flex-col">
+												<label class="pb-1 font-semibold text-gray-500">Primer</label>
+												<input
+													autocomplete="off"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													placeholder="Primer text..."
+													bind:value={question.image.primer}
+												/>
+											</div>
+											<div class="flex flex-col">
+												<label class="pb-1 font-semibold text-gray-500"
+													>Alternative text (accessibility)</label
+												>
+												<input
+													autocomplete="off"
+													class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+													placeholder="Alt text"
+													bind:value={question.image.alt}
+												/>
+											</div>
 										</div>
 									</div>
-									<input
-										autocomplete="off"
-										class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-										placeholder="Primer text..."
-										bind:value={question.image.primer}
-									/>
-									<input
-										autocomplete="off"
-										class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-										placeholder="Alt text (accessibility)"
-										bind:value={question.image.alt}
-									/>
 								</div>
 							</div>
 						{/if}
@@ -752,7 +763,9 @@
 																		{/if}
 
 																		<div>
-																			<span class="mb-1 block text-sm text-gray-400">Value</span>
+																			<span class="required mb-1 block text-sm text-gray-400"
+																				>Value</span
+																			>
 																			{#if referencedQuestion?.survey_item?.type === 'number'}
 																				<input
 																					type="number"
