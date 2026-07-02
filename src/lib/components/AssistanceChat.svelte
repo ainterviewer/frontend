@@ -52,7 +52,14 @@
 				try {
 					const data = JSON.parse(msg.content);
 					if (msg.type === 'question') {
-						parsedItems[i] = { ...data, id: data.id ?? crypto.randomUUID() } as GuideQuestion;
+						// Suggested questions can't carry id-based condition targets (the
+						// chat has no local section/question ids to resolve against), so
+						// conditions are dropped until the user re-adds them in the editor.
+						parsedItems[i] = {
+							...data,
+							id: data.id ?? crypto.randomUUID(),
+							conditions: null
+						} as GuideQuestion;
 					} else {
 						const { questions, ...sectionData } = data;
 						parsedItems[i] = {
@@ -63,7 +70,8 @@
 							} as GuideSection,
 							questions: ((questions ?? []) as (QuestionOutput & { id?: string })[]).map((q) => ({
 								...q,
-								id: q.id ?? crypto.randomUUID()
+								id: q.id ?? crypto.randomUUID(),
+								conditions: null
 							}))
 						};
 					}

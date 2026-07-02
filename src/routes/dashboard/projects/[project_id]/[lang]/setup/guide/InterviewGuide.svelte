@@ -24,6 +24,7 @@
 	import type { GuideQuestion, GuideSection } from './types';
 	import {
 		generateId,
+		localizeConditions,
 		mapFromLocal,
 		mapToLocal,
 		normalizeGeneratedQuestions,
@@ -183,7 +184,11 @@
 				alternative_main_questions: q.alternative_main_questions || [],
 				image: q.image || null,
 				survey_item: q.survey_item || null,
-				conditions: q.conditions || null,
+				conditions: localizeConditions(
+					q.conditions,
+					guideStore.localSections,
+					guideStore.localQuestions
+				),
 				can_skip: q.can_skip ?? true,
 				check_if_answered: q.check_if_answered ?? false,
 				check_if_exhausted: q.check_if_exhausted ?? false,
@@ -224,7 +229,11 @@
 				alternative_main_questions: q.alternative_main_questions || [],
 				image: q.image || null,
 				survey_item: q.survey_item || null,
-				conditions: q.conditions || null,
+				conditions: localizeConditions(
+					q.conditions,
+					guideStore.localSections,
+					guideStore.localQuestions
+				),
 				can_skip: q.can_skip ?? true,
 				check_if_answered: q.check_if_answered ?? false,
 				check_if_exhausted: q.check_if_exhausted ?? false,
@@ -639,7 +648,7 @@
 				{exporting}
 				onSave={async () => {
 					saving = true;
-					await saveGuide(
+					const result = await saveGuide(
 						projectId,
 						lang,
 						guide,
@@ -647,7 +656,15 @@
 						guideStore.localQuestions,
 						externalParams
 					);
-					savedSnapshot = getSnapshot();
+					if (result.status === 'invalid') {
+						guideStore.invalidConditionQuestionIds = result.invalidQuestionIds;
+						toast.error(
+							'Some conditions reference a later question or section. Please fix the highlighted conditions.'
+						);
+					} else if (result.status === 'success') {
+						guideStore.invalidConditionQuestionIds = [];
+						savedSnapshot = getSnapshot();
+					}
 					saving = false;
 				}}
 				onExportPdf={() => {

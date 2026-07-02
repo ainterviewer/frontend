@@ -57,7 +57,8 @@
 	function addQuestion() {
 		const newQuestion: GuideQuestion = {
 			...zQuestionOutput.parse({ main_question: '' }),
-			id: crypto.randomUUID()
+			id: crypto.randomUUID(),
+			conditions: null
 		};
 		questions.push(newQuestion);
 	}

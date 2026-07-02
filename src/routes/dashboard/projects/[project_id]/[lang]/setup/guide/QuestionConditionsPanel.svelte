@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import AccordionPanel from './AccordionPanel.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
-	import { surveyItemOptions } from './utils';
+	import { isConditionTargetValid, surveyItemOptions } from './utils';
 
 	interface Props {
 		question: GuideQuestion;
@@ -21,15 +22,59 @@
 		expanded = $bindable(false)
 	}: Props = $props();
 
+	const guideStore = getGuideStore();
+
+	// Condition targets are stored by stable id; resolve one to its current
+	// position (and the referenced question) for display and validation.
+	function resolveTarget(ctx: { sectionId: string; questionId: string }) {
+		const sectionIdx = allSections.findIndex((s) => s.id === ctx.sectionId);
+		const questions = allQuestions[ctx.sectionId] || [];
+		const questionIdx = questions.findIndex((q) => q.id === ctx.questionId);
+		return {
+			sectionIdx,
+			questionIdx,
+			question: questionIdx >= 0 ? questions[questionIdx] : null
+		};
+	}
+
+	// A new condition block defaults to the first question, which is always at or
+	// before the current one.
+	function defaultContext() {
+		const firstSection = allSections[0];
+		return {
+			sectionId: firstSection?.id ?? '',
+			questionId: firstSection ? (allQuestions[firstSection.id]?.[0]?.id ?? '') : '',
+			part: 'main' as const
+		};
+	}
+
+	// A condition block is invalid when it targets a later (or non-existent)
+	// question/section. This can happen after reordering, since the picker only
+	// prevents forward references at creation time.
+	function isBlockValid(ctx: { sectionId: string; questionId: string }): boolean {
+		return isConditionTargetValid(sectionIndex, index, ctx, allSections, allQuestions);
+	}
+
+	let hasInvalidTarget = $derived(
+		(question.conditions?.conditions ?? []).some((c) => !isBlockValid(c.question_context))
+	);
+
+	// The last save attempt flagged this question's conditions. Draw attention by
+	// auto-expanding the panel so the highlighted blocks are visible.
+	let flaggedBySave = $derived(guideStore.invalidConditionQuestionIds.includes(question.id));
+
+	$effect(() => {
+		if (flaggedBySave && hasInvalidTarget) {
+			expanded = true;
+		}
+	});
+
 	// A condition triggers by matching a survey answer when the referenced
 	// question has a survey item, otherwise by AI classification of free text.
 	$effect(() => {
 		if (!question.conditions) return;
 		for (const cond of question.conditions.conditions) {
-			const refSection = allSections[cond.question_context.section];
-			const refQ = refSection
-				? (allQuestions[refSection.id] || [])[cond.question_context.question]
-				: null;
+			const refQ = resolveTarget(cond.question_context).question;
 			const desired = refQ?.survey_item ? 'match' : 'classification';
 			if (cond.trigger_type !== desired) {
 				cond.trigger_type = desired;
@@ -41,7 +86,7 @@
 {#if question.conditions}
 	{@const conditions = question.conditions}
 	<AccordionPanel
-		borderColor="border-l-amber-600"
+		borderColor={hasInvalidTarget ? 'border-l-red-500' : 'border-l-amber-600'}
 		bind:expanded
 		removeTitle="Remove Conditions"
 		onremove={() => {
@@ -51,23 +96,35 @@
 	>
 		{#snippet header()}
 			<div
-				class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded bg-amber-50 text-amber-600"
+				class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded {hasInvalidTarget
+					? 'bg-red-50 text-red-600'
+					: 'bg-amber-50 text-amber-600'}"
 			>
 				<i class="fa-solid fa-code-branch text-lg"></i>
 			</div>
 			<div class="min-w-0 flex-1 text-left">
 				<div class="font-medium text-gray-700">Condition</div>
-				<div class="text-xs text-gray-500">
-					{#if conditions.conditions.length === 1}
-						{@const cond = conditions.conditions[0]}
-						{conditions.action.replace(/_/g, ' ')} based on Section {cond.question_context.section +
-							1}, Question {cond.question_context.question + 1}{#if cond.evaluation.length > 1}
-							<span class="ml-1">({cond.evaluation.length} rules)</span>
+				{#if hasInvalidTarget}
+					<div class="flex items-start gap-1.5 text-xs text-red-600">
+						<i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+						<span>
+							References a later or missing question. Pick a question that comes before this one.
+						</span>
+					</div>
+				{:else}
+					<div class="text-xs text-gray-500">
+						{#if conditions.conditions.length === 1}
+							{@const cond = conditions.conditions[0]}
+							{@const target = resolveTarget(cond.question_context)}
+							{conditions.action.replace(/_/g, ' ')} based on Section {target.sectionIdx + 1},
+							Question {target.questionIdx + 1}{#if cond.evaluation.length > 1}
+								<span class="ml-1">({cond.evaluation.length} rules)</span>
+							{/if}
+						{:else}
+							{conditions.action.replace(/_/g, ' ')} based on {conditions.conditions.length} conditions
 						{/if}
-					{:else}
-						{conditions.action.replace(/_/g, ' ')} based on {conditions.conditions.length} conditions
-					{/if}
-				</div>
+					</div>
+				{/if}
 			</div>
 		{/snippet}
 
@@ -90,11 +147,7 @@
 			<div class="space-y-2">
 				<span class="block text-sm font-bold text-gray-500">Condition blocks</span>
 				{#each conditions.conditions as condition, condIdx (condIdx)}
-					{@const referencedQuestion = allSections[condition.question_context.section]
-						? (allQuestions[allSections[condition.question_context.section].id] || [])[
-								condition.question_context.question
-							]
-						: null}
+					{@const referencedQuestion = resolveTarget(condition.question_context).question}
 					{@const isNumericOrDate =
 						referencedQuestion?.survey_item?.type === 'number' ||
 						referencedQuestion?.survey_item?.type === 'date' ||
@@ -102,8 +155,13 @@
 						referencedQuestion?.survey_item?.type === 'time' ||
 						referencedQuestion?.survey_item?.type === 'slider'}
 					{@const hasSurveyOptions = surveyItemOptions(referencedQuestion?.survey_item)?.length}
+					{@const targetValid = isBlockValid(condition.question_context)}
 
-					<div class="rounded-md border border-gray-300 bg-gray-50/50 p-3">
+					<div
+						class="rounded-md border p-3 {targetValid
+							? 'border-gray-300 bg-gray-50/50'
+							: 'border-red-400 bg-red-50/50'}"
+					>
 						<div class="mb-2 flex items-center justify-between">
 							<span class="text-sm font-medium text-gray-600">Condition {condIdx + 1}</span>
 							{#if conditions.conditions.length > 1}
@@ -128,20 +186,18 @@
 								Based on answer to
 								<select
 									class="mt-1 w-full rounded border-gray-200 bg-white p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-									value={`${condition.question_context.section}-${condition.question_context.question}`}
+									value={`${condition.question_context.sectionId}|${condition.question_context.questionId}`}
 									onchange={(e) => {
-										const [sIdx, qIdx] = (e.target as HTMLSelectElement).value
-											.split('-')
-											.map(Number);
-										condition.question_context.section = sIdx;
-										condition.question_context.question = qIdx;
+										const [sId, qId] = (e.target as HTMLSelectElement).value.split('|');
+										condition.question_context.sectionId = sId;
+										condition.question_context.questionId = qId;
 									}}
 								>
 									{#each allSections as sec, sIdx (sec.id)}
 										{#if sIdx <= sectionIndex}
 											{#each allQuestions[sec.id] || [] as q, qIdx (q.id)}
 												{#if sIdx < sectionIndex || qIdx <= index}
-													<option value={`${sIdx}-${qIdx}`}>
+													<option value={`${sec.id}|${q.id}`}>
 														Section {sIdx + 1} > Question {qIdx + 1}
 														{q.main_question ? `: ${q.main_question.slice(0, 30)}...` : ''}
 													</option>
@@ -334,11 +390,7 @@
 												comparison_operator: '=='
 											}
 										],
-										question_context: {
-											section: 0,
-											question: 0,
-											part: 'main'
-										}
+										question_context: defaultContext()
 									});
 								}}
 							>
@@ -357,11 +409,7 @@
 												comparison_operator: '=='
 											}
 										],
-										question_context: {
-											section: 0,
-											question: 0,
-											part: 'main'
-										}
+										question_context: defaultContext()
 									});
 								}}
 							>

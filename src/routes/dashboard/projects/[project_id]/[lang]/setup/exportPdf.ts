@@ -1,13 +1,11 @@
 import type {
-	Condition,
-	ConditionsOutput,
 	Consent,
 	Image,
 	InterviewGuideOutput,
 	TimedMessage,
 	Welcome
 } from '$lib/api/types.gen';
-import type { GuideQuestion, GuideSection } from './guide/types';
+import type { GuideQuestion, GuideSection, LocalCondition, LocalConditionSet } from './guide/types';
 
 // pdfmake doesn't ship type declarations — use a generic record type for doc nodes.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139,13 +137,17 @@ function buildSurveyItemContent(item: SurveyItem): PdfNode[] {
 	return content;
 }
 
-function buildConditionsContent(conditions: ConditionsOutput, sections: GuideSection[]): PdfNode[] {
+function buildConditionsContent(
+	conditions: LocalConditionSet,
+	sections: GuideSection[],
+	questions: Record<string, GuideQuestion[]>
+): PdfNode[] {
 	const content: PdfNode[] = [];
 
 	content.push(label(`Conditions (Action: ${formatAction(conditions.action)})`));
 
 	for (const cond of conditions.conditions) {
-		const condText = buildConditionText(cond, sections);
+		const condText = buildConditionText(cond, sections, questions);
 		content.push({ text: condText, fontSize: 9, margin: [12, 0, 0, 2] });
 	}
 
@@ -156,10 +158,16 @@ function formatAction(action: string): string {
 	return action.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function buildConditionText(cond: Condition, sections: GuideSection[]): string {
+function buildConditionText(
+	cond: LocalCondition,
+	sections: GuideSection[],
+	questions: Record<string, GuideQuestion[]>
+): string {
 	const { question_context, evaluation, negated, trigger_type, combine_next } = cond;
-	const sectionIdx = question_context.section;
-	const questionIdx = question_context.question;
+	const sectionIdx = sections.findIndex((s) => s.id === question_context.sectionId);
+	const questionIdx = (questions[question_context.sectionId] || []).findIndex(
+		(q) => q.id === question_context.questionId
+	);
 	const sectionName =
 		sections[sectionIdx]?.description?.slice(0, 40) || `Section ${sectionIdx + 1}`;
 	const ref = `[S${sectionIdx + 1} Q${questionIdx + 1}] (${sectionName})`;
@@ -233,6 +241,7 @@ function buildQuestionContent(
 	q: GuideQuestion,
 	qIdx: number,
 	sections: GuideSection[],
+	questions: Record<string, GuideQuestion[]>,
 	toggles: PdfToggles
 ): PdfNode[] {
 	const content: PdfNode[] = [];
@@ -294,7 +303,7 @@ function buildQuestionContent(
 
 	// Conditions (gated by toggle)
 	if (toggles.conditions && q.conditions && q.conditions.conditions.length > 0) {
-		const condContent = buildConditionsContent(q.conditions, sections);
+		const condContent = buildConditionsContent(q.conditions, sections, questions);
 		for (const c of condContent) {
 			content.push(indentNode(c));
 		}
@@ -515,7 +524,13 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 
 			// Questions
 			for (let qIdx = 0; qIdx < sectionQuestions.length; qIdx++) {
-				const qContent = buildQuestionContent(sectionQuestions[qIdx], qIdx, sections, toggles);
+				const qContent = buildQuestionContent(
+					sectionQuestions[qIdx],
+					qIdx,
+					sections,
+					questions,
+					toggles
+				);
 				// Wrap question in a bordered box
 				content.push({
 					margin: [0, 4, 0, 4],

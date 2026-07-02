@@ -95,6 +95,13 @@
 	}
 
 	function addCondition() {
+		// Default the target to the very first question, which is always at or
+		// before the current one (and always exists, since this question does).
+		const firstSection = allSections[0];
+		const defaultSectionId = firstSection?.id ?? sectionId;
+		const defaultQuestionId = firstSection
+			? (allQuestions[firstSection.id]?.[0]?.id ?? question.id)
+			: question.id;
 		question.conditions = {
 			action: 'skip_question',
 			conditions: [
@@ -108,8 +115,8 @@
 						}
 					],
 					question_context: {
-						section: 0,
-						question: 0,
+						sectionId: defaultSectionId,
+						questionId: defaultQuestionId,
 						part: 'main'
 					}
 				}
