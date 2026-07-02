@@ -68,6 +68,31 @@
 		draggedProbeIndex = null;
 	}
 
+	let draggedOptionIndex = $state<number | null>(null);
+
+	function handleOptionDragStart(e: DragEvent, idx: number) {
+		draggedOptionIndex = idx;
+		if (e.dataTransfer) {
+			e.dataTransfer.effectAllowed = 'move';
+			// The grip handle is what's draggable, so use the whole row as the drag image.
+			const row = (e.currentTarget as HTMLElement).closest('[data-option-row]');
+			if (row) e.dataTransfer.setDragImage(row as HTMLElement, 0, 0);
+		}
+	}
+
+	function handleOptionDragOver(e: DragEvent, idx: number) {
+		e.preventDefault();
+		const options = surveyItemOptions(question.survey_item);
+		if (draggedOptionIndex === null || draggedOptionIndex === idx || !options) return;
+		const [moved] = options.splice(draggedOptionIndex, 1);
+		options.splice(idx, 0, moved);
+		draggedOptionIndex = idx;
+	}
+
+	function handleOptionDragEnd() {
+		draggedOptionIndex = null;
+	}
+
 	let settingsPanel = $state<HTMLDivElement | null>(null);
 
 	function toggleSettings() {
@@ -411,7 +436,25 @@
 											<span class="mb-2 block text-gray-500">Options</span>
 											<div class="space-y-1">
 												{#each surveyItem.options as _, oIdx (oIdx)}
-													<div class="flex gap-1">
+													<div
+														data-option-row
+														class="flex items-center gap-1 transition-opacity"
+														class:opacity-40={draggedOptionIndex === oIdx}
+														ondragover={(e) => handleOptionDragOver(e, oIdx)}
+														role="listitem"
+													>
+														<div
+															class="cursor-grab rounded p-1 text-gray-400 outline-none hover:bg-gray-100 hover:text-gray-600"
+															title="Reorder option"
+															draggable="true"
+															ondragstart={(e) => handleOptionDragStart(e, oIdx)}
+															ondragend={handleOptionDragEnd}
+															role="button"
+															tabindex="-1"
+															aria-label="Reorder option"
+														>
+															<i class="fa-solid fa-grip-vertical"></i>
+														</div>
 														<input
 															class="flex-1 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 															bind:value={surveyItem.options[oIdx]}
