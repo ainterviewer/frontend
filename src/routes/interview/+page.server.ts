@@ -35,6 +35,11 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 		path: { project_id }
 	});
 
+	const { data: interviewModels, error: modelsError } = await Projects.getInterviewModels({
+		headers: { cookie: cookieHeader },
+		path: { project_id }
+	});
+
 	const { data: isProjectOwnerDemoUser } = await Projects.checkProjectOwner({
 		headers: { cookie: cookieHeader },
 		path: { project_id }
@@ -43,9 +48,12 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 	if (configError) {
 		console.error('Failed to load interview config', configError);
 	}
+	if (modelsError) {
+		console.error('Failed to load interview models', modelsError);
+	}
 
 	const langParam = url.searchParams.get('lang');
-	const lang = langParam || 'en';
+	const lang = langParam || 'EN';
 	const experimentID = url.searchParams.get('x');
 
 	// If no lang param, fetch available languages for language picker
@@ -77,6 +85,7 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 		interviewType,
 		experimentID,
 		interviewConfig,
+		interviewModels,
 		isProjectOwnerDemoUser: isProjectOwnerDemoUser ?? false,
 		authError,
 		externalParams: Object.keys(externalParams).length > 0 ? externalParams : null,

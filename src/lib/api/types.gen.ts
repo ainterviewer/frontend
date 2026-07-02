@@ -1165,39 +1165,6 @@ export type InterviewConfig = {
 };
 
 /**
- * InterviewConfigWithModels
- */
-export type InterviewConfigWithModels = {
-    default_language?: LanguageCode;
-    /**
-     * With Consent
-     *
-     * Whether to ask for consent before starting the interview
-     */
-    with_consent?: boolean;
-    /**
-     * With Welcome
-     *
-     * Whether to show a welcome message before starting the interview
-     */
-    with_welcome?: boolean;
-    /**
-     * With Audio
-     *
-     * Allows the respondents to record their answers as audio messages which are transcribed before send as answers to the AInterviewer.
-     */
-    with_audio?: boolean;
-    /**
-     * Probing Strategy
-     */
-    probing_strategy?: Array<ProbingStrategy>;
-    /**
-     * Models
-     */
-    models: Array<string>;
-};
-
-/**
  * InterviewDurationStats
  *
  * Statistics about interview duration (time spent).
@@ -6124,7 +6091,7 @@ export type GetInterviewConfigResponses = {
     /**
      * Successful Response
      */
-    200: InterviewConfigWithModels;
+    200: InterviewConfig;
 };
 
 export type GetInterviewConfigResponse = GetInterviewConfigResponses[keyof GetInterviewConfigResponses];
@@ -6161,6 +6128,38 @@ export type CreateInterviewConfigResponses = {
      */
     200: unknown;
 };
+
+export type GetInterviewModelsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/models';
+};
+
+export type GetInterviewModelsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetInterviewModelsError = GetInterviewModelsErrors[keyof GetInterviewModelsErrors];
+
+export type GetInterviewModelsResponses = {
+    /**
+     * Response Get Interview Models
+     *
+     * Successful Response
+     */
+    200: Array<string>;
+};
+
+export type GetInterviewModelsResponse = GetInterviewModelsResponses[keyof GetInterviewModelsResponses];
 
 export type UpdateExternalParamsData = {
     body: ExternalParamsRequest;

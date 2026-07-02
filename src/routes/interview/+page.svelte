@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { InterviewConfigWithModels, InterviewType, Welcome } from '$lib/api';
+	import type { InterviewConfig, InterviewModels, InterviewType, Welcome } from '$lib/api';
 	import { Projects, type Consent } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
@@ -18,7 +18,8 @@
 		lang: string;
 		interviewType?: InterviewType;
 		experimentID?: string;
-		interviewConfig: InterviewConfigWithModels;
+		interviewConfig: InterviewConfig;
+		interviewModels: InterviewModels;
 		isProjectOwnerDemoUser: boolean;
 		availableLanguages: Array<{ name: string; code: string }>;
 		authError?: boolean;
@@ -37,7 +38,7 @@
 
 	// Help/Exit modal text — owned by the frontend, selected by language and
 	// interpolated with the underlying model(s) returned by the interview config.
-	const models = $derived(interviewConfig?.models ?? []);
+	const models = $derived(data.interviewModels ?? []);
 	const modalText = $derived(getModalText(lang, models));
 
 	// Chat client - initialized after consent/interview creation

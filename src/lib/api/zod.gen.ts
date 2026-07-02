@@ -907,18 +907,6 @@ export const zInterviewConfig = z.object({
 });
 
 /**
- * InterviewConfigWithModels
- */
-export const zInterviewConfigWithModels = z.object({
-    default_language: zLanguageCode.optional().default('EN'),
-    with_consent: z.boolean().optional().default(true),
-    with_welcome: z.boolean().optional().default(true),
-    with_audio: z.boolean().optional().default(false),
-    probing_strategy: z.array(zProbingStrategy).optional(),
-    models: z.array(z.string())
-});
-
-/**
  * ProjectFolderCreate
  */
 export const zProjectFolderCreate = z.object({
@@ -2828,7 +2816,7 @@ export const zGetInterviewConfigPath = z.object({
 /**
  * Successful Response
  */
-export const zGetInterviewConfigResponse = zInterviewConfigWithModels;
+export const zGetInterviewConfigResponse = zInterviewConfig;
 
 export const zCreateInterviewConfigBody = zInterviewConfig;
 
@@ -2839,6 +2827,17 @@ export const zCreateInterviewConfigPath = z.object({
 export const zCreateInterviewConfigQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+export const zGetInterviewModelsPath = z.object({
+    project_id: z.string()
+});
+
+/**
+ * Response Get Interview Models
+ *
+ * Successful Response
+ */
+export const zGetInterviewModelsResponse = z.array(z.string());
 
 export const zUpdateExternalParamsBody = zExternalParamsRequest;
 
