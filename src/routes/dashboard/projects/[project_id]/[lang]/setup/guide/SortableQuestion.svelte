@@ -43,6 +43,31 @@
 	let expandedSurvey = $state(false);
 	let expandedCondition = $state(false);
 
+	let draggedProbeIndex = $state<number | null>(null);
+
+	function handleProbeDragStart(e: DragEvent, idx: number) {
+		draggedProbeIndex = idx;
+		if (e.dataTransfer) {
+			e.dataTransfer.effectAllowed = 'move';
+			// The grip handle is what's draggable, so use the whole row as the drag image.
+			const row = (e.currentTarget as HTMLElement).closest('[data-probe-row]');
+			if (row) e.dataTransfer.setDragImage(row as HTMLElement, 0, 0);
+		}
+	}
+
+	function handleProbeDragOver(e: DragEvent, idx: number) {
+		e.preventDefault();
+		const probes = question.probes;
+		if (draggedProbeIndex === null || draggedProbeIndex === idx || !probes) return;
+		const [moved] = probes.splice(draggedProbeIndex, 1);
+		probes.splice(idx, 0, moved);
+		draggedProbeIndex = idx;
+	}
+
+	function handleProbeDragEnd() {
+		draggedProbeIndex = null;
+	}
+
 	let settingsPanel = $state<HTMLDivElement | null>(null);
 
 	function toggleSettings() {
@@ -210,7 +235,7 @@
 							class="flex w-full cursor-pointer items-center gap-3 p-2"
 							onclick={() => (expandedImage = !expandedImage)}
 						>
-							<div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-gray-200">
+							<div class="h-10 w-10 shrink-0 overflow-hidden rounded bg-gray-200">
 								{#if typeof question.image.data === 'string'}
 									<img src={question.image.data} alt="Preview" class="h-full w-full object-cover" />
 								{:else}
@@ -1082,7 +1107,25 @@
 					{#if question.probes}
 						<div class="mb-2 space-y-2">
 							{#each question.probes as _, pIdx (pIdx)}
-								<div class="flex gap-2">
+								<div
+									data-probe-row
+									class="flex items-center gap-2 transition-opacity"
+									class:opacity-40={draggedProbeIndex === pIdx}
+									ondragover={(e) => handleProbeDragOver(e, pIdx)}
+									role="listitem"
+								>
+									<div
+										class="cursor-grab rounded p-1 text-gray-600 outline-none hover:text-gray-800"
+										title="Reorder probe"
+										draggable="true"
+										ondragstart={(e) => handleProbeDragStart(e, pIdx)}
+										ondragend={handleProbeDragEnd}
+										role="button"
+										tabindex="-1"
+										aria-label="Reorder probe"
+									>
+										<i class="fa-solid fa-grip-vertical"></i>
+									</div>
 									<input
 										autocomplete="off"
 										class="flex-1 rounded border-gray-200 p-2 text-sm shadow-sm focus:border-primary focus:ring-primary/20"
