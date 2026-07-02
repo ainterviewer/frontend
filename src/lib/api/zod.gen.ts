@@ -907,6 +907,18 @@ export const zInterviewConfig = z.object({
 });
 
 /**
+ * InterviewConfigWithModels
+ */
+export const zInterviewConfigWithModels = z.object({
+    default_language: zLanguageCode.optional().default('EN'),
+    with_consent: z.boolean().optional().default(true),
+    with_welcome: z.boolean().optional().default(true),
+    with_audio: z.boolean().optional().default(false),
+    probing_strategy: z.array(zProbingStrategy).optional(),
+    models: z.array(z.string())
+});
+
+/**
  * ProjectFolderCreate
  */
 export const zProjectFolderCreate = z.object({
@@ -1550,7 +1562,7 @@ export const zUserCreateRequest = z.object({
     invite_token: z.union([
         z.string(),
         z.string()
-    ]).nullish(),
+    ]).nullable(),
     research_consent: z.boolean().optional().default(false),
     password: z.string().min(8)
 });
@@ -2816,7 +2828,7 @@ export const zGetInterviewConfigPath = z.object({
 /**
  * Successful Response
  */
-export const zGetInterviewConfigResponse = zInterviewConfig;
+export const zGetInterviewConfigResponse = zInterviewConfigWithModels;
 
 export const zCreateInterviewConfigBody = zInterviewConfig;
 

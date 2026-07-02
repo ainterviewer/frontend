@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { InterviewConfig, InterviewType, Welcome } from '$lib/api';
+	import type { InterviewConfigWithModels, InterviewType, Welcome } from '$lib/api';
 	import { Projects, type Consent } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
@@ -11,20 +11,16 @@
 		parseInterviewIdFromToken,
 		saveInterviewSession
 	} from './chat.svelte';
+	import { getModalText } from './modalText';
 
 	interface PageData {
 		project_id: string;
 		lang: string;
 		interviewType?: InterviewType;
 		experimentID?: string;
-		interviewConfig: InterviewConfig;
+		interviewConfig: InterviewConfigWithModels;
 		isProjectOwnerDemoUser: boolean;
 		availableLanguages: Array<{ name: string; code: string }>;
-		help_title?: string;
-		help_text?: string;
-		exit_title?: string;
-		exit_text?: string;
-		exit_button?: string;
 		authError?: boolean;
 		externalParams?: Record<string, string> | null;
 		referer?: string | null;
@@ -39,15 +35,10 @@
 	const isDemoBlocked = $derived(data.isProjectOwnerDemoUser && interviewType === 'distributed');
 	const isAuthBlocked = $derived(data.authError === true);
 
-	// Help/Exit data
-	let helpTitle = $derived(data.help_title || 'Help');
-	let helpText = $derived(
-		data.help_text ||
-			'Type your answers and send them. You can skip or rate questions. You may pause and return later, or exit anytime.'
-	);
-	let exitTitle = $derived(data.exit_title || 'Exit Interview');
-	let exitText = $derived(data.exit_text || 'Are you sure you want to exit?');
-	let exitButtonText = $derived(data.exit_button || 'End Interview');
+	// Help/Exit modal text — owned by the frontend, selected by language and
+	// interpolated with the underlying model(s) returned by the interview config.
+	const models = $derived(interviewConfig?.models ?? []);
+	const modalText = $derived(getModalText(lang, models));
 
 	// Chat client - initialized after consent/interview creation
 	let chat = $state<ChatClient | null>(null);
@@ -296,11 +287,11 @@
 			{lang}
 			{interviewType}
 			{interviewConfig}
-			{helpTitle}
-			{helpText}
-			{exitTitle}
-			{exitText}
-			{exitButtonText}
+			helpTitle={modalText.help_title}
+			helpText={modalText.help_text}
+			exitTitle={modalText.exit_title}
+			exitText={modalText.exit_text}
+			exitButtonText={modalText.exit_button}
 		/>
 	{/if}
 </div>

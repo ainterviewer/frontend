@@ -1165,6 +1165,39 @@ export type InterviewConfig = {
 };
 
 /**
+ * InterviewConfigWithModels
+ */
+export type InterviewConfigWithModels = {
+    default_language?: LanguageCode;
+    /**
+     * With Consent
+     *
+     * Whether to ask for consent before starting the interview
+     */
+    with_consent?: boolean;
+    /**
+     * With Welcome
+     *
+     * Whether to show a welcome message before starting the interview
+     */
+    with_welcome?: boolean;
+    /**
+     * With Audio
+     *
+     * Allows the respondents to record their answers as audio messages which are transcribed before send as answers to the AInterviewer.
+     */
+    with_audio?: boolean;
+    /**
+     * Probing Strategy
+     */
+    probing_strategy?: Array<ProbingStrategy>;
+    /**
+     * Models
+     */
+    models: Array<string>;
+};
+
+/**
  * InterviewDurationStats
  *
  * Statistics about interview duration (time spent).
@@ -3187,7 +3220,7 @@ export type UserCreateRequest = {
     /**
      * Invite Token
      */
-    invite_token?: string | string | null;
+    invite_token: string | string | null;
     /**
      * Research Consent
      */
@@ -6091,7 +6124,7 @@ export type GetInterviewConfigResponses = {
     /**
      * Successful Response
      */
-    200: InterviewConfig;
+    200: InterviewConfigWithModels;
 };
 
 export type GetInterviewConfigResponse = GetInterviewConfigResponses[keyof GetInterviewConfigResponses];

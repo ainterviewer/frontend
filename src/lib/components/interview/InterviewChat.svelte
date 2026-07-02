@@ -208,7 +208,7 @@
 	<div
 		id="messages"
 		bind:this={messagesContainer}
-		class="w-full flex-1 overflow-y-auto px-2.5 sm:w-[90%] sm:max-w-[700px] sm:min-w-[500px] sm:px-0"
+		class="w-full flex-1 overflow-y-auto px-2.5 sm:w-[90%] sm:max-w-175 sm:min-w-125 sm:px-0"
 	>
 		{#each chat.messages as msg, i (i)}
 			<div
@@ -388,14 +388,14 @@
 </div>
 
 <Modal show={showHelp} title={helpTitle} onClose={() => (showHelp = false)}>
-	<div class="prose prose-sm max-w-none text-gray-600">
+	<div class="modal-prose prose prose-sm max-w-none text-gray-800">
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html helpText}
 	</div>
 </Modal>
 
 <Modal show={showExit} title={exitTitle} onClose={() => (showExit = false)}>
-	<div class="prose prose-sm max-w-none text-gray-600">
+	<div class="modal-prose prose prose-sm max-w-none text-gray-800">
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html exitText}
 	</div>
@@ -408,3 +408,37 @@
 		</button>
 	</div>
 </Modal>
+
+<style>
+	/* Tailwind Typography wraps inline <code> in literal backticks — drop them. */
+	.modal-prose :global(code::before),
+	.modal-prose :global(code::after) {
+		content: none;
+	}
+
+	/* Render the model name(s) as a wrapped row of pills rather than a bullet list. */
+	.modal-prose :global(ul.model-list) {
+		list-style: none;
+		margin: 0.75rem 0 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.modal-prose :global(ul.model-list li) {
+		margin: 0;
+		padding: 0;
+	}
+
+	.modal-prose :global(ul.model-list code) {
+		display: inline-block;
+		border: 1px solid var(--color-gray-200, #e5e7eb);
+		border-radius: 0.5rem;
+		background-color: var(--color-gray-50, #f9fafb);
+		padding: 0.25rem 0.625rem;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		color: var(--color-gray-700, #374151);
+	}
+</style>
