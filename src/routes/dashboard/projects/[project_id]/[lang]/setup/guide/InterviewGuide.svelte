@@ -18,6 +18,7 @@
 	import SetupActionBar from '../SetupActionBar.svelte';
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
+	import BulkSettingsModal from './BulkSettingsModal.svelte';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
 	import SortableSection from './SortableSection.svelte';
@@ -129,6 +130,7 @@
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
 	// Modal state
+	let showBulkSettingsModal = $state(false);
 	let showGenerateGuideModal = $state(false);
 	let showGenerateSectionModal = $state(false);
 	let showGenerateQuestionModal = $state(false);
@@ -289,6 +291,21 @@
 		}
 	}
 
+	let totalQuestions = $derived(
+		Object.values(guideStore.localQuestions).reduce((n, qs) => n + qs.length, 0)
+	);
+
+	function applyBulkSettings(changes: Partial<GuideQuestion>) {
+		let updated = 0;
+		for (const section of guideStore.localSections) {
+			for (const q of guideStore.localQuestions[section.id] ?? []) {
+				Object.assign(q, changes);
+				updated++;
+			}
+		}
+		toast.success(`Updated ${updated} question${updated === 1 ? '' : 's'}`);
+	}
+
 	let showExportPdfModal = $state(false);
 
 	async function fetchConsent(): Promise<Consent | null> {
@@ -404,14 +421,26 @@
 <div>
 	<div class="flex justify-between">
 		<h1 class="page-title">Interview Guide</h1>
-		<button
-			data-tour="generate"
-			class="mb-2 rounded-full bg-secondary px-6 font-medium text-gray-700 hover:brightness-95"
-			onclick={() => (showGenerateGuideModal = true)}
-		>
-			<i class="fa-solid fa-wand-magic-sparkles"></i>
-			Generate
-		</button>
+		<div class="mb-2 flex gap-2">
+			<button
+				data-tour="bulk-settings"
+				class="rounded-full bg-gray-100 px-6 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+				onclick={() => (showBulkSettingsModal = true)}
+				disabled={totalQuestions === 0}
+				title={totalQuestions === 0 ? 'Add a question first' : 'Edit settings for all questions'}
+			>
+				<i class="fa-solid fa-sliders"></i>
+				Bulk settings
+			</button>
+			<button
+				data-tour="generate"
+				class="rounded-full bg-secondary px-6 font-medium text-gray-700 hover:brightness-95"
+				onclick={() => (showGenerateGuideModal = true)}
+			>
+				<i class="fa-solid fa-wand-magic-sparkles"></i>
+				Generate
+			</button>
+		</div>
 	</div>
 
 	<p class="mb-6 text-gray-600">
@@ -675,6 +704,12 @@
 		</div>
 	</div>
 </div>
+
+<BulkSettingsModal
+	bind:open={showBulkSettingsModal}
+	questionCount={totalQuestions}
+	onApply={applyBulkSettings}
+/>
 
 <ExportPdfModal bind:open={showExportPdfModal} {exporting} onExport={handleExportPdf} />
 

@@ -44,6 +44,14 @@
 					}
 				},
 				{
+					element: '[data-tour="bulk-settings"]',
+					popover: {
+						title: 'Bulk Settings',
+						description:
+							'Change a setting once and apply it to every question at the same time. Enable just the probing limits or behavior flags you want to update — everything you leave off keeps its per-question value.'
+					}
+				},
+				{
 					element: '[data-tour="assistant-chat"]',
 					popover: {
 						title: 'AI Assistant (experimental)',
