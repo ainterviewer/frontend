@@ -14,6 +14,14 @@ export function generateId() {
 	return crypto.randomUUID();
 }
 
+// Survey items are a discriminated union; only the choice-based variants
+// (radio/checkbox/likert) carry an `options` array. Returns it when present.
+export function surveyItemOptions(
+	item: NonNullable<GuideQuestion['survey_item']> | null | undefined
+): string[] | undefined {
+	return item && 'options' in item ? item.options : undefined;
+}
+
 // Normalize the AI-generated-questions config into the object shape used by the
 // editor. Legacy guides may store it as a plain number (the question count) or
 // leave it undefined.
