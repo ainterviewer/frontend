@@ -21,6 +21,7 @@ export interface PdfToggles {
 	framing: boolean;
 	introduction: boolean;
 	questionSections: boolean;
+	aiGenerated: boolean;
 	outro: boolean;
 	timedMessages: boolean;
 	behaviorFlags: boolean;
@@ -33,6 +34,7 @@ export const defaultPdfToggles = (): PdfToggles => ({
 	framing: true,
 	introduction: true,
 	questionSections: true,
+	aiGenerated: true,
 	outro: true,
 	timedMessages: true,
 	behaviorFlags: true,
@@ -345,6 +347,35 @@ function buildQuestionContent(
 	return content;
 }
 
+function buildAiGeneratedQuestionsContent(section: GuideSection): PdfNode[] {
+	const gen = section.ai_generated_questions;
+	const n = gen?.n ?? 0;
+	if (n <= 0) return [];
+
+	const parts: string[] = [];
+	if (gen?.max_probes_n !== undefined && gen?.max_probes_n !== null)
+		parts.push(`max probes: ${gen.max_probes_n}`);
+	if (gen?.max_probes_time !== undefined && gen?.max_probes_time !== null)
+		parts.push(`probing time: ${gen.max_probes_time}s`);
+	const suffix = parts.length > 0 ? ` (${parts.join(' | ')})` : '';
+
+	return [
+		{
+			text: `AI-generated questions: ${n}${suffix}`,
+			fontSize: 9,
+			italics: true,
+			color: '#666',
+			margin: [0, 4, 0, 4]
+		},
+		{
+			text: 'Additional questions generated on the fly once the predefined questions are complete.',
+			fontSize: 8,
+			color: '#888',
+			margin: [0, 0, 0, 4]
+		}
+	];
+}
+
 function buildTimedMessageContent(tm: TimedMessage, idx: number, toggles: PdfToggles): PdfNode[] {
 	const content: PdfNode[] = [];
 
@@ -457,7 +488,9 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 	}
 
 	// Question Sections
-	if (toggles.questionSections && sections.length > 0) {
+	const aiSections = guide.ai_generated_sections ?? 0;
+	const showAiSections = toggles.aiGenerated && aiSections > 0;
+	if (toggles.questionSections && (sections.length > 0 || showAiSections)) {
 		content.push(heading('Question Sections', 2));
 
 		for (let sIdx = 0; sIdx < sections.length; sIdx++) {
@@ -499,9 +532,34 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 				});
 			}
 
+			// AI-generated questions for this section (gated by toggle)
+			if (toggles.aiGenerated) {
+				for (const c of buildAiGeneratedQuestionsContent(section)) {
+					content.push(c);
+				}
+			}
+
 			if (sIdx < sections.length - 1) {
 				content.push(separator());
 			}
+		}
+
+		// Guide-level AI-generated sections (gated by toggle)
+		if (showAiSections) {
+			if (sections.length > 0) content.push(separator());
+			content.push({
+				text: `AI-generated sections: ${aiSections}`,
+				fontSize: 9,
+				italics: true,
+				color: '#666',
+				margin: [0, 4, 0, 2]
+			});
+			content.push({
+				text: 'Additional sections generated on the fly once the predefined sections are complete.',
+				fontSize: 8,
+				color: '#888',
+				margin: [0, 0, 0, 4]
+			});
 		}
 
 		content.push(separator());

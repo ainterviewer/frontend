@@ -18,6 +18,7 @@
 		framing: true,
 		introduction: true,
 		questionSections: true,
+		aiGenerated: true,
 		outro: true,
 		timedMessages: true,
 		behaviorFlags: true,
@@ -68,6 +69,11 @@
 			label: 'Question sections',
 			description: 'All question sections with probes, survey items, and images.'
 		},
+		{
+			key: 'aiGenerated',
+			label: 'AI-generated questions & sections',
+			description: 'Counts of questions and sections the AI generates on the fly during interviews.'
+		},
 		{ key: 'outro', label: 'Outro', description: 'Last message shown to the interviewee.' },
 		{
 			key: 'timedMessages',
@@ -97,6 +103,7 @@
 			framing: value,
 			introduction: value,
 			questionSections: value,
+			aiGenerated: value,
 			outro: value,
 			timedMessages: value,
 			behaviorFlags: value,
