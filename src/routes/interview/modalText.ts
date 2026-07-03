@@ -73,7 +73,8 @@ export function getModalText(lang: string | undefined, models: string[] = []): M
 			exit_title: 'Afslut interview',
 			exit_text: [
 				'<p>Er du sikker på, at du vil afslutte interviewet?</p>',
-				'<p>Dette kan ikke fortrydes og vil deaktivere muligheden for at fortsætte interviewet på et senere tidspunkt.</p>'
+				'<p>De svar du har afgivet indtil videre er allerede gemte.</p>',
+				'<p>Hvis du afslutter interviewet vil det deaktivere muligheden for at fortsætte interviewet på et senere tidspunkt.</p>'
 			].join(''),
 			exit_button: 'Afslut'
 		};
@@ -91,7 +92,8 @@ export function getModalText(lang: string | undefined, models: string[] = []): M
 		exit_title: 'Exit interview',
 		exit_text: [
 			'<p>Are you sure you want to exit the interview?</p>',
-			'<p>This cannot be undone and will disable the possibility of continuing the interview at a later time.</p>'
+			'<p>Your answers so far have already been recorded.</p>',
+			'<p>Choosing to exit the interview will disable the possibility of continuing the interview at a later time.</p>'
 		].join(''),
 		exit_button: 'Exit'
 	};
