@@ -386,7 +386,7 @@
 				</div>
 
 				<!-- Guide Agent -->
-				<div class="border-b border-gray-100 pb-6">
+				<div class="hidden border-b border-gray-100 pb-6">
 					<h4 class="mb-4 font-medium text-gray-700">Guide Agent</h4>
 					<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 						<div>
