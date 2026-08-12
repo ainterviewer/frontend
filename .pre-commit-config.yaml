@@ -1,0 +1,13 @@
+# Run `prek install` once per clone to activate these hooks.
+# Formatting and linting stay in package.json scripts / the editor — this file
+# exists to enforce the Conventional Commits convention that feeds CHANGELOG.md
+# and the platform release notes.
+
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]

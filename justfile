@@ -31,17 +31,27 @@ release VERSION:
 bump TYPE: && publish
     npm version {{ TYPE }} --no-git-tag-version
 
-# Internal task to sync, commit, tag, and push
+# Install this clone's git hooks (pre-commit + commit-msg).
+[group("Frontend")]
+install-hooks:
+    prek install
+
+# Internal task to sync, regenerate the changelog, commit, tag, and push
 publish:
     #!/usr/bin/env bash
+    set -euo pipefail
     VERSION=$(jq -r .version package.json)
 
     # Sync lockfiles
     bun install
 
-    git add package.json bun.lock
-    git commit -m "Release v${VERSION}"
-    git tag -a "v${VERSION}" -m "Release v${VERSION}"
+    # Prepend this release's section; --prepend needs the file to exist.
+    touch CHANGELOG.md
+    bunx git-cliff@2.13.1 --unreleased --tag "v${VERSION}" --prepend CHANGELOG.md
+
+    git add package.json bun.lock CHANGELOG.md
+    git commit -m "chore(release): v${VERSION}"
+    git tag -a "v${VERSION}" -m "v${VERSION}"
     git push --follow-tags
 
 # Manually build & push the Docker image to ghcr.io (fallback for when CI is down).
