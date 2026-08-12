@@ -1,4 +1,4 @@
-set dotenv-load := true
+set dotenv-load
 
 export PATH := "./node_modules/.bin:" + env('PATH')
 export OPENAPI_URL := env('OPENAPI_URL', 'http://localhost:8666/api/openapi.json')
