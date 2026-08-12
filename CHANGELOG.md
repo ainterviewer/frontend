@@ -1,0 +1,17 @@
+# Changelog
+
+Generated from [Conventional Commits](https://www.conventionalcommits.org) by
+[git-cliff](https://git-cliff.org). Releases older than the earliest entry below
+predate this changelog — see `git log` for their history.
+
+## [0.2.60] - 2026-08-12
+
+### Features
+
+- (dashboard) Drag and drop projects between folders in the main dashboard
+
+### Internal
+
+- (sdk) The sdk now gets generated from a live endpoint from the backend server
+- (justfile) Lint justfile
+- Implement cliff and release note strategy
