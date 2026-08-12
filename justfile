@@ -1,18 +1,22 @@
 set dotenv-load := true
 
 export PATH := "./node_modules/.bin:" + env('PATH')
-export OPENAPI_PATH := "../backend/openapi.json"
+export OPENAPI_URL := env('OPENAPI_URL', 'http://localhost:8666/api/openapi.json')
 export SDK_OUTPUT_PATH := "src/lib/api"
 
 [private]
 default:
     @just --list
 
-[doc("Generate TypeScript SDK from openapi.json created by FastAPI:
-https://fastapi.tiangolo.com/advanced/generate-clients/")]
+[doc("Generate the TypeScript SDK from the running backend's OpenAPI schema:
+https://fastapi.tiangolo.com/advanced/generate-clients/
+
+Requires the backend dev server to be up. Override the source with OPENAPI_URL.
+This is the only SDK generator — always run it from here, never via bunx, so the
+vendored client runtime stays on the pinned @hey-api/openapi-ts in package.json.")]
 [group("Frontend")]
 generate-sdk:
-    openapi-ts --input {{ OPENAPI_PATH }}  --output {{ SDK_OUTPUT_PATH }}
+    openapi-ts --input {{ OPENAPI_URL }} --output {{ SDK_OUTPUT_PATH }}
 
 [doc("Compile the static fallback error page (e.g. 502) for nginx to serve when the app is down. Renders the shared ErrorPage.svelte to a self-contained HTML file in deploy/setup/nginx/.")]
 [group("Frontend")]
