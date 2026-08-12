@@ -183,8 +183,8 @@
 	</div>
 {/if}
 
-<div class="overflow-hidden rounded-lg bg-white shadow-md">
-	<table class="min-w-full divide-y divide-gray-200">
+<div class="overflow-x-auto rounded-lg bg-white shadow-md">
+	<table class="w-full min-w-[1200px] divide-y divide-gray-200">
 		<colgroup>
 			<col style="width: 50px" />
 			<col style="width: 150px" />
