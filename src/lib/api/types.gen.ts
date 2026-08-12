@@ -1860,6 +1860,16 @@ export type MonitoringStats = {
 };
 
 /**
+ * MoveProjectRequest
+ */
+export type MoveProjectRequest = {
+    /**
+     * Folder Id
+     */
+    folder_id: string;
+};
+
+/**
  * NewsletterRequest
  */
 export type NewsletterRequest = {
@@ -5719,6 +5729,39 @@ export type ChangeProjectTitleErrors = {
 export type ChangeProjectTitleError = ChangeProjectTitleErrors[keyof ChangeProjectTitleErrors];
 
 export type ChangeProjectTitleResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type MoveProjectData = {
+    body: MoveProjectRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/folder';
+};
+
+export type MoveProjectErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MoveProjectError = MoveProjectErrors[keyof MoveProjectErrors];
+
+export type MoveProjectResponses = {
     /**
      * Successful Response
      */

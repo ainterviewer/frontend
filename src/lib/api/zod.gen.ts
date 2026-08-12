@@ -284,7 +284,7 @@ export const zConditionEvaluation = z.object({
         '<=',
         '>',
         '>='
-    ]).optional().default('=='),
+    ]).optional(),
     combine_next: z.enum(['AND', 'OR']).nullish()
 });
 
@@ -406,7 +406,7 @@ export const zExperimentProjectPublic = z.object({
  */
 export const zExportMessagesRequest = z.object({
     interview_ids: z.array(z.string()),
-    format: z.enum(['csv', 'xlsx']).optional().default('csv')
+    format: z.enum(['csv', 'xlsx']).optional()
 });
 
 /**
@@ -504,7 +504,7 @@ export const zImage = z.object({
         'audio',
         'image',
         'video'
-    ]).optional().default('image'),
+    ]).optional(),
     name: z.string(),
     data: z.string().nullable(),
     primer: z.string().nullish().default(null),
@@ -651,7 +651,7 @@ export const zLikertItem = z.object({
     type: z.literal('likert').optional().default('likert'),
     required: z.boolean().optional().default(true),
     options: z.array(z.string()),
-    ui: z.enum(['radio', 'slider']).optional().default('radio')
+    ui: z.enum(['radio', 'slider']).optional()
 });
 
 /**
@@ -753,6 +753,13 @@ export const zMonitoringStats = z.object({
     message_count_histogram: z.array(zHistogramBucket),
     message_length_histogram: z.array(zHistogramBucket),
     dropout_stats: z.array(zDropoutPoint)
+});
+
+/**
+ * MoveProjectRequest
+ */
+export const zMoveProjectRequest = z.object({
+    folder_id: z.string()
 });
 
 /**
@@ -980,7 +987,7 @@ export const zQuestionContext = z.object({
         'main',
         'probes',
         'both'
-    ]).optional().default('main')
+    ]).optional()
 });
 
 /**
@@ -1824,7 +1831,7 @@ export const zChatMessage = z.object({
         'message',
         'question',
         'section'
-    ]).optional().default('message'),
+    ]).optional(),
     role: z.enum(['user', 'model']),
     timestamp: z.string(),
     content: z.string()
@@ -1953,8 +1960,12 @@ export const zInvitationPublicWritable = z.object({
     email: z.string().nullable()
 });
 
-export const zGetAnalysisCategoriesPath = z.object({
-    project_id: z.string()
+export const zGetAnalysisCategoriesData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -1964,20 +1975,28 @@ export const zGetAnalysisCategoriesPath = z.object({
  */
 export const zGetAnalysisCategoriesResponse = z.array(zAnalysisCategoryPublic);
 
-export const zCreateAnalysisCategoryBody = zAnalysisCategoryCreate;
-
-export const zCreateAnalysisCategoryPath = z.object({
-    project_id: z.string()
+export const zCreateAnalysisCategoryData = z.object({
+    body: zAnalysisCategoryCreate,
+    path: z.object({
+        project_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
-export const zDeleteAnalysisCategoryPath = z.object({
-    category_id: z.string()
+export const zDeleteAnalysisCategoryData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        category_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
-export const zUpdateAnalysisCategoryBody = zAnalysisCategoryCreate;
-
-export const zUpdateAnalysisCategoryPath = z.object({
-    category_id: z.string()
+export const zUpdateAnalysisCategoryData = z.object({
+    body: zAnalysisCategoryCreate,
+    path: z.object({
+        category_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -1985,8 +2004,12 @@ export const zUpdateAnalysisCategoryPath = z.object({
  */
 export const zUpdateAnalysisCategoryResponse = zAnalysisCategoryPublic;
 
-export const zGetMessageAnnotationsPath = z.object({
-    message_id: z.string()
+export const zGetMessageAnnotationsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        message_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -1996,10 +2019,12 @@ export const zGetMessageAnnotationsPath = z.object({
  */
 export const zGetMessageAnnotationsResponse = z.array(zMessageAnnotationPublic);
 
-export const zAddMessageAnnotationBody = zMessageAnnotationCreate;
-
-export const zAddMessageAnnotationPath = z.object({
-    message_id: z.string()
+export const zAddMessageAnnotationData = z.object({
+    body: zMessageAnnotationCreate,
+    path: z.object({
+        message_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2007,14 +2032,20 @@ export const zAddMessageAnnotationPath = z.object({
  */
 export const zAddMessageAnnotationResponse = zMessageAnnotationPublic;
 
-export const zDeleteMessageAnnotationPath = z.object({
-    annotation_id: z.string()
+export const zDeleteMessageAnnotationData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        annotation_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
-export const zUpdateMessageAnnotationBody = zMessageAnnotationCreate;
-
-export const zUpdateMessageAnnotationPath = z.object({
-    annotation_id: z.string()
+export const zUpdateMessageAnnotationData = z.object({
+    body: zMessageAnnotationCreate,
+    path: z.object({
+        annotation_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2022,10 +2053,12 @@ export const zUpdateMessageAnnotationPath = z.object({
  */
 export const zUpdateMessageAnnotationResponse = zMessageAnnotationPublic;
 
-export const zGetFilteredMessagesCountBody = zFilteredMessagesRequest;
-
-export const zGetFilteredMessagesCountPath = z.object({
-    project_id: z.string()
+export const zGetFilteredMessagesCountData = z.object({
+    body: zFilteredMessagesRequest,
+    path: z.object({
+        project_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2035,15 +2068,15 @@ export const zGetFilteredMessagesCountPath = z.object({
  */
 export const zGetFilteredMessagesCountResponse = z.int();
 
-export const zGetFilteredMessagesBody = zFilteredMessagesRequest;
-
-export const zGetFilteredMessagesPath = z.object({
-    project_id: z.string()
-});
-
-export const zGetFilteredMessagesQuery = z.object({
-    skip: z.int().optional().default(0),
-    limit: z.int().optional().default(20)
+export const zGetFilteredMessagesData = z.object({
+    body: zFilteredMessagesRequest,
+    path: z.object({
+        project_id: z.string()
+    }),
+    query: z.object({
+        skip: z.int().optional().default(0),
+        limit: z.int().optional().default(20)
+    }).optional()
 });
 
 /**
@@ -2053,10 +2086,14 @@ export const zGetFilteredMessagesQuery = z.object({
  */
 export const zGetFilteredMessagesResponse = z.array(zMessagePublic);
 
-export const zGetMessageContextBeforePath = z.object({
-    project_id: z.string(),
-    interview_id: z.string(),
-    message_id: z.string()
+export const zGetMessageContextBeforeData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string(),
+        interview_id: z.string(),
+        message_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2066,10 +2103,14 @@ export const zGetMessageContextBeforePath = z.object({
  */
 export const zGetMessageContextBeforeResponse = z.array(zMessagePublic);
 
-export const zGetMessageContextAfterPath = z.object({
-    project_id: z.string(),
-    interview_id: z.string(),
-    message_id: z.string()
+export const zGetMessageContextAfterData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string(),
+        interview_id: z.string(),
+        message_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2079,14 +2120,16 @@ export const zGetMessageContextAfterPath = z.object({
  */
 export const zGetMessageContextAfterResponse = z.array(zMessagePublic);
 
-export const zGetProjectMonitoringStatsPath = z.object({
-    project_id: z.string()
-});
-
-export const zGetProjectMonitoringStatsQuery = z.object({
-    interview_types: z.array(zInterviewType).optional(),
-    start_date: z.iso.datetime().nullish(),
-    end_date: z.iso.datetime().nullish()
+export const zGetProjectMonitoringStatsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string()
+    }),
+    query: z.object({
+        interview_types: z.array(zInterviewType).optional(),
+        start_date: z.iso.datetime().nullish(),
+        end_date: z.iso.datetime().nullish()
+    }).optional()
 });
 
 /**
@@ -2094,33 +2137,43 @@ export const zGetProjectMonitoringStatsQuery = z.object({
  */
 export const zGetProjectMonitoringStatsResponse = zMonitoringStats;
 
-export const zResetSessionPath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
+export const zResetSessionData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zResetSessionQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetChatData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zGetChatPath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
+export const zSendChatData = z.object({
+    body: zAssistanceChatRequest,
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zGetChatQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zSendChatBody = zAssistanceChatRequest;
-
-export const zSendChatPath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
-});
-
-export const zSendChatQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetExperimentsData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
 });
 
 /**
@@ -2130,19 +2183,37 @@ export const zSendChatQuery = z.object({
  */
 export const zGetExperimentsResponse = z.array(zExperimentPublic);
 
-export const zCreateExperimentBody = zExperimentCreate;
+export const zCreateExperimentData = z.object({
+    body: zExperimentCreate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Successful Response
  */
 export const zCreateExperimentResponse = zExperimentPublic;
 
-export const zDeleteExperimentPath = z.object({
-    experiment_id: z.string()
+export const zDeleteExperimentData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        experiment_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
-export const zGenerateExperimentQrPath = z.object({
-    experiment_id: z.string()
+export const zGenerateExperimentQrData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        experiment_id: z.string()
+    }),
+    query: z.never().optional()
+});
+
+export const zGetFoldersData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
 });
 
 /**
@@ -2152,46 +2223,56 @@ export const zGenerateExperimentQrPath = z.object({
  */
 export const zGetFoldersResponse = z.array(zProjectFolderWithProjects);
 
-export const zCreateFolderBody = zProjectFolderCreate;
+export const zCreateFolderData = z.object({
+    body: zProjectFolderCreate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Successful Response
  */
 export const zCreateFolderResponse = zProjectFolderPublic;
 
-export const zDeleteFolderPath = z.object({
-    folder_id: z.string().nullable()
+export const zDeleteFolderData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        folder_id: z.string().nullable()
+    }),
+    query: z.object({
+        project_id: z.string().nullish()
+    }).optional()
 });
 
-export const zDeleteFolderQuery = z.object({
-    project_id: z.string().nullish()
+export const zEditFolderData = z.object({
+    body: zProjectFolderEdit,
+    path: z.object({
+        folder_id: z.string().nullable()
+    }),
+    query: z.object({
+        project_id: z.string().nullish()
+    }).optional()
 });
 
-export const zEditFolderBody = zProjectFolderEdit;
-
-export const zEditFolderPath = z.object({
-    folder_id: z.string().nullable()
+export const zRemoveCollaboratorData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        folder_id: z.string().nullable()
+    }),
+    query: z.object({
+        user_id: z.string(),
+        project_id: z.string().nullish()
+    })
 });
 
-export const zEditFolderQuery = z.object({
-    project_id: z.string().nullish()
-});
-
-export const zRemoveCollaboratorPath = z.object({
-    folder_id: z.string().nullable()
-});
-
-export const zRemoveCollaboratorQuery = z.object({
-    user_id: z.string(),
-    project_id: z.string().nullish()
-});
-
-export const zGetCollaboratorsPath = z.object({
-    folder_id: z.string().nullable()
-});
-
-export const zGetCollaboratorsQuery = z.object({
-    project_id: z.string().nullish()
+export const zGetCollaboratorsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        folder_id: z.string().nullable()
+    }),
+    query: z.object({
+        project_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2201,14 +2282,16 @@ export const zGetCollaboratorsQuery = z.object({
  */
 export const zGetCollaboratorsResponse = z.array(zCollaboratorPublic);
 
-export const zUpdateCollaboratorRolePath = z.object({
-    folder_id: z.string().nullable()
-});
-
-export const zUpdateCollaboratorRoleQuery = z.object({
-    user_id: z.string(),
-    role: zCollaboratorRole,
-    project_id: z.string().nullish()
+export const zUpdateCollaboratorRoleData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        folder_id: z.string().nullable()
+    }),
+    query: z.object({
+        user_id: z.string(),
+        role: zCollaboratorRole,
+        project_id: z.string().nullish()
+    })
 });
 
 /**
@@ -2216,14 +2299,14 @@ export const zUpdateCollaboratorRoleQuery = z.object({
  */
 export const zUpdateCollaboratorRoleResponse = zCollaboratorPublic;
 
-export const zAddCollaboratorBody = zCollaboratorCreate;
-
-export const zAddCollaboratorPath = z.object({
-    folder_id: z.string().nullable()
-});
-
-export const zAddCollaboratorQuery = z.object({
-    project_id: z.string().nullish()
+export const zAddCollaboratorData = z.object({
+    body: zCollaboratorCreate,
+    path: z.object({
+        folder_id: z.string().nullable()
+    }),
+    query: z.object({
+        project_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2231,32 +2314,34 @@ export const zAddCollaboratorQuery = z.object({
  */
 export const zAddCollaboratorResponse = zCollaboratorPublic;
 
-export const zCreateProjectBody = zCreateProjectRequest;
-
-export const zCreateProjectPath = z.object({
-    folder_id: z.string().nullable()
+export const zCreateProjectData = z.object({
+    body: zCreateProjectRequest,
+    path: z.object({
+        folder_id: z.string().nullable()
+    }),
+    query: z.object({
+        project_id: z.string().nullish()
+    }).optional()
 });
 
-export const zCreateProjectQuery = z.object({
-    project_id: z.string().nullish()
+export const zDeleteParticipantsData = z.object({
+    body: zDeleteParticipantsRequest,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zDeleteParticipantsBody = zDeleteParticipantsRequest;
-
-export const zDeleteParticipantsPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zDeleteParticipantsQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetParticipantsPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zGetParticipantsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetParticipantsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2266,14 +2351,14 @@ export const zGetParticipantsQuery = z.object({
  */
 export const zGetParticipantsResponse = z.array(zParticipantPublic);
 
-export const zAddParticipantBody = zParticipantCreate;
-
-export const zAddParticipantPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zAddParticipantQuery = z.object({
-    folder_id: z.string().nullish()
+export const zAddParticipantData = z.object({
+    body: zParticipantCreate,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2281,22 +2366,26 @@ export const zAddParticipantQuery = z.object({
  */
 export const zAddParticipantResponse = zParticipantPublic;
 
-export const zDeleteParticipantPath = z.object({
-    project_id: z.string().nullable(),
-    participant_id: z.string()
+export const zDeleteParticipantData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        participant_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zDeleteParticipantQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetParticipantPath = z.object({
-    project_id: z.string().nullable(),
-    participant_id: z.string()
-});
-
-export const zGetParticipantQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetParticipantData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        participant_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2304,15 +2393,15 @@ export const zGetParticipantQuery = z.object({
  */
 export const zGetParticipantResponse = zParticipantPublic;
 
-export const zUpdateParticipantBody = zParticipantUpdate;
-
-export const zUpdateParticipantPath = z.object({
-    project_id: z.string().nullable(),
-    participant_id: z.string()
-});
-
-export const zUpdateParticipantQuery = z.object({
-    folder_id: z.string().nullish()
+export const zUpdateParticipantData = z.object({
+    body: zParticipantUpdate,
+    path: z.object({
+        project_id: z.string().nullable(),
+        participant_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2320,22 +2409,24 @@ export const zUpdateParticipantQuery = z.object({
  */
 export const zUpdateParticipantResponse = zParticipantPublic;
 
-export const zExportParticipantsBody = zExportParticipantsRequest;
-
-export const zExportParticipantsPath = z.object({
-    project_id: z.string().nullable()
+export const zExportParticipantsData = z.object({
+    body: zExportParticipantsRequest,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zExportParticipantsQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zExportEmailBundlePath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zExportEmailBundleQuery = z.object({
-    folder_id: z.string().nullish()
+export const zExportEmailBundleData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2343,13 +2434,12 @@ export const zExportEmailBundleQuery = z.object({
  */
 export const zExportEmailBundleResponse = z.string();
 
-/**
- * Reason
- */
-export const zOptOutBody = z.string().nullable();
-
-export const zOptOutPath = z.object({
-    opt_out_token: z.string()
+export const zOptOutData = z.object({
+    body: z.string().nullish(),
+    path: z.object({
+        opt_out_token: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2357,17 +2447,14 @@ export const zOptOutPath = z.object({
  */
 export const zOptOutResponse = zParticipantPublic;
 
-/**
- * Participants
- */
-export const zAddParticipantsBody = z.array(zParticipantCreate);
-
-export const zAddParticipantsPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zAddParticipantsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zAddParticipantsData = z.object({
+    body: z.array(zParticipantCreate),
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2377,14 +2464,14 @@ export const zAddParticipantsQuery = z.object({
  */
 export const zAddParticipantsResponse = z.array(zParticipantPublic);
 
-export const zUploadParticipantsBody = zBodyUploadParticipants;
-
-export const zUploadParticipantsPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zUploadParticipantsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zUploadParticipantsData = z.object({
+    body: zBodyUploadParticipants,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2394,13 +2481,15 @@ export const zUploadParticipantsQuery = z.object({
  */
 export const zUploadParticipantsResponse = z.array(zParticipantPublic);
 
-export const zGetParticipantEmailTemplatePath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
-});
-
-export const zGetParticipantEmailTemplateQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetParticipantEmailTemplateData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2408,15 +2497,15 @@ export const zGetParticipantEmailTemplateQuery = z.object({
  */
 export const zGetParticipantEmailTemplateResponse = zParticipantEmailTemplateRequest;
 
-export const zSetParticipantEmailTemplateBody = zParticipantEmailTemplateRequest;
-
-export const zSetParticipantEmailTemplatePath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
-});
-
-export const zSetParticipantEmailTemplateQuery = z.object({
-    folder_id: z.string().nullish()
+export const zSetParticipantEmailTemplateData = z.object({
+    body: zParticipantEmailTemplateRequest,
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2424,13 +2513,15 @@ export const zSetParticipantEmailTemplateQuery = z.object({
  */
 export const zSetParticipantEmailTemplateResponse = zParticipantEmailTemplateRequest;
 
-export const zListParticipantEmailAttachmentsPath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
-});
-
-export const zListParticipantEmailAttachmentsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zListParticipantEmailAttachmentsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2440,15 +2531,15 @@ export const zListParticipantEmailAttachmentsQuery = z.object({
  */
 export const zListParticipantEmailAttachmentsResponse = z.array(zParticipantEmailAttachment);
 
-export const zUploadParticipantEmailAttachmentsBody = zBodyUploadParticipantEmailAttachments;
-
-export const zUploadParticipantEmailAttachmentsPath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
-});
-
-export const zUploadParticipantEmailAttachmentsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zUploadParticipantEmailAttachmentsData = z.object({
+    body: zBodyUploadParticipantEmailAttachments,
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2458,14 +2549,16 @@ export const zUploadParticipantEmailAttachmentsQuery = z.object({
  */
 export const zUploadParticipantEmailAttachmentsResponse = z.array(zParticipantEmailAttachment);
 
-export const zDeleteParticipantEmailAttachmentPath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2),
-    filename: z.string()
-});
-
-export const zDeleteParticipantEmailAttachmentQuery = z.object({
-    folder_id: z.string().nullish()
+export const zDeleteParticipantEmailAttachmentData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2),
+        filename: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2475,14 +2568,14 @@ export const zDeleteParticipantEmailAttachmentQuery = z.object({
  */
 export const zDeleteParticipantEmailAttachmentResponse = z.array(zParticipantEmailAttachment);
 
-export const zSendParticipantEmailsBody = zSendParticipantEmailRequest;
-
-export const zSendParticipantEmailsPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zSendParticipantEmailsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zSendParticipantEmailsData = z.object({
+    body: zSendParticipantEmailRequest,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2490,13 +2583,15 @@ export const zSendParticipantEmailsQuery = z.object({
  */
 export const zSendParticipantEmailsResponse = zSendParticipantEmailResponse;
 
-export const zGetParticipantReminderEmailTemplatePath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
-});
-
-export const zGetParticipantReminderEmailTemplateQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetParticipantReminderEmailTemplateData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2504,15 +2599,15 @@ export const zGetParticipantReminderEmailTemplateQuery = z.object({
  */
 export const zGetParticipantReminderEmailTemplateResponse = zParticipantEmailTemplateRequest;
 
-export const zSetParticipantReminderEmailTemplateBody = zParticipantEmailTemplateRequest;
-
-export const zSetParticipantReminderEmailTemplatePath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
-});
-
-export const zSetParticipantReminderEmailTemplateQuery = z.object({
-    folder_id: z.string().nullish()
+export const zSetParticipantReminderEmailTemplateData = z.object({
+    body: zParticipantEmailTemplateRequest,
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2520,13 +2615,15 @@ export const zSetParticipantReminderEmailTemplateQuery = z.object({
  */
 export const zSetParticipantReminderEmailTemplateResponse = zParticipantEmailTemplateRequest;
 
-export const zListParticipantReminderEmailAttachmentsPath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
-});
-
-export const zListParticipantReminderEmailAttachmentsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zListParticipantReminderEmailAttachmentsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2536,15 +2633,15 @@ export const zListParticipantReminderEmailAttachmentsQuery = z.object({
  */
 export const zListParticipantReminderEmailAttachmentsResponse = z.array(zParticipantEmailAttachment);
 
-export const zUploadParticipantReminderEmailAttachmentsBody = zBodyUploadParticipantReminderEmailAttachments;
-
-export const zUploadParticipantReminderEmailAttachmentsPath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
-});
-
-export const zUploadParticipantReminderEmailAttachmentsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zUploadParticipantReminderEmailAttachmentsData = z.object({
+    body: zBodyUploadParticipantReminderEmailAttachments,
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2554,14 +2651,16 @@ export const zUploadParticipantReminderEmailAttachmentsQuery = z.object({
  */
 export const zUploadParticipantReminderEmailAttachmentsResponse = z.array(zParticipantEmailAttachment);
 
-export const zDeleteParticipantReminderEmailAttachmentPath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2),
-    filename: z.string()
-});
-
-export const zDeleteParticipantReminderEmailAttachmentQuery = z.object({
-    folder_id: z.string().nullish()
+export const zDeleteParticipantReminderEmailAttachmentData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2),
+        filename: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2571,14 +2670,14 @@ export const zDeleteParticipantReminderEmailAttachmentQuery = z.object({
  */
 export const zDeleteParticipantReminderEmailAttachmentResponse = z.array(zParticipantEmailAttachment);
 
-export const zSendParticipantReminderEmailsBody = zSendParticipantEmailRequest;
-
-export const zSendParticipantReminderEmailsPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zSendParticipantReminderEmailsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zSendParticipantReminderEmailsData = z.object({
+    body: zSendParticipantEmailRequest,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2586,20 +2685,24 @@ export const zSendParticipantReminderEmailsQuery = z.object({
  */
 export const zSendParticipantReminderEmailsResponse = zSendParticipantEmailResponse;
 
-export const zDeleteProjectPath = z.object({
-    project_id: z.string().nullable()
+export const zDeleteProjectData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zDeleteProjectQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetProjectPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zGetProjectQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetProjectData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2607,12 +2710,14 @@ export const zGetProjectQuery = z.object({
  */
 export const zGetProjectResponse = zProjectPublic;
 
-export const zCloneProjectPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zCloneProjectQuery = z.object({
-    folder_id: z.string().nullish()
+export const zCloneProjectData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2620,14 +2725,14 @@ export const zCloneProjectQuery = z.object({
  */
 export const zCloneProjectResponse = zProjectPublic;
 
-export const zRemoveProjectLanguageBody = zLanguageCode;
-
-export const zRemoveProjectLanguagePath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zRemoveProjectLanguageQuery = z.object({
-    folder_id: z.string().nullish()
+export const zRemoveProjectLanguageData = z.object({
+    body: zLanguageCode,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2637,8 +2742,12 @@ export const zRemoveProjectLanguageQuery = z.object({
  */
 export const zRemoveProjectLanguageResponse = z.array(zLanguageDict);
 
-export const zGetProjectLanguagesPath = z.object({
-    project_id: z.string()
+export const zGetProjectLanguagesData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2648,14 +2757,14 @@ export const zGetProjectLanguagesPath = z.object({
  */
 export const zGetProjectLanguagesResponse = z.array(zLanguageDict);
 
-export const zAddProjectLanguageBody = zBodyAddProjectLanguage;
-
-export const zAddProjectLanguagePath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zAddProjectLanguageQuery = z.object({
-    folder_id: z.string().nullish()
+export const zAddProjectLanguageData = z.object({
+    body: zBodyAddProjectLanguage,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2665,33 +2774,45 @@ export const zAddProjectLanguageQuery = z.object({
  */
 export const zAddProjectLanguageResponse = z.array(zLanguageDict);
 
-export const zChangeProjectStatusBody = zProjectStatusChangeRequest;
-
-export const zChangeProjectStatusPath = z.object({
-    project_id: z.string().nullable()
+export const zChangeProjectStatusData = z.object({
+    body: zProjectStatusChangeRequest,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zChangeProjectStatusQuery = z.object({
-    folder_id: z.string().nullish()
+export const zChangeProjectTitleData = z.object({
+    body: zProjectTitleUpdateRequest,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zChangeProjectTitleBody = zProjectTitleUpdateRequest;
-
-export const zChangeProjectTitlePath = z.object({
-    project_id: z.string().nullable()
+export const zMoveProjectData = z.object({
+    body: zMoveProjectRequest,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zChangeProjectTitleQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetGuidePath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
-});
-
-export const zGetGuideQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetGuideData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2699,26 +2820,26 @@ export const zGetGuideQuery = z.object({
  */
 export const zGetGuideResponse = zInterviewGuideOutput;
 
-export const zCreateGuideBody = zInterviewGuideInput;
-
-export const zCreateGuidePath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
+export const zCreateGuideData = z.object({
+    body: zInterviewGuideInput,
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zCreateGuideQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGenerateGuideBody = zInterviewGuideGenerationRequest;
-
-export const zGenerateGuidePath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
-});
-
-export const zGenerateGuideQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGenerateGuideData = z.object({
+    body: zInterviewGuideGenerationRequest,
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2726,15 +2847,15 @@ export const zGenerateGuideQuery = z.object({
  */
 export const zGenerateGuideResponse = zInterviewGuideOutput;
 
-export const zGenerateGuideSectionBody = zQuestionSectionGenerationRequest;
-
-export const zGenerateGuideSectionPath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
-});
-
-export const zGenerateGuideSectionQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGenerateGuideSectionData = z.object({
+    body: zQuestionSectionGenerationRequest,
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2742,15 +2863,15 @@ export const zGenerateGuideSectionQuery = z.object({
  */
 export const zGenerateGuideSectionResponse = zQuestionSection;
 
-export const zGenerateSectionQuestionBody = zQuestionGenerationRequest;
-
-export const zGenerateSectionQuestionPath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
-});
-
-export const zGenerateSectionQuestionQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGenerateSectionQuestionData = z.object({
+    body: zQuestionGenerationRequest,
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2758,23 +2879,25 @@ export const zGenerateSectionQuestionQuery = z.object({
  */
 export const zGenerateSectionQuestionResponse = zQuestionOutput;
 
-export const zUploadImageBody = zBodyUploadImage;
-
-export const zUploadImagePath = z.object({
-    project_id: z.string().nullable()
+export const zUploadImageData = z.object({
+    body: zBodyUploadImage,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zUploadImageQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetInterviewAgentsPath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
-});
-
-export const zGetInterviewAgentsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetInterviewAgentsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2782,26 +2905,26 @@ export const zGetInterviewAgentsQuery = z.object({
  */
 export const zGetInterviewAgentsResponse = zAgentConfigsOutput;
 
-export const zCreateInterviewAgentsBody = zAgentConfigsInput;
-
-export const zCreateInterviewAgentsPath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
+export const zCreateInterviewAgentsData = z.object({
+    body: zAgentConfigsInput,
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zCreateInterviewAgentsQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zPreviewProbingPromptsBody = zProbingAgentConfig;
-
-export const zPreviewProbingPromptsPath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
-});
-
-export const zPreviewProbingPromptsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zPreviewProbingPromptsData = z.object({
+    body: zProbingAgentConfig,
+    path: z.object({
+        project_id: z.string().nullable(),
+        lang: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2809,8 +2932,12 @@ export const zPreviewProbingPromptsQuery = z.object({
  */
 export const zPreviewProbingPromptsResponse = zProbingPromptPreview;
 
-export const zGetInterviewConfigPath = z.object({
-    project_id: z.string()
+export const zGetInterviewConfigData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2818,18 +2945,22 @@ export const zGetInterviewConfigPath = z.object({
  */
 export const zGetInterviewConfigResponse = zInterviewConfig;
 
-export const zCreateInterviewConfigBody = zInterviewConfig;
-
-export const zCreateInterviewConfigPath = z.object({
-    project_id: z.string().nullable()
+export const zCreateInterviewConfigData = z.object({
+    body: zInterviewConfig,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zCreateInterviewConfigQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetInterviewModelsPath = z.object({
-    project_id: z.string()
+export const zGetInterviewModelsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2839,14 +2970,20 @@ export const zGetInterviewModelsPath = z.object({
  */
 export const zGetInterviewModelsResponse = z.array(z.string());
 
-export const zUpdateExternalParamsBody = zExternalParamsRequest;
-
-export const zUpdateExternalParamsPath = z.object({
-    project_id: z.string().nullable()
+export const zUpdateExternalParamsData = z.object({
+    body: zExternalParamsRequest,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zUpdateExternalParamsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetPromptDefaultsData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
 });
 
 /**
@@ -2854,9 +2991,13 @@ export const zUpdateExternalParamsQuery = z.object({
  */
 export const zGetPromptDefaultsResponse = zProbingPromptSlots;
 
-export const zGetConsentPath = z.object({
-    project_id: z.string(),
-    language: z.string().length(2)
+export const zGetConsentData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string(),
+        language: z.string().length(2)
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2866,20 +3007,24 @@ export const zGetConsentPath = z.object({
  */
 export const zGetConsentResponse = zConsent.nullable();
 
-export const zCreateConsentBody = zConsent;
-
-export const zCreateConsentPath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
+export const zCreateConsentData = z.object({
+    body: zConsent,
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zCreateConsentQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetWelcomePath = z.object({
-    project_id: z.string(),
-    language: z.string().length(2)
+export const zGetWelcomeData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string(),
+        language: z.string().length(2)
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2889,40 +3034,42 @@ export const zGetWelcomePath = z.object({
  */
 export const zGetWelcomeResponse = zWelcome.nullable();
 
-export const zCreateWelcomeBody = zBodyCreateWelcome;
-
-export const zCreateWelcomePath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
+export const zCreateWelcomeData = z.object({
+    body: zBodyCreateWelcome,
+    path: z.object({
+        project_id: z.string().nullable(),
+        language: z.string().length(2)
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zCreateWelcomeQuery = z.object({
-    folder_id: z.string().nullish()
+export const zDeleteInterviewsData = z.object({
+    body: zDeleteInterviewRequest,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zDeleteInterviewsBody = zDeleteInterviewRequest;
-
-export const zDeleteInterviewsPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zDeleteInterviewsQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetInterviewsPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zGetInterviewsQuery = z.object({
-    interview_types: z.array(zInterviewType).nullish(),
-    created_at: z.iso.datetime().nullish(),
-    completed: z.boolean().nullish(),
-    folder_id: z.string().nullish(),
-    offset: z.int().lte(100).optional().default(0),
-    limit: z.int().lte(100).optional().default(20),
-    column: z.string().optional().default('created_at'),
-    order: z.enum(['asc', 'desc']).optional().default('desc')
+export const zGetInterviewsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        interview_types: z.array(zInterviewType).nullish(),
+        created_at: z.iso.datetime().nullish(),
+        completed: z.boolean().nullish(),
+        folder_id: z.string().nullish(),
+        offset: z.int().lte(100).optional().default(0),
+        limit: z.int().lte(100).optional().default(20),
+        column: z.string().optional().default('created_at'),
+        order: z.enum(['asc', 'desc']).optional()
+    }).optional()
 });
 
 /**
@@ -2930,23 +3077,27 @@ export const zGetInterviewsQuery = z.object({
  */
 export const zGetInterviewsResponse = zPaginatedResponseInterviewSummaryPublic;
 
-export const zGetMessagePath = z.object({
-    project_id: z.string().nullable(),
-    interview_id: z.string(),
-    message_id: z.string()
+export const zGetMessageData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        interview_id: z.string(),
+        message_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zGetMessageQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetInterviewMessagesPath = z.object({
-    project_id: z.string().nullable(),
-    interview_id: z.string()
-});
-
-export const zGetInterviewMessagesQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetInterviewMessagesData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        interview_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -2956,36 +3107,44 @@ export const zGetInterviewMessagesQuery = z.object({
  */
 export const zGetInterviewMessagesResponse = z.array(zMessagePublic);
 
-export const zGetInterviewAudioPath = z.object({
-    project_id: z.string().nullable(),
-    interview_id: z.string(),
-    filename: z.string()
+export const zGetInterviewAudioData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        interview_id: z.string(),
+        filename: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zGetInterviewAudioQuery = z.object({
-    folder_id: z.string().nullish()
+export const zExportMessagesData = z.object({
+    body: zExportMessagesRequest,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zExportMessagesBody = zExportMessagesRequest;
-
-export const zExportMessagesPath = z.object({
-    project_id: z.string().nullable()
+export const zGenerateProjectQrData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zExportMessagesQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGenerateProjectQrPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zGenerateProjectQrQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zCheckProjectOwnerPath = z.object({
-    project_id: z.string()
+export const zCheckProjectOwnerData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -2995,13 +3154,15 @@ export const zCheckProjectOwnerPath = z.object({
  */
 export const zCheckProjectOwnerResponse = z.boolean();
 
-export const zGetBackgroundInfoPath = z.object({
-    project_id: z.string().nullable(),
-    test_id: z.string()
-});
-
-export const zGetBackgroundInfoQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetBackgroundInfoData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        test_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -3009,24 +3170,26 @@ export const zGetBackgroundInfoQuery = z.object({
  */
 export const zGetBackgroundInfoResponse = zBackgroundInfoOptionsOutput;
 
-export const zUpdateBackgroundInfoBody = zUpdateBackgroundInfoRequest;
-
-export const zUpdateBackgroundInfoPath = z.object({
-    project_id: z.string().nullable(),
-    test_id: z.string()
+export const zUpdateBackgroundInfoData = z.object({
+    body: zUpdateBackgroundInfoRequest,
+    path: z.object({
+        project_id: z.string().nullable(),
+        test_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zUpdateBackgroundInfoQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetFixedPersonasPath = z.object({
-    project_id: z.string().nullable(),
-    test_id: z.string()
-});
-
-export const zGetFixedPersonasQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetFixedPersonasData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        test_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -3036,43 +3199,47 @@ export const zGetFixedPersonasQuery = z.object({
  */
 export const zGetFixedPersonasResponse = z.array(z.string()).nullable();
 
-export const zUpdateFixedPersonasBody = zUpdateFixedPersonasRequest;
-
-export const zUpdateFixedPersonasPath = z.object({
-    project_id: z.string().nullable(),
-    test_id: z.string()
+export const zUpdateFixedPersonasData = z.object({
+    body: zUpdateFixedPersonasRequest,
+    path: z.object({
+        project_id: z.string().nullable(),
+        test_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zUpdateFixedPersonasQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetFixedAnswersData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        test_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zGetFixedAnswersPath = z.object({
-    project_id: z.string().nullable(),
-    test_id: z.string()
+export const zUpdateFixedAnswersData = z.object({
+    body: zUpdateFixedAnswersRequest,
+    path: z.object({
+        project_id: z.string().nullable(),
+        test_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zGetFixedAnswersQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zUpdateFixedAnswersBody = zUpdateFixedAnswersRequest;
-
-export const zUpdateFixedAnswersPath = z.object({
-    project_id: z.string().nullable(),
-    test_id: z.string()
-});
-
-export const zUpdateFixedAnswersQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zGetTestSetupsPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zGetTestSetupsQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetTestSetupsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -3082,14 +3249,14 @@ export const zGetTestSetupsQuery = z.object({
  */
 export const zGetTestSetupsResponse = z.array(zTestSetupPublic);
 
-export const zCreateTestSetupBody = zTestSetupCreate;
-
-export const zCreateTestSetupPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zCreateTestSetupQuery = z.object({
-    folder_id: z.string().nullish()
+export const zCreateTestSetupData = z.object({
+    body: zTestSetupCreate,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -3097,53 +3264,60 @@ export const zCreateTestSetupQuery = z.object({
  */
 export const zCreateTestSetupResponse = zTestSetupPublic;
 
-export const zDeleteTestSetupPath = z.object({
-    project_id: z.string().nullable(),
-    test_id: z.string()
+export const zDeleteTestSetupData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        test_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zDeleteTestSetupQuery = z.object({
-    folder_id: z.string().nullish()
+export const zGetIntervieweeData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string()
+    }),
+    query: z.object({
+        interview_id: z.string()
+    })
 });
 
-export const zGetIntervieweePath = z.object({
-    project_id: z.string()
+export const zGetTestStatusData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        project_id: z.string().nullable(),
+        test_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zGetIntervieweeQuery = z.object({
-    interview_id: z.string()
+export const zRunSyntheticTestData = z.object({
+    body: zSynthesizeRequest,
+    path: z.object({
+        project_id: z.string().nullable(),
+        test_id: z.string()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
 });
 
-export const zGetTestStatusPath = z.object({
-    project_id: z.string().nullable(),
-    test_id: z.string()
-});
-
-export const zGetTestStatusQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zRunSyntheticTestBody = zSynthesizeRequest;
-
-export const zRunSyntheticTestPath = z.object({
-    project_id: z.string().nullable(),
-    test_id: z.string()
-});
-
-export const zRunSyntheticTestQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zCreateInterviewBody = zCreateInterviewRequest;
-
-export const zCreateInterviewHeaders = z.object({
-    'user-agent': z.string().nullish(),
-    'X-Real-IP': z.string().nullish()
-});
-
-export const zCreateInterviewPath = z.object({
-    project_id: z.string(),
-    lang: zLanguageCode
+export const zCreateInterviewData = z.object({
+    body: zCreateInterviewRequest,
+    path: z.object({
+        project_id: z.string(),
+        lang: zLanguageCode
+    }),
+    query: z.never().optional(),
+    headers: z.object({
+        'user-agent': z.string().nullish(),
+        'X-Real-IP': z.string().nullish()
+    }).optional()
 });
 
 /**
@@ -3153,72 +3327,178 @@ export const zCreateInterviewPath = z.object({
  */
 export const zCreateInterviewResponse = z.string();
 
-export const zPutFeedbackBody = zMessageFeedbackResponse;
+export const zPutFeedbackData = z.object({
+    body: zMessageFeedbackResponse,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Successful Response
  */
 export const zPutFeedbackResponse = zMessageFeedbackResponse;
 
-export const zUploadInterviewImageBody = zBodyUploadInterviewImage;
+export const zUploadInterviewImageData = z.object({
+    body: zBodyUploadInterviewImage,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Successful Response
  */
 export const zUploadInterviewImageResponse = zMediaUploadResponse;
 
-export const zUploadAudioBody = zBodyUploadAudio;
+export const zUploadAudioData = z.object({
+    body: zBodyUploadAudio,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Successful Response
  */
 export const zUploadAudioResponse = zMediaUploadResponse;
 
-export const zSynthesizeSpeechBody = zSpeechRequest;
+export const zSynthesizeSpeechData = z.object({
+    body: zSpeechRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Successful Response
  */
 export const zSynthesizeSpeechResponse = z.string();
 
-export const zLoginBody = zLoginData;
+export const zLoginData2 = z.object({
+    body: zLoginData,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
-export const zVerifyLoginCodeBody = zVerifyLoginCodeRequest;
+export const zVerifyLoginCodeData = z.object({
+    body: zVerifyLoginCodeRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
-export const zDeleteMeBody = zDeleteAccountRequest;
+export const zDeleteMeData = z.object({
+    body: zDeleteAccountRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zMeData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Successful Response
  */
 export const zMeResponse = zUserPublic;
 
-export const zUpdateMeBody = zUserSelfUpdate;
+export const zUpdateMeData = z.object({
+    body: zUserSelfUpdate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Successful Response
  */
 export const zUpdateMeResponse = zUserPublic;
 
-export const zUpdateMyEmailBody = zUpdateEmailRequest;
+export const zUpdateMyEmailData = z.object({
+    body: zUpdateEmailRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Successful Response
  */
 export const zUpdateMyEmailResponse = zUserPublic;
 
-export const zUpdateMyPasswordBody = zUpdatePasswordRequest;
+export const zUpdateMyPasswordData = z.object({
+    body: zUpdatePasswordRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
-export const zRegisterBody = zUserCreateRequest;
+export const zRegisterData = z.object({
+    body: zUserCreateRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
-export const zVerifyEmailBody = zVerifyEmailRequest;
+export const zVerifyEmailData = z.object({
+    body: zVerifyEmailRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
-export const zResendVerificationBody = zResendVerificationRequest;
+export const zResendVerificationData = z.object({
+    body: zResendVerificationRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
-export const zRequestAccessBody = zAccessRequestCreate;
+export const zRequestAccessData = z.object({
+    body: zAccessRequestCreate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
-export const zProcessAccessRequestsBody = zAccessRequestsProcessRequest;
+export const zLogoutData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
-export const zDeleteAccessRequestsBody = zAccessRequestsDeleteRequest;
+export const zLogoutEverywhereData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zExitData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zRefreshData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zGetAccessRequestsData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zProcessAccessRequestsData = z.object({
+    body: zAccessRequestsProcessRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zDeleteAccessRequestsData = z.object({
+    body: zAccessRequestsDeleteRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zGetInvitationsData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Response Get Invitations
@@ -3227,12 +3507,18 @@ export const zDeleteAccessRequestsBody = zAccessRequestsDeleteRequest;
  */
 export const zGetInvitationsResponse = z.array(zInvitationPublic);
 
-export const zCreateInvitationBody = zInvitationCreate;
+export const zCreateInvitationData = z.object({
+    body: zInvitationCreate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
-export const zUpdateInvitationBody = zInvitationUpdate;
-
-export const zUpdateInvitationPath = z.object({
-    invitation_id: z.string()
+export const zUpdateInvitationData = z.object({
+    body: zInvitationUpdate,
+    path: z.object({
+        invitation_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -3240,30 +3526,64 @@ export const zUpdateInvitationPath = z.object({
  */
 export const zUpdateInvitationResponse = zInvitationPublic;
 
-export const zDeleteInvitationsBody = zInvitationsDeleteRequest;
-
-export const zProxyToEc2ManagerDeletePath = z.object({
-    full_path: z.string()
+export const zDeleteInvitationsData = z.object({
+    body: zInvitationsDeleteRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
 });
 
-export const zProxyToEc2ManagerGetPath = z.object({
-    full_path: z.string()
+export const zProxyToEc2ManagerDeleteData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        full_path: z.string()
+    }),
+    query: z.never().optional()
 });
 
-export const zProxyToEc2ManagerPatchPath = z.object({
-    full_path: z.string()
+export const zProxyToEc2ManagerGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        full_path: z.string()
+    }),
+    query: z.never().optional()
 });
 
-export const zProxyToEc2ManagerPostPath = z.object({
-    full_path: z.string()
+export const zProxyToEc2ManagerPatchData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        full_path: z.string()
+    }),
+    query: z.never().optional()
 });
 
-export const zProxyToEc2ManagerPutPath = z.object({
-    full_path: z.string()
+export const zProxyToEc2ManagerPostData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        full_path: z.string()
+    }),
+    query: z.never().optional()
 });
 
-export const zDeleteUserQuery = z.object({
-    user_id: z.string()
+export const zProxyToEc2ManagerPutData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        full_path: z.string()
+    }),
+    query: z.never().optional()
+});
+
+export const zDeleteUserData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        user_id: z.string()
+    })
+});
+
+export const zGetUsersData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
 });
 
 /**
@@ -3273,10 +3593,12 @@ export const zDeleteUserQuery = z.object({
  */
 export const zGetUsersResponse = z.array(zUserAdmin);
 
-export const zUpdateAdminNoteBody = zAdminNoteUpdate;
-
-export const zUpdateAdminNotePath = z.object({
-    user_id: z.string()
+export const zUpdateAdminNoteData = z.object({
+    body: zAdminNoteUpdate,
+    path: z.object({
+        user_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
@@ -3284,16 +3606,30 @@ export const zUpdateAdminNotePath = z.object({
  */
 export const zUpdateAdminNoteResponse = zUserAdmin;
 
-export const zUpdateUserBody = zUserAdminUpdate;
-
-export const zUpdateUserPath = z.object({
-    user_id: z.string()
+export const zUpdateUserData = z.object({
+    body: zUserAdminUpdate,
+    path: z.object({
+        user_id: z.string()
+    }),
+    query: z.never().optional()
 });
 
 /**
  * Successful Response
  */
 export const zUpdateUserResponse = zUserAdmin;
+
+export const zGetModelsData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zGetLanguagesData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Response Get Languages
@@ -3302,9 +3638,29 @@ export const zUpdateUserResponse = zUserAdmin;
  */
 export const zGetLanguagesResponse = z.array(zLanguageDict);
 
-export const zNewsletterUnsubscribeBody = zNewsletterRequest;
+export const zNewsletterUnsubscribeData = z.object({
+    body: zNewsletterRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
-export const zNewsletterSubscribeBody = zNewsletterRequest;
+export const zNewsletterSubscribeData = z.object({
+    body: zNewsletterRequest,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zHealthData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zVersionData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
 
 /**
  * Response Version
@@ -3313,6 +3669,10 @@ export const zNewsletterSubscribeBody = zNewsletterRequest;
  */
 export const zVersionResponse = zPlatformManifest.nullable();
 
-export const zPlatformVersionPath = z.object({
-    platform_version: z.string()
+export const zPlatformVersionData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        platform_version: z.string()
+    }),
+    query: z.never().optional()
 });
