@@ -126,36 +126,33 @@
 
 	{#if platformVersion}
 		<div
-			class="group absolute bottom-0 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
+			class="absolute bottom-0 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
 		>
-			<span data-tour="platform-version" class="cursor-default whitespace-nowrap">
-				{collapsed
-					? platformVersion.platform_version?.slice(2)
-					: `v${platformVersion.platform_version}`}
-			</span>
-			<div
-				class={[
-					'pointer-events-none invisible absolute bottom-full z-1000 mb-2 rounded bg-light px-3 py-2 text-left text-xs whitespace-nowrap text-dark opacity-0 shadow-lg transition-opacity duration-200 group-hover:visible group-hover:opacity-100',
-					collapsed ? 'left-2' : 'left-1/2 -translate-x-1/2'
-				].join(' ')}
-			>
-				<div><strong>Platform:</strong> {platformVersion.platform_version}</div>
-				<div>
-					<strong>Core lib:</strong>
-					{platformVersion.core_lib} ({platformVersion.git?.core_lib})
-				</div>
-				<div>
-					<strong>Backend:</strong>
-					{platformVersion.backend} ({platformVersion.git?.backend})
-				</div>
-				<div>
-					<strong>Frontend:</strong>
-					{platformVersion.frontend} ({platformVersion.git?.frontend})
-				</div>
-				{#if platformVersion.build_time}
-					<div><strong>Built:</strong> {platformVersion.build_time}</div>
-				{/if}
-			</div>
+			<HoverInfo side="top" contentClass="max-w-none text-left whitespace-nowrap select-text">
+				<span data-tour="platform-version" class="cursor-default whitespace-nowrap">
+					{collapsed
+						? platformVersion.platform_version?.slice(2)
+						: `v${platformVersion.platform_version}`}
+				</span>
+				{#snippet content()}
+					<div><strong>Platform:</strong> {platformVersion.platform_version}</div>
+					<div>
+						<strong>Core lib:</strong>
+						{platformVersion.core_lib} ({platformVersion.git?.core_lib})
+					</div>
+					<div>
+						<strong>Backend:</strong>
+						{platformVersion.backend} ({platformVersion.git?.backend})
+					</div>
+					<div>
+						<strong>Frontend:</strong>
+						{platformVersion.frontend} ({platformVersion.git?.frontend})
+					</div>
+					{#if platformVersion.build_time}
+						<div><strong>Built:</strong> {platformVersion.build_time}</div>
+					{/if}
+				{/snippet}
+			</HoverInfo>
 		</div>
 	{/if}
 </div>

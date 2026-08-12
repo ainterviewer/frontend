@@ -6,6 +6,9 @@
 		text = '',
 		content,
 		class: className = '',
+		contentClass = '',
+		side = 'top',
+		sideOffset = 4,
 		iconColor = 'gray-400',
 		iconHoverColor = 'gray-600',
 		asChild = false,
@@ -15,6 +18,9 @@
 		text?: string;
 		content?: Snippet;
 		class?: string;
+		contentClass?: string;
+		side?: 'top' | 'right' | 'bottom' | 'left';
+		sideOffset?: number;
 		iconColor?: string;
 		iconHoverColor?: string;
 		asChild?: boolean;
@@ -46,8 +52,14 @@
 		{/if}
 		<Tooltip.Portal>
 			<Tooltip.Content
-				class="animate-in fade-in-0 zoom-in-95 z-1001 max-w-xs rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 shadow-md outline-none"
-				sideOffset={4}
+				class={[
+					'animate-in fade-in-0 zoom-in-95 z-1001 max-w-xs rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 shadow-md outline-none',
+					contentClass
+				]
+					.filter(Boolean)
+					.join(' ')}
+				{side}
+				{sideOffset}
 			>
 				{#if text}
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
