@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { BarChart, Bars, Tooltip, type ChartContextValue } from 'layerchart';
+	import { BarChart, Bars, Tooltip, type ChartState } from 'layerchart';
 
 	let {
 		data,
@@ -9,7 +9,7 @@
 		tooltipLabel?: string;
 	} = $props();
 
-	let chartContext = $state<ChartContextValue | undefined>(undefined);
+	let chartContext = $state<ChartState | undefined>(undefined);
 	let barBandwidth = $derived(
 		chartContext?.xScale?.bandwidth ? chartContext.xScale.bandwidth() : 0
 	);
@@ -38,8 +38,18 @@
 			}
 		}}
 	>
-		{#snippet marks({ getBarsProps, series })}
-			<Bars {...getBarsProps(series[0], 0)} data={barsData} />
+		{#snippet marks({ context })}
+			{#each context.series.visibleSeries as s (s.key)}
+				<Bars
+					seriesKey={s.key}
+					rounded="edge"
+					radius={4}
+					strokeWidth={1}
+					motion={{ type: 'tween', duration: 300 }}
+					insets={barInsets}
+					data={barsData}
+				/>
+			{/each}
 		{/snippet}
 		{#snippet tooltip({ context })}
 			<Tooltip.Root>
