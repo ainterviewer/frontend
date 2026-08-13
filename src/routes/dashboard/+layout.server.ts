@@ -7,9 +7,14 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 	const { cookieHeader } = locals;
 
-	const [response, platformVer] = await Promise.all([
+	// Releases ride along with the version call so the "What's new" dot can be
+	// rendered without a second round trip — and so it keys off the newest
+	// *curated* release rather than the deployed version, which may not have
+	// been written up yet.
+	const [response, platformVer, releases] = await Promise.all([
 		Auth.me({ headers: { cookie: cookieHeader } }),
-		Default.version({})
+		Default.version({}),
+		Default.releases({ query: { limit: 10 } })
 	]);
 
 	if (response.error) {
@@ -46,6 +51,7 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 	return {
 		user: me,
 		project,
-		platformVersion: platformVer.data
+		platformVersion: platformVer.data,
+		releases: releases.data ?? []
 	};
 };

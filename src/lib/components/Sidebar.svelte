@@ -3,6 +3,7 @@
 	import { type SidebarItem } from '$lib/config/sidebar';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
+	import { whatsNew } from '$lib/whatsNew.svelte';
 	import HoverInfo from './HoverInfo.svelte';
 
 	//  TODO: Align text after icons
@@ -129,11 +130,17 @@
 			class="absolute bottom-0 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
 		>
 			<HoverInfo side="top" contentClass="max-w-none text-left whitespace-nowrap select-text">
-				<span data-tour="platform-version" class="cursor-default whitespace-nowrap">
+				<button
+					data-tour="platform-version"
+					type="button"
+					onclick={() => whatsNew.open(page.data.releases?.[0]?.platform_version)}
+					class="cursor-pointer border-none bg-transparent p-0 font-normal whitespace-nowrap text-light/60 hover:text-light"
+					title="What's new"
+				>
 					{collapsed
 						? platformVersion.platform_version?.slice(2)
 						: `v${platformVersion.platform_version}`}
-				</span>
+				</button>
 				{#snippet content()}
 					<div><strong>Platform:</strong> {platformVersion.platform_version}</div>
 					<div>

@@ -3,15 +3,17 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Auth } from '$lib/api';
-	import type { ProjectPublic, UserPublic } from '$lib/api/types.gen';
+	import type { PlatformRelease, ProjectPublic, UserPublic } from '$lib/api/types.gen';
 	import Wave from '$lib/components/Wave.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls.js';
+	import { whatsNew } from '$lib/whatsNew.svelte';
 	import HoverInfo from './HoverInfo.svelte';
 
 	interface HeaderProps {
 		data: {
 			user: UserPublic;
 			project?: ProjectPublic | null;
+			releases?: PlatformRelease[];
 		};
 	}
 
@@ -20,6 +22,9 @@
 
 	let logoAnimate = $state(false);
 	let menuOpen = $state(false);
+
+	let latestRelease = $derived(data.releases?.[0]?.platform_version);
+	let hasUnseenRelease = $derived(whatsNew.isUnseen(latestRelease));
 
 	export async function signOut() {
 		const { error } = await Auth.logout();
@@ -96,13 +101,24 @@
 									e.stopPropagation();
 									menuOpen = !menuOpen;
 								}}
-								class="font-inherit pointer-events-auto block cursor-pointer border-none bg-transparent text-center text-base font-normal text-black"
+								class="font-inherit pointer-events-auto relative block cursor-pointer border-none bg-transparent text-center text-base font-normal text-black"
+								aria-label={hasUnseenRelease
+									? 'Account menu — new release available'
+									: 'Account menu'}
 							>
 								<div
 									class="relative inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-secondary hover:bg-secondary hover:brightness-85"
 								>
 									<span class="text-body font-medium">{data.user?.first_name?.[0] ?? ''}</span>
 								</div>
+								{#if hasUnseenRelease}
+									<!-- Sits on the avatar, not the menu item: the menu item is only
+									     visible once the menu has already been opened. -->
+									<span
+										class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-light bg-primary"
+										aria-hidden="true"
+									></span>
+								{/if}
 							</button>
 							<div
 								data-tour="header-menu-dropdown"
@@ -127,6 +143,21 @@
 										class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
 										role="menuitem">Your profile</a
 									>
+									<button
+										type="button"
+										onclick={(e) => {
+											e.stopPropagation();
+											menuOpen = false;
+											whatsNew.open(latestRelease);
+										}}
+										class="flex w-full cursor-pointer items-center justify-between px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
+										role="menuitem"
+									>
+										What's new
+										{#if hasUnseenRelease}
+											<span class="h-2 w-2 rounded-full bg-primary" aria-hidden="true"></span>
+										{/if}
+									</button>
 									<button
 										type="button"
 										onclick={signOut}
