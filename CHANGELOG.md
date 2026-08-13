@@ -4,6 +4,12 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.65] - 2026-08-13
+
+### Features
+
+- (charts) Add placeholder charts while data loads
+
 ## [0.2.64] - 2026-08-13
 
 ### Bug Fixes
