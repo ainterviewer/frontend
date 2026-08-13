@@ -111,6 +111,18 @@
 					</p>
 				{/each}
 			</div>
+
+			<div class="border-t border-dark/10 px-6 py-3 text-center">
+				<a
+					class="text-sm text-primary hover:underline"
+					href="https://docs.ainterviewer.dk/releases/"
+					target="_blank"
+					rel="noopener"
+				>
+					Full release notes
+					<span class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></span>
+				</a>
+			</div>
 		</div>
 	</div>
 {/if}
