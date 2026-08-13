@@ -4,6 +4,12 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.61] - 2026-08-13
+
+### Bug Fixes
+
+- (interview-setup) External params now works as intended
+
 ## [0.2.60] - 2026-08-12
 
 ### Features
