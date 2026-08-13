@@ -4,6 +4,18 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.64] - 2026-08-13
+
+### Bug Fixes
+
+- Change interview model expected type to str
+- Layerchart types updated to match latest version
+
+### Internal
+
+- Update dependencies
+- Update dependencies
+
 ## [0.2.63] - 2026-08-13
 
 ### Bug Fixes
