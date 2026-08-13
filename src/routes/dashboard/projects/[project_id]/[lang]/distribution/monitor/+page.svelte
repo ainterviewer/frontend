@@ -9,12 +9,16 @@
 	import { Tween } from 'svelte/motion';
 	import { SvelteDate } from 'svelte/reactivity';
 	import type { PageData } from './$types';
+	import ChartSkeleton from './ChartSkeleton.svelte';
 	import HistogramChart from './HistogramChart.svelte';
+
+	const POLL_INTERVAL = 15_000;
 
 	let { data }: { data: PageData } = $props();
 
 	let stats = $state<MonitoringStats | null>(null);
 	let error = $state<string | null>(null);
+	let loading = $derived(!stats && !error);
 
 	const statusColorScale = scaleOrdinal(
 		['active', 'completed', 'inactive'],
@@ -23,55 +27,65 @@
 	const formatNumber = format(',');
 	const formatPercent = format('.1%');
 
-	async function fetchStats() {
-		const { data: statsData, error: fetchError } = await Monitoring.getProjectMonitoringStats({
-			path: {
-				project_id: data.project_id
-			}
-		});
-
-		if (fetchError) {
-			error = 'Failed to load monitoring stats';
-			return;
-		}
-
-		stats = statsData;
-	}
-
-	$effect(() => {
-		fetchStats();
-	});
-
 	// Animated KPI values
-	const totalInterviews = new Tween(0, { duration: 400 });
-	const totalMessages = new Tween(0, { duration: 400 });
-	const totalDuration = new Tween(0, { duration: 400 });
-	const completionRate = new Tween(0, { duration: 400 });
-
-	$effect(() => {
-		if (stats) {
-			totalInterviews.set(stats.total_interviews);
-			totalMessages.set(stats.message_count_stats?.sum_messages ?? 0);
-			totalDuration.set(stats.duration_stats?.sum_seconds ?? 0);
-			completionRate.set(stats.completion_rate);
-		}
+	const totalInterviews = Tween.of(() => stats?.total_interviews ?? 0, { duration: 400 });
+	const totalMessages = Tween.of(() => stats?.message_count_stats?.sum_messages ?? 0, {
+		duration: 400
 	});
+	const totalDuration = Tween.of(() => stats?.duration_stats?.sum_seconds ?? 0, { duration: 400 });
+	const completionRate = Tween.of(() => stats?.completion_rate ?? 0, { duration: 400 });
 
+	// Fetched here rather than in `load` so navigation never waits on it: the page
+	// mounts with its skeletons and fills in when the first response lands, then
+	// keeps itself up to date by polling.
 	$effect(() => {
-		const interval = setInterval(async () => {
+		const projectId = data.project_id;
+
+		// Switching projects: never show the previous project's numbers as if
+		// they belonged to this one.
+		stats = null;
+		error = null;
+
+		let disposed = false;
+		let inFlight = false;
+
+		async function refresh(initial = false) {
+			// Skip while a request is still running or the tab is in the
+			// background — the query is expensive and the page is not visible.
+			if (disposed || inFlight || (!initial && document.hidden)) return;
+			inFlight = true;
 			try {
-				const { data: statsData } = await Monitoring.getProjectMonitoringStats({
-					path: { project_id: data.project_id }
+				const { data: statsData, error: fetchError } = await Monitoring.getProjectMonitoringStats({
+					path: { project_id: projectId }
 				});
-				if (statsData) {
+				if (disposed) return;
+				if (fetchError || !statsData) {
+					if (initial) error = 'Failed to load monitoring stats';
+				} else {
 					stats = statsData;
+					error = null;
 				}
 			} catch (e) {
 				console.error('Failed to fetch monitoring stats:', e);
+				if (!disposed && initial) error = 'Failed to load monitoring stats';
+			} finally {
+				inFlight = false;
 			}
-		}, 5000);
+		}
 
-		return () => clearInterval(interval);
+		refresh(true);
+		const interval = setInterval(() => refresh(), POLL_INTERVAL);
+		// Refresh straight away when the user returns, since polling was paused.
+		const onVisibilityChange = () => {
+			if (!document.hidden) refresh();
+		};
+		document.addEventListener('visibilitychange', onVisibilityChange);
+
+		return () => {
+			disposed = true;
+			clearInterval(interval);
+			document.removeEventListener('visibilitychange', onVisibilityChange);
+		};
 	});
 
 	let interviewsByStatus = $derived.by(() => {
@@ -80,6 +94,10 @@
 		const map = new Map(stats.interviews_by_status.map((d) => [d.status, d]));
 		return order.map((status) => map.get(status) || { status, count: 0 });
 	});
+
+	// `interviewsByStatus` always has all three statuses once stats are loaded, so
+	// emptiness has to be judged by the counts rather than the array length.
+	let hasStatusData = $derived(sum(interviewsByStatus, (d) => d.count) > 0);
 
 	let interviewsOverTime = $derived.by(() => {
 		if (!stats) return [];
@@ -227,32 +245,50 @@
 		<div class="grid grid-cols-2 gap-4">
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Total Interviews</div>
-				<div class="mt-2 flex items-baseline gap-2">
-					<span class="text-3xl font-bold">{formatNumber(Math.round(totalInterviews.current))}</span
-					>
-					<span class="text-muted-foreground text-sm"
-						>({stats?.interviews_by_status.find((s) => s.status === 'active')?.count ?? 0} active)</span
-					>
-				</div>
+				{#if loading}
+					<div class="mt-2 h-9 w-32 animate-pulse rounded bg-surface-200"></div>
+				{:else}
+					<div class="mt-2 flex items-baseline gap-2">
+						<span class="text-3xl font-bold"
+							>{formatNumber(Math.round(totalInterviews.current))}</span
+						>
+						<span class="text-muted-foreground text-sm"
+							>({stats?.interviews_by_status.find((s) => s.status === 'active')?.count ?? 0} active)</span
+						>
+					</div>
+				{/if}
 			</div>
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Completion Rate</div>
-				<div class="mt-2 flex items-baseline gap-2">
-					<span class="text-3xl font-bold">{formatPercent(completionRate.current)}</span>
-				</div>
+				{#if loading}
+					<div class="mt-2 h-9 w-24 animate-pulse rounded bg-surface-200"></div>
+				{:else}
+					<div class="mt-2 flex items-baseline gap-2">
+						<span class="text-3xl font-bold">{formatPercent(completionRate.current)}</span>
+					</div>
+				{/if}
 				<!-- Simple Progress Bar for Completion Rate -->
-				<div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#94a3b8]">
-					<div
-						class="h-full bg-primary transition-all duration-500 ease-out"
-						style="width: {completionRate.current * 100}%"
-					></div>
-				</div>
+				{#if loading}
+					<div class="mt-3 h-2 w-full animate-pulse rounded-full bg-surface-200"></div>
+				{:else}
+					<div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#94a3b8]">
+						<div
+							class="h-full bg-primary transition-all duration-500 ease-out"
+							style="width: {completionRate.current * 100}%"
+						></div>
+					</div>
+				{/if}
 			</div>
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Total Messages</div>
-				<div class="mt-2 text-3xl font-bold">
-					{formatNumber(Math.round(totalMessages.current))}
-				</div>
+				{#if loading}
+					<div class="mt-2 h-9 w-28 animate-pulse rounded bg-surface-200"></div>
+					<div class="mt-2 h-3 w-40 animate-pulse rounded bg-surface-200"></div>
+				{:else}
+					<div class="mt-2 text-3xl font-bold">
+						{formatNumber(Math.round(totalMessages.current))}
+					</div>
+				{/if}
 				{#if stats?.message_count_stats}
 					<div class="text-muted-foreground mt-1 text-xs">
 						Min {stats.message_count_stats.min_messages} · Avg {Math.round(
@@ -263,9 +299,14 @@
 			</div>
 			<div class="bg-card rounded-lg border p-6 shadow-sm">
 				<div class="text-muted-foreground text-sm font-medium">Total Duration</div>
-				<div class="mt-2 text-3xl font-bold">
-					{formatDuration(totalDuration.current)}
-				</div>
+				{#if loading}
+					<div class="mt-2 h-9 w-24 animate-pulse rounded bg-surface-200"></div>
+					<div class="mt-2 h-3 w-40 animate-pulse rounded bg-surface-200"></div>
+				{:else}
+					<div class="mt-2 text-3xl font-bold">
+						{formatDuration(totalDuration.current)}
+					</div>
+				{/if}
 				{#if stats?.duration_stats}
 					<div class="text-muted-foreground mt-1 text-xs">
 						Min {formatDuration(stats.duration_stats.min_seconds)} · Avg {formatDuration(
@@ -280,7 +321,7 @@
 		<div class="bg-card rounded-lg border p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Interviews by Status</h3>
 			<div class="h-75 w-full">
-				{#if interviewsByStatus.length > 0}
+				{#if hasStatusData}
 					<PieChart
 						data={interviewsByStatus}
 						key="status"
@@ -310,16 +351,20 @@
 							/>
 						{/snippet}
 					</PieChart>
-				{:else}
+				{:else if loading}
 					<!-- Skeleton placeholder -->
 					<div class="flex h-full items-center justify-center">
-						<div class="bg-muted h-[200px] w-[200px] animate-pulse rounded-full"></div>
+						<div class="h-[200px] w-[200px] animate-pulse rounded-full bg-surface-200"></div>
+					</div>
+				{:else}
+					<div class="flex h-full items-center justify-center">
+						<span class="text-muted-foreground text-sm">No data available</span>
 					</div>
 				{/if}
 			</div>
 			<!-- Legend -->
 			<div class="mt-4 flex flex-wrap justify-center gap-4">
-				{#if interviewsByStatus.length > 0}
+				{#if hasStatusData}
 					{#each interviewsByStatus as item (item.status)}
 						<div class="flex items-center gap-2">
 							<div
@@ -331,15 +376,15 @@
 							>
 						</div>
 					{/each}
-				{:else}
+				{:else if loading}
 					<!-- Skeleton legend -->
 					{#each ['active', 'completed', 'inactive'] as status (status)}
-						<div class="flex items-center gap-2">
+						<div class="flex animate-pulse items-center gap-2">
 							<div
 								class="h-3 w-3 rounded-full"
 								style="background-color: {statusColorScale(status)}"
 							></div>
-							<span class="text-muted-foreground text-sm capitalize">{status} (0)</span>
+							<span class="text-muted-foreground text-sm capitalize">{status}</span>
 						</div>
 					{/each}
 				{/if}
@@ -371,6 +416,8 @@
 							bars: { motion: { type: 'tween', duration: 300 } }
 						}}
 					/>
+				{:else if loading}
+					<ChartSkeleton bars={20} />
 				{:else}
 					<div class="flex h-full items-center justify-center">
 						<span class="text-muted-foreground text-sm">No data available</span>
@@ -384,6 +431,8 @@
 			<h3 class="mb-4 text-lg font-medium">Interviews by Time of Day</h3>
 			{#if timeOfDayHistogram.length > 0}
 				<HistogramChart data={timeOfDayHistogram} />
+			{:else if loading}
+				<ChartSkeleton />
 			{:else}
 				<div class="flex h-75 w-full items-center justify-center">
 					<span class="text-muted-foreground text-sm">No data available</span>
@@ -395,6 +444,8 @@
 			<h3 class="mb-4 text-lg font-medium">Duration (seconds)</h3>
 			{#if durationHistogram.length > 0}
 				<HistogramChart data={durationHistogram} />
+			{:else if loading}
+				<ChartSkeleton />
 			{:else}
 				<div class="flex h-75 w-full items-center justify-center">
 					<span class="text-muted-foreground text-sm">No data available</span>
@@ -407,6 +458,8 @@
 			<h3 class="mb-4 text-lg font-medium">Message Count</h3>
 			{#if messageCountHistogram.length > 0}
 				<HistogramChart data={messageCountHistogram} />
+			{:else if loading}
+				<ChartSkeleton />
 			{:else}
 				<div class="flex h-75 w-full items-center justify-center">
 					<span class="text-muted-foreground text-sm">No data available</span>
@@ -419,6 +472,8 @@
 			<h3 class="mb-4 text-lg font-medium">Message Length (characters)</h3>
 			{#if messageLengthHistogram.length > 0}
 				<HistogramChart data={messageLengthHistogram} tooltipLabel="Messages" />
+			{:else if loading}
+				<ChartSkeleton />
 			{:else}
 				<div class="flex h-75 w-full items-center justify-center">
 					<span class="text-muted-foreground text-sm">No data available</span>
@@ -454,6 +509,8 @@
 							bars: { motion: { type: 'tween', duration: 300 } }
 						}}
 					/>
+				{:else if loading}
+					<ChartSkeleton bars={20} />
 				{:else}
 					<div class="flex h-full items-center justify-center">
 						<span class="text-muted-foreground text-sm">No data available</span>
