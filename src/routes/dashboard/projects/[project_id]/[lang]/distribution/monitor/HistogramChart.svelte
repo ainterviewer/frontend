@@ -19,6 +19,27 @@
 	});
 
 	let barsData = $derived(data.length <= 1 ? [] : data.slice(0, -1));
+
+	// Every bin edge keeps its tick mark; only the labels are thinned, since bin
+	// edges can be wide (e.g. 4-digit durations) and there are 21 of them.
+	const TICK_CHAR_WIDTH = 6.6; // approx. digit advance at text-xs
+	const TICK_GAP = 10;
+	let labelledValues = $derived.by(() => {
+		const plotWidth = chartContext?.width ?? 0;
+
+		if (data.length === 0 || plotWidth <= 0) return new Set(data.map((d) => d.value));
+
+		const widestLabel = Math.max(...data.map((d) => String(d.value).length));
+		const needed = widestLabel * TICK_CHAR_WIDTH + TICK_GAP;
+		const available = plotWidth / data.length;
+		const stride = Math.max(1, Math.ceil(needed / available));
+
+		return new Set(data.filter((_, i) => i % stride === 0).map((d) => d.value));
+	});
+
+	function formatTick(value: number) {
+		return labelledValues.has(value) ? String(value) : '';
+	}
 </script>
 
 <div class="shifted-bar-chart h-75 w-full" style="--tooltip-offset: {barBandwidth / 2}px">
@@ -30,7 +51,7 @@
 		bandPadding={0}
 		padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
 		props={{
-			xAxis: { classes: { tickLabel: 'text-xs' } },
+			xAxis: { format: formatTick, classes: { tickLabel: 'text-xs' } },
 			yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
 			bars: {
 				motion: { type: 'tween', duration: 300 },
