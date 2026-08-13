@@ -115,13 +115,21 @@
 	<div
 		class="group absolute bottom-6 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
 	>
-		<HoverInfo class="pt-1" text="Documentation">
-			<a href="https://docs.ainterviewer.dk" target="_blank" aria-label="Documentation">
-				<span
-					data-tour="documentation"
-					class="fa-regular fa-question-circle text-2xl text-gray-300 hover:text-gray-100"
-				></span>
-			</a>
+		<HoverInfo text="Documentation" sideOffset={12} asChild>
+			{#snippet children({ props })}
+				<a
+					{...props}
+					class="pt-1"
+					href="https://docs.ainterviewer.dk"
+					target="_blank"
+					aria-label="Documentation"
+				>
+					<span
+						data-tour="documentation"
+						class="fa-regular fa-question-circle text-2xl text-gray-300 hover:text-gray-100"
+					></span>
+				</a>
+			{/snippet}
 		</HoverInfo>
 	</div>
 
@@ -129,18 +137,25 @@
 		<div
 			class="absolute bottom-0 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
 		>
-			<HoverInfo side="top" contentClass="max-w-none text-left whitespace-nowrap select-text">
-				<button
-					data-tour="platform-version"
-					type="button"
-					onclick={() => whatsNew.open(page.data.releases?.[0]?.platform_version)}
-					class="cursor-pointer border-none bg-transparent p-0 font-normal whitespace-nowrap text-light/60 hover:text-light"
-					title="What's new"
-				>
-					{collapsed
-						? platformVersion.platform_version?.slice(2)
-						: `v${platformVersion.platform_version}`}
-				</button>
+			<HoverInfo
+				side="top"
+				contentClass="max-w-none text-left whitespace-nowrap select-text"
+				asChild
+			>
+				{#snippet children({ props })}
+					<button
+						{...props}
+						data-tour="platform-version"
+						type="button"
+						onclick={() => whatsNew.open(page.data.releases?.[0]?.platform_version)}
+						class="cursor-pointer border-none bg-transparent p-0 font-normal whitespace-nowrap text-light/60 hover:text-light"
+						title="What's new"
+					>
+						{collapsed
+							? platformVersion.platform_version?.slice(2)
+							: `v${platformVersion.platform_version}`}
+					</button>
+				{/snippet}
 				{#snippet content()}
 					<div><strong>Platform:</strong> {platformVersion.platform_version}</div>
 					<div>
