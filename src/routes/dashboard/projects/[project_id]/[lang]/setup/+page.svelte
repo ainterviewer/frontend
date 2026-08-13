@@ -54,7 +54,8 @@
 	];
 
 	let savingConfig = $state(false);
-	let config: InterviewConfig = $derived(structuredClone(data.config ?? {}));
+	// svelte-ignore state_referenced_locally
+	let config: InterviewConfig = $state(structuredClone(data.config ?? {}));
 
 	function toggleProbing(strategy: ProbingStrategy, checked: boolean) {
 		const current = config.probing_strategy ?? [];
@@ -76,6 +77,7 @@
 			toast.error('Failed to save interview configuration');
 		} else {
 			await invalidateAll();
+			config = structuredClone(data.config ?? {});
 			toast.success('Interview configuration saved');
 		}
 		savingConfig = false;
@@ -92,9 +94,8 @@
 		};
 	}
 
-	let externalParams: ExternalParam[] = $derived(
-		structuredClone(data.project?.external_params ?? [])
-	);
+	// svelte-ignore state_referenced_locally
+	let externalParams: ExternalParam[] = $state(structuredClone(data.external_params ?? []));
 
 	const paramCount = $derived(externalParams.length);
 
@@ -117,6 +118,7 @@
 			toast.error('Failed to save external parameters');
 		} else {
 			await invalidateAll();
+			externalParams = structuredClone(data.external_params ?? []);
 			toast.success('External parameters saved');
 		}
 		savingParams = false;
