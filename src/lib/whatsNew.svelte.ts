@@ -13,6 +13,9 @@ class WhatsNewState {
 	/** Newest platform version the user has already seen, or null. */
 	lastSeen = $state<string | null>(null);
 
+	/** Whether the stored marker has been read yet. */
+	hydrated = $state(false);
+
 	/**
 	 * Read the stored marker.
 	 *
@@ -23,11 +26,19 @@ class WhatsNewState {
 	hydrate() {
 		if (typeof localStorage === 'undefined') return;
 		this.lastSeen = localStorage.getItem(LAST_SEEN_KEY);
+		this.hydrated = true;
 	}
 
-	/** Whether there is a release the user has not opened the dialog for yet. */
+	/**
+	 * Whether there is a release the user has not opened the dialog for yet.
+	 *
+	 * False until the marker has been read. Otherwise the server — which cannot
+	 * see localStorage, so `lastSeen` is null there — would render the dot for
+	 * everyone, and hydration would immediately remove it again for users who
+	 * had already looked. That flash is worse than showing the dot a beat late.
+	 */
 	isUnseen(version: string | undefined | null) {
-		return !!version && this.lastSeen !== version;
+		return this.hydrated && !!version && this.lastSeen !== version;
 	}
 
 	/** Opening the dialog is what marks the release as seen. */

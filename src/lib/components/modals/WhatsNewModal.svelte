@@ -82,9 +82,14 @@
 						<ul class="m-0 list-none space-y-4 p-0">
 							{#each release.highlights as highlight, index (`${release.platform_version}-${index}`)}
 								<li class="flex gap-3">
+									<!-- Fixed width so every pill is the same size and the titles
+									     beside them share one left edge, whatever the label.
+									     self-start is load-bearing: without it the pill stretches to
+									     the row's height, and rounded-full then renders it as a blob
+									     next to any entry whose text wraps. -->
 									<span
 										class={[
-											'mt-0.5 h-fit shrink-0 rounded-full px-2 py-0.5 text-xs font-medium',
+											'mt-0.5 w-18 shrink-0 self-start rounded-full py-0.5 text-center text-xs font-medium',
 											KIND_CLASSES[highlight.kind]
 										].join(' ')}
 									>

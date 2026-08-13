@@ -115,7 +115,7 @@
 									<!-- Sits on the avatar, not the menu item: the menu item is only
 									     visible once the menu has already been opened. -->
 									<span
-										class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-light bg-primary"
+										class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-light bg-orange-500"
 										aria-hidden="true"
 									></span>
 								{/if}
@@ -155,7 +155,7 @@
 									>
 										What's new
 										{#if hasUnseenRelease}
-											<span class="h-2 w-2 rounded-full bg-primary" aria-hidden="true"></span>
+											<span class="h-2 w-2 rounded-full bg-orange-500" aria-hidden="true"></span>
 										{/if}
 									</button>
 									<button
