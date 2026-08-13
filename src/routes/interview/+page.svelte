@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { InterviewConfig, InterviewModels, InterviewType, Welcome } from '$lib/api';
+	import type { InterviewConfig, InterviewType, Welcome } from '$lib/api';
 	import { Projects, type Consent } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
@@ -19,7 +19,7 @@
 		interviewType?: InterviewType;
 		experimentID?: string;
 		interviewConfig: InterviewConfig;
-		interviewModels: InterviewModels;
+		interviewModels: string[];
 		isProjectOwnerDemoUser: boolean;
 		availableLanguages: Array<{ name: string; code: string }>;
 		authError?: boolean;
