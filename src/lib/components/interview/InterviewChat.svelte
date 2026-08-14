@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Auth, type InterviewConfig, type InterviewType } from '$lib/api';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
-	import { tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { clearInterviewSession, type ChatClient } from '../../../routes/interview/chat.svelte';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
@@ -43,6 +43,12 @@
 	let isRecording = $state(false);
 
 	let imageUpload = $state(false);
+
+	// Detected after mount to avoid a hydration mismatch on the shortcut hint
+	let isMac = $state(false);
+	onMount(() => {
+		isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+	});
 
 	let surveyActive = $derived.by(() => {
 		for (let i = chat.messages.length - 1; i >= 0; i--) {
@@ -357,12 +363,12 @@
 					hover:bg-dark
 					disabled:cursor-not-allowed disabled:bg-[#cccccc] disabled:text-[#666666]
 				"
-				title="Send message (Ctrl+Enter)"
+				title={isMac ? 'Send message (⌘+Enter)' : 'Send message (Ctrl+Enter)'}
 			>
 				Send
 			</button>
 			<div class="mt-1 hidden text-center text-xs text-gray-400 sm:block">
-				<span class="font-sans">ctrl</span>+<span class="font-bold">↵</span>
+				<span class="font-sans">{isMac ? '⌘' : 'ctrl'}</span>+<span class="font-bold">↵</span>
 			</div>
 			<div class="flex" class:hidden={!interviewConfig.with_audio}>
 				<button
