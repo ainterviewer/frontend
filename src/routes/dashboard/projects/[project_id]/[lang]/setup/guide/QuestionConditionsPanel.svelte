@@ -2,7 +2,7 @@
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import AccordionPanel from './AccordionPanel.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
-	import { isConditionTargetValid, surveyItemOptions } from './utils';
+	import { isConditionTargetValid, resolveConditionTarget, surveyItemOptions } from './utils';
 
 	interface Props {
 		question: GuideQuestion;
@@ -25,16 +25,17 @@
 	const guideStore = getGuideStore();
 
 	// Condition targets are stored by stable id; resolve one to its current
-	// position (and the referenced question) for display and validation.
+	// position (and the referenced question) for display and validation. The
+	// resolver also follows a question that was dragged into another section, so
+	// `sectionId` here is the section it lives in *now*, which may differ from the
+	// one stored on the condition.
 	function resolveTarget(ctx: { sectionId: string; questionId: string }) {
-		const sectionIdx = allSections.findIndex((s) => s.id === ctx.sectionId);
-		const questions = allQuestions[ctx.sectionId] || [];
-		const questionIdx = questions.findIndex((q) => q.id === ctx.questionId);
-		return {
-			sectionIdx,
-			questionIdx,
-			question: questionIdx >= 0 ? questions[questionIdx] : null
-		};
+		const { sectionIndex, questionIndex, sectionId, question } = resolveConditionTarget(
+			ctx,
+			allSections,
+			allQuestions
+		);
+		return { sectionIdx: sectionIndex, questionIdx: questionIndex, sectionId, question };
 	}
 
 	// A new condition block defaults to the first question, which is always at or
@@ -147,7 +148,8 @@
 			<div class="space-y-2">
 				<span class="block text-sm font-bold text-gray-500">Condition blocks</span>
 				{#each conditions.conditions as condition, condIdx (condIdx)}
-					{@const referencedQuestion = resolveTarget(condition.question_context).question}
+					{@const resolved = resolveTarget(condition.question_context)}
+					{@const referencedQuestion = resolved.question}
 					{@const isNumericOrDate =
 						referencedQuestion?.survey_item?.type === 'number' ||
 						referencedQuestion?.survey_item?.type === 'date' ||
@@ -186,7 +188,7 @@
 								Based on answer to
 								<select
 									class="mt-1 w-full rounded border-gray-200 bg-white p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-									value={`${condition.question_context.sectionId}|${condition.question_context.questionId}`}
+									value={`${resolved.sectionId}|${condition.question_context.questionId}`}
 									onchange={(e) => {
 										const [sId, qId] = (e.target as HTMLSelectElement).value.split('|');
 										condition.question_context.sectionId = sId;

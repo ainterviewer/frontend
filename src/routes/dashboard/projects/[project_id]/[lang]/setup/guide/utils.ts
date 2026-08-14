@@ -69,6 +69,54 @@ export function localizeConditions(
 	};
 }
 
+// Resolves an id-based condition target to where it currently lives. The stored
+// `sectionId` is only a hint: question ids are unique across the whole guide, so
+// a question dragged into a different section is still found by the fallback
+// scan and the reference follows it there instead of dangling. Everything that
+// reads a target (display, validation, save, export) must go through this, since
+// the stored `sectionId` is deliberately left stale rather than mutated.
+// A target that no longer exists resolves to -1 / null.
+export function resolveConditionTarget(
+	ctx: { sectionId: string; questionId: string },
+	sections: GuideSection[],
+	questionsMap: Record<string, GuideQuestion[]>
+): {
+	sectionIndex: number;
+	questionIndex: number;
+	sectionId: string;
+	question: GuideQuestion | null;
+} {
+	const miss = { sectionIndex: -1, questionIndex: -1, sectionId: '', question: null };
+	if (!ctx.questionId) return miss;
+
+	const at = (sectionIndex: number, questionIndex: number, sectionId: string) => ({
+		sectionIndex,
+		questionIndex,
+		sectionId,
+		question: questionsMap[sectionId][questionIndex]
+	});
+
+	// Fast path: the target is still in the section it was stored under.
+	const storedIdx = sections.findIndex((s) => s.id === ctx.sectionId);
+	if (storedIdx >= 0) {
+		const q = (questionsMap[ctx.sectionId] || []).findIndex(
+			(question) => question.id === ctx.questionId
+		);
+		if (q >= 0) return at(storedIdx, q, ctx.sectionId);
+	}
+
+	// The question moved sections (or the stored section is gone) — find it by id.
+	for (let s = 0; s < sections.length; s++) {
+		const sectionId = sections[s].id;
+		const q = (questionsMap[sectionId] || []).findIndex(
+			(question) => question.id === ctx.questionId
+		);
+		if (q >= 0) return at(s, q, sectionId);
+	}
+
+	return miss;
+}
+
 // Inverse of localizeConditions: resolves the editor's id-based targets back to
 // the current section/question indices for the API. A missing target resolves
 // to -1 (blocked earlier by validateGuideConditions on save).
@@ -84,11 +132,14 @@ export function delocalizeConditions(
 			const { question_context, ...rest } = cond;
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { sectionId, questionId, ...ctxRest } = question_context;
-			const section = sections.findIndex((s) => s.id === sectionId);
-			const question = (questionsMap[sectionId] || []).findIndex((q) => q.id === questionId);
+			const target = resolveConditionTarget(question_context, sections, questionsMap);
 			return {
 				...rest,
-				question_context: { ...ctxRest, section, question }
+				question_context: {
+					...ctxRest,
+					section: target.sectionIndex,
+					question: target.questionIndex
+				}
 			};
 		})
 	};
@@ -178,13 +229,9 @@ export function isConditionTargetValid(
 	sections: GuideSection[],
 	questionsMap: Record<string, GuideQuestion[]>
 ): boolean {
-	// Target must point at an existing section/question.
-	const s = sections.findIndex((section) => section.id === ctx.sectionId);
-	if (s < 0) return false;
-	const q = (questionsMap[ctx.sectionId] || []).findIndex(
-		(question) => question.id === ctx.questionId
-	);
-	if (q < 0) return false;
+	// Target must still exist somewhere in the guide.
+	const { sectionIndex: s, questionIndex: q } = resolveConditionTarget(ctx, sections, questionsMap);
+	if (s < 0 || q < 0) return false;
 	// No forward references (same question is allowed).
 	if (s > ownSectionIndex) return false;
 	if (s === ownSectionIndex && q > ownQuestionIndex) return false;

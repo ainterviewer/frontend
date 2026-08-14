@@ -6,6 +6,7 @@ import type {
 	Welcome
 } from '$lib/api/types.gen';
 import type { GuideQuestion, GuideSection, LocalCondition, LocalConditionSet } from './guide/types';
+import { resolveConditionTarget } from './guide/utils';
 
 // pdfmake doesn't ship type declarations — use a generic record type for doc nodes.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -164,13 +165,18 @@ function buildConditionText(
 	questions: Record<string, GuideQuestion[]>
 ): string {
 	const { question_context, evaluation, negated, trigger_type, combine_next } = cond;
-	const sectionIdx = sections.findIndex((s) => s.id === question_context.sectionId);
-	const questionIdx = (questions[question_context.sectionId] || []).findIndex(
-		(q) => q.id === question_context.questionId
+	const { sectionIndex: sectionIdx, questionIndex: questionIdx } = resolveConditionTarget(
+		question_context,
+		sections,
+		questions
 	);
-	const sectionName =
-		sections[sectionIdx]?.description?.slice(0, 40) || `Section ${sectionIdx + 1}`;
-	const ref = `[S${sectionIdx + 1} Q${questionIdx + 1}] (${sectionName})`;
+	// A target that no longer exists would otherwise print as "[S0 Q0]".
+	const ref =
+		sectionIdx < 0
+			? '[missing question]'
+			: `[S${sectionIdx + 1} Q${questionIdx + 1}] (${
+					sections[sectionIdx].description?.slice(0, 40) || `Section ${sectionIdx + 1}`
+				})`;
 	const trigger = trigger_type === 'classification' ? 'Classification' : 'Match';
 	const neg = negated ? ' NOT' : '';
 	const evals = evaluation
