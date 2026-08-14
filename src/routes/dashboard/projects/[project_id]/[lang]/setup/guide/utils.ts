@@ -51,7 +51,6 @@ export function localizeConditions(
 	return {
 		action: apiConditions.action,
 		conditions: apiConditions.conditions.map((cond) => {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { question_context, ...rest } = cond;
 			const targetSection = sections[question_context.section];
 			const targetQuestion = targetSection

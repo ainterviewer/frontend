@@ -191,10 +191,6 @@
 		}
 	}
 
-	function handleConnect(_id: string) {
-		alert('Not implemented');
-	}
-
 	function toggleDropdown(event: MouseEvent, id: string) {
 		const target = event.currentTarget as HTMLElement;
 		const rect = target.getBoundingClientRect();
