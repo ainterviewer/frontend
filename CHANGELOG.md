@@ -4,6 +4,13 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.70] - 2026-08-14
+
+### Bug Fixes
+
+- (conditions) Improved condition target question resolution
+- (lint) Remove stale eslint-disable and remove unused handleConnect stub
+
 ## [0.2.69] - 2026-08-14
 
 ### Features
