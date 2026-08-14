@@ -76,8 +76,13 @@
 			<div class="overflow-y-auto px-6 py-5">
 				{#each shown as release (release.platform_version)}
 					<section class="mb-6 last:mb-0">
-						<h3 class="mb-3 text-xs font-semibold tracking-wide text-dark/50 uppercase">
-							{formatDate(release.released_at)}
+						<h3 class="mb-3 flex items-baseline justify-between gap-3">
+							<span class="text-xs font-semibold tracking-wide text-dark/50 uppercase">
+								{formatDate(release.released_at)}
+							</span>
+							<span class="text-[0.625rem] font-medium tracking-wide text-dark/35">
+								v{release.platform_version}
+							</span>
 						</h3>
 						<ul class="m-0 list-none space-y-4 p-0">
 							{#each release.highlights as highlight, index (`${release.platform_version}-${index}`)}
