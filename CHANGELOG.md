@@ -4,6 +4,16 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.67] - 2026-08-14
+
+### Features
+
+- Add link to full release notes in WhatsNewModal
+
+### Bug Fixes
+
+- Change mac shortcut hint from ctrl -> ⌘ in interview
+
 ## [0.2.66] - 2026-08-13
 
 ### Bug Fixes
