@@ -58,7 +58,7 @@
 
 		<!-- Modal Panel -->
 		<div
-			class="relative flex max-h-[80vh] w-full max-w-lg transform flex-col overflow-hidden rounded-xl bg-light shadow-2xl transition-all"
+			class="relative flex max-h-[72vh] w-full max-w-2xl transform flex-col overflow-hidden rounded-xl bg-light shadow-2xl transition-all"
 			transition:fly={{ y: 20, duration: 300 }}
 		>
 			<div class="flex items-start justify-between border-b border-dark/10 px-6 py-4">
