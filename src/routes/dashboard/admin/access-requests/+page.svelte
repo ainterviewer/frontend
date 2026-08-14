@@ -25,6 +25,7 @@
 	const selectedIds = new SvelteSet<string>();
 	let scopeByRequest = $state<Record<string, Scope>>({});
 
+	const DEFAULT_USER_SCOPE: Scope = 'demo';
 	const scopeOptions: Scope[] = ['admin', 'user', 'demo', 'guest'];
 	const scopeColors: Record<string, string> = {
 		admin: 'bg-purple-100 text-purple-800 focus:border-purple-800 focus:ring-purple-800',
@@ -37,7 +38,7 @@
 
 	$effect(() => {
 		error = data.error;
-		scopeByRequest = Object.fromEntries(data.requests.map((r) => [r.id, 'user' as Scope]));
+		scopeByRequest = Object.fromEntries(data.requests.map((r) => [r.id, DEFAULT_USER_SCOPE]));
 	});
 
 	async function loadRequests() {
@@ -81,7 +82,7 @@
 			const response = await Admin.processAccessRequests({
 				body: {
 					ids: ids,
-					scopes: ids.map((id) => scopeByRequest[id] ?? 'user'),
+					scopes: ids.map((id) => scopeByRequest[id] ?? DEFAULT_USER_SCOPE),
 					action: action
 				}
 			});
@@ -284,14 +285,14 @@
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap">
 							<select
-								value={scopeByRequest[request.id] ?? 'user'}
+								value={scopeByRequest[request.id] ?? DEFAULT_USER_SCOPE}
 								onclick={(e) => e.stopPropagation()}
 								onchange={(e) => {
 									const value = e.currentTarget.value as Scope;
 									scopeByRequest = { ...scopeByRequest, [request.id]: value };
 								}}
 								class="w-24 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium {scopeColors[
-									scopeByRequest[request.id] ?? 'user'
+									scopeByRequest[request.id] ?? DEFAULT_USER_SCOPE
 								]}  focus:outline-none"
 							>
 								{#each scopeOptions as scope (scope)}
