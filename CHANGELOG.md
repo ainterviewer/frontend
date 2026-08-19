@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.71] - 2026-08-19
+
+### Features
+
+- (language) Improve default language control
+
+### Bug Fixes
+
+- Improve size of WhatsNewModal
+- Better language resolvement for interviews
+
 ## [0.2.70] - 2026-08-14
 
 ### Bug Fixes
