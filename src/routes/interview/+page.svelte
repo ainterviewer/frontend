@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { InterviewConfig, InterviewType, Welcome } from '$lib/api';
+	import type { InterviewConfig, InterviewType, ProjectLanguage, Welcome } from '$lib/api';
 	import { Projects, type Consent } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
@@ -21,7 +21,7 @@
 		interviewConfig: InterviewConfig;
 		interviewModels: string[];
 		isProjectOwnerDemoUser: boolean;
-		availableLanguages: Array<{ name: string; code: string }>;
+		availableLanguages: ProjectLanguage[];
 		authError?: boolean;
 		externalParams?: Record<string, string> | null;
 		referer?: string | null;
@@ -61,6 +61,9 @@
 	let isInitializing = $state(true);
 	let consentAccepting = $state(false);
 	let validationErrors = $state<Array<{ loc: string; msg: string }> | null>(null);
+	// Set when the interview can't be prepared. Never start an interview in
+	// this state: the consent screen may not be skipped because of an error.
+	let loadError = $state(false);
 
 	onMount(() => {
 		if (isDemoBlocked || isAuthBlocked) {
@@ -150,14 +153,13 @@
 		});
 
 		if (consentError) {
+			// A failure here is not the same as "no consent configured": the
+			// project may well require consent that we simply couldn't load.
+			// Stop rather than start an interview the respondent never
+			// consented to.
 			console.error('Error loading consent', consentError);
-			// Error loading consent - create interview and proceed to welcome
-			const newInterviewId = await createInterviewAndGetId();
-			if (newInterviewId) {
-				await loadWelcome();
-			} else {
-				isInitializing = false;
-			}
+			loadError = true;
+			isInitializing = false;
 			return;
 		}
 
@@ -229,6 +231,7 @@
 		lang = code;
 		showLanguagePicker = false;
 		isInitializing = true;
+		loadError = false;
 		loadConsent();
 	}
 
@@ -257,6 +260,23 @@
 	{:else if isAuthBlocked}
 		<div class="flex flex-1 items-center justify-center px-6">
 			<p class="text-center text-gray-600">You must be logged in to access this interview.</p>
+		</div>
+	{:else if loadError}
+		<div class="flex flex-1 items-center justify-center px-6">
+			<div class="max-w-md text-center">
+				<div
+					class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100"
+				>
+					<i class="fa-solid fa-triangle-exclamation text-xl text-red-600"></i>
+				</div>
+				<h2 class="mb-2 text-lg font-semibold text-gray-900">
+					This interview could not be started
+				</h2>
+				<p class="text-sm text-gray-600">
+					Something went wrong while preparing the interview. Please try the link again, or contact
+					the person who shared it with you.
+				</p>
+			</div>
 		</div>
 	{:else if validationErrors}
 		<div class="flex flex-1 items-center justify-center px-6">
@@ -327,7 +347,7 @@
 </div>
 
 <!-- Loading State -->
-{#if isInitializing && !showLanguagePicker && !showConsent && !showWelcome}
+{#if isInitializing && !loadError && !showLanguagePicker && !showConsent && !showWelcome}
 	<div class="fixed inset-0 z-200 flex items-center justify-center bg-white">
 		<div class="flex flex-col items-center gap-4">
 			<div

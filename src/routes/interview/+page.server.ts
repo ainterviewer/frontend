@@ -53,20 +53,29 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 	}
 
 	const langParam = url.searchParams.get('lang');
-	const lang = langParam || 'EN';
 	const experimentID = url.searchParams.get('x');
 
-	// If no lang param, fetch available languages for language picker
-	let availableLanguages: Array<{ name: string; code: string }> = [];
-	if (!langParam) {
-		const { data: languages } = await Projects.getProjectLanguages({
-			headers: { cookie: cookieHeader },
-			path: { project_id }
-		});
-		if (languages && languages.length > 1) {
-			availableLanguages = languages;
-		}
-	}
+	// Resolve the interview language against what the project actually has.
+	// The link generated at project creation carries no `lang` param, so
+	// defaulting to a hardcoded 'EN' silently disagreed with the backend
+	// (which falls back to the project's default) for every project without an
+	// English localization.
+	const { data: projectLanguages } = await Projects.getProjectLanguages({
+		headers: { cookie: cookieHeader },
+		path: { project_id }
+	});
+	const languages = projectLanguages ?? [];
+
+	const requested = langParam
+		? languages.find((l) => l.code === langParam.toUpperCase())
+		: undefined;
+	const lang = (requested ?? languages.find((l) => l.is_default) ?? languages[0])?.code ?? 'EN';
+
+	// Let the respondent choose whenever the project offers a choice and the
+	// link didn't make one for them — including when it asked for a language
+	// the project doesn't have.
+	const languageUnresolved = !langParam || !requested;
+	const availableLanguages = languageUnresolved && languages.length > 1 ? languages : [];
 
 	// Collect extra query params (exclude known ones)
 	const knownParams = new Set(['id', 'interview_type', 'lang', 'x']);
