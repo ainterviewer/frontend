@@ -1512,6 +1512,14 @@ export const zUpdatePasswordRequest = z.object({
 });
 
 /**
+ * UploadParticipantsResponse
+ */
+export const zUploadParticipantsResponse = z.object({
+    participants: z.array(zParticipantPublic),
+    skipped_rows: z.int()
+});
+
+/**
  * UserAdmin
  */
 export const zUserAdmin = z.object({
@@ -2453,11 +2461,9 @@ export const zUploadParticipantsData = z.object({
 });
 
 /**
- * Response Upload Participants
- *
  * Successful Response
  */
-export const zUploadParticipantsResponse = z.array(zParticipantPublic);
+export const zUploadParticipantsResponse2 = zUploadParticipantsResponse;
 
 export const zGetParticipantEmailTemplateData = z.object({
     body: z.never().optional(),

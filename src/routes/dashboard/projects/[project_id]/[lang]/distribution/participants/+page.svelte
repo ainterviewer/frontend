@@ -32,6 +32,8 @@
 	);
 	const isIndeterminate = $derived(participants.some((p) => selected.has(p.id)) && !allSelected);
 
+	let lastClickedIndex = $state<number | null>(null);
+
 	async function load() {
 		loading = true;
 		error = null;
@@ -42,13 +44,30 @@
 		} else {
 			participants = (res.data ?? []) as ParticipantPublic[];
 		}
+		lastClickedIndex = null;
 		loading = false;
 	}
 
-	function toggleOne(id: string) {
+	function toggleOne(index: number, e: MouseEvent) {
+		const id = participants[index].id;
 		const next = new SvelteSet(selected);
-		if (next.has(id)) next.delete(id);
-		else next.add(id);
+		const select = !next.has(id);
+
+		// Shift-click extends from the previously clicked row, applying that
+		// row's new state to the whole range (the usual file-list behaviour).
+		if (e.shiftKey && lastClickedIndex !== null && lastClickedIndex < participants.length) {
+			const [from, to] = [lastClickedIndex, index].sort((a, b) => a - b);
+			for (const p of participants.slice(from, to + 1)) {
+				if (select) next.add(p.id);
+				else next.delete(p.id);
+			}
+		} else if (select) {
+			next.add(id);
+		} else {
+			next.delete(id);
+		}
+
+		lastClickedIndex = index;
 		selected = next;
 	}
 
@@ -59,6 +78,7 @@
 			if (checked) next.add(p.id);
 			else next.delete(p.id);
 		}
+		lastClickedIndex = null;
 		selected = next;
 	}
 
@@ -227,7 +247,13 @@
 			toast.error('Failed to upload file');
 			return;
 		}
-		toast.success('Participants uploaded');
+		const skipped = res.data?.skipped_rows ?? 0;
+		const added = res.data?.participants.length ?? 0;
+		toast.success(
+			skipped > 0
+				? `${added} participant(s) added, ${skipped} blank row(s) skipped`
+				: `${added} participant(s) added`
+		);
 		await load();
 	}
 
@@ -428,14 +454,14 @@
 					<td colspan="9" class="px-5 py-10 text-center text-gray-500"> No participants yet </td>
 				</tr>
 			{:else}
-				{#each participants as p (p.id)}
+				{#each participants as p, i (p.id)}
 					<tr class="border-b border-gray-200 text-sm hover:bg-gray-50">
 						<td class="px-5 py-3">
 							<input
 								type="checkbox"
 								class="form-checkbox h-4 w-4 cursor-pointer text-primary focus:ring-primary"
 								checked={selected.has(p.id)}
-								onchange={() => toggleOne(p.id)}
+								onclick={(e) => toggleOne(i, e)}
 							/>
 						</td>
 						{#if editingId === p.id}

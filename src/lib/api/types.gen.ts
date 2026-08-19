@@ -2941,6 +2941,20 @@ export type UpdatePasswordRequest = {
 };
 
 /**
+ * UploadParticipantsResponse
+ */
+export type UploadParticipantsResponse = {
+    /**
+     * Participants
+     */
+    participants: Array<ParticipantPublic>;
+    /**
+     * Skipped Rows
+     */
+    skipped_rows: number;
+};
+
+/**
  * UserAdmin
  */
 export type UserAdmin = {
@@ -4841,14 +4855,12 @@ export type UploadParticipantsError = UploadParticipantsErrors[keyof UploadParti
 
 export type UploadParticipantsResponses = {
     /**
-     * Response Upload Participants
-     *
      * Successful Response
      */
-    200: Array<ParticipantPublic>;
+    200: UploadParticipantsResponse;
 };
 
-export type UploadParticipantsResponse = UploadParticipantsResponses[keyof UploadParticipantsResponses];
+export type UploadParticipantsResponse2 = UploadParticipantsResponses[keyof UploadParticipantsResponses];
 
 export type GetParticipantEmailTemplateData = {
     body?: never;
