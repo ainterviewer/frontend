@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { SvelteSet } from 'svelte/reactivity';
+	import SortableHeader from '../../interviews/SortableHeader.svelte';
 
 	const project_id = $derived(page.params.project_id as string);
 	const isDemo = $derived(page.data.user?.scope === 'demo');
@@ -26,6 +27,57 @@
 	let saving = $state(false);
 
 	let fileInput: HTMLInputElement;
+
+	type SortColumn =
+		| 'name'
+		| 'email'
+		| 'pid'
+		| 'participating'
+		| 'created_at'
+		| 'latest_interview_at'
+		| 'latest_interview_status';
+
+	let sortColumn = $state<SortColumn>('created_at');
+	let sortOrder = $state<'asc' | 'desc'>('desc');
+
+	function sortValue(p: ParticipantPublic, column: SortColumn): string | number | null {
+		switch (column) {
+			case 'participating':
+				return p.participating ? 1 : 0;
+			case 'created_at':
+			case 'latest_interview_at': {
+				const v = p[column];
+				return v ? new Date(v).getTime() : null;
+			}
+			default:
+				return p[column] ?? null;
+		}
+	}
+
+	const sortedParticipants = $derived.by(() => {
+		const dir = sortOrder === 'asc' ? 1 : -1;
+		return [...participants].sort((a, b) => {
+			const av = sortValue(a, sortColumn);
+			const bv = sortValue(b, sortColumn);
+			// Empty values sort last whichever direction the column is sorted in.
+			const aEmpty = av === null || av === '';
+			const bEmpty = bv === null || bv === '';
+			if (aEmpty || bEmpty) return aEmpty && bEmpty ? 0 : aEmpty ? 1 : -1;
+			if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+			return String(av).localeCompare(String(bv), undefined, { sensitivity: 'base' }) * dir;
+		});
+	});
+
+	function toggleSort(column: string) {
+		if (sortColumn === column) {
+			sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+		} else {
+			sortColumn = column as SortColumn;
+			sortOrder = 'desc';
+		}
+		// Row indices change with the order, so an in-progress shift-range is void.
+		lastClickedIndex = null;
+	}
 
 	const allSelected = $derived(
 		participants.length > 0 && participants.every((p) => selected.has(p.id))
@@ -49,15 +101,16 @@
 	}
 
 	function toggleOne(index: number, e: MouseEvent) {
-		const id = participants[index].id;
+		const rows = sortedParticipants;
+		const id = rows[index].id;
 		const next = new SvelteSet(selected);
 		const select = !next.has(id);
 
 		// Shift-click extends from the previously clicked row, applying that
 		// row's new state to the whole range (the usual file-list behaviour).
-		if (e.shiftKey && lastClickedIndex !== null && lastClickedIndex < participants.length) {
+		if (e.shiftKey && lastClickedIndex !== null && lastClickedIndex < rows.length) {
 			const [from, to] = [lastClickedIndex, index].sort((a, b) => a - b);
-			for (const p of participants.slice(from, to + 1)) {
+			for (const p of rows.slice(from, to + 1)) {
 				if (select) next.add(p.id);
 				else next.delete(p.id);
 			}
@@ -432,13 +485,37 @@
 						onchange={toggleAll}
 					/>
 				</th>
-				<th class="px-5 py-3">Name</th>
-				<th class="px-5 py-3">Email</th>
-				<th class="px-5 py-3">PID</th>
-				<th class="px-5 py-3">Participating</th>
-				<th class="px-5 py-3">Created</th>
-				<th class="px-5 py-3">Latest interview activity</th>
-				<th class="px-5 py-3">Latest interview status</th>
+				<SortableHeader label="Name" column="name" {sortColumn} {sortOrder} onSort={toggleSort} />
+				<SortableHeader label="Email" column="email" {sortColumn} {sortOrder} onSort={toggleSort} />
+				<SortableHeader label="PID" column="pid" {sortColumn} {sortOrder} onSort={toggleSort} />
+				<SortableHeader
+					label="Participating"
+					column="participating"
+					{sortColumn}
+					{sortOrder}
+					onSort={toggleSort}
+				/>
+				<SortableHeader
+					label="Created"
+					column="created_at"
+					{sortColumn}
+					{sortOrder}
+					onSort={toggleSort}
+				/>
+				<SortableHeader
+					label="Latest interview activity"
+					column="latest_interview_at"
+					{sortColumn}
+					{sortOrder}
+					onSort={toggleSort}
+				/>
+				<SortableHeader
+					label="Latest interview status"
+					column="latest_interview_status"
+					{sortColumn}
+					{sortOrder}
+					onSort={toggleSort}
+				/>
 				<th class="px-5 py-3 text-right">Actions</th>
 			</tr>
 		</thead>
@@ -454,7 +531,7 @@
 					<td colspan="9" class="px-5 py-10 text-center text-gray-500"> No participants yet </td>
 				</tr>
 			{:else}
-				{#each participants as p, i (p.id)}
+				{#each sortedParticipants as p, i (p.id)}
 					<tr class="border-b border-gray-200 text-sm hover:bg-gray-50">
 						<td class="px-5 py-3">
 							<input
