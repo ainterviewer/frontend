@@ -125,7 +125,8 @@
 							onclick={() => selectLanguage(lang.code)}
 						>
 							<span
-								class="inline-block h-3 w-3 shrink-0 rounded-full border-2 {lang.code === currentLang
+								class="inline-block h-3 w-3 shrink-0 rounded-full border-2 {lang.code ===
+								currentLang
 									? 'border-blue-500 bg-blue-500'
 									: 'border-gray-300 bg-white'}"
 							></span>
