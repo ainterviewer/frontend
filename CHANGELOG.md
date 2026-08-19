@@ -4,6 +4,12 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.73] - 2026-08-19
+
+### Bug Fixes
+
+- Add skipped blank rows to upload participants toast and allow the user to select ranges with shift
+
 ## [0.2.72] - 2026-08-19
 
 ### Internal
