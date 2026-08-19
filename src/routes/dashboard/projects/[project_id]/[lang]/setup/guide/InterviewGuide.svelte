@@ -5,10 +5,10 @@
 	import type {
 		Consent,
 		ExternalParam,
-		InterviewGuideOutput,
+		InterviewGuide,
 		ProjectLanguage,
-		QuestionOutput,
-		QuestionSectionQuestionOutput,
+		Question,
+		QuestionSectionQuestion,
 		Welcome
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
@@ -39,7 +39,7 @@
 		availableLanguages = [],
 		externalParams = []
 	} = $props<{
-		guide: InterviewGuideOutput | null;
+		guide: InterviewGuide | null;
 		lang: string;
 		projectName?: string;
 		availableLanguages?: ProjectLanguage[];
@@ -51,7 +51,7 @@
 	// State
 	let saving = $state(false);
 	let exporting = $state(false);
-	let guide = $state<InterviewGuideOutput>({
+	let guide = $state<InterviewGuide>({
 		framing: '',
 		introduction: '',
 		question_sections: [],
@@ -59,7 +59,7 @@
 		timed_messages: []
 	});
 
-	function applyGuide(next: InterviewGuideOutput | null) {
+	function applyGuide(next: InterviewGuide | null) {
 		guide = next ?? {
 			framing: '',
 			introduction: '',
@@ -169,7 +169,7 @@
 		}
 
 		if (data) {
-			const section = data as QuestionSectionQuestionOutput;
+			const section = data as QuestionSectionQuestion;
 			const newId = generateId();
 			const newSection: GuideSection = {
 				id: newId,
@@ -224,7 +224,7 @@
 		}
 
 		if (data) {
-			const q = data as QuestionOutput;
+			const q = data as Question;
 			const newQuestion: GuideQuestion = {
 				...q,
 				id: generateId(),

@@ -6,7 +6,7 @@
 	import type {
 		AnalysisCategoryPublic,
 		AnnotationValueCreate,
-		InterviewGuideOutput,
+		InterviewGuide,
 		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
 	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
@@ -39,7 +39,7 @@
 	);
 
 	let categories = $state<AnalysisCategoryPublic[]>([]);
-	let guide = $state<InterviewGuideOutput | null>(null);
+	let guide = $state<InterviewGuide | null>(null);
 	let rawMessages = $state<MessagePublic[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);

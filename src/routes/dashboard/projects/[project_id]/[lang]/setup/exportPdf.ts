@@ -1,10 +1,4 @@
-import type {
-	Consent,
-	Image,
-	InterviewGuideOutput,
-	TimedMessage,
-	Welcome
-} from '$lib/api/types.gen';
+import type { Consent, Image, InterviewGuide, TimedMessage, Welcome } from '$lib/api/types.gen';
 import type { GuideQuestion, GuideSection, LocalCondition, LocalConditionSet } from './guide/types';
 import { resolveConditionTarget } from './guide/utils';
 
@@ -41,7 +35,7 @@ export const defaultPdfToggles = (): PdfToggles => ({
 });
 
 export interface ExportOptions {
-	guide: InterviewGuideOutput;
+	guide: InterviewGuide;
 	sections: GuideSection[];
 	questions: Record<string, GuideQuestion[]>;
 	projectName: string;

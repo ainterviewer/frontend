@@ -212,27 +212,7 @@ export const zCommunicationTraits = z.object({
  *
  * Dataclass representing the possible values for the background info of the synthetic agents
  */
-export const zBackgroundInfoOptionsInput = z.object({
-    names_gender: z.array(z.tuple([z.string(), z.string()])),
-    age_range: z.tuple([z.int(), z.int()]).optional().default([18, 80]),
-    educations: z.array(z.string()),
-    occupations: z.array(z.string()),
-    locations: z.array(z.string()),
-    personalities: z.array(z.string()),
-    communication_traits: zCommunicationTraits,
-    extra_traits: z.union([
-        z.array(z.record(z.string(), z.string())),
-        z.array(z.string())
-    ]).nullish(),
-    refusal_rate: z.tuple([z.number(), z.number()]).nullish()
-});
-
-/**
- * BackgroundInfoOptions
- *
- * Dataclass representing the possible values for the background info of the synthetic agents
- */
-export const zBackgroundInfoOptionsOutput = z.object({
+export const zBackgroundInfoOptions = z.object({
     names_gender: z.array(z.tuple([z.string(), z.string()])),
     age_range: z.tuple([z.int(), z.int()]).optional().default([18, 80]),
     educations: z.array(z.string()),
@@ -1056,15 +1036,7 @@ export const zCondition = z.object({
 /**
  * Conditions
  */
-export const zConditionsInput = z.object({
-    conditions: z.array(zCondition),
-    action: zConditionAction
-});
-
-/**
- * Conditions
- */
-export const zConditionsOutput = z.object({
+export const zConditions = z.object({
     conditions: z.array(zCondition),
     action: zConditionAction
 });
@@ -1294,7 +1266,7 @@ export const zTestSetupPublic = z.object({
     n_runs: z.int(),
     id: z.string(),
     created_at: z.iso.datetime(),
-    background_info: zBackgroundInfoOptionsOutput.nullish(),
+    background_info: zBackgroundInfoOptions.nullish(),
     fixed_answers: z.array(z.string()).nullish(),
     fixed_personas: z.array(z.string()).nullish()
 });
@@ -1427,7 +1399,7 @@ export const zPaginatedResponseInterviewSummaryPublic = z.object({
  *
  * A question that can be asked to the interviewee
  */
-export const zQuestionInput = z.object({
+export const zQuestion = z.object({
     description: z.string().nullish(),
     main_question: z.string(),
     probes: z.array(z.string()).nullish(),
@@ -1454,44 +1426,7 @@ export const zQuestionInput = z.object({
     references: z.array(zReference).nullish(),
     image: zImage.nullish(),
     user_image: z.boolean().optional().default(false),
-    conditions: zConditionsInput.nullish(),
-    probing_context: zProbingContext.nullish(),
-    index: zQuestionIndex.nullish()
-});
-
-/**
- * Question
- *
- * A question that can be asked to the interviewee
- */
-export const zQuestionOutput = z.object({
-    description: z.string().nullish(),
-    main_question: z.string(),
-    probes: z.array(z.string()).nullish(),
-    max_probes_n: z.int().gte(0).nullish().default(3),
-    max_probes_time: z.number().gt(0).nullish(),
-    survey_item: z.union([
-        zRadioItem,
-        zCheckboxItem,
-        zLikertItem,
-        zSliderItem,
-        zNumberItem,
-        zDateItem,
-        zDatetimeItem,
-        zTimeItem
-    ]).nullish(),
-    can_answer: z.boolean().optional().default(true),
-    alternative_main_questions: z.array(z.string()).nullish(),
-    check_if_answered: z.boolean().optional().default(false),
-    check_if_exhausted: z.boolean().optional().default(false),
-    can_skip: z.boolean().optional().default(true),
-    shuffle: z.boolean().optional().default(false),
-    create_segue: z.boolean().optional().default(false),
-    exclude_from_history: z.boolean().optional().default(false),
-    references: z.array(zReference).nullish(),
-    image: zImage.nullish(),
-    user_image: z.boolean().optional().default(false),
-    conditions: zConditionsOutput.nullish(),
+    conditions: zConditions.nullish(),
     probing_context: zProbingContext.nullish(),
     index: zQuestionIndex.nullish()
 });
@@ -1499,19 +1434,9 @@ export const zQuestionOutput = z.object({
 /**
  * QuestionSection[Question]
  */
-export const zQuestionSectionQuestionInput = z.object({
+export const zQuestionSectionQuestion = z.object({
     description: z.string(),
-    questions: z.array(zQuestionInput),
-    shuffle: z.boolean().optional().default(false),
-    ai_generated_questions: zGeneratedQuestions.optional().default({ n: 0 })
-});
-
-/**
- * QuestionSection[Question]
- */
-export const zQuestionSectionQuestionOutput = z.object({
-    description: z.string(),
-    questions: z.array(zQuestionOutput),
+    questions: z.array(zQuestion),
     shuffle: z.boolean().optional().default(false),
     ai_generated_questions: zGeneratedQuestions.optional().default({ n: 0 })
 });
@@ -1531,10 +1456,10 @@ export const zTimedMessage = z.object({
 /**
  * InterviewGuide
  */
-export const zInterviewGuideInput = z.object({
+export const zInterviewGuide = z.object({
     framing: z.string().optional().default(''),
     introduction: z.string().optional().default(''),
-    question_sections: z.array(zQuestionSectionQuestionInput).optional(),
+    question_sections: z.array(zQuestionSectionQuestion).optional(),
     outro: z.string().nullish(),
     extra_variables: z.array(z.string()).optional(),
     timed_messages: z.array(zTimedMessage).nullish(),
@@ -1546,27 +1471,14 @@ export const zInterviewGuideInput = z.object({
  */
 export const zAssistanceChatRequest = z.object({
     prompt: z.string(),
-    guide: zInterviewGuideInput
-});
-
-/**
- * InterviewGuide
- */
-export const zInterviewGuideOutput = z.object({
-    framing: z.string().optional().default(''),
-    introduction: z.string().optional().default(''),
-    question_sections: z.array(zQuestionSectionQuestionOutput).optional(),
-    outro: z.string().nullish(),
-    extra_variables: z.array(z.string()).optional(),
-    timed_messages: z.array(zTimedMessage).nullish(),
-    ai_generated_sections: z.int().optional().default(0)
+    guide: zInterviewGuide
 });
 
 /**
  * UpdateBackgroundInfoRequest
  */
 export const zUpdateBackgroundInfoRequest = z.object({
-    background_info: zBackgroundInfoOptionsInput
+    background_info: zBackgroundInfoOptions
 });
 
 /**
@@ -1753,21 +1665,7 @@ export const zVisualConfig = z.object({
 /**
  * AgentConfigs
  */
-export const zAgentConfigsInput = z.object({
-    probing: zProbingAgentConfig.optional(),
-    classification: zAgentConfig.optional(),
-    guide: zAgentConfig.optional(),
-    history: zAgentConfig.optional(),
-    security: zSecurityConfig.optional(),
-    answering: zAgentConfig.optional(),
-    reformulation: zAgentConfig.optional(),
-    visual: zVisualConfig.optional()
-});
-
-/**
- * AgentConfigs
- */
-export const zAgentConfigsOutput = z.object({
+export const zAgentConfigs = z.object({
     probing: zProbingAgentConfig.optional(),
     classification: zAgentConfig.optional(),
     guide: zAgentConfig.optional(),
@@ -2915,10 +2813,10 @@ export const zGetGuideData = z.object({
 /**
  * Successful Response
  */
-export const zGetGuideResponse = zInterviewGuideOutput;
+export const zGetGuideResponse = zInterviewGuide;
 
 export const zCreateGuideData = z.object({
-    body: zInterviewGuideInput,
+    body: zInterviewGuide,
     path: z.object({
         project_id: z.string().nullable(),
         lang: z.string().length(2)
@@ -2942,7 +2840,7 @@ export const zGenerateGuideData = z.object({
 /**
  * Successful Response
  */
-export const zGenerateGuideResponse = zInterviewGuideOutput;
+export const zGenerateGuideResponse = zInterviewGuide;
 
 export const zGenerateGuideSectionData = z.object({
     body: zQuestionSectionGenerationRequest,
@@ -2974,7 +2872,7 @@ export const zGenerateSectionQuestionData = z.object({
 /**
  * Successful Response
  */
-export const zGenerateSectionQuestionResponse = zQuestionOutput;
+export const zGenerateSectionQuestionResponse = zQuestion;
 
 export const zUploadImageData = z.object({
     body: zBodyUploadImage,
@@ -3000,10 +2898,10 @@ export const zGetInterviewAgentsData = z.object({
 /**
  * Successful Response
  */
-export const zGetInterviewAgentsResponse = zAgentConfigsOutput;
+export const zGetInterviewAgentsResponse = zAgentConfigs;
 
 export const zCreateInterviewAgentsData = z.object({
-    body: zAgentConfigsInput,
+    body: zAgentConfigs,
     path: z.object({
         project_id: z.string().nullable(),
         lang: z.string().length(2)
@@ -3265,7 +3163,7 @@ export const zGetBackgroundInfoData = z.object({
 /**
  * Successful Response
  */
-export const zGetBackgroundInfoResponse = zBackgroundInfoOptionsOutput;
+export const zGetBackgroundInfoResponse = zBackgroundInfoOptions;
 
 export const zUpdateBackgroundInfoData = z.object({
     body: zUpdateBackgroundInfoRequest,

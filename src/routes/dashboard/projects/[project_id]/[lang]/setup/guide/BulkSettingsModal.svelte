@@ -30,7 +30,11 @@
 	});
 
 	const numberFields: { key: string; label: string; info: string }[] = [
-		{ key: 'max_probes_n', label: 'Max Probes', info: 'Max number of follow-up probes per question.' },
+		{
+			key: 'max_probes_n',
+			label: 'Max Probes',
+			info: 'Max number of follow-up probes per question.'
+		},
 		{
 			key: 'max_probes_time',
 			label: 'Max Time (seconds)',
@@ -233,7 +237,9 @@
 			</div>
 
 			<!-- Footer -->
-			<div class="mt-4 flex items-center justify-between gap-2 border-t border-gray-100 bg-gray-50/60 px-6 py-3">
+			<div
+				class="mt-4 flex items-center justify-between gap-2 border-t border-gray-100 bg-gray-50/60 px-6 py-3"
+			>
 				<span class="text-xs text-gray-400">
 					{enabledCount} setting{enabledCount === 1 ? '' : 's'} selected
 				</span>

@@ -1,4 +1,4 @@
-import type { InterviewGuideOutput } from '$lib/api/types.gen';
+import type { InterviewGuide } from '$lib/api/types.gen';
 import { createContext } from 'svelte';
 // Single source of truth for the editor's local models lives with the guide
 // route; re-export so existing `$lib/stores/guideStore.svelte` importers keep
@@ -17,7 +17,7 @@ export const [getGuideStore, setGuideStore] = createContext<GuideStore>();
 export function createGuideStore() {
 	let _localSections = $state<GuideSection[]>([]);
 	let _localQuestions = $state<Record<string, GuideQuestion[]>>({});
-	let _guide = $state<InterviewGuideOutput | null>(null);
+	let _guide = $state<InterviewGuide | null>(null);
 	// Ids of questions whose conditions failed validation on the last save
 	// attempt. Used to draw attention to the offending condition panels.
 	let _invalidConditionQuestionIds = $state<string[]>([]);
@@ -38,7 +38,7 @@ export function createGuideStore() {
 		get guide() {
 			return _guide;
 		},
-		set guide(v: InterviewGuideOutput | null) {
+		set guide(v: InterviewGuide | null) {
 			_guide = v;
 		},
 		get invalidConditionQuestionIds() {

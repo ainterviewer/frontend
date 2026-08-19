@@ -85,21 +85,7 @@ export type AgentConfig = {
 /**
  * AgentConfigs
  */
-export type AgentConfigsInput = {
-    probing?: ProbingAgentConfig;
-    classification?: AgentConfig;
-    guide?: AgentConfig;
-    history?: AgentConfig;
-    security?: SecurityConfig;
-    answering?: AgentConfig;
-    reformulation?: AgentConfig;
-    visual?: VisualConfig;
-};
-
-/**
- * AgentConfigs
- */
-export type AgentConfigsOutput = {
+export type AgentConfigs = {
     probing?: ProbingAgentConfig;
     classification?: AgentConfig;
     guide?: AgentConfig;
@@ -230,7 +216,7 @@ export type AssistanceChatRequest = {
      * Prompt
      */
     prompt: string;
-    guide: InterviewGuideInput;
+    guide: InterviewGuide;
 };
 
 /**
@@ -238,59 +224,7 @@ export type AssistanceChatRequest = {
  *
  * Dataclass representing the possible values for the background info of the synthetic agents
  */
-export type BackgroundInfoOptionsInput = {
-    /**
-     * Names Gender
-     */
-    names_gender: Array<[
-        string,
-        string
-    ]>;
-    /**
-     * Age Range
-     */
-    age_range?: [
-        number,
-        number
-    ];
-    /**
-     * Educations
-     */
-    educations: Array<string>;
-    /**
-     * Occupations
-     */
-    occupations: Array<string>;
-    /**
-     * Locations
-     */
-    locations: Array<string>;
-    /**
-     * Personalities
-     */
-    personalities: Array<string>;
-    communication_traits: CommunicationTraits;
-    /**
-     * Extra Traits
-     */
-    extra_traits?: Array<{
-        [key: string]: string;
-    }> | Array<string> | null;
-    /**
-     * Refusal Rate
-     */
-    refusal_rate?: [
-        number,
-        number
-    ] | null;
-};
-
-/**
- * BackgroundInfoOptions
- *
- * Dataclass representing the possible values for the background info of the synthetic agents
- */
-export type BackgroundInfoOptionsOutput = {
+export type BackgroundInfoOptions = {
     /**
      * Names Gender
      */
@@ -657,18 +591,7 @@ export type ConditionTrigger = 'match' | 'classification';
 /**
  * Conditions
  */
-export type ConditionsInput = {
-    /**
-     * Conditions
-     */
-    conditions: Array<Condition>;
-    action: ConditionAction;
-};
-
-/**
- * Conditions
- */
-export type ConditionsOutput = {
+export type Conditions = {
     /**
      * Conditions
      */
@@ -1242,7 +1165,7 @@ export type InterviewDurationStats = {
 /**
  * InterviewGuide
  */
-export type InterviewGuideInput = {
+export type InterviewGuide = {
     /**
      * Framing
      *
@@ -1260,53 +1183,7 @@ export type InterviewGuideInput = {
      *
      * A list of sections containing questions to ask the interviewee
      */
-    question_sections?: Array<QuestionSectionQuestionInput>;
-    /**
-     * Outro
-     *
-     * An outro message for the interview. Displayed to the interviewee as the last message they will see. They will not be able to answer this message.
-     */
-    outro?: string | null;
-    /**
-     * Extra Variables
-     *
-     * Names of variables (beyond the built-in project_id and interview_id) that this guide expects to be supplied via referable_values at runtime. Every {{ placeholder }} in user-facing templates must appear here or be a built-in.
-     */
-    extra_variables?: Array<string>;
-    /**
-     * Timed Messages
-     *
-     * Messages that are displayed to the interviewee after a certain amount of time
-     */
-    timed_messages?: Array<TimedMessage> | null;
-    /**
-     * Ai Generated Sections
-     */
-    ai_generated_sections?: number;
-};
-
-/**
- * InterviewGuide
- */
-export type InterviewGuideOutput = {
-    /**
-     * Framing
-     *
-     * A description of the interview and its purpose. Only used by the model.
-     */
-    framing?: string;
-    /**
-     * Introduction
-     *
-     * An introduction to the interview. Displayed to the interviewee as the first message. They whon't be able to respond to this message.
-     */
-    introduction?: string;
-    /**
-     * Question Sections
-     *
-     * A list of sections containing questions to ask the interviewee
-     */
-    question_sections?: Array<QuestionSectionQuestionOutput>;
+    question_sections?: Array<QuestionSectionQuestion>;
     /**
      * Outro
      *
@@ -2385,7 +2262,7 @@ export type ProjectTitleUpdateRequest = {
  *
  * A question that can be asked to the interviewee
  */
-export type QuestionInput = {
+export type Question = {
     /**
      * Description
      *
@@ -2479,114 +2356,7 @@ export type QuestionInput = {
      * Whether the user should be able to upload an image as a response
      */
     user_image?: boolean;
-    conditions?: ConditionsInput | null;
-    probing_context?: ProbingContext | null;
-    /**
-     * The index of the question in the interview, ie (section, question) = (2, 2) (for 3rd section 3rd question). Used to keep track of questions initial position after shuffling.
-     */
-    index?: QuestionIndex | null;
-};
-
-/**
- * Question
- *
- * A question that can be asked to the interviewee
- */
-export type QuestionOutput = {
-    /**
-     * Description
-     *
-     * A description of the question, may be used to reformulate the question and improve the relevance of the probes.
-     */
-    description?: string | null;
-    /**
-     * Main Question
-     *
-     * The question to ask the interviewee.
-     */
-    main_question: string;
-    /**
-     * Probes
-     *
-     * A list of possible follow-up questions to ask after the main question. If provided set max_probes_n or max_probes_time to greater than 0.
-     */
-    probes?: Array<string> | null;
-    /**
-     * Max Probes N
-     *
-     * Max number of probes.
-     */
-    max_probes_n?: number | null;
-    /**
-     * Max Probes Time
-     *
-     * Max time to spend on probing, in seconds.
-     */
-    max_probes_time?: number | null;
-    /**
-     * Survey Item
-     */
-    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
-    /**
-     * Can Answer
-     *
-     * Should the user be able to answer the question? Disable this to make the question into a message
-     */
-    can_answer?: boolean;
-    /**
-     * Alternative Main Questions
-     *
-     * List of alternative formulations of the main question, will be chosen at random.
-     */
-    alternative_main_questions?: Array<string> | null;
-    /**
-     * Check If Answered
-     *
-     * Check if the question has already been answered under a previous question
-     */
-    check_if_answered?: boolean;
-    /**
-     * Check If Exhausted
-     *
-     * During the probing, check if the question has been exhausted and the model should continue to the next question.
-     */
-    check_if_exhausted?: boolean;
-    /**
-     * Can Skip
-     *
-     * Should the user be able to skip the question?
-     */
-    can_skip?: boolean;
-    /**
-     * Shuffle
-     *
-     * Should the question be shuffled?
-     */
-    shuffle?: boolean;
-    /**
-     * Create Segue
-     *
-     * Create a segue from the previous question, to possibly improve the flow of the interview.
-     */
-    create_segue?: boolean;
-    /**
-     * Exclude From History
-     *
-     * Exclude from the interview history. This means that the model will not use this question or the response as a context when it asks further questions.
-     */
-    exclude_from_history?: boolean;
-    /**
-     * References
-     */
-    references?: Array<Reference> | null;
-    image?: Image | null;
-    /**
-     * User Image
-     *
-     * Whether the user should be able to upload an image as a response
-     */
-    user_image?: boolean;
-    conditions?: ConditionsOutput | null;
+    conditions?: Conditions | null;
     probing_context?: ProbingContext | null;
     /**
      * The index of the question in the interview, ie (section, question) = (2, 2) (for 3rd section 3rd question). Used to keep track of questions initial position after shuffling.
@@ -2726,7 +2496,7 @@ export type QuestionSectionGenerationRequest = {
 /**
  * QuestionSection[Question]
  */
-export type QuestionSectionQuestionInput = {
+export type QuestionSectionQuestion = {
     /**
      * Description
      *
@@ -2736,30 +2506,7 @@ export type QuestionSectionQuestionInput = {
     /**
      * Questions
      */
-    questions: Array<QuestionInput>;
-    /**
-     * Shuffle
-     *
-     * Should the section be included in shuffling?
-     */
-    shuffle?: boolean;
-    ai_generated_questions?: GeneratedQuestions;
-};
-
-/**
- * QuestionSection[Question]
- */
-export type QuestionSectionQuestionOutput = {
-    /**
-     * Description
-     *
-     * A description of the section, used as context for the prober to limit its scope.
-     */
-    description: string;
-    /**
-     * Questions
-     */
-    questions: Array<QuestionOutput>;
+    questions: Array<Question>;
     /**
      * Shuffle
      *
@@ -3034,7 +2781,7 @@ export type TestSetupPublic = {
      * Created At
      */
     created_at: string;
-    background_info?: BackgroundInfoOptionsOutput | null;
+    background_info?: BackgroundInfoOptions | null;
     /**
      * Fixed Answers
      */
@@ -3142,7 +2889,7 @@ export type TimedMessage = {
  * UpdateBackgroundInfoRequest
  */
 export type UpdateBackgroundInfoRequest = {
-    background_info: BackgroundInfoOptionsInput;
+    background_info: BackgroundInfoOptions;
 };
 
 /**
@@ -5962,13 +5709,13 @@ export type GetGuideResponses = {
     /**
      * Successful Response
      */
-    200: InterviewGuideOutput;
+    200: InterviewGuide;
 };
 
 export type GetGuideResponse = GetGuideResponses[keyof GetGuideResponses];
 
 export type CreateGuideData = {
-    body: InterviewGuideInput;
+    body: InterviewGuide;
     path: {
         /**
          * Project Id
@@ -6038,7 +5785,7 @@ export type GenerateGuideResponses = {
     /**
      * Successful Response
      */
-    200: InterviewGuideOutput;
+    200: InterviewGuide;
 };
 
 export type GenerateGuideResponse = GenerateGuideResponses[keyof GenerateGuideResponses];
@@ -6116,7 +5863,7 @@ export type GenerateSectionQuestionResponses = {
     /**
      * Successful Response
      */
-    200: QuestionOutput;
+    200: Question;
 };
 
 export type GenerateSectionQuestionResponse = GenerateSectionQuestionResponses[keyof GenerateSectionQuestionResponses];
@@ -6188,13 +5935,13 @@ export type GetInterviewAgentsResponses = {
     /**
      * Successful Response
      */
-    200: AgentConfigsOutput;
+    200: AgentConfigs;
 };
 
 export type GetInterviewAgentsResponse = GetInterviewAgentsResponses[keyof GetInterviewAgentsResponses];
 
 export type CreateInterviewAgentsData = {
-    body: AgentConfigsInput;
+    body: AgentConfigs;
     path: {
         /**
          * Project Id
@@ -6910,7 +6657,7 @@ export type GetBackgroundInfoResponses = {
     /**
      * Successful Response
      */
-    200: BackgroundInfoOptionsOutput;
+    200: BackgroundInfoOptions;
 };
 
 export type GetBackgroundInfoResponse = GetBackgroundInfoResponses[keyof GetBackgroundInfoResponses];

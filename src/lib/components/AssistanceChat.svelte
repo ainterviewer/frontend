@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Assistance } from '$lib/api/sdk.gen';
-	import type { ChatMessage, InterviewGuideOutput, QuestionOutput } from '$lib/api/types.gen';
+	import type { ChatMessage, InterviewGuide, Question } from '$lib/api/types.gen';
 	import type { GuideQuestion, GuideSection } from '$lib/stores/guideStore.svelte';
 	import { tick, type Snippet } from 'svelte';
 	import { fly } from 'svelte/transition';
@@ -8,7 +8,7 @@
 	interface Props {
 		project_id: string;
 		lang: string;
-		guide: InterviewGuideOutput | null;
+		guide: InterviewGuide | null;
 		questionMessage?: Snippet<[item: GuideQuestion, index: number]>;
 		sectionMessage?: Snippet<
 			[item: { section: GuideSection; questions: GuideQuestion[] }, index: number]
@@ -68,7 +68,7 @@
 								id: sectionData.id ?? crypto.randomUUID(),
 								questions: []
 							} as GuideSection,
-							questions: ((questions ?? []) as (QuestionOutput & { id?: string })[]).map((q) => ({
+							questions: ((questions ?? []) as (Question & { id?: string })[]).map((q) => ({
 								...q,
 								id: q.id ?? crypto.randomUUID(),
 								conditions: null

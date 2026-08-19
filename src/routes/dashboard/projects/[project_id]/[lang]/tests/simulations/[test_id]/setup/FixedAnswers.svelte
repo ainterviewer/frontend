@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Synthesize, type QuestionOutput, type TestSetupPublic } from '$lib/api';
+	import { Synthesize, type Question, type TestSetupPublic } from '$lib/api';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 
-	type SetupQuestion = Pick<QuestionOutput, 'main_question' | 'can_answer'>;
+	type SetupQuestion = Pick<Question, 'main_question' | 'can_answer'>;
 
 	let { test, questions }: { test: TestSetupPublic; questions: SetupQuestion[] } = $props();
 	// Seeded once from the test prop; deliberately not reactive to prop updates.

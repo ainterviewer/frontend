@@ -1,9 +1,4 @@
-import {
-	Projects,
-	Synthesize,
-	type BackgroundInfoOptionsOutput,
-	type QuestionOutput
-} from '$lib/api';
+import { Projects, Synthesize, type BackgroundInfoOptions, type Question } from '$lib/api';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -61,12 +56,12 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 			path: { project_id, test_id }
 		});
 		if (!bgInfoResponse.error && bgInfoResponse.data) {
-			test.background_info = bgInfoResponse.data as BackgroundInfoOptionsOutput;
+			test.background_info = bgInfoResponse.data as BackgroundInfoOptions;
 		}
 	}
 
 	// Extract questions from the guide
-	const questions: Array<Pick<QuestionOutput, 'main_question' | 'can_answer'>> = [];
+	const questions: Array<Pick<Question, 'main_question' | 'can_answer'>> = [];
 	if (!guideResponse.error && guideResponse.data?.question_sections) {
 		for (const section of guideResponse.data.question_sections) {
 			if (section.questions) {

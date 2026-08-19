@@ -1,10 +1,10 @@
 import type {
-	QuestionOutput as ApiQuestion,
+	Question as ApiQuestion,
 	Condition,
-	ConditionsOutput,
+	Conditions,
 	GeneratedQuestions,
 	QuestionContext,
-	QuestionSectionQuestionOutput as QuestionSectionOutput
+	QuestionSectionQuestion as QuestionSectionOutput
 } from '$lib/api/types.gen';
 
 // While editing, a condition points at its target section/question by their
@@ -20,7 +20,7 @@ export type LocalCondition = Omit<Condition, 'question_context'> & {
 	question_context: LocalQuestionContext;
 };
 
-export type LocalConditionSet = Omit<ConditionsOutput, 'conditions'> & {
+export type LocalConditionSet = Omit<Conditions, 'conditions'> & {
 	conditions: LocalCondition[];
 };
 

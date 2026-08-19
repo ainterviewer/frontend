@@ -1,12 +1,11 @@
 import { Projects } from '$lib/api';
 import type {
-	QuestionOutput as ApiQuestion,
-	ConditionsOutput,
+	Question as ApiQuestion,
+	Conditions,
 	ExternalParam,
 	GeneratedQuestions,
-	InterviewGuideInput,
-	InterviewGuideOutput,
-	QuestionSectionQuestionOutput as QuestionSectionOutput
+	InterviewGuide,
+	QuestionSectionQuestion as QuestionSectionOutput
 } from '$lib/api/types.gen';
 import { toast } from 'svelte-sonner';
 import type { GuideQuestion, GuideSection, LocalConditionSet } from './types';
@@ -43,7 +42,7 @@ export function normalizeGeneratedQuestions(value: unknown): GeneratedQuestions 
 // sections/questions. Unresolvable targets keep an empty id, which validation
 // then flags. Returns null for questions without conditions.
 export function localizeConditions(
-	apiConditions: ConditionsOutput | null | undefined,
+	apiConditions: Conditions | null | undefined,
 	sections: GuideSection[],
 	questionsMap: Record<string, GuideQuestion[]>
 ): LocalConditionSet | null {
@@ -123,7 +122,7 @@ export function delocalizeConditions(
 	localConditions: LocalConditionSet | null | undefined,
 	sections: GuideSection[],
 	questionsMap: Record<string, GuideQuestion[]>
-): ConditionsOutput | null {
+): Conditions | null {
 	if (!localConditions) return null;
 	return {
 		action: localConditions.action,
@@ -144,7 +143,7 @@ export function delocalizeConditions(
 	};
 }
 
-export function mapToLocal(data: InterviewGuideOutput): {
+export function mapToLocal(data: InterviewGuide): {
 	sections: GuideSection[];
 	questions: Record<string, GuideQuestion[]>;
 } {
@@ -275,7 +274,7 @@ function trimSurveyItemOptions(questionsMap: Record<string, GuideQuestion[]>) {
 export async function saveGuide(
 	projectId: string,
 	lang: string,
-	guide: InterviewGuideOutput,
+	guide: InterviewGuide,
 	localSections: GuideSection[],
 	localQuestions: Record<string, GuideQuestion[]>,
 	externalParams: ExternalParam[] = []
@@ -288,7 +287,7 @@ export async function saveGuide(
 
 	trimSurveyItemOptions(localQuestions);
 
-	const payload: InterviewGuideInput = {
+	const payload: InterviewGuide = {
 		...guide,
 		question_sections: mapFromLocal(localSections, localQuestions),
 		extra_variables: externalParams.map((p) => p.name)

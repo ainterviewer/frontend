@@ -1,12 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type {
-		AgentConfigsInput,
-		AgentConfigsOutput,
-		ProbingAgentConfig,
-		ProbingPromptSlots
-	} from '$lib/api/types.gen';
+	import type { AgentConfigs, ProbingAgentConfig, ProbingPromptSlots } from '$lib/api/types.gen';
 	import { untrack } from 'svelte';
 
 	import { toast } from 'svelte-sonner';
@@ -16,7 +11,7 @@
 
 	let saving = $state(false);
 	let mode = $state<'basic' | 'advanced'>('basic');
-	let agents = $state<AgentConfigsOutput>(untrack(() => data.agents));
+	let agents = $state<AgentConfigs>(untrack(() => data.agents));
 	let models = $state<string[]>(untrack(() => data.models));
 	let promptDefaults = $state<ProbingPromptSlots>(untrack(() => data.promptDefaults));
 
@@ -144,7 +139,7 @@
 
 		const res = await Projects.createInterviewAgents({
 			path: { project_id: projectId, lang: lang },
-			body: agents as AgentConfigsInput
+			body: agents as AgentConfigs
 		});
 
 		if (res.error) {

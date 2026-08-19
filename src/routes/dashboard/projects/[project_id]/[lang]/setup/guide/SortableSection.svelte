@@ -6,7 +6,7 @@
 	import SortableQuestion from './SortableQuestion.svelte';
 	import { dragState } from './dragState.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
-	import { zQuestionOutput } from '$lib/api/zod.gen';
+	import { zQuestion } from '$lib/api/zod.gen';
 
 	interface Props {
 		section: GuideSection;
@@ -56,7 +56,7 @@
 
 	function addQuestion() {
 		const newQuestion: GuideQuestion = {
-			...zQuestionOutput.parse({ main_question: '' }),
+			...zQuestion.parse({ main_question: '' }),
 			id: crypto.randomUUID(),
 			conditions: null
 		};

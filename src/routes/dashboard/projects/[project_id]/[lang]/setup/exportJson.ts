@@ -1,9 +1,9 @@
-import type { Consent, InterviewGuideOutput, Welcome } from '$lib/api/types.gen';
+import type { Consent, InterviewGuide, Welcome } from '$lib/api/types.gen';
 
 interface UnifiedSetupExportJson {
 	consent: Consent | null;
 	welcome: Welcome | null;
-	interview_guide: InterviewGuideOutput | null;
+	interview_guide: InterviewGuide | null;
 	platform_version: string | null;
 }
 

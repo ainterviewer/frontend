@@ -274,8 +274,8 @@
 		<h2 class="text-lg font-semibold text-dark">Onboarding</h2>
 		<p class="mt-1 text-sm text-gray-500">
 			Guided tours introduce features as you navigate the app. They are currently
-			<span class="font-medium">{onboardingDisabled ? 'turned off' : 'on'}</span>. Resetting turns them
-			back on and replays every tour the next time you visit each page.
+			<span class="font-medium">{onboardingDisabled ? 'turned off' : 'on'}</span>. Resetting turns
+			them back on and replays every tour the next time you visit each page.
 		</p>
 		<button type="button" class="mt-4 {buttonClass}" onclick={reenableOnboarding}>
 			Reset onboarding tours
