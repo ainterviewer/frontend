@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import type { CollaboratorRole, ProjectFolderWithProjects, ProjectPublic } from '$lib/api';
+	import type {
+		CollaboratorRole,
+		ProjectFolderWithProjects,
+		ProjectLanguage,
+		ProjectPublic
+	} from '$lib/api';
 	import { Folders, Projects } from '$lib/api';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
@@ -485,6 +490,12 @@
 		await moveProject(dropped.id, dropped.folderId, folderId);
 	}
 
+	/** The language whose localization a project's per-language routes should open. */
+	function defaultLanguageOf(project: { available_languages?: ProjectLanguage[] | null }): string {
+		const languages = project.available_languages ?? [];
+		return (languages.find((l) => l.is_default) ?? languages[0])?.code ?? 'EN';
+	}
+
 	function handleRowClick(projectId: string, defaultLanguage: string) {
 		// Mock navigation or real navigation if route exists
 		// document.cookie = `project_id=${projectId}; path=/`; // Old app did this
@@ -588,10 +599,10 @@
 					draggable="true"
 					ondragstart={(e) => handleDragStart(e, project.id, folder.id)}
 					ondragend={handleDragEnd}
-					onclick={() => handleRowClick(project.id, project.config.default_language ?? 'EN')}
+					onclick={() => handleRowClick(project.id, defaultLanguageOf(project))}
 					onkeydown={(e) => {
 						if (e.key === 'Enter' || e.key === ' ') {
-							handleRowClick(project.id, project.config.default_language ?? 'EN');
+							handleRowClick(project.id, defaultLanguageOf(project));
 						}
 					}}
 				>
@@ -657,7 +668,7 @@
 									<a
 										class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
 										href={resolve(
-											`/dashboard/projects/${project.id}/${project.config.default_language}/settings`
+											`/dashboard/projects/${project.id}/${defaultLanguageOf(project)}/settings`
 										)}
 									>
 										Settings

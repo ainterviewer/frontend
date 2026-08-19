@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import type { LanguageDict } from '$lib/api/types.gen';
+	import type { ProjectLanguage } from '$lib/api/types.gen';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 
 	let {
@@ -16,7 +16,7 @@
 	}: {
 		projectId: string;
 		lang: string;
-		availableLanguages?: LanguageDict[];
+		availableLanguages?: ProjectLanguage[];
 		saving?: boolean;
 		exporting?: boolean;
 		saveLabel?: string;

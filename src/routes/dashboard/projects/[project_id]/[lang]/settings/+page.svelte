@@ -9,7 +9,10 @@
 	let project = $derived(data.project);
 
 	let title = $derived(project.title);
-	let defaultLanguage = $derived(project.config.default_language);
+	let defaultLanguage = $derived(
+		project.available_languages?.find((l) => l.is_default)?.code ??
+			project.available_languages?.[0]?.code
+	);
 	let savingTitle = $state(false);
 	let savingLanguage = $state(false);
 	let changingStatus = $state(false);
@@ -31,10 +34,11 @@
 	}
 
 	async function saveDefaultLanguage() {
+		if (!defaultLanguage) return;
 		savingLanguage = true;
-		const { error } = await Projects.createInterviewConfig({
+		const { error } = await Projects.setDefaultLanguage({
 			path: { project_id: project.id },
-			body: { ...project.config, default_language: defaultLanguage }
+			body: defaultLanguage
 		});
 		if (error) {
 			console.error(error);

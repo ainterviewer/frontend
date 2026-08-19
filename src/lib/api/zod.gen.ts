@@ -941,7 +941,6 @@ export const zProbingStrategy = z.enum([
  * InterviewConfig
  */
 export const zInterviewConfig = z.object({
-    default_language: zLanguageCode.optional().default('EN'),
     with_consent: z.boolean().optional().default(true),
     with_welcome: z.boolean().optional().default(true),
     with_audio: z.boolean().optional().default(false),
@@ -961,6 +960,22 @@ export const zProjectFolderCreate = z.object({
  */
 export const zProjectFolderEdit = z.object({
     title: z.string()
+});
+
+/**
+ * ProjectLanguage
+ *
+ * A language a project has a localization for.
+ *
+ * Same shape as the library's `LanguageDict` plus whether it is the
+ * project's default. `LanguageDict` itself stays free of the flag: it comes
+ * straight out of the shared `LANGUAGES` constant and knows nothing about
+ * projects.
+ */
+export const zProjectLanguage = z.object({
+    name: z.string(),
+    code: zLanguageCode,
+    is_default: z.boolean()
 });
 
 /**
@@ -1677,7 +1692,7 @@ export const zProjectPublic = z.object({
     external_params: z.array(zExternalParam).nullish(),
     owner_id: z.string(),
     n_interviews: z.int().nullish(),
-    available_languages: z.array(zLanguageDict).nullish(),
+    available_languages: z.array(zProjectLanguage).nullish(),
     tests: z.array(zTestSetupPublic).nullish(),
     owner: zUserPublic
 });
@@ -1744,9 +1759,9 @@ export const zAgentConfigsInput = z.object({
     guide: zAgentConfig.optional(),
     history: zAgentConfig.optional(),
     security: zSecurityConfig.optional(),
-    visual: zVisualConfig.optional(),
     answering: zAgentConfig.optional(),
-    reformulation: zAgentConfig.optional()
+    reformulation: zAgentConfig.optional(),
+    visual: zVisualConfig.optional()
 });
 
 /**
@@ -1758,9 +1773,9 @@ export const zAgentConfigsOutput = z.object({
     guide: zAgentConfig.optional(),
     history: zAgentConfig.optional(),
     security: zSecurityConfig.optional(),
-    visual: zVisualConfig.optional(),
     answering: zAgentConfig.optional(),
-    reformulation: zAgentConfig.optional()
+    reformulation: zAgentConfig.optional(),
+    visual: zVisualConfig.optional()
 });
 
 /**
@@ -2805,7 +2820,7 @@ export const zRemoveProjectLanguageData = z.object({
  *
  * Successful Response
  */
-export const zRemoveProjectLanguageResponse = z.array(zLanguageDict);
+export const zRemoveProjectLanguageResponse = z.array(zProjectLanguage);
 
 export const zGetProjectLanguagesData = z.object({
     body: z.never().optional(),
@@ -2820,7 +2835,7 @@ export const zGetProjectLanguagesData = z.object({
  *
  * Successful Response
  */
-export const zGetProjectLanguagesResponse = z.array(zLanguageDict);
+export const zGetProjectLanguagesResponse = z.array(zProjectLanguage);
 
 export const zAddProjectLanguageData = z.object({
     body: zBodyAddProjectLanguage,
@@ -2837,7 +2852,24 @@ export const zAddProjectLanguageData = z.object({
  *
  * Successful Response
  */
-export const zAddProjectLanguageResponse = z.array(zLanguageDict);
+export const zAddProjectLanguageResponse = z.array(zProjectLanguage);
+
+export const zSetDefaultLanguageData = z.object({
+    body: zLanguageCode,
+    path: z.object({
+        project_id: z.string().nullable()
+    }),
+    query: z.object({
+        folder_id: z.string().nullish()
+    }).optional()
+});
+
+/**
+ * Response Set Default Language
+ *
+ * Successful Response
+ */
+export const zSetDefaultLanguageResponse = z.array(zProjectLanguage);
 
 export const zChangeProjectStatusData = z.object({
     body: zProjectStatusChangeRequest,

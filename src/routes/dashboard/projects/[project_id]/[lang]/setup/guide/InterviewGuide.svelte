@@ -6,7 +6,7 @@
 		Consent,
 		ExternalParam,
 		InterviewGuideOutput,
-		LanguageDict,
+		ProjectLanguage,
 		QuestionOutput,
 		QuestionSectionQuestionOutput,
 		Welcome
@@ -42,7 +42,7 @@
 		guide: InterviewGuideOutput | null;
 		lang: string;
 		projectName?: string;
-		availableLanguages?: LanguageDict[];
+		availableLanguages?: ProjectLanguage[];
 		externalParams?: ExternalParam[];
 	}>();
 

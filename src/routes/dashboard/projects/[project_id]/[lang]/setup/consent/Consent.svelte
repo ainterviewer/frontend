@@ -2,7 +2,7 @@
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { LanguageDict, Welcome } from '$lib/api/types.gen';
+	import type { ProjectLanguage, Welcome } from '$lib/api/types.gen';
 	import { ConsentModal } from '$lib/components/modals';
 	import { toast } from 'svelte-sonner';
 	import ExportPdfModal from '../ExportPdfModal.svelte';
@@ -13,7 +13,7 @@
 
 	interface Props {
 		initialData?: { title: string; text: string } | null;
-		availableLanguages?: LanguageDict[];
+		availableLanguages?: ProjectLanguage[];
 		projectName?: string;
 	}
 
@@ -33,7 +33,7 @@
 	let showFullscreenModal = $state(false);
 	let saving = $state(false);
 	let exporting = $state(false);
-	const availableLanguages = $derived<LanguageDict[]>(initialAvailableLanguages);
+	const availableLanguages = $derived<ProjectLanguage[]>(initialAvailableLanguages);
 
 	function getSnapshot() {
 		return JSON.stringify({ title, text });

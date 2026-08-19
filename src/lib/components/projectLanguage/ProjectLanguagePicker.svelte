@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { Projects } from '$lib/api';
-	import type { LanguageDict } from '$lib/api/types.gen';
+	import type { ProjectLanguage } from '$lib/api/types.gen';
 	import { toast } from 'svelte-sonner';
 	import AddLanguageModal from './AddLanguageModal.svelte';
 	import ProjectLanguageMenu from './ProjectLanguageMenu.svelte';
@@ -14,7 +14,7 @@
 	}: {
 		projectId: string;
 		currentLang: string;
-		availableLanguages: LanguageDict[];
+		availableLanguages: ProjectLanguage[];
 		/** Called before navigating to another language. Return false to cancel (e.g. unsaved changes). */
 		canSwitch?: () => boolean | Promise<boolean>;
 	} = $props();
@@ -43,6 +43,12 @@
 		toast.success('Language added');
 	}
 
+	/** The backend refuses to drop the default or the last language; show its reason. */
+	function removalError(error: unknown): string {
+		const detail = (error as { detail?: unknown } | null)?.detail;
+		return typeof detail === 'string' ? detail : 'Failed to remove language';
+	}
+
 	async function handleRemove(code: string) {
 		if (availableLanguages.length <= 1) return;
 		const { error } = await Projects.removeProjectLanguage({
@@ -51,7 +57,7 @@
 		});
 		if (error) {
 			console.error('Failed to remove language', error);
-			toast.error('Failed to remove language');
+			toast.error(removalError(error));
 			return;
 		}
 		toast.success('Language removed');
@@ -69,6 +75,20 @@
 		}
 		await invalidateAll();
 	}
+
+	async function handleSetDefault(code: string) {
+		const { error } = await Projects.setDefaultLanguage({
+			path: { project_id: projectId },
+			body: code
+		});
+		if (error) {
+			console.error('Failed to set default language', error);
+			toast.error(removalError(error));
+			return;
+		}
+		await invalidateAll();
+		toast.success('Default language updated');
+	}
 </script>
 
 <ProjectLanguageMenu
@@ -77,6 +97,7 @@
 	onLanguageSwitch={handleSwitch}
 	onAddLanguage={() => (showAddModal = true)}
 	onRemoveLanguage={handleRemove}
+	onSetDefault={handleSetDefault}
 />
 
 <AddLanguageModal

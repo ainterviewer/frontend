@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Participants } from '$lib/api';
-	import type { LanguageDict, ParticipantEmailAttachment } from '$lib/api/types.gen';
+	import type { ParticipantEmailAttachment, ProjectLanguage } from '$lib/api/types.gen';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 	import { Editor } from '@tiptap/core';
 	import Image from '@tiptap/extension-image';
 	import StarterKit from '@tiptap/starter-kit';
 	import { toast } from 'svelte-sonner';
 
-	let { data }: { data: { available_languages: LanguageDict[] } } = $props();
+	let { data }: { data: { available_languages: ProjectLanguage[] } } = $props();
 
 	const project_id = $derived(page.params.project_id as string);
 	const language = $derived(page.params.lang as string);

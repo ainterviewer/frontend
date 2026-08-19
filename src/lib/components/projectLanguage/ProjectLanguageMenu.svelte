@@ -1,22 +1,30 @@
 <script lang="ts">
+	import type { ProjectLanguage } from '$lib/api/types.gen';
+
 	let {
 		currentLang,
 		availableLanguages,
 		onLanguageSwitch,
 		onAddLanguage,
-		onRemoveLanguage
+		onRemoveLanguage,
+		onSetDefault
 	}: {
 		currentLang: string;
-		availableLanguages: Array<{ name: string; code: string }>;
+		availableLanguages: ProjectLanguage[];
 		onLanguageSwitch: (code: string) => void;
 		onAddLanguage: () => void;
 		onRemoveLanguage: (code: string) => void;
+		onSetDefault: (code: string) => void;
 	} = $props();
 
 	let open = $state(false);
 
 	let currentLanguageName = $derived(
 		availableLanguages.find((l) => l.code === currentLang)?.name ?? currentLang
+	);
+
+	let currentIsDefault = $derived(
+		availableLanguages.find((l) => l.code === currentLang)?.is_default ?? false
 	);
 
 	function toggle(e: MouseEvent) {
@@ -43,6 +51,11 @@
 		if (confirmed) {
 			onRemoveLanguage(currentLang);
 		}
+		open = false;
+	}
+
+	function handleSetDefault() {
+		onSetDefault(currentLang);
 		open = false;
 	}
 
@@ -90,6 +103,14 @@
 							: 'border-gray-300 bg-white'}"
 					></span>
 					{lang.name}
+					{#if lang.is_default}
+						<span
+							class="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
+							title="Used when a respondent's language isn't available, and as the source for translations"
+						>
+							Default
+						</span>
+					{/if}
 				</button>
 			{/each}
 
@@ -104,17 +125,35 @@
 				Add language...
 			</button>
 
+			{#if availableLanguages.length > 1 && !currentIsDefault}
+				<button
+					type="button"
+					class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+					onclick={handleSetDefault}
+				>
+					<i class="fa-solid fa-star text-xs"></i>
+					Make {currentLanguageName} the default
+				</button>
+			{/if}
+
 			{#if availableLanguages.length > 1}
 				<hr class="my-1 border-gray-200" />
 
-				<button
-					type="button"
-					class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
-					onclick={handleRemove}
-				>
-					<i class="fa-solid fa-trash text-xs"></i>
-					Remove {currentLanguageName}
-				</button>
+				{#if currentIsDefault}
+					<p class="px-4 py-2 text-sm text-gray-500">
+						{currentLanguageName} is the default language. Make another language the default to remove
+						it.
+					</p>
+				{:else}
+					<button
+						type="button"
+						class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
+						onclick={handleRemove}
+					>
+						<i class="fa-solid fa-trash text-xs"></i>
+						Remove {currentLanguageName}
+					</button>
+				{/if}
 			{/if}
 		</div>
 	{/if}

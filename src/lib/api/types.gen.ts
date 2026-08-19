@@ -91,9 +91,9 @@ export type AgentConfigsInput = {
     guide?: AgentConfig;
     history?: AgentConfig;
     security?: SecurityConfig;
-    visual?: VisualConfig;
     answering?: AgentConfig;
     reformulation?: AgentConfig;
+    visual?: VisualConfig;
 };
 
 /**
@@ -105,9 +105,9 @@ export type AgentConfigsOutput = {
     guide?: AgentConfig;
     history?: AgentConfig;
     security?: SecurityConfig;
-    visual?: VisualConfig;
     answering?: AgentConfig;
     reformulation?: AgentConfig;
+    visual?: VisualConfig;
 };
 
 /**
@@ -1191,7 +1191,6 @@ export type Image = {
  * InterviewConfig
  */
 export type InterviewConfig = {
-    default_language?: LanguageCode;
     /**
      * With Consent
      *
@@ -2293,6 +2292,28 @@ export type ProjectFolderWithProjects = {
 };
 
 /**
+ * ProjectLanguage
+ *
+ * A language a project has a localization for.
+ *
+ * Same shape as the library's `LanguageDict` plus whether it is the
+ * project's default. `LanguageDict` itself stays free of the flag: it comes
+ * straight out of the shared `LANGUAGES` constant and knows nothing about
+ * projects.
+ */
+export type ProjectLanguage = {
+    /**
+     * Name
+     */
+    name: string;
+    code: LanguageCode;
+    /**
+     * Is Default
+     */
+    is_default: boolean;
+};
+
+/**
  * ProjectPublic
  */
 export type ProjectPublic = {
@@ -2329,7 +2350,7 @@ export type ProjectPublic = {
     /**
      * Available Languages
      */
-    available_languages?: Array<LanguageDict> | null;
+    available_languages?: Array<ProjectLanguage> | null;
     /**
      * Tests
      */
@@ -5697,7 +5718,7 @@ export type RemoveProjectLanguageResponses = {
      *
      * Successful Response
      */
-    200: Array<LanguageDict>;
+    200: Array<ProjectLanguage>;
 };
 
 export type RemoveProjectLanguageResponse = RemoveProjectLanguageResponses[keyof RemoveProjectLanguageResponses];
@@ -5729,7 +5750,7 @@ export type GetProjectLanguagesResponses = {
      *
      * Successful Response
      */
-    200: Array<LanguageDict>;
+    200: Array<ProjectLanguage>;
 };
 
 export type GetProjectLanguagesResponse = GetProjectLanguagesResponses[keyof GetProjectLanguagesResponses];
@@ -5766,10 +5787,47 @@ export type AddProjectLanguageResponses = {
      *
      * Successful Response
      */
-    200: Array<LanguageDict>;
+    200: Array<ProjectLanguage>;
 };
 
 export type AddProjectLanguageResponse = AddProjectLanguageResponses[keyof AddProjectLanguageResponses];
+
+export type SetDefaultLanguageData = {
+    body: LanguageCode;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/default_language';
+};
+
+export type SetDefaultLanguageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetDefaultLanguageError = SetDefaultLanguageErrors[keyof SetDefaultLanguageErrors];
+
+export type SetDefaultLanguageResponses = {
+    /**
+     * Response Set Default Language
+     *
+     * Successful Response
+     */
+    200: Array<ProjectLanguage>;
+};
+
+export type SetDefaultLanguageResponse = SetDefaultLanguageResponses[keyof SetDefaultLanguageResponses];
 
 export type ChangeProjectStatusData = {
     body: ProjectStatusChangeRequest;

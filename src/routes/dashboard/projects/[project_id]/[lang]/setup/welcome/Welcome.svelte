@@ -2,7 +2,7 @@
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { Consent, LanguageDict } from '$lib/api/types.gen';
+	import type { Consent, ProjectLanguage } from '$lib/api/types.gen';
 	import { WelcomeModal } from '$lib/components/modals';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -19,7 +19,7 @@
 			email: string;
 			video_file_name?: string | null;
 		} | null;
-		availableLanguages?: LanguageDict[];
+		availableLanguages?: ProjectLanguage[];
 		projectName?: string;
 	}
 
@@ -47,7 +47,7 @@
 	let showFullscreenModal = $state(false);
 	let saving = $state(false);
 	let exporting = $state(false);
-	const availableLanguages = $derived<LanguageDict[]>(initialAvailableLanguages);
+	const availableLanguages = $derived<ProjectLanguage[]>(initialAvailableLanguages);
 
 	let videoPreviewUrl = $state<string | null>(null);
 
