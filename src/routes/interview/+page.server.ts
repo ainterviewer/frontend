@@ -94,15 +94,20 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 	// Only whether the link is valid, never which param is at fault: naming the
 	// missing param would tell a respondent what to forge. The backend logs the
 	// detail for the project owner.
-	const { error: paramsError, response: paramsResponse } = await Interviews.validateInterviewParams(
-		{
-			path: { project_id },
-			body: { external_params: Object.keys(externalParams).length > 0 ? externalParams : null }
+	//
+	// Test runs come from the dashboard rather than from a distributed link, so
+	// they carry no link params to check; `create_interview` skips them too.
+	let paramsInvalid = false;
+	if (interviewType === 'distributed') {
+		const { error: paramsError, response: paramsResponse } =
+			await Interviews.validateInterviewParams({
+				path: { project_id },
+				body: { external_params: Object.keys(externalParams).length > 0 ? externalParams : null }
+			});
+		paramsInvalid = paramsResponse?.status === 422;
+		if (paramsError && !paramsInvalid) {
+			console.error('Failed to validate external params', paramsError);
 		}
-	);
-	const paramsInvalid = paramsResponse?.status === 422;
-	if (paramsError && !paramsInvalid) {
-		console.error('Failed to validate external params', paramsError);
 	}
 
 	const referer = request.headers.get('referer') || null;
