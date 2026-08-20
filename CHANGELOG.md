@@ -4,6 +4,12 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.80] - 2026-08-20
+
+### Features
+
+- Validate external params as first step when an interview is loaded
+
 ## [0.2.79] - 2026-08-20
 
 ### Bug Fixes
