@@ -9,8 +9,8 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 
 	// Releases ride along with the version call so the "What's new" dot can be
 	// rendered without a second round trip — and so it keys off the newest
-	// *curated* release rather than the deployed version, which may not have
-	// been written up yet.
+	// release that has something to announce rather than the deployed version,
+	// which may not have been written up yet, or may have nothing to write up.
 	const [response, platformVer, releases] = await Promise.all([
 		Auth.me({ headers: { cookie: cookieHeader } }),
 		Default.version({}),

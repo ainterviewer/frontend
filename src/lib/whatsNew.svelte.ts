@@ -1,4 +1,22 @@
+import type { PlatformRelease } from '$lib/api';
+
 const LAST_SEEN_KEY = 'whats-new-last-seen';
+
+/**
+ * The newest release that actually announces something, or undefined.
+ *
+ * Not simply `releases[0]`: the API also serves releases curated as having
+ * nothing user-facing, which the dialog lists as a maintenance row. Those are
+ * worth reading, not worth interrupting for, so the unseen dot skips them.
+ *
+ * Both the dot and the marker written when the dialog opens read this one
+ * value. Letting them diverge latches the dot on forever — `isUnseen` compares
+ * with `!==`, so a marker holding a version the dot never asks about can never
+ * clear it.
+ */
+export function newsworthyVersion(releases: PlatformRelease[] | undefined) {
+	return releases?.find((release) => release.highlights.length > 0)?.platform_version;
+}
 
 /**
  * Open/closed state for the "What's new" dialog, plus the marker for which

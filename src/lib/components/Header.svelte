@@ -6,7 +6,7 @@
 	import type { PlatformRelease, ProjectPublic, UserPublic } from '$lib/api/types.gen';
 	import Wave from '$lib/components/Wave.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls.js';
-	import { whatsNew } from '$lib/whatsNew.svelte';
+	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
 	import HoverInfo from './HoverInfo.svelte';
 
 	interface HeaderProps {
@@ -23,7 +23,7 @@
 	let logoAnimate = $state(false);
 	let menuOpen = $state(false);
 
-	let latestRelease = $derived(data.releases?.[0]?.platform_version);
+	let latestRelease = $derived(newsworthyVersion(data.releases));
 	let hasUnseenRelease = $derived(whatsNew.isUnseen(latestRelease));
 
 	export async function signOut() {

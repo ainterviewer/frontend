@@ -3,7 +3,7 @@
 	import { type SidebarItem } from '$lib/config/sidebar';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
-	import { whatsNew } from '$lib/whatsNew.svelte';
+	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
 	import HoverInfo from './HoverInfo.svelte';
 
 	//  TODO: Align text after icons
@@ -147,7 +147,7 @@
 						{...props}
 						data-tour="platform-version"
 						type="button"
-						onclick={() => whatsNew.open(page.data.releases?.[0]?.platform_version)}
+						onclick={() => whatsNew.open(newsworthyVersion(page.data.releases))}
 						class="cursor-pointer border-none bg-transparent p-0 font-normal whitespace-nowrap text-light/60 hover:text-light"
 						title="What's new"
 					>
