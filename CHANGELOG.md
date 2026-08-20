@@ -4,6 +4,12 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.79] - 2026-08-20
+
+### Bug Fixes
+
+- Don't show new release notification for only releases with only internal changes
+
 ## [0.2.78] - 2026-08-20
 
 ### Bug Fixes
