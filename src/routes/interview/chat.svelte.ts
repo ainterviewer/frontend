@@ -2,7 +2,6 @@ import { browser } from '$app/environment';
 import {
 	Auth,
 	Interviews,
-	type HttpValidationError,
 	type InterviewToken,
 	type InterviewType,
 	type OutgoingData,
@@ -101,8 +100,7 @@ export function clearInterviewSession(projectId: string): void {
 }
 
 export type CreateInterviewResult =
-	| { ok: true; token: string }
-	| { ok: false; validationErrors?: Array<{ loc: string; msg: string }> };
+	{ ok: true; token: string } | { ok: false; paramsInvalid?: boolean };
 
 /**
  * Create a new interview for the given project
@@ -131,18 +129,11 @@ export async function createInterview(
 			}
 		});
 		if (error || !response?.ok) {
-			// Try to extract validation errors from the response
-			try {
-				const body = error as HttpValidationError;
-				if (body?.detail && Array.isArray(body.detail)) {
-					const validationErrors = body.detail.map((d) => ({
-						loc: Array.isArray(d.loc) ? d.loc.join('.') : String(d.loc),
-						msg: d.msg
-					}));
-					return { ok: false, validationErrors };
-				}
-			} catch {
-				// ignore parse errors
+			// A 422 means the link's params don't satisfy the project's schema.
+			// The body says no more than that on purpose — see the backend's
+			// `validate_external_params`.
+			if (response?.status === 422) {
+				return { ok: false, paramsInvalid: true };
 			}
 			console.error('Failed to create interview');
 			return { ok: false };

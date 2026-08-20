@@ -3164,6 +3164,20 @@ export type UserSelfUpdate = {
 };
 
 /**
+ * ValidateExternalParamsRequest
+ */
+export type ValidateExternalParamsRequest = {
+    /**
+     * External Params
+     *
+     * Query parameters carried by the interview link.
+     */
+    external_params?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
  * ValidationError
  */
 export type ValidationError = {
@@ -7073,6 +7087,34 @@ export type RunSyntheticTestErrors = {
 export type RunSyntheticTestError = RunSyntheticTestErrors[keyof RunSyntheticTestErrors];
 
 export type RunSyntheticTestResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ValidateInterviewParamsData = {
+    body: ValidateExternalParamsRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/api/projects/{project_id}/external_params/validate';
+};
+
+export type ValidateInterviewParamsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ValidateInterviewParamsError = ValidateInterviewParamsErrors[keyof ValidateInterviewParamsErrors];
+
+export type ValidateInterviewParamsResponses = {
     /**
      * Successful Response
      */

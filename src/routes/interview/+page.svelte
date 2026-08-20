@@ -24,6 +24,7 @@
 		availableLanguages: ProjectLanguage[];
 		authError?: boolean;
 		externalParams?: Record<string, string> | null;
+		paramsInvalid?: boolean;
 		referer?: string | null;
 	}
 
@@ -60,13 +61,17 @@
 	let consentData = $state<Consent | null>(null);
 	let isInitializing = $state(true);
 	let consentAccepting = $state(false);
-	let validationErrors = $state<Array<{ loc: string; msg: string }> | null>(null);
+	// The load function validates the link's params against the project's
+	// schema before the page renders; `createInterviewAndGetId` can still
+	// report a failure if the schema changed between landing and consent.
+	let createParamsInvalid = $state(false);
+	const paramsInvalid = $derived(createParamsInvalid || data.paramsInvalid === true);
 	// Set when the interview can't be prepared. Never start an interview in
 	// this state: the consent screen may not be skipped because of an error.
 	let loadError = $state(false);
 
 	onMount(() => {
-		if (isDemoBlocked || isAuthBlocked) {
+		if (isDemoBlocked || isAuthBlocked || paramsInvalid) {
 			isInitializing = false;
 			return;
 		}
@@ -107,8 +112,8 @@
 				return null;
 			}
 		} else {
-			if (result.validationErrors) {
-				validationErrors = result.validationErrors;
+			if (result.paramsInvalid) {
+				createParamsInvalid = true;
 			}
 			console.error('Failed to create interview');
 			return null;
@@ -278,7 +283,7 @@
 				</p>
 			</div>
 		</div>
-	{:else if validationErrors}
+	{:else if paramsInvalid}
 		<div class="flex flex-1 items-center justify-center px-6">
 			<div class="max-w-md text-center">
 				<div
@@ -286,20 +291,11 @@
 				>
 					<i class="fa-solid fa-triangle-exclamation text-xl text-red-600"></i>
 				</div>
-				<h2 class="mb-2 text-lg font-semibold text-gray-900">Missing required parameters</h2>
+				<h2 class="mb-2 text-lg font-semibold text-gray-900">This interview link is not valid</h2>
 				<p class="mb-4 text-sm text-gray-600">
-					This interview link is missing required URL parameters. Please make sure that you used the
-					exact link provided to you and try again. If the error persists contact the entity who
-					shared the interview with you.
+					Please make sure that you used the exact link provided to you, without editing it, and try
+					again. If the error persists contact the entity who shared the interview with you.
 				</p>
-				<ul class="mb-4 space-y-1 text-left text-sm">
-					{#each validationErrors as err, errIdx (errIdx)}
-						<li class="rounded bg-red-50 px-3 py-2 text-red-700">
-							<!-- TODO: Maybe msg should not be displayed? -->
-							<span class="font-medium">{err.loc}</span> &mdash; {err.msg}
-						</li>
-					{/each}
-				</ul>
 			</div>
 		</div>
 	{:else if chat}

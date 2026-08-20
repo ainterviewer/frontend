@@ -1628,6 +1628,13 @@ export const zProjectFolderWithProjects = z.object({
 });
 
 /**
+ * ValidateExternalParamsRequest
+ */
+export const zValidateExternalParamsRequest = z.object({
+    external_params: z.record(z.string(), z.unknown()).nullish()
+});
+
+/**
  * ValidationError
  */
 export const zValidationError = z.object({
@@ -3150,6 +3157,12 @@ export const zRunSyntheticTestPath = z.object({
 
 export const zRunSyntheticTestQuery = z.object({
     folder_id: z.string().nullish()
+});
+
+export const zValidateInterviewParamsBody = zValidateExternalParamsRequest;
+
+export const zValidateInterviewParamsPath = z.object({
+    project_id: z.string()
 });
 
 export const zCreateInterviewBody = zCreateInterviewRequest;

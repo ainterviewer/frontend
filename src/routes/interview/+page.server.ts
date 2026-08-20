@@ -1,4 +1,4 @@
-import { Auth, Projects, type InterviewType } from '$lib/api';
+import { Auth, Interviews, Projects, type InterviewType } from '$lib/api';
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -86,6 +86,25 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 		}
 	}
 
+	// Validate the link's params against the project's schema up front, so a
+	// broken link fails on arrival instead of after the respondent has picked a
+	// language and accepted the consent text. `createInterview` validates again
+	// server-side; this only moves the feedback earlier.
+	//
+	// Only whether the link is valid, never which param is at fault: naming the
+	// missing param would tell a respondent what to forge. The backend logs the
+	// detail for the project owner.
+	const { error: paramsError, response: paramsResponse } = await Interviews.validateInterviewParams(
+		{
+			path: { project_id },
+			body: { external_params: Object.keys(externalParams).length > 0 ? externalParams : null }
+		}
+	);
+	const paramsInvalid = paramsResponse?.status === 422;
+	if (paramsError && !paramsInvalid) {
+		console.error('Failed to validate external params', paramsError);
+	}
+
 	const referer = request.headers.get('referer') || null;
 
 	return {
@@ -99,6 +118,7 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 		authError,
 		externalParams: Object.keys(externalParams).length > 0 ? externalParams : null,
 		referer,
-		availableLanguages
+		availableLanguages,
+		paramsInvalid
 	};
 };
