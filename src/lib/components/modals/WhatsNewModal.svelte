@@ -19,10 +19,6 @@
 		fixed: 'bg-dark/10 text-dark/70'
 	} as const;
 
-	// Releases with nothing user-facing are filtered out by the API, but a
-	// curated-then-emptied release would still arrive with no highlights.
-	let shown = $derived(releases.filter((release) => release.highlights.length > 0));
-
 	function formatDate(iso: string) {
 		const parsed = new Date(iso);
 		if (Number.isNaN(parsed.getTime())) return iso;
@@ -74,7 +70,7 @@
 			</div>
 
 			<div class="overflow-y-auto px-6 py-5">
-				{#each shown as release (release.platform_version)}
+				{#each releases as release (release.platform_version)}
 					<section class="mb-6 last:mb-0">
 						<h3 class="mb-3 flex items-baseline justify-between gap-3">
 							<span class="text-xs font-semibold tracking-wide text-dark/50 uppercase">
@@ -105,6 +101,21 @@
 										{#if highlight.body}
 											<p class="m-0 mt-1 text-sm text-dark/60">{highlight.body}</p>
 										{/if}
+									</div>
+								</li>
+							{:else}
+								<!-- A release curated as "nothing user-facing". It still gets a row:
+								     the version is deployed and the unseen dot points at it, so an
+								     empty section would read as a bug rather than as news. -->
+								<li class="flex gap-3">
+									<span
+										class="mt-0.5 w-18 shrink-0 self-start rounded-full bg-dark/5 py-0.5 text-center text-xs font-medium text-dark/50"
+									>
+										Internal
+									</span>
+									<div class="min-w-0">
+										<p class="m-0 text-sm font-medium text-dark">Maintenance release</p>
+										<p class="m-0 mt-1 text-sm text-dark/60">No user-facing changes.</p>
 									</div>
 								</li>
 							{/each}
