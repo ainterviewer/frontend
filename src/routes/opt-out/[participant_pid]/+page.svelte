@@ -53,13 +53,17 @@
 				<div class="text-center">
 					<h2 class="text-2xl font-bold text-dark">You've been opted out</h2>
 					<p class="mt-3 text-base text-gray-600">
-						Your data will no longer be used in this study and you won't be contacted again.
+						You won't be contacted about this interview again. Answers you've already given will
+						remain part of the study. To ask about how those answers are handled, please contact
+						whoever sent you this link.
 					</p>
 				</div>
 			{:else}
 				<p class="text-base text-gray-600">
-					Confirm that you want to opt out of this interview and stop being contacted about it in
-					the future. <span class="font-medium text-dark">This cannot be undone.</span>
+					Confirm that you no longer want to take part in this interview. We won't contact you about
+					it again, and answers you have already given will remain part of the study.
+					<span class="font-medium text-dark">This cannot be undone.</span> To ask about how those answers
+					are handled, please contact whoever sent you this link.
 				</p>
 
 				<form onsubmit={handleOptOut} class="mt-6 space-y-5">
