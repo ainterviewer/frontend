@@ -236,7 +236,10 @@
 		const url = window.URL.createObjectURL(res.data as Blob);
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = res.response?.headers.get('x-filename') ?? '';
+		// The backend percent-encodes the header: HTTP header values are
+		// latin-1, and project titles are not.
+		const encodedName = res.response?.headers.get('x-filename');
+		a.download = encodedName ? decodeURIComponent(encodedName) : '';
 		document.body.appendChild(a);
 		a.click();
 		window.URL.revokeObjectURL(url);
