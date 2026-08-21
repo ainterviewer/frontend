@@ -270,6 +270,43 @@
 	</div>
 {/if}
 
+<!-- Expired Session -->
+<!--
+	Deliberately not a Modal: Modal is dismissable, and there is nothing behind
+	this to go back to. The interview cannot be resumed from this browser, so
+	starting over is the only move — say so rather than reloading out from under
+	the respondent with no explanation.
+-->
+{#if chat.sessionExpired}
+	<div
+		class="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+		role="alertdialog"
+		aria-modal="true"
+		aria-labelledby="session-expired-title"
+	>
+		<div
+			class="relative z-10 w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl ring-1 ring-black/5"
+		>
+			<h2 id="session-expired-title" class="text-lg font-semibold text-gray-900">
+				Your session has expired
+			</h2>
+			<p class="mt-3 text-sm text-gray-600">
+				We could not resume your interview — this can happen if too much time has passed or if your
+				browser cleared its data. Your previous answers cannot be continued from here.
+			</p>
+			<div class="mt-6 flex justify-end">
+				<button
+					type="button"
+					class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+					onclick={() => chat.startOver()}
+				>
+					Start a new interview
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
 <!-- Input Area -->
 <div class="flex w-full flex-col items-center pb-2">
 	<form

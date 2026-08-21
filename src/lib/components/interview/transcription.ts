@@ -5,12 +5,16 @@
 // client only streams audio, commits the buffer, and collects transcripts.
 // The final transcript is submitted through the normal interview message path.
 
+import { WS_UNAUTHORIZED } from './types';
+
 // Backend + OpenAI expect 24 kHz mono PCM16.
 const SAMPLE_RATE = 24_000;
 // ~100ms of audio per binary frame.
 const CHUNK_SAMPLES = 2_400;
 // How long to wait for the final transcript after committing the buffer.
 const FINISH_TIMEOUT_MS = 20_000;
+// How long to wait for the backend's `recording` frame before giving up.
+const CONNECT_TIMEOUT_MS = 10_000;
 
 function getTranscribeUrl(): string {
 	const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
@@ -25,6 +29,11 @@ export class TranscriptionClient {
 	private ws: WebSocket | null = null;
 	private segments: string[] = [];
 	private pendingFinish: { resolve: (transcript: string) => void; timer: number } | null = null;
+	private pendingConnect: {
+		resolve: () => void;
+		reject: (error: Error) => void;
+		timer: number;
+	} | null = null;
 	private bytesSinceCommit = 0;
 
 	/** True when the backend reported the transcription service is down.
@@ -39,15 +48,36 @@ export class TranscriptionClient {
 	/** Invoked when the backend reports the transcription service is down. */
 	onUnavailable: (() => void) | null = null;
 
-	/** Open the socket. Resolves once connected; rejects if the connection
-	 *  fails (in which case nothing is being recorded). */
+	/** Open the socket. Resolves once the backend has accepted the session;
+	 *  rejects if the connection fails (in which case nothing is being
+	 *  recorded).
+	 *
+	 *  Note this resolves on the `recording` frame rather than on `open`. The
+	 *  backend authenticates *after* accepting the handshake so it can report
+	 *  WS_UNAUTHORIZED as a close code, which means an opened socket is not yet
+	 *  an authorized one. `recording` is the first frame past that check, and
+	 *  it carries the filename we need regardless. */
 	connect(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			const ws = new WebSocket(getTranscribeUrl());
 			ws.binaryType = 'arraybuffer';
-			ws.onopen = () => resolve();
-			ws.onerror = () => reject(new Error('Failed to connect to transcription endpoint'));
-			ws.onclose = () => {
+
+			const timer = window.setTimeout(() => {
+				this.settleConnect(new Error('Timed out connecting to transcription endpoint'));
+				ws.close();
+			}, CONNECT_TIMEOUT_MS);
+			this.pendingConnect = { resolve, reject, timer };
+
+			ws.onerror = () =>
+				this.settleConnect(new Error('Failed to connect to transcription endpoint'));
+			ws.onclose = (event) => {
+				this.settleConnect(
+					new Error(
+						event.code === WS_UNAUTHORIZED
+							? 'Interview session expired'
+							: 'Transcription connection closed before it was ready'
+					)
+				);
 				// A close while a finish() is pending means no more transcripts
 				// are coming — resolve with what we have.
 				this.resolveFinish();
@@ -99,6 +129,17 @@ export class TranscriptionClient {
 		return this.segments.join(' ').trim();
 	}
 
+	/** Settle a pending connect(): resolve it, or reject with `error` if it
+	 *  never became ready. A no-op once the session is up. */
+	private settleConnect(error?: Error) {
+		if (!this.pendingConnect) return;
+		const { resolve, reject, timer } = this.pendingConnect;
+		clearTimeout(timer);
+		this.pendingConnect = null;
+		if (error) reject(error);
+		else resolve();
+	}
+
 	private resolveFinish() {
 		if (!this.pendingFinish) return;
 		clearTimeout(this.pendingFinish.timer);
@@ -119,6 +160,7 @@ export class TranscriptionClient {
 		switch (data.type) {
 			case 'recording':
 				this.recordingFilename = data.filename ?? null;
+				this.settleConnect();
 				break;
 
 			case 'conversation.item.input_audio_transcription.completed':

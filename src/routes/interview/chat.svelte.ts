@@ -9,7 +9,7 @@ import {
 	type OutgoingMessage,
 	type ReceivedData
 } from '$lib/api';
-import { type Message } from '$lib/components/interview/types';
+import { WS_UNAUTHORIZED, type Message } from '$lib/components/interview/types';
 
 // Messages arriving over the interview WebSocket. `OutgoingData` is extended
 // with the session identifiers the server includes on `data` frames.
@@ -43,10 +43,16 @@ export function parseInterviewIdFromToken(token: string): string | null {
 
 // The credential is the httponly `interview_token` cookie, which the browser
 // sends automatically on the WebSocket handshake. JavaScript cannot (and must
-// not) read it. We persist only the interview/project identifiers needed to
-// decide whether to resume, with an expiry mirroring the token's lifetime
-// (APP jwt_interview_token_expiration, 3 days) so a stale entry doesn't outlive
-// the cookie.
+// not) read it, so this entry can only ever be a guess at whether the cookie is
+// still there — the cookie is authoritative, and this mirrors its Max-Age
+// (APP jwt_interview_token_expiration, 3 days) as a best effort.
+//
+// The two can still diverge (cleared cookies, a different browser), which is
+// why divergence must be *recoverable* rather than merely unlikely: the
+// backend closes an unauthenticated socket with WS_UNAUTHORIZED and we clear
+// this entry and start over. Do not treat matching numbers here as a
+// guarantee; that assumption is what previously stranded respondents in a
+// reconnect loop.
 const SESSION_TTL_MS = 3 * 24 * 60 * 60 * 1000;
 
 function sessionKey(projectId: string): string {
@@ -157,6 +163,9 @@ export class ChatClient {
 	reconnectEnabled = $state(true);
 	reconnectFailed = $state(false);
 	isReconnecting = $state(false);
+	/** The interview credential is gone and cannot be recovered. Reconnecting
+	 *  is pointless; the respondent has to start a new interview. */
+	sessionExpired = $state(false);
 
 	// Show the typing indicator whenever we're waiting on the server. The chat
 	// is turn-based: the last message being a user `sent` means a reply is
@@ -166,6 +175,7 @@ export class ChatClient {
 	// submission that doesn't push a new message).
 	showTypingIndicator = $derived.by(() => {
 		if (!this.reconnectEnabled || this.reconnectFailed || this.isReconnecting) return false;
+		if (this.sessionExpired) return false;
 		if (this.forceTypingIndicator) return true;
 		const last = this.messages[this.messages.length - 1];
 		if (!last || last.type !== 'sent') return false;
@@ -259,9 +269,19 @@ export class ChatClient {
 				}
 			};
 
-			this.ws.onclose = () => {
+			this.ws.onclose = (event) => {
 				this.isConnected = false;
 				this.isConnecting = false;
+
+				// Fail fast on the one close we know is permanent. Every other
+				// pre-open failure (server restarting, network blip) is exactly
+				// what the backoff below exists for — see the note on
+				// WS_UNAUTHORIZED in types.ts for why we can only distinguish
+				// these two now that the backend closes rather than rejects.
+				if (event.code === WS_UNAUTHORIZED) {
+					this.handleSessionExpired();
+					return;
+				}
 
 				if (this.reconnectEnabled && this.reconnectAttempts < this.maxReconnectAttempts) {
 					this.isReconnecting = true;
@@ -333,6 +353,34 @@ export class ChatClient {
 	disableReconnect() {
 		this.reconnectEnabled = false;
 		if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+	}
+
+	/** The backend closed us with WS_UNAUTHORIZED: the interview token is gone
+	 *  or no longer valid, so this interview can never be resumed from this
+	 *  browser. Drop the stale resume entry and surface it — `startOver()`
+	 *  takes the respondent back through consent into a new interview. */
+	private async handleSessionExpired() {
+		this.disableReconnect();
+		this.isReconnecting = false;
+		this.reconnectFailed = false;
+		this.inputEnabled = false;
+		this.forceTypingIndicator = false;
+		this.sessionExpired = true;
+
+		// Clear the local entry first: it is the thing that decides whether the
+		// next load tries to resume, and leaving it behind reproduces the loop.
+		clearInterviewSession(this.project_id);
+
+		const { error: exitError } = await Auth.exit();
+		if (exitError) {
+			console.error('Error during exit', exitError);
+		}
+	}
+
+	/** Discard the expired session and start a fresh interview. */
+	startOver() {
+		clearInterviewSession(this.project_id);
+		window.location.reload();
 	}
 
 	async sendFeedback(feedback: 'positive' | 'negative' | null, messageId: string | number) {
