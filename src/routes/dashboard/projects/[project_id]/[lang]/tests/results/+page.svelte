@@ -16,6 +16,7 @@
 	// State
 	let interviews = $state<InterviewWithType[]>([]);
 	let loading = $state(false);
+	let hasLoaded = $state(false);
 	let totalItems = $state(0);
 	let currentPage = $state(1);
 	let itemsPerPage = $state(10);
@@ -81,6 +82,7 @@
 			}
 		}
 		loading = false;
+		hasLoaded = true;
 	}
 
 	function handleSort(column: string) {
@@ -313,7 +315,7 @@
 			</tr>
 		</thead>
 		<tbody class="bg-white">
-			{#if loading}
+			{#if loading && !hasLoaded}
 				<tr>
 					<td colspan="10" class="px-5 py-10 text-center text-gray-500">
 						<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading results...

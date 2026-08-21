@@ -12,6 +12,7 @@
 
 	let participants = $state<ParticipantPublic[]>([]);
 	let loading = $state(false);
+	let hasLoaded = $state(false);
 	let error = $state<string | null>(null);
 	let selected = $state(new Set<string>());
 
@@ -98,6 +99,7 @@
 		}
 		lastClickedIndex = null;
 		loading = false;
+		hasLoaded = true;
 	}
 
 	function toggleOne(index: number, e: MouseEvent) {
@@ -520,7 +522,7 @@
 			</tr>
 		</thead>
 		<tbody class="bg-white">
-			{#if loading}
+			{#if loading && !hasLoaded}
 				<tr>
 					<td colspan="9" class="px-5 py-10 text-center text-gray-500">
 						<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading participants...

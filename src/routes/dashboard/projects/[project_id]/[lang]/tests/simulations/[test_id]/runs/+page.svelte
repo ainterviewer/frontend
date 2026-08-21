@@ -25,6 +25,7 @@
 
 	let testRuns = $state<TestRun[]>([]);
 	let loading = $state(false);
+	let hasLoaded = $state(false);
 	let running = $state(false);
 
 	// Form defaults seeded once from the loaded test; deliberately not reactive to prop updates.
@@ -53,6 +54,7 @@
 			testRuns = (statusData as TestRun[]) || [];
 		}
 		loading = false;
+		hasLoaded = true;
 	}
 
 	async function runTest() {
@@ -262,7 +264,7 @@
 					</tr>
 				</thead>
 				<tbody class="bg-white">
-					{#if loading}
+					{#if loading && !hasLoaded}
 						<tr>
 							<td colspan="8" class="px-5 py-10 text-center text-gray-500">
 								<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading test runs...
