@@ -1295,6 +1295,10 @@ export type InterviewSubject = {
 
 /**
  * InterviewSummaryPublic
+ *
+ * One row of the interview list. Deliberately carries no messages: the
+ * list only ever renders `n_messages`, and the transcript is fetched from
+ * /interviews/{id}/messages when a single interview is opened.
  */
 export type InterviewSummaryPublic = {
     /**
@@ -1321,10 +1325,6 @@ export type InterviewSummaryPublic = {
      * N Messages
      */
     n_messages: number;
-    /**
-     * Messages
-     */
-    messages: Array<MessagePublic>;
     /**
      * Test Name
      */

@@ -653,6 +653,26 @@ export const zCreateProjectRequest = z.object({
 });
 
 /**
+ * InterviewSummaryPublic
+ *
+ * One row of the interview list. Deliberately carries no messages: the
+ * list only ever renders `n_messages`, and the transcript is fetched from
+ * /interviews/{id}/messages when a single interview is opened.
+ */
+export const zInterviewSummaryPublic = z.object({
+    id: z.string(),
+    language: zLanguageCode.optional().default('EN'),
+    interviewer: zInterviewer.optional().default('ai'),
+    status: zInterviewStatus,
+    type: zInterviewType,
+    created_at: z.iso.datetime(),
+    last_updated: z.iso.datetime().nullish(),
+    total_time_spent: z.int().optional().default(0),
+    n_messages: z.int(),
+    test_name: z.string().nullish()
+});
+
+/**
  * LanguageDict
  */
 export const zLanguageDict = z.object({
@@ -803,6 +823,14 @@ export const zNumberItem = z.object({
         z.int(),
         z.number()
     ]).nullish().default(1)
+});
+
+/**
+ * PaginatedResponse[InterviewSummaryPublic]
+ */
+export const zPaginatedResponseInterviewSummaryPublic = z.object({
+    total: z.int(),
+    items: z.array(zInterviewSummaryPublic)
 });
 
 /**
@@ -1367,31 +1395,6 @@ export const zMessagePublic = z.object({
     id: z.string(),
     annotations: z.array(zMessageAnnotationPublic).optional().default([]),
     interview_type: zInterviewType
-});
-
-/**
- * InterviewSummaryPublic
- */
-export const zInterviewSummaryPublic = z.object({
-    id: z.string(),
-    language: zLanguageCode.optional().default('EN'),
-    interviewer: zInterviewer.optional().default('ai'),
-    status: zInterviewStatus,
-    type: zInterviewType,
-    created_at: z.iso.datetime(),
-    last_updated: z.iso.datetime().nullish(),
-    total_time_spent: z.int().optional().default(0),
-    n_messages: z.int(),
-    messages: z.array(zMessagePublic),
-    test_name: z.string().nullish()
-});
-
-/**
- * PaginatedResponse[InterviewSummaryPublic]
- */
-export const zPaginatedResponseInterviewSummaryPublic = z.object({
-    total: z.int(),
-    items: z.array(zInterviewSummaryPublic)
 });
 
 /**
