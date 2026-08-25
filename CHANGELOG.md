@@ -4,6 +4,16 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.85] - 2026-08-25
+
+### Features
+
+- (tables) Unify all dashboard tables on TanStack Table v9
+
+### Internal
+
+- Add citation information
+
 ## [0.2.84] - 2026-08-21
 
 ### Features
