@@ -8,8 +8,20 @@
 		TimeDelta
 	} from '$lib/api';
 	import { Admin } from '$lib/api/sdk.gen';
+	import DataTable from '$lib/components/table/DataTable.svelte';
+	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
+	import {
+		dataTableFeatures,
+		formatDate,
+		formatDateFull,
+		matchesSelection,
+		NO_PAGINATION,
+		sortableText,
+		sortableTime,
+		type DataTableFeatures
+	} from '$lib/components/table/features';
 	import { errorMessage } from '$lib/utils/errors';
-	import { SvelteSet } from 'svelte/reactivity';
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -18,7 +30,6 @@
 	let invitations = $derived(data.invitations as InvitationPublic[]);
 	let isLoading = $state(false);
 	let error = $derived<string | null>(data.error);
-	const selectedIds = new SvelteSet<string>();
 	let showCreateForm = $state(false);
 	let editingInvitation = $state<InvitationPublic | null>(null);
 
@@ -37,15 +48,6 @@
 	let reusableInvitations = $derived(invitations.filter((invitation) => invitation.reuseable));
 	let singleUseInvitations = $derived(invitations.filter((invitation) => !invitation.reuseable));
 
-	let reusableAllSelected = $derived(
-		reusableInvitations.length > 0 &&
-			reusableInvitations.every((invitation) => selectedIds.has(invitation.id))
-	);
-	let singleUseAllSelected = $derived(
-		singleUseInvitations.length > 0 &&
-			singleUseInvitations.every((invitation) => selectedIds.has(invitation.id))
-	);
-
 	const scopeColors: Record<string, string> = {
 		admin: 'bg-purple-100 text-purple-800',
 		user: 'bg-blue-100 text-blue-800',
@@ -59,7 +61,7 @@
 		error = null;
 		try {
 			await invalidateAll();
-			selectedIds.clear();
+			clearSelections();
 		} catch (e) {
 			error = errorMessage(e) || 'Failed to fetch invitations';
 		} finally {
@@ -67,30 +69,14 @@
 		}
 	}
 
-	function toggleSelection(id: string) {
-		if (selectedIds.has(id)) {
-			selectedIds.delete(id);
-		} else {
-			selectedIds.add(id);
-		}
-	}
+	/**
+	 * Each table owns its own selection, so the ids come from the table whose
+	 * Delete was clicked -- the two lists are never acted on together.
+	 */
+	async function handleDelete(ids: string[]) {
+		if (ids.length === 0) return;
 
-	function toggleGroup(ids: string[], checked: boolean) {
-		if (checked) {
-			ids.forEach((id) => selectedIds.add(id));
-		} else {
-			ids.forEach((id) => selectedIds.delete(id));
-		}
-	}
-
-	async function handleDelete() {
-		const ids = Array.from(selectedIds);
-		if (ids.length === 0) {
-			toast.error('Please select one or more invitations to delete.');
-			return;
-		}
-
-		if (!confirm('Are you sure you want to delete these invitations?')) {
+		if (!confirm(`Are you sure you want to delete ${ids.length} invitation(s)?`)) {
 			return;
 		}
 
@@ -261,6 +247,122 @@
 			toast.error('Failed to copy link');
 		}
 	}
+
+	/* ---------------------------------------------------------------- tables */
+
+	const helper = createColumnHelper<DataTableFeatures, InvitationPublic>();
+
+	/** Renders a TimeDelta or an absolute timestamp as a short label. */
+	function userExpiresLabel(value: InvitationPublic['user_expires']): string {
+		if (!value) return '';
+		if (typeof value === 'string') return formatDate(value);
+		const delta = value as TimeDelta;
+		return (
+			[
+				delta.days ? `${delta.days}d` : '',
+				delta.hours ? `${delta.hours}h` : '',
+				delta.minutes ? `${delta.minutes}m` : ''
+			]
+				.filter(Boolean)
+				.join(' ') || ''
+		);
+	}
+
+	const isPast = (value: string | null | undefined) => !!value && new Date(value) < new Date();
+
+	const sharedColumns = [
+		helper.accessor((i) => sortableText(i.user_scope ?? 'user'), {
+			id: 'user_scope',
+			header: 'Scope',
+			sortFn: 'text',
+			filterFn: matchesSelection
+		}),
+		helper.accessor((i) => sortableTime(i.expires_at), {
+			id: 'expires_at',
+			header: 'Expires at',
+			sortFn: 'basic',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap tabular-nums' }
+		}),
+		helper.accessor((i) => sortableText(userExpiresLabel(i.user_expires)), {
+			id: 'user_expires',
+			header: 'User expires',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap' }
+		}),
+		helper.display({
+			id: 'actions',
+			header: 'Actions',
+			enableHiding: false,
+			meta: { align: 'right', class: 'whitespace-nowrap' }
+		})
+	];
+
+	const titleColumn = helper.accessor((i) => sortableText(i.title), {
+		id: 'title',
+		header: 'Title',
+		sortFn: 'text',
+		sortUndefined: 'last',
+		meta: { class: 'font-medium whitespace-nowrap text-dark' }
+	});
+
+	const emailColumn = helper.accessor((i) => sortableText(i.email), {
+		id: 'email',
+		header: 'Email',
+		sortFn: 'text',
+		sortUndefined: 'last',
+		meta: { class: 'whitespace-nowrap text-gray-700' }
+	});
+
+	const columnLabels: Record<string, string> = {
+		title: 'Title',
+		email: 'Email',
+		user_scope: 'Scope',
+		expires_at: 'Expires at',
+		user_expires: 'User expires'
+	};
+
+	const searchable = ['title', 'email'];
+
+	const reusableTable = createTable({
+		features: dataTableFeatures,
+		columns: helper.columns([
+			helper.display({ id: 'select', enableHiding: false }),
+			titleColumn,
+			...sharedColumns
+		]),
+		get data() {
+			return reusableInvitations;
+		},
+		getRowId: (i) => i.id,
+		globalFilterFn: 'includesString',
+		getColumnCanGlobalFilter: (column) => searchable.includes(column.id),
+		initialState: { pagination: NO_PAGINATION, sorting: [{ id: 'title', desc: false }] }
+	});
+
+	const singleUseTable = createTable({
+		features: dataTableFeatures,
+		columns: helper.columns([
+			helper.display({ id: 'select', enableHiding: false }),
+			titleColumn,
+			emailColumn,
+			...sharedColumns
+		]),
+		get data() {
+			return singleUseInvitations;
+		},
+		getRowId: (i) => i.id,
+		globalFilterFn: 'includesString',
+		getColumnCanGlobalFilter: (column) => searchable.includes(column.id),
+		initialState: { pagination: NO_PAGINATION, sorting: [{ id: 'title', desc: false }] }
+	});
+
+	// Delete acts on both tables at once, as the single toolbar button did.
+	function clearSelections() {
+		reusableTable.resetRowSelection(true);
+		singleUseTable.resetRowSelection(true);
+	}
 </script>
 
 <svelte:head>
@@ -285,14 +387,6 @@
 			disabled={isLoading}
 		>
 			<i class="fa-solid fa-plus"></i>
-		</button>
-		<button
-			class="cursor-pointer rounded bg-red-600 p-2 text-white transition hover:bg-red-700 disabled:opacity-50"
-			onclick={handleDelete}
-			title="Delete selected invitations"
-			disabled={selectedIds.size === 0 || isLoading}
-		>
-			<i class="fa-solid fa-trash"></i>
 		</button>
 		<button
 			class="cursor-pointer rounded bg-blue-600 p-2 text-white transition hover:bg-blue-700 disabled:opacity-50"
@@ -472,307 +566,97 @@
 {/if}
 
 <div class="space-y-6">
-	<div class="overflow-hidden rounded-lg bg-white shadow-md">
-		<div class="border-b border-gray-200 bg-gray-50 px-6 py-3">
-			<h3 class="text-sm font-semibold text-gray-700">Reusable Invitations</h3>
-		</div>
-		<table class="min-w-full divide-y divide-gray-200">
-			<thead class="bg-gray-50">
-				<tr>
-					<th
-						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>
-						<input
-							type="checkbox"
-							checked={reusableAllSelected}
-							onchange={(e) =>
-								toggleGroup(
-									reusableInvitations.map((invitation) => invitation.id),
-									e.currentTarget.checked
-								)}
-							class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
-						/>
-					</th>
-					<th
-						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>
-						<span class="inline-block w-64">Title</span>
-					</th>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>Scope</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>Expires At</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>User Expires</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>Actions</th
-					>
-				</tr>
-			</thead>
-			<tbody class="divide-y divide-gray-200 bg-white">
-				{#if isLoading && invitations.length === 0}
-					<tr>
-						<td colspan="6" class="px-6 py-4 text-center text-gray-500">
-							Loading invitations...
-						</td>
-					</tr>
-				{:else if reusableInvitations.length === 0}
-					<tr>
-						<td colspan="6" class="px-6 py-4 text-center text-gray-500">
-							No reusable invitations found.
-						</td>
-					</tr>
-				{:else}
-					{#each reusableInvitations as invitation (invitation.id)}
-						<tr
-							class="cursor-pointer hover:bg-gray-50"
-							tabindex="0"
-							onclick={() => toggleSelection(invitation.id)}
-							onkeydown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ') {
-									e.preventDefault();
-									toggleSelection(invitation.id);
-								}
-							}}
-						>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<input
-									type="checkbox"
-									checked={selectedIds.has(invitation.id)}
-									onchange={() => toggleSelection(invitation.id)}
-									onclick={(e) => e.stopPropagation()}
-									class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
-								/>
-							</td>
-							<td class="w-64 px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-								{invitation.title || '-'}
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<span
-									class="inline-flex rounded-full px-2 text-xs leading-5 font-semibold {scopeColors[
-										invitation.user_scope ?? 'user'
-									] ?? 'bg-gray-100 text-gray-800'}"
-								>
-									{invitation.user_scope ?? 'user'}
-								</span>
-							</td>
-							<td
-								class="px-6 py-4 text-sm whitespace-nowrap {invitation.expires_at &&
-								new Date(invitation.expires_at) < new Date()
-									? 'text-red-500'
-									: 'text-gray-500'}"
-							>
-								{invitation.expires_at ? new Date(invitation.expires_at).toLocaleString() : '-'}
-							</td>
-							<td
-								class="px-6 py-4 text-sm whitespace-nowrap {invitation.user_expires &&
-								typeof invitation.user_expires === 'string' &&
-								new Date(invitation.user_expires) < new Date()
-									? 'text-red-500'
-									: 'text-gray-500'}"
-							>
-								{#if !invitation.user_expires}
-									-
-								{:else if typeof invitation.user_expires === 'string'}
-									{new Date(invitation.user_expires).toLocaleString()}
-								{:else}
-									{[
-										invitation.user_expires.days ? `${invitation.user_expires.days}d` : '',
-										invitation.user_expires.hours ? `${invitation.user_expires.hours}h` : '',
-										invitation.user_expires.minutes ? `${invitation.user_expires.minutes}m` : ''
-									]
-										.filter(Boolean)
-										.join(' ') || '-'}
-								{/if}
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="flex gap-1">
-									<button
-										onclick={(e) => {
-											e.stopPropagation();
-											startEdit(invitation);
-										}}
-										class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
-										title="Edit invitation"
-									>
-										<i class="fa-solid fa-pencil"></i>
-									</button>
-									<button
-										onclick={(e) => {
-											e.stopPropagation();
-											copyLink(invitation.invitation_link);
-										}}
-										class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
-										title={invitation.invitation_link}
-									>
-										<i class="fa-solid fa-copy"></i>
-										Copy link
-									</button>
-								</div>
-							</td>
-						</tr>
-					{/each}
+	{#each [{ table: reusableTable, title: 'Reusable Invitations', reusable: true }, { table: singleUseTable, title: 'Single-Use Invitations', reusable: false }] as group (group.title)}
+		<DataTable
+			table={group.table}
+			{columnLabels}
+			title={group.title}
+			loading={isLoading}
+			hasLoaded={!isLoading || invitations.length > 0}
+			search
+			rowLabel="invitation"
+			searchPlaceholder="Search title or email..."
+			emptyTitle={group.reusable ? 'No reusable invitations' : 'No single-use invitations'}
+			emptyDescription="Create one with the + button above."
+		>
+			{#snippet filters()}
+				{#if group.table.getColumn('user_scope')}
+					<FacetedFilter title="Scope" column={group.table.getColumn('user_scope')!} />
 				{/if}
-			</tbody>
-		</table>
-	</div>
+			{/snippet}
 
-	<div class="overflow-hidden rounded-lg bg-white shadow-md">
-		<div class="border-b border-gray-200 bg-gray-50 px-6 py-3">
-			<h3 class="text-sm font-semibold text-gray-700">Single-Use Invitations</h3>
-		</div>
-		<table class="min-w-full divide-y divide-gray-200">
-			<thead class="bg-gray-50">
-				<tr>
-					<th
-						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+			{#snippet selectionActions()}
+				<button
+					class="ml-1 flex items-center gap-1.5 rounded px-2 py-0.5 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+					onclick={() => handleDelete(group.table.getSelectedRowIds())}
+					disabled={isLoading}
+				>
+					<i class="fa-solid fa-trash-can text-xs"></i>
+					Delete
+				</button>
+			{/snippet}
+
+			{#snippet cell(columnId, row)}
+				{@const invitation = row.original}
+				{#if columnId === 'title'}
+					{#if invitation.title}{invitation.title}{:else}<span class="text-gray-300">&ndash;</span
+						>{/if}
+				{:else if columnId === 'email'}
+					{#if invitation.email}{invitation.email}{:else}<span class="text-gray-300">&ndash;</span
+						>{/if}
+				{:else if columnId === 'user_scope'}
+					<span
+						class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {scopeColors[
+							invitation.user_scope ?? 'user'
+						] ?? 'bg-gray-100 text-gray-800'}"
 					>
-						<input
-							type="checkbox"
-							checked={singleUseAllSelected}
-							onchange={(e) =>
-								toggleGroup(
-									singleUseInvitations.map((invitation) => invitation.id),
-									e.currentTarget.checked
-								)}
-							class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
-						/>
-					</th>
-					<th
-						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>
-						<span class="inline-block w-64">Title</span>
-					</th>
-					<th
-						class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>
-						<span class="inline-block w-64">Email</span>
-					</th>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>Scope</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>Expires At</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>User Expires</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>Actions</th
-					>
-				</tr>
-			</thead>
-			<tbody class="divide-y divide-gray-200 bg-white">
-				{#if isLoading && invitations.length === 0}
-					<tr>
-						<td colspan="6" class="px-6 py-4 text-center text-gray-500">
-							Loading invitations...
-						</td>
-					</tr>
-				{:else if singleUseInvitations.length === 0}
-					<tr>
-						<td colspan="6" class="px-6 py-4 text-center text-gray-500">
-							No single-use invitations found.
-						</td>
-					</tr>
-				{:else}
-					{#each singleUseInvitations as invitation (invitation.id)}
-						<tr
-							class="cursor-pointer hover:bg-gray-50"
-							tabindex="0"
-							onclick={() => toggleSelection(invitation.id)}
-							onkeydown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ') {
-									e.preventDefault();
-									toggleSelection(invitation.id);
-								}
-							}}
+						{invitation.user_scope ?? 'user'}
+					</span>
+				{:else if columnId === 'expires_at'}
+					{#if invitation.expires_at}
+						<span
+							class={isPast(invitation.expires_at) ? 'font-medium text-red-600' : 'text-gray-600'}
+							title={formatDateFull(invitation.expires_at)}
 						>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<input
-									type="checkbox"
-									checked={selectedIds.has(invitation.id)}
-									onchange={() => toggleSelection(invitation.id)}
-									onclick={(e) => e.stopPropagation()}
-									class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
-								/>
-							</td>
-							<td class="w-64 px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-								{invitation.title || '-'}
-							</td>
-							<td class="w-64 px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-								{invitation.email || '-'}
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<span
-									class="inline-flex rounded-full px-2 text-xs leading-5 font-semibold {scopeColors[
-										invitation.user_scope ?? 'user'
-									] ?? 'bg-gray-100 text-gray-800'}"
-								>
-									{invitation.user_scope ?? 'user'}
-								</span>
-							</td>
-							<td
-								class="px-6 py-4 text-sm whitespace-nowrap {invitation.expires_at &&
-								new Date(invitation.expires_at) < new Date()
-									? 'text-red-500'
-									: 'text-gray-500'}"
-							>
-								{invitation.expires_at ? new Date(invitation.expires_at).toLocaleString() : '-'}
-							</td>
-							<td
-								class="px-6 py-4 text-sm whitespace-nowrap {invitation.user_expires &&
-								typeof invitation.user_expires === 'string' &&
-								new Date(invitation.user_expires) < new Date()
-									? 'text-red-500'
-									: 'text-gray-500'}"
-							>
-								{#if !invitation.user_expires}
-									-
-								{:else if typeof invitation.user_expires === 'string'}
-									{new Date(invitation.user_expires).toLocaleString()}
-								{:else}
-									{[
-										invitation.user_expires.days ? `${invitation.user_expires.days}d` : '',
-										invitation.user_expires.hours ? `${invitation.user_expires.hours}h` : '',
-										invitation.user_expires.minutes ? `${invitation.user_expires.minutes}m` : ''
-									]
-										.filter(Boolean)
-										.join(' ') || '-'}
-								{/if}
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="flex gap-1">
-									<button
-										onclick={(e) => {
-											e.stopPropagation();
-											startEdit(invitation);
-										}}
-										class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
-										title="Edit invitation"
-									>
-										<i class="fa-solid fa-pencil"></i>
-									</button>
-									<button
-										onclick={(e) => {
-											e.stopPropagation();
-											copyLink(invitation.invitation_link);
-										}}
-										class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-200"
-										title={invitation.invitation_link}
-									>
-										<i class="fa-solid fa-copy"></i>
-										Copy link
-									</button>
-								</div>
-							</td>
-						</tr>
-					{/each}
+							{formatDate(invitation.expires_at)}
+						</span>
+					{:else}<span class="text-gray-300">&ndash;</span>{/if}
+				{:else if columnId === 'user_expires'}
+					{@const label = userExpiresLabel(invitation.user_expires)}
+					{#if label}
+						<span
+							class={typeof invitation.user_expires === 'string' && isPast(invitation.user_expires)
+								? 'font-medium text-red-600'
+								: 'text-gray-600'}
+						>
+							{label}
+						</span>
+					{:else}<span class="text-gray-300">&ndash;</span>{/if}
+				{:else if columnId === 'actions'}
+					<button
+						onclick={(e) => {
+							e.stopPropagation();
+							startEdit(invitation);
+						}}
+						class="mr-1 rounded p-1.5 text-gray-400 hover:bg-secondary/40 hover:text-dark"
+						title="Edit invitation"
+						aria-label="Edit invitation"
+					>
+						<i class="fa-solid fa-pencil text-xs"></i>
+					</button>
+					<button
+						onclick={(e) => {
+							e.stopPropagation();
+							copyLink(invitation.invitation_link);
+						}}
+						class="rounded p-1.5 text-gray-400 hover:bg-secondary/40 hover:text-dark"
+						title={invitation.invitation_link}
+						aria-label="Copy invitation link"
+					>
+						<i class="fa-solid fa-copy text-xs"></i>
+					</button>
 				{/if}
-			</tbody>
-		</table>
-	</div>
+			{/snippet}
+		</DataTable>
+	{/each}
 </div>

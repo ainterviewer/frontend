@@ -7,6 +7,19 @@
 	import type { SynthesizeRequest } from '$lib/api/types.gen';
 	import type { PageData } from './$types';
 	import SimulationActionBar from '../SimulationActionBar.svelte';
+	import DataTable from '$lib/components/table/DataTable.svelte';
+	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
+	import {
+		dataTableFeatures,
+		NO_PAGINATION,
+		formatDate,
+		formatDateFull,
+		matchesSelection,
+		sortableText,
+		sortableTime,
+		type DataTableFeatures
+	} from '$lib/components/table/features';
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
 
 	let isAdmin = $derived(page.data.user?.scope === 'admin');
 
@@ -88,11 +101,6 @@
 		running = false;
 	}
 
-	function formatDate(dateStr: string) {
-		if (!dateStr) return 'N/A';
-		return new Date(dateStr).toLocaleString('en-GB', { hour12: false });
-	}
-
 	function getStatusClass(status: string) {
 		switch (status) {
 			case 'running':
@@ -127,6 +135,72 @@
 			if (refreshInterval) clearInterval(refreshInterval);
 		};
 	});
+
+	/* ---------------------------------------------------------------- table */
+
+	const helper = createColumnHelper<DataTableFeatures, TestRun>();
+
+	const columns = helper.columns([
+		helper.accessor((r) => sortableTime(r.created_at), {
+			id: 'created_at',
+			header: 'Created',
+			sortFn: 'basic',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap tabular-nums text-gray-600' }
+		}),
+		helper.accessor((r) => sortableText(r.language), {
+			id: 'language',
+			header: 'Language',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			filterFn: matchesSelection,
+			meta: { class: 'text-gray-600' }
+		}),
+		helper.accessor((r) => r.n_interviews ?? 0, {
+			id: 'n_interviews',
+			header: 'N interviews',
+			sortFn: 'basic',
+			meta: { class: 'tabular-nums text-gray-600' }
+		}),
+		helper.display({
+			id: 'question_model',
+			header: 'Question model',
+			meta: { class: 'text-gray-600' }
+		}),
+		helper.accessor((r) => sortableText(r.answering_model), {
+			id: 'answering_model',
+			header: 'Answering model',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'text-gray-600' }
+		}),
+		helper.accessor((r) => sortableText(r.status), {
+			id: 'status',
+			header: 'Status',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			filterFn: matchesSelection
+		})
+	]);
+
+	const table = createTable({
+		features: dataTableFeatures,
+		columns,
+		get data() {
+			return testRuns;
+		},
+		getRowId: (r) => r.id,
+		initialState: { pagination: NO_PAGINATION, sorting: [{ id: 'created_at', desc: true }] }
+	});
+
+	const columnLabels: Record<string, string> = {
+		created_at: 'Created',
+		language: 'Language',
+		n_interviews: 'N interviews',
+		question_model: 'Question model',
+		answering_model: 'Answering model',
+		status: 'Status'
+	};
 </script>
 
 <div class="flex min-h-full flex-col pb-32">
@@ -241,68 +315,47 @@
 
 		<h2 class="mt-8 mb-4 text-lg font-medium text-gray-800">Test Runs</h2>
 
-		<div class="shrink-0 overflow-x-auto rounded-lg bg-white shadow">
-			<table class="min-w-full leading-normal">
-				<thead>
-					<tr
-						class="border-b-2 border-gray-200 bg-secondary text-left text-[13px] font-bold tracking-wider text-gray-900 uppercase"
+		<DataTable
+			{table}
+			{columnLabels}
+			{loading}
+			{hasLoaded}
+			selectable={false}
+			rowLabel="test run"
+			emptyTitle="No test runs yet"
+			emptyDescription="Run the test above to create one."
+		>
+			{#snippet filters()}
+				{#if table.getColumn('status')}
+					<FacetedFilter title="Status" column={table.getColumn('status')!} />
+				{/if}
+			{/snippet}
+
+			{#snippet cell(columnId, row)}
+				{@const testRun = row.original}
+				{#if columnId === 'created_at'}
+					<span title={formatDateFull(testRun.created_at)}>
+						{formatDate(testRun.created_at)}
+					</span>
+				{:else if columnId === 'language'}
+					{testRun.language}
+				{:else if columnId === 'n_interviews'}
+					{testRun.n_interviews}
+				{:else if columnId === 'question_model'}
+					<span class="text-gray-300">&ndash;</span>
+				{:else if columnId === 'answering_model'}
+					{#if testRun.answering_model}{testRun.answering_model}{:else}<span class="text-gray-300"
+							>&ndash;</span
+						>{/if}
+				{:else if columnId === 'status'}
+					<span
+						class="rounded-full px-2 py-0.5 text-xs font-semibold {getStatusClass(testRun.status)}"
 					>
-						<th class="w-12 px-5 py-3">
-							<input
-								type="checkbox"
-								disabled
-								class="form-checkbox h-4 w-4 text-primary opacity-50"
-							/>
-						</th>
-						<th class="px-5 py-3">Created</th>
-						<th class="px-5 py-3">Language</th>
-						<th class="px-5 py-3">N interviews</th>
-						<th class="px-5 py-3">Question model</th>
-						<th class="px-5 py-3">Answering model</th>
-						<th class="px-5 py-3">Status</th>
-						<th class="w-12 px-5 py-3"></th>
-					</tr>
-				</thead>
-				<tbody class="bg-white">
-					{#if loading && !hasLoaded}
-						<tr>
-							<td colspan="8" class="px-5 py-10 text-center text-gray-500">
-								<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading test runs...
-							</td>
-						</tr>
-					{:else if testRuns.length === 0}
-						<tr>
-							<td colspan="8" class="px-5 py-10 text-center text-gray-500"> No test runs found </td>
-						</tr>
-					{:else}
-						{#each testRuns as testRun (testRun.id)}
-							<tr class="border-b border-gray-200 text-sm hover:bg-gray-50">
-								<td class="px-5 py-4">
-									<input
-										type="checkbox"
-										disabled
-										class="form-checkbox h-4 w-4 cursor-not-allowed text-blue-600 opacity-50"
-									/>
-								</td>
-								<td class="px-5 py-4">{formatDate(testRun.created_at)}</td>
-								<td class="px-5 py-4">{testRun.language}</td>
-								<td class="px-5 py-4">{testRun.n_interviews}</td>
-								<td class="px-5 py-4">-</td>
-								<td class="px-5 py-4">{testRun.answering_model || '-'}</td>
-								<td class="px-5 py-4">
-									<span
-										class="rounded-full px-2 py-1 text-xs font-semibold {getStatusClass(
-											testRun.status
-										)}">{testRun.status}</span
-									>
-								</td>
-								<td class="px-5 py-4"></td>
-							</tr>
-						{/each}
-					{/if}
-				</tbody>
-			</table>
-		</div>
+						{testRun.status}
+					</span>
+				{/if}
+			{/snippet}
+		</DataTable>
 	</div>
 	<SimulationActionBar current="runs" />
 </div>

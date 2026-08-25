@@ -2,10 +2,20 @@
 	import { page } from '$app/state';
 	import { Participants } from '$lib/api';
 	import type { ParticipantPublic } from '$lib/api/types.gen';
+	import DataTable from '$lib/components/table/DataTable.svelte';
+	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
+	import {
+		dataTableFeatures,
+		formatDate,
+		formatDateFull,
+		matchesSelection,
+		sortableText,
+		sortableTime,
+		type DataTableFeatures
+	} from '$lib/components/table/features';
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { SvelteSet } from 'svelte/reactivity';
-	import SortableHeader from '../../interviews/SortableHeader.svelte';
 
 	const project_id = $derived(page.params.project_id as string);
 	const isDemo = $derived(page.data.user?.scope === 'demo');
@@ -14,7 +24,6 @@
 	let loading = $state(false);
 	let hasLoaded = $state(false);
 	let error = $state<string | null>(null);
-	let selected = $state(new Set<string>());
 
 	type EditState = { name: string; email: string; pid: string; participating: boolean };
 	let editingId = $state<string | null>(null);
@@ -29,63 +38,101 @@
 
 	let fileInput: HTMLInputElement;
 
-	type SortColumn =
-		| 'name'
-		| 'email'
-		| 'pid'
-		| 'participating'
-		| 'created_at'
-		| 'latest_interview_at'
-		| 'latest_interview_status';
+	/** Each click adds a full turn, so the icon spins once per refresh. */
+	let refreshTurns = $state(0);
 
-	let sortColumn = $state<SortColumn>('created_at');
-	let sortOrder = $state<'asc' | 'desc'>('desc');
+	/* ---------------------------------------------------------------- table */
 
-	function sortValue(p: ParticipantPublic, column: SortColumn): string | number | null {
-		switch (column) {
-			case 'participating':
-				return p.participating ? 1 : 0;
-			case 'created_at':
-			case 'latest_interview_at': {
-				const v = p[column];
-				return v ? new Date(v).getTime() : null;
-			}
-			default:
-				return p[column] ?? null;
+	const helper = createColumnHelper<DataTableFeatures, ParticipantPublic>();
+
+	const columns = helper.columns([
+		helper.display({ id: 'select', enableHiding: false }),
+		helper.accessor((p) => sortableText(p.name), {
+			id: 'name',
+			header: 'Name',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'font-medium text-dark' }
+		}),
+		helper.accessor((p) => sortableText(p.email), {
+			id: 'email',
+			header: 'Email',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'text-gray-700' }
+		}),
+		helper.accessor((p) => sortableText(p.pid), {
+			id: 'pid',
+			header: 'PID',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'font-mono text-xs text-gray-500' }
+		}),
+		helper.accessor('participating', {
+			header: 'Participating',
+			sortFn: 'basic',
+			filterFn: matchesSelection
+		}),
+		helper.accessor((p) => sortableTime(p.created_at), {
+			id: 'created_at',
+			header: 'Created',
+			sortFn: 'basic',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap tabular-nums text-gray-600' }
+		}),
+		helper.accessor((p) => sortableTime(p.latest_interview_at), {
+			id: 'latest_interview_at',
+			header: 'Latest interview activity',
+			sortFn: 'basic',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap tabular-nums text-gray-600' }
+		}),
+		helper.accessor((p) => sortableText(p.latest_interview_status), {
+			id: 'latest_interview_status',
+			header: 'Latest interview status',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			filterFn: matchesSelection,
+			meta: { class: 'text-gray-600' }
+		}),
+		helper.display({
+			id: 'actions',
+			header: 'Actions',
+			enableHiding: false,
+			meta: { align: 'right', class: 'whitespace-nowrap' }
+		})
+	]);
+
+	const searchableColumns = ['name', 'email', 'pid'];
+
+	const table = createTable({
+		features: dataTableFeatures,
+		columns,
+		get data() {
+			return participants;
+		},
+		getRowId: (p) => p.id,
+		globalFilterFn: 'includesString',
+		getColumnCanGlobalFilter: (column) => searchableColumns.includes(column.id),
+		initialState: {
+			pagination: { pageIndex: 0, pageSize: 25 },
+			sorting: [{ id: 'created_at', desc: true }]
 		}
-	}
-
-	const sortedParticipants = $derived.by(() => {
-		const dir = sortOrder === 'asc' ? 1 : -1;
-		return [...participants].sort((a, b) => {
-			const av = sortValue(a, sortColumn);
-			const bv = sortValue(b, sortColumn);
-			// Empty values sort last whichever direction the column is sorted in.
-			const aEmpty = av === null || av === '';
-			const bEmpty = bv === null || bv === '';
-			if (aEmpty || bEmpty) return aEmpty && bEmpty ? 0 : aEmpty ? 1 : -1;
-			if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
-			return String(av).localeCompare(String(bv), undefined, { sensitivity: 'base' }) * dir;
-		});
 	});
 
-	function toggleSort(column: string) {
-		if (sortColumn === column) {
-			sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-		} else {
-			sortColumn = column as SortColumn;
-			sortOrder = 'desc';
-		}
-		// Row indices change with the order, so an in-progress shift-range is void.
-		lastClickedIndex = null;
-	}
+	const columnLabels: Record<string, string> = {
+		name: 'Name',
+		email: 'Email',
+		pid: 'PID',
+		participating: 'Participating',
+		created_at: 'Created',
+		latest_interview_at: 'Latest interview activity',
+		latest_interview_status: 'Latest interview status'
+	};
 
-	const allSelected = $derived(
-		participants.length > 0 && participants.every((p) => selected.has(p.id))
-	);
-	const isIndeterminate = $derived(participants.some((p) => selected.has(p.id)) && !allSelected);
+	const selectedIds = $derived(table.getSelectedRowIds());
 
-	let lastClickedIndex = $state<number | null>(null);
+	/* ----------------------------------------------------------------- data */
 
 	async function load() {
 		loading = true;
@@ -97,44 +144,8 @@
 		} else {
 			participants = (res.data ?? []) as ParticipantPublic[];
 		}
-		lastClickedIndex = null;
 		loading = false;
 		hasLoaded = true;
-	}
-
-	function toggleOne(index: number, e: MouseEvent) {
-		const rows = sortedParticipants;
-		const id = rows[index].id;
-		const next = new SvelteSet(selected);
-		const select = !next.has(id);
-
-		// Shift-click extends from the previously clicked row, applying that
-		// row's new state to the whole range (the usual file-list behaviour).
-		if (e.shiftKey && lastClickedIndex !== null && lastClickedIndex < rows.length) {
-			const [from, to] = [lastClickedIndex, index].sort((a, b) => a - b);
-			for (const p of rows.slice(from, to + 1)) {
-				if (select) next.add(p.id);
-				else next.delete(p.id);
-			}
-		} else if (select) {
-			next.add(id);
-		} else {
-			next.delete(id);
-		}
-
-		lastClickedIndex = index;
-		selected = next;
-	}
-
-	function toggleAll(e: Event) {
-		const checked = (e.target as HTMLInputElement).checked;
-		const next = new SvelteSet(selected);
-		for (const p of participants) {
-			if (checked) next.add(p.id);
-			else next.delete(p.id);
-		}
-		lastClickedIndex = null;
-		selected = next;
 	}
 
 	function trimOrNull(v: string): string | null {
@@ -164,7 +175,7 @@
 	async function exportParticipants() {
 		const { data, error: exportError } = await Participants.exportParticipants({
 			path: { project_id },
-			body: { participant_ids: Array.from(selected) },
+			body: { participant_ids: selectedIds },
 			parseAs: 'blob'
 		});
 		if (exportError) {
@@ -199,10 +210,7 @@
 
 		saving = true;
 		if (cleaned.length === 1) {
-			const res = await Participants.addParticipant({
-				path: { project_id },
-				body: cleaned[0]
-			});
+			const res = await Participants.addParticipant({ path: { project_id }, body: cleaned[0] });
 			saving = false;
 			if (res.error) {
 				toast.error('Failed to add participant');
@@ -210,10 +218,7 @@
 			}
 			toast.success('Participant added');
 		} else {
-			const res = await Participants.addParticipants({
-				path: { project_id },
-				body: cleaned
-			});
+			const res = await Participants.addParticipants({ path: { project_id }, body: cleaned });
 			saving = false;
 			if (res.error) {
 				toast.error('Failed to add participants');
@@ -267,24 +272,27 @@
 			toast.error('Failed to delete participant');
 			return;
 		}
-		const next = new SvelteSet(selected);
-		next.delete(id);
-		selected = next;
+		// Row selection is independent state and keeps ids after the row is gone.
+		table.setRowSelection((old) => {
+			const next = { ...old };
+			delete next[id];
+			return next;
+		});
 		await load();
 	}
 
 	async function deleteSelected() {
-		if (selected.size === 0) return;
-		if (!confirm(`Delete ${selected.size} participant(s)? This cannot be undone.`)) return;
+		if (selectedIds.length === 0) return;
+		if (!confirm(`Delete ${selectedIds.length} participant(s)? This cannot be undone.`)) return;
 		const res = await Participants.deleteParticipants({
 			path: { project_id },
-			body: { participant_ids: Array.from(selected) }
+			body: { participant_ids: selectedIds }
 		});
 		if (res.error) {
 			toast.error('Failed to delete participants');
 			return;
 		}
-		selected = new Set();
+		table.resetRowSelection(true);
 		await load();
 	}
 
@@ -293,10 +301,7 @@
 		const file = input.files?.[0];
 		if (!file) return;
 
-		const res = await Participants.uploadParticipants({
-			path: { project_id },
-			body: { file }
-		});
+		const res = await Participants.uploadParticipants({ path: { project_id }, body: { file } });
 		input.value = '';
 		if (res.error) {
 			toast.error('Failed to upload file');
@@ -312,40 +317,45 @@
 		await load();
 	}
 
-	function formatDate(s: string | null | undefined) {
-		if (!s) return '';
-		return new Date(s).toLocaleString('en-GB', { hour12: false });
-	}
-
 	onMount(load);
 </script>
 
-<div class="mb-2 flex items-end justify-between">
-	<h1 class="page-title">Participants</h1>
-	<div class="flex gap-1">
+<div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+	<h1 class="page-title mb-0">Participants</h1>
+	<div class="flex items-center gap-1">
 		<button
-			class="p-2 text-gray-600 transition-transform duration-300 hover:rotate-180 hover:text-gray-900"
-			onclick={load}
+			class="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-secondary/40 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30"
+			onclick={() => {
+				refreshTurns += 1;
+				load();
+			}}
 			title="Refresh"
+			aria-label="Refresh"
 			disabled={isDemo}
 		>
-			<i class="fa-solid fa-arrows-rotate text-lg"></i>
+			<i
+				class="fa-solid fa-arrows-rotate transition-transform duration-500 ease-out"
+				style="transform: rotate({refreshTurns * 360}deg)"
+			></i>
 		</button>
+		<span class="mx-1 h-6 w-px bg-gray-200"></span>
 		<button
-			class="p-2 text-gray-600 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30"
+			class="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-secondary/40 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30"
 			onclick={openAdd}
 			disabled={isDemo}
 			title="Add participants"
+			aria-label="Add participants"
 		>
-			<i class="fa-solid fa-plus text-lg"></i>
+			<i class="fa-solid fa-plus"></i>
 		</button>
 		<button
-			class="p-2 text-gray-600 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30"
+			class="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-secondary/40 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30"
 			onclick={() => fileInput?.click()}
 			disabled={isDemo}
-			title="Upload CSV"
+			title="Upload CSV or Excel file"
+			aria-label="Upload CSV or Excel file"
 		>
-			<i class="fa-solid fa-file-arrow-up text-lg"></i>
+			<i class="fa-solid fa-file-arrow-up"></i>
 		</button>
 		<input
 			bind:this={fileInput}
@@ -355,20 +365,15 @@
 			onchange={handleUpload}
 		/>
 		<button
-			class="p-2 text-gray-600 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30"
+			class="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-secondary/40 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30"
 			onclick={exportParticipants}
 			disabled={isDemo || participants.length === 0}
-			title="Export CSV"
+			title={selectedIds.length > 0
+				? `Export ${selectedIds.length} selected as CSV`
+				: 'Export all as CSV'}
+			aria-label="Export CSV"
 		>
-			<i class="fa-solid fa-file-arrow-down text-lg"></i>
-		</button>
-		<button
-			class="p-2 text-gray-600 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
-			onclick={deleteSelected}
-			disabled={isDemo || selected.size === 0}
-			title="Delete selected"
-		>
-			<i class="fa-solid fa-trash-can text-lg"></i>
+			<i class="fa-solid fa-file-arrow-down"></i>
 		</button>
 	</div>
 </div>
@@ -380,7 +385,7 @@
 {/if}
 
 {#if showAddPanel}
-	<div class="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow">
+	<div class="mb-4 shrink-0 rounded-lg border border-gray-200 bg-white p-4 shadow">
 		<div class="mb-3 flex items-center justify-between">
 			<h2 class="text-sm font-semibold text-gray-700">
 				Add participants ({addRows.length} row{addRows.length === 1 ? '' : 's'})
@@ -472,171 +477,137 @@
 	</div>
 {/if}
 
-<div class="overflow-x-auto rounded-lg bg-white shadow">
-	<table class="min-w-full leading-normal">
-		<thead>
-			<tr
-				class="border-b-2 border-gray-200 bg-secondary text-left text-[13px] font-bold tracking-wider text-gray-900 uppercase"
-			>
-				<th class="w-12 px-5 py-3.5">
-					<input
-						type="checkbox"
-						class="form-checkbox h-4 w-4 cursor-pointer text-primary focus:ring-primary"
-						checked={allSelected}
-						indeterminate={isIndeterminate}
-						onchange={toggleAll}
-					/>
-				</th>
-				<SortableHeader label="Name" column="name" {sortColumn} {sortOrder} onSort={toggleSort} />
-				<SortableHeader label="Email" column="email" {sortColumn} {sortOrder} onSort={toggleSort} />
-				<SortableHeader label="PID" column="pid" {sortColumn} {sortOrder} onSort={toggleSort} />
-				<SortableHeader
-					label="Participating"
-					column="participating"
-					{sortColumn}
-					{sortOrder}
-					onSort={toggleSort}
+<DataTable
+	{table}
+	{columnLabels}
+	{loading}
+	{hasLoaded}
+	search
+	searchPlaceholder="Search name, email or PID..."
+	rowLabel="participant"
+	emptyTitle="No participants yet"
+	emptyDescription="Add participants directly, or upload a CSV or Excel file."
+>
+	{#snippet filters()}
+		{#if table.getColumn('participating')}
+			<FacetedFilter
+				title="Participating"
+				column={table.getColumn('participating')!}
+				options={[
+					{ value: 'true', label: 'Yes' },
+					{ value: 'false', label: 'No' }
+				]}
+			/>
+		{/if}
+		{#if table.getColumn('latest_interview_status')}
+			<FacetedFilter title="Status" column={table.getColumn('latest_interview_status')!} />
+		{/if}
+	{/snippet}
+
+	{#snippet selectionActions()}
+		<button
+			class="ml-1 flex items-center gap-1.5 rounded px-2 py-0.5 text-red-600 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-400/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+			onclick={deleteSelected}
+			disabled={isDemo}
+		>
+			<i class="fa-solid fa-trash-can text-xs"></i>
+			Delete
+		</button>
+	{/snippet}
+
+	{#snippet cell(columnId, row)}
+		{@const p = row.original}
+		{@const editing = editingId === p.id}
+		{#if columnId === 'name'}
+			{#if editing}
+				<input
+					type="text"
+					bind:value={editDraft.name}
+					class="w-full rounded border border-gray-300 px-2 py-1 focus:border-primary focus:outline-none"
 				/>
-				<SortableHeader
-					label="Created"
-					column="created_at"
-					{sortColumn}
-					{sortOrder}
-					onSort={toggleSort}
+			{:else if p.name}{p.name}{:else}<span class="text-gray-300">&ndash;</span>{/if}
+		{:else if columnId === 'email'}
+			{#if editing}
+				<input
+					type="email"
+					bind:value={editDraft.email}
+					class="w-full rounded border border-gray-300 px-2 py-1 focus:border-primary focus:outline-none"
 				/>
-				<SortableHeader
-					label="Latest interview activity"
-					column="latest_interview_at"
-					{sortColumn}
-					{sortOrder}
-					onSort={toggleSort}
+			{:else if p.email}{p.email}{:else}<span class="text-gray-300">&ndash;</span>{/if}
+		{:else if columnId === 'pid'}
+			{#if editing}
+				<input
+					type="text"
+					bind:value={editDraft.pid}
+					class="w-full rounded border border-gray-300 px-2 py-1 focus:border-primary focus:outline-none"
 				/>
-				<SortableHeader
-					label="Latest interview status"
-					column="latest_interview_status"
-					{sortColumn}
-					{sortOrder}
-					onSort={toggleSort}
+			{:else if p.pid}{p.pid}{:else}<span class="text-gray-300">&ndash;</span>{/if}
+		{:else if columnId === 'participating'}
+			{#if editing}
+				<input
+					type="checkbox"
+					bind:checked={editDraft.participating}
+					class="form-checkbox h-4 w-4 cursor-pointer rounded border-gray-400 text-primary"
 				/>
-				<th class="px-5 py-3 text-right">Actions</th>
-			</tr>
-		</thead>
-		<tbody class="bg-white">
-			{#if loading && !hasLoaded}
-				<tr>
-					<td colspan="9" class="px-5 py-10 text-center text-gray-500">
-						<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading participants...
-					</td>
-				</tr>
-			{:else if participants.length === 0}
-				<tr>
-					<td colspan="9" class="px-5 py-10 text-center text-gray-500"> No participants yet </td>
-				</tr>
+			{:else if p.participating}
+				<span class="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-semibold text-primary">
+					Yes
+				</span>
 			{:else}
-				{#each sortedParticipants as p, i (p.id)}
-					<tr class="border-b border-gray-200 text-sm hover:bg-gray-50">
-						<td class="px-5 py-3">
-							<input
-								type="checkbox"
-								class="form-checkbox h-4 w-4 cursor-pointer text-primary focus:ring-primary"
-								checked={selected.has(p.id)}
-								onclick={(e) => toggleOne(i, e)}
-							/>
-						</td>
-						{#if editingId === p.id}
-							<td class="px-5 py-2">
-								<input
-									type="text"
-									bind:value={editDraft.name}
-									class="w-full rounded border border-gray-300 px-2 py-1"
-								/>
-							</td>
-							<td class="px-5 py-2">
-								<input
-									type="email"
-									bind:value={editDraft.email}
-									class="w-full rounded border border-gray-300 px-2 py-1"
-								/>
-							</td>
-							<td class="px-5 py-2">
-								<input
-									type="text"
-									bind:value={editDraft.pid}
-									class="w-full rounded border border-gray-300 px-2 py-1"
-								/>
-							</td>
-							<td class="px-5 py-2">
-								<input
-									type="checkbox"
-									bind:checked={editDraft.participating}
-									class="form-checkbox h-4 w-4 cursor-pointer text-primary"
-								/>
-							</td>
-							<td class="px-5 py-2">{formatDate(p.created_at)}</td>
-							<td class="px-5 py-2">{formatDate(p.latest_interview_at)}</td>
-							<td class="px-5 py-2">{p.latest_interview_status}</td>
-							<td class="px-5 py-2 text-right">
-								<button
-									class="mr-2 text-green-600 hover:text-green-800"
-									onclick={() => saveEdit(p.id)}
-									title="Save"
-									aria-label="Save"
-								>
-									<i class="fa-solid fa-check"></i>
-								</button>
-								<button
-									class="text-gray-500 hover:text-gray-700"
-									onclick={cancelEdit}
-									title="Cancel"
-									aria-label="Cancel"
-								>
-									<i class="fa-solid fa-xmark"></i>
-								</button>
-							</td>
-						{:else}
-							<td class="px-5 py-3">{p.name ?? ''}</td>
-							<td class="px-5 py-3">{p.email ?? ''}</td>
-							<td class="px-5 py-3 font-mono text-xs">{p.pid ?? ''}</td>
-							<td class="px-5 py-3">
-								{#if p.participating}
-									<span
-										class="rounded-full bg-green-100 px-2 py-1 text-xs leading-tight font-semibold text-green-700"
-										>Yes</span
-									>
-								{:else}
-									<span
-										class="rounded-full bg-gray-100 px-2 py-1 text-xs leading-tight font-semibold text-gray-700"
-										>No</span
-									>
-								{/if}
-							</td>
-							<td class="px-5 py-3">{formatDate(p.created_at)}</td>
-							<td class="px-5 py-3">{formatDate(p.latest_interview_at)}</td>
-							<td class="px-5 py-3">{p.latest_interview_status}</td>
-							<td class="px-5 py-3 text-right">
-								<button
-									class="mr-3 text-gray-500 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-30"
-									onclick={() => startEdit(p)}
-									disabled={isDemo}
-									title="Edit"
-									aria-label="Edit"
-								>
-									<i class="fa-solid fa-pen"></i>
-								</button>
-								<button
-									class="text-gray-500 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
-									onclick={() => deleteOne(p.id)}
-									disabled={isDemo}
-									title="Delete"
-									aria-label="Delete"
-								>
-									<i class="fa-solid fa-trash-can"></i>
-								</button>
-							</td>
-						{/if}
-					</tr>
-				{/each}
+				<span class="rounded-full bg-red-800/20 px-2 py-0.5 text-xs font-semibold text-red-800">
+					No
+				</span>
 			{/if}
-		</tbody>
-	</table>
-</div>
+		{:else if columnId === 'created_at'}
+			<span title={formatDateFull(p.created_at)}>{formatDate(p.created_at)}</span>
+		{:else if columnId === 'latest_interview_at'}
+			{#if p.latest_interview_at}
+				<span title={formatDateFull(p.latest_interview_at)}>
+					{formatDate(p.latest_interview_at)}
+				</span>
+			{:else}<span class="text-gray-300">&ndash;</span>{/if}
+		{:else if columnId === 'latest_interview_status'}
+			{#if p.latest_interview_status}{p.latest_interview_status}{:else}<span class="text-gray-300"
+					>&ndash;</span
+				>{/if}
+		{:else if columnId === 'actions'}
+			{#if editing}
+				<button
+					class="mr-1 rounded p-1.5 text-primary hover:bg-primary/10"
+					onclick={() => saveEdit(p.id)}
+					title="Save changes"
+					aria-label="Save changes"
+				>
+					<i class="fa-solid fa-check"></i>
+				</button>
+				<button
+					class="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-dark"
+					onclick={cancelEdit}
+					title="Cancel"
+					aria-label="Cancel"
+				>
+					<i class="fa-solid fa-xmark"></i>
+				</button>
+			{:else}
+				<button
+					class="mr-1 rounded p-1.5 text-gray-400 hover:bg-secondary/40 hover:text-dark disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+					onclick={() => startEdit(p)}
+					disabled={isDemo}
+					title="Edit"
+					aria-label="Edit"
+				>
+					<i class="fa-solid fa-pen text-xs"></i>
+				</button>
+				<button
+					class="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+					onclick={() => deleteOne(p.id)}
+					disabled={isDemo}
+					title="Delete"
+					aria-label="Delete"
+				>
+					<i class="fa-solid fa-trash-can text-xs"></i>
+				</button>
+			{/if}
+		{/if}
+	{/snippet}
+</DataTable>

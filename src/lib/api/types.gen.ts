@@ -943,6 +943,22 @@ export type ExternalParamsRequest = {
 };
 
 /**
+ * FacetCount
+ *
+ * One selectable value of a filter, and how many rows carry it.
+ */
+export type FacetCount = {
+    /**
+     * Value
+     */
+    value: string;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * Feedback
  */
 export type Feedback = 'positive' | 'negative';
@@ -1163,6 +1179,30 @@ export type InterviewDurationStats = {
 };
 
 /**
+ * InterviewFacets
+ *
+ * The values each interview filter can usefully offer.
+ *
+ * Counted server-side because the client holds a single page: it has no way
+ * to know which statuses or languages exist across the whole result set, let
+ * alone how many rows each one accounts for.
+ */
+export type InterviewFacets = {
+    /**
+     * Status
+     */
+    status?: Array<FacetCount>;
+    /**
+     * Language
+     */
+    language?: Array<FacetCount>;
+    /**
+     * Type
+     */
+    type?: Array<FacetCount>;
+};
+
+/**
  * InterviewGuide
  */
 export type InterviewGuide = {
@@ -1216,6 +1256,23 @@ export type InterviewGuideGenerationRequest = {
      * Prompt
      */
     prompt: string;
+};
+
+/**
+ * InterviewListResponse
+ *
+ * A page of interviews plus the filter options that fit the query.
+ */
+export type InterviewListResponse = {
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Items
+     */
+    items: Array<InterviewSummaryPublic>;
+    facets?: InterviewFacets;
 };
 
 /**
@@ -1831,20 +1888,6 @@ export type NumberItem = {
      * Step
      */
     step?: number | number | null;
-};
-
-/**
- * PaginatedResponse[InterviewSummaryPublic]
- */
-export type PaginatedResponseInterviewSummaryPublic = {
-    /**
-     * Total
-     */
-    total: number;
-    /**
-     * Items
-     */
-    items: Array<InterviewSummaryPublic>;
 };
 
 /**
@@ -6379,13 +6422,33 @@ export type GetInterviewsData = {
          */
         interview_types?: Array<InterviewType> | null;
         /**
-         * Created At
+         * Types
          */
-        created_at?: string | null;
+        types?: Array<InterviewType> | null;
+        /**
+         * Statuses
+         */
+        statuses?: Array<InterviewStatus> | null;
+        /**
+         * Languages
+         */
+        languages?: Array<string> | null;
+        /**
+         * Created From
+         */
+        created_from?: string | null;
+        /**
+         * Created To
+         */
+        created_to?: string | null;
         /**
          * Completed
          */
         completed?: boolean | null;
+        /**
+         * Search
+         */
+        search?: string | null;
         /**
          * Folder Id
          */
@@ -6423,7 +6486,7 @@ export type GetInterviewsResponses = {
     /**
      * Successful Response
      */
-    200: PaginatedResponseInterviewSummaryPublic;
+    200: InterviewListResponse;
 };
 
 export type GetInterviewsResponse = GetInterviewsResponses[keyof GetInterviewsResponses];

@@ -1,6 +1,18 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { Admin, type Scope, type UserAdmin } from '$lib/api';
+	import DataTable from '$lib/components/table/DataTable.svelte';
+	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
+	import {
+		dataTableFeatures,
+		formatDate,
+		formatDateFull,
+		matchesSelection,
+		sortableText,
+		sortableTime,
+		type DataTableFeatures
+	} from '$lib/components/table/features';
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
@@ -125,14 +137,6 @@
 		return new Date(expiresAt) < new Date();
 	}
 
-	function formatDate(date: string | null | undefined): string {
-		if (!date) return '-';
-		return new Date(date).toLocaleDateString('en-GB', {
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	}
-
 	async function loadUsers() {
 		loading = true;
 		try {
@@ -192,260 +196,343 @@
 			savingNote.delete(user.id);
 		}
 	}
+
+	/* ---------------------------------------------------------------- table */
+
+	const helper = createColumnHelper<DataTableFeatures, UserAdmin>();
+
+	const fullName = (u: UserAdmin) => `${u.first_name}${u.last_name ? ` ${u.last_name}` : ''}`;
+
+	const columns = helper.columns([
+		helper.display({ id: 'expand', enableHiding: false, meta: { class: 'w-8' } }),
+		helper.accessor((u) => sortableText(fullName(u)), {
+			id: 'name',
+			header: 'Name',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'font-medium whitespace-nowrap text-dark' }
+		}),
+		helper.accessor((u) => sortableText(u.email), {
+			id: 'email',
+			header: 'Email',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap text-gray-700' }
+		}),
+		helper.accessor((u) => sortableText(u.scope), {
+			id: 'scope',
+			header: 'Role',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			filterFn: matchesSelection
+		}),
+		helper.accessor((u) => u.two_factor_enabled ?? false, {
+			id: 'two_factor_enabled',
+			header: '2FA',
+			sortFn: 'basic',
+			filterFn: matchesSelection
+		}),
+		helper.accessor((u) => sortableText(u.invitation_title), {
+			id: 'invitation_title',
+			header: 'Invitation',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap text-gray-600' }
+		}),
+		helper.accessor((u) => sortableText(u.organization), {
+			id: 'organization',
+			header: 'Organization',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap text-gray-600' }
+		}),
+		helper.accessor((u) => sortableTime(u.expires_at), {
+			id: 'expires_at',
+			header: 'Expires',
+			sortFn: 'basic',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap tabular-nums' }
+		}),
+		helper.accessor((u) => sortableTime(u.last_active), {
+			id: 'last_active',
+			header: 'Last active',
+			sortFn: 'basic',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap tabular-nums text-gray-600' }
+		}),
+		helper.display({
+			id: 'actions',
+			header: 'Actions',
+			enableHiding: false,
+			meta: { align: 'right', class: 'whitespace-nowrap' }
+		})
+	]);
+
+	const searchableColumns = ['name', 'email', 'organization', 'invitation_title'];
+
+	const table = createTable({
+		features: dataTableFeatures,
+		columns,
+		get data() {
+			return users;
+		},
+		getRowId: (u) => u.id,
+		globalFilterFn: 'includesString',
+		getColumnCanGlobalFilter: (column) => searchableColumns.includes(column.id),
+		initialState: {
+			pagination: { pageIndex: 0, pageSize: 25 },
+			sorting: [{ id: 'last_active', desc: true }]
+		}
+	});
+
+	const columnLabels: Record<string, string> = {
+		name: 'Name',
+		email: 'Email',
+		scope: 'Role',
+		two_factor_enabled: '2FA',
+		invitation_title: 'Invitation',
+		organization: 'Organization',
+		expires_at: 'Expires',
+		last_active: 'Last active'
+	};
 </script>
 
-<div class="mb-6 flex items-center justify-between">
-	<h1 class="page-title">User Management</h1>
+<div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+	<h1 class="page-title mb-0">User Management</h1>
 	<button
+		class="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-secondary/40 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30"
 		onclick={loadUsers}
-		class="hover:bg-opacity-90 rounded bg-primary px-4 py-2 text-white transition-colors"
+		title="Refresh"
+		aria-label="Refresh"
+		disabled={loading}
 	>
-		Refresh
+		<i class="fa-solid fa-arrows-rotate {loading ? 'animate-spin' : ''}"></i>
 	</button>
 </div>
 
-{#if loading}
-	<div class="flex justify-center p-8 text-gray-500">Loading users...</div>
-{:else if error}
+{#if error}
 	<div
-		class="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
+		class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
 		role="alert"
 	>
 		<strong class="font-bold">Error!</strong>
 		<span class="block sm:inline">{error}</span>
 	</div>
-{:else if users.length === 0}
-	<div class="rounded-lg bg-white p-8 text-center text-gray-500 shadow">No users found.</div>
-{:else}
-	<div class="ring-opacity-5 overflow-x-auto rounded-lg bg-white shadow ring-1 ring-black">
-		<table class="min-w-full divide-y divide-gray-300">
-			<thead class="bg-gray-50">
-				<tr>
-					<th scope="col" class="w-8 py-3.5 pl-3">
-						<span class="sr-only">Expand</span>
-					</th>
-					<th scope="col" class="py-3.5 pr-3 pl-2 text-left text-sm font-semibold text-gray-900"
-						>Name</th
-					>
-					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-						>Email</th
-					>
-					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th
-					>
-					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">2FA</th>
-					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-						>Invitation</th
-					>
-					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-						>Organization</th
-					>
-					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-						>Expires</th
-					>
-					<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-						>Last Active</th
-					>
-					<th scope="col" class="relative py-3.5 pr-4 pl-3 sm:pr-6">
-						<span class="sr-only">Actions</span>
-					</th>
-				</tr>
-			</thead>
-			<tbody class="divide-y divide-gray-200 bg-white">
-				{#each users as user (user.id)}
-					<tr class="cursor-pointer hover:bg-gray-50" onclick={() => toggleRow(user)}>
-						<td class="py-4 pl-3">
-							<svg
-								class="h-4 w-4 text-gray-400 transition-transform {expandedRows.has(user.id)
-									? 'rotate-90'
-									: ''}"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-								stroke-width="2"
-							>
-								<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-							</svg>
-						</td>
-						<td class="py-4 pr-3 pl-2 text-sm font-medium whitespace-nowrap text-gray-900">
-							{user.first_name}{user.last_name ? ` ${user.last_name}` : ''}
-						</td>
-						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">{user.email}</td>
-						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
-							<span
-								class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {scopeColors[
-									user.scope ?? ''
-								] ?? 'bg-green-100 text-green-800'}"
-							>
-								{user.scope ?? '-'}
-							</span>
-						</td>
-						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
-							<span
-								class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {user.two_factor_enabled
-									? 'bg-green-100 text-green-800'
-									: 'bg-gray-100 text-gray-600'}"
-							>
-								{user.two_factor_enabled ? 'On' : 'Off'}
-							</span>
-						</td>
-						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
-							{user.invitation_title ?? '-'}
-						</td>
-						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
-							{user.organization ?? '-'}
-						</td>
-						<td
-							class="px-3 py-4 text-sm whitespace-nowrap {isExpired(user.expires_at)
-								? 'font-medium text-red-600'
-								: 'text-gray-500'}"
-						>
-							{formatDate(user.expires_at)}
-						</td>
-						<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
-							{formatDate(user.last_active)}
-						</td>
-						<td
-							class="relative py-2 pr-2 pl-1 text-right text-sm font-medium whitespace-nowrap sm:pr-6"
-						>
-							<button
-								onclick={(e) => {
-									e.stopPropagation();
-									deleteUser(user.id);
-								}}
-								class="rounded p-2 text-red-600 transition-colors hover:bg-red-200 hover:text-red-900"
-							>
-								Delete<span class="sr-only">, {user.first_name}</span>
-							</button>
-						</td>
-					</tr>
-					{#if expandedRows.has(user.id)}
-						{@const edit = ensureEdit(user)}
-						{@const dirty = isDirty(user)}
-						{@const saving = savingUser.has(user.id)}
-						<tr class="bg-gray-50">
-							<td colspan="10" class="px-6 py-4">
-								<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-									<div>
-										<h4 class="text-sm font-semibold text-gray-700">Access Request Message</h4>
-										<p class="mt-1 text-sm text-gray-600">
-											{user.access_request_message ?? 'No message provided'}
-										</p>
-									</div>
-									<div>
-										<div class="flex items-center gap-2">
-											<h4 class="text-sm font-semibold text-gray-700">Admin Note</h4>
-											{#if savingNote.has(user.id)}
-												<span class="text-xs text-gray-400">Saving...</span>
-											{:else if user.admin_note_updated_at}
-												<span class="text-xs text-gray-400">
-													Updated {formatDate(user.admin_note_updated_at)}
-												</span>
-											{/if}
-										</div>
-										<textarea
-											class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-											rows="2"
-											placeholder="Add a note..."
-											value={user.admin_note ?? ''}
-											onclick={(e) => e.stopPropagation()}
-											onblur={(e) => saveAdminNote(user, e.currentTarget.value)}
-											onkeydown={(e) => {
-												if (e.key === 'Enter' && !e.shiftKey) {
-													e.preventDefault();
-													e.currentTarget.blur();
-												}
-											}}
-										></textarea>
-									</div>
-								</div>
-								<div class="mt-4 border-t border-gray-200 pt-4">
-									<div class="mb-2 flex items-center justify-between">
-										<h4 class="text-sm font-semibold text-gray-700">Edit User</h4>
-										<div class="flex items-center gap-2">
-											{#if dirty && !saving}
-												<button
-													onclick={(e) => {
-														e.stopPropagation();
-														resetEdit(user);
-													}}
-													class="rounded px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
-												>
-													Reset
-												</button>
-											{/if}
-											<button
-												disabled={!dirty || saving}
-												onclick={(e) => {
-													e.stopPropagation();
-													saveUser(user);
-												}}
-												class="hover:bg-opacity-90 rounded bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-											>
-												{saving ? 'Saving...' : 'Save'}
-											</button>
-										</div>
-									</div>
-									<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-										<label class="block text-sm">
-											<span class="text-xs font-medium text-gray-600">Scope</span>
-											<select
-												class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-												bind:value={edit.scope}
-												onclick={(e) => e.stopPropagation()}
-											>
-												{#each SCOPES as s (s)}
-													<option value={s}>{s}</option>
-												{/each}
-											</select>
-										</label>
-										<label class="block text-sm">
-											<span class="text-xs font-medium text-gray-600">Organization</span>
-											<input
-												type="text"
-												class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-												placeholder="-"
-												bind:value={edit.organization}
-												onclick={(e) => e.stopPropagation()}
-											/>
-										</label>
-										<label class="block text-sm">
-											<span class="text-xs font-medium text-gray-600">Expires At</span>
-											<input
-												type="datetime-local"
-												class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-												bind:value={edit.expires_at}
-												onclick={(e) => e.stopPropagation()}
-											/>
-										</label>
-									</div>
-									<div class="mt-5 mb-1 flex flex-wrap gap-x-6 gap-y-2">
-										<label class="flex items-center gap-2 text-sm">
-											<input
-												type="checkbox"
-												class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-												bind:checked={edit.with_demo_features}
-												onclick={(e) => e.stopPropagation()}
-											/>
-											<span class="text-xs font-medium text-gray-600">Demo features enabled</span>
-										</label>
-										<label class="flex items-center gap-2 text-sm">
-											<input
-												type="checkbox"
-												class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-												bind:checked={edit.two_factor_enabled}
-												onclick={(e) => e.stopPropagation()}
-											/>
-											<span class="text-xs font-medium text-gray-600"
-												>Two-factor authentication enabled</span
-											>
-										</label>
-									</div>
-								</div>
-							</td>
-						</tr>
-					{/if}
-				{/each}
-			</tbody>
-		</table>
-	</div>
 {/if}
+
+<DataTable
+	{table}
+	{columnLabels}
+	{loading}
+	hasLoaded={!loading}
+	selectable={false}
+	search
+	rowLabel="user"
+	searchPlaceholder="Search name, email or organization..."
+	emptyTitle="No users found"
+	onRowClick={(row) => toggleRow(row.original)}
+	isExpanded={(row) => expandedRows.has(row.original.id)}
+>
+	{#snippet filters()}
+		{#if table.getColumn('scope')}
+			<FacetedFilter title="Role" column={table.getColumn('scope')!} />
+		{/if}
+		{#if table.getColumn('two_factor_enabled')}
+			<FacetedFilter
+				title="2FA"
+				column={table.getColumn('two_factor_enabled')!}
+				options={[
+					{ value: 'true', label: 'On' },
+					{ value: 'false', label: 'Off' }
+				]}
+			/>
+		{/if}
+	{/snippet}
+
+	{#snippet cell(columnId, row)}
+		{@const user = row.original}
+		{#if columnId === 'expand'}
+			<i
+				class="fa-solid fa-chevron-right text-xs text-gray-400 transition-transform {expandedRows.has(
+					user.id
+				)
+					? 'rotate-90'
+					: ''}"
+			></i>
+		{:else if columnId === 'name'}
+			{user.first_name}{user.last_name ? ` ${user.last_name}` : ''}
+		{:else if columnId === 'email'}
+			{user.email}
+		{:else if columnId === 'scope'}
+			<span
+				class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {scopeColors[
+					user.scope ?? ''
+				] ?? 'bg-green-100 text-green-800'}"
+			>
+				{user.scope ?? '-'}
+			</span>
+		{:else if columnId === 'two_factor_enabled'}
+			<span
+				class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {user.two_factor_enabled
+					? 'bg-green-100 text-green-800'
+					: 'bg-gray-100 text-gray-600'}"
+			>
+				{user.two_factor_enabled ? 'On' : 'Off'}
+			</span>
+		{:else if columnId === 'invitation_title'}
+			{#if user.invitation_title}{user.invitation_title}{:else}<span class="text-gray-300"
+					>&ndash;</span
+				>{/if}
+		{:else if columnId === 'organization'}
+			{#if user.organization}{user.organization}{:else}<span class="text-gray-300">&ndash;</span
+				>{/if}
+		{:else if columnId === 'expires_at'}
+			{#if user.expires_at}
+				<span
+					class={isExpired(user.expires_at) ? 'font-medium text-red-600' : 'text-gray-600'}
+					title={formatDateFull(user.expires_at)}
+				>
+					{formatDate(user.expires_at)}
+				</span>
+			{:else}<span class="text-gray-300">&ndash;</span>{/if}
+		{:else if columnId === 'last_active'}
+			{#if user.last_active}
+				<span title={formatDateFull(user.last_active)}>{formatDate(user.last_active)}</span>
+			{:else}<span class="text-gray-300">&ndash;</span>{/if}
+		{:else if columnId === 'actions'}
+			<button
+				onclick={(e) => {
+					e.stopPropagation();
+					deleteUser(user.id);
+				}}
+				class="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+				title="Delete user"
+			>
+				<i class="fa-solid fa-trash-can text-xs"></i>
+				<span class="sr-only">Delete {user.first_name}</span>
+			</button>
+		{/if}
+	{/snippet}
+
+	{#snippet expandedRow(row)}
+		{@const user = row.original}
+		{@const edit = ensureEdit(user)}
+		{@const dirty = isDirty(user)}
+		{@const saving = savingUser.has(user.id)}
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+			<div>
+				<h4 class="text-sm font-semibold text-gray-700">Access Request Message</h4>
+				<p class="mt-1 text-sm text-gray-600">
+					{user.access_request_message ?? 'No message provided'}
+				</p>
+			</div>
+			<div>
+				<div class="flex items-center gap-2">
+					<h4 class="text-sm font-semibold text-gray-700">Admin Note</h4>
+					{#if savingNote.has(user.id)}
+						<span class="text-xs text-gray-400">Saving...</span>
+					{:else if user.admin_note_updated_at}
+						<span class="text-xs text-gray-400">
+							Updated {formatDate(user.admin_note_updated_at)}
+						</span>
+					{/if}
+				</div>
+				<textarea
+					class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+					rows="2"
+					placeholder="Add a note..."
+					value={user.admin_note ?? ''}
+					onclick={(e) => e.stopPropagation()}
+					onblur={(e) => saveAdminNote(user, e.currentTarget.value)}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' && !e.shiftKey) {
+							e.preventDefault();
+							e.currentTarget.blur();
+						}
+					}}
+				></textarea>
+			</div>
+		</div>
+		<div class="mt-4 border-t border-gray-200 pt-4">
+			<div class="mb-2 flex items-center justify-between">
+				<h4 class="text-sm font-semibold text-gray-700">Edit User</h4>
+				<div class="flex items-center gap-2">
+					{#if dirty && !saving}
+						<button
+							onclick={(e) => {
+								e.stopPropagation();
+								resetEdit(user);
+							}}
+							class="rounded px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
+						>
+							Reset
+						</button>
+					{/if}
+					<button
+						disabled={!dirty || saving}
+						onclick={(e) => {
+							e.stopPropagation();
+							saveUser(user);
+						}}
+						class="rounded bg-primary px-3 py-1.5 text-xs font-medium text-on-primary transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						{saving ? 'Saving...' : 'Save'}
+					</button>
+				</div>
+			</div>
+			<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+				<label class="block text-sm">
+					<span class="text-xs font-medium text-gray-600">Scope</span>
+					<select
+						class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+						bind:value={edit.scope}
+						onclick={(e) => e.stopPropagation()}
+					>
+						{#each SCOPES as s (s)}
+							<option value={s}>{s}</option>
+						{/each}
+					</select>
+				</label>
+				<label class="block text-sm">
+					<span class="text-xs font-medium text-gray-600">Organization</span>
+					<input
+						type="text"
+						class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+						placeholder="-"
+						bind:value={edit.organization}
+						onclick={(e) => e.stopPropagation()}
+					/>
+				</label>
+				<label class="block text-sm">
+					<span class="text-xs font-medium text-gray-600">Expires At</span>
+					<input
+						type="datetime-local"
+						class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+						bind:value={edit.expires_at}
+						onclick={(e) => e.stopPropagation()}
+					/>
+				</label>
+			</div>
+			<div class="mt-5 mb-1 flex flex-wrap gap-x-6 gap-y-2">
+				<label class="flex items-center gap-2 text-sm">
+					<input
+						type="checkbox"
+						class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+						bind:checked={edit.with_demo_features}
+						onclick={(e) => e.stopPropagation()}
+					/>
+					<span class="text-xs font-medium text-gray-600">Demo features enabled</span>
+				</label>
+				<label class="flex items-center gap-2 text-sm">
+					<input
+						type="checkbox"
+						class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+						bind:checked={edit.two_factor_enabled}
+						onclick={(e) => e.stopPropagation()}
+					/>
+					<span class="text-xs font-medium text-gray-600">Two-factor authentication enabled</span>
+				</label>
+			</div>
+		</div>
+	{/snippet}
+</DataTable>

@@ -3,6 +3,16 @@
 	import { page } from '$app/state';
 	import { Experiments } from '$lib/api/sdk.gen';
 	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
+	import DataTable from '$lib/components/table/DataTable.svelte';
+	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
+	import {
+		dataTableFeatures,
+		NO_PAGINATION,
+		matchesSelection,
+		sortableText,
+		type DataTableFeatures
+	} from '$lib/components/table/features';
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
 	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
@@ -56,6 +66,20 @@
 			dropdownPosition = null;
 		}
 	}
+
+	/**
+	 * The menu is placed from a one-off measurement of its trigger, so it cannot
+	 * follow it. Capture phase, because a scroll inside the table's own row area
+	 * does not bubble.
+	 */
+	$effect(() => {
+		const close = () => {
+			openDropdownId = null;
+			dropdownPosition = null;
+		};
+		window.addEventListener('scroll', close, true);
+		return () => window.removeEventListener('scroll', close, true);
+	});
 
 	function toggleDropdown(id: string, event: MouseEvent) {
 		if (openDropdownId === id) {
@@ -195,6 +219,55 @@
 			delete projectWeights[projectId];
 		}
 	}
+
+	/* ---------------------------------------------------------------- table */
+
+	const helper = createColumnHelper<DataTableFeatures, Experiment>();
+
+	const columns = helper.columns([
+		helper.display({ id: 'icon', enableHiding: false, meta: { class: 'w-10 text-gray-400' } }),
+		helper.accessor((e) => sortableText(e.title || e.id), {
+			id: 'title',
+			header: 'Experiment',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'font-medium whitespace-nowrap text-dark' }
+		}),
+		helper.accessor('status', {
+			header: 'Status',
+			sortFn: 'text',
+			filterFn: matchesSelection
+		}),
+		helper.display({
+			id: 'weights',
+			header: 'Weights',
+			meta: { align: 'center', class: 'tabular-nums text-gray-600' }
+		}),
+		helper.display({
+			id: 'actions',
+			header: 'Actions',
+			enableHiding: false,
+			meta: { align: 'right', class: 'whitespace-nowrap' }
+		})
+	]);
+
+	const table = createTable({
+		features: dataTableFeatures,
+		columns,
+		get data() {
+			return experiments;
+		},
+		getRowId: (e) => e.id,
+		globalFilterFn: 'includesString',
+		getColumnCanGlobalFilter: (column) => column.id === 'title',
+		initialState: { pagination: NO_PAGINATION, sorting: [{ id: 'title', desc: false }] }
+	});
+
+	const columnLabels: Record<string, string> = {
+		title: 'Experiment',
+		status: 'Status',
+		weights: 'Weights'
+	};
 </script>
 
 <svelte:window onclick={handleWindowClick} />
@@ -224,72 +297,54 @@
 	</button>
 </div>
 
-<div class="ring-opacity-5 overflow-hidden rounded-lg bg-white shadow ring-1 ring-black">
-	<table class="min-w-full divide-y divide-gray-300">
-		<thead class="bg-gray-50">
-			<tr>
-				<th
-					scope="col"
-					class="w-16 py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-				></th>
-				<th scope="col" class="py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900"
-					>Experiment</th
-				>
-				<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th
-				>
-				<th scope="col" class="px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
-					>Weights</th
-				>
-				<th scope="col" class="relative w-20 py-3.5 pr-4 pl-3 sm:pr-6"></th>
-			</tr>
-		</thead>
-		<tbody class="divide-y divide-gray-200 bg-white">
-			{#each experiments as experiment (experiment.id)}
-				<tr class="transition-colors hover:bg-gray-50">
-					<td class="py-4 pr-3 pl-4 text-gray-400 sm:pl-6">
-						<i class="fa-solid fa-vial"></i>
-					</td>
-					<td class="py-4 pr-3 pl-4 text-sm font-medium whitespace-nowrap text-gray-900">
-						{experiment.title || experiment.id}
-					</td>
-					<td class="px-3 py-4 text-sm whitespace-nowrap">
-						<span
-							class="rounded-full border px-3 py-1 text-xs font-semibold {getStatusClass(
-								experiment.status
-							)}"
-						>
-							{experiment.status}
-						</span>
-					</td>
-					<td class="px-3 py-4 text-center text-sm whitespace-nowrap text-gray-600">
-						{#if experiment.weights}
-							{experiment.weights.map((w: number) => w.toFixed(2)).join(' ')}
-						{/if}
-					</td>
-					<td
-						class="relative py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-6"
-					>
-						<button
-							class="dropdown-trigger rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-							onclick={(e) => {
-								e.stopPropagation();
-								toggleDropdown(experiment.id, e);
-							}}
-							aria-label="Experiment options"
-						>
-							<i class="fa-solid fa-ellipsis-vertical"></i>
-						</button>
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
-	{#if experiments.length === 0}
-		<div class="p-8 text-center text-gray-500">
-			No experiments found. Create one to get started.
-		</div>
-	{/if}
-</div>
+<DataTable
+	{table}
+	{columnLabels}
+	selectable={false}
+	search
+	rowLabel="experiment"
+	searchPlaceholder="Search experiments..."
+	emptyTitle="No experiments yet"
+	emptyDescription="Create one to get started."
+>
+	{#snippet filters()}
+		{#if table.getColumn('status')}
+			<FacetedFilter title="Status" column={table.getColumn('status')!} />
+		{/if}
+	{/snippet}
+
+	{#snippet cell(columnId, row)}
+		{@const experiment = row.original}
+		{#if columnId === 'icon'}
+			<i class="fa-solid fa-vial"></i>
+		{:else if columnId === 'title'}
+			{experiment.title || experiment.id}
+		{:else if columnId === 'status'}
+			<span
+				class="rounded-full border px-3 py-1 text-xs font-semibold {getStatusClass(
+					experiment.status
+				)}"
+			>
+				{experiment.status}
+			</span>
+		{:else if columnId === 'weights'}
+			{#if experiment.weights}
+				{experiment.weights.map((w: number) => w.toFixed(2)).join(' ')}
+			{/if}
+		{:else if columnId === 'actions'}
+			<button
+				class="dropdown-trigger rounded-full p-1.5 text-gray-400 hover:bg-secondary/40 hover:text-dark"
+				onclick={(e) => {
+					e.stopPropagation();
+					toggleDropdown(experiment.id, e);
+				}}
+				aria-label="Experiment options"
+			>
+				<i class="fa-solid fa-ellipsis-vertical"></i>
+			</button>
+		{/if}
+	{/snippet}
+</DataTable>
 
 <!-- Dropdown Portal -->
 {#if openDropdownId && dropdownPosition}

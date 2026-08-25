@@ -446,6 +446,16 @@ export const zExternalParamsRequest = z.object({
 });
 
 /**
+ * FacetCount
+ *
+ * One selectable value of a filter, and how many rows carry it.
+ */
+export const zFacetCount = z.object({
+    value: z.string(),
+    count: z.int()
+});
+
+/**
  * Feedback
  */
 export const zFeedback = z.enum(['positive', 'negative']);
@@ -538,6 +548,21 @@ export const zInterviewDurationStats = z.object({
     max_seconds: z.int(),
     avg_seconds: z.number(),
     sum_seconds: z.number()
+});
+
+/**
+ * InterviewFacets
+ *
+ * The values each interview filter can usefully offer.
+ *
+ * Counted server-side because the client holds a single page: it has no way
+ * to know which statuses or languages exist across the whole result set, let
+ * alone how many rows each one accounts for.
+ */
+export const zInterviewFacets = z.object({
+    status: z.array(zFacetCount).optional().default([]),
+    language: z.array(zFacetCount).optional().default([]),
+    type: z.array(zFacetCount).optional().default([])
 });
 
 /**
@@ -670,6 +695,21 @@ export const zInterviewSummaryPublic = z.object({
     total_time_spent: z.int().optional().default(0),
     n_messages: z.int(),
     test_name: z.string().nullish()
+});
+
+/**
+ * InterviewListResponse
+ *
+ * A page of interviews plus the filter options that fit the query.
+ */
+export const zInterviewListResponse = z.object({
+    total: z.int(),
+    items: z.array(zInterviewSummaryPublic),
+    facets: zInterviewFacets.optional().default({
+        status: [],
+        language: [],
+        type: []
+    })
 });
 
 /**
@@ -823,14 +863,6 @@ export const zNumberItem = z.object({
         z.int(),
         z.number()
     ]).nullish().default(1)
-});
-
-/**
- * PaginatedResponse[InterviewSummaryPublic]
- */
-export const zPaginatedResponseInterviewSummaryPublic = z.object({
-    total: z.int(),
-    items: z.array(zInterviewSummaryPublic)
 });
 
 /**
@@ -2944,8 +2976,13 @@ export const zGetInterviewsPath = z.object({
 
 export const zGetInterviewsQuery = z.object({
     interview_types: z.array(zInterviewType).nullish(),
-    created_at: z.iso.datetime().nullish(),
+    types: z.array(zInterviewType).nullish(),
+    statuses: z.array(zInterviewStatus).nullish(),
+    languages: z.array(z.string()).nullish(),
+    created_from: z.iso.datetime().nullish(),
+    created_to: z.iso.datetime().nullish(),
     completed: z.boolean().nullish(),
+    search: z.string().max(200).nullish(),
     folder_id: z.string().nullish(),
     offset: z.int().lte(100).optional().default(0),
     limit: z.int().lte(100).optional().default(20),
@@ -2956,7 +2993,7 @@ export const zGetInterviewsQuery = z.object({
 /**
  * Successful Response
  */
-export const zGetInterviewsResponse = zPaginatedResponseInterviewSummaryPublic;
+export const zGetInterviewsResponse = zInterviewListResponse;
 
 export const zGetMessagePath = z.object({
     project_id: z.string().nullable(),

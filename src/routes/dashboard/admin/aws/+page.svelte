@@ -1,15 +1,23 @@
 <script lang="ts">
 	import { Admin } from '$lib/api';
+	import DataTable from '$lib/components/table/DataTable.svelte';
+	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
+	import {
+		dataTableFeatures,
+		matchesSelection,
+		NO_PAGINATION,
+		sortableText,
+		type DataTableFeatures
+	} from '$lib/components/table/features';
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { SvelteSet } from 'svelte/reactivity';
 	import type { PageData } from './$types';
 	import type { Instance } from './types';
 
 	let { data }: { data: PageData } = $props();
 
 	let instances: Instance[] = $state([]);
-	let selectedInstances: Set<string> = $state(new Set());
 	let isLoading = $state(false);
 	let error = $state('');
 	let minInstances = $derived(data.settings.min_instances);
@@ -27,7 +35,6 @@
 	let downtimeEnd = $derived(
 		data.settings.ec2_downtime ? toInputTime(data.settings.ec2_downtime[1]) : '00:00'
 	);
-	let allSelected = $derived(instances.length > 0 && selectedInstances.size === instances.length);
 
 	function formatTimeEstimate(seconds: number) {
 		const decimalHours = seconds / 3600;
@@ -87,28 +94,10 @@
 		toast.success('Settings updated');
 	}
 
-	function toggleInstance(id: string) {
-		const newSelected = new SvelteSet(selectedInstances);
-		if (newSelected.has(id)) {
-			newSelected.delete(id);
-		} else {
-			newSelected.add(id);
-		}
-		selectedInstances = newSelected;
-	}
-
-	function toggleAll(checked: boolean) {
-		if (checked) {
-			selectedInstances = new Set(instances.map((i) => i.id));
-		} else {
-			selectedInstances = new Set();
-		}
-	}
-
 	async function startSelected() {
-		if (selectedInstances.size === 0) return;
+		if (selectedIds.length === 0) return;
 
-		if (selectedInstances.size === instances.length) {
+		if (table.getIsAllRowsSelected()) {
 			const { error: startError } = await Admin.proxyToEc2ManagerPost({
 				path: { full_path: 'instances/start-all' }
 			});
@@ -119,7 +108,7 @@
 			}
 		} else {
 			const results = await Promise.all(
-				Array.from(selectedInstances).map((id) =>
+				selectedIds.map((id) =>
 					Admin.proxyToEc2ManagerPost({
 						path: { full_path: `instances/start/${id}` }
 					})
@@ -133,14 +122,14 @@
 			}
 		}
 		await getInstanceStatus();
-		selectedInstances = new Set();
+		table.resetRowSelection(true);
 		toast.success('Instances starting');
 	}
 
 	async function stopSelected() {
-		if (selectedInstances.size === 0) return;
+		if (selectedIds.length === 0) return;
 
-		if (selectedInstances.size === instances.length) {
+		if (table.getIsAllRowsSelected()) {
 			const { error: stopError } = await Admin.proxyToEc2ManagerPost({
 				path: { full_path: 'instances/stop-all' }
 			});
@@ -151,7 +140,7 @@
 			}
 		} else {
 			const results = await Promise.all(
-				Array.from(selectedInstances).map((id) =>
+				selectedIds.map((id) =>
 					Admin.proxyToEc2ManagerPost({
 						path: { full_path: `instances/stop/${id}` }
 					})
@@ -165,7 +154,7 @@
 			}
 		}
 		await getInstanceStatus();
-		selectedInstances = new Set();
+		table.resetRowSelection(true);
 		toast.success('Instances stopping');
 	}
 
@@ -181,46 +170,140 @@
 	onMount(() => {
 		getInstanceStatus();
 	});
+
+	/* ---------------------------------------------------------------- table */
+
+	const helper = createColumnHelper<DataTableFeatures, Instance>();
+
+	const columns = helper.columns([
+		helper.display({ id: 'select', enableHiding: false }),
+		helper.group({
+			id: 'ec2',
+			header: 'EC2',
+			columns: helper.columns([
+				helper.accessor((i) => sortableText(i.name), {
+					id: 'name',
+					header: 'Instance name',
+					sortFn: 'text',
+					sortUndefined: 'last',
+					meta: { class: 'font-medium whitespace-nowrap text-dark' }
+				}),
+				helper.accessor((i) => sortableText(i.state), {
+					id: 'state',
+					header: 'State',
+					sortFn: 'text',
+					sortUndefined: 'last',
+					filterFn: matchesSelection
+				}),
+				helper.accessor((i) => sortableText(i.instance_type), {
+					id: 'instance_type',
+					header: 'Type',
+					sortFn: 'text',
+					sortUndefined: 'last',
+					filterFn: matchesSelection,
+					meta: { class: 'whitespace-nowrap text-gray-600' }
+				}),
+				helper.accessor((i) => sortableText(i.id), {
+					id: 'id',
+					header: 'ID',
+					sortFn: 'text',
+					sortUndefined: 'last',
+					meta: { class: 'font-mono text-xs whitespace-nowrap text-gray-500' }
+				}),
+				helper.accessor((i) => sortableText(i.model), {
+					id: 'model',
+					header: 'Model',
+					sortFn: 'text',
+					sortUndefined: 'last',
+					meta: { class: 'whitespace-nowrap text-gray-600' }
+				})
+			])
+		}),
+		// The vLLM columns render under their own spanning header, with a dashed
+		// rule marking the boundary through the whole table.
+		helper.group({
+			id: 'vllm',
+			header: 'vLLM',
+			meta: { groupStart: true },
+			columns: helper.columns([
+				helper.accessor((i) => sortableText(i.vllm.status), {
+					id: 'vllm_status',
+					header: 'Status',
+					sortFn: 'text',
+					sortUndefined: 'last',
+					filterFn: matchesSelection,
+					meta: { groupStart: true, class: 'whitespace-nowrap' }
+				}),
+				helper.accessor((i) => sortableText(i.vllm.models?.[0]?.name), {
+					id: 'vllm_model',
+					header: 'Model',
+					sortFn: 'text',
+					sortUndefined: 'last',
+					meta: { class: 'whitespace-nowrap text-gray-600' }
+				}),
+				helper.accessor((i) => i.connections ?? 0, {
+					id: 'connections',
+					header: 'Conn.',
+					sortFn: 'basic',
+					meta: { align: 'center', class: 'tabular-nums text-gray-600' }
+				}),
+				helper.accessor((i) => i.idle_time ?? 0, {
+					id: 'idle_time',
+					header: 'Idle',
+					sortFn: 'basic',
+					meta: { align: 'right', class: 'whitespace-nowrap tabular-nums text-gray-600' }
+				})
+			])
+		})
+	]);
+
+	const table = createTable({
+		features: dataTableFeatures,
+		columns,
+		get data() {
+			return instances;
+		},
+		getRowId: (i) => i.id,
+		globalFilterFn: 'includesString',
+		getColumnCanGlobalFilter: (column) => ['name', 'id', 'model'].includes(column.id),
+		initialState: { pagination: NO_PAGINATION, sorting: [{ id: 'name', desc: false }] }
+	});
+
+	const selectedIds = $derived(table.getSelectedRowIds());
+
+	const columnLabels: Record<string, string> = {
+		name: 'Instance name',
+		state: 'State',
+		instance_type: 'Type',
+		id: 'ID',
+		model: 'Model',
+		vllm: 'vLLM',
+		vllm_status: 'vLLM status',
+		vllm_model: 'vLLM model',
+		connections: 'Connections',
+		idle_time: 'Idle'
+	};
 </script>
 
 <div class="sm:flex sm:items-center">
 	<div class="sm:flex-auto">
-		<h1 class="page-title">Admin</h1>
+		<h1 class="page-title">AWS</h1>
 		<p class="mt-2 text-sm text-gray-700">Manage your EC2 instances and settings.</p>
 	</div>
 </div>
 
-<div class="mt-8 flex items-end justify-between border-b border-gray-200 pb-4">
-	<h2 class="text-xl leading-6 font-bold text-gray-900">EC2 Instances</h2>
-	<div class="flex gap-2">
-		<button
-			type="button"
-			class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-			onclick={startSelected}
-			disabled={selectedInstances.size === 0}
-			title="Start selected instances"
-		>
-			<i class="fa-solid fa-play mr-1.5 text-green-600"></i> Start
-		</button>
-		<button
-			type="button"
-			class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-			onclick={stopSelected}
-			disabled={selectedInstances.size === 0}
-			title="Stop selected instances"
-		>
-			<i class="fa-solid fa-stop mr-1.5 text-red-600"></i> Stop
-		</button>
-		<button
-			type="button"
-			class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-			onclick={getInstanceStatus}
-			disabled={isLoading}
-			title="Refresh status"
-		>
-			<i class="fa-solid fa-arrows-rotate text-gray-600 {isLoading ? 'animate-spin' : ''}"></i>
-		</button>
-	</div>
+<div class="mt-8 mb-4 flex flex-wrap items-end justify-between gap-3">
+	<h2 class="text-lg font-semibold text-dark">EC2 Instances</h2>
+	<button
+		type="button"
+		class="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-secondary/40 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30"
+		onclick={getInstanceStatus}
+		disabled={isLoading}
+		title="Refresh status"
+		aria-label="Refresh status"
+	>
+		<i class="fa-solid fa-arrows-rotate {isLoading ? 'animate-spin' : ''}"></i>
+	</button>
 </div>
 
 {#if error}
@@ -239,166 +322,84 @@
 	</div>
 {/if}
 
-<div class="mt-8 flow-root">
-	<div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-		<div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-			<div class="ring-opacity-5 relative overflow-hidden shadow ring-1 ring-black sm:rounded-lg">
-				{#if isLoading && instances.length === 0}
-					<div class="flex items-center justify-center py-12">
-						<div
-							class="text-surface h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-e-transparent align-[-0.125em] text-indigo-600 motion-reduce:animate-[spin_1.5s_linear_infinite] dark:text-white"
-							role="status"
-						>
-							<span
-								class="!absolute !-m-px !h-px !w-px !overflow-hidden !border-0 !p-0 !whitespace-nowrap ![clip:rect(0,0,0,0)]"
-								>Loading...</span
-							>
-						</div>
-						<span class="ml-3 text-sm text-gray-500">Loading instance data...</span>
-					</div>
-				{:else}
-					<table class="min-w-full divide-y divide-gray-300 {isLoading ? 'opacity-50' : ''}">
-						<thead class="bg-gray-50">
-							<tr>
-								<th scope="col" class="relative px-7 sm:w-12 sm:px-6"></th>
-								<th
-									scope="col"
-									class="py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0"
-								></th>
-								<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-								></th>
-								<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-								></th>
-								<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-								></th>
-								<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-								></th>
-								<th
-									scope="col"
-									colspan="4"
-									class="border-l border-dashed border-gray-400 px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
-								>
-									vLLM
-								</th>
-							</tr>
-							<tr>
-								<th scope="col" class="relative px-7 sm:w-12 sm:px-6">
-									<input
-										type="checkbox"
-										class="absolute top-1/2 left-4 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-										checked={allSelected}
-										onchange={(e) => toggleAll(e.currentTarget.checked)}
-									/>
-								</th>
-								<th
-									scope="col"
-									class="py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900"
-									>Instance Name</th
-								>
-								<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-									>State</th
-								>
-								<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-									>Type</th
-								>
-								<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-									>ID</th
-								>
-								<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-									>Model</th
-								>
-								<th
-									scope="col"
-									class="border-l border-dashed border-gray-400 px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-									>Status</th
-								>
-								<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-									>Model</th
-								>
-								<th scope="col" class="px-3 py-3.5 text-center text-sm font-semibold text-gray-900"
-									>Conn.</th
-								>
-								<th scope="col" class="px-3 py-3.5 text-right text-sm font-semibold text-gray-900"
-									>Idle</th
-								>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-gray-200 bg-white">
-							{#each instances as instance (instance.id)}
-								<tr
-									class="cursor-pointer hover:bg-gray-50 {selectedInstances.has(instance.id)
-										? 'bg-gray-50'
-										: ''}"
-									onclick={(e) => {
-										if ((e.target as HTMLInputElement).type !== 'checkbox')
-											toggleInstance(instance.id);
-									}}
-								>
-									<td class="relative px-7 sm:w-12 sm:px-6">
-										{#if selectedInstances.has(instance.id)}
-											<div class="absolute inset-y-0 left-0 w-0.5 bg-indigo-600"></div>
-										{/if}
-										<input
-											type="checkbox"
-											class="absolute top-1/2 left-4 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-											checked={selectedInstances.has(instance.id)}
-											onchange={() => toggleInstance(instance.id)}
-											onclick={(e) => e.stopPropagation()}
-										/>
-									</td>
-									<td class="py-4 pr-3 pl-4 text-sm font-medium whitespace-nowrap text-gray-900"
-										>{instance.name}</td
-									>
-									<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500">
-										<span
-											class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {getStatusColor(
-												instance.state
-											)}"
-										>
-											{instance.state}
-										</span>
-									</td>
-									<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500"
-										>{instance.instance_type}</td
-									>
-									<td class="px-3 py-4 font-mono text-xs whitespace-nowrap text-gray-500"
-										>{instance.id}</td
-									>
-									<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500"
-										>{instance.model ?? '-'}</td
-									>
-									<td
-										class="border-l border-dashed border-gray-300 px-3 py-4 text-sm whitespace-nowrap text-gray-500"
-									>
-										<span
-											class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {getStatusColor(
-												instance.vllm.status
-											)}"
-										>
-											{instance.vllm.status}
-										</span>
-									</td>
-									<td class="px-3 py-4 text-sm whitespace-nowrap text-gray-500"
-										>{instance.vllm.models?.[0]?.name ?? '-'}</td
-									>
-									<td class="px-3 py-4 text-center text-sm whitespace-nowrap text-gray-500"
-										>{instance.connections}</td
-									>
-									<td class="px-3 py-4 text-right text-sm whitespace-nowrap text-gray-500"
-										>{formatTimeEstimate(instance.idle_time)}</td
-									>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				{/if}
-			</div>
-		</div>
-	</div>
-</div>
+<DataTable
+	{table}
+	{columnLabels}
+	loading={isLoading}
+	search
+	rowLabel="instance"
+	searchPlaceholder="Search name, ID or model..."
+	emptyTitle="No instances"
+	emptyDescription="Nothing is running right now."
+>
+	{#snippet selectionActions()}
+		<button
+			class="ml-1 flex items-center gap-1.5 rounded px-2 py-0.5 text-green-700 hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-40"
+			onclick={startSelected}
+			disabled={isLoading}
+		>
+			<i class="fa-solid fa-play text-xs"></i>
+			Start
+		</button>
+		<button
+			class="flex items-center gap-1.5 rounded px-2 py-0.5 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+			onclick={stopSelected}
+			disabled={isLoading}
+		>
+			<i class="fa-solid fa-stop text-xs"></i>
+			Stop
+		</button>
+	{/snippet}
 
-<div class="mt-8 rounded-lg bg-gray-50 p-4 shadow-sm ring-1 ring-gray-900/5 sm:max-w-md">
-	<h3 class="text-base leading-7 font-semibold text-gray-900">Configuration</h3>
+	{#snippet filters()}
+		{#if table.getColumn('state')}
+			<FacetedFilter title="State" column={table.getColumn('state')!} />
+		{/if}
+		{#if table.getColumn('vllm_status')}
+			<FacetedFilter title="vLLM status" column={table.getColumn('vllm_status')!} />
+		{/if}
+	{/snippet}
+
+	{#snippet cell(columnId, row)}
+		{@const instance = row.original}
+		{#if columnId === 'name'}
+			{instance.name}
+		{:else if columnId === 'state'}
+			<span
+				class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {getStatusColor(
+					instance.state
+				)}"
+			>
+				{instance.state}
+			</span>
+		{:else if columnId === 'instance_type'}
+			{instance.instance_type}
+		{:else if columnId === 'id'}
+			{instance.id}
+		{:else if columnId === 'model'}
+			{#if instance.model}{instance.model}{:else}<span class="text-gray-300">&ndash;</span>{/if}
+		{:else if columnId === 'vllm_status'}
+			<span
+				class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {getStatusColor(
+					instance.vllm.status
+				)}"
+			>
+				{instance.vllm.status}
+			</span>
+		{:else if columnId === 'vllm_model'}
+			{#if instance.vllm.models?.[0]?.name}{instance.vllm.models[0].name}{:else}<span
+					class="text-gray-300">&ndash;</span
+				>{/if}
+		{:else if columnId === 'connections'}
+			{instance.connections}
+		{:else if columnId === 'idle_time'}
+			{formatTimeEstimate(instance.idle_time)}
+		{/if}
+	{/snippet}
+</DataTable>
+
+<div class="mt-8 shrink-0 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:max-w-md">
+	<h3 class="text-base leading-7 font-semibold text-dark">Configuration</h3>
 	<div class="mt-4 flex flex-col gap-4">
 		<div>
 			<label for="min-instances" class="mb-1 block text-sm leading-6 font-medium text-gray-900"
@@ -409,7 +410,7 @@
 					type="number"
 					id="min-instances"
 					bind:value={minInstances}
-					class="block w-20 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
+					class="block w-20 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-primary focus:ring-inset sm:text-sm sm:leading-6"
 				/>
 			</div>
 		</div>
@@ -423,7 +424,7 @@
 					type="checkbox"
 					id="start-check"
 					bind:checked={startCheck}
-					class="h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 shadow-sm transition duration-150 ease-out hover:border-indigo-400 hover:bg-indigo-50 hover:shadow checked:hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-1"
+					class="h-5 w-5 cursor-pointer rounded border-gray-300 text-primary shadow-sm transition duration-150 ease-out hover:border-primary focus:ring-2 focus:ring-primary/40 focus:ring-offset-1"
 				/>
 			</div>
 		</div>
@@ -436,7 +437,7 @@
 					id="stop-check"
 					type="checkbox"
 					bind:checked={stopCheck}
-					class="h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 shadow-sm transition duration-150 ease-out hover:border-indigo-400 hover:bg-indigo-50 hover:shadow checked:hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-1"
+					class="h-5 w-5 cursor-pointer rounded border-gray-300 text-primary shadow-sm transition duration-150 ease-out hover:border-primary focus:ring-2 focus:ring-primary/40 focus:ring-offset-1"
 				/>
 			</div>
 		</div>
@@ -450,7 +451,7 @@
 						id="downtime-check"
 						type="checkbox"
 						bind:checked={downtimeEnabled}
-						class="mt-1.5 h-5 w-5 cursor-pointer rounded border-gray-300 text-indigo-600 shadow-sm transition duration-150 ease-out hover:border-indigo-400 hover:bg-indigo-50 hover:shadow checked:hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-1"
+						class="mt-1.5 h-5 w-5 cursor-pointer rounded border-gray-300 text-primary shadow-sm transition duration-150 ease-out hover:border-primary focus:ring-2 focus:ring-primary/40 focus:ring-offset-1"
 					/>
 				</div>
 				{#if downtimeEnabled}
@@ -464,7 +465,7 @@
 							type="time"
 							lang="en-GB"
 							bind:value={downtimeStart}
-							class="ml-auto block rounded-md border-0 py-1 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
+							class="ml-auto block rounded-md border-0 py-1 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-primary focus:ring-inset sm:text-sm sm:leading-6"
 						/>
 					</div>
 					<div class="flex-1">
@@ -477,7 +478,7 @@
 							type="time"
 							lang="en-GB"
 							bind:value={downtimeEnd}
-							class="ml-auto block rounded-md border-0 py-1 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
+							class="ml-auto block rounded-md border-0 py-1 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-primary focus:ring-inset sm:text-sm sm:leading-6"
 						/>
 					</div>
 				{/if}
@@ -485,7 +486,7 @@
 		</div>
 		<button
 			type="button"
-			class="w-fit rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+			class="w-fit rounded-md bg-primary px-3 py-2 text-sm font-semibold text-on-primary shadow-sm hover:brightness-110 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
 			onclick={updateSettings}
 		>
 			Update

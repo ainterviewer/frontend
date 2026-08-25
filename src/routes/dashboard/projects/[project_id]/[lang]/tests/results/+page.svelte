@@ -1,153 +1,284 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
-	import type { InterviewSummaryPublic, InterviewType } from '$lib/api';
-	import { SvelteSet } from 'svelte/reactivity';
+	import type {
+		InterviewFacets,
+		InterviewStatus,
+		InterviewSummaryPublic,
+		InterviewType
+	} from '$lib/api';
+	import DataTable from '$lib/components/table/DataTable.svelte';
+	import DateRangeFilter from '$lib/components/table/DateRangeFilter.svelte';
+	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
+	import {
+		dataTableFeatures,
+		dateRangeQuery,
+		facetCounts,
+		facetOptions,
+		formatDate,
+		formatDateFull,
+		type DataTableFeatures,
+		type DateRange
+	} from '$lib/components/table/features';
+	import {
+		createColumnHelper,
+		createTable,
+		type ColumnFiltersState,
+		type PaginationState,
+		type SortingState,
+		type Updater
+	} from '@tanstack/svelte-table';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
-	import TablePaginationFooter from '../../interviews/TablePaginationFooter.svelte';
-	import SortableHeader from '../../interviews/SortableHeader.svelte';
-
-	// Extend InterviewSummaryPublic with interview_type field
-	type InterviewWithType = InterviewSummaryPublic & {
-		interview_type?: InterviewType;
-	};
 
 	// State
-	let interviews = $state<InterviewWithType[]>([]);
+	let interviews = $state<InterviewSummaryPublic[]>([]);
 	let loading = $state(false);
 	let hasLoaded = $state(false);
 	let totalItems = $state(0);
-	let currentPage = $state(1);
-	let itemsPerPage = $state(10);
-	let sortColumn = $state('created_at');
-	let sortOrder = $state<'asc' | 'desc'>('desc');
-	const selectedInterviews = new SvelteSet<string>();
+	let facets = $state<InterviewFacets>({});
 	let activeDropdown = $state<string | null>(null);
 	let dropdownPosition = $state({ top: 0, right: 0 });
 	let error = $state<string | null>(null);
 
 	const project_id = $derived(page.params.project_id as string);
-	const totalPages = $derived(Math.ceil(totalItems / itemsPerPage));
-	const allSelected = $derived(
-		interviews.length > 0 && interviews.every((i) => selectedInterviews.has(i.id))
-	);
-	const isIndeterminate = $derived(
-		interviews.some((i) => selectedInterviews.has(i.id)) && !allSelected
-	);
 
 	const InterviewTypeMap = new Map<InterviewType, string>([
 		['manual_test', 'Manual'],
 		['synthetic_test', 'Synthetic']
 	]);
 
-	const columns = [
-		{ key: 'id', label: 'ID' },
-		{ key: 'created_at', label: 'Created' },
-		{ key: 'n_messages', label: 'Messages' },
-		{ key: 'interview_type', label: 'Type' },
-		{ key: 'test_name', label: 'Test name' },
-		{ key: 'language', label: 'Language' },
-		{ key: 'status', label: 'Status' }
-	];
+	/** The two types this page ever shows: its scope, not a user filter. */
+	const TEST_TYPES: InterviewType[] = ['manual_test', 'synthetic_test'];
+
+	const TYPE_LABELS = Object.fromEntries(InterviewTypeMap);
+
+	/** Reads the way the Status cell does. */
+	const STATUS_LABELS: Record<string, string> = {
+		completed: 'Complete',
+		active: 'Active',
+		inactive: 'Inactive'
+	};
+
+	/* ---------------------------------------------------------------- table */
+
+	// Everything about this table happens on the server, so every state slice
+	// that shapes the query is owned here and every change refetches. The
+	// controls still read and write TanStack's own state, which keeps
+	// DataTable's search box, "Clear filters" and empty states working as they
+	// do on the client-side tables.
+	let sorting = $state<SortingState>([{ id: 'created_at', desc: true }]);
+	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
+	let columnFilters = $state<ColumnFiltersState>([]);
+	let globalFilter = $state('');
+
+	/** A column's selected facet values, as `FacetedFilter` stores them. */
+	function selection<T extends string = string>(columnId: string) {
+		return columnFilters.find((filter) => filter.id === columnId)?.value as T[] | undefined;
+	}
+
+	const helper = createColumnHelper<DataTableFeatures, InterviewSummaryPublic>();
+
+	const columns = helper.columns([
+		helper.display({ id: 'select', enableHiding: false }),
+		helper.accessor('id', {
+			header: 'ID',
+			// The API sorts by a fixed set of columns and id is not one of them,
+			// so the header must not offer it.
+			enableSorting: false,
+			meta: { class: 'font-mono text-xs whitespace-nowrap text-gray-500' }
+		}),
+		helper.accessor('created_at', {
+			header: 'Created',
+			meta: { class: 'whitespace-nowrap tabular-nums text-gray-600' }
+		}),
+		helper.accessor('n_messages', {
+			header: 'Messages',
+			meta: { align: 'right', class: 'tabular-nums text-gray-600' }
+		}),
+		helper.accessor('type', { header: 'Type', meta: { class: 'text-gray-600' } }),
+		helper.accessor('test_name', {
+			header: 'Test name',
+			meta: { class: 'whitespace-nowrap text-gray-600' }
+		}),
+		helper.accessor('language', { header: 'Language', meta: { class: 'text-gray-600' } }),
+		helper.accessor('status', { header: 'Status' }),
+		helper.display({ id: 'join', header: '', enableHiding: false }),
+		helper.display({
+			id: 'actions',
+			header: 'Actions',
+			enableHiding: false,
+			meta: { align: 'right', class: 'whitespace-nowrap' }
+		})
+	]);
+
+	const table = createTable({
+		features: dataTableFeatures,
+		columns,
+		get data() {
+			return interviews;
+		},
+		getRowId: (i) => i.id,
+		// The server has already filtered, sorted and sliced; trust the incoming
+		// rows and render them as they arrive.
+		manualSorting: true,
+		manualPagination: true,
+		manualFiltering: true,
+		// The API always needs a column and order, so sorting must never be
+		// cleared to an empty state: clicking cycles asc/desc only.
+		enableSortingRemoval: false,
+		get rowCount() {
+			return totalItems;
+		},
+		state: {
+			get sorting() {
+				return sorting;
+			},
+			get pagination() {
+				return pagination;
+			},
+			get columnFilters() {
+				return columnFilters;
+			},
+			get globalFilter() {
+				return globalFilter;
+			}
+		},
+		onSortingChange: (updater: Updater<SortingState>) => {
+			sorting = typeof updater === 'function' ? updater(sorting) : updater;
+			pagination = { ...pagination, pageIndex: 0 };
+			scheduleLoad();
+		},
+		onPaginationChange: (updater: Updater<PaginationState>) => {
+			pagination = typeof updater === 'function' ? updater(pagination) : updater;
+			scheduleLoad();
+		},
+		// Filtering has to reset the page by hand: TanStack only does that
+		// automatically for tables it paginates itself.
+		onColumnFiltersChange: (updater: Updater<ColumnFiltersState>) => {
+			columnFilters = typeof updater === 'function' ? updater(columnFilters) : updater;
+			pagination = { ...pagination, pageIndex: 0 };
+			scheduleLoad();
+		},
+		onGlobalFilterChange: (updater: Updater<string>) => {
+			globalFilter = typeof updater === 'function' ? updater(globalFilter) : updater;
+			pagination = { ...pagination, pageIndex: 0 };
+			scheduleLoad();
+		}
+	});
+
+	/**
+	 * One fetch per burst of state changes. `Clear filters` sets the global
+	 * filter and resets the column filters back to back, and each of those
+	 * fires its own handler, so without this the button costs two round trips.
+	 */
+	let queued = false;
+
+	function scheduleLoad() {
+		if (queued) return;
+		queued = true;
+		queueMicrotask(() => {
+			queued = false;
+			loadInterviews();
+		});
+	}
+
+	const columnLabels: Record<string, string> = {
+		id: 'ID',
+		created_at: 'Created',
+		n_messages: 'Messages',
+		type: 'Type',
+		test_name: 'Test name',
+		language: 'Language',
+		status: 'Status'
+	};
+
+	const selectedIds = $derived(table.getSelectedRowIds());
+
+	// Sorting and paging both refetch, so two requests can easily be in flight at
+	// once. Only the newest may write: an earlier response landing later would
+	// paint rows that no longer match the current sort or page.
+	let requestId = 0;
 
 	async function loadInterviews() {
+		const id = ++requestId;
 		loading = true;
 		error = null;
-		const offset = (currentPage - 1) * itemsPerPage;
-		const { data: responseData, error: fetchError } = await Api.getInterviews({
-			path: { project_id },
-			query: {
-				offset,
-				limit: itemsPerPage,
-				column: sortColumn,
-				order: sortOrder,
-				interview_types: ['manual_test', 'synthetic_test']
-			}
-		});
+		try {
+			const { data: responseData, error: fetchError } = await Api.getInterviews({
+				path: { project_id },
+				query: {
+					offset: pagination.pageIndex * pagination.pageSize,
+					limit: pagination.pageSize,
+					column: sorting[0]?.id ?? 'created_at',
+					order: sorting[0]?.desc ? 'desc' : 'asc',
+					// The scope of this page. `types` is what the Type filter narrows
+					// it to, and unlike the scope it is left out of the type facet.
+					interview_types: TEST_TYPES,
+					types: selection<InterviewType>('type'),
+					search: globalFilter || undefined,
+					statuses: selection<InterviewStatus>('status'),
+					languages: selection('language'),
+					...dateRangeQuery(
+						columnFilters.find((filter) => filter.id === 'created_at')?.value as
+							DateRange | undefined
+					)
+				}
+			});
+			if (id !== requestId) return;
 
-		if (fetchError) {
-			console.error('Error fetching test results:', fetchError);
-			error = 'Failed to load test results';
-			interviews = [];
-			totalItems = 0;
-		} else {
-			const data = responseData;
-			if (data) {
-				interviews = data.items || [];
-				totalItems = data.total || 0;
-			} else {
+			if (fetchError) {
+				console.error('Error fetching test results:', fetchError);
+				error = 'Failed to load test results';
 				interviews = [];
 				totalItems = 0;
+				facets = {};
+			} else {
+				const data = responseData;
+				if (data) {
+					interviews = data.items || [];
+					totalItems = data.total || 0;
+					facets = data.facets ?? {};
+				} else {
+					interviews = [];
+					totalItems = 0;
+					facets = {};
+				}
 			}
-		}
-		loading = false;
-		hasLoaded = true;
-	}
-
-	function handleSort(column: string) {
-		if (sortColumn === column) {
-			sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-		} else {
-			sortColumn = column;
-			sortOrder = 'desc';
-		}
-		currentPage = 1;
-		loadInterviews();
-	}
-
-	function handlePageChange(newPage: number) {
-		if (newPage < 1 || newPage > totalPages) return;
-		currentPage = newPage;
-		loadInterviews();
-	}
-
-	function handleLimitChange(newLimit: number) {
-		itemsPerPage = newLimit;
-		currentPage = 1;
-		loadInterviews();
-	}
-
-	function toggleSelection(id: string) {
-		if (selectedInterviews.has(id)) {
-			selectedInterviews.delete(id);
-		} else {
-			selectedInterviews.add(id);
-		}
-	}
-
-	function toggleSelectAll(event: Event) {
-		const checkbox = event.target as HTMLInputElement;
-		if (checkbox.checked) {
-			interviews.forEach((i) => selectedInterviews.add(i.id));
-		} else {
-			interviews.forEach((i) => selectedInterviews.delete(i.id));
+		} finally {
+			// Whatever happened, the refresh button must not stay disabled.
+			if (id === requestId) {
+				loading = false;
+				hasLoaded = true;
+			}
 		}
 	}
 
 	async function handleDeleteSelected() {
 		if (
 			!confirm(
-				`Are you sure you want to delete the selected ${selectedInterviews.size} result(s)? This action cannot be undone.`
+				`Are you sure you want to delete the selected ${selectedIds.length} result(s)? This action cannot be undone.`
 			)
 		)
 			return;
 
 		const { error: deleteError } = await Api.deleteInterviews({
 			path: { project_id },
-			body: { interview_ids: Array.from(selectedInterviews) }
+			body: { interview_ids: selectedIds }
 		});
 		if (deleteError) {
 			console.error('Error deleting test results:', deleteError);
 			toast.error('Failed to delete test results');
 			return;
 		}
-		selectedInterviews.clear();
-		loadInterviews();
+		table.resetRowSelection(true);
+		// Deleting the last rows of the final page would otherwise leave the table
+		// pointing past the end of the shortened dataset.
+		table.setPageIndex(0);
 	}
 
 	async function handleDownloadSelected() {
-		const ids = Array.from(selectedInterviews);
+		const ids = selectedIds;
 		downloadFile(ids, 'xlsx');
 	}
 
@@ -232,49 +363,37 @@
 		}
 	}
 
-	function formatDate(dateStr: string | null | undefined) {
-		if (!dateStr) return 'N/A';
-		return new Date(dateStr).toLocaleString('en-GB', { hour12: false });
+	/**
+	 * The menu is placed from a one-off measurement of its trigger, so it cannot
+	 * follow it. Capture phase, because a scroll inside the table's own row area
+	 * does not bubble.
+	 */
+	function handleScroll() {
+		activeDropdown = null;
 	}
 
 	onMount(() => {
 		loadInterviews();
 		window.addEventListener('click', handleWindowClick);
+		window.addEventListener('scroll', handleScroll, true);
 		return () => {
 			window.removeEventListener('click', handleWindowClick);
+			window.removeEventListener('scroll', handleScroll, true);
 		};
 	});
 </script>
 
-<div class="mb-2 flex items-end justify-between">
-	<h1 class="page-title">Test Results</h1>
-	<div class="flex gap-1">
-		<button
-			class="p-2 text-gray-600 transition-transform duration-300 hover:rotate-180 hover:text-gray-900"
-			onclick={loadInterviews}
-			title="Refresh results"
-		>
-			<i class="fa-solid fa-arrows-rotate text-lg"></i>
-		</button>
-
-		<button
-			class="p-2 text-gray-600 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30"
-			onclick={handleDownloadSelected}
-			disabled={selectedInterviews.size === 0}
-			title="Download selected results"
-		>
-			<i class="fa-solid fa-download text-lg"></i>
-		</button>
-
-		<button
-			class="p-2 text-gray-600 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
-			onclick={handleDeleteSelected}
-			disabled={selectedInterviews.size === 0}
-			title="Delete selected results"
-		>
-			<i class="fa-solid fa-trash-can text-lg"></i>
-		</button>
-	</div>
+<div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+	<h1 class="page-title mb-0">Test Results</h1>
+	<button
+		class="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-secondary/40 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30"
+		onclick={loadInterviews}
+		title="Refresh"
+		aria-label="Refresh"
+		disabled={loading}
+	>
+		<i class="fa-solid fa-arrows-rotate {loading ? 'animate-spin' : ''}"></i>
+	</button>
 </div>
 
 {#if error}
@@ -286,133 +405,128 @@
 	</div>
 {/if}
 
-<div class="overflow-x-auto rounded-lg bg-white shadow">
-	<table class="min-w-full leading-normal">
-		<thead>
-			<tr
-				class="border-b-2 border-gray-200 bg-secondary text-left text-[13px] font-bold tracking-wider text-gray-900 uppercase"
-			>
-				<th class="w-12 px-5 py-3.5">
-					<input
-						type="checkbox"
-						class="form-checkbox h-4 w-4 cursor-pointer text-primary transition duration-150 ease-in-out focus:ring-primary"
-						checked={allSelected}
-						onchange={toggleSelectAll}
-						indeterminate={isIndeterminate}
-					/>
-				</th>
-				{#each columns as col (col.key)}
-					<SortableHeader
-						column={col.key}
-						label={col.label}
-						{sortColumn}
-						{sortOrder}
-						onSort={handleSort}
-					/>
-				{/each}
-				<th class="px-5 py-3"></th>
-				<th class="px-5 py-3"></th>
-			</tr>
-		</thead>
-		<tbody class="bg-white">
-			{#if loading && !hasLoaded}
-				<tr>
-					<td colspan="10" class="px-5 py-10 text-center text-gray-500">
-						<i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading results...
-					</td>
-				</tr>
-			{:else if interviews.length === 0}
-				<tr>
-					<td colspan="10" class="px-5 py-10 text-center text-gray-500"> No test results found </td>
-				</tr>
-			{:else}
-				{#each interviews as interview (interview.id)}
-					<tr class="border-b border-gray-200 text-sm hover:bg-gray-50">
-						<td class="px-5 py-4">
-							<input
-								type="checkbox"
-								class="form-checkbox h-4 w-4 cursor-pointer text-primary transition duration-150 ease-in-out focus:ring-primary"
-								checked={selectedInterviews.has(interview.id)}
-								onchange={() => toggleSelection(interview.id)}
-							/>
-						</td>
-						<td class="px-5 py-4 font-mono text-xs">{interview.id}</td>
-						<td class="px-5 py-4">{formatDate(interview.created_at)}</td>
-						<td class="px-5 py-4">{interview.n_messages}</td>
-						<td class="px-5 py-4">{InterviewTypeMap.get(interview.type)}</td>
-						<td class="px-5 py-4">{interview.test_name}</td>
-						<td class="px-5 py-4">{interview.language}</td>
-						<td class="px-5 py-4">
-							{#if interview.status === 'completed'}
-								<span
-									class="rounded-full bg-green-100 px-2 py-1 text-xs leading-tight font-semibold text-green-700"
-									>Complete</span
-								>
-							{:else if interview.status === 'active'}
-								<span
-									class="rounded-full bg-blue-100 px-2 py-1 text-xs leading-tight font-semibold text-blue-700"
-									>Active</span
-								>
-							{:else}
-								<span
-									class="rounded-full bg-gray-100 px-2 py-1 text-xs leading-tight font-semibold text-gray-700"
-									>Inactive</span
-								>
-							{/if}
-						</td>
-						<td class="px-5 py-4">
-							{#if interview.interviewer !== 'ai' && interview.status === 'active'}
-								<button
-									class="rounded bg-blue-500 px-3 py-1 text-xs font-bold text-white transition duration-150 hover:bg-blue-600"
-									onclick={() => handleConnect(interview.id)}
-								>
-									Join
-								</button>
-							{/if}
-						</td>
-						<td class="px-5 py-4 text-right">
-							<div class="dropdown-container relative">
-								<button
-									class="w-4 text-gray-500 hover:text-gray-700 focus:outline-none"
-									onclick={(e) => {
-										e.stopPropagation();
-										toggleDropdown(e, interview.id);
-									}}
-									aria-label="Actions"
-								>
-									<i class="fa-solid fa-ellipsis-vertical"></i>
-								</button>
-							</div>
-						</td>
-					</tr>
-				{/each}
-			{/if}
-		</tbody>
-	</table>
-</div>
+<DataTable
+	{table}
+	{columnLabels}
+	{loading}
+	{hasLoaded}
+	search
+	searchPlaceholder="Search by ID or test name..."
+	rowCount={totalItems}
+	rowLabel="test result"
+	emptyTitle="No test results yet"
+	emptyDescription="Run a manual or synthetic test to see results here."
+>
+	{#snippet filters()}
+		<FacetedFilter
+			title="Type"
+			column={table.getColumn('type')!}
+			options={facetOptions(facets.type, TYPE_LABELS)}
+			counts={facetCounts(facets.type)}
+		/>
+		<FacetedFilter
+			title="Status"
+			column={table.getColumn('status')!}
+			options={facetOptions(facets.status, STATUS_LABELS)}
+			counts={facetCounts(facets.status)}
+		/>
+		<FacetedFilter
+			title="Language"
+			column={table.getColumn('language')!}
+			options={facetOptions(facets.language)}
+			counts={facetCounts(facets.language)}
+		/>
+		<DateRangeFilter title="Created" column={table.getColumn('created_at')!} />
+	{/snippet}
 
-<TablePaginationFooter
-	{totalItems}
-	{itemsPerPage}
-	{currentPage}
-	onPageChange={handlePageChange}
-	onItemsPerPageChange={handleLimitChange}
-	itemName="results"
-/>
+	{#snippet selectionActions()}
+		<button
+			class="ml-1 flex items-center gap-1.5 rounded px-2 py-0.5 text-gray-700 hover:bg-secondary/40"
+			onclick={handleDownloadSelected}
+		>
+			<i class="fa-solid fa-download text-xs"></i>
+			Download
+		</button>
+		<button
+			class="flex items-center gap-1.5 rounded px-2 py-0.5 text-red-600 hover:bg-red-50"
+			onclick={handleDeleteSelected}
+		>
+			<i class="fa-solid fa-trash-can text-xs"></i>
+			Delete
+		</button>
+	{/snippet}
+
+	{#snippet cell(columnId, row)}
+		{@const interview = row.original}
+		{#if columnId === 'id'}
+			{interview.id}
+		{:else if columnId === 'created_at'}
+			<span title={formatDateFull(interview.created_at)}>{formatDate(interview.created_at)}</span>
+		{:else if columnId === 'n_messages'}
+			{interview.n_messages}
+		{:else if columnId === 'type'}
+			{InterviewTypeMap.get(interview.type) ?? ''}
+		{:else if columnId === 'test_name'}
+			{#if interview.test_name}{interview.test_name}{:else}<span class="text-gray-300">&ndash;</span
+				>{/if}
+		{:else if columnId === 'language'}
+			{interview.language}
+		{:else if columnId === 'status'}
+			{#if interview.status === 'completed'}
+				<span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+					Complete
+				</span>
+			{:else if interview.status === 'active'}
+				<span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+					Active
+				</span>
+			{:else}
+				<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">
+					Inactive
+				</span>
+			{/if}
+		{:else if columnId === 'join'}
+			{#if interview.interviewer !== 'ai' && interview.status === 'active'}
+				<button
+					class="rounded bg-primary px-3 py-1 text-xs font-semibold text-on-primary transition hover:brightness-110"
+					onclick={(e) => {
+						e.stopPropagation();
+						handleConnect(interview.id);
+					}}
+				>
+					Join
+				</button>
+			{/if}
+		{:else if columnId === 'actions'}
+			<div class="dropdown-container relative inline-block">
+				<button
+					class="rounded p-1.5 text-gray-400 hover:bg-secondary/40 hover:text-dark"
+					onclick={(e) => {
+						e.stopPropagation();
+						toggleDropdown(e, interview.id);
+					}}
+					aria-label="Actions"
+				>
+					<i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+				</button>
+			</div>
+		{/if}
+	{/snippet}
+</DataTable>
 
 {#if activeDropdown}
 	<div
-		class="dropdown-menu fixed z-50 mt-2 w-48 rounded-md border border-gray-100 bg-white py-1 text-left shadow-lg"
+		class="dropdown-menu fixed z-2000 mt-2 w-48 rounded-md border border-gray-200 bg-white py-1 text-left shadow-lg"
 		style="top: {dropdownPosition.top}px; right: {dropdownPosition.right}px;"
 	>
 		<button
-			class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+			class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-secondary/40"
 			onclick={() => handleSingleAction('view', activeDropdown!)}
 		>
 			<i class="fa-solid fa-eye mr-2 text-gray-500"></i> View
 		</button>
 		<button
-			class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+			class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-secondary/40"
 			onclick={() => handleSingleAction('download', activeDropdown!)}
 		>
 			<i class="fa-solid fa-download mr-2 text-gray-500"></i> Download

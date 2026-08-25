@@ -1440,6 +1440,13 @@ export class Projects {
     
     /**
      * Get Interviews
+     *
+     * One page of interviews, with the filter options that fit the query.
+     *
+     * `interview_types` is the scope of the list: the interviews page passes
+     * nothing and gets distributed interviews, the test results page passes the
+     * two test types. `types` is the user narrowing that scope from the Type
+     * filter, and unlike the scope it is dropped when counting the type facet.
      */
     public static getInterviews<ThrowOnError extends boolean = false>(options: Options<GetInterviewsData, ThrowOnError>): RequestResult<GetInterviewsResponses, GetInterviewsErrors, ThrowOnError> {
         return (options.client ?? client).get<GetInterviewsResponses, GetInterviewsErrors, ThrowOnError>({

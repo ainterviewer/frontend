@@ -1,8 +1,20 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { Admin, type Scope } from '$lib/api';
+	import DataTable from '$lib/components/table/DataTable.svelte';
+	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
+	import {
+		dataTableFeatures,
+		NO_PAGINATION,
+		formatDate,
+		formatDateFull,
+		matchesSelection,
+		sortableText,
+		sortableTime,
+		type DataTableFeatures
+	} from '$lib/components/table/features';
 	import { errorMessage } from '$lib/utils/errors';
-	import { SvelteSet } from 'svelte/reactivity';
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
@@ -22,7 +34,6 @@
 	let requests = $derived(data.requests as AccessRequest[]);
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
-	const selectedIds = new SvelteSet<string>();
 	let scopeByRequest = $state<Record<string, Scope>>({});
 
 	const DEFAULT_USER_SCOPE: Scope = 'demo';
@@ -34,12 +45,95 @@
 		guest: 'bg-gray-100 text-gray-800 focus:border-gray-800 focus:ring-gray-800'
 	};
 
-	let allSelected = $derived(requests.length > 0 && selectedIds.size === requests.length);
-
 	$effect(() => {
 		error = data.error;
 		scopeByRequest = Object.fromEntries(data.requests.map((r) => [r.id, DEFAULT_USER_SCOPE]));
 	});
+
+	/* ---------------------------------------------------------------- table */
+
+	const helper = createColumnHelper<DataTableFeatures, AccessRequest>();
+
+	const columns = helper.columns([
+		helper.display({ id: 'select', enableHiding: false }),
+		helper.accessor((r) => sortableText(r.name), {
+			id: 'name',
+			header: 'Name',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'font-medium whitespace-nowrap text-dark' }
+		}),
+		helper.accessor((r) => sortableText(r.email), {
+			id: 'email',
+			header: 'Email',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap text-gray-700' }
+		}),
+		helper.accessor((r) => sortableText(r.organization), {
+			id: 'organization',
+			header: 'Organization',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap text-gray-600' }
+		}),
+		helper.accessor('status', {
+			header: 'Status',
+			sortFn: 'text',
+			filterFn: matchesSelection
+		}),
+		helper.display({ id: 'scope', header: 'Scope' }),
+		helper.accessor((r) => sortableText(r.message), {
+			id: 'message',
+			header: 'Message',
+			sortFn: 'text',
+			sortUndefined: 'last',
+			meta: { class: 'max-w-xs truncate text-gray-600' }
+		}),
+		helper.accessor((r) => sortableTime(r.created_at), {
+			id: 'created_at',
+			header: 'Created',
+			sortFn: 'basic',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap tabular-nums text-gray-600' }
+		}),
+		helper.accessor((r) => sortableTime(r.updated_at), {
+			id: 'updated_at',
+			header: 'Updated',
+			sortFn: 'basic',
+			sortUndefined: 'last',
+			meta: { class: 'whitespace-nowrap tabular-nums text-gray-600' }
+		})
+	]);
+
+	const searchableColumns = ['name', 'email', 'organization', 'message'];
+
+	const table = createTable({
+		features: dataTableFeatures,
+		columns,
+		get data() {
+			return requests;
+		},
+		getRowId: (r) => r.id,
+		globalFilterFn: 'includesString',
+		getColumnCanGlobalFilter: (column) => searchableColumns.includes(column.id),
+		initialState: { pagination: NO_PAGINATION, sorting: [{ id: 'created_at', desc: true }] }
+	});
+
+	const columnLabels: Record<string, string> = {
+		name: 'Name',
+		email: 'Email',
+		organization: 'Organization',
+		status: 'Status',
+		scope: 'Scope',
+		message: 'Message',
+		created_at: 'Created',
+		updated_at: 'Updated'
+	};
+
+	const selectedIds = $derived(table.getSelectedRowIds());
+
+	/* --------------------------------------------------------------- actions */
 
 	async function loadRequests() {
 		if (isLoading) return;
@@ -47,7 +141,7 @@
 		error = null;
 		try {
 			await invalidateAll();
-			selectedIds.clear();
+			table.resetRowSelection(true);
 		} catch (e) {
 			error = errorMessage(e) || 'Failed to fetch requests';
 		} finally {
@@ -55,23 +149,8 @@
 		}
 	}
 
-	function toggleSelection(id: string) {
-		if (selectedIds.has(id)) {
-			selectedIds.delete(id);
-		} else {
-			selectedIds.add(id);
-		}
-	}
-
-	function toggleAll(checked: boolean) {
-		selectedIds.clear();
-		if (checked) {
-			for (const r of requests) selectedIds.add(r.id);
-		}
-	}
-
 	async function handleAction(action: 'approve' | 'deny') {
-		const ids = Array.from(selectedIds);
+		const ids = selectedIds;
 		if (ids.length === 0) {
 			toast.error(`Please select one or more requests to ${action}.`);
 			return;
@@ -81,9 +160,9 @@
 		try {
 			const response = await Admin.processAccessRequests({
 				body: {
-					ids: ids,
+					ids,
 					scopes: ids.map((id) => scopeByRequest[id] ?? DEFAULT_USER_SCOPE),
-					action: action
+					action
 				}
 			});
 			if (response.error) {
@@ -101,7 +180,7 @@
 	}
 
 	async function handleDelete() {
-		const ids = Array.from(selectedIds);
+		const ids = selectedIds;
 		if (ids.length === 0) {
 			toast.error('Please select one or more requests to delete.');
 			return;
@@ -113,11 +192,7 @@
 
 		isLoading = true;
 		try {
-			const response = await Admin.deleteAccessRequests({
-				body: {
-					ids: ids
-				}
-			});
+			const response = await Admin.deleteAccessRequests({ body: { ids } });
 			if (response.error) {
 				throw new Error(String(response.error));
 			}
@@ -136,42 +211,17 @@
 	<title>AInterviewer - Access Requests</title>
 </svelte:head>
 
-<div class="mb-4 flex items-end justify-between">
-	<h2 class="page-title">Access Requests</h2>
-	<div class="flex gap-2">
-		<button
-			class="cursor-pointer rounded bg-green-600 p-2 text-white transition hover:bg-green-700 disabled:opacity-50"
-			onclick={() => handleAction('approve')}
-			title="Accept selected requests"
-			disabled={selectedIds.size === 0 || isLoading}
-		>
-			<i class="fa-solid fa-circle-check"></i>
-		</button>
-		<button
-			class="cursor-pointer rounded bg-red-600 p-2 text-white transition hover:bg-red-700 disabled:opacity-50"
-			onclick={() => handleAction('deny')}
-			title="Deny selected requests"
-			disabled={selectedIds.size === 0 || isLoading}
-		>
-			<i class="fa-solid fa-ban"></i>
-		</button>
-		<button
-			class="cursor-pointer rounded bg-gray-600 p-2 text-white transition hover:bg-gray-700 disabled:opacity-50"
-			onclick={handleDelete}
-			title="Delete selected requests"
-			disabled={selectedIds.size === 0 || isLoading}
-		>
-			<i class="fa-solid fa-trash"></i>
-		</button>
-		<button
-			class="cursor-pointer rounded bg-blue-600 p-2 text-white transition hover:bg-blue-700 disabled:opacity-50"
-			onclick={loadRequests}
-			title="Refresh requests"
-			disabled={isLoading}
-		>
-			<i class="fa-solid fa-arrows-rotate {isLoading ? 'animate-spin' : ''}"></i>
-		</button>
-	</div>
+<div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+	<h2 class="page-title mb-0">Access Requests</h2>
+	<button
+		class="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-secondary/40 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30"
+		onclick={loadRequests}
+		title="Refresh"
+		aria-label="Refresh"
+		disabled={isLoading}
+	>
+		<i class="fa-solid fa-arrows-rotate {isLoading ? 'animate-spin' : ''}"></i>
+	</button>
 </div>
 
 {#if error}
@@ -184,135 +234,95 @@
 	</div>
 {/if}
 
-<div class="overflow-x-auto rounded-lg bg-white shadow-md">
-	<table class="w-full min-w-[1200px] divide-y divide-gray-200">
-		<colgroup>
-			<col style="width: 50px" />
-			<col style="width: 150px" />
-			<col style="width: 220px" />
-			<col style="width: 120px" />
-			<col style="width: 100px" />
-			<col style="width: 120px" />
-			<col style="width: auto" />
-			<col style="width: 160px" />
-			<col style="width: 160px" />
-		</colgroup>
-		<thead class="bg-gray-50">
-			<tr>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-					<input
-						type="checkbox"
-						checked={allSelected}
-						onchange={(e) => toggleAll(e.currentTarget.checked)}
-						class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
-					/>
-				</th>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Name</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Email</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Organization</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Status</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Scope</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Message</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Created at</th
-				>
-				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-					>Updated at</th
-				>
-			</tr>
-		</thead>
-		<tbody class="divide-y divide-gray-200 bg-white">
-			{#if isLoading && requests.length === 0}
-				<tr>
-					<td colspan="9" class="px-6 py-4 text-center text-gray-500"> Loading requests... </td>
-				</tr>
-			{:else if requests.length === 0}
-				<tr>
-					<td colspan="9" class="px-6 py-4 text-center text-gray-500">
-						No access requests found.
-					</td>
-				</tr>
-			{:else}
-				{#each requests as request (request.id)}
-					<tr
-						class="cursor-pointer hover:bg-gray-50"
-						tabindex="0"
-						onclick={() => toggleSelection(request.id)}
-						onkeydown={(e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
-								e.preventDefault();
-								toggleSelection(request.id);
-							}
-						}}
-					>
-						<td class="px-6 py-4 whitespace-nowrap">
-							<input
-								type="checkbox"
-								checked={selectedIds.has(request.id)}
-								onchange={() => toggleSelection(request.id)}
-								onclick={(e) => e.stopPropagation()}
-								class="cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
-							/>
-						</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">{request.name}</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">{request.email}</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500"
-							>{request.organization || '-'}</td
-						>
-						<td class="px-6 py-4 whitespace-nowrap">
-							<span
-								class="inline-flex rounded-full px-2 text-xs leading-5 font-semibold capitalize
-                                    {request.status === 'fulfilled'
-									? 'bg-green-100 text-green-800'
-									: request.status === 'denied' || request.status === 'error'
-										? 'bg-red-100 text-red-800'
-										: 'bg-orange-100 text-orange-800'}"
-							>
-								{request.status}
-							</span>
-						</td>
-						<td class="px-6 py-4 whitespace-nowrap">
-							<select
-								value={scopeByRequest[request.id] ?? DEFAULT_USER_SCOPE}
-								onclick={(e) => e.stopPropagation()}
-								onchange={(e) => {
-									const value = e.currentTarget.value as Scope;
-									scopeByRequest = { ...scopeByRequest, [request.id]: value };
-								}}
-								class="w-24 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium {scopeColors[
-									scopeByRequest[request.id] ?? DEFAULT_USER_SCOPE
-								]}  focus:outline-none"
-							>
-								{#each scopeOptions as scope (scope)}
-									<option value={scope}>{scope}</option>
-								{/each}
-							</select>
-						</td>
-						<td
-							class="max-w-xs truncate px-6 py-4 text-sm text-gray-500"
-							title={request.message || ''}>{request.message || '-'}</td
-						>
-						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500"
-							>{new Date(request.created_at).toLocaleString()}</td
-						>
-						<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500"
-							>{new Date(request.updated_at).toLocaleString()}</td
-						>
-					</tr>
+<DataTable
+	{table}
+	{columnLabels}
+	loading={isLoading}
+	hasLoaded={!isLoading || requests.length > 0}
+	search
+	rowLabel="request"
+	searchPlaceholder="Search name, email or organization..."
+	emptyTitle="No access requests"
+	emptyDescription="Requests appear here when someone asks for access."
+>
+	{#snippet filters()}
+		{#if table.getColumn('status')}
+			<FacetedFilter title="Status" column={table.getColumn('status')!} />
+		{/if}
+	{/snippet}
+
+	{#snippet selectionActions()}
+		<button
+			class="ml-1 flex items-center gap-1.5 rounded px-2 py-0.5 text-green-700 hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-40"
+			onclick={() => handleAction('approve')}
+			disabled={isLoading}
+		>
+			<i class="fa-solid fa-circle-check text-xs"></i>
+			Approve
+		</button>
+		<button
+			class="flex items-center gap-1.5 rounded px-2 py-0.5 text-orange-700 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-40"
+			onclick={() => handleAction('deny')}
+			disabled={isLoading}
+		>
+			<i class="fa-solid fa-ban text-xs"></i>
+			Deny
+		</button>
+		<button
+			class="flex items-center gap-1.5 rounded px-2 py-0.5 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+			onclick={handleDelete}
+			disabled={isLoading}
+		>
+			<i class="fa-solid fa-trash-can text-xs"></i>
+			Delete
+		</button>
+	{/snippet}
+
+	{#snippet cell(columnId, row)}
+		{@const request = row.original}
+		{#if columnId === 'name'}
+			{request.name}
+		{:else if columnId === 'email'}
+			{request.email}
+		{:else if columnId === 'organization'}
+			{#if request.organization}{request.organization}{:else}<span class="text-gray-300"
+					>&ndash;</span
+				>{/if}
+		{:else if columnId === 'status'}
+			<span
+				class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize
+					{request.status === 'fulfilled'
+					? 'bg-green-100 text-green-800'
+					: request.status === 'denied' || request.status === 'error'
+						? 'bg-red-100 text-red-800'
+						: 'bg-orange-100 text-orange-800'}"
+			>
+				{request.status}
+			</span>
+		{:else if columnId === 'scope'}
+			<select
+				value={scopeByRequest[request.id] ?? DEFAULT_USER_SCOPE}
+				onclick={(e) => e.stopPropagation()}
+				onchange={(e) => {
+					const value = e.currentTarget.value as Scope;
+					scopeByRequest = { ...scopeByRequest, [request.id]: value };
+				}}
+				class="w-24 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium focus:outline-none {scopeColors[
+					scopeByRequest[request.id] ?? DEFAULT_USER_SCOPE
+				]}"
+			>
+				{#each scopeOptions as scope (scope)}
+					<option value={scope}>{scope}</option>
 				{/each}
-			{/if}
-		</tbody>
-	</table>
-</div>
+			</select>
+		{:else if columnId === 'message'}
+			<span title={request.message || ''}>
+				{#if request.message}{request.message}{:else}<span class="text-gray-300">&ndash;</span>{/if}
+			</span>
+		{:else if columnId === 'created_at'}
+			<span title={formatDateFull(request.created_at)}>{formatDate(request.created_at)}</span>
+		{:else if columnId === 'updated_at'}
+			<span title={formatDateFull(request.updated_at)}>{formatDate(request.updated_at)}</span>
+		{/if}
+	{/snippet}
+</DataTable>
