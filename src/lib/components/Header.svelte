@@ -7,6 +7,8 @@
 	import Wave from '$lib/components/Wave.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls.js';
 	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
+	import LanguageSwitcher from './header/LanguageSwitcher.svelte';
+	import ProjectSwitcher from './header/ProjectSwitcher.svelte';
 	import HoverInfo from './HoverInfo.svelte';
 
 	interface HeaderProps {
@@ -18,7 +20,9 @@
 	}
 
 	let { data }: HeaderProps = $props();
-	let { projectId } = $derived(parseProjectRoute(page.url.pathname));
+	let { projectId, languageCode } = $derived(parseProjectRoute(page.url.pathname));
+
+	let languages = $derived(data.project?.available_languages ?? []);
 
 	let logoAnimate = $state(false);
 	let menuOpen = $state(false);
@@ -52,10 +56,17 @@
 					<span class="font-[noto_sans] font-semibold">AInterviewer</span>
 				</a>
 			</div>
-			<div id="project-id-picker">
+			<!-- gap-1 plus the switchers' own px-2 leaves an even 12px between every
+			     crumb and its separator; ml-3 gives the first slash the same gap from
+			     the logo, which has no padding of its own. -->
+			<div id="project-id-picker" class="flex items-center gap-1">
 				{#if projectId}
-					<span class="mx-2.5"> / </span>
-					<span class="text-xs">{data.project?.title ?? projectId}</span>
+					<span class="ml-3 text-light/50" aria-hidden="true">/</span>
+					<ProjectSwitcher {projectId} title={data.project?.title ?? projectId} />
+					{#if languageCode && languages.length > 0}
+						<span class="text-light/50" aria-hidden="true">/</span>
+						<LanguageSwitcher {projectId} {languageCode} {languages} />
+					{/if}
 				{/if}
 			</div>
 		</div>
