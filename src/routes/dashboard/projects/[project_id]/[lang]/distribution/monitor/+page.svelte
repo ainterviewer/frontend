@@ -461,7 +461,7 @@
 								class="h-3 w-3 rounded-full"
 								style="background-color: {statusColorScale(item.status)}"
 							></div>
-							<span class="text-sm text-gray-500 capitalize">{item.status} ({item.count})</span>
+							<span class="text-sm text-gray-700 capitalize">{item.status} ({item.count})</span>
 						</div>
 					{/each}
 				{:else if loading}
@@ -472,7 +472,7 @@
 								class="h-3 w-3 rounded-full"
 								style="background-color: {statusColorScale(status)}"
 							></div>
-							<span class="text-sm text-gray-500 capitalize">{status}</span>
+							<span class="text-sm text-gray-700 capitalize">{status}</span>
 						</div>
 					{/each}
 				{/if}
