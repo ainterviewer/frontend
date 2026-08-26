@@ -51,8 +51,7 @@
 	const scopeColors: Record<string, string> = {
 		admin: 'bg-purple-100 text-purple-800',
 		user: 'bg-blue-100 text-blue-800',
-		demo: 'bg-amber-100 text-amber-800',
-		guest: 'bg-gray-100 text-gray-800'
+		demo: 'bg-amber-100 text-amber-800'
 	};
 
 	async function loadInvitations() {
@@ -463,7 +462,6 @@
 					<option value="admin">Admin</option>
 					<option value="user">User</option>
 					<option value="demo">Demo</option>
-					<option value="guest">Guest</option>
 				</select>
 			</div>
 			<div class="sm:col-span-2">

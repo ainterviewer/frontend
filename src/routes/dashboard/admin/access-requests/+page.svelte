@@ -37,12 +37,11 @@
 	let scopeByRequest = $state<Record<string, Scope>>({});
 
 	const DEFAULT_USER_SCOPE: Scope = 'demo';
-	const scopeOptions: Scope[] = ['admin', 'user', 'demo', 'guest'];
+	const scopeOptions: Scope[] = ['admin', 'user', 'demo'];
 	const scopeColors: Record<string, string> = {
 		admin: 'bg-purple-100 text-purple-800 focus:border-purple-800 focus:ring-purple-800',
 		user: 'bg-blue-100 text-blue-800 focus:border-blue-800 focus:ring-blue-800',
-		demo: 'bg-amber-100 text-amber-800 focus:border-amber-800 focus:ring-amber-800',
-		guest: 'bg-gray-100 text-gray-800 focus:border-gray-800 focus:ring-gray-800'
+		demo: 'bg-amber-100 text-amber-800 focus:border-amber-800 focus:ring-amber-800'
 	};
 
 	$effect(() => {
