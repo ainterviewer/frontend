@@ -394,12 +394,13 @@ export class ChatClient {
 
 		if (!this.project_id || !this.interview_id) return;
 
+		// No ids in the body: the endpoint takes the interview and project from
+		// the interview_token cookie, so feedback can only ever land on this
+		// respondent's own transcript.
 		const { error } = await Interviews.putFeedback({
 			body: {
 				message_id: Number(messageId),
-				feedback: feedback,
-				project_id: this.project_id,
-				interview_id: this.interview_id
+				feedback: feedback
 			}
 		});
 		if (error) {

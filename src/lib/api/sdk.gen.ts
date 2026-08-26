@@ -1873,14 +1873,18 @@ export class Interviews {
     
     /**
      * Put Feedback
+     *
+     * Record a respondent's thumbs up/down on one interviewer message.
+     *
+     * Authenticated with the participant's interview token, like the speech and
+     * transcription endpoints, and scoped the same way: the interview and project
+     * come from the token, and the message is looked up inside them. Previously
+     * both ids were taken from the request body under a user-account token, so
+     * any account could write feedback onto any interview's message given its id
+     * -- and a respondent, holding no account at all, could not use it.
      */
     public static putFeedback<ThrowOnError extends boolean = false>(options: Options<PutFeedbackData, ThrowOnError>): RequestResult<PutFeedbackResponses, PutFeedbackErrors, ThrowOnError> {
         return (options.client ?? client).patch<PutFeedbackResponses, PutFeedbackErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
             url: '/api/feedback',
             ...options,
             headers: {

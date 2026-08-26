@@ -1751,6 +1751,23 @@ export type MessageCountStats = {
 };
 
 /**
+ * MessageFeedbackRequest
+ *
+ * Feedback on one message of the caller's own interview.
+ *
+ * Carries no interview or project id on purpose: both come from the
+ * interview_token cookie, so a caller cannot leave feedback on somebody
+ * else's transcript by naming it. Mirrors SpeechRequest.
+ */
+export type MessageFeedbackRequest = {
+    /**
+     * Message Id
+     */
+    message_id: number;
+    feedback?: Feedback | null;
+};
+
+/**
  * MessageFeedbackResponse
  */
 export type MessageFeedbackResponse = {
@@ -2701,7 +2718,7 @@ export type ResendVerificationRequest = {
 /**
  * Scope
  */
-export type Scope = 'admin' | 'user' | 'demo' | 'guest';
+export type Scope = 'admin' | 'user' | 'demo';
 
 /**
  * SecurityConfig
@@ -7459,7 +7476,7 @@ export type RedeemInterviewResumeLinkResponses = {
 export type RedeemInterviewResumeLinkResponse = RedeemInterviewResumeLinkResponses[keyof RedeemInterviewResumeLinkResponses];
 
 export type PutFeedbackData = {
-    body: MessageFeedbackResponse;
+    body: MessageFeedbackRequest;
     path?: never;
     query?: never;
     url: '/api/feedback';

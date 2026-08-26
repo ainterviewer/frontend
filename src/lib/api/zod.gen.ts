@@ -824,6 +824,20 @@ export const zMessageCountStats = z.object({
 });
 
 /**
+ * MessageFeedbackRequest
+ *
+ * Feedback on one message of the caller's own interview.
+ *
+ * Carries no interview or project id on purpose: both come from the
+ * interview_token cookie, so a caller cannot leave feedback on somebody
+ * else's transcript by naming it. Mirrors SpeechRequest.
+ */
+export const zMessageFeedbackRequest = z.object({
+    message_id: z.int(),
+    feedback: zFeedback.nullish()
+});
+
+/**
  * MessageFeedbackResponse
  */
 export const zMessageFeedbackResponse = z.object({
@@ -1237,8 +1251,7 @@ export const zResendVerificationRequest = z.object({
 export const zScope = z.enum([
     'admin',
     'user',
-    'demo',
-    'guest'
+    'demo'
 ]);
 
 /**
@@ -3333,7 +3346,7 @@ export const zRedeemInterviewResumeLinkPath = z.object({
  */
 export const zRedeemInterviewResumeLinkResponse = zInterviewResumeRedeemed;
 
-export const zPutFeedbackBody = zMessageFeedbackResponse;
+export const zPutFeedbackBody = zMessageFeedbackRequest;
 
 /**
  * Successful Response
