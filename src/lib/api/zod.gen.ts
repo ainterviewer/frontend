@@ -351,11 +351,47 @@ export const zDeleteParticipantsRequest = z.object({
 });
 
 /**
+ * DropoutSection
+ *
+ * A section of the interview guide, for grouping dropout points.
+ *
+ * Sourced from the project's default localization, so `description` may be in
+ * a different language than the dashboard page requesting these stats.
+ */
+export const zDropoutSection = z.object({
+    section: z.int(),
+    description: z.string()
+});
+
+/**
+ * DropoutStage
+ *
+ * Where in the interview an inactive respondent stopped.
+ *
+ * Dropouts do not all land on a question: an interview can be abandoned
+ * before a single message exists, during the introduction, or on the outro.
+ * Those three stages have no `(section, main_question)` to group by, so they
+ * are carried as explicit stages instead of being dropped.
+ */
+export const zDropoutStage = z.enum([
+    'never_started',
+    'introduction',
+    'question',
+    'outro'
+]);
+
+/**
  * DropoutPoint
  *
- * Count of dropouts at a specific question.
+ * Count of dropouts at a specific point in the interview.
+ *
+ * `section`, `main_question` and `sub_question` are the zero-based indices
+ * recorded on the last message, and are only populated for
+ * `DropoutStage.QUESTION`.
  */
 export const zDropoutPoint = z.object({
+    stage: zDropoutStage,
+    section: z.int().nullable(),
     main_question: z.int().nullable(),
     sub_question: z.int().nullable(),
     count: z.int()
@@ -883,7 +919,9 @@ export const zMonitoringStats = z.object({
     duration_histogram: z.array(zHistogramBucket),
     message_count_histogram: z.array(zHistogramBucket),
     message_length_histogram: z.array(zHistogramBucket),
-    dropout_stats: z.array(zDropoutPoint)
+    dropout_stats: z.array(zDropoutPoint),
+    dropout_sections: z.array(zDropoutSection),
+    total_inactive: z.int()
 });
 
 /**

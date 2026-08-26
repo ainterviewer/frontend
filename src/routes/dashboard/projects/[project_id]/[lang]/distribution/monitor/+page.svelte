@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { Monitoring } from '$lib/api';
-	import type { HistogramBucket, InterviewStatus, MonitoringStats } from '$lib/api/types.gen';
+	import type {
+		DropoutStage,
+		HistogramBucket,
+		InterviewStatus,
+		MonitoringStats
+	} from '$lib/api/types.gen';
 	import { max, min, sum } from 'd3-array';
 	import { format } from 'd3-format';
 	import { scaleOrdinal } from 'd3-scale';
@@ -10,6 +15,7 @@
 	import { SvelteDate } from 'svelte/reactivity';
 	import type { PageData } from './$types';
 	import ChartSkeleton from './ChartSkeleton.svelte';
+	import DropoutChart from './DropoutChart.svelte';
 	import HistogramChart from './HistogramChart.svelte';
 
 	const POLL_INTERVAL = 15_000;
@@ -183,55 +189,122 @@
 		}
 		return buckets;
 	});
-	let dropoutStats = $derived.by(() => {
-		if (!stats?.dropout_stats) return [];
+	// The dropout chart is laid out as a single run of bars with section
+	// grouping bands drawn under it.
+	type DropoutBar = {
+		key: string;
+		label: string;
+		count: number;
+		tooltip: string;
+		section: number | null;
+		isProbe: boolean;
+	};
+	type DropoutBand = {
+		section: number | null;
+		label: string;
+		description: string | null;
+		span: number;
+	};
 
-		// Filter to only include entries with a main_question
-		const validStats = stats.dropout_stats.filter((d) => d.main_question !== null);
-		if (validStats.length === 0) return [];
+	const DROPOUT_STAGE_LABELS: Record<DropoutStage, string> = {
+		never_started: 'Never started',
+		introduction: 'Introduction',
+		question: '',
+		outro: 'Outro'
+	};
 
-		// Create a map for quick lookup of existing data
+	let dropoutChart = $derived.by(() => {
+		const points = stats?.dropout_stats;
+		if (!points?.length) return { bars: [] as DropoutBar[], bands: [] as DropoutBand[] };
+
+		const descriptions = new Map<number, string>(
+			(stats?.dropout_sections ?? []).map((s) => [s.section, s.description])
+		);
+
+		// The backend zero-fills main questions from the interview guide, but a
+		// probe only exists once it has been asked, so probes surface only where
+		// someone actually dropped out on one. Left alone that renders a lone
+		// "probe 2" with no probe 1 beside it, which reads as a mistake. Record
+		// the highest probe seen per question so the run can be filled up to it.
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local to this computation, never escapes
-		const dataMap = new Map<string, number>();
-		for (const d of validStats) {
-			const key = `${d.main_question}-${d.sub_question ?? 0}`;
-			dataMap.set(key, d.count);
+		const maxSub = new Map<string, number>();
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local to this computation, never escapes
+		const counts = new Map<string, number>();
+		for (const point of points) {
+			if (point.stage !== 'question') continue;
+			const question = `${point.section}-${point.main_question}`;
+			const sub = point.sub_question ?? 0;
+			maxSub.set(question, Math.max(maxSub.get(question) ?? 0, sub));
+			counts.set(`${question}-${sub}`, point.count);
 		}
 
-		// Find the range of main questions and max sub_question per main question
+		const bars: DropoutBar[] = [];
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local to this computation, never escapes
-		const maxSubByMain = new Map<number, number>();
-		for (const d of validStats) {
-			const main = d.main_question!;
-			const sub = d.sub_question ?? 0;
-			maxSubByMain.set(main, Math.max(maxSubByMain.get(main) ?? 0, sub));
-		}
+		const seen = new Set<string>();
 
-		const maxMain = Math.max(...maxSubByMain.keys());
+		for (const point of points) {
+			if (point.stage !== 'question') {
+				const label = DROPOUT_STAGE_LABELS[point.stage];
+				bars.push({
+					key: point.stage,
+					label,
+					count: point.count,
+					tooltip: label,
+					section: null,
+					isProbe: false
+				});
+				continue;
+			}
 
-		// Generate all labels in the range
-		const result: { main_question: number; sub_question: number; count: number; label: string }[] =
-			[];
+			// A question and all of its probes are emitted together, the first time
+			// the question is reached; the remaining points for it are already
+			// covered by that expansion.
+			const question = `${point.section}-${point.main_question}`;
+			if (seen.has(question)) continue;
+			seen.add(question);
 
-		for (let main = 0; main <= maxMain; main++) {
-			// Get max sub_question for this main question (0 if no entries exist)
-			const maxSub = maxSubByMain.get(main) ?? 0;
+			// Sections and questions are zero-based indices; they read as ordinals.
+			const main = (point.main_question ?? 0) + 1;
+			const sectionLabel = `Section ${(point.section ?? 0) + 1}`;
 
-			for (let sub = 0; sub <= maxSub; sub++) {
-				const key = `${main}-${sub}`;
-				const count = dataMap.get(key) ?? 0;
-				const label = sub === 0 ? `Q${main}` : `${main}.${sub}`;
-
-				result.push({
-					main_question: main,
-					sub_question: sub,
-					count,
-					label
+			for (let sub = 0; sub <= (maxSub.get(question) ?? 0); sub++) {
+				bars.push({
+					// Question numbers restart in every section, so the section has to
+					// be part of the key or Section 2's Q1 would land on Section 1's bar.
+					key: `${question}-${sub}`,
+					// The section band underneath already says which section this is,
+					// and the probe marker distinguishes the two kinds of tick, so the
+					// question number carries no prefix.
+					label: sub === 0 ? `${main}` : `↳${sub}`,
+					count: counts.get(`${question}-${sub}`) ?? 0,
+					tooltip:
+						sub === 0
+							? `${sectionLabel} · Question ${main}`
+							: `${sectionLabel} · Question ${main} · Probe ${sub}`,
+					section: point.section,
+					isProbe: sub > 0
 				});
 			}
 		}
 
-		return result;
+		// Bars for a section are contiguous, so a band only needs to know how many
+		// bars it spans.
+		const bands: DropoutBand[] = [];
+		for (const bar of bars) {
+			const current = bands.at(-1);
+			if (current && current.section === bar.section) {
+				current.span += 1;
+				continue;
+			}
+			bands.push({
+				section: bar.section,
+				label: bar.section === null ? '' : `Section ${bar.section + 1}`,
+				description: bar.section === null ? null : (descriptions.get(bar.section) ?? null),
+				span: 1
+			});
+		}
+
+		return { bars, bands };
 	});
 </script>
 
@@ -483,32 +556,17 @@
 
 		<!-- 8. Dropout Stats -->
 		<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
-			<h3 class="mb-4 text-lg font-medium">Dropout Analysis</h3>
+			<div class="mb-4">
+				<h3 class="text-lg font-medium">Dropout Analysis</h3>
+				{#if stats}
+					<p class="text-sm text-gray-500">
+						{formatNumber(stats.total_inactive)} inactive interviews
+					</p>
+				{/if}
+			</div>
 			<div class="h-75 w-full">
-				{#if dropoutStats.length > 0}
-					<BarChart
-						data={dropoutStats}
-						x="label"
-						y="count"
-						series={[{ key: 'count', label: 'Dropouts', color: '#94a3b8' }]}
-						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
-						props={{
-							xAxis: { classes: { tickLabel: 'text-xs' } },
-							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-							tooltip: {
-								header: {
-									format: (d) => {
-										if (d.startsWith('Q')) {
-											return `Main Question ${d.substring(1)}`;
-										}
-										const [main, sub] = d.split('.');
-										return `Main Question ${main} Sub Question ${sub}`;
-									}
-								}
-							},
-							bars: { motion: { type: 'tween', duration: 300 } }
-						}}
-					/>
+				{#if dropoutChart.bars.length > 0}
+					<DropoutChart bars={dropoutChart.bars} bands={dropoutChart.bands} />
 				{:else if loading}
 					<ChartSkeleton bars={20} />
 				{:else}

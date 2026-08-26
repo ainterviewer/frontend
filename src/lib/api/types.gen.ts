@@ -760,9 +760,18 @@ export type DeleteParticipantsRequest = {
 /**
  * DropoutPoint
  *
- * Count of dropouts at a specific question.
+ * Count of dropouts at a specific point in the interview.
+ *
+ * `section`, `main_question` and `sub_question` are the zero-based indices
+ * recorded on the last message, and are only populated for
+ * `DropoutStage.QUESTION`.
  */
 export type DropoutPoint = {
+    stage: DropoutStage;
+    /**
+     * Section
+     */
+    section: number | null;
     /**
      * Main Question
      */
@@ -776,6 +785,37 @@ export type DropoutPoint = {
      */
     count: number;
 };
+
+/**
+ * DropoutSection
+ *
+ * A section of the interview guide, for grouping dropout points.
+ *
+ * Sourced from the project's default localization, so `description` may be in
+ * a different language than the dashboard page requesting these stats.
+ */
+export type DropoutSection = {
+    /**
+     * Section
+     */
+    section: number;
+    /**
+     * Description
+     */
+    description: string;
+};
+
+/**
+ * DropoutStage
+ *
+ * Where in the interview an inactive respondent stopped.
+ *
+ * Dropouts do not all land on a question: an interview can be abandoned
+ * before a single message exists, during the introduction, or on the outro.
+ * Those three stages have no `(section, main_question)` to group by, so they
+ * are carried as explicit stages instead of being dropped.
+ */
+export type DropoutStage = 'never_started' | 'introduction' | 'question' | 'outro';
 
 /**
  * ErrorResponse
@@ -1930,6 +1970,14 @@ export type MonitoringStats = {
      * Dropout Stats
      */
     dropout_stats: Array<DropoutPoint>;
+    /**
+     * Dropout Sections
+     */
+    dropout_sections: Array<DropoutSection>;
+    /**
+     * Total Inactive
+     */
+    total_inactive: number;
 };
 
 /**
