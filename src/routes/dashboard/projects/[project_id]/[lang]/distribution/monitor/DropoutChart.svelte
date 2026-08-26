@@ -1,11 +1,17 @@
 <script lang="ts">
-	import { BarChart, Text, type ChartState } from 'layerchart';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { BarChart, Text, Tooltip, type ChartState } from 'layerchart';
 
 	type DropoutBar = {
 		key: string;
 		label: string;
 		count: number;
 		tooltip: string;
+		// The authored text of the question this bar sits on, when the guide still
+		// has one at these indices. A probe carries its parent question's text:
+		// probes are generated during the interview, so the guide has no wording
+		// for them.
+		questionText: string | null;
 		section: number | null;
 		isProbe: boolean;
 	};
@@ -41,7 +47,6 @@
 	let chartContext = $state<ChartState | undefined>(undefined);
 
 	let labels = $derived(new Map(bars.map((bar) => [bar.key, bar.label])));
-	let tooltips = $derived(new Map(bars.map((bar) => [bar.key, bar.tooltip])));
 
 	// Section rules are measured off the chart's own x scale rather than by
 	// dividing the plot area into equal shares. `bandPadding` applies outer
@@ -111,17 +116,44 @@
 					tickLabel
 				},
 				yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-				tooltip: {
-					header: { format: (key: string) => tooltips.get(key) ?? key }
-				},
 				bars: { motion: { type: 'tween', duration: 300 } }
 			}}
-		/>
+		>
+			<!-- A custom tooltip rather than `props.tooltip.header.format`, which can
+			     only place a single formatted string: the header here carries both the
+			     position and the question's own text. -->
+			{#snippet tooltip()}
+				<Tooltip.Root>
+					{#snippet children({ data }: { data: DropoutBar })}
+						<!-- The header's own rule then falls under the question text rather
+						     than between it and the position it belongs to. The default
+						     header is a nowrap flex row, so it is turned into a stack that
+						     wraps; `:where()` on layerchart's own rules means these plain
+						     utilities win without `!important`. -->
+						<Tooltip.Header class="flex-col items-start gap-1 whitespace-normal">
+							{data.tooltip}
+							{#if data.questionText}
+								<!-- `pre-line` so an authored line break in the question survives;
+								     runs of spaces still collapse and the text still wraps. -->
+								<div
+									class="max-w-2xs text-xs font-normal text-pretty whitespace-pre-line text-gray-600"
+								>
+									{data.questionText}
+								</div>
+							{/if}
+						</Tooltip.Header>
+						<Tooltip.List>
+							<Tooltip.Item label="Dropouts" value={data.count} />
+						</Tooltip.List>
+					{/snippet}
+				</Tooltip.Root>
+			{/snippet}
+		</BarChart>
 	</div>
 
 	<!--
 		The section bands are plain DOM rather than chart marks, so the section
-		names stay selectable text and can be given a title attribute.
+		names stay selectable text and can carry a real tooltip.
 	-->
 	<div
 		class="relative h-11 shrink-0"
@@ -137,13 +169,21 @@
 			     A single-question section is only one bar wide, so the label is
 			     wider than its own box, and an overflowing centred line spills to
 			     the right only — which read as a label that was off-centre. -->
-			<div
-				class="absolute -translate-x-1/2 text-sm whitespace-nowrap text-gray-700"
-				style="left: {rule.left + rule.width / 2}px; top: {LABEL_TOP}px"
-				title={rule.band.description ?? undefined}
+			<HoverInfo
+				text={rule.band.description ?? ''}
+				asChild
+				contentClass="text-pretty whitespace-pre-line"
 			>
-				{rule.band.label}
-			</div>
+				{#snippet children({ props })}
+					<div
+						{...props}
+						class="absolute -translate-x-1/2 cursor-default text-sm whitespace-nowrap text-gray-700"
+						style="left: {rule.left + rule.width / 2}px; top: {LABEL_TOP}px"
+					>
+						{rule.band.label}
+					</div>
+				{/snippet}
+			</HoverInfo>
 		{/each}
 	</div>
 </div>

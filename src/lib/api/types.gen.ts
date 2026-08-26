@@ -791,8 +791,9 @@ export type DropoutPoint = {
  *
  * A section of the interview guide, for grouping dropout points.
  *
- * Sourced from the project's default localization, so `description` may be in
- * a different language than the dashboard page requesting these stats.
+ * Sourced from the project's default localization, so `description` and
+ * `questions` may be in a different language than the dashboard page
+ * requesting these stats.
  */
 export type DropoutSection = {
     /**
@@ -803,6 +804,10 @@ export type DropoutSection = {
      * Description
      */
     description: string;
+    /**
+     * Questions
+     */
+    questions: Array<string>;
 };
 
 /**

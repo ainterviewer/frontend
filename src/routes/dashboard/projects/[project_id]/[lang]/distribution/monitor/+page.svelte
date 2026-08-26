@@ -196,6 +196,11 @@
 		label: string;
 		count: number;
 		tooltip: string;
+		// The authored text of the question this bar sits on, when the guide
+		// still has one at these indices. A probe carries its parent question's
+		// text: probes are generated during the interview, so the guide has no
+		// wording for them.
+		questionText: string | null;
 		section: number | null;
 		isProbe: boolean;
 	};
@@ -219,6 +224,11 @@
 
 		const descriptions = new Map<number, string>(
 			(stats?.dropout_sections ?? []).map((s) => [s.section, s.description])
+		);
+		const questionTexts = new Map<string, string>(
+			(stats?.dropout_sections ?? []).flatMap((s) =>
+				s.questions.map((text, i): [string, string] => [`${s.section}-${i}`, text])
+			)
 		);
 
 		// The backend zero-fills main questions from the interview guide, but a
@@ -250,6 +260,7 @@
 					label,
 					count: point.count,
 					tooltip: label,
+					questionText: null,
 					section: null,
 					isProbe: false
 				});
@@ -266,6 +277,11 @@
 			// Sections and questions are zero-based indices; they read as ordinals.
 			const main = (point.main_question ?? 0) + 1;
 			const sectionLabel = `Section ${(point.section ?? 0) + 1}`;
+			// Missing whenever the interview ran against a snapshot whose
+			// questions the current draft no longer has at these indices, and for
+			// a shuffled section, where the recorded index is the position the
+			// respondent was asked in rather than the authored one.
+			const questionText = questionTexts.get(question) ?? null;
 
 			for (let sub = 0; sub <= (maxSub.get(question) ?? 0); sub++) {
 				bars.push({
@@ -281,6 +297,7 @@
 						sub === 0
 							? `${sectionLabel} · Question ${main}`
 							: `${sectionLabel} · Question ${main} · Probe ${sub}`,
+					questionText,
 					section: point.section,
 					isProbe: sub > 0
 				});
