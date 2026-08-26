@@ -129,7 +129,7 @@
 	>
 		{#each sectionRules as rule (rule.key)}
 			<div
-				class="absolute border-t border-gray-300"
+				class="absolute border-t border-gray-500"
 				style="left: {rule.left}px; width: {rule.width}px; top: {RULE_TOP}px"
 			></div>
 			<!-- The label is anchored to the rule's midpoint and centred with a
@@ -138,7 +138,7 @@
 			     wider than its own box, and an overflowing centred line spills to
 			     the right only — which read as a label that was off-centre. -->
 			<div
-				class="absolute -translate-x-1/2 text-sm whitespace-nowrap text-gray-500"
+				class="absolute -translate-x-1/2 text-sm whitespace-nowrap text-gray-700"
 				style="left: {rule.left + rule.width / 2}px; top: {LABEL_TOP}px"
 				title={rule.band.description ?? undefined}
 			>

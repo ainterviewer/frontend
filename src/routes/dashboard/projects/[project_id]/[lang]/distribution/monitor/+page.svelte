@@ -316,8 +316,8 @@
 	<div class="my-8 grid grid-cols-2 gap-4">
 		<!-- 1. KPI Cards -->
 		<div class="grid grid-cols-2 gap-4">
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<div class="text-muted-foreground text-sm font-medium">Total Interviews</div>
+			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+				<div class="text-sm font-medium text-gray-700">Total Interviews</div>
 				{#if loading}
 					<div class="mt-2 h-9 w-32 animate-pulse rounded bg-surface-200"></div>
 				{:else}
@@ -325,14 +325,14 @@
 						<span class="text-3xl font-bold"
 							>{formatNumber(Math.round(totalInterviews.current))}</span
 						>
-						<span class="text-muted-foreground text-sm"
+						<span class="text-sm text-gray-500"
 							>({stats?.interviews_by_status.find((s) => s.status === 'active')?.count ?? 0} active)</span
 						>
 					</div>
 				{/if}
 			</div>
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<div class="text-muted-foreground text-sm font-medium">Completion Rate</div>
+			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+				<div class="text-sm font-medium text-gray-700">Completion Rate</div>
 				{#if loading}
 					<div class="mt-2 h-9 w-24 animate-pulse rounded bg-surface-200"></div>
 				{:else}
@@ -352,8 +352,8 @@
 					</div>
 				{/if}
 			</div>
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<div class="text-muted-foreground text-sm font-medium">Total Messages</div>
+			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+				<div class="text-sm font-medium text-gray-700">Total Messages</div>
 				{#if loading}
 					<div class="mt-2 h-9 w-28 animate-pulse rounded bg-surface-200"></div>
 					<div class="mt-2 h-3 w-40 animate-pulse rounded bg-surface-200"></div>
@@ -363,15 +363,15 @@
 					</div>
 				{/if}
 				{#if stats?.message_count_stats}
-					<div class="text-muted-foreground mt-1 text-xs">
+					<div class="mt-1 text-xs text-gray-500">
 						Min {stats.message_count_stats.min_messages} · Avg {Math.round(
 							stats.message_count_stats.avg_messages
 						)} · Max {stats.message_count_stats.max_messages}
 					</div>
 				{/if}
 			</div>
-			<div class="bg-card rounded-lg border p-6 shadow-sm">
-				<div class="text-muted-foreground text-sm font-medium">Total Duration</div>
+			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+				<div class="text-sm font-medium text-gray-700">Total Duration</div>
 				{#if loading}
 					<div class="mt-2 h-9 w-24 animate-pulse rounded bg-surface-200"></div>
 					<div class="mt-2 h-3 w-40 animate-pulse rounded bg-surface-200"></div>
@@ -381,7 +381,7 @@
 					</div>
 				{/if}
 				{#if stats?.duration_stats}
-					<div class="text-muted-foreground mt-1 text-xs">
+					<div class="mt-1 text-xs text-gray-500">
 						Min {formatDuration(stats.duration_stats.min_seconds)} · Avg {formatDuration(
 							stats.duration_stats.avg_seconds
 						)} · Max {formatDuration(stats.duration_stats.max_seconds)}
@@ -391,7 +391,7 @@
 		</div>
 
 		<!-- 2. Interviews by Status -->
-		<div class="bg-card rounded-lg border p-6 shadow-sm">
+		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Interviews by Status</h3>
 			<div class="h-75 w-full">
 				{#if hasStatusData}
@@ -431,7 +431,7 @@
 					</div>
 				{:else}
 					<div class="flex h-full items-center justify-center">
-						<span class="text-muted-foreground text-sm">No data available</span>
+						<span class="text-sm text-gray-500">No data available</span>
 					</div>
 				{/if}
 			</div>
@@ -444,9 +444,7 @@
 								class="h-3 w-3 rounded-full"
 								style="background-color: {statusColorScale(item.status)}"
 							></div>
-							<span class="text-muted-foreground text-sm capitalize"
-								>{item.status} ({item.count})</span
-							>
+							<span class="text-sm text-gray-500 capitalize">{item.status} ({item.count})</span>
 						</div>
 					{/each}
 				{:else if loading}
@@ -457,7 +455,7 @@
 								class="h-3 w-3 rounded-full"
 								style="background-color: {statusColorScale(status)}"
 							></div>
-							<span class="text-muted-foreground text-sm capitalize">{status}</span>
+							<span class="text-sm text-gray-500 capitalize">{status}</span>
 						</div>
 					{/each}
 				{/if}
@@ -467,7 +465,7 @@
 
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
 		<!-- 3. Interviews Per Day -->
-		<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
+		<div class="col-span-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2">
 			<h3 class="mb-4 text-lg font-medium">Interviews Per Day</h3>
 			<div class="h-75 w-full">
 				{#if interviewsOverTime.length > 0}
@@ -493,14 +491,14 @@
 					<ChartSkeleton bars={20} />
 				{:else}
 					<div class="flex h-full items-center justify-center">
-						<span class="text-muted-foreground text-sm">No data available</span>
+						<span class="text-sm text-gray-500">No data available</span>
 					</div>
 				{/if}
 			</div>
 		</div>
 
 		<!-- 4. Interviews by Time of Day -->
-		<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm">
+		<div class="col-span-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Interviews by Time of Day</h3>
 			{#if timeOfDayHistogram.length > 0}
 				<HistogramChart data={timeOfDayHistogram} />
@@ -508,12 +506,12 @@
 				<ChartSkeleton />
 			{:else}
 				<div class="flex h-75 w-full items-center justify-center">
-					<span class="text-muted-foreground text-sm">No data available</span>
+					<span class="text-sm text-gray-500">No data available</span>
 				</div>
 			{/if}
 		</div>
 		<!-- 5. Duration Histogram -->
-		<div class="bg-card rounded-lg border p-6 shadow-sm">
+		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Duration (seconds)</h3>
 			{#if durationHistogram.length > 0}
 				<HistogramChart data={durationHistogram} />
@@ -521,13 +519,13 @@
 				<ChartSkeleton />
 			{:else}
 				<div class="flex h-75 w-full items-center justify-center">
-					<span class="text-muted-foreground text-sm">No data available</span>
+					<span class="text-sm text-gray-500">No data available</span>
 				</div>
 			{/if}
 		</div>
 
 		<!-- 6. Message Count Histogram -->
-		<div class="bg-card rounded-lg border p-6 shadow-sm">
+		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Message Count</h3>
 			{#if messageCountHistogram.length > 0}
 				<HistogramChart data={messageCountHistogram} />
@@ -535,13 +533,13 @@
 				<ChartSkeleton />
 			{:else}
 				<div class="flex h-75 w-full items-center justify-center">
-					<span class="text-muted-foreground text-sm">No data available</span>
+					<span class="text-sm text-gray-500">No data available</span>
 				</div>
 			{/if}
 		</div>
 
 		<!-- 7. Message Length Histogram -->
-		<div class="bg-card rounded-lg border p-6 shadow-sm">
+		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Message Length (characters)</h3>
 			{#if messageLengthHistogram.length > 0}
 				<HistogramChart data={messageLengthHistogram} tooltipLabel="Messages" />
@@ -549,13 +547,13 @@
 				<ChartSkeleton />
 			{:else}
 				<div class="flex h-75 w-full items-center justify-center">
-					<span class="text-muted-foreground text-sm">No data available</span>
+					<span class="text-sm text-gray-500">No data available</span>
 				</div>
 			{/if}
 		</div>
 
 		<!-- 8. Dropout Stats -->
-		<div class="bg-card col-span-1 rounded-lg border p-6 shadow-sm lg:col-span-2">
+		<div class="col-span-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2">
 			<div class="mb-4">
 				<h3 class="text-lg font-medium">Dropout Analysis</h3>
 				{#if stats}
@@ -571,7 +569,7 @@
 					<ChartSkeleton bars={20} />
 				{:else}
 					<div class="flex h-full items-center justify-center">
-						<span class="text-muted-foreground text-sm">No data available</span>
+						<span class="text-sm text-gray-500">No data available</span>
 					</div>
 				{/if}
 			</div>
