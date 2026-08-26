@@ -4,6 +4,23 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.87] - 2026-08-26
+
+### Features
+
+- (email) Implement template substitution in email subject line
+- Add link between participants and interviews
+- Add resumeable respondent links
+- Improved dropout chart with correct section assignment
+- Improve monitor card and text styling
+- Add question text to dropout hover and improve dropout section hover
+- Small improvements to text color in PieChart label
+
+### Bug Fixes
+
+- Harden interview authentication
+- Remove unused and redundant guest scope
+
 ## [0.2.86] - 2026-08-26
 
 ### Features
