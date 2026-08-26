@@ -6,7 +6,16 @@
 		ProjectLanguage,
 		TemplatePlaceholder
 	} from '$lib/api/types.gen';
+	import { EditorLinkModal } from '$lib/components/modals';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
+	import {
+		isUrlPlaceholder,
+		nodesToPlaceholders,
+		placeholderPattern,
+		placeholders,
+		placeholdersToNodes
+	} from '$lib/tiptap/placeholders';
+	import { TemplatePlaceholderNode } from '$lib/tiptap/templatePlaceholder';
 	import { Editor } from '@tiptap/core';
 	import Image from '@tiptap/extension-image';
 	import StarterKit from '@tiptap/starter-kit';
@@ -89,33 +98,6 @@
 
 	const origin = $derived(typeof window !== 'undefined' ? window.location.origin : '');
 
-	// Keyed by the backend's TemplatePlaceholder enum, which is the authoritative
-	// list (app/services/email/participant_template.py, exported through the
-	// OpenAPI schema). Record<> demands an entry per member, so adding a
-	// placeholder in the backend breaks this build until it is given a label
-	// here, rather than silently never being offered to template authors.
-	const PLACEHOLDER_LABELS: Record<TemplatePlaceholder, string> = {
-		name: 'Name',
-		email: 'Email',
-		pid: 'PID',
-		interview_url: 'Interview URL',
-		project_title: 'Project title',
-		opt_out_url: 'Opt-out URL'
-	};
-
-	const placeholders = Object.entries(PLACEHOLDER_LABELS).map(([key, label]) => ({
-		key: key as TemplatePlaceholder,
-		label
-	}));
-
-	// Built from the same keys so the preview cannot fall behind the buttons:
-	// project_title was substituted on send but left literal in the preview,
-	// because this pattern was a third hand-maintained copy of the list.
-	const placeholderPattern = new RegExp(
-		`\\{\\{\\s*(${Object.keys(PLACEHOLDER_LABELS).join('|')})\\s*\\}\\}`,
-		'g'
-	);
-
 	const sample: Record<TemplatePlaceholder, string> = $derived({
 		name: 'Jane Doe',
 		email: 'jane@example.com',
@@ -126,7 +108,7 @@
 	});
 
 	const previewHtml = $derived(
-		current.templateHtml.replace(placeholderPattern, (_, k) => sample[k as TemplatePlaceholder])
+		current.templateHtml.replace(placeholderPattern(), (_, k) => sample[k as TemplatePlaceholder])
 	);
 
 	const sendLabel = $derived(kind === 'reminder' ? 'Send reminders' : 'Send to participants');
@@ -142,23 +124,27 @@
 			: 'Compose the invitation email sent to participants. Use placeholders below to insert each participant’s name, email, PID or personal interview URL.'
 	);
 
-	function setLink() {
+	let linkModalOpen = $state(false);
+	let linkModalHref = $state('');
+
+	function openLinkModal() {
 		if (!editor) return;
-		const prev = editor.getAttributes('link').href ?? '';
-		const url = window.prompt(
-			'URL (use {{ interview_url }} or {{ opt_out_url }} for personal links)',
-			prev
-		);
-		if (url === null) return;
-		if (url === '') {
-			editor.chain().focus().extendMarkRange('link').unsetLink().run();
-			return;
-		}
-		editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+		linkModalHref = editor.getAttributes('link').href ?? '';
+		linkModalOpen = true;
 	}
 
-	function insertPlaceholder(key: string) {
-		editor?.chain().focus().insertContent(`{{ ${key} }}`).run();
+	function applyLink(href: string) {
+		linkModalOpen = false;
+		editor?.chain().focus().extendMarkRange('link').setLink({ href }).run();
+	}
+
+	function removeLink() {
+		linkModalOpen = false;
+		editor?.chain().focus().extendMarkRange('link').unsetLink().run();
+	}
+
+	function insertPlaceholder(key: TemplatePlaceholder) {
+		editor?.chain().focus().insertTemplatePlaceholder(key).run();
 	}
 
 	async function loadTemplate(k: Kind) {
@@ -184,7 +170,9 @@
 			states[k].savedSubject = states[k].subject;
 		}
 		if (k === kind) {
-			editor?.commands.setContent(states[k].templateHtml || '', { emitUpdate: false });
+			editor?.commands.setContent(placeholdersToNodes(states[k].templateHtml || ''), {
+				emitUpdate: false
+			});
 		}
 		states[k].loading = false;
 	}
@@ -276,7 +264,9 @@
 	function switchKind(next: Kind) {
 		if (next === kind) return;
 		kind = next;
-		editor?.commands.setContent(states[next].templateHtml || '', { emitUpdate: false });
+		editor?.commands.setContent(placeholdersToNodes(states[next].templateHtml || ''), {
+			emitUpdate: false
+		});
 	}
 
 	async function loadAttachments(k: Kind) {
@@ -348,6 +338,7 @@
 			element: editorEl,
 			extensions: [
 				StarterKit.configure({ link: { openOnClick: false } }),
+				TemplatePlaceholderNode,
 				Image.configure({
 					inline: true,
 					allowBase64: true
@@ -360,7 +351,7 @@
 				}
 			},
 			onUpdate: ({ editor: e }) => {
-				states[kind].templateHtml = e.getHTML();
+				states[kind].templateHtml = nodesToPlaceholders(e.getHTML());
 			}
 		});
 		return () => {
@@ -419,11 +410,15 @@
 		{#each placeholders as p (p.key)}
 			<button
 				type="button"
-				class="rounded border border-gray-300 bg-gray-50 px-2 py-0.5 font-mono text-xs text-gray-700 hover:bg-gray-100"
+				class="tpl-chip tpl-chip--button"
 				onclick={() => insertPlaceholder(p.key)}
 				disabled={isDemo}
+				title={`Insert {{ ${p.key} }}`}
 			>
-				{`{{ ${p.key} }}`}
+				{#if isUrlPlaceholder(p.key)}
+					<i class="fa-solid fa-link tpl-chip__icon" aria-hidden="true"></i>
+				{/if}
+				<span class="tpl-chip__label">{p.label}</span>
 			</button>
 		{/each}
 	</div>
@@ -540,7 +535,7 @@
 					type="button"
 					class="rounded px-2 py-1 text-sm hover:bg-gray-100 disabled:opacity-40"
 					class:bg-gray-200={editor?.isActive('link')}
-					onclick={setLink}
+					onclick={openLinkModal}
 					disabled={!editor || isDemo}
 					title="Link"
 					aria-label="Link"
@@ -711,3 +706,77 @@
 		</button>
 	</div>
 </div>
+
+<EditorLinkModal
+	show={linkModalOpen}
+	href={linkModalHref}
+	onSubmit={applyLink}
+	onRemove={removeLink}
+	onClose={() => (linkModalOpen = false)}
+/>
+
+<style>
+	/* The chips are rendered by a TipTap node view outside Svelte's scoping, so
+	   the editor rules have to be global. Kept next to the toolbar buttons that
+	   share the class so the two cannot drift apart. */
+	:global(.tpl-chip) {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.125rem;
+		border-radius: 9999px;
+		border: 1px solid var(--color-primary, #196858);
+		background-color: color-mix(in srgb, var(--color-primary, #196858) 10%, white);
+		padding: 0.0625rem 0.5rem;
+		font-size: 0.75rem;
+		line-height: 1.25rem;
+		font-weight: 500;
+		white-space: nowrap;
+		color: var(--color-primary, #196858);
+		vertical-align: baseline;
+		user-select: none;
+	}
+
+	:global(.tpl-chip__icon) {
+		font-size: 0.625rem;
+		opacity: 0.7;
+	}
+
+	:global(.tpl-chip--button) {
+		cursor: pointer;
+	}
+
+	:global(.tpl-chip--button:hover) {
+		background-color: color-mix(in srgb, var(--color-primary, #196858) 18%, white);
+	}
+
+	:global(.tpl-chip--button:disabled) {
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+
+	:global(.tpl-chip__remove) {
+		display: none;
+		cursor: pointer;
+		border: 0;
+		background: none;
+		padding: 0;
+		font-size: 0.875rem;
+		line-height: 1;
+		color: inherit;
+		opacity: 0.6;
+	}
+
+	:global(.ProseMirror .tpl-chip:hover .tpl-chip__remove),
+	:global(.ProseMirror .tpl-chip.ProseMirror-selectednode .tpl-chip__remove) {
+		display: inline;
+	}
+
+	:global(.tpl-chip__remove:hover) {
+		opacity: 1;
+	}
+
+	:global(.ProseMirror .tpl-chip.ProseMirror-selectednode) {
+		outline: 2px solid color-mix(in srgb, var(--color-primary, #196858) 45%, white);
+		outline-offset: 1px;
+	}
+</style>
