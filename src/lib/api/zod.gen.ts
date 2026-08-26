@@ -1972,6 +1972,18 @@ export const zReceivedData = z.object({
 });
 
 /**
+ * TemplatePlaceholder
+ */
+export const zTemplatePlaceholder = z.enum([
+    'name',
+    'email',
+    'pid',
+    'interview_url',
+    'project_title',
+    'opt_out_url'
+]);
+
+/**
  * InvitationPublic
  */
 export const zInvitationPublicWritable = z.object({

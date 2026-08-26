@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Participants } from '$lib/api';
-	import type { ParticipantEmailAttachment, ProjectLanguage } from '$lib/api/types.gen';
+	import type {
+		ParticipantEmailAttachment,
+		ProjectLanguage,
+		TemplatePlaceholder
+	} from '$lib/api/types.gen';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 	import { Editor } from '@tiptap/core';
 	import Image from '@tiptap/extension-image';
@@ -84,27 +88,45 @@
 	);
 
 	const origin = $derived(typeof window !== 'undefined' ? window.location.origin : '');
-	const sample = $derived({
+
+	// Keyed by the backend's TemplatePlaceholder enum, which is the authoritative
+	// list (app/services/email/participant_template.py, exported through the
+	// OpenAPI schema). Record<> demands an entry per member, so adding a
+	// placeholder in the backend breaks this build until it is given a label
+	// here, rather than silently never being offered to template authors.
+	const PLACEHOLDER_LABELS: Record<TemplatePlaceholder, string> = {
+		name: 'Name',
+		email: 'Email',
+		pid: 'PID',
+		interview_url: 'Interview URL',
+		project_title: 'Project title',
+		opt_out_url: 'Opt-out URL'
+	};
+
+	const placeholders = Object.entries(PLACEHOLDER_LABELS).map(([key, label]) => ({
+		key: key as TemplatePlaceholder,
+		label
+	}));
+
+	// Built from the same keys so the preview cannot fall behind the buttons:
+	// project_title was substituted on send but left literal in the preview,
+	// because this pattern was a third hand-maintained copy of the list.
+	const placeholderPattern = new RegExp(
+		`\\{\\{\\s*(${Object.keys(PLACEHOLDER_LABELS).join('|')})\\s*\\}\\}`,
+		'g'
+	);
+
+	const sample: Record<TemplatePlaceholder, string> = $derived({
 		name: 'Jane Doe',
 		email: 'jane@example.com',
 		pid: 'P-001',
 		interview_url: origin ? `${origin}/interview?id=${project_id}&pid=P-001` : '',
+		project_title: 'Example project',
 		opt_out_url: origin ? `${origin}/opt-out/P-001` : ''
 	});
 
-	const placeholders = [
-		{ key: 'name', label: 'Name' },
-		{ key: 'email', label: 'Email' },
-		{ key: 'pid', label: 'PID' },
-		{ key: 'interview_url', label: 'Interview URL' },
-		{ key: 'opt_out_url', label: 'Opt-out URL' }
-	];
-
 	const previewHtml = $derived(
-		current.templateHtml.replace(
-			/\{\{\s*(name|email|pid|interview_url|opt_out_url)\s*\}\}/g,
-			(_, k) => sample[k as keyof typeof sample]
-		)
+		current.templateHtml.replace(placeholderPattern, (_, k) => sample[k as TemplatePlaceholder])
 	);
 
 	const sendLabel = $derived(kind === 'reminder' ? 'Send reminders' : 'Send to participants');

@@ -3502,6 +3502,11 @@ export type ReceivedData = {
 };
 
 /**
+ * TemplatePlaceholder
+ */
+export type TemplatePlaceholder = 'name' | 'email' | 'pid' | 'interview_url' | 'project_title' | 'opt_out_url';
+
+/**
  * InvitationPublic
  */
 export type InvitationPublicWritable = {
