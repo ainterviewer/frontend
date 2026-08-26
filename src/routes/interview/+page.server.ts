@@ -2,6 +2,29 @@ import { Auth, Interviews, Projects, type InterviewType } from '$lib/api';
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
+/**
+ * The interview id inside an `interview_token` cookie, if it is for this
+ * project.
+ *
+ * Decoded, not verified: SvelteKit has no access to the JWT secret, and does
+ * not need it. This only decides which interview the page tries to reconnect
+ * to. The websocket independently verifies the same cookie and reads the
+ * interview id out of *it* (see the backend's websockets/auth.py and
+ * interviews/ai.py), so a forged cookie changes what this page attempts and
+ * nothing about what the server will actually serve.
+ */
+function resumableInterviewId(token: string | undefined, project_id: string): string | null {
+	if (!token) return null;
+	try {
+		const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'));
+		if (payload?.project_id !== project_id) return null;
+		return typeof payload.interview_id === 'string' ? payload.interview_id : null;
+	} catch {
+		// A malformed cookie is simply not a resumable session.
+		return null;
+	}
+}
+
 export const load: PageServerLoad = async ({ url, cookies, request, locals }) => {
 	const project_id = url.searchParams.get('id');
 
@@ -77,6 +100,15 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 	const languageUnresolved = !langParam || !requested;
 	const availableLanguages = languageUnresolved && languages.length > 1 ? languages : [];
 
+	// Which interview this browser already holds a session for, read out of the
+	// httponly `interview_token` cookie the browser sends with this request.
+	//
+	// Read from the cookie rather than passed in the URL on purpose. The cookie
+	// is the credential, so taking the id from the same artifact that authorises
+	// it means the two can never disagree, and nothing interview-identifying
+	// ends up in a URL that people forward.
+	const resumeInterviewId = resumableInterviewId(cookies.get('interview_token'), project_id);
+
 	// Collect extra query params (exclude known ones)
 	const knownParams = new Set(['id', 'interview_type', 'lang', 'x']);
 	const externalParams: Record<string, string> = {};
@@ -97,8 +129,16 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 	//
 	// Test runs come from the dashboard rather than from a distributed link, so
 	// they carry no link params to check; `create_interview` skips them too.
+	//
+	// Skipped when this browser already holds a session for an interview in this
+	// project. There is nothing to check: the interview being reopened already
+	// exists, and its params were validated when it was created. Without this,
+	// returning to a project that requires params (a `pid`, say) failed here
+	// whenever the URL didn't carry them again — which a resume link never does.
+	// This only skips the pre-flight; `create_interview` validates server-side
+	// before any *new* interview can be created.
 	let paramsInvalid = false;
-	if (interviewType === 'distributed') {
+	if (interviewType === 'distributed' && !resumeInterviewId) {
 		const { error: paramsError, response: paramsResponse } =
 			await Interviews.validateInterviewParams({
 				path: { project_id },
@@ -124,6 +164,7 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 		externalParams: Object.keys(externalParams).length > 0 ? externalParams : null,
 		referer,
 		availableLanguages,
-		paramsInvalid
+		paramsInvalid,
+		resumeInterviewId
 	};
 };

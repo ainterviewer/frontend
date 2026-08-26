@@ -32,6 +32,7 @@
 	} from '@tanstack/svelte-table';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import ResumeLinkModal from './ResumeLinkModal.svelte';
 
 	let isDemo = $derived(page.data.user?.scope === 'demo');
 
@@ -174,6 +175,14 @@
 		}
 	});
 
+	// A resume link is a bearer credential for one transcript, so it is issued
+	// per interview from this dialog rather than mailed out with distribution.
+	let resumeLinkFor = $state<InterviewSummaryPublic | null>(null);
+
+	function openResumeLink(id: string) {
+		resumeLinkFor = interviews.find((interview) => interview.id === id) ?? null;
+	}
+
 	/** Reads the way the Status cell does. */
 	const STATUS_LABELS: Record<string, string> = {
 		completed: 'Complete',
@@ -208,6 +217,11 @@
 	};
 
 	const selectedIds = $derived(table.getSelectedRowIds());
+
+	/** The row whose actions menu is open, for the menu's own conditionals. */
+	const activeInterview = $derived(
+		activeDropdown ? (interviews.find((i) => i.id === activeDropdown) ?? null) : null
+	);
 
 	/* ----------------------------------------------------------------- data */
 
@@ -316,9 +330,11 @@
 		}
 	}
 
-	function handleSingleAction(action: 'view' | 'download' | 'delete', id: string) {
+	function handleSingleAction(action: 'view' | 'download' | 'delete' | 'resume-link', id: string) {
 		activeDropdown = null;
-		if (action === 'view') {
+		if (action === 'resume-link') {
+			openResumeLink(id);
+		} else if (action === 'view') {
 			const lang = page.params.lang || 'en';
 			window.open(`/dashboard/projects/${project_id}/${lang}/interviews/${id}`, '_self')?.focus();
 		} else if (action === 'download') {
@@ -535,6 +551,14 @@
 		>
 			<i class="fa-solid fa-download mr-2 text-gray-400"></i> Download
 		</button>
+		{#if activeInterview && activeInterview.status !== 'completed'}
+			<button
+				class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-secondary/40"
+				onclick={() => handleSingleAction('resume-link', activeDropdown!)}
+			>
+				<i class="fa-solid fa-link mr-2 text-gray-400"></i> Resume link
+			</button>
+		{/if}
 		<button
 			class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
 			onclick={() => handleSingleAction('delete', activeDropdown!)}
@@ -543,3 +567,11 @@
 		</button>
 	</div>
 {/if}
+
+<ResumeLinkModal
+	open={resumeLinkFor !== null}
+	projectId={project_id}
+	interviewId={resumeLinkFor?.id ?? null}
+	pid={resumeLinkFor?.pid}
+	onClose={() => (resumeLinkFor = null)}
+/>

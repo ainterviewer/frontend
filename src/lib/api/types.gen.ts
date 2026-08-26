@@ -1286,6 +1286,73 @@ export type InterviewMessage = {
 };
 
 /**
+ * InterviewResumeLinkCreated
+ *
+ * A freshly minted resume link. The only time the URL ever exists.
+ */
+export type InterviewResumeLinkCreated = {
+    /**
+     * Url
+     */
+    url: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+};
+
+/**
+ * InterviewResumeLinkPublic
+ *
+ * The state of an interview's most recent resume link.
+ *
+ * Deliberately carries no token: the plaintext is shown once at creation and
+ * is not stored, so there is nothing here to show again. This only answers
+ * "is a link outstanding, and what happened to it".
+ */
+export type InterviewResumeLinkPublic = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+    /**
+     * Redeemed At
+     */
+    redeemed_at?: string | null;
+    /**
+     * Revoked At
+     */
+    revoked_at?: string | null;
+    /**
+     * Redeemable
+     */
+    redeemable: boolean;
+};
+
+/**
+ * InterviewResumeRedeemed
+ *
+ * What the interview page needs to resume after redeeming a link.
+ *
+ * The credential itself rides back as the httponly ``interview_token``
+ * cookie; these ids only tell the page which interview to reconnect to.
+ */
+export type InterviewResumeRedeemed = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+};
+
+/**
  * InterviewStatus
  */
 export type InterviewStatus = 'active' | 'inactive' | 'completed';
@@ -6504,6 +6571,127 @@ export type GetInterviewsResponses = {
 
 export type GetInterviewsResponse = GetInterviewsResponses[keyof GetInterviewsResponses];
 
+export type RevokeInterviewResumeLinkData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/interviews/{interview_id}/resume-link';
+};
+
+export type RevokeInterviewResumeLinkErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RevokeInterviewResumeLinkError = RevokeInterviewResumeLinkErrors[keyof RevokeInterviewResumeLinkErrors];
+
+export type RevokeInterviewResumeLinkResponses = {
+    /**
+     * Response Revoke Interview Resume Link
+     *
+     * Successful Response
+     */
+    200: InterviewResumeLinkPublic | null;
+};
+
+export type RevokeInterviewResumeLinkResponse = RevokeInterviewResumeLinkResponses[keyof RevokeInterviewResumeLinkResponses];
+
+export type GetInterviewResumeLinkData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/interviews/{interview_id}/resume-link';
+};
+
+export type GetInterviewResumeLinkErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetInterviewResumeLinkError = GetInterviewResumeLinkErrors[keyof GetInterviewResumeLinkErrors];
+
+export type GetInterviewResumeLinkResponses = {
+    /**
+     * Response Get Interview Resume Link
+     *
+     * Successful Response
+     */
+    200: InterviewResumeLinkPublic | null;
+};
+
+export type GetInterviewResumeLinkResponse = GetInterviewResumeLinkResponses[keyof GetInterviewResumeLinkResponses];
+
+export type CreateInterviewResumeLinkData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/interviews/{interview_id}/resume-link';
+};
+
+export type CreateInterviewResumeLinkErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateInterviewResumeLinkError = CreateInterviewResumeLinkErrors[keyof CreateInterviewResumeLinkErrors];
+
+export type CreateInterviewResumeLinkResponses = {
+    /**
+     * Successful Response
+     */
+    200: InterviewResumeLinkCreated;
+};
+
+export type CreateInterviewResumeLinkResponse = CreateInterviewResumeLinkResponses[keyof CreateInterviewResumeLinkResponses];
+
 export type GetMessageData = {
     body?: never;
     path: {
@@ -7239,6 +7427,36 @@ export type CreateInterviewResponses = {
 };
 
 export type CreateInterviewResponse = CreateInterviewResponses[keyof CreateInterviewResponses];
+
+export type RedeemInterviewResumeLinkData = {
+    body?: never;
+    path: {
+        /**
+         * Resume Token
+         */
+        resume_token: string;
+    };
+    query?: never;
+    url: '/api/interviews/resume/{resume_token}';
+};
+
+export type RedeemInterviewResumeLinkErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RedeemInterviewResumeLinkError = RedeemInterviewResumeLinkErrors[keyof RedeemInterviewResumeLinkErrors];
+
+export type RedeemInterviewResumeLinkResponses = {
+    /**
+     * Successful Response
+     */
+    200: InterviewResumeRedeemed;
+};
+
+export type RedeemInterviewResumeLinkResponse = RedeemInterviewResumeLinkResponses[keyof RedeemInterviewResumeLinkResponses];
 
 export type PutFeedbackData = {
     body: MessageFeedbackResponse;

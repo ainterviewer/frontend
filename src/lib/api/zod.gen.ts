@@ -580,6 +580,46 @@ export const zInterviewMessage = z.object({
 });
 
 /**
+ * InterviewResumeLinkCreated
+ *
+ * A freshly minted resume link. The only time the URL ever exists.
+ */
+export const zInterviewResumeLinkCreated = z.object({
+    url: z.string(),
+    expires_at: z.iso.datetime()
+});
+
+/**
+ * InterviewResumeLinkPublic
+ *
+ * The state of an interview's most recent resume link.
+ *
+ * Deliberately carries no token: the plaintext is shown once at creation and
+ * is not stored, so there is nothing here to show again. This only answers
+ * "is a link outstanding, and what happened to it".
+ */
+export const zInterviewResumeLinkPublic = z.object({
+    created_at: z.iso.datetime(),
+    expires_at: z.iso.datetime(),
+    redeemed_at: z.iso.datetime().nullish(),
+    revoked_at: z.iso.datetime().nullish(),
+    redeemable: z.boolean()
+});
+
+/**
+ * InterviewResumeRedeemed
+ *
+ * What the interview page needs to resume after redeeming a link.
+ *
+ * The credential itself rides back as the httponly ``interview_token``
+ * cookie; these ids only tell the page which interview to reconnect to.
+ */
+export const zInterviewResumeRedeemed = z.object({
+    project_id: z.string(),
+    interview_id: z.string()
+});
+
+/**
  * InterviewStatus
  */
 export const zInterviewStatus = z.enum([
@@ -3009,6 +3049,52 @@ export const zGetInterviewsQuery = z.object({
  */
 export const zGetInterviewsResponse = zInterviewListResponse;
 
+export const zRevokeInterviewResumeLinkPath = z.object({
+    project_id: z.string().nullable(),
+    interview_id: z.string()
+});
+
+export const zRevokeInterviewResumeLinkQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Response Revoke Interview Resume Link
+ *
+ * Successful Response
+ */
+export const zRevokeInterviewResumeLinkResponse = zInterviewResumeLinkPublic.nullable();
+
+export const zGetInterviewResumeLinkPath = z.object({
+    project_id: z.string().nullable(),
+    interview_id: z.string()
+});
+
+export const zGetInterviewResumeLinkQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Response Get Interview Resume Link
+ *
+ * Successful Response
+ */
+export const zGetInterviewResumeLinkResponse = zInterviewResumeLinkPublic.nullable();
+
+export const zCreateInterviewResumeLinkPath = z.object({
+    project_id: z.string().nullable(),
+    interview_id: z.string()
+});
+
+export const zCreateInterviewResumeLinkQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zCreateInterviewResumeLinkResponse = zInterviewResumeLinkCreated;
+
 export const zGetMessagePath = z.object({
     project_id: z.string().nullable(),
     interview_id: z.string(),
@@ -3237,6 +3323,15 @@ export const zCreateInterviewPath = z.object({
  * Successful Response
  */
 export const zCreateInterviewResponse = z.string();
+
+export const zRedeemInterviewResumeLinkPath = z.object({
+    resume_token: z.string()
+});
+
+/**
+ * Successful Response
+ */
+export const zRedeemInterviewResumeLinkResponse = zInterviewResumeRedeemed;
 
 export const zPutFeedbackBody = zMessageFeedbackResponse;
 

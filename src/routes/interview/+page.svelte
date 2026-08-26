@@ -22,6 +22,7 @@
 		interviewModels: string[];
 		isProjectOwnerDemoUser: boolean;
 		availableLanguages: ProjectLanguage[];
+		resumeInterviewId?: string | null;
 		authError?: boolean;
 		externalParams?: Record<string, string> | null;
 		paramsInvalid?: boolean;
@@ -76,7 +77,12 @@
 			return;
 		}
 
-		const existingInterviewId = getStoredInterviewId(projectId);
+		// The cookie is preferred over the stored session: it is the credential
+		// the websocket will actually be authenticated with, so it cannot
+		// disagree with what the server is willing to serve, and it is present
+		// in a browser that has no stored session at all -- which is exactly
+		// the browser a resume link is opened in.
+		const existingInterviewId = data.resumeInterviewId ?? getStoredInterviewId(projectId);
 
 		if (existingInterviewId && !(interviewType === 'manual_test')) {
 			initializeChat(existingInterviewId);
