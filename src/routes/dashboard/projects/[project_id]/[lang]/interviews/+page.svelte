@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Projects as Api } from '$lib/api';
 	import type {
@@ -56,6 +58,24 @@
 	let columnFilters = $state<ColumnFiltersState>([]);
 	let globalFilter = $state('');
 
+	// Not part of TanStack's filter state: it comes in as `?pid=` from the
+	// participants table's "view interviews" link, is matched exactly rather
+	// than searched, and has no column control of its own. Keeping it separate
+	// also keeps DataTable's "Clear filters" from silently dropping it -- the
+	// chip carries its own dismiss.
+	let pidFilter = $state<string | null>(null);
+
+	/** Drop the participant filter and take it out of the URL with it. */
+	function clearPidFilter() {
+		pidFilter = null;
+		replaceState(
+			resolve(`/dashboard/projects/${project_id}/${page.params.lang ?? 'en'}/interviews`),
+			page.state
+		);
+		pagination = { ...pagination, pageIndex: 0 };
+		scheduleLoad();
+	}
+
 	/** A column's selected facet values, as `FacetedFilter` stores them. */
 	function selection<T extends string = string>(columnId: string) {
 		return columnFilters.find((filter) => filter.id === columnId)?.value as T[] | undefined;
@@ -71,6 +91,10 @@
 			// so the header must not offer it.
 			enableSorting: false,
 			meta: { class: 'font-mono text-xs whitespace-nowrap text-gray-500' }
+		}),
+		helper.accessor('pid', {
+			header: 'PID',
+			meta: { class: 'font-mono text-xs whitespace-nowrap text-gray-600' }
 		}),
 		helper.accessor('created_at', {
 			header: 'Created',
@@ -175,6 +199,7 @@
 
 	const columnLabels: Record<string, string> = {
 		id: 'ID',
+		pid: 'PID',
 		created_at: 'Created',
 		last_updated: 'Updated',
 		n_messages: 'Messages',
@@ -204,6 +229,7 @@
 					column: sorting[0]?.id ?? 'created_at',
 					order: sorting[0]?.desc ? 'desc' : 'asc',
 					search: globalFilter || undefined,
+					pid: pidFilter || undefined,
 					statuses: selection<InterviewStatus>('status'),
 					languages: selection('language'),
 					...dateRangeQuery(
@@ -342,6 +368,7 @@
 	}
 
 	onMount(() => {
+		pidFilter = page.url.searchParams.get('pid');
 		loadInterviews();
 		window.addEventListener('click', handleWindowClick);
 		window.addEventListener('scroll', handleScroll, true);
@@ -387,13 +414,31 @@
 	{loading}
 	{hasLoaded}
 	search
-	searchPlaceholder="Search by interview ID..."
+	searchPlaceholder="Search by interview ID or PID..."
 	rowCount={totalItems}
 	rowLabel="interview"
-	emptyTitle="No interviews yet"
-	emptyDescription="Interviews appear here once participants start responding."
+	emptyTitle={pidFilter ? 'No interviews for this participant' : 'No interviews yet'}
+	emptyDescription={pidFilter
+		? `Nothing has been recorded for ${pidFilter} yet.`
+		: 'Interviews appear here once participants start responding.'}
 >
 	{#snippet filters()}
+		{#if pidFilter}
+			<span
+				class="flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 py-1 pr-1 pl-2.5 text-sm"
+			>
+				<span class="text-gray-600">Participant</span>
+				<span class="font-mono font-semibold text-dark">{pidFilter}</span>
+				<button
+					class="rounded p-1 text-gray-400 hover:bg-secondary/40 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
+					onclick={clearPidFilter}
+					title="Show all participants"
+					aria-label="Clear participant filter"
+				>
+					<i class="fa-solid fa-xmark text-xs"></i>
+				</button>
+			</span>
+		{/if}
 		<FacetedFilter
 			title="Status"
 			column={table.getColumn('status')!}
@@ -430,6 +475,8 @@
 		{@const interview = row.original}
 		{#if columnId === 'id'}
 			{interview.id}
+		{:else if columnId === 'pid'}
+			{#if interview.pid}{interview.pid}{:else}<span class="text-gray-300">&ndash;</span>{/if}
 		{:else if columnId === 'created_at'}
 			<span title={formatDateFull(interview.created_at)}>{formatDate(interview.created_at)}</span>
 		{:else if columnId === 'last_updated'}

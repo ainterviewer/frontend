@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Participants } from '$lib/api';
 	import type { ParticipantPublic } from '$lib/api/types.gen';
@@ -18,7 +19,14 @@
 	import { toast } from 'svelte-sonner';
 
 	const project_id = $derived(page.params.project_id as string);
+	const lang = $derived(page.params.lang ?? 'en');
 	const isDemo = $derived(page.data.user?.scope === 'demo');
+
+	/** The interviews list, narrowed to one participant. Matched on pid rather
+	 * than on the participant id because pid is what the interview list shows
+	 * and what a reader can check the result against. */
+	const interviewsHref = (pid: string) =>
+		resolve(`/dashboard/projects/${project_id}/${lang}/interviews?pid=${encodeURIComponent(pid)}`);
 
 	let participants = $state<ParticipantPublic[]>([]);
 	let loading = $state(false);
@@ -589,6 +597,14 @@
 					<i class="fa-solid fa-xmark"></i>
 				</button>
 			{:else}
+				<a
+					class="mr-1 inline-block rounded p-1.5 text-gray-400 hover:bg-secondary/40 hover:text-dark"
+					href={interviewsHref(p.pid)}
+					title="View interviews"
+					aria-label="View interviews"
+				>
+					<i class="fa-solid fa-comments text-xs"></i>
+				</a>
 				<button
 					class="mr-1 rounded p-1.5 text-gray-400 hover:bg-secondary/40 hover:text-dark disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
 					onclick={() => startEdit(p)}

@@ -1386,6 +1386,10 @@ export type InterviewSummaryPublic = {
      * Test Name
      */
     test_name?: string | null;
+    /**
+     * Pid
+     */
+    pid?: string | null;
 };
 
 /**
@@ -6454,6 +6458,10 @@ export type GetInterviewsData = {
          * Search
          */
         search?: string | null;
+        /**
+         * Pid
+         */
+        pid?: string | null;
         /**
          * Folder Id
          */

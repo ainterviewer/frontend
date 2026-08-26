@@ -694,7 +694,8 @@ export const zInterviewSummaryPublic = z.object({
     last_updated: z.iso.datetime().nullish(),
     total_time_spent: z.int().optional().default(0),
     n_messages: z.int(),
-    test_name: z.string().nullish()
+    test_name: z.string().nullish(),
+    pid: z.string().nullish()
 });
 
 /**
@@ -2995,6 +2996,7 @@ export const zGetInterviewsQuery = z.object({
     created_to: z.iso.datetime().nullish(),
     completed: z.boolean().nullish(),
     search: z.string().max(200).nullish(),
+    pid: z.string().max(200).nullish(),
     folder_id: z.string().nullish(),
     offset: z.int().lte(100).optional().default(0),
     limit: z.int().lte(100).optional().default(20),

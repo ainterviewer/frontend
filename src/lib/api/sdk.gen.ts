@@ -1447,6 +1447,10 @@ export class Projects {
      * nothing and gets distributed interviews, the test results page passes the
      * two test types. `types` is the user narrowing that scope from the Type
      * filter, and unlike the scope it is dropped when counting the type facet.
+     *
+     * `pid` narrows the list to a single participant and is matched exactly --
+     * it backs the "view interviews" link from the participants table, where the
+     * pid is already known.
      */
     public static getInterviews<ThrowOnError extends boolean = false>(options: Options<GetInterviewsData, ThrowOnError>): RequestResult<GetInterviewsResponses, GetInterviewsErrors, ThrowOnError> {
         return (options.client ?? client).get<GetInterviewsResponses, GetInterviewsErrors, ThrowOnError>({
