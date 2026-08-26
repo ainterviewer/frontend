@@ -6,6 +6,7 @@
 		ProjectLanguage,
 		TemplatePlaceholder
 	} from '$lib/api/types.gen';
+	import PlaceholderInput from '$lib/components/editor/PlaceholderInput.svelte';
 	import { EditorLinkModal } from '$lib/components/modals';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 	import {
@@ -71,6 +72,10 @@
 
 	let editorEl: HTMLDivElement;
 	let editor = $state<Editor | null>(null);
+	let subjectEditor = $state<{ insert: (key: TemplatePlaceholder) => void } | null>(null);
+	// Placeholders are inserted wherever the author last had the caret, so the
+	// same button row serves both the subject and the body.
+	let insertTarget = $state<'subject' | 'body'>('body');
 	let attachmentInput: HTMLInputElement;
 
 	const dirty = $derived(
@@ -110,6 +115,9 @@
 	const previewHtml = $derived(
 		current.templateHtml.replace(placeholderPattern(), (_, k) => sample[k as TemplatePlaceholder])
 	);
+	const previewSubject = $derived(
+		current.subject.replace(placeholderPattern(), (_, k) => sample[k as TemplatePlaceholder])
+	);
 
 	const sendLabel = $derived(kind === 'reminder' ? 'Send reminders' : 'Send to participants');
 	const sendingLabel = $derived(kind === 'reminder' ? 'Sending...' : 'Sending...');
@@ -120,8 +128,8 @@
 	);
 	const introText = $derived(
 		kind === 'reminder'
-			? 'Compose the reminder email sent to participants who have not yet completed the interview. Use placeholders below to insert each participant’s name, email, PID or personal interview URL.'
-			: 'Compose the invitation email sent to participants. Use placeholders below to insert each participant’s name, email, PID or personal interview URL.'
+			? 'Compose the reminder email sent to participants who have not yet completed the interview. Use the placeholders below in the subject or the body to insert each participant’s name, email, PID or personal interview URL.'
+			: 'Compose the invitation email sent to participants. Use the placeholders below in the subject or the body to insert each participant’s name, email, PID or personal interview URL.'
 	);
 
 	let linkModalOpen = $state(false);
@@ -144,6 +152,10 @@
 	}
 
 	function insertPlaceholder(key: TemplatePlaceholder) {
+		if (insertTarget === 'subject') {
+			subjectEditor?.insert(key);
+			return;
+		}
 		editor?.chain().focus().insertTemplatePlaceholder(key).run();
 	}
 
@@ -352,7 +364,8 @@
 			},
 			onUpdate: ({ editor: e }) => {
 				states[kind].templateHtml = nodesToPlaceholders(e.getHTML());
-			}
+			},
+			onFocus: () => (insertTarget = 'body')
 		});
 		return () => {
 			editor?.destroy();
@@ -426,15 +439,16 @@
 	<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 		<div class="rounded-lg border border-gray-200 bg-white shadow">
 			<div class="flex items-center gap-2 border-b border-gray-200 px-3 py-2">
-				<label for="email-subject" class="text-sm font-semibold text-gray-700">Subject</label>
-				<input
-					id="email-subject"
-					type="text"
-					class="flex-1 rounded border border-gray-300 px-2 py-1 text-sm focus:border-primary focus:outline-none disabled:bg-gray-50 disabled:opacity-60"
+				<span class="text-sm font-semibold text-gray-700">Subject</span>
+				<PlaceholderInput
+					bind:this={subjectEditor}
+					class="flex-1"
+					value={states[kind].subject}
+					onChange={(next) => (states[kind].subject = next)}
+					onFocus={() => (insertTarget = 'subject')}
+					ariaLabel="Email subject"
 					placeholder="Email subject"
-					bind:value={states[kind].subject}
 					disabled={isDemo || current.loading}
-					autocomplete="off"
 				/>
 			</div>
 			<div class="flex flex-wrap items-center gap-1 border-b border-gray-200 px-2 py-1.5">
@@ -580,7 +594,7 @@
 					{#if current.subject}
 						<div class="mb-2 border-b border-gray-100 pb-2 text-sm">
 							<span class="font-semibold text-gray-700">Subject:</span>
-							<span class="text-gray-800">{current.subject}</span>
+							<span class="text-gray-800">{previewSubject}</span>
 						</div>
 					{/if}
 					<div class="prose prose-sm max-w-none">
