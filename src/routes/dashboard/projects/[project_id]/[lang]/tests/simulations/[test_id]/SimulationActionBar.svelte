@@ -19,8 +19,11 @@
 	const testId = $derived(page.params.test_id);
 </script>
 
+<!-- mt-auto keeps the bar at the foot of the page when the content is too short
+     to fill the viewport; sticky keeps it in view when it is not. z-20 keeps it
+     above a DataTable's sticky header cells (z-10). -->
 <div
-	class="sticky bottom-0 ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
+	class="sticky bottom-0 z-20 mt-auto ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
 >
 	{#if current === 'setup'}
 		<a
