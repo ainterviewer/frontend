@@ -19,6 +19,30 @@
 
 	const sensors = [PointerSensor, KeyboardSensor];
 
+	// The sidebar is sticky, but until it sticks it sits below the page heading,
+	// so a fixed max-height leaves its last items below the fold. Measure the
+	// distance from its actual top to the bottom of the viewport instead.
+	let asideEl = $state<HTMLElement | null>(null);
+	let maxHeight = $state('calc(100vh - 9rem)');
+
+	function measure() {
+		if (!asideEl) return;
+		const top = asideEl.getBoundingClientRect().top;
+		maxHeight = `${Math.max(0, window.innerHeight - top - 24)}px`;
+	}
+
+	$effect(() => {
+		if (!asideEl) return;
+		measure();
+		// The page scrolls in an ancestor element, and scroll events don't bubble.
+		window.addEventListener('scroll', measure, true);
+		window.addEventListener('resize', measure);
+		return () => {
+			window.removeEventListener('scroll', measure, true);
+			window.removeEventListener('resize', measure);
+		};
+	});
+
 	function arrayMove<T>(arr: T[], from: number, to: number): T[] {
 		const result = arr.slice();
 		result.splice(to, 0, result.splice(from, 1)[0]);
@@ -90,7 +114,9 @@
 <!-- Sidebar has its own DragDropProvider, independent of the main guide's context -->
 <DragDropProvider {sensors} onDragOver={handleDragOver}>
 	<aside
-		class="sticky top-6 mb-5 hidden max-h-[calc(100vh-9rem)] w-55 shrink-0 space-y-8 overflow-y-auto pr-4 xl:block"
+		bind:this={asideEl}
+		style="max-height: {maxHeight}"
+		class="sticky top-6 mb-5 hidden w-55 shrink-0 space-y-8 overflow-y-auto pr-4 xl:block"
 	>
 		<nav class="space-y-1">
 			<a
