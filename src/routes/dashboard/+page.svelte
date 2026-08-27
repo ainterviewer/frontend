@@ -58,7 +58,17 @@
 	let createFolderCollaborators: { email: string; role: CollaboratorRole }[] = $state([]);
 
 	// Folder Editing
+	// Collaborator changes are staged locally and only sent when "Save Changes"
+	// is clicked, so the whole modal behaves as one edit.
+	type EditCollaborator = {
+		key: string;
+		userId: string | null;
+		email: string;
+		role: CollaboratorRole;
+		originalRole: CollaboratorRole | null;
+	};
 	let editFolderName = $state('');
+	let editCollaborators: EditCollaborator[] = $state([]);
 	let editCollaboratorEmail = $state('');
 	let editCollaboratorRole: CollaboratorRole = $state('viewer');
 	const roles: CollaboratorRole[] = ['viewer', 'annotator', 'editor', 'admin'];
@@ -248,102 +258,119 @@
 	function openEditFolderModal(folder: ProjectFolderWithProjects) {
 		selectedFolder = folder;
 		editFolderName = folder.title;
+		editCollaborators = (folder.collaborators ?? []).map((collaborator) => ({
+			key: collaborator.user.id,
+			userId: collaborator.user.id,
+			email: collaborator.user.email,
+			role: collaborator.role,
+			originalRole: collaborator.role
+		}));
 		editCollaboratorEmail = '';
 		editCollaboratorRole = 'viewer';
 		isEditFolderModalOpen = true;
 		activeDropdown = null;
 	}
 
-	async function handleEditFolder() {
-		if (!selectedFolder) return;
-		const { error } = await Folders.editFolder({
-			path: {
-				folder_id: selectedFolder.id
-			},
-			body: {
-				title: editFolderName
-			}
-		});
-		if (error) {
-			console.error('Failed to edit folder:', error);
-			toast.error('Failed to edit folder');
+	// Staged collaborator changes, compared against the folder as it was loaded.
+	let editCollaboratorChanges = $derived.by(() => {
+		const original = selectedFolder?.collaborators ?? [];
+		const added = editCollaborators.filter((c) => !c.userId);
+		const removed = original.filter((c) => !editCollaborators.some((e) => e.userId === c.user.id));
+		const roleChanged = editCollaborators.filter((c) => c.userId && c.originalRole !== c.role);
+		return { added, removed, roleChanged };
+	});
+
+	let hasEditFolderChanges = $derived.by(() => {
+		const titleChanged = editFolderName !== (selectedFolder?.title ?? '');
+		const { added, removed, roleChanged } = editCollaboratorChanges;
+		return titleChanged || added.length > 0 || removed.length > 0 || roleChanged.length > 0;
+	});
+
+	function stageCollaborator() {
+		const email = editCollaboratorEmail.trim();
+		if (!email) return;
+		if (editCollaborators.some((c) => c.email.toLowerCase() === email.toLowerCase())) {
+			toast.error('That collaborator is already on the list');
 			return;
 		}
+		editCollaborators.push({
+			key: crypto.randomUUID(),
+			userId: null,
+			email,
+			role: editCollaboratorRole,
+			originalRole: null
+		});
+		editCollaboratorEmail = '';
+		editCollaboratorRole = 'viewer';
+	}
+
+	function unstageCollaborator(key: string) {
+		editCollaborators = editCollaborators.filter((c) => c.key !== key);
+	}
+
+	async function handleEditFolder() {
+		if (!selectedFolder || !hasEditFolderChanges) return;
+		const folderId = selectedFolder.id;
+		const { added, removed, roleChanged } = editCollaboratorChanges;
+
+		if (editFolderName !== selectedFolder.title) {
+			const { error } = await Folders.editFolder({
+				path: { folder_id: folderId },
+				body: { title: editFolderName }
+			});
+			if (error) {
+				console.error('Failed to edit folder:', error);
+				toast.error('Failed to edit folder');
+				return;
+			}
+		}
+
+		for (const collaborator of removed) {
+			const { error } = await Folders.removeCollaborator({
+				path: { folder_id: folderId },
+				query: { user_id: collaborator.user.id }
+			});
+			if (error) {
+				console.error('Failed to remove collaborator:', error);
+				toast.error(`Failed to remove ${collaborator.user.email}`);
+				await loadData();
+				return;
+			}
+		}
+
+		for (const collaborator of roleChanged) {
+			const { error } = await Folders.updateCollaboratorRole({
+				path: { folder_id: folderId },
+				query: { user_id: collaborator.userId!, role: collaborator.role }
+			});
+			if (error) {
+				console.error('Failed to update role:', error);
+				toast.error(`Failed to update the role of ${collaborator.email}`);
+				await loadData();
+				return;
+			}
+		}
+
+		for (const collaborator of added) {
+			const { error } = await Folders.addCollaborator({
+				path: { folder_id: folderId },
+				body: { email: collaborator.email, role: collaborator.role }
+			});
+			if (error) {
+				console.error('Failed to add collaborator:', error);
+				toast.error(`Failed to add ${collaborator.email}`);
+				await loadData();
+				return;
+			}
+		}
+
 		// Reset and refresh
 		editFolderName = '';
+		editCollaborators = [];
+		editCollaboratorEmail = '';
 		isEditFolderModalOpen = false;
 		selectedFolder = null;
 		await loadData();
-	}
-
-	async function handleAddCollaborator(folderId: string) {
-		if (!editCollaboratorEmail) return;
-		const { error } = await Folders.addCollaborator({
-			path: {
-				folder_id: folderId
-			},
-			body: {
-				email: editCollaboratorEmail,
-				role: editCollaboratorRole
-			}
-		});
-		if (error) {
-			console.error('Failed to add collaborator:', error);
-			toast.error('Failed to add collaborator');
-			return;
-		}
-		editCollaboratorEmail = '';
-		editCollaboratorRole = 'viewer';
-		await loadData();
-		if (selectedFolder) {
-			const updatedFolder = folders.find((f) => f.id === selectedFolder!.id);
-			if (updatedFolder) selectedFolder = updatedFolder;
-		}
-	}
-
-	async function handleRemoveCollaborator(userId: string) {
-		if (!selectedFolder) return;
-		const { error } = await Folders.removeCollaborator({
-			path: {
-				folder_id: selectedFolder.id
-			},
-			query: {
-				user_id: userId
-			}
-		});
-		if (error) {
-			console.error('Failed to remove collaborator:', error);
-			toast.error('Failed to remove collaborator');
-			return;
-		}
-		await loadData();
-		if (selectedFolder) {
-			const updatedFolder = folders.find((f) => f.id === selectedFolder!.id);
-			if (updatedFolder) selectedFolder = updatedFolder;
-		}
-	}
-
-	async function handleUpdateCollaboratorRole(userId: string, role: CollaboratorRole) {
-		if (!selectedFolder) return;
-		const { error } = await Folders.updateCollaboratorRole({
-			path: {
-				folder_id: selectedFolder.id
-			},
-			query: {
-				user_id: userId,
-				role
-			}
-		});
-		if (error) {
-			console.error('Failed to update role:', error);
-			toast.error('Failed to update role');
-			return;
-		}
-		await loadData();
-		if (selectedFolder) {
-			const updatedFolder = folders.find((f) => f.id === selectedFolder!.id);
-			if (updatedFolder) selectedFolder = updatedFolder;
-		}
 	}
 
 	function openDeleteFolderModal(folder: ProjectFolderWithProjects) {
@@ -984,7 +1011,7 @@
 			<div class="mt-6 mb-4">
 				<label class="mb-2 block font-bold" for="edit-folder-collaborators">Collaborators</label>
 
-				{#if selectedFolder.collaborators && selectedFolder.collaborators.length > 0}
+				{#if editCollaborators.length > 0}
 					<div
 						class="mb-2 grid grid-cols-[1fr_8rem_2rem] gap-2 px-1 text-sm font-bold text-gray-700"
 					>
@@ -1016,25 +1043,22 @@
 							</Info>
 						</span>
 					</div>
-					{#each selectedFolder.collaborators as collaborator (collaborator.id)}
+					{#each editCollaborators as collaborator (collaborator.key)}
 						<div class="mb-2 grid grid-cols-[1fr_8rem_2rem] items-center gap-2 px-1">
 							<div class="overflow-hidden">
-								<span class="block truncate text-sm font-medium" title={collaborator.user.email}
-									>{collaborator.user.email}</span
+								<span class="block truncate text-sm font-medium" title={collaborator.email}
+									>{collaborator.email}</span
 								>
+								{#if !collaborator.userId}
+									<span class="text-xs text-gray-500">Not saved yet</span>
+								{/if}
 							</div>
 							<div class="w-32">
-								<Select
-									items={roleItems}
-									value={collaborator.role}
-									onValueChange={(val: string) =>
-										handleUpdateCollaboratorRole(collaborator.user.id, val as CollaboratorRole)}
-									class="text-md h-9 py-1"
-								/>
+								<Select items={roleItems} bind:value={collaborator.role} class="text-md h-9 py-1" />
 							</div>
 							<button
 								class="flex h-9 items-center justify-center rounded text-red-500 hover:bg-red-200 hover:text-red-700"
-								onclick={() => handleRemoveCollaborator(collaborator.user.id)}
+								onclick={() => unstageCollaborator(collaborator.key)}
 								aria-label="Remove collaborator"
 							>
 								<i class="fa-solid fa-trash"></i>
@@ -1049,15 +1073,21 @@
 						class="w-full rounded border border-gray-300 p-2"
 						placeholder="Add collaborator email"
 						bind:value={editCollaboratorEmail}
+						onkeydown={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								stageCollaborator();
+							}
+						}}
 					/>
 					<div class="w-32">
 						<Select items={roleItems} bind:value={editCollaboratorRole} class="text-md h-9 py-1" />
 					</div>
 					<button
 						class="flex h-9 w-full items-center justify-center rounded bg-primary text-white hover:opacity-90 disabled:opacity-50"
-						onclick={() => handleAddCollaborator(selectedFolder!.id)}
-						disabled={!editCollaboratorEmail}
-						aria-label="Add collaborator"
+						onclick={stageCollaborator}
+						disabled={!editCollaboratorEmail.trim()}
+						aria-label="Add collaborator to the list"
 					>
 						<i class="fa-solid fa-plus"></i>
 					</button>
@@ -1072,7 +1102,7 @@
 				<button
 					class="rounded border-none bg-primary px-4 py-2 text-white hover:opacity-90 disabled:opacity-50"
 					onclick={handleEditFolder}
-					disabled={!editFolderName || editFolderName === selectedFolder.title}
+					disabled={!editFolderName || !hasEditFolderChanges}
 				>
 					Save Changes
 				</button>
