@@ -64,7 +64,20 @@
 	}
 
 	function removeQuestion(idx: number) {
-		questions.splice(idx, 1);
+		const question = questions[idx];
+		if (!question) return;
+
+		const text = (question.main_question ?? '').trim().split('\n')[0];
+		const label =
+			text.length > 60
+				? `question ${idx + 1}: "${text.slice(0, 60)}\u2026"`
+				: text
+					? `question ${idx + 1}: "${text}"`
+					: `question ${idx + 1}`;
+
+		if (confirm(`Are you sure you want to delete ${label} in section ${sectionIndex + 1}?`)) {
+			questions.splice(idx, 1);
+		}
 	}
 </script>
 

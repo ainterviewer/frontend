@@ -285,7 +285,22 @@
 	}
 
 	function removeSection(index: number) {
-		if (confirm('Are you sure you want to delete this section?')) {
+		const section = guideStore.localSections[index];
+		if (!section) return;
+
+		const description = (section.description ?? '').trim().split('\n')[0];
+		const label =
+			description.length > 60
+				? `Section ${index + 1}: "${description.slice(0, 60)}\u2026"`
+				: description
+					? `Section ${index + 1}: "${description}"`
+					: `Section ${index + 1}`;
+		const questionCount = guideStore.localQuestions[section.id]?.length ?? 0;
+		const questionNote = questionCount
+			? ` and its ${questionCount} question${questionCount === 1 ? '' : 's'}`
+			: '';
+
+		if (confirm(`Are you sure you want to delete ${label}${questionNote}?`)) {
 			const [removed] = guideStore.localSections.splice(index, 1);
 			delete guideStore.localQuestions[removed.id];
 		}
