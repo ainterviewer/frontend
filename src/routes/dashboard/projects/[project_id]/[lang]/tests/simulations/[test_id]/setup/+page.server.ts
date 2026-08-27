@@ -60,23 +60,26 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 		}
 	}
 
-	// Extract questions from the guide
-	const questions: Array<Pick<Question, 'main_question' | 'can_answer'>> = [];
+	// Extract the questions from the guide, kept grouped by section so the setup
+	// page can mirror the interview guide's section/question numbering.
+	const sections: Array<{
+		description: string;
+		questions: Array<Pick<Question, 'main_question' | 'can_answer'>>;
+	}> = [];
 	if (!guideResponse.error && guideResponse.data?.question_sections) {
 		for (const section of guideResponse.data.question_sections) {
-			if (section.questions) {
-				for (const q of section.questions) {
-					questions.push({
-						main_question: q.main_question,
-						can_answer: q.can_answer
-					});
-				}
-			}
+			sections.push({
+				description: section.description,
+				questions: (section.questions ?? []).map((q) => ({
+					main_question: q.main_question,
+					can_answer: q.can_answer
+				}))
+			});
 		}
 	}
 
 	return {
 		test,
-		questions
+		sections
 	};
 };

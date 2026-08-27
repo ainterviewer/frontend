@@ -12,7 +12,7 @@
 	let lang = $derived(page.params.lang);
 </script>
 
-<div class="flex min-h-full flex-col">
+<div class="flex min-h-full flex-1 flex-col">
 	<a
 		href={resolve(`/dashboard/projects/${projectId}/${lang}/tests/simulations`)}
 		class="mb-4 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
@@ -22,7 +22,7 @@
 	</a>
 
 	{#if test.type === 'fixed_answers'}
-		<FixedAnswers {test} questions={data.questions} />
+		<FixedAnswers {test} sections={data.sections} />
 	{:else if test.type === 'shuffled_ai'}
 		<ShuffledAI {test} />
 	{:else if test.type === 'fixed_ai'}
