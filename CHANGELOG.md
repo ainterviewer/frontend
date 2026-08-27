@@ -4,6 +4,23 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.90] - 2026-08-27
+
+### Features
+
+- Show sections in "Fixed Answers" setup
+- Section and question deletion now indicates which section and question(s) are being deleted in confirmation dialogue
+- The dialogue for editing a folder is now more intuitive when adding new collaborators
+- Use the sidebars state to improve the outlines hidden state detection
+- Add deduplication for participants in monitoring dashboard
+- Add Participation Rate and Language Distribution KPI cards to monitoring
+
+### Bug Fixes
+
+- Action bar in simulations now stays at the bottom of the screen, and sits on top of table headers
+- Outline in interview guide now properly fits the screen without overflowing beyond the screen height
+- SetupActionBar now properly resizes on smaller screens
+
 ## [0.2.89] - 2026-08-26
 
 ### Features
