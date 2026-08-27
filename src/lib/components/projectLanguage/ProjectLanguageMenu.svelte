@@ -72,7 +72,7 @@
 <div class="relative">
 	<button
 		type="button"
-		class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"
+		class="rounded-full bg-gray-100 px-6 py-2 font-medium whitespace-nowrap text-gray-700 hover:bg-gray-200"
 		onclick={toggle}
 	>
 		<i class="fa-solid fa-globe mr-2"></i>
