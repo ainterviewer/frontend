@@ -1651,6 +1651,22 @@ export type InvitationsDeleteRequest = {
 export type LanguageCode = string;
 
 /**
+ * LanguageCount
+ *
+ * Count of interviews conducted in a given language.
+ */
+export type LanguageCount = {
+    /**
+     * Language
+     */
+    language: string;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * LanguageDict
  */
 export type LanguageDict = {
@@ -1950,6 +1966,10 @@ export type MonitoringStats = {
      */
     interviews_by_status: Array<InterviewStatusCount>;
     /**
+     * Interviews By Language
+     */
+    interviews_by_language: Array<LanguageCount>;
+    /**
      * Interviews Over Time
      */
     interviews_over_time: Array<DailyInterviewCount>;
@@ -1979,6 +1999,18 @@ export type MonitoringStats = {
      * Dropout Sections
      */
     dropout_sections: Array<DropoutSection>;
+    /**
+     * Total Participants
+     */
+    total_participants: number;
+    /**
+     * Participants Completed
+     */
+    participants_completed: number;
+    /**
+     * Participation Rate
+     */
+    participation_rate: number | null;
     /**
      * Total Inactive
      */

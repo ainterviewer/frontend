@@ -43,6 +43,56 @@
 	});
 	const totalDuration = Tween.of(() => stats?.duration_stats?.sum_seconds ?? 0, { duration: 400 });
 	const completionRate = Tween.of(() => stats?.completion_rate ?? 0, { duration: 400 });
+	const participationRate = Tween.of(() => stats?.participation_rate ?? 0, { duration: 400 });
+
+	// Categorical hues for the language breakdown, validated for colour-vision
+	// deficiency across every pair (not just neighbouring segments, since the
+	// legend invites comparing any two). The lead hue is the brand green, which
+	// is the one slot slightly under the chroma floor; the two lightest hues sit
+	// under 3:1 against white, which the always-visible legend labels relieve.
+	const LANGUAGE_COLORS = ['#00705f', '#cf9426', '#4276db', '#cd5f8c', '#59c0d8'];
+	// Languages past the palette are folded into one neutral "Other" slice
+	// rather than being given generated hues.
+	const OTHER_LANGUAGE_COLOR = '#94a3b8';
+	const MAX_LANGUAGE_SLICES = LANGUAGE_COLORS.length;
+
+	type LanguageSlice = { language: string; count: number; share: number; color: string };
+
+	let languageBreakdown = $derived.by(() => {
+		const counts = stats?.interviews_by_language ?? [];
+		const total = sum(counts, (d) => d.count);
+		if (total === 0) return [] as LanguageSlice[];
+
+		// The backend already orders by count descending, so the head is the
+		// dominant language and the tail is what gets folded together.
+		const head = counts.slice(0, MAX_LANGUAGE_SLICES);
+		const tail = counts.slice(MAX_LANGUAGE_SLICES);
+
+		const slices: LanguageSlice[] = head.map((d, i) => ({
+			language: d.language.toUpperCase(),
+			count: d.count,
+			share: d.count / total,
+			color: LANGUAGE_COLORS[i]
+		}));
+
+		if (tail.length > 0) {
+			const otherCount = sum(tail, (d) => d.count);
+			slices.push({
+				language: 'Other',
+				count: otherCount,
+				share: otherCount / total,
+				color: OTHER_LANGUAGE_COLOR
+			});
+		}
+
+		return slices;
+	});
+
+	let dominantLanguage = $derived(languageBreakdown[0] ?? null);
+
+	// An anonymous-link project has no participant roster, so there is no
+	// denominator to divide by and the card is left out entirely.
+	let hasParticipants = $derived((stats?.total_participants ?? 0) > 0);
 
 	// Tracked outside the effect so that re-running it for a changed
 	// deduplication setting does not read as a project switch.
@@ -422,6 +472,31 @@
 					</div>
 				{/if}
 			</div>
+			{#if loading || hasParticipants}
+				<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+					<div class="text-sm font-medium text-gray-700">Participation Rate</div>
+					{#if loading}
+						<div class="mt-2 h-9 w-24 animate-pulse rounded bg-surface-200"></div>
+						<div class="mt-3 h-2 w-full animate-pulse rounded-full bg-surface-200"></div>
+					{:else}
+						<div class="mt-2 flex items-baseline gap-2">
+							<span class="text-3xl font-bold">{formatPercent(participationRate.current)}</span>
+							<span class="text-sm text-gray-500">
+								({stats?.participants_completed ?? 0} of {stats?.total_participants ?? 0})
+							</span>
+						</div>
+						<div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#94a3b8]">
+							<div
+								class="h-full bg-primary transition-all duration-500 ease-out"
+								style="width: {participationRate.current * 100}%"
+							></div>
+						</div>
+						<div class="mt-1 text-xs text-gray-500">
+							Invited participants with a completed interview
+						</div>
+					{/if}
+				</div>
+			{/if}
 			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 				<div class="text-sm font-medium text-gray-700">Total Duration</div>
 				{#if loading}
@@ -438,6 +513,49 @@
 							stats.duration_stats.avg_seconds
 						)} · Max {formatDuration(stats.duration_stats.max_seconds)}
 					</div>
+				{/if}
+			</div>
+			<div
+				class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+				class:col-span-2={!loading && !hasParticipants}
+			>
+				<div class="text-sm font-medium text-gray-700">Language Distribution</div>
+				{#if loading}
+					<div class="mt-2 h-9 w-28 animate-pulse rounded bg-surface-200"></div>
+					<div class="mt-3 h-2 w-full animate-pulse rounded-full bg-surface-200"></div>
+					<div class="mt-3 h-3 w-40 animate-pulse rounded bg-surface-200"></div>
+				{:else if dominantLanguage}
+					<div class="mt-2 flex items-baseline gap-2">
+						<span class="text-3xl font-bold">{dominantLanguage.language}</span>
+						<span class="text-sm text-gray-500">{formatPercent(dominantLanguage.share)}</span>
+					</div>
+					<!-- Segments are separated by a surface-coloured gap rather than
+					     sitting flush, so neighbouring hues stay distinguishable. -->
+					<div class="mt-3 flex h-2 w-full gap-0.5 overflow-hidden rounded-full">
+						{#each languageBreakdown as slice (slice.language)}
+							<div
+								class="h-full first:rounded-l-full last:rounded-r-full"
+								style="width: {slice.share * 100}%; background-color: {slice.color}"
+							></div>
+						{/each}
+					</div>
+					<div class="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+						{#each languageBreakdown as slice (slice.language)}
+							<div class="flex items-center gap-1.5">
+								<div
+									class="h-2 w-2 shrink-0 rounded-full"
+									style="background-color: {slice.color}"
+								></div>
+								<span class="text-xs text-gray-500">
+									{slice.language}
+									{formatPercent(slice.share)}
+								</span>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<div class="mt-2 text-3xl font-bold text-gray-400">&mdash;</div>
+					<div class="mt-1 text-xs text-gray-500">No data available</div>
 				{/if}
 			</div>
 		</div>

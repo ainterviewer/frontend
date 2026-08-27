@@ -1937,8 +1937,8 @@ export class Interviews {
     /**
      * Synthesize Speech
      *
-     * Synthesize speech for an interviewer message via the OpenAI-compatible
-     * TTS service, streaming the MP3 back as it is generated.
+     * Synthesize speech for an interviewer message, streaming the MP3 back as
+     * it is generated.
      *
      * Authenticated with the participant's interview token cookie, like the
      * transcription endpoint. The text is looked up by message id within the

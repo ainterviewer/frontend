@@ -792,6 +792,16 @@ export const zInterviewListResponse = z.object({
 });
 
 /**
+ * LanguageCount
+ *
+ * Count of interviews conducted in a given language.
+ */
+export const zLanguageCount = z.object({
+    language: z.string(),
+    count: z.int()
+});
+
+/**
  * LanguageDict
  */
 export const zLanguageDict = z.object({
@@ -914,6 +924,7 @@ export const zMonitoringStats = z.object({
     total_interviews: z.int(),
     completion_rate: z.number(),
     interviews_by_status: z.array(zInterviewStatusCount),
+    interviews_by_language: z.array(zLanguageCount),
     interviews_over_time: z.array(zDailyInterviewCount),
     interviews_by_time_of_day: z.array(zInterviewTimeOfDayCount),
     duration_stats: zInterviewDurationStats.nullable(),
@@ -923,6 +934,9 @@ export const zMonitoringStats = z.object({
     message_length_histogram: z.array(zHistogramBucket),
     dropout_stats: z.array(zDropoutPoint),
     dropout_sections: z.array(zDropoutSection),
+    total_participants: z.int(),
+    participants_completed: z.int(),
+    participation_rate: z.number().nullable(),
     total_inactive: z.int()
 });
 
@@ -2228,7 +2242,7 @@ export const zGetProjectMonitoringStatsQuery = z.object({
     interview_types: z.array(zInterviewType).optional(),
     start_date: z.iso.datetime().nullish(),
     end_date: z.iso.datetime().nullish(),
-    deduplicate_by_pid: z.boolean().optional().default(true)
+    deduplicate_by_pid: z.boolean().optional().default(false)
 });
 
 /**
