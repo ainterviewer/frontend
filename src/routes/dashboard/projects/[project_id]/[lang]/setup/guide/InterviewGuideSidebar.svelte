@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { sidebar } from '$lib/sidebar.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import {
 		DragDropProvider,
@@ -18,6 +19,11 @@
 	}>();
 
 	const sensors = [PointerSensor, KeyboardSensor];
+
+	// The main nav sidebar is 250px when expanded and 70px when collapsed, so a
+	// collapsed nav frees up 180px for the page content. Keep the outline visible
+	// on correspondingly narrower viewports in that case.
+	let visibilityClass = $derived(sidebar.collapsed ? 'min-[1100px]:block' : 'xl:block');
 
 	// The sidebar is sticky, but until it sticks it sits below the page heading,
 	// so a fixed max-height leaves its last items below the fold. Measure the
@@ -116,7 +122,7 @@
 	<aside
 		bind:this={asideEl}
 		style="max-height: {maxHeight}"
-		class="sticky top-6 mb-5 hidden w-55 shrink-0 space-y-8 overflow-y-auto pr-4 xl:block"
+		class="sticky top-6 mb-5 hidden w-55 shrink-0 space-y-8 overflow-y-auto pr-4 {visibilityClass}"
 	>
 		<nav class="space-y-1">
 			<a
