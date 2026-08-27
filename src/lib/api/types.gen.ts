@@ -4142,6 +4142,10 @@ export type GetProjectMonitoringStatsData = {
          * End Date
          */
         end_date?: string | null;
+        /**
+         * Deduplicate By Pid
+         */
+        deduplicate_by_pid?: boolean;
     };
     url: '/api/monitoring/projects/{project_id}/stats';
 };

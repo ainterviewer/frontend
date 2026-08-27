@@ -2227,7 +2227,8 @@ export const zGetProjectMonitoringStatsPath = z.object({
 export const zGetProjectMonitoringStatsQuery = z.object({
     interview_types: z.array(zInterviewType).optional(),
     start_date: z.iso.datetime().nullish(),
-    end_date: z.iso.datetime().nullish()
+    end_date: z.iso.datetime().nullish(),
+    deduplicate_by_pid: z.boolean().optional().default(true)
 });
 
 /**

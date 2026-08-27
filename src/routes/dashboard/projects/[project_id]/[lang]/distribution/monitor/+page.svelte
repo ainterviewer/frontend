@@ -6,6 +6,8 @@
 		InterviewStatus,
 		MonitoringStats
 	} from '$lib/api/types.gen';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { Switch } from 'bits-ui';
 	import { max, min, sum } from 'd3-array';
 	import { format } from 'd3-format';
 	import { scaleOrdinal } from 'd3-scale';
@@ -25,6 +27,7 @@
 	let stats = $state<MonitoringStats | null>(null);
 	let error = $state<string | null>(null);
 	let loading = $derived(!stats && !error);
+	let deduplicateByPid = $state(false);
 
 	const statusColorScale = scaleOrdinal(
 		['active', 'completed', 'inactive'],
@@ -41,16 +44,26 @@
 	const totalDuration = Tween.of(() => stats?.duration_stats?.sum_seconds ?? 0, { duration: 400 });
 	const completionRate = Tween.of(() => stats?.completion_rate ?? 0, { duration: 400 });
 
+	// Tracked outside the effect so that re-running it for a changed
+	// deduplication setting does not read as a project switch.
+	let loadedProjectId: string | null = null;
+
 	// Fetched here rather than in `load` so navigation never waits on it: the page
 	// mounts with its skeletons and fills in when the first response lands, then
 	// keeps itself up to date by polling.
 	$effect(() => {
 		const projectId = data.project_id;
+		const deduplicate = deduplicateByPid;
 
 		// Switching projects: never show the previous project's numbers as if
-		// they belonged to this one.
-		stats = null;
-		error = null;
+		// they belonged to this one. Toggling deduplication keeps the current
+		// numbers on screen until the recount lands, since they describe the
+		// same project either way.
+		if (loadedProjectId !== projectId) {
+			loadedProjectId = projectId;
+			stats = null;
+			error = null;
+		}
 
 		let disposed = false;
 		let inFlight = false;
@@ -62,18 +75,21 @@
 			inFlight = true;
 			try {
 				const { data: statsData, error: fetchError } = await Monitoring.getProjectMonitoringStats({
-					path: { project_id: projectId }
+					path: { project_id: projectId },
+					query: { deduplicate_by_pid: deduplicate }
 				});
 				if (disposed) return;
 				if (fetchError || !statsData) {
-					if (initial) error = 'Failed to load monitoring stats';
+					// Only surface a hard error when there is nothing to show; a
+					// failed recount after a toggle leaves the previous numbers up.
+					if (initial && !stats) error = 'Failed to load monitoring stats';
 				} else {
 					stats = statsData;
 					error = null;
 				}
 			} catch (e) {
 				console.error('Failed to fetch monitoring stats:', e);
-				if (!disposed && initial) error = 'Failed to load monitoring stats';
+				if (!disposed && initial && !stats) error = 'Failed to load monitoring stats';
 			} finally {
 				inFlight = false;
 			}
@@ -325,7 +341,26 @@
 	});
 </script>
 
-<h1 class="page-title">Project Monitoring</h1>
+<div class="flex items-center justify-between gap-4">
+	<h1 class="page-title">Project Monitoring</h1>
+	<div class="flex items-center gap-2">
+		<Switch.Root
+			id="deduplicate-by-pid"
+			bind:checked={deduplicateByPid}
+			class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+		>
+			<Switch.Thumb
+				class="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
+			/>
+		</Switch.Root>
+		<label for="deduplicate-by-pid" class="cursor-pointer text-sm text-gray-700">
+			Deduplicate by participant
+		</label>
+		<HoverInfo
+			text="Counts one interview per participant ID, keeping the one with most progress. Turn off to count every interview, including repeat visits from the same participant."
+		/>
+	</div>
+</div>
 
 {#if error}
 	<div class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
