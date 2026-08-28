@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ItemDistribution } from '$lib/api/types.gen';
 	import AnswerRateBar from './AnswerRateBar.svelte';
+	import { reveal } from '$lib/utils/reveal';
 	import DistributionChart, { type Bar } from './DistributionChart.svelte';
 	import OptionBars from './OptionBars.svelte';
 	import SampleDots from './SampleDots.svelte';
@@ -92,6 +93,7 @@
      scanning for distributions skims past it, while a reader following the
      guide still finds it in place. -->
 <div
+	{@attach reveal()}
 	class="flex flex-col gap-3 rounded-lg border p-5 {isStatement
 		? 'bg-surface-50 border-dashed border-gray-300'
 		: 'border-gray-200 bg-white shadow-sm'}"

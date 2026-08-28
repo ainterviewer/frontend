@@ -65,36 +65,49 @@
 		{#snippet placeholder()}
 			<ChartSkeleton />
 		{/snippet}
-		<BarChart
-			data={bars}
-			x="key"
-			{series}
-			seriesLayout={stacked ? 'stack' : 'overlap'}
-			padding={{ left: 32, bottom: 22, right: 8, top: 8 }}
-			props={{
-				xAxis: { format: formatTick, classes: { tickLabel: 'text-[0.625rem]' } },
-				yAxis: { format: 'metric', classes: { tickLabel: 'text-[0.625rem]' } },
-				bars: { rounded: 'edge', radius: 3, motion: { type: 'tween', duration: 300 } }
-			}}
-		>
-			{#snippet tooltip()}
-				<Tooltip.Root>
-					{#snippet children({ data }: { data: Bar })}
-						<Tooltip.Header>{data.label}</Tooltip.Header>
-						<Tooltip.List>
-							{#if stacked}
-								{#each languages as language (language)}
-									{#if (data[language] as number) > 0}
-										<Tooltip.Item label={language.toUpperCase()} value={data[language] as number} />
+		{#snippet children(animate)}
+			<!-- The reveal goes on the chart rather than the container, so it plays
+			     when the chart appears rather than while the skeleton is still up. -->
+			<div class="h-full w-full {animate ? 'chart-reveal' : ''}">
+				<BarChart
+					data={bars}
+					x="key"
+					{series}
+					seriesLayout={stacked ? 'stack' : 'overlap'}
+					padding={{ left: 32, bottom: 22, right: 8, top: 8 }}
+					props={{
+						xAxis: { format: formatTick, classes: { tickLabel: 'text-[0.625rem]' } },
+						yAxis: { format: 'metric', classes: { tickLabel: 'text-[0.625rem]' } },
+						bars: {
+							rounded: 'edge',
+							radius: 3,
+							motion: animate ? { type: 'tween', duration: 300 } : undefined
+						}
+					}}
+				>
+					{#snippet tooltip()}
+						<Tooltip.Root>
+							{#snippet children({ data }: { data: Bar })}
+								<Tooltip.Header>{data.label}</Tooltip.Header>
+								<Tooltip.List>
+									{#if stacked}
+										{#each languages as language (language)}
+											{#if (data[language] as number) > 0}
+												<Tooltip.Item
+													label={language.toUpperCase()}
+													value={data[language] as number}
+												/>
+											{/if}
+										{/each}
 									{/if}
-								{/each}
-							{/if}
-							<Tooltip.Item label={tooltipLabel} value={data.count} />
-						</Tooltip.List>
+									<Tooltip.Item label={tooltipLabel} value={data.count} />
+								</Tooltip.List>
+							{/snippet}
+						</Tooltip.Root>
 					{/snippet}
-				</Tooltip.Root>
-			{/snippet}
-		</BarChart>
+				</BarChart>
+			</div>
+		{/snippet}
 	</LazyMount>
 </div>
 

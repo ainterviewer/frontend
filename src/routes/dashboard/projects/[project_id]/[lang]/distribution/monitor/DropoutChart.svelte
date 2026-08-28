@@ -24,10 +24,13 @@
 
 	let {
 		bars,
-		bands
+		bands,
+		animate = false
 	}: {
 		bars: DropoutBar[];
 		bands: DropoutBand[];
+		/** See `HistogramChart`: `undefined` motion is layerchart's fast path. */
+		animate?: boolean;
 	} = $props();
 
 	// Must match the chart's `padding`, so the band strip is measured from the
@@ -116,7 +119,7 @@
 					tickLabel
 				},
 				yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-				bars: { motion: { type: 'tween', duration: 300 } }
+				bars: { motion: animate ? { type: 'tween', duration: 300 } : undefined }
 			}}
 		>
 			<!-- A custom tooltip rather than `props.tooltip.header.format`, which can

@@ -3,11 +3,20 @@
 
 	let {
 		data,
-		tooltipLabel = 'Interviews'
+		tooltipLabel = 'Interviews',
+		animate = false
 	}: {
 		data: { value: number; count: number; label: string }[];
 		tooltipLabel?: string;
+		/**
+		 * Whether the bars grow in on mount. Off by default: `undefined` motion
+		 * is layerchart's fast path, which skips the per-bar motion state
+		 * entirely rather than merely holding it still.
+		 */
+		animate?: boolean;
 	} = $props();
+
+	const barMotion = $derived(animate ? ({ type: 'tween', duration: 300 } as const) : undefined);
 
 	let chartContext = $state<ChartState | undefined>(undefined);
 	let barBandwidth = $derived(
@@ -54,7 +63,7 @@
 			xAxis: { format: formatTick, classes: { tickLabel: 'text-xs' } },
 			yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
 			bars: {
-				motion: { type: 'tween', duration: 300 },
+				motion: barMotion,
 				insets: barInsets
 			}
 		}}
@@ -66,7 +75,7 @@
 					rounded="edge"
 					radius={4}
 					strokeWidth={1}
-					motion={{ type: 'tween', duration: 300 }}
+					motion={barMotion}
 					insets={barInsets}
 					data={barsData}
 				/>

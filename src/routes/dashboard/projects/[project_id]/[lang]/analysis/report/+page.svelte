@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Report } from '$lib/api';
 	import { ANSWER_STATE_COLORS, languageColor } from '$lib/config/chartColors';
-	import type { InterviewType, ItemDistribution, ItemDistributions } from '$lib/api/types.gen';
+	import type { ItemDistribution, ItemDistributions } from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { Switch } from 'bits-ui';
 	import { format } from 'd3-format';
@@ -9,6 +9,8 @@
 	import AnswerRateBar from './AnswerRateBar.svelte';
 	import ChartSkeleton from './ChartSkeleton.svelte';
 	import ClampedText from './ClampedText.svelte';
+	import { DISTRIBUTED_ONLY, isDefaultQuery, WITH_TESTS } from './filters';
+	import { reveal } from '$lib/utils/reveal';
 	import ItemCard from './ItemCard.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -24,9 +26,6 @@
 	let completedOnly = $state(false);
 	let includeTests = $state(false);
 
-	const DISTRIBUTED_ONLY: InterviewType[] = ['distributed'];
-	const WITH_TESTS: InterviewType[] = ['distributed', 'manual_test', 'synthetic_test'];
-
 	// Held across refetches so the language chips do not disappear while a
 	// filtered response is in flight.
 	let availableLanguages = $state<string[]>([]);
@@ -38,12 +37,46 @@
 	// read as a project switch.
 	let loadedProjectId: string | null = null;
 
-	// Fetched here rather than in `load` so navigation never waits on it: the
-	// page mounts with its skeletons and fills in when the response lands.
+	// `load` has already sent the request for the filters the page opens on, so
+	// the first pass through the effect adopts it instead of sending a second.
+	// Tracked by identity: a new one arrives with every navigation, and every
+	// filter change from there on issues its own.
+	let seenPreload: PageData['distributions'] | null = null;
+
+	// The filters belong to the reader, so they survive a refetch -- but not a
+	// switch to a different project, whose respondents are different people and
+	// whose languages need not overlap at all. Carrying them over also wastes
+	// the preload: `load` has just asked for the default cohort, and a filter
+	// held over from the last project means nothing can adopt it.
+	//
+	// Its own effect, declared before the one that fetches, so that one runs
+	// once with the filters already back at their defaults instead of firing a
+	// request for the old cohort and then a second for the new.
+	let filteredProjectId: string | null = null;
 	$effect(() => {
 		const projectId = data.project_id;
+		if (filteredProjectId === projectId) return;
+
+		const firstProject = filteredProjectId === null;
+		filteredProjectId = projectId;
+		// Nothing to clear on the first pass, and writing the defaults over
+		// themselves would only re-run the fetch below for no reason.
+		if (firstProject) return;
+
+		selectedLanguages = [];
+		completedOnly = false;
+		includeTests = false;
+		availableLanguages = [];
+	});
+
+	// The response is applied here rather than awaited in `load` so navigation
+	// never waits on it: the page mounts with its skeletons and fills in when
+	// the response lands.
+	$effect(() => {
+		const projectId = data.project_id;
+		const preloaded = data.distributions;
 		const query = {
-			interview_types: includeTests ? WITH_TESTS : DISTRIBUTED_ONLY,
+			interview_types: [...(includeTests ? WITH_TESTS : DISTRIBUTED_ONLY)],
 			completed_only: completedOnly,
 			// The generated client omits an empty array, which is exactly the
 			// "no language filter" the backend expects.
@@ -65,12 +98,24 @@
 		// connection the request the user is actually waiting on could use.
 		const controller = new AbortController();
 
+		// The preloaded request went out before this component existed, so it
+		// has no signal to abort; toggling a filter straight away leaves it to
+		// finish and discards the result. It only answers the filters `load`
+		// sent, so anything else -- filters restored from the URL, say -- has to
+		// ask for itself rather than quietly showing the default cohort.
+		const adopting = preloaded !== seenPreload && isDefaultQuery(query);
+		seenPreload = preloaded;
+
+		const request = adopting
+			? preloaded
+			: Report.getProjectItemDistributions({
+					path: { project_id: projectId },
+					query,
+					signal: controller.signal
+				});
+
 		(async () => {
-			const { data: body, error: fetchError } = await Report.getProjectItemDistributions({
-				path: { project_id: projectId },
-				query,
-				signal: controller.signal
-			});
+			const { data: body, error: fetchError } = await request;
 			if (disposed) return;
 
 			if (fetchError || !body) {
@@ -325,7 +370,12 @@
 					{:else}
 						<div class="flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">
 							{#each answerRateRows as item (`${item.section}-${item.main_question}`)}
-								<div class="grid grid-cols-[minmax(0,15rem)_1fr] items-center gap-3">
+								<!-- Revealed per row, not per list: the list scrolls, so revealing
+								     it whole would animate every row below its own fold unseen. -->
+								<div
+									{@attach reveal()}
+									class="grid grid-cols-[minmax(0,15rem)_1fr] items-center gap-3"
+								>
 									<div class="truncate text-xs text-gray-700" title={item.question}>
 										<span class="text-gray-400 tabular-nums">
 											{item.section + 1}.{item.main_question + 1}

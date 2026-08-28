@@ -36,6 +36,7 @@
 	let failed = $state(false);
 	// Row elements by project id, so scrolling the highlighted row into view does
 	// not depend on list indices that shift as the search filters.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- written from an attachment, read from a key handler; nothing renders from it
 	const rows = new Map<string, HTMLElement>();
 	// Only reveal the current project's folder on the first render of an open
 	// popover — re-running it while the user types would fight their search.

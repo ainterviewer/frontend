@@ -32,18 +32,22 @@
 
 <div class="flex items-center gap-2">
 	<div
-		class="flex h-1.5 flex-1 gap-0.5 overflow-hidden rounded-full bg-surface-200"
+		class="flex h-1.5 flex-1 overflow-hidden rounded-full bg-surface-200"
 		title={segments.map((s) => `${s.label}: ${s.count}`).join(' · ')}
 	>
-		{#each segments as segment (segment.key)}
-			{#if segment.count > 0}
-				<div
-					class="h-full first:rounded-l-full last:rounded-r-full"
-					style="width: {(segment.count / Math.max(1, asked)) *
-						100}%; background-color: {segment.color}"
-				></div>
-			{/if}
-		{/each}
+		<!-- The segments grow together inside the track, so the track's own
+		     grey stays at full width behind them. -->
+		<div class="bar-grow flex h-full w-full gap-0.5">
+			{#each segments as segment (segment.key)}
+				{#if segment.count > 0}
+					<div
+						class="h-full first:rounded-l-full last:rounded-r-full"
+						style="width: {(segment.count / Math.max(1, asked)) *
+							100}%; background-color: {segment.color}"
+					></div>
+				{/if}
+			{/each}
+		</div>
 	</div>
 	<span class="shrink-0 text-xs text-gray-500 tabular-nums">
 		{formatPercent(rate)}

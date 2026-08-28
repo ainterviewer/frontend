@@ -36,6 +36,47 @@
 /* Custom  */
 
 @layer components {
+	/* A bar that grows out of its left edge once its card has been reached.
+	   Set on the filled part, inside a `reveal()` container; a bar that is
+	   never scrolled to simply never animates. Transform rather than width so
+	   the browser can run it off the main thread, which matters on a report
+	   holding a few hundred of these. */
+	.bar-grow {
+		transform-origin: left;
+	}
+	[data-revealed] .bar-grow {
+		animation: bar-grow 450ms ease-out;
+	}
+	@keyframes bar-grow {
+		from {
+			transform: scaleX(0);
+		}
+	}
+	/* A chart cannot grow the way a bar does -- scaling it would take the axes
+	   and tick labels with it -- so it fades up in place instead. Set on the
+	   chart itself when it mounts, not on a `reveal()` container: the container
+	   is still holding a skeleton at the point the card is reached, and the
+	   animation would play out on that instead. */
+	.chart-reveal {
+		animation: chart-reveal 450ms ease-out;
+	}
+	@keyframes chart-reveal {
+		from {
+			opacity: 0;
+			transform: translateY(6px);
+		}
+	}
+	/* `.chart-reveal` is covered at its source instead: `LazyMount` withholds
+	   the flag that applies it, which also turns off the chart libraries' own
+	   JS motion -- the part no media query can reach. `.bar-grow` has no such
+	   gate, since `reveal()` sets `data-revealed` for layout reasons that hold
+	   either way, so it is turned off here. */
+	@media (prefers-reduced-motion: reduce) {
+		[data-revealed] .bar-grow {
+			animation: none;
+		}
+	}
+
 	.page-title {
 		@apply mb-4 w-fit text-2xl font-bold;
 	}

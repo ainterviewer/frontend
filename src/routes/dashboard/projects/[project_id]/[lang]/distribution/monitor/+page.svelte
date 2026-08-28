@@ -571,35 +571,43 @@
 								<div class="h-[200px] w-[200px] animate-pulse rounded-full bg-surface-200"></div>
 							</div>
 						{/snippet}
-						<PieChart
-							data={interviewsByStatus}
-							key="status"
-							value="count"
-							innerRadius={-20}
-							cornerRadius={5}
-							padAngle={0.02}
-							cRange={['#e8dcb9', '#196858', '#94a3b8']}
-							props={{
-								arc: { motion: { type: 'spring', stiffness: 0.1, damping: 0.4 } }
-							}}
-						>
-							{#snippet aboveMarks()}
-								<Text
-									value={formatNumber(sum(interviewsByStatus, (d) => d.count))}
-									textAnchor="middle"
-									verticalAnchor="middle"
-									class="text-4xl"
-									dy={4}
-								/>
-								<Text
-									value="interviews"
-									textAnchor="middle"
-									verticalAnchor="middle"
-									class="fill-surface-content/50 text-sm"
-									dy={26}
-								/>
-							{/snippet}
-						</PieChart>
+						{#snippet children(animate)}
+							<PieChart
+								data={interviewsByStatus}
+								key="status"
+								value="count"
+								innerRadius={-20}
+								cornerRadius={5}
+								padAngle={0.02}
+								cRange={['#e8dcb9', '#196858', '#94a3b8']}
+								props={{
+									// On `pie`, not `arc`: the chart hands each arc an explicit
+									// start and end angle, and an arc with those set ignores its
+									// own motion. The sweep is the pie's, which tweens the angle
+									// the whole layout is generated at.
+									pie: {
+										motion: animate ? { type: 'spring', stiffness: 0.1, damping: 0.4 } : undefined
+									}
+								}}
+							>
+								{#snippet aboveMarks()}
+									<Text
+										value={formatNumber(sum(interviewsByStatus, (d) => d.count))}
+										textAnchor="middle"
+										verticalAnchor="middle"
+										class="text-4xl"
+										dy={4}
+									/>
+									<Text
+										value="interviews"
+										textAnchor="middle"
+										verticalAnchor="middle"
+										class="fill-surface-content/50 text-sm"
+										dy={26}
+									/>
+								{/snippet}
+							</PieChart>
+						{/snippet}
 					</LazyMount>
 				{:else if loading}
 					<!-- Skeleton placeholder -->
@@ -650,24 +658,37 @@
 						{#snippet placeholder()}
 							<ChartSkeleton bars={20} />
 						{/snippet}
-						<BarChart
-							data={interviewsOverTime}
-							x="date"
-							series={[
-								{ key: 'unfinished_count', label: 'Inactive', color: statusColorScale('inactive') },
-								{ key: 'completed_count', label: 'Completed', color: statusColorScale('completed') }
-							]}
-							seriesLayout="stack"
-							padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
-							props={{
-								xAxis: { format: (d) => timeFormat('%b %d')(d), classes: { tickLabel: 'text-xs' } },
-								yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-								tooltip: {
-									header: { format: (d) => timeFormat('%B %d, %Y')(d) }
-								},
-								bars: { motion: { type: 'tween', duration: 300 } }
-							}}
-						/>
+						{#snippet children(animate)}
+							<BarChart
+								data={interviewsOverTime}
+								x="date"
+								series={[
+									{
+										key: 'unfinished_count',
+										label: 'Inactive',
+										color: statusColorScale('inactive')
+									},
+									{
+										key: 'completed_count',
+										label: 'Completed',
+										color: statusColorScale('completed')
+									}
+								]}
+								seriesLayout="stack"
+								padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
+								props={{
+									xAxis: {
+										format: (d) => timeFormat('%b %d')(d),
+										classes: { tickLabel: 'text-xs' }
+									},
+									yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
+									tooltip: {
+										header: { format: (d) => timeFormat('%B %d, %Y')(d) }
+									},
+									bars: { motion: animate ? { type: 'tween', duration: 300 } : undefined }
+								}}
+							/>
+						{/snippet}
 					</LazyMount>
 				{:else if loading}
 					<ChartSkeleton bars={20} />
@@ -687,7 +708,9 @@
 					{#snippet placeholder()}
 						<ChartSkeleton />
 					{/snippet}
-					<HistogramChart data={timeOfDayHistogram} />
+					{#snippet children(animate)}
+						<HistogramChart data={timeOfDayHistogram} {animate} />
+					{/snippet}
 				</LazyMount>
 			{:else if loading}
 				<ChartSkeleton />
@@ -705,7 +728,9 @@
 					{#snippet placeholder()}
 						<ChartSkeleton />
 					{/snippet}
-					<HistogramChart data={durationHistogram} />
+					{#snippet children(animate)}
+						<HistogramChart data={durationHistogram} {animate} />
+					{/snippet}
 				</LazyMount>
 			{:else if loading}
 				<ChartSkeleton />
@@ -724,7 +749,9 @@
 					{#snippet placeholder()}
 						<ChartSkeleton />
 					{/snippet}
-					<HistogramChart data={messageCountHistogram} />
+					{#snippet children(animate)}
+						<HistogramChart data={messageCountHistogram} {animate} />
+					{/snippet}
 				</LazyMount>
 			{:else if loading}
 				<ChartSkeleton />
@@ -743,7 +770,9 @@
 					{#snippet placeholder()}
 						<ChartSkeleton />
 					{/snippet}
-					<HistogramChart data={messageLengthHistogram} tooltipLabel="Messages" />
+					{#snippet children(animate)}
+						<HistogramChart data={messageLengthHistogram} tooltipLabel="Messages" {animate} />
+					{/snippet}
 				</LazyMount>
 			{:else if loading}
 				<ChartSkeleton />
@@ -770,7 +799,9 @@
 						{#snippet placeholder()}
 							<ChartSkeleton bars={20} />
 						{/snippet}
-						<DropoutChart bars={dropoutChart.bars} bands={dropoutChart.bands} />
+						{#snippet children(animate)}
+							<DropoutChart bars={dropoutChart.bars} bands={dropoutChart.bands} {animate} />
+						{/snippet}
 					</LazyMount>
 				{:else if loading}
 					<ChartSkeleton bars={20} />

@@ -102,7 +102,7 @@
 			     everyone. -->
 			<div class="h-3 w-full overflow-hidden rounded-full bg-surface-200">
 				<div
-					class="flex h-full overflow-hidden rounded-full transition-[width] duration-500 ease-out"
+					class="bar-grow flex h-full overflow-hidden rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none"
 					style="width: {Math.min(1, share) * 100}%"
 					title={tooltipFor(entry)}
 				>
