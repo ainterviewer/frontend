@@ -60,11 +60,16 @@
 		}
 
 		let disposed = false;
+		// Filters can be toggled faster than the recount comes back; the stale
+		// request is not just ignored but dropped, so it stops occupying a
+		// connection the request the user is actually waiting on could use.
+		const controller = new AbortController();
 
 		(async () => {
 			const { data: body, error: fetchError } = await Report.getProjectItemDistributions({
 				path: { project_id: projectId },
-				query
+				query,
+				signal: controller.signal
 			});
 			if (disposed) return;
 
@@ -82,6 +87,7 @@
 
 		return () => {
 			disposed = true;
+			controller.abort();
 		};
 	});
 

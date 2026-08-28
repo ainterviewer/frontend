@@ -110,6 +110,9 @@
 
 		let disposed = false;
 		let inFlight = false;
+		// One controller for the whole run: it only ever fires on teardown, so
+		// whichever poll is in flight at that moment is the one to drop.
+		const controller = new AbortController();
 
 		async function refresh(initial = false) {
 			// Skip while a request is still running or the tab is in the
@@ -119,7 +122,8 @@
 			try {
 				const { data: statsData, error: fetchError } = await Monitoring.getProjectMonitoringStats({
 					path: { project_id: projectId },
-					query: { deduplicate_by_pid: deduplicate }
+					query: { deduplicate_by_pid: deduplicate },
+					signal: controller.signal
 				});
 				if (disposed) return;
 				if (fetchError || !statsData) {
@@ -131,8 +135,10 @@
 					error = null;
 				}
 			} catch (e) {
+				// Includes the abort below, which is this component's own doing.
+				if (disposed) return;
 				console.error('Failed to fetch monitoring stats:', e);
-				if (!disposed && initial && !stats) error = 'Failed to load monitoring stats';
+				if (initial && !stats) error = 'Failed to load monitoring stats';
 			} finally {
 				inFlight = false;
 			}
@@ -148,6 +154,7 @@
 
 		return () => {
 			disposed = true;
+			controller.abort();
 			clearInterval(interval);
 			document.removeEventListener('visibilitychange', onVisibilityChange);
 		};
