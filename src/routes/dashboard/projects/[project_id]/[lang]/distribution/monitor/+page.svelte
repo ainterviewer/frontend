@@ -8,6 +8,7 @@
 		MonitoringStats
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import LazyMount from '$lib/components/LazyMount.svelte';
 	import { Switch } from 'bits-ui';
 	import { max, min, sum } from 'd3-array';
 	import { format } from 'd3-format';
@@ -557,35 +558,42 @@
 			<h3 class="mb-4 text-lg font-medium">Interviews by Status</h3>
 			<div class="h-75 w-full">
 				{#if hasStatusData}
-					<PieChart
-						data={interviewsByStatus}
-						key="status"
-						value="count"
-						innerRadius={-20}
-						cornerRadius={5}
-						padAngle={0.02}
-						cRange={['#e8dcb9', '#196858', '#94a3b8']}
-						props={{
-							arc: { motion: { type: 'spring', stiffness: 0.1, damping: 0.4 } }
-						}}
-					>
-						{#snippet aboveMarks()}
-							<Text
-								value={formatNumber(sum(interviewsByStatus, (d) => d.count))}
-								textAnchor="middle"
-								verticalAnchor="middle"
-								class="text-4xl"
-								dy={4}
-							/>
-							<Text
-								value="interviews"
-								textAnchor="middle"
-								verticalAnchor="middle"
-								class="fill-surface-content/50 text-sm"
-								dy={26}
-							/>
+					<LazyMount class="h-full w-full">
+						{#snippet placeholder()}
+							<div class="flex h-full items-center justify-center">
+								<div class="h-[200px] w-[200px] animate-pulse rounded-full bg-surface-200"></div>
+							</div>
 						{/snippet}
-					</PieChart>
+						<PieChart
+							data={interviewsByStatus}
+							key="status"
+							value="count"
+							innerRadius={-20}
+							cornerRadius={5}
+							padAngle={0.02}
+							cRange={['#e8dcb9', '#196858', '#94a3b8']}
+							props={{
+								arc: { motion: { type: 'spring', stiffness: 0.1, damping: 0.4 } }
+							}}
+						>
+							{#snippet aboveMarks()}
+								<Text
+									value={formatNumber(sum(interviewsByStatus, (d) => d.count))}
+									textAnchor="middle"
+									verticalAnchor="middle"
+									class="text-4xl"
+									dy={4}
+								/>
+								<Text
+									value="interviews"
+									textAnchor="middle"
+									verticalAnchor="middle"
+									class="fill-surface-content/50 text-sm"
+									dy={26}
+								/>
+							{/snippet}
+						</PieChart>
+					</LazyMount>
 				{:else if loading}
 					<!-- Skeleton placeholder -->
 					<div class="flex h-full items-center justify-center">
@@ -631,24 +639,29 @@
 			<h3 class="mb-4 text-lg font-medium">Interviews Per Day</h3>
 			<div class="h-75 w-full">
 				{#if interviewsOverTime.length > 0}
-					<BarChart
-						data={interviewsOverTime}
-						x="date"
-						series={[
-							{ key: 'unfinished_count', label: 'Inactive', color: statusColorScale('inactive') },
-							{ key: 'completed_count', label: 'Completed', color: statusColorScale('completed') }
-						]}
-						seriesLayout="stack"
-						padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
-						props={{
-							xAxis: { format: (d) => timeFormat('%b %d')(d), classes: { tickLabel: 'text-xs' } },
-							yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
-							tooltip: {
-								header: { format: (d) => timeFormat('%B %d, %Y')(d) }
-							},
-							bars: { motion: { type: 'tween', duration: 300 } }
-						}}
-					/>
+					<LazyMount class="h-full w-full">
+						{#snippet placeholder()}
+							<ChartSkeleton bars={20} />
+						{/snippet}
+						<BarChart
+							data={interviewsOverTime}
+							x="date"
+							series={[
+								{ key: 'unfinished_count', label: 'Inactive', color: statusColorScale('inactive') },
+								{ key: 'completed_count', label: 'Completed', color: statusColorScale('completed') }
+							]}
+							seriesLayout="stack"
+							padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
+							props={{
+								xAxis: { format: (d) => timeFormat('%b %d')(d), classes: { tickLabel: 'text-xs' } },
+								yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
+								tooltip: {
+									header: { format: (d) => timeFormat('%B %d, %Y')(d) }
+								},
+								bars: { motion: { type: 'tween', duration: 300 } }
+							}}
+						/>
+					</LazyMount>
 				{:else if loading}
 					<ChartSkeleton bars={20} />
 				{:else}
@@ -663,7 +676,12 @@
 		<div class="col-span-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Interviews by Time of Day</h3>
 			{#if timeOfDayHistogram.length > 0}
-				<HistogramChart data={timeOfDayHistogram} />
+				<LazyMount class="h-75 w-full">
+					{#snippet placeholder()}
+						<ChartSkeleton />
+					{/snippet}
+					<HistogramChart data={timeOfDayHistogram} />
+				</LazyMount>
 			{:else if loading}
 				<ChartSkeleton />
 			{:else}
@@ -676,7 +694,12 @@
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Duration (seconds)</h3>
 			{#if durationHistogram.length > 0}
-				<HistogramChart data={durationHistogram} />
+				<LazyMount class="h-75 w-full">
+					{#snippet placeholder()}
+						<ChartSkeleton />
+					{/snippet}
+					<HistogramChart data={durationHistogram} />
+				</LazyMount>
 			{:else if loading}
 				<ChartSkeleton />
 			{:else}
@@ -690,7 +713,12 @@
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Message Count</h3>
 			{#if messageCountHistogram.length > 0}
-				<HistogramChart data={messageCountHistogram} />
+				<LazyMount class="h-75 w-full">
+					{#snippet placeholder()}
+						<ChartSkeleton />
+					{/snippet}
+					<HistogramChart data={messageCountHistogram} />
+				</LazyMount>
 			{:else if loading}
 				<ChartSkeleton />
 			{:else}
@@ -704,7 +732,12 @@
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h3 class="mb-4 text-lg font-medium">Message Length (characters)</h3>
 			{#if messageLengthHistogram.length > 0}
-				<HistogramChart data={messageLengthHistogram} tooltipLabel="Messages" />
+				<LazyMount class="h-75 w-full">
+					{#snippet placeholder()}
+						<ChartSkeleton />
+					{/snippet}
+					<HistogramChart data={messageLengthHistogram} tooltipLabel="Messages" />
+				</LazyMount>
 			{:else if loading}
 				<ChartSkeleton />
 			{:else}
@@ -726,7 +759,12 @@
 			</div>
 			<div class="h-75 w-full">
 				{#if dropoutChart.bars.length > 0}
-					<DropoutChart bars={dropoutChart.bars} bands={dropoutChart.bands} />
+					<LazyMount class="h-full w-full">
+						{#snippet placeholder()}
+							<ChartSkeleton bars={20} />
+						{/snippet}
+						<DropoutChart bars={dropoutChart.bars} bands={dropoutChart.bands} />
+					</LazyMount>
 				{:else if loading}
 					<ChartSkeleton bars={20} />
 				{:else}
