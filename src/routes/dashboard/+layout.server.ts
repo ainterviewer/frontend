@@ -11,10 +11,18 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 	// rendered without a second round trip — and so it keys off the newest
 	// release that has something to announce rather than the deployed version,
 	// which may not have been written up yet, or may have nothing to write up.
-	const [response, platformVer, releases] = await Promise.all([
+	const { projectId } = parseProjectRoute(url.pathname);
+
+	const [response, platformVer, releases, projectResponse] = await Promise.all([
 		Auth.me({ headers: { cookie: cookieHeader } }),
 		Default.version({}),
-		Default.releases({ query: { limit: 10 } })
+		Default.releases({ query: { limit: 10 } }),
+		projectId
+			? Projects.getProject({
+					headers: { cookie: cookieHeader },
+					path: { project_id: projectId }
+				})
+			: null
 	]);
 
 	if (response.error) {
@@ -34,18 +42,10 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 	}
 
 	let project = null;
-	const { projectId } = parseProjectRoute(url.pathname);
-
-	if (projectId) {
-		const projectResponse = await Projects.getProject({
-			headers: { cookie: cookieHeader },
-			path: { project_id: projectId }
-		});
-		if (projectResponse.error) {
-			console.error('Failed to load project:', projectResponse.error);
-		} else if (projectResponse.data) {
-			project = projectResponse.data;
-		}
+	if (projectResponse?.error) {
+		console.error('Failed to load project:', projectResponse.error);
+	} else if (projectResponse?.data) {
+		project = projectResponse.data;
 	}
 
 	return {
