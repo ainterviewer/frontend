@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Visualizations } from '$lib/api';
+	import { Report } from '$lib/api';
 	import { ANSWER_STATE_COLORS, languageColor } from '$lib/config/chartColors';
 	import type { InterviewType, ItemDistribution, ItemDistributions } from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
@@ -62,7 +62,7 @@
 		let disposed = false;
 
 		(async () => {
-			const { data: body, error: fetchError } = await Visualizations.getProjectItemDistributions({
+			const { data: body, error: fetchError } = await Report.getProjectItemDistributions({
 				path: { project_id: projectId },
 				query
 			});
@@ -184,7 +184,7 @@
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-4">
-	<h1 class="page-title">Visualizations</h1>
+	<h1 class="page-title">Report</h1>
 
 	<div class="flex flex-wrap items-center gap-4">
 		{#if availableLanguages.length > 1}

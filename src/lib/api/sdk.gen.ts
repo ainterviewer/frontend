@@ -252,7 +252,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/visualizations/projects/{project_id}/item-distributions',
+            url: '/api/report/projects/{project_id}/item-distributions',
             ...options
         });
     }
@@ -277,7 +277,7 @@ export class Monitoring {
     }
 }
 
-export class Visualizations {
+export class Report {
     /**
      * Get Project Item Distributions
      *
@@ -290,7 +290,7 @@ export class Visualizations {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/visualizations/projects/{project_id}/item-distributions',
+            url: '/api/report/projects/{project_id}/item-distributions',
             ...options
         });
     }

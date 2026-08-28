@@ -4442,7 +4442,7 @@ export type GetProjectItemDistributionsData = {
          */
         completed_only?: boolean;
     };
-    url: '/api/visualizations/projects/{project_id}/item-distributions';
+    url: '/api/report/projects/{project_id}/item-distributions';
 };
 
 export type GetProjectItemDistributionsErrors = {

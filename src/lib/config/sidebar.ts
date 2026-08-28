@@ -152,8 +152,8 @@ export const projectSidebarItems: SidebarItem[] = [
 				icon: 'fas fa-tags'
 			},
 			{
-				label: 'Visualizations',
-				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/visualizations',
+				label: 'Report',
+				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/report',
 				icon: 'fas fa-chart-line'
 			}
 		]
