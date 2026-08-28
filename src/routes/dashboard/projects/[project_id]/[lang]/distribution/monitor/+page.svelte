@@ -16,7 +16,6 @@
 	import { timeFormat } from 'd3-time-format';
 	import { BarChart, PieChart, Text } from 'layerchart';
 	import { Tween } from 'svelte/motion';
-	import { SvelteDate } from 'svelte/reactivity';
 	import type { PageData } from './$types';
 	import ChartSkeleton from './ChartSkeleton.svelte';
 	import DropoutChart from './DropoutChart.svelte';
@@ -187,7 +186,8 @@
 		if (!minDate || !maxDate) return items;
 
 		const filled = [];
-		const current = new SvelteDate(minDate);
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local to this computation, never escapes
+		const current = new Date(minDate);
 		const end = new Date(maxDate);
 		const itemMap = new Map(items.map((d) => [d.date.toISOString().slice(0, 10), d]));
 
