@@ -95,6 +95,20 @@ export const zAnswerLength = z.enum([
 ]);
 
 /**
+ * AnswerSample
+ *
+ * One answer's numeric value, kept verbatim rather than binned.
+ *
+ * A histogram needs enough answers to have a shape. Under
+ * `MAX_SAMPLE_ANSWERS` the individual values are returned instead, so the
+ * page can plot the answers themselves and not a row of one-tall bars.
+ */
+export const zAnswerSample = z.object({
+    value: z.number(),
+    language: z.string()
+});
+
+/**
  * Body_create_welcome
  */
 export const zBodyCreateWelcome = z.object({
@@ -151,6 +165,18 @@ export const zBodyUploadParticipantReminderEmailAttachments = z.object({
  */
 export const zBodyUploadParticipants = z.object({
     file: z.string()
+});
+
+/**
+ * CategoryCount
+ *
+ * One bar of a categorical distribution.
+ */
+export const zCategoryCount = z.object({
+    label: z.string(),
+    count: z.int(),
+    is_other: z.boolean().optional().default(false),
+    by_language: z.record(z.string(), z.int()).optional()
 });
 
 /**
@@ -351,6 +377,36 @@ export const zDeleteParticipantsRequest = z.object({
 });
 
 /**
+ * DistributionBucket
+ *
+ * A histogram bucket carrying the same per-language split as a bar.
+ */
+export const zDistributionBucket = z.object({
+    value: z.int(),
+    count: z.int(),
+    label: z.string(),
+    by_language: z.record(z.string(), z.int()).optional()
+});
+
+/**
+ * DistributionKind
+ *
+ * Which of the distribution fields carries this item's data.
+ *
+ * The chart to draw follows from this, not from the survey item type: two
+ * item types that bin the same way (`slider` and `number`) are drawn the same
+ * way, and a question with no survey item still has a distribution -- the
+ * length of its free-text answers.
+ */
+export const zDistributionKind = z.enum([
+    'categorical',
+    'numeric',
+    'temporal',
+    'text',
+    'statement'
+]);
+
+/**
  * DropoutSection
  *
  * A section of the interview guide, for grouping dropout points.
@@ -526,6 +582,19 @@ export const zGitHashes = z.object({
     core_lib: z.string(),
     backend: z.string(),
     frontend: z.string()
+});
+
+/**
+ * GuideSection
+ *
+ * A section of the interview guide, for grouping the items under.
+ *
+ * Sourced from the project's default localization, so `description` may be in
+ * a different language than the dashboard page requesting it.
+ */
+export const zGuideSection = z.object({
+    section: z.int(),
+    description: z.string()
 });
 
 /**
@@ -972,6 +1041,21 @@ export const zNumberItem = z.object({
         z.int(),
         z.number()
     ]).nullish().default(1)
+});
+
+/**
+ * NumericStats
+ *
+ * Summary of the answered numbers behind a numeric/text distribution.
+ *
+ * Computed on the raw answers, so it keeps the precision the buckets round
+ * away.
+ */
+export const zNumericStats = z.object({
+    min: z.number(),
+    max: z.number(),
+    mean: z.number(),
+    median: z.number()
 });
 
 /**
@@ -1493,6 +1577,49 @@ export const zTimeItem = z.object({
     required: z.boolean().optional().default(true),
     min: z.string().nullish().default(null),
     max: z.string().nullish().default(null)
+});
+
+/**
+ * ItemDistribution
+ *
+ * The distribution of answers to one authored question.
+ */
+export const zItemDistribution = z.object({
+    section: z.int(),
+    main_question: z.int(),
+    question: z.string(),
+    kind: zDistributionKind,
+    item: z.union([
+        zRadioItem,
+        zCheckboxItem,
+        zLikertItem,
+        zSliderItem,
+        zNumberItem,
+        zDateItem,
+        zDatetimeItem,
+        zTimeItem
+    ]).nullable(),
+    n_asked: z.int(),
+    n_answered: z.int(),
+    n_skipped: z.int(),
+    counts: z.array(zCategoryCount),
+    buckets: z.array(zDistributionBucket),
+    stats: zNumericStats.nullable(),
+    samples: z.array(zAnswerSample).optional(),
+    n_other_hidden: z.int().optional().default(0),
+    n_other_hidden_count: z.int().optional().default(0)
+});
+
+/**
+ * ItemDistributions
+ *
+ * Answer distributions for every question of a project's guide.
+ */
+export const zItemDistributions = z.object({
+    sections: z.array(zGuideSection),
+    items: z.array(zItemDistribution),
+    languages: z.array(z.string()),
+    total_interviews: z.int()
 });
 
 /**
@@ -2249,6 +2376,21 @@ export const zGetProjectMonitoringStatsQuery = z.object({
  * Successful Response
  */
 export const zGetProjectMonitoringStatsResponse = zMonitoringStats;
+
+export const zGetProjectItemDistributionsPath = z.object({
+    project_id: z.string()
+});
+
+export const zGetProjectItemDistributionsQuery = z.object({
+    interview_types: z.array(zInterviewType).optional(),
+    languages: z.array(z.string()).nullish(),
+    completed_only: z.boolean().optional().default(false)
+});
+
+/**
+ * Successful Response
+ */
+export const zGetProjectItemDistributionsResponse = zItemDistributions;
 
 export const zResetSessionPath = z.object({
     project_id: z.string().nullable(),

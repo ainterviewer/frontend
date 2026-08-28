@@ -209,6 +209,26 @@ export type AnnotationValuePublic = {
 export type AnswerLength = 'short' | 'medium' | 'long';
 
 /**
+ * AnswerSample
+ *
+ * One answer's numeric value, kept verbatim rather than binned.
+ *
+ * A histogram needs enough answers to have a shape. Under
+ * `MAX_SAMPLE_ANSWERS` the individual values are returned instead, so the
+ * page can plot the answers themselves and not a row of one-tall bars.
+ */
+export type AnswerSample = {
+    /**
+     * Value
+     */
+    value: number;
+    /**
+     * Language
+     */
+    language: string;
+};
+
+/**
  * AssistanceChatRequest
  */
 export type AssistanceChatRequest = {
@@ -390,6 +410,32 @@ export type BodyUploadParticipants = {
      * File
      */
     file: Blob | File;
+};
+
+/**
+ * CategoryCount
+ *
+ * One bar of a categorical distribution.
+ */
+export type CategoryCount = {
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Is Other
+     */
+    is_other?: boolean;
+    /**
+     * By Language
+     */
+    by_language?: {
+        [key: string]: number;
+    };
 };
 
 /**
@@ -758,6 +804,44 @@ export type DeleteParticipantsRequest = {
 };
 
 /**
+ * DistributionBucket
+ *
+ * A histogram bucket carrying the same per-language split as a bar.
+ */
+export type DistributionBucket = {
+    /**
+     * Value
+     */
+    value: number;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * By Language
+     */
+    by_language?: {
+        [key: string]: number;
+    };
+};
+
+/**
+ * DistributionKind
+ *
+ * Which of the distribution fields carries this item's data.
+ *
+ * The chart to draw follows from this, not from the survey item type: two
+ * item types that bin the same way (`slider` and `number`) are drawn the same
+ * way, and a question with no survey item still has a distribution -- the
+ * length of its free-text answers.
+ */
+export type DistributionKind = 'categorical' | 'numeric' | 'temporal' | 'text' | 'statement';
+
+/**
  * DropoutPoint
  *
  * Count of dropouts at a specific point in the interview.
@@ -1075,6 +1159,25 @@ export type GitHashes = {
      * Frontend
      */
     frontend: string;
+};
+
+/**
+ * GuideSection
+ *
+ * A section of the interview guide, for grouping the items under.
+ *
+ * Sourced from the project's default localization, so `description` may be in
+ * a different language than the dashboard page requesting it.
+ */
+export type GuideSection = {
+    /**
+     * Section
+     */
+    section: number;
+    /**
+     * Description
+     */
+    description: string;
 };
 
 /**
@@ -1648,6 +1751,88 @@ export type InvitationsDeleteRequest = {
     ids: Array<string>;
 };
 
+/**
+ * ItemDistribution
+ *
+ * The distribution of answers to one authored question.
+ */
+export type ItemDistribution = {
+    /**
+     * Section
+     */
+    section: number;
+    /**
+     * Main Question
+     */
+    main_question: number;
+    /**
+     * Question
+     */
+    question: string;
+    kind: DistributionKind;
+    /**
+     * Item
+     */
+    item: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    /**
+     * N Asked
+     */
+    n_asked: number;
+    /**
+     * N Answered
+     */
+    n_answered: number;
+    /**
+     * N Skipped
+     */
+    n_skipped: number;
+    /**
+     * Counts
+     */
+    counts: Array<CategoryCount>;
+    /**
+     * Buckets
+     */
+    buckets: Array<DistributionBucket>;
+    stats: NumericStats | null;
+    /**
+     * Samples
+     */
+    samples?: Array<AnswerSample>;
+    /**
+     * N Other Hidden
+     */
+    n_other_hidden?: number;
+    /**
+     * N Other Hidden Count
+     */
+    n_other_hidden_count?: number;
+};
+
+/**
+ * ItemDistributions
+ *
+ * Answer distributions for every question of a project's guide.
+ */
+export type ItemDistributions = {
+    /**
+     * Sections
+     */
+    sections: Array<GuideSection>;
+    /**
+     * Items
+     */
+    items: Array<ItemDistribution>;
+    /**
+     * Languages
+     */
+    languages: Array<string>;
+    /**
+     * Total Interviews
+     */
+    total_interviews: number;
+};
+
 export type LanguageCode = string;
 
 /**
@@ -2061,6 +2246,33 @@ export type NumberItem = {
      * Step
      */
     step?: number | number | null;
+};
+
+/**
+ * NumericStats
+ *
+ * Summary of the answered numbers behind a numeric/text distribution.
+ *
+ * Computed on the raw answers, so it keeps the precision the buckets round
+ * away.
+ */
+export type NumericStats = {
+    /**
+     * Min
+     */
+    min: number;
+    /**
+     * Max
+     */
+    max: number;
+    /**
+     * Mean
+     */
+    mean: number;
+    /**
+     * Median
+     */
+    median: number;
 };
 
 /**
@@ -4203,6 +4415,57 @@ export type GetProjectMonitoringStatsResponses = {
 };
 
 export type GetProjectMonitoringStatsResponse = GetProjectMonitoringStatsResponses[keyof GetProjectMonitoringStatsResponses];
+
+export type GetProjectItemDistributionsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Interview Types
+         */
+        interview_types?: Array<InterviewType>;
+        /**
+         * Languages
+         *
+         * Restrict to interviews conducted in these languages
+         */
+        languages?: Array<string> | null;
+        /**
+         * Completed Only
+         *
+         * Count only interviews that reached the end
+         */
+        completed_only?: boolean;
+    };
+    url: '/api/visualizations/projects/{project_id}/item-distributions';
+};
+
+export type GetProjectItemDistributionsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetProjectItemDistributionsError = GetProjectItemDistributionsErrors[keyof GetProjectItemDistributionsErrors];
+
+export type GetProjectItemDistributionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ItemDistributions;
+};
+
+export type GetProjectItemDistributionsResponse = GetProjectItemDistributionsResponses[keyof GetProjectItemDistributionsResponses];
 
 export type ResetSessionData = {
     body?: never;

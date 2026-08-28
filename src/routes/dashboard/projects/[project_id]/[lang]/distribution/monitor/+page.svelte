@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Monitoring } from '$lib/api';
+	import { LANGUAGE_COLORS, OTHER_LANGUAGE_COLOR } from '$lib/config/chartColors';
 	import type {
 		DropoutStage,
 		HistogramBucket,
@@ -45,15 +46,6 @@
 	const completionRate = Tween.of(() => stats?.completion_rate ?? 0, { duration: 400 });
 	const participationRate = Tween.of(() => stats?.participation_rate ?? 0, { duration: 400 });
 
-	// Categorical hues for the language breakdown, validated for colour-vision
-	// deficiency across every pair (not just neighbouring segments, since the
-	// legend invites comparing any two). The lead hue is the brand green, which
-	// is the one slot slightly under the chroma floor; the two lightest hues sit
-	// under 3:1 against white, which the always-visible legend labels relieve.
-	const LANGUAGE_COLORS = ['#00705f', '#cf9426', '#4276db', '#cd5f8c', '#59c0d8'];
-	// Languages past the palette are folded into one neutral "Other" slice
-	// rather than being given generated hues.
-	const OTHER_LANGUAGE_COLOR = '#94a3b8';
 	const MAX_LANGUAGE_SLICES = LANGUAGE_COLORS.length;
 
 	type LanguageSlice = { language: string; count: number; share: number; color: string };
