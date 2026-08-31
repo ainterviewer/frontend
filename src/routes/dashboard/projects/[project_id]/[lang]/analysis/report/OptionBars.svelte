@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { CategoryCount } from '$lib/api/types.gen';
-	import { LANGUAGE_COLORS, WRITE_IN_COLOR } from '$lib/config/chartColors';
+	import { pooledColor, WRITE_IN_COLOR } from '$lib/config/chartColors';
 	import { format } from 'd3-format';
 
 	let {
@@ -16,8 +16,9 @@
 		// one bar per box ticked, so its bars add up to more than the number of
 		// respondents, and each bar means "this share of respondents picked it".
 		total: number;
-		// The languages present in the cohort, in the order their colours were
-		// assigned. One language means one solid bar; more than one stacks.
+		// The languages to split the bars by, in the order their colours were
+		// assigned. More than one stacks; one or none draws a single series,
+		// which is what the page's language split being off leaves here.
 		languages: string[];
 		colorFor: (language: string) => string;
 		// The write-in tail the backend folded away, summarised under the bars.
@@ -61,7 +62,7 @@
 				{
 					key: 'all',
 					count: entry.count,
-					color: entry.is_other ? WRITE_IN_COLOR : (colorFor(languages[0]) ?? LANGUAGE_COLORS[0])
+					color: entry.is_other ? WRITE_IN_COLOR : pooledColor(languages, colorFor)
 				}
 			];
 		}
@@ -88,7 +89,11 @@
 <div class="flex flex-col gap-1.5">
 	{#each visible as entry, i (`${entry.label}-${i}`)}
 		{@const share = total > 0 ? entry.count / total : 0}
-		<div class="grid grid-cols-[minmax(0,13rem)_1fr_auto] items-center gap-3">
+		<!-- Fixed label and value columns rather than content-sized ones: with
+		     `auto` columns a card of short options draws longer tracks than the
+		     card beside it, and two bars of the same share look different
+		     lengths. Every card now lays its track between the same two x. -->
+		<div class="grid grid-cols-[9rem_1fr_5rem] items-center gap-3 sm:grid-cols-[13rem_1fr_5.5rem]">
 			<div class="line-clamp-2 text-xs break-words text-gray-700" title={entry.label}>
 				{entry.label}
 				{#if entry.is_other}
@@ -115,7 +120,7 @@
 					{/each}
 				</div>
 			</div>
-			<div class="text-xs text-gray-500 tabular-nums">
+			<div class="text-center text-xs whitespace-nowrap text-gray-500 tabular-nums">
 				{entry.count}
 				<span class="text-gray-400">· {formatPercent(share)}</span>
 			</div>

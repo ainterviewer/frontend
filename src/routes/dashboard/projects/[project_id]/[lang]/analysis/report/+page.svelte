@@ -11,6 +11,7 @@
 	import ClampedText from './ClampedText.svelte';
 	import { DISTRIBUTED_ONLY, isDefaultQuery, WITH_TESTS } from './filters';
 	import { reveal } from '$lib/utils/reveal';
+	import { buildGateMap, questionKey, questionNumber, summarizeConditions } from './conditions';
 	import ItemCard from './ItemCard.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -25,6 +26,12 @@
 	let selectedLanguages = $state<string[]>([]);
 	let completedOnly = $state(false);
 	let includeTests = $state(false);
+
+	// Whether every bar is broken down by the language the interview ran in.
+	// On by default, because a cohort spanning two languages is two recruitment
+	// channels as often as it is one; off pools them into a single series for a
+	// reader who is after the shape of the answers and not who gave them.
+	let splitByLanguage = $state(false);
 
 	// Held across refetches so the language chips do not disappear while a
 	// filtered response is in flight.
@@ -66,6 +73,7 @@
 		selectedLanguages = [];
 		completedOnly = false;
 		includeTests = false;
+		splitByLanguage = true;
 		availableLanguages = [];
 	});
 
@@ -165,6 +173,38 @@
 		return availableLanguages.filter((language) => seen.has(language));
 	});
 
+	// What the charts split by: the split being off is the same thing to them
+	// as a single-language cohort, which is what an empty list means here.
+	let chartLanguages = $derived(splitByLanguage ? presentLanguages : []);
+
+	// The condition graph, read off the guide the response carries. Inverted
+	// once for the page rather than per card, since every card needs the whole
+	// set to know whether it is named by another's condition.
+	let gateMap = $derived(buildGateMap(stats?.items ?? []));
+
+	let questionTitles = $derived(
+		new Map(
+			(stats?.items ?? []).map((item) => [
+				questionNumber(item.section, item.main_question),
+				item.question
+			])
+		)
+	);
+
+	function questionTitleFor(number: string) {
+		return questionTitles.get(number);
+	}
+
+	// A row of the answer-rate list is marked when the question is conditional,
+	// so a low rate that is really "most people never reached this" is not read
+	// as a question everybody refused.
+	function conditionHint(item: ItemDistribution) {
+		const summary = summarizeConditions(item.conditions);
+		if (!summary) return null;
+		const notAsked = item.n_not_asked_by_condition ?? 0;
+		return notAsked > 0 ? `${summary.text} — ${notAsked} never asked` : summary.text;
+	}
+
 	type Group = { section: number; description: string; items: ItemDistribution[] };
 
 	let groups = $derived.by((): Group[] => {
@@ -263,6 +303,26 @@
 				{/each}
 				<HoverInfo
 					text="Pool answers across every language, or pick the ones to count. The items are the same either way — only their wording is translated."
+				/>
+			</div>
+		{/if}
+
+		{#if availableLanguages.length > 1}
+			<div class="flex items-center gap-2">
+				<Switch.Root
+					id="split-by-language"
+					bind:checked={splitByLanguage}
+					class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+				>
+					<Switch.Thumb
+						class="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
+					/>
+				</Switch.Root>
+				<label for="split-by-language" class="cursor-pointer text-sm text-gray-700">
+					Split by language
+				</label>
+				<HoverInfo
+					text="Break every bar down by the language the interview ran in. Turn off to pool them into one series — the counts are the same either way."
 				/>
 			</div>
 		{/if}
@@ -370,18 +430,43 @@
 					{:else}
 						<div class="flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">
 							{#each answerRateRows as item (`${item.section}-${item.main_question}`)}
+								{@const hint = conditionHint(item)}
 								<!-- Revealed per row, not per list: the list scrolls, so revealing
 								     it whole would animate every row below its own fold unseen. -->
 								<div
 									{@attach reveal()}
 									class="grid grid-cols-[minmax(0,15rem)_1fr] items-center gap-3"
 								>
-									<div class="truncate text-xs text-gray-700" title={item.question}>
-										<span class="text-gray-400 tabular-nums">
-											{item.section + 1}.{item.main_question + 1}
-										</span>
-										{item.question}
-									</div>
+									<!-- One tooltip for the whole label rather than one on the row and
+									     another on the branch icon: nesting a trigger inside a trigger makes
+									     which one is showing depend on where the pointer happened to land. -->
+									<HoverInfo asChild contentClass="max-w-sm">
+										{#snippet content()}
+											<div class="flex flex-col gap-1">
+												<span>{item.question}</span>
+												{#if hint}
+													<!-- The rate beside it is over the respondents who were asked, so a
+													     conditional question's row is a rate within its own subset and
+													     not within the cohort. -->
+													<span class="text-amber-700">{hint}</span>
+												{/if}
+											</div>
+										{/snippet}
+										{#snippet children({ props })}
+											<div {...props} class="truncate text-left text-xs text-gray-700">
+												<span class="text-gray-400 tabular-nums">
+													{item.section + 1}.{item.main_question + 1}
+												</span>
+												{#if hint}
+													<i
+														class="fa-solid fa-code-branch text-[0.625rem] text-amber-500"
+														aria-label="Conditional question"
+													></i>
+												{/if}
+												{item.question}
+											</div>
+										{/snippet}
+									</HoverInfo>
 									<AnswerRateBar
 										asked={item.n_asked}
 										answered={item.n_answered}
@@ -448,7 +533,13 @@
 							{/if}
 							{#each block as item (`${item.section}-${item.main_question}`)}
 								<div class="mb-4 break-inside-avoid">
-									<ItemCard {item} languages={presentLanguages} {colorFor} />
+									<ItemCard
+										{item}
+										languages={chartLanguages}
+										{colorFor}
+										gates={gateMap.get(questionKey(item.section, item.main_question)) ?? []}
+										{questionTitleFor}
+									/>
 								</div>
 							{/each}
 						</div>

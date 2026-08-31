@@ -1802,6 +1802,7 @@ export type ItemDistribution = {
      * Item
      */
     item: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    conditions?: Conditions | null;
     /**
      * N Asked
      */
@@ -1814,6 +1815,10 @@ export type ItemDistribution = {
      * N Skipped
      */
     n_skipped: number;
+    /**
+     * N Not Asked By Condition
+     */
+    n_not_asked_by_condition?: number;
     /**
      * Counts
      */
@@ -2259,6 +2264,14 @@ export type MonitoringStats = {
      * Duration Histogram
      */
     duration_histogram: Array<HistogramBucket>;
+    /**
+     * Duration Outliers Excluded
+     */
+    duration_outliers_excluded: number;
+    /**
+     * Duration Outlier Threshold
+     */
+    duration_outlier_threshold: number | null;
     /**
      * Message Count Histogram
      */

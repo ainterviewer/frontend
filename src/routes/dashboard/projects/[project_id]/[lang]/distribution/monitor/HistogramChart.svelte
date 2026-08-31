@@ -4,10 +4,15 @@
 	let {
 		data,
 		tooltipLabel = 'Interviews',
+		xLabel,
+		yLabel,
 		animate = false
 	}: {
 		data: { value: number; count: number; label: string }[];
 		tooltipLabel?: string;
+		/** Axis captions. Omitted axes keep their tighter padding. */
+		xLabel?: string;
+		yLabel?: string;
 		/**
 		 * Whether the bars grow in on mount. Off by default: `undefined` motion
 		 * is layerchart's fast path, which skips the per-bar motion state
@@ -15,6 +20,20 @@
 		 */
 		animate?: boolean;
 	} = $props();
+
+	// One tick count for both the y axis and the grid. layerchart defaults the
+	// two independently -- the axis picks its own count, the grid uses 4 -- so
+	// left alone the gridlines land between the labelled values instead of on
+	// them.
+	const Y_TICKS = 5;
+
+	// Room for the axis captions, on top of the space the tick labels need.
+	let padding = $derived({
+		left: yLabel ? 56 : 40,
+		bottom: xLabel ? 44 : 24,
+		right: 20,
+		top: 20
+	});
 
 	const barMotion = $derived(animate ? ({ type: 'tween', duration: 300 } as const) : undefined);
 
@@ -58,10 +77,22 @@
 		x="value"
 		y="count"
 		bandPadding={0}
-		padding={{ left: 40, bottom: 24, right: 20, top: 20 }}
+		{padding}
 		props={{
-			xAxis: { format: formatTick, classes: { tickLabel: 'text-xs' } },
-			yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
+			xAxis: {
+				format: formatTick,
+				label: xLabel,
+				labelProps: { class: 'text-xs fill-gray-500' },
+				classes: { tickLabel: 'text-xs' }
+			},
+			yAxis: {
+				format: 'metric',
+				ticks: Y_TICKS,
+				label: yLabel,
+				labelProps: { class: 'text-xs fill-gray-500' },
+				classes: { tickLabel: 'text-xs' }
+			},
+			grid: { yTicks: Y_TICKS },
 			bars: {
 				motion: barMotion,
 				insets: barInsets

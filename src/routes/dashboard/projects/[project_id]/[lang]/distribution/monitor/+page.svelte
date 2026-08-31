@@ -222,9 +222,17 @@
 		if (!buckets || buckets.length === 0) return [];
 		if (buckets.length === 1) return buckets;
 
-		const step = buckets[buckets.length - 1].value - buckets[buckets.length - 2].value;
 		const last = buckets[buckets.length - 1];
-		const nextValue = last.value + step;
+		// The closing edge is the top of the last bin, which the label already
+		// carries ("2000-5000"). Reading it there rather than extrapolating a
+		// step keeps the tick right for log-spaced bins, where the edges are not
+		// evenly spaced. The extrapolation is the fallback for a label that is
+		// not a range.
+		const labelledEdge = Number(last.label.split('-').pop());
+		const nextValue =
+			Number.isFinite(labelledEdge) && labelledEdge > last.value
+				? labelledEdge
+				: last.value + (last.value - buckets[buckets.length - 2].value);
 
 		return [
 			...buckets,
@@ -681,7 +689,10 @@
 										format: (d) => timeFormat('%b %d')(d),
 										classes: { tickLabel: 'text-xs' }
 									},
-									yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
+									yAxis: { format: 'metric', ticks: 5, classes: { tickLabel: 'text-xs' } },
+									// Same tick count as the axis, so the gridlines land on the
+									// labelled values instead of layerchart's separate default of 4.
+									grid: { yTicks: 5 },
 									tooltip: {
 										header: { format: (d) => timeFormat('%B %d, %Y')(d) }
 									},
@@ -709,7 +720,12 @@
 						<ChartSkeleton />
 					{/snippet}
 					{#snippet children(animate)}
-						<HistogramChart data={timeOfDayHistogram} {animate} />
+						<HistogramChart
+							data={timeOfDayHistogram}
+							xLabel="Hour of day"
+							yLabel="Interviews"
+							{animate}
+						/>
 					{/snippet}
 				</LazyMount>
 			{:else if loading}
@@ -722,14 +738,31 @@
 		</div>
 		<!-- 5. Duration Histogram -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-			<h3 class="mb-4 text-lg font-medium">Duration (seconds)</h3>
+			<div class="mb-4">
+				<h3 class="text-lg font-medium">Duration</h3>
+				<!-- The bars leave out interviews left open for hours; the summary
+				     card above still counts them, so say so here rather than letting
+				     the two quietly disagree. -->
+				{#if stats && stats.duration_outliers_excluded > 0}
+					<p class="text-sm text-gray-500">
+						Excludes {formatNumber(stats.duration_outliers_excluded)}
+						{stats.duration_outliers_excluded === 1 ? 'outlier' : 'outliers'} over
+						{formatDuration(stats.duration_outlier_threshold ?? 0)}
+					</p>
+				{/if}
+			</div>
 			{#if durationHistogram.length > 0}
 				<LazyMount class="h-75 w-full">
 					{#snippet placeholder()}
 						<ChartSkeleton />
 					{/snippet}
 					{#snippet children(animate)}
-						<HistogramChart data={durationHistogram} {animate} />
+						<HistogramChart
+							data={durationHistogram}
+							xLabel="Minutes"
+							yLabel="Interviews"
+							{animate}
+						/>
 					{/snippet}
 				</LazyMount>
 			{:else if loading}
@@ -750,7 +783,12 @@
 						<ChartSkeleton />
 					{/snippet}
 					{#snippet children(animate)}
-						<HistogramChart data={messageCountHistogram} {animate} />
+						<HistogramChart
+							data={messageCountHistogram}
+							xLabel="Messages per interview"
+							yLabel="Interviews"
+							{animate}
+						/>
 					{/snippet}
 				</LazyMount>
 			{:else if loading}
@@ -764,14 +802,30 @@
 
 		<!-- 7. Message Length Histogram -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-			<h3 class="mb-4 text-lg font-medium">Message Length (characters)</h3>
+			<div class="mb-4 flex items-center gap-2">
+				<h3 class="text-lg font-medium">Message Length</h3>
+				<!-- The bars are evenly spaced but their ranges widen tenfold across
+				     the axis, which is easy to misread as a linear axis. -->
+				<span
+					class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
+					title="Bins widen with length: each bar covers a wider range of characters than the one before it."
+				>
+					log scale
+				</span>
+			</div>
 			{#if messageLengthHistogram.length > 0}
 				<LazyMount class="h-75 w-full">
 					{#snippet placeholder()}
 						<ChartSkeleton />
 					{/snippet}
 					{#snippet children(animate)}
-						<HistogramChart data={messageLengthHistogram} tooltipLabel="Messages" {animate} />
+						<HistogramChart
+							data={messageLengthHistogram}
+							tooltipLabel="Messages"
+							xLabel="Characters (log scale)"
+							yLabel="Messages"
+							{animate}
+						/>
 					{/snippet}
 				</LazyMount>
 			{:else if loading}

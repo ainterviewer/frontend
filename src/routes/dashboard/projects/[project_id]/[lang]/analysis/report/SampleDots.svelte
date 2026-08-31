@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { AnswerSample } from '$lib/api/types.gen';
+	import { pooledColor } from '$lib/config/chartColors';
 
 	let {
 		samples,
@@ -26,6 +27,9 @@
 	const MAX_STACK = 7;
 
 	let stacked = $derived(languages.length > 1);
+	// The one tone every dot takes when the answers are not being told apart by
+	// language, so a pooled plot does not imply a breakdown it is not drawing.
+	let solid = $derived(pooledColor(languages, colorFor));
 
 	let min = $derived(Math.min(...samples.map((s) => s.value)));
 	let max = $derived(Math.max(...samples.map((s) => s.value)));
@@ -81,9 +85,9 @@
 			{#if dot.row < MAX_STACK}
 				<div
 					class="absolute h-1.5 w-1.5 -translate-x-1/2 rounded-full"
-					style="left: {offset(dot.value)}%; bottom: {dot.row * DOT}px; background-color: {colorFor(
-						dot.language
-					)}"
+					style="left: {offset(dot.value)}%; bottom: {dot.row * DOT}px; background-color: {stacked
+						? colorFor(dot.language)
+						: solid}"
 					title="{dot.value} {unit}{stacked ? ` · ${dot.language.toUpperCase()}` : ''}"
 				></div>
 			{/if}

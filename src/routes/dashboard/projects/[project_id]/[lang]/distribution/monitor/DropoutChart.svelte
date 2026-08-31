@@ -118,7 +118,10 @@
 					format: (key: string) => labels.get(key) ?? key,
 					tickLabel
 				},
-				yAxis: { format: 'metric', classes: { tickLabel: 'text-xs' } },
+				yAxis: { format: 'metric', ticks: 5, classes: { tickLabel: 'text-xs' } },
+				// Same tick count as the axis, so the gridlines land on the labelled
+				// values instead of layerchart's separate default of 4.
+				grid: { yTicks: 5 },
 				bars: { motion: animate ? { type: 'tween', duration: 300 } : undefined }
 			}}
 		>

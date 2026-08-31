@@ -46,3 +46,19 @@ export function languageColor(language: string, allLanguages: readonly string[])
 	if (index < 0 || index >= LANGUAGE_COLORS.length) return OTHER_LANGUAGE_COLOR;
 	return LANGUAGE_COLORS[index];
 }
+
+/**
+ * The colour of a series that is *not* split by language: one language in the
+ * cohort, or the split turned off.
+ *
+ * A single language keeps its own hue, so turning the split off in a
+ * one-language project changes nothing. Pooling several falls back to the lead
+ * hue, because a pooled bar is one series and must not read as any one
+ * language's.
+ */
+export function pooledColor(
+	languages: readonly string[],
+	colorFor: (language: string) => string
+): string {
+	return languages.length === 1 ? colorFor(languages[0]) : LANGUAGE_COLORS[0];
+}
