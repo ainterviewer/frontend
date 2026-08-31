@@ -27,6 +27,18 @@
 	let logoAnimate = $state(false);
 	let menuOpen = $state(false);
 
+	// The avatar button, so closing with Escape hands focus back to what opened
+	// the menu instead of dropping it on the document.
+	let menuButton = $state<HTMLButtonElement | null>(null);
+
+	function onWindowKeydown(e: KeyboardEvent) {
+		if (e.key !== 'Escape' || !menuOpen) return;
+		// Claim the Escape so page-level handlers do not also act on it.
+		e.preventDefault();
+		menuOpen = false;
+		menuButton?.focus();
+	}
+
 	let latestRelease = $derived(newsworthyVersion(data.releases));
 	let hasUnseenRelease = $derived(whatsNew.isUnseen(latestRelease));
 
@@ -39,7 +51,7 @@
 	}
 </script>
 
-<svelte:window onclick={() => (menuOpen = false)} />
+<svelte:window onclick={() => (menuOpen = false)} onkeydown={onWindowKeydown} />
 
 <header
 	class="fixed top-0 z-1000 h-11 w-full bg-primary text-light shadow-[0_0_10px_10px_rgba(0,0,0,0.15)]"
@@ -106,6 +118,7 @@
 							class="pointer-events-none absolute top-0 right-0 z-50 flex flex-col items-end"
 						>
 							<button
+								bind:this={menuButton}
 								data-tour="header-menu"
 								type="button"
 								onclick={(e) => {
