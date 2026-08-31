@@ -13,17 +13,27 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 	// which may not have been written up yet, or may have nothing to write up.
 	const { projectId } = parseProjectRoute(url.pathname);
 
-	const [response, platformVer, releases, projectResponse] = await Promise.all([
-		Auth.me({ headers: { cookie: cookieHeader } }),
-		Default.version({}),
-		Default.releases({ query: { limit: 10 } }),
-		projectId
-			? Projects.getProject({
-					headers: { cookie: cookieHeader },
-					path: { project_id: projectId }
-				})
-			: null
-	]);
+	const [response, platformVer, releases, projectResponse, permissionsResponse] = await Promise.all(
+		[
+			Auth.me({ headers: { cookie: cookieHeader } }),
+			Default.version({}),
+			Default.releases({ query: { limit: 10 } }),
+			projectId
+				? Projects.getProject({
+						headers: { cookie: cookieHeader },
+						path: { project_id: projectId }
+					})
+				: null,
+			// What this user may do in the project, so the UI can leave out actions
+			// the API would refuse — moderating other people's comments, above all.
+			projectId
+				? Projects.getProjectPermissions({
+						headers: { cookie: cookieHeader },
+						path: { project_id: projectId }
+					})
+				: null
+		]
+	);
 
 	if (response.error) {
 		if (!response.response) {
@@ -48,9 +58,19 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 		project = projectResponse.data;
 	}
 
+	// Absent permissions mean the least rights, never the most: a failed call
+	// must not hand somebody moderation buttons.
+	let permissions = null;
+	if (permissionsResponse?.error) {
+		console.error('Failed to load project permissions:', permissionsResponse.error);
+	} else if (permissionsResponse?.data) {
+		permissions = permissionsResponse.data;
+	}
+
 	return {
 		user: me,
 		project,
+		permissions,
 		platformVersion: platformVer.data,
 		releases: releases.data ?? []
 	};

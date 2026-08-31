@@ -9,9 +9,13 @@
 		InterviewGuide,
 		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
+	import AnnotationChips from '$lib/components/analysis/AnnotationChips.svelte';
 	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
+	import MessageCommentThread from '$lib/components/analysis/MessageCommentThread.svelte';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import type { Message } from '$lib/components/interview/types';
+	import { MessageComments } from '$lib/stores/messageComments.svelte';
+	import { authorName } from '$lib/utils/annotations';
 	import { getContrastColor } from '$lib/utils/colors';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
@@ -52,12 +56,18 @@
 	// UI State
 	let activeAnnotationMessageId = $state<string | null>(null);
 	const openCommentIds = new SvelteSet<string>();
-	const commentTexts = new SvelteMap<string, string>();
 	let savingAnnotation = $state(false);
-	const savingCommentIds = new SvelteSet<string>();
 	let showQuestionDropdown = $state(false);
 	let showCommentModal = $state(false);
 	let commentModalMessageId = $state<string | null>(null);
+
+	// The signed-in user: annotations and comments are author specific, so this
+	// decides what may be edited here.
+	let userId = $derived(page.data.user?.id ?? '');
+	// Moderation (editing or deleting someone else's comment) is the project's
+	// to grant: platform admin, project owner, or folder admin. The server says
+	// which, so the buttons match what the API will actually accept.
+	let canModerate = $derived(page.data.permissions?.can_moderate ?? false);
 
 	// Check if screen is wide enough for margin comments
 	let useMarginComments = $state(true);
@@ -347,16 +357,23 @@
 		return groups;
 	});
 
-	// Annotations Map
+	// Annotations are per author: only the current user's is editable here, the
+	// rest are shown read-only so disagreement between coders stays visible.
 	const messageAnnotations = new SvelteMap<string, MessageAnnotationPublic>();
+	const otherAnnotations = new SvelteMap<string, MessageAnnotationPublic[]>();
+	const comments = new MessageComments();
 
 	$effect(() => {
 		messageAnnotations.clear();
+		otherAnnotations.clear();
 		for (const msg of rawMessages) {
-			if (msg.annotations && msg.annotations.length > 0) {
-				messageAnnotations.set(msg.id, msg.annotations[0]);
-			}
+			const own = msg.annotations?.find((annotation) => annotation.user_id === userId);
+			if (own) messageAnnotations.set(msg.id, own);
+
+			const others = msg.annotations?.filter((annotation) => annotation.user_id !== userId) ?? [];
+			if (others.length > 0) otherAnnotations.set(msg.id, others);
 		}
+		comments.seed(rawMessages);
 	});
 
 	async function loadData() {
@@ -404,6 +421,7 @@
 			guide = guideRes.data;
 		}
 		if (msgsRes.data) {
+			comments.clear();
 			rawMessages = msgsRes.data;
 			hasMore = msgsRes.data.length === limit;
 		}
@@ -577,36 +595,11 @@
 		updateSearchParams();
 	}
 
-	// Annotation Helpers
-	function getAnnotationSummary(annotation: MessageAnnotationPublic): {
-		tags: { name: string; color: string }[];
-		scores: { name: string; value: number; color: string }[];
-		hasComment: boolean;
-	} {
-		const tags: { name: string; color: string }[] = [];
-		const scores: { name: string; value: number; color: string }[] = [];
-
-		for (const value of annotation.values) {
-			const category = categories.find((c) => c.id === value.category_id);
-			if (category) {
-				if (category.type === 'tag' && value.value_int === 1) {
-					tags.push({ name: category.name, color: category.color });
-				} else if (category.type === 'score') {
-					scores.push({ name: category.name, value: value.value_int, color: category.color });
-				}
-			}
-		}
-
-		return { tags, scores, hasComment: !!annotation.comment };
-	}
-
 	async function handleSaveAnnotation(
 		messageId: string,
 		values: AnnotationValueCreate[],
 		shouldClose: boolean = true
 	) {
-		const userId = page.data.user?.id;
-
 		if (!userId) {
 			alert('User not found. Please reload.');
 			return;
@@ -615,9 +608,6 @@
 		savingAnnotation = true;
 		try {
 			const existingAnnotation = messageAnnotations.get(messageId);
-			// Preserve existing comment when saving annotations
-			const existingComment = existingAnnotation?.comment || null;
-			console.log(existingComment);
 
 			if (existingAnnotation) {
 				const { data: updatedAnnotation, error } = await Analysis.updateMessageAnnotation({
@@ -625,7 +615,6 @@
 					body: {
 						message_id: messageId,
 						user_id: userId,
-						comment: existingComment,
 						values
 					}
 				});
@@ -639,7 +628,6 @@
 					body: {
 						message_id: messageId,
 						user_id: userId,
-						comment: null,
 						values
 					}
 				});
@@ -658,67 +646,7 @@
 		}
 	}
 
-	async function handleSaveComment(messageId: string) {
-		const userId = page.data.user?.id;
-
-		if (!userId) {
-			alert('User not found. Please reload.');
-			return;
-		}
-
-		savingCommentIds.add(messageId);
-
-		try {
-			const existingAnnotation = messageAnnotations.get(messageId);
-			const text = commentTexts.get(messageId) ?? '';
-			const newComment = text.trim() || null;
-
-			if (existingAnnotation) {
-				const { data: updatedAnnotation, error } = await Analysis.updateMessageAnnotation({
-					path: { annotation_id: existingAnnotation.id },
-					body: {
-						message_id: messageId,
-						user_id: userId,
-						comment: newComment,
-						values: existingAnnotation.values.map((v) => ({
-							category_id: v.category_id,
-							value_int: v.value_int
-						}))
-					}
-				});
-				if (error) throw error;
-				if (updatedAnnotation) {
-					messageAnnotations.set(messageId, updatedAnnotation);
-				}
-			} else {
-				const { data: newAnnotation, error } = await Analysis.addMessageAnnotation({
-					path: { message_id: messageId },
-					body: {
-						message_id: messageId,
-						user_id: userId,
-						comment: newComment,
-						values: []
-					}
-				});
-				if (error) throw error;
-				if (newAnnotation) {
-					messageAnnotations.set(messageId, newAnnotation);
-				}
-			}
-
-			closeCommentInput(messageId);
-		} catch (e) {
-			console.error('Error saving comment:', e);
-			toast.error('Error saving comment');
-		} finally {
-			savingCommentIds.delete(messageId);
-		}
-	}
-
-	function openCommentInput(messageId: string) {
-		const existingAnnotation = messageAnnotations.get(messageId);
-		commentTexts.set(messageId, existingAnnotation?.comment || '');
-
+	function openCommentThread(messageId: string) {
 		if (useMarginComments) {
 			openCommentIds.add(messageId);
 		} else {
@@ -727,22 +655,13 @@
 		}
 	}
 
-	function closeCommentInput(messageId: string) {
+	function closeCommentThread(messageId: string) {
 		openCommentIds.delete(messageId);
-		commentTexts.delete(messageId);
 
 		if (commentModalMessageId === messageId) {
 			showCommentModal = false;
 			commentModalMessageId = null;
 		}
-	}
-
-	function getCommentText(messageId: string): string {
-		return commentTexts.get(messageId) ?? '';
-	}
-
-	function setCommentText(messageId: string, value: string) {
-		commentTexts.set(messageId, value);
 	}
 
 	async function handleDeleteAnnotation(messageId: string) {
@@ -1207,13 +1126,11 @@
 										{@const msg = item.data}
 										{@const messageId = msg.id}
 										{@const annotation = messageAnnotations.get(messageId)}
-										{@const annotationSummary = annotation
-											? getAnnotationSummary(annotation)
-											: null}
+										{@const others = otherAnnotations.get(messageId) ?? []}
 										{@const isCommentOpen = openCommentIds.has(messageId)}
-										{@const isSavingComment = savingCommentIds.has(messageId)}
+										{@const commentCount = comments.count(messageId)}
 										{@const hasMarginContent =
-											useMarginComments && (isCommentOpen || annotation?.comment)}
+											useMarginComments && (isCommentOpen || commentCount > 0)}
 
 										<div
 											class={msg.type === 'system'
@@ -1283,28 +1200,12 @@
 																	Annotate
 																</button>
 															{/if}
-															{#if annotationSummary}
-																{#each annotationSummary.tags as tag (tag.name)}
-																	<span
-																		class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-																		style="background-color: {tag.color}; color: {getContrastColor(
-																			tag.color
-																		)}"
-																	>
-																		{tag.name}
-																	</span>
-																{/each}
-																{#each annotationSummary.scores as score (score.name)}
-																	<span
-																		class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-																		style="background-color: {score.color}; color: {getContrastColor(
-																			score.color
-																		)}"
-																	>
-																		{score.name}: {score.value}
-																	</span>
-																{/each}
+															{#if annotation}
+																<AnnotationChips {annotation} {categories} />
 															{/if}
+															{#each others as other (other.id)}
+																<AnnotationChips annotation={other} {categories} showAuthor />
+															{/each}
 															{#if msg.type === 'received'}
 																<!-- Annotate Badge (shown on hover) -->
 																<button
@@ -1326,30 +1227,47 @@
 													<div class="flex-shrink-0 self-start pt-2">
 														<button
 															type="button"
-															class="flex h-7 w-7 items-center justify-center rounded-full transition-all {annotation?.comment
+															class="flex h-7 items-center justify-center gap-1 rounded-full px-2 transition-all {commentCount >
+															0
 																? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
-																: 'bg-gray-100 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600'}"
-															onclick={() => openCommentInput(messageId)}
-															title={annotation?.comment ? 'Edit comment' : 'Add comment'}
+																: 'w-7 bg-gray-100 px-0 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600'}"
+															onclick={() =>
+																isCommentOpen
+																	? closeCommentThread(messageId)
+																	: openCommentThread(messageId)}
+															title={commentCount > 0
+																? `${commentCount} comment${commentCount === 1 ? '' : 's'}`
+																: 'Add comment'}
 														>
 															<i class="fa-solid fa-comment text-xs"></i>
+															{#if commentCount > 0}
+																<span class="text-[10px] font-medium">{commentCount}</span>
+															{/if}
 														</button>
 													</div>
 												</div>
 
-												<!-- Inline comment for small screens -->
-												{#if !useMarginComments && annotation?.comment}
+												<!-- Comment thread teaser for small screens (opens the modal) -->
+												{#if !useMarginComments && commentCount > 0}
+													{@const latest = comments.get(messageId).at(-1)}
 													<button
 														type="button"
 														class="group/comment mt-2 w-full cursor-pointer rounded-lg border border-amber-200 bg-amber-50 p-2 text-left transition-shadow hover:shadow-sm"
-														onclick={() => openCommentInput(messageId)}
+														onclick={() => openCommentThread(messageId)}
 													>
-														<p class="text-sm whitespace-pre-wrap text-gray-700">
-															{annotation.comment}
+														<p class="line-clamp-2 text-sm whitespace-pre-wrap text-gray-700">
+															{#if latest}
+																<span class="font-medium">{authorName(latest.author)}:</span>
+																{latest.body}
+															{/if}
 														</p>
-														<div class="mt-1 flex items-center justify-end">
+														<div class="mt-1 flex items-center justify-between">
+															<span class="text-[10px] text-gray-500">
+																{commentCount}
+																{commentCount === 1 ? 'comment' : 'comments'}
+															</span>
 															<i
-																class="fa-solid fa-pen text-[10px] text-gray-400 opacity-0 transition-opacity group-hover/comment:opacity-100"
+																class="fa-solid fa-comments text-[10px] text-gray-400 opacity-0 transition-opacity group-hover/comment:opacity-100"
 															></i>
 														</div>
 													</button>
@@ -1395,80 +1313,71 @@
 												{/if}
 											{/if}
 
-											<!-- Margin Comment (positioned in right margin on xl screens) -->
+											<!-- Margin discussion (positioned in right margin on xl screens) -->
 											{#if hasMarginContent}
-												<div class="absolute top-0 left-full ml-4 hidden w-72 pl-4 xl:block">
-													{#if isCommentOpen}
-														<div class="rounded-lg border border-blue-200 bg-white shadow-md">
-															<div
-																class="flex items-center justify-between border-b border-gray-100 px-3 py-2"
-															>
-																<span class="text-xs font-medium text-gray-600">
-																	{annotation?.comment ? 'Edit Comment' : 'Add Comment'}
-																</span>
+												<div class="absolute top-0 left-full ml-4 hidden w-80 pl-4 xl:block">
+													<div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+														<div
+															class="flex items-center justify-between border-b border-gray-100 px-3 py-2"
+														>
+															<span class="text-xs font-medium text-gray-600">
+																{commentCount > 0
+																	? `${commentCount} comment${commentCount === 1 ? '' : 's'}`
+																	: 'Comments'}
+															</span>
+															{#if isCommentOpen}
 																<button
 																	type="button"
 																	class="text-gray-400 hover:text-gray-600"
-																	aria-label="Close comment"
-																	onclick={() => closeCommentInput(messageId)}
+																	aria-label="Close comments"
+																	onclick={() => closeCommentThread(messageId)}
 																>
 																	<i class="fa-solid fa-times text-xs"></i>
 																</button>
-															</div>
-															<div class="p-3">
-																<textarea
-																	value={getCommentText(messageId)}
-																	oninput={(e) =>
-																		setCommentText(
-																			messageId,
-																			(e.target as HTMLTextAreaElement).value
-																		)}
-																	rows="3"
-																	class="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-																	placeholder="Add a comment..."
-																></textarea>
-																<div class="mt-2 flex justify-end gap-2">
-																	<button
-																		type="button"
-																		class="rounded px-3 py-1 text-xs text-gray-600 hover:bg-gray-100"
-																		onclick={() => closeCommentInput(messageId)}
-																	>
-																		Cancel
-																	</button>
-																	<button
-																		type="button"
-																		class="rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-																		onclick={() => handleSaveComment(messageId)}
-																		disabled={isSavingComment}
-																	>
-																		{#if isSavingComment}
-																			<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-																		{/if}
-																		Save
-																	</button>
-																</div>
-															</div>
+															{:else}
+																<button
+																	type="button"
+																	class="text-[10px] text-blue-600 hover:text-blue-800"
+																	onclick={() => openCommentThread(messageId)}
+																>
+																	Reply
+																</button>
+															{/if}
 														</div>
-													{:else if annotation?.comment}
-														<div
-															class="group/comment cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
-															role="button"
-															tabindex="0"
-															onclick={() => openCommentInput(messageId)}
-															onkeydown={(e) => {
-																if (e.key === 'Enter') openCommentInput(messageId);
-															}}
-														>
-															<p class="text-sm whitespace-pre-wrap text-gray-700">
-																{annotation.comment}
-															</p>
-															<div class="mt-1 flex items-center justify-end">
-																<i
-																	class="fa-solid fa-pen text-[10px] text-gray-400 opacity-0 transition-opacity group-hover/comment:opacity-100"
-																></i>
-															</div>
+														<div class="p-3">
+															{#if isCommentOpen}
+																<MessageCommentThread
+																	comments={comments.get(messageId)}
+																	currentUserId={userId}
+																	{canModerate}
+																	pending={comments.isPending(messageId)}
+																	compact
+																	autofocusComposer={commentCount === 0}
+																	onAdd={(body, parentId) =>
+																		comments.add(messageId, body, parentId)}
+																	onEdit={(commentId, body) =>
+																		comments.edit(messageId, commentId, body)}
+																	onDelete={(commentId) => comments.remove(messageId, commentId)}
+																/>
+															{:else}
+																<button
+																	type="button"
+																	class="w-full text-left"
+																	onclick={() => openCommentThread(messageId)}
+																>
+																	{#each comments.get(messageId).slice(0, 2) as root (root.id)}
+																		<p class="mb-1 line-clamp-3 text-sm text-gray-700">
+																			<span class="font-medium">{authorName(root.author)}:</span>
+																			{root.body}
+																		</p>
+																	{/each}
+																	{#if commentCount > 2}
+																		<span class="text-[10px] text-gray-400">Show whole thread</span>
+																	{/if}
+																</button>
+															{/if}
 														</div>
-													{/if}
+													</div>
 												</div>
 											{/if}
 										</div>
@@ -1508,61 +1417,42 @@
 	</div>
 </div>
 
-<!-- Comment Modal (small screens) -->
+<!-- Comment thread modal (small screens) -->
 {#if showCommentModal && commentModalMessageId}
 	{@const modalMessageId = commentModalMessageId}
-	{@const modalAnnotation = messageAnnotations.get(modalMessageId)}
-	{@const isSaving = savingCommentIds.has(modalMessageId)}
+	{@const modalCount = comments.count(modalMessageId)}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
 		onclick={(e) => {
-			if (e.target === e.currentTarget) closeCommentInput(modalMessageId);
+			if (e.target === e.currentTarget) closeCommentThread(modalMessageId);
 		}}
-		onkeydown={(e) => e.key === 'Escape' && closeCommentInput(modalMessageId)}
 		role="presentation"
 	>
-		<div class="w-full max-w-md rounded-lg bg-white shadow-xl">
+		<div class="flex max-h-[80vh] w-full max-w-md flex-col rounded-lg bg-white shadow-xl">
 			<div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
 				<h3 class="text-sm font-medium text-gray-800">
-					{modalAnnotation?.comment ? 'Edit Comment' : 'Add Comment'}
+					{modalCount > 0 ? `${modalCount} comment${modalCount === 1 ? '' : 's'}` : 'Add comment'}
 				</h3>
 				<button
 					type="button"
 					class="text-gray-400 hover:text-gray-600"
-					aria-label="Close comment"
-					onclick={() => closeCommentInput(modalMessageId)}
+					aria-label="Close comments"
+					onclick={() => closeCommentThread(modalMessageId)}
 				>
 					<i class="fa-solid fa-times"></i>
 				</button>
 			</div>
-			<div class="p-4">
-				<textarea
-					value={getCommentText(modalMessageId)}
-					oninput={(e) => setCommentText(modalMessageId, (e.target as HTMLTextAreaElement).value)}
-					rows="4"
-					class="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-					placeholder="Add a comment..."
-				></textarea>
-				<div class="mt-3 flex justify-end gap-2">
-					<button
-						type="button"
-						class="rounded px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
-						onclick={() => closeCommentInput(modalMessageId)}
-					>
-						Cancel
-					</button>
-					<button
-						type="button"
-						class="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-						onclick={() => handleSaveComment(modalMessageId)}
-						disabled={isSaving}
-					>
-						{#if isSaving}
-							<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-						{/if}
-						Save
-					</button>
-				</div>
+			<div class="overflow-y-auto p-4">
+				<MessageCommentThread
+					comments={comments.get(modalMessageId)}
+					currentUserId={userId}
+					{canModerate}
+					pending={comments.isPending(modalMessageId)}
+					autofocusComposer={modalCount === 0}
+					onAdd={(body, parentId) => comments.add(modalMessageId, body, parentId)}
+					onEdit={(commentId, body) => comments.edit(modalMessageId, commentId, body)}
+					onDelete={(commentId) => comments.remove(modalMessageId, commentId)}
+				/>
 			</div>
 		</div>
 	</div>
@@ -1570,6 +1460,19 @@
 
 <svelte:window
 	onresize={checkScreenWidth}
+	onkeydown={(e) => {
+		// Escape closes whichever comment surface is open — the modal on narrow
+		// screens, the margin threads on wide ones — wherever focus happens to
+		// be. Unless the thread already used the key to back out of a reply or
+		// edit box, which is the more local meaning of the same press.
+		if (e.key !== 'Escape' || e.defaultPrevented) return;
+
+		if (showCommentModal && commentModalMessageId) {
+			closeCommentThread(commentModalMessageId);
+		} else if (openCommentIds.size > 0) {
+			openCommentIds.clear();
+		}
+	}}
 	onclick={(e) => {
 		const target = e.target as Element;
 

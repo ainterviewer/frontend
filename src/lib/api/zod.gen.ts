@@ -109,6 +109,22 @@ export const zAnswerSample = z.object({
 });
 
 /**
+ * AuthorPublic
+ *
+ * Who wrote an annotation or a comment.
+ *
+ * Annotations and comments are author specific, so every one of them is shown
+ * with a name attached. Carrying the author inline saves the client from
+ * resolving user ids against a separate collaborator listing.
+ */
+export const zAuthorPublic = z.object({
+    id: z.string(),
+    first_name: z.string(),
+    last_name: z.string().nullish(),
+    email: z.email()
+});
+
+/**
  * Body_create_welcome
  */
 export const zBodyCreateWelcome = z.object({
@@ -911,7 +927,6 @@ export const zMediaUploadResponse = z.object({
 export const zMessageAnnotationCreate = z.object({
     message_id: z.string(),
     user_id: z.string(),
-    comment: z.string().nullish(),
     values: z.array(zAnnotationValueCreate)
 });
 
@@ -921,11 +936,44 @@ export const zMessageAnnotationCreate = z.object({
 export const zMessageAnnotationPublic = z.object({
     message_id: z.string(),
     user_id: z.string(),
-    comment: z.string().nullish(),
     id: z.string(),
     created_at: z.iso.datetime(),
     updated_at: z.iso.datetime(),
-    values: z.array(zAnnotationValuePublic)
+    values: z.array(zAnnotationValuePublic),
+    author: zAuthorPublic
+});
+
+/**
+ * MessageCommentCreate
+ *
+ * A new comment. The author is taken from the caller's token, never from
+ * the payload; ``parent_id`` must name a root comment on the same message.
+ */
+export const zMessageCommentCreate = z.object({
+    body: z.string().min(1),
+    parent_id: z.string().nullish()
+});
+
+/**
+ * MessageCommentPublic
+ */
+export const zMessageCommentPublic = z.object({
+    id: z.string(),
+    message_id: z.string(),
+    user_id: z.string(),
+    parent_id: z.string().nullable(),
+    body: z.string(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    author: zAuthorPublic,
+    replies: z.array(z.lazy((): any => zMessageCommentPublic)).optional().default([])
+});
+
+/**
+ * MessageCommentUpdate
+ */
+export const zMessageCommentUpdate = z.object({
+    body: z.string().min(1)
 });
 
 /**
@@ -1209,6 +1257,21 @@ export const zProjectLanguage = z.object({
     name: z.string(),
     code: zLanguageCode,
     is_default: z.boolean()
+});
+
+/**
+ * ProjectPermissionsPublic
+ *
+ * What the caller may do in one project.
+ *
+ * The UI asks for this so it can leave out the actions the API would refuse,
+ * such as editing somebody else's comment. It is a convenience, never the
+ * check itself: every endpoint still enforces its own rights.
+ */
+export const zProjectPermissionsPublic = z.object({
+    role: zCollaboratorRole.nullish(),
+    is_owner: z.boolean(),
+    can_moderate: z.boolean()
 });
 
 /**
@@ -1661,6 +1724,7 @@ export const zMessagePublic = z.object({
     skipped_by_condition: z.boolean().optional().default(false),
     id: z.string(),
     annotations: z.array(zMessageAnnotationPublic).optional().default([]),
+    comments: z.array(zMessageCommentPublic).optional().default([]),
     interview_type: zInterviewType
 });
 
@@ -2361,6 +2425,43 @@ export const zGetMessageContextAfterPath = z.object({
  */
 export const zGetMessageContextAfterResponse = z.array(zMessagePublic);
 
+export const zGetMessageCommentsPath = z.object({
+    message_id: z.string()
+});
+
+/**
+ * Response Get Message Comments
+ *
+ * Successful Response
+ */
+export const zGetMessageCommentsResponse = z.array(zMessageCommentPublic);
+
+export const zAddMessageCommentBody = zMessageCommentCreate;
+
+export const zAddMessageCommentPath = z.object({
+    message_id: z.string()
+});
+
+/**
+ * Successful Response
+ */
+export const zAddMessageCommentResponse = zMessageCommentPublic;
+
+export const zDeleteMessageCommentPath = z.object({
+    comment_id: z.string()
+});
+
+export const zUpdateMessageCommentBody = zMessageCommentUpdate;
+
+export const zUpdateMessageCommentPath = z.object({
+    comment_id: z.string()
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateMessageCommentResponse = zMessageCommentPublic;
+
 export const zGetProjectMonitoringStatsPath = z.object({
     project_id: z.string()
 });
@@ -3007,6 +3108,19 @@ export const zMoveProjectPath = z.object({
 export const zMoveProjectQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+export const zGetProjectPermissionsPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zGetProjectPermissionsQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetProjectPermissionsResponse = zProjectPermissionsPublic;
 
 export const zGetGuidePath = z.object({
     project_id: z.string().nullable(),

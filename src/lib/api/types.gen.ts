@@ -240,6 +240,34 @@ export type AssistanceChatRequest = {
 };
 
 /**
+ * AuthorPublic
+ *
+ * Who wrote an annotation or a comment.
+ *
+ * Annotations and comments are author specific, so every one of them is shown
+ * with a name attached. Carrying the author inline saves the client from
+ * resolving user ids against a separate collaborator listing.
+ */
+export type AuthorPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * First Name
+     */
+    first_name: string;
+    /**
+     * Last Name
+     */
+    last_name?: string | null;
+    /**
+     * Email
+     */
+    email: string;
+};
+
+/**
  * BackgroundInfoOptions
  *
  * Dataclass representing the possible values for the background info of the synthetic agents
@@ -1929,10 +1957,6 @@ export type MessageAnnotationCreate = {
      */
     user_id: string;
     /**
-     * Comment
-     */
-    comment?: string | null;
-    /**
      * Values
      */
     values: Array<AnnotationValueCreate>;
@@ -1951,10 +1975,6 @@ export type MessageAnnotationPublic = {
      */
     user_id: string;
     /**
-     * Comment
-     */
-    comment?: string | null;
-    /**
      * Id
      */
     id: string;
@@ -1970,6 +1990,73 @@ export type MessageAnnotationPublic = {
      * Values
      */
     values: Array<AnnotationValuePublic>;
+    author: AuthorPublic;
+};
+
+/**
+ * MessageCommentCreate
+ *
+ * A new comment. The author is taken from the caller's token, never from
+ * the payload; ``parent_id`` must name a root comment on the same message.
+ */
+export type MessageCommentCreate = {
+    /**
+     * Body
+     */
+    body: string;
+    /**
+     * Parent Id
+     */
+    parent_id?: string | null;
+};
+
+/**
+ * MessageCommentPublic
+ */
+export type MessageCommentPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Message Id
+     */
+    message_id: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Parent Id
+     */
+    parent_id: string | null;
+    /**
+     * Body
+     */
+    body: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    author: AuthorPublic;
+    /**
+     * Replies
+     */
+    replies?: Array<MessageCommentPublic>;
+};
+
+/**
+ * MessageCommentUpdate
+ */
+export type MessageCommentUpdate = {
+    /**
+     * Body
+     */
+    body: string;
 };
 
 /**
@@ -2119,6 +2206,10 @@ export type MessagePublic = {
      * Annotations
      */
     annotations?: Array<MessageAnnotationPublic>;
+    /**
+     * Comments
+     */
+    comments?: Array<MessageCommentPublic>;
     interview_type: InterviewType;
 };
 
@@ -2616,6 +2707,27 @@ export type ProjectLanguage = {
      * Is Default
      */
     is_default: boolean;
+};
+
+/**
+ * ProjectPermissionsPublic
+ *
+ * What the caller may do in one project.
+ *
+ * The UI asks for this so it can leave out the actions the API would refuse,
+ * such as editing somebody else's comment. It is a convenience, never the
+ * check itself: every endpoint still enforces its own rights.
+ */
+export type ProjectPermissionsPublic = {
+    role?: CollaboratorRole | null;
+    /**
+     * Is Owner
+     */
+    is_owner: boolean;
+    /**
+     * Can Moderate
+     */
+    can_moderate: boolean;
 };
 
 /**
@@ -4364,6 +4476,142 @@ export type GetMessageContextAfterResponses = {
 };
 
 export type GetMessageContextAfterResponse = GetMessageContextAfterResponses[keyof GetMessageContextAfterResponses];
+
+export type GetMessageCommentsData = {
+    body?: never;
+    path: {
+        /**
+         * Message Id
+         */
+        message_id: string;
+    };
+    query?: never;
+    url: '/api/messages/{message_id}/comments';
+};
+
+export type GetMessageCommentsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMessageCommentsError = GetMessageCommentsErrors[keyof GetMessageCommentsErrors];
+
+export type GetMessageCommentsResponses = {
+    /**
+     * Response Get Message Comments
+     *
+     * Successful Response
+     */
+    200: Array<MessageCommentPublic>;
+};
+
+export type GetMessageCommentsResponse = GetMessageCommentsResponses[keyof GetMessageCommentsResponses];
+
+export type AddMessageCommentData = {
+    body: MessageCommentCreate;
+    path: {
+        /**
+         * Message Id
+         */
+        message_id: string;
+    };
+    query?: never;
+    url: '/api/messages/{message_id}/comments';
+};
+
+export type AddMessageCommentErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddMessageCommentError = AddMessageCommentErrors[keyof AddMessageCommentErrors];
+
+export type AddMessageCommentResponses = {
+    /**
+     * Successful Response
+     */
+    200: MessageCommentPublic;
+};
+
+export type AddMessageCommentResponse = AddMessageCommentResponses[keyof AddMessageCommentResponses];
+
+export type DeleteMessageCommentData = {
+    body?: never;
+    path: {
+        /**
+         * Comment Id
+         */
+        comment_id: string;
+    };
+    query?: never;
+    url: '/api/analysis/comments/{comment_id}';
+};
+
+export type DeleteMessageCommentErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteMessageCommentError = DeleteMessageCommentErrors[keyof DeleteMessageCommentErrors];
+
+export type DeleteMessageCommentResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type UpdateMessageCommentData = {
+    body: MessageCommentUpdate;
+    path: {
+        /**
+         * Comment Id
+         */
+        comment_id: string;
+    };
+    query?: never;
+    url: '/api/analysis/comments/{comment_id}';
+};
+
+export type UpdateMessageCommentErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateMessageCommentError = UpdateMessageCommentErrors[keyof UpdateMessageCommentErrors];
+
+export type UpdateMessageCommentResponses = {
+    /**
+     * Successful Response
+     */
+    200: MessageCommentPublic;
+};
+
+export type UpdateMessageCommentResponse = UpdateMessageCommentResponses[keyof UpdateMessageCommentResponses];
 
 export type GetProjectMonitoringStatsData = {
     body?: never;
@@ -6188,6 +6436,41 @@ export type MoveProjectResponses = {
      */
     200: unknown;
 };
+
+export type GetProjectPermissionsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/permissions';
+};
+
+export type GetProjectPermissionsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetProjectPermissionsError = GetProjectPermissionsErrors[keyof GetProjectPermissionsErrors];
+
+export type GetProjectPermissionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectPermissionsPublic;
+};
+
+export type GetProjectPermissionsResponse = GetProjectPermissionsResponses[keyof GetProjectPermissionsResponses];
 
 export type GetGuideData = {
     body?: never;

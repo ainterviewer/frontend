@@ -8,13 +8,14 @@
 		AnnotationValueCreate,
 		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
+	import AnnotationChips from '$lib/components/analysis/AnnotationChips.svelte';
 	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
-	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import MessageCommentThread from '$lib/components/analysis/MessageCommentThread.svelte';
 	import AudioPlayer from '$lib/components/interview/AudioPlayer.svelte';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import type { Message } from '$lib/components/interview/types';
-	import { getContrastColor } from '$lib/utils/colors';
-	import { SvelteMap } from 'svelte/reactivity';
+	import { MessageComments } from '$lib/stores/messageComments.svelte';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 	interface InterviewData {
 		messages: MessagePublic[];
@@ -33,28 +34,41 @@
 		backLink: string;
 	} = $props();
 
-	// State for annotations - keyed by message id
-	const messageAnnotations = new SvelteMap<string, MessageAnnotationPublic>();
+	// Get user ID from the layout data
+	let userId = $derived(page.data.user?.id || '');
+	// Moderation (editing or deleting someone else's comment) is the project's
+	// to grant: platform admin, project owner, or folder admin. The server says
+	// which, so the buttons match what the API will actually accept.
+	let canModerate = $derived(page.data.permissions?.can_moderate ?? false);
 
-	// Initialize annotations from server data
+	// Annotations are per author: the current user's is the editable one, the
+	// others are shown read-only. Comments are a separate, threaded discussion.
+	const messageAnnotations = new SvelteMap<string, MessageAnnotationPublic>();
+	const otherAnnotations = new SvelteMap<string, MessageAnnotationPublic[]>();
+	const comments = new MessageComments();
+
+	// Initialize annotations and comment threads from server data
 	$effect(() => {
 		messageAnnotations.clear();
+		otherAnnotations.clear();
+		comments.clear();
 		if (data.messages) {
 			for (const msg of data.messages) {
-				if (msg.annotations && msg.annotations.length > 0) {
-					// Use the first annotation (or could show all)
-					messageAnnotations.set(msg.id, msg.annotations[0]);
-				}
+				const own = msg.annotations?.find((annotation) => annotation.user_id === userId);
+				if (own) messageAnnotations.set(msg.id, own);
+
+				const others = msg.annotations?.filter((annotation) => annotation.user_id !== userId) ?? [];
+				if (others.length > 0) otherAnnotations.set(msg.id, others);
 			}
+			comments.seed(data.messages);
 		}
 	});
 
 	// UI state
 	let activeAnnotationMessageId = $state<string | null>(null);
 	let savingAnnotation = $state(false);
-
-	// Get user ID from the layout data
-	let userId = $derived(page.data.user?.id || '');
+	/** Messages whose discussion thread is expanded. */
+	const openCommentIds = new SvelteSet<string>();
 
 	// Transform API messages to ChatClient Message format
 	let messages = $derived.by(() => {
@@ -151,7 +165,6 @@
 	async function handleSaveAnnotation(
 		messageId: string,
 		values: AnnotationValueCreate[],
-		comment: string | null,
 		shouldClose: boolean = true
 	) {
 		if (!userId) {
@@ -170,7 +183,6 @@
 					body: {
 						message_id: messageId,
 						user_id: userId,
-						comment,
 						values
 					}
 				});
@@ -191,7 +203,6 @@
 					body: {
 						message_id: messageId,
 						user_id: userId,
-						comment,
 						values
 					}
 				});
@@ -246,28 +257,6 @@
 		}
 	}
 
-	function getAnnotationSummary(annotation: MessageAnnotationPublic): {
-		tags: { name: string; color: string }[];
-		scores: { name: string; value: number; color: string }[];
-		hasComment: boolean;
-	} {
-		const tags: { name: string; color: string }[] = [];
-		const scores: { name: string; value: number; color: string }[] = [];
-
-		for (const value of annotation.values) {
-			const category = data.categories.find((c) => c.id === value.category_id);
-			if (category) {
-				if (category.type === 'tag' && value.value_int === 1) {
-					tags.push({ name: category.name, color: category.color });
-				} else if (category.type === 'score') {
-					scores.push({ name: category.name, value: value.value_int, color: category.color });
-				}
-			}
-		}
-
-		return { tags, scores, hasComment: !!annotation.comment };
-	}
-
 	let hasCategories = $derived(data.categories?.length > 0);
 </script>
 
@@ -314,7 +303,9 @@
 					{#each messages as msg, i (msg.message_id || msg.id)}
 						{@const messageId = msg.id as string}
 						{@const annotation = messageAnnotations.get(messageId)}
-						{@const annotationSummary = annotation ? getAnnotationSummary(annotation) : null}
+						{@const others = otherAnnotations.get(messageId) ?? []}
+						{@const commentCount = comments.count(messageId)}
+						{@const isCommentOpen = openCommentIds.has(messageId)}
 
 						{#if msg.section !== undefined && msg.section !== null && (i === 0 || messages[i - 1].section !== msg.section)}
 							<div class="relative my-6 flex items-center">
@@ -362,48 +353,48 @@
 											</div>
 										{/if}
 
-										<!-- Annotation Summary (shown below message) -->
-										{#if annotationSummary && (annotationSummary.tags.length > 0 || annotationSummary.scores.length > 0 || annotationSummary.hasComment)}
+										<!-- Annotation summary (shown below message) -->
+										{#if annotation || others.length > 0}
 											<div
 												class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type === 'received'
 													? 'ml-2.5 sm:ml-[50px]'
 													: 'mr-2.5 justify-end sm:mr-[50px]'}"
 											>
-												{#each annotationSummary.tags as tag (tag.name)}
-													<span
-														class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-														style="background-color: {tag.color}; color: {getContrastColor(
-															tag.color
-														)}"
-													>
-														{tag.name}
-													</span>
-												{/each}
-												{#each annotationSummary.scores as score (score.name)}
-													<span
-														class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-														style="background-color: {score.color}; color: {getContrastColor(
-															score.color
-														)}"
-													>
-														{score.name}: {score.value}
-													</span>
-												{/each}
-												{#if annotationSummary.hasComment}
-													<HoverInfo text={annotation?.comment || ''} asChild>
-														{#snippet children({ props })}
-															<span
-																{...props}
-																class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
-															>
-																<i class="fa-solid fa-comment mr-1"></i>
-																Note
-															</span>
-														{/snippet}
-													</HoverInfo>
+												{#if annotation}
+													<AnnotationChips {annotation} categories={data.categories} />
 												{/if}
+												{#each others as other (other.id)}
+													<AnnotationChips
+														annotation={other}
+														categories={data.categories}
+														showAuthor
+													/>
+												{/each}
 											</div>
 										{/if}
+									</div>
+
+									<!-- Comment Button -->
+									<div class="flex-shrink-0 self-start pt-2">
+										<button
+											type="button"
+											class="flex h-7 items-center justify-center gap-1 rounded-full px-2 transition-all {commentCount >
+											0
+												? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
+												: 'w-7 bg-gray-100 px-0 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600'}"
+											onclick={() =>
+												isCommentOpen
+													? openCommentIds.delete(messageId)
+													: openCommentIds.add(messageId)}
+											title={commentCount > 0
+												? `${commentCount} comment${commentCount === 1 ? '' : 's'}`
+												: 'Add comment'}
+										>
+											<i class="fa-solid fa-comment text-xs"></i>
+											{#if commentCount > 0}
+												<span class="text-[10px] font-medium">{commentCount}</span>
+											{/if}
+										</button>
 									</div>
 
 									<!-- Annotation Button -->
@@ -431,6 +422,24 @@
 								</div>
 							{/if}
 
+							<!-- Discussion thread (inline) -->
+							{#if isCommentOpen}
+								<div class="mt-2 max-w-2xl px-4 sm:px-12">
+									<div class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+										<MessageCommentThread
+											comments={comments.get(messageId)}
+											currentUserId={userId}
+											{canModerate}
+											pending={comments.isPending(messageId)}
+											autofocusComposer={commentCount === 0}
+											onAdd={(body, parentId) => comments.add(messageId, body, parentId)}
+											onEdit={(commentId, body) => comments.edit(messageId, commentId, body)}
+											onDelete={(commentId) => comments.remove(messageId, commentId)}
+										/>
+									</div>
+								</div>
+							{/if}
+
 							<!-- Annotation Panel (inline) -->
 							{#if activeAnnotationMessageId === messageId}
 								<div class="annotation-panel-container mt-2 max-w-2xl px-4 sm:px-12">
@@ -440,7 +449,7 @@
 										{annotation}
 										saving={savingAnnotation}
 										onSave={(values, shouldClose) =>
-											handleSaveAnnotation(messageId, values, null, shouldClose)}
+											handleSaveAnnotation(messageId, values, shouldClose)}
 										onDelete={annotation ? () => handleDeleteAnnotation(messageId) : undefined}
 										onCancel={() => (activeAnnotationMessageId = null)}
 										onCategoryCreated={() => invalidateAll()}
