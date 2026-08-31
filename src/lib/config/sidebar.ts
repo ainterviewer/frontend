@@ -146,6 +146,11 @@ export const projectSidebarItems: SidebarItem[] = [
 		demoFeature: true,
 		dataTour: 'analysis',
 		children: [
+			// {
+			// 	label: 'Explore',
+			// 	href: '/dashboard/projects/{projectId}/{languageCode}/analysis/explore',
+			// 	icon: 'fas fa-book-atlas'
+			// },
 			{
 				label: 'Annotate',
 				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
@@ -154,7 +159,7 @@ export const projectSidebarItems: SidebarItem[] = [
 			{
 				label: 'Report',
 				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/report',
-				icon: 'fas fa-chart-line'
+				icon: 'fas fa-magnifying-glass-chart'
 			}
 		]
 	},
