@@ -8,14 +8,13 @@
 		AnnotationValueCreate,
 		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
-	import AnnotationChips from '$lib/components/analysis/AnnotationChips.svelte';
-	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
-	import MessageCommentThread from '$lib/components/analysis/MessageCommentThread.svelte';
+	import AnnotatedMessage from '$lib/components/analysis/AnnotatedMessage.svelte';
+	import MessageCommentModal from '$lib/components/analysis/MessageCommentModal.svelte';
 	import AudioPlayer from '$lib/components/interview/AudioPlayer.svelte';
-	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import type { Message } from '$lib/components/interview/types';
+	import { CommentSurface } from '$lib/stores/commentSurface.svelte';
 	import { MessageComments } from '$lib/stores/messageComments.svelte';
-	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	interface InterviewData {
 		messages: MessagePublic[];
@@ -67,8 +66,11 @@
 	// UI state
 	let activeAnnotationMessageId = $state<string | null>(null);
 	let savingAnnotation = $state(false);
-	/** Messages whose discussion thread is expanded. */
-	const openCommentIds = new SvelteSet<string>();
+	const surface = new CommentSurface();
+
+	$effect(() => {
+		surface.syncWidth();
+	});
 
 	// Transform API messages to ChatClient Message format
 	let messages = $derived.by(() => {
@@ -281,13 +283,13 @@
 		{#if hasCategories}
 			<div class="text-xs text-gray-500">
 				<i class="fa-solid fa-tags mr-1"></i>
-				Click <i class="fa-solid fa-plus-circle mx-1"></i> to annotate messages
+				Hover a message to annotate or comment on it
 			</div>
 		{/if}
 	</header>
 
 	<!-- Messages Area -->
-	<div class="flex-1 overflow-y-auto bg-gray-50 p-4">
+	<div class="flex-1 overflow-y-auto bg-gray-50 p-4 xl:pr-[320px]" style="overflow-x: clip;">
 		<div class="mx-auto min-h-full max-w-4xl rounded-lg bg-white p-6 shadow-sm">
 			{#if data.error}
 				<div class="rounded-md bg-red-50 p-4 text-center text-red-700">
@@ -302,10 +304,6 @@
 				<div class="flex flex-col gap-4">
 					{#each messages as msg, i (msg.message_id || msg.id)}
 						{@const messageId = msg.id as string}
-						{@const annotation = messageAnnotations.get(messageId)}
-						{@const others = otherAnnotations.get(messageId) ?? []}
-						{@const commentCount = comments.count(messageId)}
-						{@const isCommentOpen = openCommentIds.has(messageId)}
 
 						{#if msg.section !== undefined && msg.section !== null && (i === 0 || messages[i - 1].section !== msg.section)}
 							<div class="relative my-6 flex items-center">
@@ -319,144 +317,51 @@
 							</div>
 						{/if}
 
-						<div
-							class={msg.type === 'system'
-								? 'my-2 text-center text-sm text-gray-500 select-none'
-								: 'group relative'}
-						>
-							{#if msg.type === 'system'}
-								{msg.text}
-							{:else}
-								<div class="flex items-start gap-2">
-									<!-- Message Content -->
-									<div class="min-w-0 flex-1">
-										<InterviewMessage
-											message={msg}
-											lang={data.lang}
-											isLast={false}
-											readonly={true}
-											onFeedback={() => {}}
-											onSkip={() => {}}
-											onSurveyAnswer={() => {}}
-										/>
-
-										<!-- Original voice recording of a transcribed message -->
-										{#if msg.audio_file}
-											<div
-												class="mt-1 flex {msg.type === 'received'
-													? 'ml-2.5 sm:ml-[50px]'
-													: 'mr-2.5 justify-end sm:mr-[50px]'}"
-											>
-												<AudioPlayer
-													src="/api/projects/{data.project_id}/interviews/{data.interview_id}/audio/{msg.audio_file}"
-												/>
-											</div>
-										{/if}
-
-										<!-- Annotation summary (shown below message) -->
-										{#if annotation || others.length > 0}
-											<div
-												class="mt-1 flex flex-wrap items-center gap-1.5 {msg.type === 'received'
-													? 'ml-2.5 sm:ml-[50px]'
-													: 'mr-2.5 justify-end sm:mr-[50px]'}"
-											>
-												{#if annotation}
-													<AnnotationChips {annotation} categories={data.categories} />
-												{/if}
-												{#each others as other (other.id)}
-													<AnnotationChips
-														annotation={other}
-														categories={data.categories}
-														showAuthor
-													/>
-												{/each}
-											</div>
-										{/if}
-									</div>
-
-									<!-- Comment Button -->
-									<div class="flex-shrink-0 self-start pt-2">
-										<button
-											type="button"
-											class="flex h-7 items-center justify-center gap-1 rounded-full px-2 transition-all {commentCount >
-											0
-												? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
-												: 'w-7 bg-gray-100 px-0 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600'}"
-											onclick={() =>
-												isCommentOpen
-													? openCommentIds.delete(messageId)
-													: openCommentIds.add(messageId)}
-											title={commentCount > 0
-												? `${commentCount} comment${commentCount === 1 ? '' : 's'}`
-												: 'Add comment'}
+						{#if msg.type === 'system'}
+							<div class="my-2 text-center text-sm text-gray-500 select-none">{msg.text}</div>
+						{:else}
+							<AnnotatedMessage
+								message={msg}
+								{messageId}
+								lang={data.lang}
+								projectId={data.project_id}
+								categories={data.categories}
+								annotation={messageAnnotations.get(messageId)}
+								otherAnnotations={otherAnnotations.get(messageId) ?? []}
+								{comments}
+								{surface}
+								currentUserId={userId}
+								{canModerate}
+								canAnnotate={hasCategories}
+								annotationOpen={activeAnnotationMessageId === messageId}
+								{savingAnnotation}
+								onToggleAnnotation={() =>
+									(activeAnnotationMessageId =
+										activeAnnotationMessageId === messageId ? null : messageId)}
+								onSaveAnnotation={(values, shouldClose) =>
+									handleSaveAnnotation(messageId, values, shouldClose)}
+								onDeleteAnnotation={messageAnnotations.has(messageId)
+									? () => handleDeleteAnnotation(messageId)
+									: undefined}
+								onCancelAnnotation={() => (activeAnnotationMessageId = null)}
+								onCategoryCreated={() => invalidateAll()}
+							>
+								{#snippet underMessage()}
+									<!-- Original voice recording of a transcribed message -->
+									{#if msg.audio_file}
+										<div
+											class="mt-1 flex {msg.type === 'received'
+												? 'ml-2.5 sm:ml-[50px]'
+												: 'mr-2.5 justify-end sm:mr-[50px]'}"
 										>
-											<i class="fa-solid fa-comment text-xs"></i>
-											{#if commentCount > 0}
-												<span class="text-[10px] font-medium">{commentCount}</span>
-											{/if}
-										</button>
-									</div>
-
-									<!-- Annotation Button -->
-									{#if hasCategories}
-										<div class="relative flex-shrink-0 self-start pt-2">
-											<button
-												type="button"
-												class="flex h-7 w-7 items-center justify-center rounded-full transition-all {annotation
-													? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-													: 'bg-gray-100 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600'}"
-												onclick={() => {
-													activeAnnotationMessageId =
-														activeAnnotationMessageId === messageId ? null : messageId;
-												}}
-												title={annotation ? 'Edit annotation' : 'Add annotation'}
-											>
-												{#if annotation}
-													<i class="fa-solid fa-pen-to-square text-xs"></i>
-												{:else}
-													<i class="fa-solid fa-plus text-xs"></i>
-												{/if}
-											</button>
+											<AudioPlayer
+												src="/api/projects/{data.project_id}/interviews/{data.interview_id}/audio/{msg.audio_file}"
+											/>
 										</div>
 									{/if}
-								</div>
-							{/if}
-
-							<!-- Discussion thread (inline) -->
-							{#if isCommentOpen}
-								<div class="mt-2 max-w-2xl px-4 sm:px-12">
-									<div class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-										<MessageCommentThread
-											comments={comments.get(messageId)}
-											currentUserId={userId}
-											{canModerate}
-											pending={comments.isPending(messageId)}
-											autofocusComposer={commentCount === 0}
-											onAdd={(body, parentId) => comments.add(messageId, body, parentId)}
-											onEdit={(commentId, body) => comments.edit(messageId, commentId, body)}
-											onDelete={(commentId) => comments.remove(messageId, commentId)}
-										/>
-									</div>
-								</div>
-							{/if}
-
-							<!-- Annotation Panel (inline) -->
-							{#if activeAnnotationMessageId === messageId}
-								<div class="annotation-panel-container mt-2 max-w-2xl px-4 sm:px-12">
-									<MessageAnnotationPanel
-										projectId={data.project_id}
-										categories={data.categories}
-										{annotation}
-										saving={savingAnnotation}
-										onSave={(values, shouldClose) =>
-											handleSaveAnnotation(messageId, values, shouldClose)}
-										onDelete={annotation ? () => handleDeleteAnnotation(messageId) : undefined}
-										onCancel={() => (activeAnnotationMessageId = null)}
-										onCategoryCreated={() => invalidateAll()}
-									/>
-								</div>
-							{/if}
-						</div>
+								{/snippet}
+							</AnnotatedMessage>
+						{/if}
 					{/each}
 				</div>
 			{/if}
@@ -464,15 +369,17 @@
 	</div>
 </div>
 
-<!-- Click outside to close annotation panel -->
+<!-- Comment thread modal, where the screen has no room for a margin card -->
+<MessageCommentModal {comments} {surface} currentUserId={userId} {canModerate} />
+
 <svelte:window
-	onclick={(e) => {
-		if (
-			activeAnnotationMessageId &&
-			!(e.target as Element).closest('.annotation-panel-container') &&
-			!(e.target as Element).closest('button')
-		) {
-			// Don't close immediately to allow panel interactions
-		}
+	onresize={() => surface.syncWidth()}
+	onkeydown={(e) => {
+		// Escape closes whichever comment surface is open — the modal on narrow
+		// screens, the margin threads on wide ones — wherever focus happens to
+		// be. Unless the thread already used the key to back out of a reply or
+		// edit box, which is the more local meaning of the same press.
+		if (e.key !== 'Escape' || e.defaultPrevented) return;
+		surface.closeTopmost();
 	}}
 />

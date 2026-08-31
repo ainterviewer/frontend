@@ -231,11 +231,11 @@
 				</div>
 			{/if}
 		</div>
-	{:else}
-		<p class="text-xs text-gray-400">No comments yet.</p>
 	{/each}
 
-	<div class="border-t border-gray-100 pt-2">
+	<!-- The rule separates the composer from the thread; with nothing above it,
+	it would be separating it from nothing. -->
+	<div class={comments.length > 0 ? 'border-t border-gray-100 pt-2' : ''}>
 		<textarea
 			bind:value={newComment}
 			{@attach (node: HTMLTextAreaElement) => {

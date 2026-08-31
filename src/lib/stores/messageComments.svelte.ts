@@ -1,6 +1,7 @@
 import { Analysis } from '$lib/api';
 import type { MessageCommentPublic, MessagePublic } from '$lib/api/types.gen';
 import { countComments } from '$lib/utils/annotations';
+import { untrack } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { toast } from 'svelte-sonner';
 
@@ -17,12 +18,6 @@ import { toast } from 'svelte-sonner';
  */
 export class MessageComments {
 	#threads = new SvelteMap<string, MessageCommentPublic[]>();
-	/**
-	 * Which messages have been seeded. A plain Set on purpose: seeding runs
-	 * inside an $effect, and reading the reactive map there would make the
-	 * effect depend on state it writes itself.
-	 */
-	#seeded = new Set<string>();
 	/** Message ids with a write in flight, so composers can disable themselves. */
 	#pending = new SvelteSet<string>();
 
@@ -35,8 +30,9 @@ export class MessageComments {
 	seed(messages: MessagePublic[] | undefined) {
 		if (!messages) return;
 		for (const message of messages) {
-			if (this.#seeded.has(message.id)) continue;
-			this.#seeded.add(message.id);
+			// Seeding runs inside an $effect; tracking this read would make that
+			// effect depend on the very map it is about to write to.
+			if (untrack(() => this.#threads.has(message.id))) continue;
 			this.#threads.set(message.id, message.comments ?? []);
 		}
 	}
@@ -44,14 +40,7 @@ export class MessageComments {
 	/** Drop everything — for a reload that replaces the message list wholesale. */
 	clear() {
 		this.#threads.clear();
-		this.#seeded.clear();
 		this.#pending.clear();
-	}
-
-	/** Every write goes through here so a thread is never re-seeded over. */
-	#write(messageId: string, thread: MessageCommentPublic[]) {
-		this.#seeded.add(messageId);
-		this.#threads.set(messageId, thread);
 	}
 
 	get(messageId: string): MessageCommentPublic[] {
@@ -88,7 +77,7 @@ export class MessageComments {
 			} else {
 				thread.push(data);
 			}
-			this.#write(messageId, thread);
+			this.#threads.set(messageId, thread);
 			return true;
 		} catch (e) {
 			console.error('Failed to add comment:', e);
@@ -111,7 +100,7 @@ export class MessageComments {
 			});
 			if (error || !data) throw error ?? new Error('No comment returned');
 
-			this.#write(
+			this.#threads.set(
 				messageId,
 				this.get(messageId).map((root) => {
 					if (root.id === commentId) return { ...data, replies: root.replies ?? [] };
@@ -141,7 +130,7 @@ export class MessageComments {
 			});
 			if (error) throw error;
 
-			this.#write(
+			this.#threads.set(
 				messageId,
 				this.get(messageId)
 					.filter((root) => root.id !== commentId)
