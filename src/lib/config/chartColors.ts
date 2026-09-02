@@ -62,3 +62,45 @@ export function pooledColor(
 ): string {
 	return languages.length === 1 ? colorFor(languages[0]) : LANGUAGE_COLORS[0];
 }
+
+/**
+ * Hues for HDBSCAN cluster ids on the analysis explore map.
+ *
+ * A cluster id is a label with no order and no meaning of its own — id 3 is not
+ * "more" than id 2 — so this is a categorical scale, cycled once a run finds
+ * more clusters than there are hues. Kept apart from `LANGUAGE_COLORS` because
+ * the two never share a surface: the map is the only place clusters are drawn,
+ * and borrowing the language hues there would teach the brand green a second
+ * meaning on the one page where its first meaning is absent.
+ *
+ * Ten hues rather than five, because `min_cluster_size` is a slider the reader
+ * drags: pulled low enough it routinely finds a dozen clusters. Cycling is the
+ * honest failure — the map runs out of distinguishable colour long before it
+ * runs out of clusters — and the panel beside it names every cluster in text.
+ */
+export const CLUSTER_COLORS = [
+	'#3b6fd4',
+	'#d1620f',
+	'#1f8a70',
+	'#b3459a',
+	'#7a5cd0',
+	'#9c6b1f',
+	'#c0392b',
+	'#4f8f2a',
+	'#0f7f9c',
+	'#8b6f5e'
+];
+
+/**
+ * A point HDBSCAN declined to place. Deliberately a grey rather than an
+ * eleventh hue: outliers are drawn rather than dropped — in interview data the
+ * answer that fits nowhere is frequently the interesting one — but they are not
+ * a cluster, and a coloured one would read as one.
+ */
+export const OUTLIER_COLOR = '#94a3b8';
+
+/** The colour for a cluster id, or the outlier grey for an unplaced point. */
+export function clusterColor(cluster: number | null): string {
+	if (cluster === null || cluster < 0) return OUTLIER_COLOR;
+	return CLUSTER_COLORS[cluster % CLUSTER_COLORS.length];
+}

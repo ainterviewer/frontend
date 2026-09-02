@@ -472,6 +472,66 @@ export const zDropoutPoint = z.object({
 });
 
 /**
+ * EmbeddingBackfillResponse
+ *
+ * What one backfill trigger put in flight.
+ */
+export const zEmbeddingBackfillResponse = z.object({
+    queued: z.int(),
+    skipped: z.int(),
+    failed_interviews: z.array(z.string()).optional().default([]),
+    queue_depth: z.int()
+});
+
+/**
+ * EmbeddingClusterPoint
+ *
+ * One chunk's position in the scatter plot.
+ */
+export const zEmbeddingClusterPoint = z.object({
+    id: z.string(),
+    cluster: z.int().nullable(),
+    probability: z.number(),
+    x: z.number(),
+    y: z.number(),
+    preview: z.string().nullish()
+});
+
+/**
+ * EmbeddingKind
+ *
+ * The unit of text an embedding vector represents.
+ *
+ * ``QA_PAIR`` is the primary analytic unit: a main question, its answer, and
+ * every probe that followed it, rendered as one small transcript. Respondent
+ * answers on their own are frequently too short to carry meaning out of
+ * context -- the median one in a real interview is barely a sentence -- which
+ * is why ``MESSAGE`` alone is not enough.
+ */
+export const zEmbeddingKind = z.enum([
+    'message',
+    'qa_pair',
+    'section',
+    'interview'
+]);
+
+/**
+ * EmbeddingStatus
+ *
+ * Whether a project's corpus is embedded, and whether it could be.
+ */
+export const zEmbeddingStatus = z.object({
+    enabled: z.boolean(),
+    healthy: z.boolean(),
+    model: z.string(),
+    dimension: z.int(),
+    coverage: z.record(z.string(), z.int()).optional().default({}),
+    total: z.int().optional().default(0),
+    queue_depth: z.int().optional().default(0),
+    queue_dropped: z.int().optional().default(0)
+});
+
+/**
  * ErrorResponse
  */
 export const zErrorResponse = z.object({
@@ -838,6 +898,87 @@ export const zBodyAddProjectLanguage = z.object({
 export const zCreateProjectRequest = z.object({
     title: z.string(),
     default_language: zLanguageCode
+});
+
+/**
+ * EmbeddingSearchHit
+ *
+ * One semantic-search result, renderable on its own.
+ *
+ * Carries the matched text and the interview context around it, because the
+ * alternative is a request per hit: a QA-pair chunk spans several messages and
+ * has no `message_id` to fetch, so there is nothing a client could resolve it
+ * to. `message_id` is set for MESSAGE hits only, and is the handle for the
+ * existing annotation, comment and message-context endpoints.
+ */
+export const zEmbeddingSearchHit = z.object({
+    id: z.string(),
+    score: z.number(),
+    kind: zEmbeddingKind,
+    text: z.string().nullable(),
+    interview_id: z.string(),
+    message_id: z.string().nullable(),
+    section: z.int().nullable(),
+    main_question: z.int().nullable(),
+    sub_question: z.int().nullable(),
+    language: zLanguageCode,
+    interview_created_at: z.iso.datetime().nullish(),
+    interview_status: zInterviewStatus.nullish(),
+    interview_type: zInterviewType.nullish(),
+    participant_id: z.string().nullish(),
+    participant_pid: z.string().nullish()
+});
+
+/**
+ * EmbeddingCluster
+ */
+export const zEmbeddingCluster = z.object({
+    id: z.int(),
+    size: z.int(),
+    representatives: z.array(zEmbeddingSearchHit).optional().default([]),
+    question_purity: z.number().nullish()
+});
+
+/**
+ * EmbeddingClusterResponse
+ */
+export const zEmbeddingClusterResponse = z.object({
+    kind: zEmbeddingKind,
+    n_points: z.int(),
+    n_clusters: z.int(),
+    n_outliers: z.int(),
+    components: z.int(),
+    explained_variance_2d: z.number(),
+    centered_by_question: z.boolean(),
+    clusters: z.array(zEmbeddingCluster).optional().default([]),
+    points: z.array(zEmbeddingClusterPoint).optional().default([])
+});
+
+/**
+ * EmbeddingSearchResponse
+ *
+ * Top-k results for one query.
+ *
+ * Not paginated: k is chosen up front and the whole point of a ranked search
+ * is that results past the cut-off are not worth a page.
+ */
+export const zEmbeddingSearchResponse = z.object({
+    query: z.string(),
+    kind: zEmbeddingKind,
+    task: z.string(),
+    candidates: z.int().optional().default(0),
+    items: z.array(zEmbeddingSearchHit).optional().default([])
+});
+
+/**
+ * EmbeddingSimilarResponse
+ *
+ * Neighbours of a chunk already in the corpus.
+ */
+export const zEmbeddingSimilarResponse = z.object({
+    source: zEmbeddingSearchHit,
+    candidates: z.int().optional().default(0),
+    items: z.array(zEmbeddingSearchHit).optional().default([])
 });
 
 /**
@@ -1306,6 +1447,16 @@ export const zProjectStatusChangeRequest = z.object({
 export const zProjectTitleUpdateRequest = z.object({
     title: z.string()
 });
+
+/**
+ * QueryTask
+ */
+export const zQueryTask = z.enum([
+    'retrieval',
+    'similarity',
+    'classification',
+    'clustering'
+]);
 
 /**
  * QuestionBase
@@ -2465,6 +2616,103 @@ export const zUpdateMessageCommentPath = z.object({
  * Successful Response
  */
 export const zUpdateMessageCommentResponse = zMessageCommentPublic;
+
+export const zSearchEmbeddingsPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zSearchEmbeddingsQuery = z.object({
+    query: z.string().min(1).max(2000),
+    kind: zEmbeddingKind.optional().default('qa_pair'),
+    task: zQueryTask.optional().default('retrieval'),
+    k: z.int().gte(1).lte(100).optional().default(10),
+    folder_id: z.string().nullish(),
+    language: z.string().nullish(),
+    status: zInterviewStatus.nullish(),
+    participant_id: z.string().nullish(),
+    created_after: z.iso.datetime().nullish(),
+    created_before: z.iso.datetime().nullish(),
+    interview_id: z.array(z.string()).nullish(),
+    include_synthetic: z.boolean().optional().default(false)
+});
+
+/**
+ * Successful Response
+ */
+export const zSearchEmbeddingsResponse = zEmbeddingSearchResponse;
+
+export const zFindSimilarEmbeddingsPath = z.object({
+    project_id: z.string().nullable(),
+    embedding_id: z.string()
+});
+
+export const zFindSimilarEmbeddingsQuery = z.object({
+    k: z.int().gte(1).lte(100).optional().default(10),
+    folder_id: z.string().nullish(),
+    language: z.string().nullish(),
+    status: zInterviewStatus.nullish(),
+    participant_id: z.string().nullish(),
+    created_after: z.iso.datetime().nullish(),
+    created_before: z.iso.datetime().nullish(),
+    interview_id: z.array(z.string()).nullish(),
+    include_synthetic: z.boolean().optional().default(false)
+});
+
+/**
+ * Successful Response
+ */
+export const zFindSimilarEmbeddingsResponse = zEmbeddingSimilarResponse;
+
+export const zClusterEmbeddingsPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zClusterEmbeddingsQuery = z.object({
+    kind: zEmbeddingKind.optional().default('qa_pair'),
+    min_cluster_size: z.int().gte(2).lte(500).optional().default(5),
+    min_samples: z.int().gte(1).lte(500).nullish(),
+    center_by_question: z.boolean().optional().default(false),
+    n_representatives: z.int().gte(1).lte(10).optional().default(3),
+    folder_id: z.string().nullish(),
+    language: z.string().nullish(),
+    status: zInterviewStatus.nullish(),
+    participant_id: z.string().nullish(),
+    created_after: z.iso.datetime().nullish(),
+    created_before: z.iso.datetime().nullish(),
+    interview_id: z.array(z.string()).nullish(),
+    include_synthetic: z.boolean().optional().default(false)
+});
+
+/**
+ * Successful Response
+ */
+export const zClusterEmbeddingsResponse = zEmbeddingClusterResponse;
+
+export const zGetEmbeddingStatusPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zGetEmbeddingStatusQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetEmbeddingStatusResponse = zEmbeddingStatus;
+
+export const zTriggerEmbeddingBackfillPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zTriggerEmbeddingBackfillQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zTriggerEmbeddingBackfillResponse = zEmbeddingBackfillResponse;
 
 export const zGetProjectMonitoringStatsPath = z.object({
     project_id: z.string()

@@ -146,11 +146,11 @@ export const projectSidebarItems: SidebarItem[] = [
 		demoFeature: true,
 		dataTour: 'analysis',
 		children: [
-			// {
-			// 	label: 'Explore',
-			// 	href: '/dashboard/projects/{projectId}/{languageCode}/analysis/explore',
-			// 	icon: 'fas fa-book-atlas'
-			// },
+			{
+				label: 'Explore',
+				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/explore',
+				icon: 'fas fa-compass'
+			},
 			{
 				label: 'Annotate',
 				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',

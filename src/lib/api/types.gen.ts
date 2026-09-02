@@ -935,6 +935,285 @@ export type DropoutSection = {
 export type DropoutStage = 'never_started' | 'introduction' | 'question' | 'outro';
 
 /**
+ * EmbeddingBackfillResponse
+ *
+ * What one backfill trigger put in flight.
+ */
+export type EmbeddingBackfillResponse = {
+    /**
+     * Queued
+     */
+    queued: number;
+    /**
+     * Skipped
+     */
+    skipped: number;
+    /**
+     * Failed Interviews
+     */
+    failed_interviews?: Array<string>;
+    /**
+     * Queue Depth
+     */
+    queue_depth: number;
+};
+
+/**
+ * EmbeddingCluster
+ */
+export type EmbeddingCluster = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Representatives
+     */
+    representatives?: Array<EmbeddingSearchHit>;
+    /**
+     * Question Purity
+     */
+    question_purity?: number | null;
+};
+
+/**
+ * EmbeddingClusterPoint
+ *
+ * One chunk's position in the scatter plot.
+ */
+export type EmbeddingClusterPoint = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Cluster
+     */
+    cluster: number | null;
+    /**
+     * Probability
+     */
+    probability: number;
+    /**
+     * X
+     */
+    x: number;
+    /**
+     * Y
+     */
+    y: number;
+    /**
+     * Preview
+     */
+    preview?: string | null;
+};
+
+/**
+ * EmbeddingClusterResponse
+ */
+export type EmbeddingClusterResponse = {
+    kind: EmbeddingKind;
+    /**
+     * N Points
+     */
+    n_points: number;
+    /**
+     * N Clusters
+     */
+    n_clusters: number;
+    /**
+     * N Outliers
+     */
+    n_outliers: number;
+    /**
+     * Components
+     */
+    components: number;
+    /**
+     * Explained Variance 2D
+     */
+    explained_variance_2d: number;
+    /**
+     * Centered By Question
+     */
+    centered_by_question: boolean;
+    /**
+     * Clusters
+     */
+    clusters?: Array<EmbeddingCluster>;
+    /**
+     * Points
+     */
+    points?: Array<EmbeddingClusterPoint>;
+};
+
+/**
+ * EmbeddingKind
+ *
+ * The unit of text an embedding vector represents.
+ *
+ * ``QA_PAIR`` is the primary analytic unit: a main question, its answer, and
+ * every probe that followed it, rendered as one small transcript. Respondent
+ * answers on their own are frequently too short to carry meaning out of
+ * context -- the median one in a real interview is barely a sentence -- which
+ * is why ``MESSAGE`` alone is not enough.
+ */
+export type EmbeddingKind = 'message' | 'qa_pair' | 'section' | 'interview';
+
+/**
+ * EmbeddingSearchHit
+ *
+ * One semantic-search result, renderable on its own.
+ *
+ * Carries the matched text and the interview context around it, because the
+ * alternative is a request per hit: a QA-pair chunk spans several messages and
+ * has no `message_id` to fetch, so there is nothing a client could resolve it
+ * to. `message_id` is set for MESSAGE hits only, and is the handle for the
+ * existing annotation, comment and message-context endpoints.
+ */
+export type EmbeddingSearchHit = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Score
+     */
+    score: number;
+    kind: EmbeddingKind;
+    /**
+     * Text
+     */
+    text: string | null;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * Message Id
+     */
+    message_id: string | null;
+    /**
+     * Section
+     */
+    section: number | null;
+    /**
+     * Main Question
+     */
+    main_question: number | null;
+    /**
+     * Sub Question
+     */
+    sub_question: number | null;
+    language: LanguageCode;
+    /**
+     * Interview Created At
+     */
+    interview_created_at?: string | null;
+    interview_status?: InterviewStatus | null;
+    interview_type?: InterviewType | null;
+    /**
+     * Participant Id
+     */
+    participant_id?: string | null;
+    /**
+     * Participant Pid
+     */
+    participant_pid?: string | null;
+};
+
+/**
+ * EmbeddingSearchResponse
+ *
+ * Top-k results for one query.
+ *
+ * Not paginated: k is chosen up front and the whole point of a ranked search
+ * is that results past the cut-off are not worth a page.
+ */
+export type EmbeddingSearchResponse = {
+    /**
+     * Query
+     */
+    query: string;
+    kind: EmbeddingKind;
+    /**
+     * Task
+     */
+    task: string;
+    /**
+     * Candidates
+     */
+    candidates?: number;
+    /**
+     * Items
+     */
+    items?: Array<EmbeddingSearchHit>;
+};
+
+/**
+ * EmbeddingSimilarResponse
+ *
+ * Neighbours of a chunk already in the corpus.
+ */
+export type EmbeddingSimilarResponse = {
+    source: EmbeddingSearchHit;
+    /**
+     * Candidates
+     */
+    candidates?: number;
+    /**
+     * Items
+     */
+    items?: Array<EmbeddingSearchHit>;
+};
+
+/**
+ * EmbeddingStatus
+ *
+ * Whether a project's corpus is embedded, and whether it could be.
+ */
+export type EmbeddingStatus = {
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Healthy
+     */
+    healthy: boolean;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Dimension
+     */
+    dimension: number;
+    /**
+     * Coverage
+     */
+    coverage?: {
+        [key: string]: number;
+    };
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Queue Depth
+     */
+    queue_depth?: number;
+    /**
+     * Queue Dropped
+     */
+    queue_dropped?: number;
+};
+
+/**
  * ErrorResponse
  */
 export type ErrorResponse = {
@@ -2811,6 +3090,11 @@ export type ProjectTitleUpdateRequest = {
 };
 
 /**
+ * QueryTask
+ */
+export type QueryTask = 'retrieval' | 'similarity' | 'classification' | 'clustering';
+
+/**
  * Question
  *
  * A question that can be asked to the interviewee
@@ -4625,6 +4909,320 @@ export type UpdateMessageCommentResponses = {
 };
 
 export type UpdateMessageCommentResponse = UpdateMessageCommentResponses[keyof UpdateMessageCommentResponses];
+
+export type SearchEmbeddingsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query: {
+        /**
+         * Query
+         */
+        query: string;
+        kind?: EmbeddingKind;
+        task?: QueryTask;
+        /**
+         * K
+         */
+        k?: number;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+        /**
+         * Language
+         */
+        language?: string | null;
+        /**
+         * Status
+         */
+        status?: InterviewStatus | null;
+        /**
+         * Participant Id
+         */
+        participant_id?: string | null;
+        /**
+         * Created After
+         */
+        created_after?: string | null;
+        /**
+         * Created Before
+         */
+        created_before?: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id?: Array<string> | null;
+        /**
+         * Include Synthetic
+         */
+        include_synthetic?: boolean;
+    };
+    url: '/api/projects/{project_id}/analysis/embeddings/search';
+};
+
+export type SearchEmbeddingsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SearchEmbeddingsError = SearchEmbeddingsErrors[keyof SearchEmbeddingsErrors];
+
+export type SearchEmbeddingsResponses = {
+    /**
+     * Successful Response
+     */
+    200: EmbeddingSearchResponse;
+};
+
+export type SearchEmbeddingsResponse = SearchEmbeddingsResponses[keyof SearchEmbeddingsResponses];
+
+export type FindSimilarEmbeddingsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Embedding Id
+         */
+        embedding_id: string;
+    };
+    query?: {
+        /**
+         * K
+         */
+        k?: number;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+        /**
+         * Language
+         */
+        language?: string | null;
+        /**
+         * Status
+         */
+        status?: InterviewStatus | null;
+        /**
+         * Participant Id
+         */
+        participant_id?: string | null;
+        /**
+         * Created After
+         */
+        created_after?: string | null;
+        /**
+         * Created Before
+         */
+        created_before?: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id?: Array<string> | null;
+        /**
+         * Include Synthetic
+         */
+        include_synthetic?: boolean;
+    };
+    url: '/api/projects/{project_id}/analysis/embeddings/{embedding_id}/similar';
+};
+
+export type FindSimilarEmbeddingsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type FindSimilarEmbeddingsError = FindSimilarEmbeddingsErrors[keyof FindSimilarEmbeddingsErrors];
+
+export type FindSimilarEmbeddingsResponses = {
+    /**
+     * Successful Response
+     */
+    200: EmbeddingSimilarResponse;
+};
+
+export type FindSimilarEmbeddingsResponse = FindSimilarEmbeddingsResponses[keyof FindSimilarEmbeddingsResponses];
+
+export type ClusterEmbeddingsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        kind?: EmbeddingKind;
+        /**
+         * Min Cluster Size
+         */
+        min_cluster_size?: number;
+        /**
+         * Min Samples
+         */
+        min_samples?: number | null;
+        /**
+         * Center By Question
+         */
+        center_by_question?: boolean;
+        /**
+         * N Representatives
+         */
+        n_representatives?: number;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+        /**
+         * Language
+         */
+        language?: string | null;
+        /**
+         * Status
+         */
+        status?: InterviewStatus | null;
+        /**
+         * Participant Id
+         */
+        participant_id?: string | null;
+        /**
+         * Created After
+         */
+        created_after?: string | null;
+        /**
+         * Created Before
+         */
+        created_before?: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id?: Array<string> | null;
+        /**
+         * Include Synthetic
+         */
+        include_synthetic?: boolean;
+    };
+    url: '/api/projects/{project_id}/analysis/embeddings/clusters';
+};
+
+export type ClusterEmbeddingsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ClusterEmbeddingsError = ClusterEmbeddingsErrors[keyof ClusterEmbeddingsErrors];
+
+export type ClusterEmbeddingsResponses = {
+    /**
+     * Successful Response
+     */
+    200: EmbeddingClusterResponse;
+};
+
+export type ClusterEmbeddingsResponse = ClusterEmbeddingsResponses[keyof ClusterEmbeddingsResponses];
+
+export type GetEmbeddingStatusData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/embeddings/status';
+};
+
+export type GetEmbeddingStatusErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetEmbeddingStatusError = GetEmbeddingStatusErrors[keyof GetEmbeddingStatusErrors];
+
+export type GetEmbeddingStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: EmbeddingStatus;
+};
+
+export type GetEmbeddingStatusResponse = GetEmbeddingStatusResponses[keyof GetEmbeddingStatusResponses];
+
+export type TriggerEmbeddingBackfillData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/embeddings/backfill';
+};
+
+export type TriggerEmbeddingBackfillErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TriggerEmbeddingBackfillError = TriggerEmbeddingBackfillErrors[keyof TriggerEmbeddingBackfillErrors];
+
+export type TriggerEmbeddingBackfillResponses = {
+    /**
+     * Successful Response
+     */
+    202: EmbeddingBackfillResponse;
+};
+
+export type TriggerEmbeddingBackfillResponse = TriggerEmbeddingBackfillResponses[keyof TriggerEmbeddingBackfillResponses];
 
 export type GetProjectMonitoringStatsData = {
     body?: never;
