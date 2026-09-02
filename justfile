@@ -49,8 +49,6 @@ publish:
     touch CHANGELOG.md
     bunx git-cliff@2.13.1 --unreleased --tag "v${VERSION}" --prepend CHANGELOG.md
 
-    # --only commits just these paths, leaving any other staged work in the
-    # index untouched (a plain `git commit` would sweep it into the release).
     git commit --only package.json bun.lock CHANGELOG.md -m "chore(release): v${VERSION}"
     git tag -a "v${VERSION}" -m "v${VERSION}"
     git push --follow-tags
