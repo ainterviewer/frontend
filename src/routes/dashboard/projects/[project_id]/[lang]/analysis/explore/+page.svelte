@@ -2,15 +2,17 @@
 	import { page } from '$app/state';
 	import { Analysis } from '$lib/api';
 	import type {
+		EmbeddingClusterPoint,
 		EmbeddingClusterResponse,
 		EmbeddingKind,
 		EmbeddingSearchResponse,
 		EmbeddingSimilarResponse,
 		EmbeddingStatus,
+		GroupKind,
 		InterviewStatus
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { OUTLIER_COLOR } from '$lib/config/chartColors';
+	import { OUTLIER_COLOR, mapColor } from '$lib/config/chartColors';
 	import { Switch } from 'bits-ui';
 	import { format } from 'd3-format';
 	import type { PageData } from './$types';
@@ -19,16 +21,20 @@
 	import StatusStrip from './StatusStrip.svelte';
 	import {
 		DEFAULT_CENTER_BY_QUESTION,
+		DEFAULT_GROUP_MODE,
 		DEFAULT_K,
 		DEFAULT_KIND,
 		DEFAULT_MIN_CLUSTER_SIZE,
 		DEFAULT_TASK,
+		GROUP_MODES,
 		KINDS,
 		MIN_CLUSTER_SIZE_RANGE,
 		clusterQuery,
 		defaultFilters,
 		describeError,
 		filterQuery,
+		groupKeyOf,
+		groupOrder,
 		isDefaultClusterSettings,
 		type ClusterSettings
 	} from './explore';
@@ -85,8 +91,16 @@
 	let detailLoading = $state(false);
 	let detailError = $state<string | null>(null);
 
-	let focusedCluster = $state<number | null>(null);
+	let focusedGroup = $state<string | null>(null);
 	let hoveredId = $state<string | null>(null);
+
+	/**
+	 * What the map is coloured by. Not part of `ClusterSettings`: all three
+	 * groupings are read off one response — the clustering the server ran, and
+	 * the guide coordinates it now returns per point — so switching costs a
+	 * recolour rather than a request.
+	 */
+	let groupMode = $state<GroupKind>(DEFAULT_GROUP_MODE);
 
 	/** Text search is the one thing here that needs the inference server. */
 	let searchAvailable = $derived(status?.healthy ?? false);
@@ -314,10 +328,67 @@
 		if (visibleSearch) {
 			return new Set((visibleSearch.items ?? []).map((hit) => hit.id));
 		}
-		if (focusedCluster !== null) {
-			return new Set(points.filter((p) => p.cluster === focusedCluster).map((p) => p.id));
+		if (focusedGroup !== null) {
+			return new Set(
+				points.filter((p) => groupKeyOf(p, groupMode) === focusedGroup).map((p) => p.id)
+			);
 		}
 		return null;
+	});
+
+	// -- grouping -------------------------------------------------------------
+
+	let groups = $derived(clusters?.groups ?? []);
+
+	/** Palette position per guide group; cluster ids are positions already. */
+	let order = $derived(groupOrder(groups, groupMode));
+
+	function colorOf(point: EmbeddingClusterPoint) {
+		const key = groupKeyOf(point, groupMode);
+		if (key === null) return OUTLIER_COLOR;
+		return mapColor(groupMode === 'cluster' ? Number(key) : (order.get(key) ?? null));
+	}
+
+	function grouped(point: EmbeddingClusterPoint) {
+		return groupKeyOf(point, groupMode) !== null;
+	}
+
+	function strengthOf(point: EmbeddingClusterPoint) {
+		// Only HDBSCAN reports a membership probability. Guide membership is
+		// recorded, not inferred, so every point in a question is equally in it —
+		// fading them by a number that does not exist would invent a gradient.
+		return groupMode === 'cluster' ? point.probability : 1;
+	}
+
+	let groupLabels = $derived(new Map(groups.map((group) => [group.key, group.label])));
+
+	let groupCount = $derived(groups.filter((group) => group.kind === groupMode).length);
+	// Chunks the guide cannot place: an interview-level chunk spans the whole
+	// guide and carries no coordinates at all.
+	let ungrouped = $derived(points.filter((point) => !grouped(point)).length);
+
+	function describe(point: EmbeddingClusterPoint) {
+		const key = groupKeyOf(point, groupMode);
+		if (groupMode === 'cluster') {
+			return key === null
+				? 'Unplaced'
+				: `Cluster ${key} · ${Math.round(point.probability * 100)}% member`;
+		}
+		if (key === null) return 'No guide coordinates';
+		return groupLabels.get(key) ?? key;
+	}
+
+	// A key from one grouping means nothing under the next, and clustering knobs
+	// that change what the clusters are invalidate a cluster focus outright.
+	function changeGroupMode(next: GroupKind) {
+		groupMode = next;
+		focusedGroup = null;
+	}
+
+	$effect(() => {
+		void minClusterSize;
+		void clusters;
+		if (groupMode === 'cluster') focusedGroup = null;
 	});
 
 	/**
@@ -341,7 +412,7 @@
 		submitted = queryText;
 		// A new query answers a different question than whatever chunk is open.
 		selectedId = null;
-		focusedCluster = null;
+		focusedGroup = null;
 	}
 
 	function clearSearch() {
@@ -355,7 +426,7 @@
 	function changeKind(next: EmbeddingKind) {
 		kind = next;
 		selectedId = null;
-		focusedCluster = null;
+		focusedGroup = null;
 	}
 </script>
 
@@ -460,6 +531,29 @@
 			</form>
 
 			<div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-600">
+				<div class="flex items-center gap-1.5">
+					<span class="text-gray-500">Group by</span>
+					<!-- A segmented control rather than a select: three options, one of
+					     which is the reason to look at the other two, and the comparison
+					     only works if switching between them is a single click. -->
+					<div class="flex overflow-hidden rounded-md border border-gray-200">
+						{#each GROUP_MODES as mode (mode.value)}
+							<button
+								type="button"
+								onclick={() => changeGroupMode(mode.value)}
+								aria-pressed={groupMode === mode.value}
+								class="cursor-pointer px-2 py-1 font-medium transition-colors {groupMode ===
+								mode.value
+									? 'bg-primary text-on-primary'
+									: 'bg-white text-gray-500 hover:text-gray-900'}"
+							>
+								{mode.label}
+							</button>
+						{/each}
+					</div>
+					<HoverInfo text={GROUP_MODES.find((mode) => mode.value === groupMode)?.hint ?? ''} />
+				</div>
+
 				<label class="flex items-center gap-1.5">
 					<span class="text-gray-500">Unit</span>
 					<select
@@ -474,18 +568,27 @@
 					<HoverInfo text={KINDS.find((option) => option.value === kind)?.hint ?? ''} />
 				</label>
 
-				<label class="flex items-center gap-2">
+				<!-- Greyed out away from the clusters, where it changes nothing that
+				     is on screen: the positions come from the projection, and the
+				     cluster ids it does change are not what the points are coloured
+				     by. Centring below stays live in every mode — it moves the points
+				     themselves, and watching a question's colour scatter as it comes
+				     on is the whole reason to colour by question. -->
+				<label class="flex items-center gap-2" class:opacity-40={groupMode !== 'cluster'}>
 					<span class="text-gray-500">Min cluster size</span>
 					<input
 						type="range"
 						min={MIN_CLUSTER_SIZE_RANGE.min}
 						max={maxClusterSize}
 						bind:value={minClusterSize}
-						class="w-32 accent-primary"
+						disabled={groupMode !== 'cluster'}
+						class="w-32 accent-primary disabled:cursor-not-allowed"
 					/>
 					<span class="w-6 font-mono tabular-nums">{minClusterSize}</span>
 					<HoverInfo
-						text="The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Recomputes in about a fifth of a second, so drag it."
+						text={groupMode === 'cluster'
+							? 'The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Recomputes in about a fifth of a second, so drag it.'
+							: 'Only affects the clusters, which is not what the map is coloured by right now. Switch back to Clusters to use it.'}
 					/>
 				</label>
 
@@ -568,9 +671,13 @@
 							{selectedId}
 							bind:hoveredId
 							{matchedIds}
+							{colorOf}
+							{grouped}
+							{strengthOf}
+							{describe}
 							onselect={(id) => {
 								selectedId = id;
-								if (id) focusedCluster = null;
+								if (id) focusedGroup = null;
 							}}
 						/>
 						{#if clusterLoading}
@@ -587,16 +694,32 @@
 					<div
 						class="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 px-4 py-2 text-xs text-gray-500"
 					>
-						<span>
-							<span class="font-medium text-gray-700">{formatNumber(clusters.n_clusters)}</span>
-							clusters
-						</span>
-						<span class="flex items-center gap-1.5">
-							<span class="inline-block h-2 w-2 rounded-full" style="background:{OUTLIER_COLOR}"
-							></span>
-							{formatNumber(clusters.n_outliers)} unplaced
-						</span>
+						{#if groupMode === 'cluster'}
+							<span>
+								<span class="font-medium text-gray-700">{formatNumber(clusters.n_clusters)}</span>
+								clusters
+							</span>
+						{:else}
+							<span>
+								<span class="font-medium text-gray-700">{formatNumber(groupCount)}</span>
+								{groupMode === 'question' ? 'questions' : 'sections'}
+							</span>
+							{#if ungrouped > 0}
+								<span class="flex items-center gap-1.5">
+									<span class="inline-block h-2 w-2 rounded-full" style="background:{OUTLIER_COLOR}"
+									></span>
+									{formatNumber(ungrouped)} without coordinates
+								</span>
+							{/if}
+						{/if}
 						<span>{formatNumber(clusters.n_points)} chunks</span>
+						{#if groupMode === 'cluster'}
+							<span class="flex items-center gap-1.5">
+								<span class="inline-block h-2 w-2 rounded-full" style="background:{OUTLIER_COLOR}"
+								></span>
+								{formatNumber(clusters.n_outliers)} unplaced
+							</span>
+						{/if}
 						<span class="flex items-center gap-1">
 							{formatPercent(clusters.explained_variance_2d)} of the spread shown
 							<!-- Stated rather than left to be assumed. Around a third is
@@ -619,6 +742,8 @@
 				<div class="w-full">
 					<DetailPanel
 						clusters={clusters?.clusters ?? []}
+						{groups}
+						{groupMode}
 						search={visibleSearch}
 						{searchLoading}
 						{searchError}
@@ -628,9 +753,9 @@
 						{detailLoading}
 						{detailError}
 						{selectedId}
-						{focusedCluster}
+						{focusedGroup}
 						onselect={(id) => (selectedId = id)}
-						onfocuscluster={(cluster) => (focusedCluster = cluster)}
+						onfocusgroup={(key) => (focusedGroup = key)}
 					/>
 				</div>
 			</div>

@@ -1,4 +1,11 @@
-import type { EmbeddingKind, InterviewStatus, QueryTask } from '$lib/api/types.gen';
+import type {
+	EmbeddingClusterPoint,
+	EmbeddingGroup,
+	EmbeddingKind,
+	GroupKind,
+	InterviewStatus,
+	QueryTask
+} from '$lib/api/types.gen';
 
 /**
  * The unit of text the page works in.
@@ -157,4 +164,64 @@ export function describeError(status: number | undefined, fallback: string) {
 		default:
 			return fallback;
 	}
+}
+
+/**
+ * What the map is coloured by.
+ *
+ * `cluster` is what HDBSCAN found; the other two are what the interview guide
+ * declared. Offering both is the point: a cluster is only a finding if it is
+ * *not* the guide, and the fastest way to see that is to recolour the same
+ * scatter by question and watch whether the blobs stay put.
+ */
+export const GROUP_MODES: { value: GroupKind; label: string; hint: string }[] = [
+	{
+		value: 'cluster',
+		label: 'Clusters',
+		hint: 'Groups HDBSCAN found in the vectors. Unnamed by construction — the panel lists the chunks nearest each centre so you can name them.'
+	},
+	{
+		value: 'question',
+		label: 'Questions',
+		hint: 'The interview guide’s own questions. Colour by these to see whether a cluster is a theme or just a question everyone was asked.'
+	},
+	{
+		value: 'section',
+		label: 'Sections',
+		hint: 'The guide’s sections. Broader than questions, and the quickest read on whether the map is recovering the guide’s structure.'
+	}
+];
+
+export const DEFAULT_GROUP_MODE: GroupKind = 'cluster';
+
+/**
+ * The group a point belongs to under one mode, or `null` when it belongs to
+ * none — an outlier under clustering, or a chunk with no guide coordinates,
+ * which is every interview-level chunk.
+ *
+ * Keys are strings for all three modes so one `focusedGroup` covers them:
+ * a cluster's key is its id written out, and a guide group's is its
+ * coordinates, matching `EmbeddingGroup.key` from the API.
+ */
+export function groupKeyOf(point: EmbeddingClusterPoint, mode: GroupKind): string | null {
+	if (mode === 'cluster') return point.cluster === null ? null : String(point.cluster);
+	if (point.section === null || point.section === undefined) return null;
+	if (mode === 'section') return String(point.section);
+	if (point.main_question === null || point.main_question === undefined) return null;
+	return `${point.section}.${point.main_question}`;
+}
+
+/** The guide groups of one kind, in the order the guide declares them. */
+export function guideGroups(groups: EmbeddingGroup[], mode: GroupKind): EmbeddingGroup[] {
+	if (mode === 'cluster') return [];
+	return groups.filter((group) => group.kind === mode);
+}
+
+/**
+ * Group key to palette position, so a colour belongs to a group rather than to
+ * whatever order the points happened to arrive in. Cluster ids are already
+ * positions; guide keys take their place in the legend.
+ */
+export function groupOrder(groups: EmbeddingGroup[], mode: GroupKind): Map<string, number> {
+	return new Map(guideGroups(groups, mode).map((group, index) => [group.key, index]));
 }

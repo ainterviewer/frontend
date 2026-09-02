@@ -4,6 +4,7 @@
 	import type { EmbeddingSearchHit } from '$lib/api/types.gen';
 	import { format } from 'd3-format';
 	import { timeFormat } from 'd3-time-format';
+	import ChunkTranscript from './ChunkTranscript.svelte';
 
 	let {
 		hit,
@@ -36,6 +37,19 @@
 	 */
 	const CLAMP_LINES = 6;
 
+	/**
+	 * The same clamp for the bubble rendering, where lines are not the unit: a
+	 * bubble has padding and a gap around it, so six lines of text occupy more
+	 * than six lines of box. Roughly the same amount of chunk, measured in the
+	 * only thing a stack of bubbles has in common with a paragraph — height.
+	 */
+	const CLAMP_HEIGHT = '9.5rem';
+
+	// A chunk the interview's own messages could be found for reads as the
+	// conversation it was; one whose messages no longer line up with its
+	// coordinates still has the text the model saw, and falls back to it.
+	let turns = $derived(hit.turns ?? []);
+
 	let interviewHref = $derived(
 		resolve(
 			`/dashboard/projects/${page.params.project_id}/${page.params.lang ?? 'en'}/interviews/${hit.interview_id}`
@@ -55,7 +69,7 @@
 		hit.interview_created_at ? formatDate(new Date(hit.interview_created_at)) : null
 	);
 
-	let paragraph = $state<HTMLParagraphElement | null>(null);
+	let body = $state<HTMLElement | null>(null);
 	let open = $state(false);
 
 	// Whether the clamp is actually hiding anything. A character count is the
@@ -70,12 +84,13 @@
 	let overflowing = $state(false);
 
 	$effect(() => {
-		const element = paragraph;
+		const element = body;
 		if (!element) return;
 
 		// Re-measure when the text itself changes, not only when the box resizes:
 		// the panel reuses these cards as the reader moves between chunks.
 		void hit.text;
+		void turns;
 
 		const measure = () => {
 			// Meaningful only while clamped — expanded, the element is its own full
@@ -104,15 +119,21 @@
 	class:border-primary={anchored}
 	class:border-gray-200={!anchored}
 >
-	<p
-		bind:this={paragraph}
-		class="text-sm whitespace-pre-line text-gray-800"
-		style={open
-			? undefined
-			: `display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:${CLAMP_LINES};overflow:hidden`}
-	>
-		{hit.text ?? 'No text stored for this chunk.'}
-	</p>
+	{#if turns.length > 0}
+		<div bind:this={body} style={open ? undefined : `max-height:${CLAMP_HEIGHT};overflow:hidden`}>
+			<ChunkTranscript {turns} />
+		</div>
+	{:else}
+		<p
+			bind:this={body}
+			class="text-sm whitespace-pre-line text-gray-800"
+			style={open
+				? undefined
+				: `display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:${CLAMP_LINES};overflow:hidden`}
+		>
+			{hit.text ?? 'No text stored for this chunk.'}
+		</p>
+	{/if}
 
 	{#if overflowing}
 		<button

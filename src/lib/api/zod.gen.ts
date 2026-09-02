@@ -494,7 +494,10 @@ export const zEmbeddingClusterPoint = z.object({
     probability: z.number(),
     x: z.number(),
     y: z.number(),
-    preview: z.string().nullish()
+    preview: z.string().nullish(),
+    section: z.int().nullish(),
+    main_question: z.int().nullish(),
+    sub_question: z.int().nullish()
 });
 
 /**
@@ -658,6 +661,38 @@ export const zGitHashes = z.object({
     core_lib: z.string(),
     backend: z.string(),
     frontend: z.string()
+});
+
+/**
+ * GroupKind
+ *
+ * What a cluster map's points are grouped by.
+ *
+ * `CLUSTER` is what HDBSCAN found; the other two are the interview guide's own
+ * structure, which is not discovered but declared -- and is the baseline the
+ * clusters are worth reading against.
+ */
+export const zGroupKind = z.enum([
+    'cluster',
+    'question',
+    'section'
+]);
+
+/**
+ * EmbeddingGroup
+ *
+ * A named set of points to colour the scatter by.
+ *
+ * Questions and sections come from the guide rather than from the data, so
+ * unlike a cluster they arrive already named -- which is what makes them the
+ * baseline worth reading the clusters against.
+ */
+export const zEmbeddingGroup = z.object({
+    kind: zGroupKind,
+    key: z.string(),
+    label: z.string(),
+    text: z.string().nullish(),
+    size: z.int()
 });
 
 /**
@@ -898,87 +933,6 @@ export const zBodyAddProjectLanguage = z.object({
 export const zCreateProjectRequest = z.object({
     title: z.string(),
     default_language: zLanguageCode
-});
-
-/**
- * EmbeddingSearchHit
- *
- * One semantic-search result, renderable on its own.
- *
- * Carries the matched text and the interview context around it, because the
- * alternative is a request per hit: a QA-pair chunk spans several messages and
- * has no `message_id` to fetch, so there is nothing a client could resolve it
- * to. `message_id` is set for MESSAGE hits only, and is the handle for the
- * existing annotation, comment and message-context endpoints.
- */
-export const zEmbeddingSearchHit = z.object({
-    id: z.string(),
-    score: z.number(),
-    kind: zEmbeddingKind,
-    text: z.string().nullable(),
-    interview_id: z.string(),
-    message_id: z.string().nullable(),
-    section: z.int().nullable(),
-    main_question: z.int().nullable(),
-    sub_question: z.int().nullable(),
-    language: zLanguageCode,
-    interview_created_at: z.iso.datetime().nullish(),
-    interview_status: zInterviewStatus.nullish(),
-    interview_type: zInterviewType.nullish(),
-    participant_id: z.string().nullish(),
-    participant_pid: z.string().nullish()
-});
-
-/**
- * EmbeddingCluster
- */
-export const zEmbeddingCluster = z.object({
-    id: z.int(),
-    size: z.int(),
-    representatives: z.array(zEmbeddingSearchHit).optional().default([]),
-    question_purity: z.number().nullish()
-});
-
-/**
- * EmbeddingClusterResponse
- */
-export const zEmbeddingClusterResponse = z.object({
-    kind: zEmbeddingKind,
-    n_points: z.int(),
-    n_clusters: z.int(),
-    n_outliers: z.int(),
-    components: z.int(),
-    explained_variance_2d: z.number(),
-    centered_by_question: z.boolean(),
-    clusters: z.array(zEmbeddingCluster).optional().default([]),
-    points: z.array(zEmbeddingClusterPoint).optional().default([])
-});
-
-/**
- * EmbeddingSearchResponse
- *
- * Top-k results for one query.
- *
- * Not paginated: k is chosen up front and the whole point of a ranked search
- * is that results past the cut-off are not worth a page.
- */
-export const zEmbeddingSearchResponse = z.object({
-    query: z.string(),
-    kind: zEmbeddingKind,
-    task: z.string(),
-    candidates: z.int().optional().default(0),
-    items: z.array(zEmbeddingSearchHit).optional().default([])
-});
-
-/**
- * EmbeddingSimilarResponse
- *
- * Neighbours of a chunk already in the corpus.
- */
-export const zEmbeddingSimilarResponse = z.object({
-    source: zEmbeddingSearchHit,
-    candidates: z.int().optional().default(0),
-    items: z.array(zEmbeddingSearchHit).optional().default([])
 });
 
 /**
@@ -1961,6 +1915,118 @@ export const zInterviewGuide = z.object({
 export const zAssistanceChatRequest = z.object({
     prompt: z.string(),
     guide: zInterviewGuide
+});
+
+/**
+ * TurnRole
+ *
+ * Who is speaking in a rendered chunk of interview text.
+ *
+ * Coarser than `MessageRole` on purpose: a reader of a search result cares
+ * whether a line was asked or answered, not whether the asking was done by
+ * the agent or by a scripted guide message.
+ */
+export const zTurnRole = z.enum(['interviewer', 'respondent']);
+
+/**
+ * EmbeddingTurn
+ *
+ * One speaker turn inside a chunk, as it was said in the interview.
+ *
+ * A chunk's stored `text` is the rendering the *model* saw -- one string with
+ * ``Q:``/``A:`` prefixes -- and re-splitting it on those prefixes would be a
+ * parse of prose that a respondent can break by starting a sentence with
+ * "Q:". These come from the message rows instead, so the roles are structural
+ * and a result reads the way the conversation did.
+ */
+export const zEmbeddingTurn = z.object({
+    role: zTurnRole,
+    text: z.string(),
+    survey_label: z.string().nullish(),
+    match: z.boolean().optional().default(false)
+});
+
+/**
+ * EmbeddingSearchHit
+ *
+ * One semantic-search result, renderable on its own.
+ *
+ * Carries the matched text and the interview context around it, because the
+ * alternative is a request per hit: a QA-pair chunk spans several messages and
+ * has no `message_id` to fetch, so there is nothing a client could resolve it
+ * to. `message_id` is set for MESSAGE hits only, and is the handle for the
+ * existing annotation, comment and message-context endpoints.
+ */
+export const zEmbeddingSearchHit = z.object({
+    id: z.string(),
+    score: z.number(),
+    kind: zEmbeddingKind,
+    text: z.string().nullable(),
+    interview_id: z.string(),
+    message_id: z.string().nullable(),
+    section: z.int().nullable(),
+    main_question: z.int().nullable(),
+    sub_question: z.int().nullable(),
+    language: zLanguageCode,
+    interview_created_at: z.iso.datetime().nullish(),
+    interview_status: zInterviewStatus.nullish(),
+    interview_type: zInterviewType.nullish(),
+    participant_id: z.string().nullish(),
+    participant_pid: z.string().nullish(),
+    turns: z.array(zEmbeddingTurn).optional().default([])
+});
+
+/**
+ * EmbeddingCluster
+ */
+export const zEmbeddingCluster = z.object({
+    id: z.int(),
+    size: z.int(),
+    representatives: z.array(zEmbeddingSearchHit).optional().default([]),
+    question_purity: z.number().nullish()
+});
+
+/**
+ * EmbeddingClusterResponse
+ */
+export const zEmbeddingClusterResponse = z.object({
+    kind: zEmbeddingKind,
+    n_points: z.int(),
+    n_clusters: z.int(),
+    n_outliers: z.int(),
+    components: z.int(),
+    explained_variance_2d: z.number(),
+    centered_by_question: z.boolean(),
+    clusters: z.array(zEmbeddingCluster).optional().default([]),
+    groups: z.array(zEmbeddingGroup).optional().default([]),
+    points: z.array(zEmbeddingClusterPoint).optional().default([])
+});
+
+/**
+ * EmbeddingSearchResponse
+ *
+ * Top-k results for one query.
+ *
+ * Not paginated: k is chosen up front and the whole point of a ranked search
+ * is that results past the cut-off are not worth a page.
+ */
+export const zEmbeddingSearchResponse = z.object({
+    query: z.string(),
+    kind: zEmbeddingKind,
+    task: z.string(),
+    candidates: z.int().optional().default(0),
+    items: z.array(zEmbeddingSearchHit).optional().default([])
+});
+
+/**
+ * EmbeddingSimilarResponse
+ *
+ * Neighbours of a chunk already in the corpus.
+ */
+export const zEmbeddingSimilarResponse = z.object({
+    source: zEmbeddingSearchHit,
+    candidates: z.int().optional().default(0),
+    items: z.array(zEmbeddingSearchHit).optional().default([])
 });
 
 /**

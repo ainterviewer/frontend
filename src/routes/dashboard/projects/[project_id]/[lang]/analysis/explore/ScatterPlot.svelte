@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { EmbeddingClusterPoint } from '$lib/api/types.gen';
-	import { clusterColor } from '$lib/config/chartColors';
 	import { extent } from 'd3-array';
 	import { scaleLinear } from 'd3-scale';
 
@@ -9,6 +8,10 @@
 		selectedId = null,
 		hoveredId = $bindable(null),
 		matchedIds = null,
+		colorOf,
+		grouped,
+		strengthOf,
+		describe,
 		onselect
 	}: {
 		points: EmbeddingClusterPoint[];
@@ -20,6 +23,22 @@
 		 * on the map, and every point should say so by dimming.
 		 */
 		matchedIds?: Set<string> | null;
+		/**
+		 * How a point is drawn under the grouping in force. Passed in rather than
+		 * derived here because the same scatter is coloured three ways — by what
+		 * clustering found, and by the two levels of structure the interview guide
+		 * declared — and only the first of those is knowable from a point alone.
+		 */
+		colorOf: (point: EmbeddingClusterPoint) => string;
+		/** Whether the point falls in any group at all; ungrouped points sit under
+		 *  the rest, smaller and fainter, the way outliers always have. */
+		grouped: (point: EmbeddingClusterPoint) => boolean;
+		/** Confidence in that membership, 0–1. Meaningful for clusters, where
+		 *  HDBSCAN reports it; flat for the guide, where membership is recorded
+		 *  rather than inferred. */
+		strengthOf: (point: EmbeddingClusterPoint) => number;
+		/** The second line of the hover card: which group this point is in. */
+		describe: (point: EmbeddingClusterPoint) => string;
 		onselect: (id: string | null) => void;
 	} = $props();
 
@@ -72,27 +91,25 @@
 		return zoom.y + zoom.k * scales.y(p.y);
 	}
 
-	// Outliers first so they end up under the clustered points: they are the
+	// Ungrouped points first so they end up under the grouped ones: they are the
 	// most numerous and the least specific, and a grey drawn over a coloured
 	// point hides the one the reader is more likely to be after.
-	let ordered = $derived(
-		[...points].sort((a, b) => Number(a.cluster !== null) - Number(b.cluster !== null))
-	);
+	let ordered = $derived([...points].sort((a, b) => Number(grouped(a)) - Number(grouped(b))));
 
 	function radius(p: EmbeddingClusterPoint) {
 		if (p.id === selectedId) return 6;
-		return p.cluster === null ? 2.5 : 3.5;
+		return grouped(p) ? 3.5 : 2.5;
 	}
 
 	function opacity(p: EmbeddingClusterPoint) {
 		// Dimmed rather than dropped while a search is up: a result you cannot
 		// see in context is a list, and the map is here to give the context.
 		if (matchedIds && !matchedIds.has(p.id)) return 0.1;
-		if (p.cluster === null) return 0.55;
-		// Membership probability, floored so a marginal member is faint but not
-		// invisible — HDBSCAN's low-probability points are on cluster edges,
-		// which is exactly where a reader looks when deciding if a cluster holds.
-		return 0.35 + 0.6 * p.probability;
+		if (!grouped(p)) return 0.55;
+		// Floored so a marginal member is faint but not invisible — HDBSCAN's
+		// low-probability points are on cluster edges, which is exactly where a
+		// reader looks when deciding if a cluster holds.
+		return 0.35 + 0.6 * strengthOf(p);
 	}
 
 	/** The point nearest a screen position, if anything is near enough. */
@@ -216,7 +233,7 @@
 							cx={scales.x(point.x)}
 							cy={scales.y(point.y)}
 							r={radius(point) / zoom.k}
-							fill={clusterColor(point.cluster)}
+							fill={colorOf(point)}
 							opacity={opacity(point)}
 						/>
 					{/each}
@@ -231,7 +248,7 @@
 								cy={scales.y(point.y)}
 								r={(point.id === selectedId ? 9 : 7) / zoom.k}
 								fill="none"
-								stroke={clusterColor(point.cluster)}
+								stroke={colorOf(point)}
 								stroke-width={(point.id === selectedId ? 2 : 1.5) / zoom.k}
 							/>
 						{/if}
@@ -268,11 +285,7 @@
 				14}px"
 		>
 			<span class="line-clamp-4">{hovered.preview ?? 'No preview'}</span>
-			<span class="mt-1 block text-[0.6875rem] text-gray-400">
-				{hovered.cluster === null
-					? 'Unplaced'
-					: `Cluster ${hovered.cluster} · ${Math.round(hovered.probability * 100)}% member`}
-			</span>
+			<span class="mt-1 block text-[0.6875rem] text-gray-400">{describe(hovered)}</span>
 		</div>
 	{/if}
 

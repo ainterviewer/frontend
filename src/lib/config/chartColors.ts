@@ -99,8 +99,17 @@ export const CLUSTER_COLORS = [
  */
 export const OUTLIER_COLOR = '#94a3b8';
 
-/** The colour for a cluster id, or the outlier grey for an unplaced point. */
-export function clusterColor(cluster: number | null): string {
-	if (cluster === null || cluster < 0) return OUTLIER_COLOR;
-	return CLUSTER_COLORS[cluster % CLUSTER_COLORS.length];
+/**
+ * The colour for the nth group drawn on the explore map, or the outlier grey
+ * for a point in no group at all.
+ *
+ * Takes a position rather than an identity because the map is coloured by
+ * whichever grouping the reader has chosen — HDBSCAN's clusters, or the
+ * interview guide's questions and sections — and only the clusters arrive as
+ * small integers. Everything else is keyed by guide coordinates and gets its
+ * hue from its place in the ordered legend beside the map.
+ */
+export function mapColor(index: number | null): string {
+	if (index === null || index < 0) return OUTLIER_COLOR;
+	return CLUSTER_COLORS[index % CLUSTER_COLORS.length];
 }

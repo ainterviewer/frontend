@@ -1,17 +1,22 @@
 <script lang="ts">
 	import type {
 		EmbeddingCluster,
+		EmbeddingGroup,
 		EmbeddingSearchHit,
 		EmbeddingSimilarResponse,
-		EmbeddingSearchResponse
+		EmbeddingSearchResponse,
+		GroupKind
 	} from '$lib/api/types.gen';
-	import { clusterColor } from '$lib/config/chartColors';
+	import { mapColor } from '$lib/config/chartColors';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { format } from 'd3-format';
 	import HitCard from './HitCard.svelte';
+	import { GROUP_MODES, guideGroups } from './explore';
 
 	let {
 		clusters,
+		groups,
+		groupMode,
 		search,
 		searchLoading,
 		searchError,
@@ -20,11 +25,14 @@
 		detailLoading,
 		detailError,
 		selectedId,
-		focusedCluster,
+		focusedGroup,
 		onselect,
-		onfocuscluster
+		onfocusgroup
 	}: {
 		clusters: EmbeddingCluster[];
+		/** Every guide group the plotted points fall into, of both kinds. */
+		groups: EmbeddingGroup[];
+		groupMode: GroupKind;
 		search: EmbeddingSearchResponse | null;
 		searchLoading: boolean;
 		searchError: string | null;
@@ -39,10 +47,20 @@
 		detailLoading: boolean;
 		detailError: string | null;
 		selectedId: string | null;
-		focusedCluster: number | null;
+		/**
+		 * The group picked out on the map, as `EmbeddingGroup.key` — a cluster id
+		 * written out, or guide coordinates. One field for all three groupings,
+		 * because focusing is one act however the map is coloured.
+		 */
+		focusedGroup: string | null;
 		onselect: (id: string | null) => void;
-		onfocuscluster: (cluster: number | null) => void;
+		onfocusgroup: (key: string | null) => void;
 	} = $props();
+
+	let listed = $derived(guideGroups(groups, groupMode));
+	let modeLabel = $derived(
+		GROUP_MODES.find((mode) => mode.value === groupMode)?.label ?? 'Clusters'
+	);
 
 	const formatNumber = format(',');
 	const formatPercent = format('.0%');
@@ -146,6 +164,57 @@
 				</div>
 			{/if}
 		</div>
+	{:else if groupMode !== 'cluster'}
+		<!-- Guide groups. Unlike a cluster these arrive named, and there is
+		     nothing to read to find out what they are — so a row is a legend
+		     entry and a way to pick its points out of the map, not a card. -->
+		<header class="border-b border-gray-100 px-4 py-3">
+			<h2
+				class="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-gray-400 uppercase"
+			>
+				{modeLabel}
+				<HoverInfo
+					text="Taken from the project's default guide, matched to each chunk by the position it was asked in. A question the guide no longer has keeps its number and loses its wording."
+				/>
+			</h2>
+		</header>
+
+		<div class="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+			{#if listed.length === 0}
+				<p class="text-sm text-gray-500">
+					None of the plotted chunks carry guide coordinates, so there is nothing to group them by.
+					Interview-level chunks span the whole guide and have none.
+				</p>
+			{:else}
+				<div class="flex flex-col gap-1">
+					{#each listed as group, index (group.key)}
+						{@const open = focusedGroup === group.key}
+						<button
+							type="button"
+							onclick={() => onfocusgroup(open ? null : group.key)}
+							class="flex w-full cursor-pointer items-start gap-2 rounded-lg border px-3 py-2 text-left"
+							class:border-primary={open}
+							class:border-transparent={!open}
+							class:hover:border-gray-200={!open}
+						>
+							<span
+								class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
+								style="background:{mapColor(index)}"
+							></span>
+							<span class="min-w-0 flex-1">
+								<span class="flex items-baseline gap-2">
+									<span class="text-sm font-medium text-gray-800">{group.label}</span>
+									<span class="text-xs text-gray-400">{formatNumber(group.size)} chunks</span>
+								</span>
+								{#if group.text}
+									<span class="mt-0.5 block text-xs text-gray-500">{group.text}</span>
+								{/if}
+							</span>
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	{:else}
 		<header class="border-b border-gray-100 px-4 py-3">
 			<h2
@@ -167,16 +236,16 @@
 			{:else}
 				<div class="flex flex-col gap-2">
 					{#each clusters as cluster (cluster.id)}
-						{@const open = focusedCluster === cluster.id}
+						{@const open = focusedGroup === String(cluster.id)}
 						<div class="rounded-lg border border-gray-200">
 							<button
 								type="button"
-								onclick={() => onfocuscluster(open ? null : cluster.id)}
+								onclick={() => onfocusgroup(open ? null : String(cluster.id))}
 								class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left"
 							>
 								<span
 									class="h-2.5 w-2.5 shrink-0 rounded-full"
-									style="background:{clusterColor(cluster.id)}"
+									style="background:{mapColor(cluster.id)}"
 								></span>
 								<span class="text-sm font-medium text-gray-800">Cluster {cluster.id}</span>
 								<span class="text-xs text-gray-400">{formatNumber(cluster.size)} chunks</span>

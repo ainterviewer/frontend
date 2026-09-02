@@ -1010,6 +1010,18 @@ export type EmbeddingClusterPoint = {
      * Preview
      */
     preview?: string | null;
+    /**
+     * Section
+     */
+    section?: number | null;
+    /**
+     * Main Question
+     */
+    main_question?: number | null;
+    /**
+     * Sub Question
+     */
+    sub_question?: number | null;
 };
 
 /**
@@ -1046,9 +1058,42 @@ export type EmbeddingClusterResponse = {
      */
     clusters?: Array<EmbeddingCluster>;
     /**
+     * Groups
+     */
+    groups?: Array<EmbeddingGroup>;
+    /**
      * Points
      */
     points?: Array<EmbeddingClusterPoint>;
+};
+
+/**
+ * EmbeddingGroup
+ *
+ * A named set of points to colour the scatter by.
+ *
+ * Questions and sections come from the guide rather than from the data, so
+ * unlike a cluster they arrive already named -- which is what makes them the
+ * baseline worth reading the clusters against.
+ */
+export type EmbeddingGroup = {
+    kind: GroupKind;
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Text
+     */
+    text?: string | null;
+    /**
+     * Size
+     */
+    size: number;
 };
 
 /**
@@ -1124,6 +1169,10 @@ export type EmbeddingSearchHit = {
      * Participant Pid
      */
     participant_pid?: string | null;
+    /**
+     * Turns
+     */
+    turns?: Array<EmbeddingTurn>;
 };
 
 /**
@@ -1211,6 +1260,33 @@ export type EmbeddingStatus = {
      * Queue Dropped
      */
     queue_dropped?: number;
+};
+
+/**
+ * EmbeddingTurn
+ *
+ * One speaker turn inside a chunk, as it was said in the interview.
+ *
+ * A chunk's stored `text` is the rendering the *model* saw -- one string with
+ * ``Q:``/``A:`` prefixes -- and re-splitting it on those prefixes would be a
+ * parse of prose that a respondent can break by starting a sentence with
+ * "Q:". These come from the message rows instead, so the roles are structural
+ * and a result reads the way the conversation did.
+ */
+export type EmbeddingTurn = {
+    role: TurnRole;
+    /**
+     * Text
+     */
+    text: string;
+    /**
+     * Survey Label
+     */
+    survey_label?: string | null;
+    /**
+     * Match
+     */
+    match?: boolean;
 };
 
 /**
@@ -1467,6 +1543,17 @@ export type GitHashes = {
      */
     frontend: string;
 };
+
+/**
+ * GroupKind
+ *
+ * What a cluster map's points are grouped by.
+ *
+ * `CLUSTER` is what HDBSCAN found; the other two are the interview guide's own
+ * structure, which is not discovered but declared -- and is the baseline the
+ * clusters are worth reading against.
+ */
+export type GroupKind = 'cluster' | 'question' | 'section';
 
 /**
  * GuideSection
@@ -3721,6 +3808,17 @@ export type TimedMessage = {
      */
     as_modal?: boolean;
 };
+
+/**
+ * TurnRole
+ *
+ * Who is speaking in a rendered chunk of interview text.
+ *
+ * Coarser than `MessageRole` on purpose: a reader of a search result cares
+ * whether a line was asked or answered, not whether the asking was done by
+ * the agent or by a scripted guide message.
+ */
+export type TurnRole = 'interviewer' | 'respondent';
 
 /**
  * UpdateBackgroundInfoRequest
