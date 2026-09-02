@@ -982,7 +982,7 @@ export const zInterviewListResponse = z.object({
  * Count of interviews conducted in a given language.
  */
 export const zLanguageCount = z.object({
-    language: z.string(),
+    language: zLanguageCode,
     count: z.int()
 });
 

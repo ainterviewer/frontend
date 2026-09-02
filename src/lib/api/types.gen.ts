@@ -222,10 +222,7 @@ export type AnswerSample = {
      * Value
      */
     value: number;
-    /**
-     * Language
-     */
-    language: string;
+    language: LanguageCode;
 };
 
 /**
@@ -462,7 +459,7 @@ export type CategoryCount = {
      * By Language
      */
     by_language?: {
-        [key: string]: number;
+        [key in LanguageCode]?: number;
     };
 };
 
@@ -853,7 +850,7 @@ export type DistributionBucket = {
      * By Language
      */
     by_language?: {
-        [key: string]: number;
+        [key in LanguageCode]?: number;
     };
 };
 
@@ -1026,10 +1023,7 @@ export type EmbeddingClusterPoint = {
      * Sub Question
      */
     sub_question?: number | null;
-    /**
-     * Language
-     */
-    language: string;
+    language: LanguageCode;
 };
 
 /**
@@ -1265,7 +1259,7 @@ export type EmbeddingStatus = {
      * Languages
      */
     languages?: {
-        [key: string]: number;
+        [key in LanguageCode]?: number;
     };
     /**
      * Total
@@ -2261,10 +2255,7 @@ export type LanguageCode = string;
  * Count of interviews conducted in a given language.
  */
 export type LanguageCount = {
-    /**
-     * Language
-     */
-    language: string;
+    language: LanguageCode;
     /**
      * Count
      */
