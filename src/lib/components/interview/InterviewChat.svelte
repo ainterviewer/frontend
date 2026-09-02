@@ -254,6 +254,45 @@
 	</div>
 {/if}
 
+<!-- Service Unavailable -->
+<!--
+	The interview cannot run — the server reported a failure, or it kept
+	accepting connections and dying on them. Deliberately offers no Retry: we
+	already know retrying reproduces it, and a button that never works is worse
+	than none. The respondent's answers are saved, so say that much and point
+	them at the person who sent the link.
+-->
+{#if chat.serviceUnavailable}
+	<div
+		class="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+		role="alertdialog"
+		aria-modal="true"
+		aria-labelledby="service-unavailable-title"
+	>
+		<div
+			class="relative z-10 w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl ring-1 ring-black/5"
+		>
+			<div class="flex gap-4">
+				<div
+					class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100"
+				>
+					<i class="fa-solid fa-triangle-exclamation text-red-600"></i>
+				</div>
+				<div>
+					<h2 id="service-unavailable-title" class="text-lg font-semibold text-gray-900">
+						The interview cannot continue
+					</h2>
+					<p class="mt-2 text-sm text-gray-600">
+						Something on our side is preventing the interview from running. Your answers so far have
+						been saved. Please try again later, or contact the person who shared this interview with
+						you.
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
 <!-- Reconnection Failure -->
 {#if chat.reconnectFailed}
 	<div

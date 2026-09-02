@@ -55,6 +55,36 @@ export function parseInterviewIdFromToken(token: string): string | null {
 // reconnect loop.
 const SESSION_TTL_MS = 3 * 24 * 60 * 60 * 1000;
 
+// How long a connection must survive before it counts as healthy. A backend
+// that crashes part-way through a turn still opens the socket and replays the
+// stored history first, so "the server sent something" is not evidence that
+// reconnecting is working -- it is exactly what the failing case does on every
+// attempt. Only time spent connected, or a turn the respondent completed,
+// clears the retry budget.
+const HEALTHY_CONNECTION_MS = 10_000;
+
+// A ceiling that no amount of partial success can lift: more than this many
+// connection attempts inside the window and we stop, however healthy any single
+// one of them looked.
+const RECONNECT_WINDOW_MS = 2 * 60 * 1000;
+const MAX_CONNECTS_PER_WINDOW = 6;
+
+// The server can also say outright that it is temporarily unable to run the
+// interview -- the inference server still starting, a provider rate limit, an
+// upstream timeout. That is worth waiting out rather than reconnecting into
+// immediately, but not forever: after this many waits we stop and say so.
+// One line covering every transient cause, because the respondent can act on
+// none of them and the backend deliberately does not say which it was.
+const TRANSIENT_FAILURE_TEXT = 'The interview service is busy. Trying again in a moment…';
+
+const TRANSIENT_RETRY_MS = 30_000;
+const MAX_TRANSIENT_RETRIES = 3;
+
+// Opens that died before reaching HEALTHY_CONNECTION_MS. Two or more of them
+// means the server is accepting us and then failing, which is a broken
+// interview rather than a broken network -- worth saying so.
+const SHORT_LIVED_OPENS_FOR_SERVICE_FAILURE = 2;
+
 function sessionKey(projectId: string): string {
 	return `interview_session:${projectId}`;
 }
@@ -166,6 +196,11 @@ export class ChatClient {
 	/** The interview credential is gone and cannot be recovered. Reconnecting
 	 *  is pointless; the respondent has to start a new interview. */
 	sessionExpired = $state(false);
+	/** The interview itself cannot run: the server reported a failure, or it
+	 *  kept accepting connections and dying on them. Distinct from
+	 *  `reconnectFailed`, which means we never got through at all -- here
+	 *  retrying is known to be pointless, so we do not offer it. */
+	serviceUnavailable = $state(false);
 
 	// Show the typing indicator whenever we're waiting on the server. The chat
 	// is turn-based: the last message being a user `sent` means a reply is
@@ -175,7 +210,7 @@ export class ChatClient {
 	// submission that doesn't push a new message).
 	showTypingIndicator = $derived.by(() => {
 		if (!this.reconnectEnabled || this.reconnectFailed || this.isReconnecting) return false;
-		if (this.sessionExpired) return false;
+		if (this.sessionExpired || this.serviceUnavailable) return false;
 		if (this.forceTypingIndicator) return true;
 		const last = this.messages[this.messages.length - 1];
 		if (!last || last.type !== 'sent') return false;
@@ -185,6 +220,14 @@ export class ChatClient {
 	reconnectAttempts = 0;
 	maxReconnectAttempts = 5;
 	reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+	/** Fires once a connection has stayed open long enough to be trusted. */
+	private healthyTimeout: ReturnType<typeof setTimeout> | null = null;
+	/** Start times of recent connection attempts, for the rolling ceiling. */
+	private connectTimestamps: number[] = [];
+	/** Connections that opened and then closed before they were trusted. */
+	private shortLivedOpens = 0;
+	/** Waits already spent on a server that reported a transient failure. */
+	private transientRetries = 0;
 
 	// Context
 	project_id: string;
@@ -230,6 +273,15 @@ export class ChatClient {
 	connect() {
 		if (!browser) return;
 		if (this.isConnecting) return;
+
+		const now = Date.now();
+		this.connectTimestamps = this.connectTimestamps.filter((t) => now - t < RECONNECT_WINDOW_MS);
+		if (this.connectTimestamps.length >= MAX_CONNECTS_PER_WINDOW) {
+			this.giveUp();
+			return;
+		}
+		this.connectTimestamps.push(now);
+
 		this.isConnecting = true;
 
 		const ws_url = this.getWsUrl();
@@ -241,10 +293,13 @@ export class ChatClient {
 			this.ws.onopen = () => {
 				this.isConnected = true;
 				this.isConnecting = false;
+				this.isReconnecting = false;
 				// NOTE: do not reset reconnectAttempts here — a socket that opens
-				// but then closes before any message arrives (e.g. backend data
-				// handler crash) would otherwise loop forever with no backoff.
-				// Attempts reset in onmessage once the server actually speaks.
+				// but then closes shortly after (e.g. a backend that replays the
+				// history and then fails on the model) would otherwise loop
+				// forever with no backoff. Only surviving HEALTHY_CONNECTION_MS,
+				// or completing a turn, clears the budget.
+				this.markHealthyLater();
 				this.inputEnabled = false; // Initial state often disabled until server speaks
 
 				// Send initialized if needed or just handle open
@@ -261,8 +316,6 @@ export class ChatClient {
 			this.ws.onmessage = (event) => {
 				try {
 					const data = JSON.parse(event.data);
-					this.reconnectAttempts = 0;
-					this.isReconnecting = false;
 					this.queueMessage(data);
 				} catch (e) {
 					console.error('Failed to parse message', e);
@@ -272,6 +325,15 @@ export class ChatClient {
 			this.ws.onclose = (event) => {
 				this.isConnected = false;
 				this.isConnecting = false;
+
+				if (this.healthyTimeout) {
+					// The connection never earned our trust: it opened and died
+					// inside the health window. Enough of those in a row and the
+					// server, not the network, is what is broken.
+					clearTimeout(this.healthyTimeout);
+					this.healthyTimeout = null;
+					this.shortLivedOpens++;
+				}
 
 				// Fail fast on the one close we know is permanent. Every other
 				// pre-open failure (server restarting, network blip) is exactly
@@ -288,8 +350,7 @@ export class ChatClient {
 					this.attemptReconnect();
 				} else if (this.reconnectEnabled) {
 					console.log('Max reconnects reached');
-					this.isReconnecting = false;
-					this.reconnectFailed = true;
+					this.giveUp();
 				}
 			};
 
@@ -340,9 +401,96 @@ export class ChatClient {
 		}, delay);
 	}
 
+	/** A connection that lasts this long is working; forgive the attempts that
+	 *  led to it, so an interview spanning a flaky afternoon is not capped by
+	 *  drops it already recovered from. */
+	private markHealthyLater() {
+		if (this.healthyTimeout) clearTimeout(this.healthyTimeout);
+		this.healthyTimeout = setTimeout(() => {
+			this.healthyTimeout = null;
+			this.markHealthy();
+		}, HEALTHY_CONNECTION_MS);
+	}
+
+	private markHealthy() {
+		this.reconnectAttempts = 0;
+		this.shortLivedOpens = 0;
+		this.transientRetries = 0;
+		this.connectTimestamps = [];
+	}
+
+	/** Stop retrying and say which of the two things went wrong. Repeated opens
+	 *  that died young mean the server is failing the interview; anything else
+	 *  looks like a connection we simply cannot establish. */
+	private giveUp() {
+		this.disableReconnect();
+		this.isReconnecting = false;
+		this.isConnecting = false;
+		this.inputEnabled = false;
+		this.forceTypingIndicator = false;
+
+		if (this.shortLivedOpens >= SHORT_LIVED_OPENS_FOR_SERVICE_FAILURE) {
+			this.serviceUnavailable = true;
+		} else {
+			this.reconnectFailed = true;
+		}
+	}
+
+	/** The server told us it cannot run the interview *right now* — it is
+	 *  starting up, rate limited, or waiting on a slow upstream. Reconnecting
+	 *  straight into that only burns the retry budget on a failure we have been
+	 *  told the shape of, so wait a while and try again on our own clock. */
+	private handleTransientFailure() {
+		// Cancels the ordinary backoff the socket's close is about to schedule
+		// (or already has); this path owns the retry from here.
+		this.disableReconnect();
+		this.inputEnabled = false;
+		this.forceTypingIndicator = false;
+
+		if (this.transientRetries >= MAX_TRANSIENT_RETRIES) {
+			this.isReconnecting = false;
+			this.serviceUnavailable = true;
+			return;
+		}
+
+		this.transientRetries++;
+		// A give-up may have already fired on the socket close, before this
+		// frame was processed; the server has since told us to wait, so take
+		// that back.
+		this.serviceUnavailable = false;
+		this.reconnectFailed = false;
+		this.isReconnecting = true;
+
+		if (!this.messages.some((m) => m.type === 'system' && m.text === TRANSIENT_FAILURE_TEXT)) {
+			this.messages.push({ type: 'system', text: TRANSIENT_FAILURE_TEXT });
+		}
+
+		this.reconnectTimeout = setTimeout(() => {
+			this.reconnectEnabled = true;
+			this.reconnectAttempts = 0;
+			this.shortLivedOpens = 0;
+			this.connectTimestamps = [];
+			this.isInitialized = true;
+			this.connect();
+		}, TRANSIENT_RETRY_MS);
+	}
+
+	/** The server told us the interview cannot run. Unlike a dropped
+	 *  connection this is not worth retrying, so stop and say so. */
+	private handleServiceFailure() {
+		this.disableReconnect();
+		this.isReconnecting = false;
+		this.reconnectFailed = false;
+		this.inputEnabled = false;
+		this.forceTypingIndicator = false;
+		this.serviceUnavailable = true;
+	}
+
 	manualReconnect() {
 		if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
 		this.reconnectAttempts = 0;
+		this.shortLivedOpens = 0;
+		this.connectTimestamps = [];
 		this.reconnectFailed = false;
 		this.reconnectEnabled = true;
 		this.isReconnecting = true;
@@ -353,6 +501,10 @@ export class ChatClient {
 	disableReconnect() {
 		this.reconnectEnabled = false;
 		if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+		if (this.healthyTimeout) {
+			clearTimeout(this.healthyTimeout);
+			this.healthyTimeout = null;
+		}
 	}
 
 	/** The backend closed us with WS_UNAUTHORIZED: the interview token is gone
@@ -461,8 +613,7 @@ export class ChatClient {
 	}
 
 	disconnect() {
-		this.reconnectEnabled = false;
-		if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+		this.disableReconnect();
 		if (this.ws) {
 			this.ws.close();
 			this.ws = null;
@@ -479,6 +630,10 @@ export class ChatClient {
 			: { type: 'message', content: text };
 		this.ws.send(JSON.stringify(msg));
 
+		// The respondent got far enough to answer, so this connection is doing
+		// its job whatever its age -- forgive the retries that led here.
+		this.markHealthy();
+
 		// Optimistically add to UI
 		this.messages.push({
 			type: 'sent',
@@ -494,6 +649,8 @@ export class ChatClient {
 	sendSkip() {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 		this.ws.send(JSON.stringify({ type: 'message', content: '<|skipquestion|>' }));
+
+		this.markHealthy();
 
 		// Add to local UI
 		this.messages.push({
@@ -520,6 +677,10 @@ export class ChatClient {
 				responds_to: originalMessageId
 			})
 		);
+
+		// A survey-only interview never calls `sendMessage`, so this is where its
+		// completed turns register as progress.
+		this.markHealthy();
 
 		this.inputEnabled = false;
 		// No new message is pushed here, but a server reply is pending — force
@@ -647,19 +808,16 @@ export class ChatClient {
 
 				if (data.error) {
 					if (data.error === 'InstanceInitializing') {
-						this.messages.push({ type: 'system', text: 'System initializing. Please wait.' });
-					} else if (data.error === 'InferenceError') {
-						this.messages.push({
-							type: 'system',
-							text: `No server capacity. Please check back later.`
-						});
+						// The backend classifies everything it expects to pass on
+						// its own under this code — a warming inference server, a
+						// rate limit, a slow upstream.
+						this.handleTransientFailure();
 					} else {
-						this.messages.push({
-							type: 'system',
-							text: `An unexpected error has occured. Please try again later.`
-						});
+						// Everything else it reports has already been judged
+						// unservable: a retired model, bad credentials, a bug on
+						// our side. Reconnecting would only reproduce it.
+						this.handleServiceFailure();
 					}
-					this.disableReconnect();
 				}
 
 				if (data.content === '<|restartinterview|>') {
