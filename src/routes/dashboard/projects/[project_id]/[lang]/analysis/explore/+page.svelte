@@ -367,14 +367,13 @@
 		</p>
 	</header>
 
-	{#if statusError}
-		<p class="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600">
-			{statusError}
-		</p>
-	{:else if !status}
-		<div class="h-10 animate-pulse rounded-lg bg-gray-100"></div>
-		<div class="min-h-[26rem] flex-1 animate-pulse rounded-lg bg-gray-100"></div>
-	{:else if !status.enabled}
+	<!-- Only the two states the status *answers* gate the page. A status that has
+	     not landed, or that failed, does not: it says whether text search is
+	     available, and nothing else here depends on the inference server -- the
+	     map and nearest-neighbours read stored vectors. Waiting on it put the
+	     whole page behind a spinner whenever the embedding host was unreachable,
+	     which is exactly when the parts that still work matter most. -->
+	{#if status && !status.enabled}
 		<!-- A normal state, not an error: embedding is configured per deployment
 		     and off by default, and with it off the interviews run exactly as
 		     they always did. Nothing here is broken and nothing is waiting. -->
@@ -385,245 +384,256 @@
 				meaning. Everything else about the project is unaffected.
 			</p>
 		</div>
-	{:else}
+	{:else if status && (status.total ?? 0) === 0}
 		<StatusStrip
 			{status}
 			projectId={data.project_id}
 			{canBackfill}
 			onstatus={(next) => (status = next)}
 		/>
-
-		{#if (status.total ?? 0) === 0}
-			<div class="rounded-lg border border-gray-200 bg-white px-5 py-8 text-center">
-				<p class="text-sm font-medium text-gray-700">Nothing is embedded yet</p>
-				<p class="mx-auto mt-1 max-w-md text-sm text-gray-500">
-					{canBackfill
-						? 'Run “Re-embed project” above to index this project’s transcripts. It takes a few minutes and only has to be done once.'
-						: 'This project’s transcripts have not been indexed. An editor can start that from this page.'}
-				</p>
-			</div>
+		<div class="rounded-lg border border-gray-200 bg-white px-5 py-8 text-center">
+			<p class="text-sm font-medium text-gray-700">Nothing is embedded yet</p>
+			<p class="mx-auto mt-1 max-w-md text-sm text-gray-500">
+				{canBackfill
+					? 'Run “Re-embed project” above to index this project’s transcripts. It takes a few minutes and only has to be done once.'
+					: 'This project’s transcripts have not been indexed. An editor can start that from this page.'}
+			</p>
+		</div>
+	{:else}
+		{#if status}
+			<StatusStrip
+				{status}
+				projectId={data.project_id}
+				{canBackfill}
+				onstatus={(next) => (status = next)}
+			/>
+		{:else if statusError}
+			<p class="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs text-gray-500">
+				{statusError} Text search stays unavailable until it answers; the map and “nearest neighbours”
+				read stored vectors and still work.
+			</p>
 		{:else}
-			{#if !status.healthy}
-				<p
-					class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800"
+			<div class="h-[2.375rem] animate-pulse rounded-lg bg-gray-100"></div>
+		{/if}
+
+		{#if status && !status.healthy}
+			<p class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
+				The embedding server is not reachable, so text search is unavailable. The map and “nearest
+				neighbours” read stored vectors and still work.
+			</p>
+		{/if}
+
+		<!-- Controls. Search on top because it is what most readers come for;
+		     the clustering knobs beneath it because they change what the map
+		     means and deserve to be read, not hunted for. -->
+		<div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3">
+			<form onsubmit={search} class="flex items-center gap-2">
+				<div class="relative flex-1">
+					<i
+						class="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs text-gray-300"
+					></i>
+					<input
+						type="search"
+						bind:value={queryText}
+						disabled={!searchAvailable}
+						placeholder="How do people describe trust?"
+						aria-label="Search the transcripts by meaning"
+						class="w-full rounded-md border border-gray-200 py-1.5 pr-3 pl-8 text-sm placeholder:text-gray-300 focus:border-primary focus:ring-0 disabled:bg-gray-50"
+					/>
+				</div>
+				<button
+					type="submit"
+					disabled={!searchAvailable || !queryText.trim()}
+					class="cursor-pointer rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-on-primary disabled:cursor-not-allowed disabled:opacity-50"
 				>
-					The embedding server is not reachable, so text search is unavailable. The map and “nearest
-					neighbours” read stored vectors and still work.
-				</p>
-			{/if}
-
-			<!-- Controls. Search on top because it is what most readers come for;
-			     the clustering knobs beneath it because they change what the map
-			     means and deserve to be read, not hunted for. -->
-			<div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3">
-				<form onsubmit={search} class="flex items-center gap-2">
-					<div class="relative flex-1">
-						<i
-							class="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs text-gray-300"
-						></i>
-						<input
-							type="search"
-							bind:value={queryText}
-							disabled={!searchAvailable}
-							placeholder="How do people describe trust?"
-							aria-label="Search the transcripts by meaning"
-							class="w-full rounded-md border border-gray-200 py-1.5 pr-3 pl-8 text-sm placeholder:text-gray-300 focus:border-primary focus:ring-0 disabled:bg-gray-50"
-						/>
-					</div>
+					Search
+				</button>
+				{#if submitted}
 					<button
-						type="submit"
-						disabled={!searchAvailable || !queryText.trim()}
-						class="cursor-pointer rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-on-primary disabled:cursor-not-allowed disabled:opacity-50"
+						type="button"
+						onclick={clearSearch}
+						class="cursor-pointer text-sm text-gray-500 hover:text-gray-900"
 					>
-						Search
+						Clear
 					</button>
-					{#if submitted}
-						<button
-							type="button"
-							onclick={clearSearch}
-							class="cursor-pointer text-sm text-gray-500 hover:text-gray-900"
-						>
-							Clear
-						</button>
-					{/if}
-				</form>
+				{/if}
+			</form>
 
-				<div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-600">
-					<label class="flex items-center gap-1.5">
-						<span class="text-gray-500">Unit</span>
-						<select
-							value={kind}
-							onchange={(event) => changeKind(event.currentTarget.value as EmbeddingKind)}
-							class="rounded-md border border-gray-200 py-1 pr-7 pl-2 text-xs focus:border-primary focus:ring-0"
-						>
-							{#each KINDS as option (option.value)}
-								<option value={option.value}>{option.label}</option>
-							{/each}
-						</select>
-						<HoverInfo text={KINDS.find((option) => option.value === kind)?.hint ?? ''} />
-					</label>
+			<div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-600">
+				<label class="flex items-center gap-1.5">
+					<span class="text-gray-500">Unit</span>
+					<select
+						value={kind}
+						onchange={(event) => changeKind(event.currentTarget.value as EmbeddingKind)}
+						class="rounded-md border border-gray-200 py-1 pr-7 pl-2 text-xs focus:border-primary focus:ring-0"
+					>
+						{#each KINDS as option (option.value)}
+							<option value={option.value}>{option.label}</option>
+						{/each}
+					</select>
+					<HoverInfo text={KINDS.find((option) => option.value === kind)?.hint ?? ''} />
+				</label>
 
+				<label class="flex items-center gap-2">
+					<span class="text-gray-500">Min cluster size</span>
+					<input
+						type="range"
+						min={MIN_CLUSTER_SIZE_RANGE.min}
+						max={maxClusterSize}
+						bind:value={minClusterSize}
+						class="w-32 accent-primary"
+					/>
+					<span class="w-6 font-mono tabular-nums">{minClusterSize}</span>
+					<HoverInfo
+						text="The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Recomputes in about a fifth of a second, so drag it."
+					/>
+				</label>
+
+				<div class="flex items-center gap-2">
+					<Switch.Root
+						id="center-by-question"
+						bind:checked={centerByQuestion}
+						class="inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+					>
+						<Switch.Thumb
+							class="pointer-events-none block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.125rem]"
+						/>
+					</Switch.Root>
+					<label for="center-by-question" class="cursor-pointer">Centre by question</label>
+					<HoverInfo
+						text="Every respondent was asked the same questions, and a chunk contains its question verbatim — so left alone, clustering recovers the interview guide rather than what anyone said. Centring subtracts each question's average before grouping, leaving the variation between answers. Turn it off to see the raw structure."
+					/>
+				</div>
+
+				<div class="flex items-center gap-2">
+					<Switch.Root
+						id="include-synthetic"
+						bind:checked={includeSynthetic}
+						class="inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+					>
+						<Switch.Thumb
+							class="pointer-events-none block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.125rem]"
+						/>
+					</Switch.Root>
+					<label for="include-synthetic" class="cursor-pointer">Include test runs</label>
+				</div>
+
+				<label class="flex items-center gap-1.5">
+					<span class="text-gray-500">Interviews</span>
+					<select
+						bind:value={interviewStatus}
+						class="rounded-md border border-gray-200 py-1 pr-7 pl-2 text-xs focus:border-primary focus:ring-0"
+					>
+						<option value={null}>Any status</option>
+						<option value="completed">Completed</option>
+						<option value="active">Active</option>
+						<option value="inactive">Inactive</option>
+					</select>
+				</label>
+
+				{#if searchResponse}
 					<label class="flex items-center gap-2">
-						<span class="text-gray-500">Min cluster size</span>
+						<span class="text-gray-500">Min score</span>
 						<input
 							type="range"
-							min={MIN_CLUSTER_SIZE_RANGE.min}
-							max={maxClusterSize}
-							bind:value={minClusterSize}
-							class="w-32 accent-primary"
+							min="0"
+							max="0.95"
+							step="0.01"
+							bind:value={scoreCutoff}
+							class="w-24 accent-primary"
 						/>
-						<span class="w-6 font-mono tabular-nums">{minClusterSize}</span>
+						<span class="w-8 font-mono tabular-nums">{scoreCutoff.toFixed(2)}</span>
 						<HoverInfo
-							text="The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Recomputes in about a fifth of a second, so drag it."
+							text="A real cosine similarity, so the cut-off is meaningful. Applied to the results already fetched — moving it does not re-run the search."
 						/>
 					</label>
+				{/if}
+			</div>
+		</div>
 
-					<div class="flex items-center gap-2">
-						<Switch.Root
-							id="center-by-question"
-							bind:checked={centerByQuestion}
-							class="inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-						>
-							<Switch.Thumb
-								class="pointer-events-none block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.125rem]"
-							/>
-						</Switch.Root>
-						<label for="center-by-question" class="cursor-pointer">Centre by question</label>
-						<HoverInfo
-							text="Every respondent was asked the same questions, and a chunk contains its question verbatim — so left alone, clustering recovers the interview guide rather than what anyone said. Centring subtracts each question's average before grouping, leaving the variation between answers. Turn it off to see the raw structure."
+		<div class="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
+			<div class="flex min-h-[26rem] flex-1 flex-col rounded-lg border border-gray-200 bg-white">
+				<div class="relative min-h-0 flex-1">
+					{#if clusterError && !clusters}
+						<p class="p-5 text-sm text-gray-500">{clusterError}</p>
+					{:else if !clusters}
+						<div class="h-full w-full animate-pulse rounded-lg bg-gray-100"></div>
+					{:else if points.length === 0}
+						<p class="p-5 text-sm text-gray-500">
+							No chunks of this kind match the filters, so there is nothing to plot.
+						</p>
+					{:else}
+						<ScatterPlot
+							{points}
+							{selectedId}
+							bind:hoveredId
+							{matchedIds}
+							onselect={(id) => {
+								selectedId = id;
+								if (id) focusedCluster = null;
+							}}
 						/>
-					</div>
-
-					<div class="flex items-center gap-2">
-						<Switch.Root
-							id="include-synthetic"
-							bind:checked={includeSynthetic}
-							class="inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-						>
-							<Switch.Thumb
-								class="pointer-events-none block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.125rem]"
-							/>
-						</Switch.Root>
-						<label for="include-synthetic" class="cursor-pointer">Include test runs</label>
-					</div>
-
-					<label class="flex items-center gap-1.5">
-						<span class="text-gray-500">Interviews</span>
-						<select
-							bind:value={interviewStatus}
-							class="rounded-md border border-gray-200 py-1 pr-7 pl-2 text-xs focus:border-primary focus:ring-0"
-						>
-							<option value={null}>Any status</option>
-							<option value="completed">Completed</option>
-							<option value="active">Active</option>
-							<option value="inactive">Inactive</option>
-						</select>
-					</label>
-
-					{#if searchResponse}
-						<label class="flex items-center gap-2">
-							<span class="text-gray-500">Min score</span>
-							<input
-								type="range"
-								min="0"
-								max="0.95"
-								step="0.01"
-								bind:value={scoreCutoff}
-								class="w-24 accent-primary"
-							/>
-							<span class="w-8 font-mono tabular-nums">{scoreCutoff.toFixed(2)}</span>
-							<HoverInfo
-								text="A real cosine similarity, so the cut-off is meaningful. Applied to the results already fetched — moving it does not re-run the search."
-							/>
-						</label>
+						{#if clusterLoading}
+							<span
+								class="absolute top-2 left-2 rounded-md bg-white/90 px-2 py-1 text-xs text-gray-400"
+							>
+								Reclustering…
+							</span>
+						{/if}
 					{/if}
 				</div>
-			</div>
 
-			<div class="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
-				<div class="flex min-h-[26rem] flex-1 flex-col rounded-lg border border-gray-200 bg-white">
-					<div class="relative min-h-0 flex-1">
-						{#if clusterError && !clusters}
-							<p class="p-5 text-sm text-gray-500">{clusterError}</p>
-						{:else if !clusters}
-							<div class="h-full w-full animate-pulse rounded-lg bg-gray-100"></div>
-						{:else if points.length === 0}
-							<p class="p-5 text-sm text-gray-500">
-								No chunks of this kind match the filters, so there is nothing to plot.
-							</p>
-						{:else}
-							<ScatterPlot
-								{points}
-								{selectedId}
-								bind:hoveredId
-								{matchedIds}
-								onselect={(id) => {
-									selectedId = id;
-									if (id) focusedCluster = null;
-								}}
+				{#if clusters}
+					<div
+						class="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 px-4 py-2 text-xs text-gray-500"
+					>
+						<span>
+							<span class="font-medium text-gray-700">{formatNumber(clusters.n_clusters)}</span>
+							clusters
+						</span>
+						<span class="flex items-center gap-1.5">
+							<span class="inline-block h-2 w-2 rounded-full" style="background:{OUTLIER_COLOR}"
+							></span>
+							{formatNumber(clusters.n_outliers)} unplaced
+						</span>
+						<span>{formatNumber(clusters.n_points)} chunks</span>
+						<span class="flex items-center gap-1">
+							{formatPercent(clusters.explained_variance_2d)} of the spread shown
+							<!-- Stated rather than left to be assumed. Around a third is
+							     normal for text embeddings: points far apart really are far
+							     apart, but points close together need not be. -->
+							<HoverInfo
+								text="The map is a flat shadow of a {clusters.components}-dimensional space, and shows about {formatPercent(
+									clusters.explained_variance_2d
+								)} of the variation in it. Read distance as a navigation aid, not as evidence — things far apart on screen are genuinely far apart, but things close together may not be."
 							/>
-							{#if clusterLoading}
-								<span
-									class="absolute top-2 left-2 rounded-md bg-white/90 px-2 py-1 text-xs text-gray-400"
-								>
-									Reclustering…
-								</span>
-							{/if}
+						</span>
+						{#if !clusters.centered_by_question}
+							<span class="text-amber-700">Uncentred</span>
 						{/if}
 					</div>
+				{/if}
+			</div>
 
-					{#if clusters}
-						<div
-							class="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 px-4 py-2 text-xs text-gray-500"
-						>
-							<span>
-								<span class="font-medium text-gray-700">{formatNumber(clusters.n_clusters)}</span>
-								clusters
-							</span>
-							<span class="flex items-center gap-1.5">
-								<span class="inline-block h-2 w-2 rounded-full" style="background:{OUTLIER_COLOR}"
-								></span>
-								{formatNumber(clusters.n_outliers)} unplaced
-							</span>
-							<span>{formatNumber(clusters.n_points)} chunks</span>
-							<span class="flex items-center gap-1">
-								{formatPercent(clusters.explained_variance_2d)} of the spread shown
-								<!-- Stated rather than left to be assumed. Around a third is
-								     normal for text embeddings: points far apart really are far
-								     apart, but points close together need not be. -->
-								<HoverInfo
-									text="The map is a flat shadow of a {clusters.components}-dimensional space, and shows about {formatPercent(
-										clusters.explained_variance_2d
-									)} of the variation in it. Read distance as a navigation aid, not as evidence — things far apart on screen are genuinely far apart, but things close together may not be."
-								/>
-							</span>
-							{#if !clusters.centered_by_question}
-								<span class="text-amber-700">Uncentred</span>
-							{/if}
-						</div>
-					{/if}
-				</div>
-
-				<div class="flex min-h-[26rem] shrink-0 lg:w-[24rem]">
-					<div class="w-full">
-						<DetailPanel
-							clusters={clusters?.clusters ?? []}
-							search={visibleSearch}
-							{searchLoading}
-							{searchError}
-							cutoffHiding={(searchResponse?.items ?? []).length -
-								(visibleSearch?.items ?? []).length}
-							{detail}
-							{detailLoading}
-							{detailError}
-							{selectedId}
-							{focusedCluster}
-							onselect={(id) => (selectedId = id)}
-							onfocuscluster={(cluster) => (focusedCluster = cluster)}
-						/>
-					</div>
+			<div class="flex min-h-[26rem] shrink-0 lg:w-[24rem]">
+				<div class="w-full">
+					<DetailPanel
+						clusters={clusters?.clusters ?? []}
+						search={visibleSearch}
+						{searchLoading}
+						{searchError}
+						cutoffHiding={(searchResponse?.items ?? []).length -
+							(visibleSearch?.items ?? []).length}
+						{detail}
+						{detailLoading}
+						{detailError}
+						{selectedId}
+						{focusedCluster}
+						onselect={(id) => (selectedId = id)}
+						onfocuscluster={(cluster) => (focusedCluster = cluster)}
+					/>
 				</div>
 			</div>
-		{/if}
+		</div>
 	{/if}
 </div>
