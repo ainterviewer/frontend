@@ -12,6 +12,7 @@
 		colorOf,
 		grouped,
 		strengthOf,
+		visible = () => true,
 		describe,
 		resetKey = null,
 		stale = false,
@@ -40,6 +41,16 @@
 		 *  HDBSCAN reports it; flat for the guide, where membership is recorded
 		 *  rather than inferred. */
 		strengthOf: (point: EmbeddingClusterPoint) => number;
+		/**
+		 * Whether the reader is currently looking at this point. A point that is
+		 * not stays plotted — it is part of the shape the projection produced, and
+		 * removing it would move nothing on screen except the reader's sense of
+		 * how big the cloud is — but it is faded almost out, dropped underneath
+		 * the rest, and taken out of hover, click and arrow-key reach, so it is
+		 * context rather than something to land on. Defaults to showing
+		 * everything.
+		 */
+		visible?: (point: EmbeddingClusterPoint) => boolean;
 		/** The second line of the hover card: which group this point is in. */
 		describe: (point: EmbeddingClusterPoint) => string;
 		/**
@@ -113,17 +124,28 @@
 		return zoom.y + zoom.k * scales.y(p.y);
 	}
 
-	// Ungrouped points first so they end up under the grouped ones: they are the
-	// most numerous and the least specific, and a grey drawn over a coloured
-	// point hides the one the reader is more likely to be after.
-	let ordered = $derived([...points].sort((a, b) => Number(grouped(a)) - Number(grouped(b))));
+	// Painting order, back to front: points the reader has taken out of view
+	// first, then ungrouped ones, then the rest. Both are drawn under for the
+	// same reason — they are the least specific thing on the map, and a grey or
+	// a ghost drawn over a coloured point hides the one the reader is after.
+	let ordered = $derived(
+		[...points].sort(
+			(a, b) => Number(visible(a)) - Number(visible(b)) || Number(grouped(a)) - Number(grouped(b))
+		)
+	);
+
+	/** The points that can be hovered, clicked or stepped to. */
+	let reachable = $derived(ordered.filter((point) => visible(point)));
 
 	function radius(p: EmbeddingClusterPoint) {
 		if (p.id === selectedId) return 6;
 		return grouped(p) ? 3.5 : 2.5;
 	}
 
-	function opacity(p: EmbeddingClusterPoint) {
+	/** What a point out of view fades to, at most. */
+	const VEILED_OPACITY = 0.1;
+
+	function strength(p: EmbeddingClusterPoint) {
 		// Dimmed rather than dropped while a search is up: a result you cannot
 		// see in context is a list, and the map is here to give the context.
 		if (matchedIds && !matchedIds.has(p.id)) return 0.1;
@@ -132,6 +154,14 @@
 		// low-probability points are on cluster edges, which is exactly where a
 		// reader looks when deciding if a cluster holds.
 		return 0.35 + 0.6 * strengthOf(p);
+	}
+
+	function opacity(p: EmbeddingClusterPoint) {
+		const base = strength(p);
+		// Capped rather than multiplied: a point already faint for one of the
+		// reasons above is faint enough, and two dimmings multiplied together
+		// take it to nothing.
+		return visible(p) ? base : Math.min(base, VEILED_OPACITY);
 	}
 
 	/** The point nearest a screen position, if anything is near enough. */
@@ -143,7 +173,7 @@
 
 		let best: EmbeddingClusterPoint | null = null;
 		let bestDistance = HIT_RADIUS * HIT_RADIUS;
-		for (const p of points) {
+		for (const p of reachable) {
 			const dx = screenX(p) - px;
 			const dy = screenY(p) - py;
 			const distance = dx * dx + dy * dy;
@@ -224,7 +254,7 @@
 	// surface whose only affordance is a mouse is not finished, and stepping
 	// through the points in plotted order at least makes every one reachable.
 	function onkeydown(event: KeyboardEvent) {
-		if (points.length === 0) return;
+		if (reachable.length === 0) return;
 
 		if (event.key === 'Escape') {
 			onselect(null);
@@ -235,9 +265,9 @@
 		const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
 		if (step !== 0) {
 			event.preventDefault();
-			const current = ordered.findIndex((p) => p.id === (hoveredId ?? selectedId));
-			const next = (current + step + ordered.length) % ordered.length;
-			hoveredId = ordered[next].id;
+			const current = reachable.findIndex((p) => p.id === (hoveredId ?? selectedId));
+			const next = (current + step + reachable.length) % reachable.length;
+			hoveredId = reachable[next].id;
 			return;
 		}
 
@@ -303,7 +333,7 @@
 		     the map is where they are reachable one at a time. -->
 		<button
 			type="button"
-			aria-label="Cluster map, {points.length} chunks. Left and right arrows step through them, Enter opens one."
+			aria-label="Cluster map, {reachable.length} chunks. Left and right arrows step through them, Enter opens one."
 			class="absolute inset-0 touch-none rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
 			class:cursor-grabbing={dragging}
 			class:cursor-crosshair={!dragging}

@@ -4,6 +4,7 @@ import type {
 	EmbeddingKind,
 	GroupKind,
 	InterviewStatus,
+	LanguageCode,
 	Projection,
 	QueryTask
 } from '$lib/api/types.gen';
@@ -19,14 +20,14 @@ import type {
  */
 export const KINDS: { value: EmbeddingKind; label: string; hint: string }[] = [
 	{
-		value: 'qa_pair',
-		label: 'Q&A pairs',
-		hint: 'A main question, its answer, and every probe that followed. The unit most analysis wants.'
-	},
-	{
 		value: 'message',
 		label: 'Messages',
 		hint: 'One respondent message of free text. Short, but grouped by what was said rather than what was asked.'
+	},
+	{
+		value: 'qa_pair',
+		label: 'Q&A pairs',
+		hint: 'A main question, its answer, and every probe that followed. The unit most analysis wants.'
 	},
 	{
 		value: 'interview',
@@ -136,26 +137,56 @@ export const N_REPRESENTATIVES = 3;
  * asking for ten hits from completed interviews returns ten of those, not
  * whichever of the global top ten happened to be completed.
  *
- * Language is deliberately absent. The `[lang]` in the route is the language
- * the *guide* is being authored in, not a cohort — the report page pools every
- * language for the same reason — and each hit carries its own language for a
- * reader who needs to tell them apart.
+ * Language is a cohort here and nothing to do with the `[lang]` in the route,
+ * which is the language the *guide* is being authored in. An empty list means
+ * every language, which is the default: the report page pools them all for the
+ * same reason, and each hit carries its own language for a reader who only
+ * needs to tell them apart rather than to exclude one.
+ *
+ * Filtering here is a different act from hiding a language on the map. This
+ * one changes what is embedded into the projection, so the axes, the clusters
+ * and every purity figure are computed over the narrowed corpus — which is the
+ * point, and also why it costs a refetch. `visibleLanguages` on the page is the
+ * cheap half: same projection, some points dimmed.
  */
 export type ExploreFilters = {
 	status: InterviewStatus | null;
+	languages: LanguageCode[];
 	include_synthetic: boolean;
 };
 
 export function defaultFilters(): ExploreFilters {
-	return { status: null, include_synthetic: false };
+	return { status: null, languages: [], include_synthetic: false };
 }
 
-/** The filter half of a request, with `null` status left off entirely. */
+/**
+ * The filter half of a request, with `null` status and an empty language list
+ * left off entirely — the API reads a missing `language` as "every one", and
+ * sending `[]` would be a request for none.
+ */
 export function filterQuery(filters: ExploreFilters) {
 	return {
 		...(filters.status ? { status: filters.status } : {}),
+		...(filters.languages.length > 0 ? { language: filters.languages } : {}),
 		include_synthetic: filters.include_synthetic
 	};
+}
+
+/** Whether two language selections hold the same codes, order aside. */
+export function sameLanguages(a: LanguageCode[], b: LanguageCode[]) {
+	return a.length === b.length && a.every((code) => b.includes(code));
+}
+
+/** One code added or removed, kept in the order `languages` lists them. */
+export function toggleLanguage(
+	selected: LanguageCode[],
+	code: LanguageCode,
+	order: LanguageCode[]
+) {
+	const next = selected.includes(code)
+		? selected.filter((other) => other !== code)
+		: [...selected, code];
+	return order.filter((other) => next.includes(other));
 }
 
 /** Every knob the scatter is drawn from. */
@@ -228,8 +259,8 @@ export function isToolbarChange(previous: ClusterSettings | null, next: ClusterS
  * rail's reset button and the button that reopens it — and two counts that can
  * disagree are worse than no count at all.
  *
- * `center_by_language` counts only where it does anything: a monolingual
- * project would otherwise wear a badge for a setting it is not shown and could
+ * The two language settings count only where they do anything: a monolingual
+ * project would otherwise wear a badge for controls it is not shown and could
  * not change.
  */
 export function offDefaultCount(settings: ClusterSettings, multilingual: boolean) {
@@ -242,6 +273,7 @@ export function offDefaultCount(settings: ClusterSettings, multilingual: boolean
 		settings.center_by_question !== fallback.center_by_question,
 		multilingual && settings.center_by_language !== fallback.center_by_language,
 		settings.filters.status !== fallback.filters.status,
+		multilingual && settings.filters.languages.length > 0,
 		settings.filters.include_synthetic !== fallback.filters.include_synthetic
 	].filter(Boolean).length;
 }
@@ -258,6 +290,7 @@ export function isDefaultClusterSettings(settings: ClusterSettings) {
 		settings.center_by_question === fallback.center_by_question &&
 		settings.center_by_language === fallback.center_by_language &&
 		settings.filters.status === fallback.filters.status &&
+		sameLanguages(settings.filters.languages, fallback.filters.languages) &&
 		settings.filters.include_synthetic === fallback.filters.include_synthetic
 	);
 }

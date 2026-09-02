@@ -1,7 +1,14 @@
 <script lang="ts">
-	import type { EmbeddingKind, GroupKind, InterviewStatus, Projection } from '$lib/api/types.gen';
+	import type {
+		EmbeddingKind,
+		GroupKind,
+		InterviewStatus,
+		LanguageCode,
+		Projection
+	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { Switch } from 'bits-ui';
+	import { format } from 'd3-format';
 	import type { Snippet } from 'svelte';
 	import {
 		DEFAULT_CENTER_BY_LANGUAGE,
@@ -15,7 +22,8 @@
 		MIN_DIST_RANGE,
 		N_NEIGHBORS_RANGE,
 		PROJECTIONS,
-		defaultFilters
+		defaultFilters,
+		toggleLanguage
 	} from './explore';
 
 	let {
@@ -31,9 +39,12 @@
 		centerByQuestion = $bindable(),
 		centerByLanguage = $bindable(),
 		interviewStatus = $bindable(),
+		filterLanguages = $bindable(),
 		includeSynthetic = $bindable(),
+		visibleLanguages = $bindable(),
 		scoreCutoff = $bindable(),
 		searching,
+		languages,
 		multilingual,
 		offDefault,
 		ongroupmode,
@@ -53,14 +64,35 @@
 		centerByQuestion: boolean;
 		centerByLanguage: boolean;
 		interviewStatus: InterviewStatus | null;
+		/**
+		 * Languages the corpus is narrowed to before it is projected, empty for
+		 * all of them. Costs a refetch, and moves every point on the map: the
+		 * projection is fitted to what is left.
+		 */
+		filterLanguages: LanguageCode[];
 		includeSynthetic: boolean;
+		/**
+		 * Languages currently on show, empty for all of them. Costs nothing and
+		 * moves nothing — the same projection with the rest faded out — which is
+		 * why it sits under Colour rather than beside the filters.
+		 */
+		visibleLanguages: LanguageCode[];
 		scoreCutoff: number;
 		/** Whether a search is up, which is the only time a score cut-off means anything. */
 		searching: boolean;
 		/**
-		 * Whether the plotted corpus holds more than one language. Centring on
-		 * language is a real choice only where there is more than one to centre;
-		 * on a single-language corpus it subtracts one mean from everything.
+		 * The languages on offer: the project's own localizations at first paint,
+		 * replaced by what the corpus actually holds once the status call lands.
+		 * Never the plotted points, which the filter below would narrow out from
+		 * under itself. `count` is null while it is the former — the project
+		 * knows its languages, not how much of each is embedded.
+		 */
+		languages: { code: LanguageCode; name: string; count: number | null }[];
+		/**
+		 * Whether the corpus holds more than one language. Centring on language,
+		 * filtering by it and hiding one are all real choices only where there is
+		 * more than one; on a single-language corpus centring subtracts one mean
+		 * from everything and the other two can only ever say "all of it".
 		 */
 		multilingual: boolean;
 		/** How many settings are off default, counted by `offDefaultCount`. */
@@ -78,10 +110,19 @@
 		centerByQuestion = DEFAULT_CENTER_BY_QUESTION;
 		centerByLanguage = DEFAULT_CENTER_BY_LANGUAGE;
 		interviewStatus = defaultFilters().status;
+		filterLanguages = defaultFilters().languages;
 		includeSynthetic = defaultFilters().include_synthetic;
+		// Not counted by `offDefault` — it is a view, not a setting — but a reader
+		// reaching for the way back means the whole map, not most of it.
+		visibleLanguages = [];
 	}
 
 	let clustering = $derived(groupMode === 'cluster');
+
+	const formatNumber = format(',');
+
+	/** The order a selection is kept in, so two chips read the same either way. */
+	let codes = $derived(languages.map((language) => language.code));
 </script>
 
 {#snippet heading(text: string)}
@@ -252,6 +293,65 @@
 	{@render toggle('Centre by language', centerByLanguage, (value) => (centerByLanguage = value))}
 {/snippet}
 
+<!-- A wrapped row of chips rather than a multi-select: three or four language
+     codes fit across the rail, every option is one click from every other, and
+     an empty selection has somewhere to be said out loud. "All" is a state, not
+     a shortcut — it is what an empty list means, and clicking it clears. -->
+{#snippet languageChips(
+	name: string,
+	selected: LanguageCode[],
+	set: (next: LanguageCode[]) => void
+)}
+	<div role="group" aria-label={name} class="flex flex-wrap gap-1">
+		<button
+			type="button"
+			aria-pressed={selected.length === 0}
+			onclick={() => set([])}
+			class="cursor-pointer rounded-md border px-1.5 py-0.5 text-[0.6875rem] font-medium transition-colors {selected.length ===
+			0
+				? 'border-primary bg-primary text-on-primary'
+				: 'border-gray-200 text-gray-500 hover:text-gray-900'}"
+		>
+			All
+		</button>
+		{#each languages as language (language.code)}
+			{@const on = selected.includes(language.code)}
+			<!-- The code on the chip and the name in the tooltip, rather than the
+			     other way round: four names do not fit across the rail, and the
+			     codes are what the map's own legend and hover cards say. -->
+			<button
+				type="button"
+				aria-pressed={on}
+				aria-label={language.name}
+				title={language.count === null
+					? language.name
+					: `${language.name} — ${formatNumber(language.count)} chunks`}
+				onclick={() => set(toggleLanguage(selected, language.code, codes))}
+				class="flex cursor-pointer items-baseline gap-1 rounded-md border px-1.5 py-0.5 text-[0.6875rem] font-medium transition-colors {on
+					? 'border-primary bg-primary text-on-primary'
+					: 'border-gray-200 text-gray-500 hover:text-gray-900'}"
+			>
+				{language.code.toUpperCase()}
+				{#if language.count !== null}
+					<span
+						class="font-mono text-[0.625rem] tabular-nums {on ? 'opacity-70' : 'text-gray-400'}"
+					>
+						{formatNumber(language.count)}
+					</span>
+				{/if}
+			</button>
+		{/each}
+	</div>
+{/snippet}
+
+{#snippet visibleLanguageControl()}
+	{@render languageChips('Languages shown', visibleLanguages, (next) => (visibleLanguages = next))}
+{/snippet}
+
+{#snippet filterLanguageControl()}
+	{@render languageChips('Languages included', filterLanguages, (next) => (filterLanguages = next))}
+{/snippet}
+
 {#snippet cutoffControl()}
 	<input
 		type="range"
@@ -283,6 +383,16 @@
 		<div class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
 			{@render heading('Colour')}
 			{@render stacked('Group by', 'What the map is coloured by.', null, groupControl)}
+			{#if multilingual}
+				{@render stacked(
+					'Show',
+					'Which languages to look at. The map is not recomputed — the same points stay where they are and the rest fade back, so a language can be picked out of the layout the whole corpus produced. Cluster sizes, counts and purity still describe every point. To leave a language out of the projection itself, use the filter under Corpus.',
+					visibleLanguages.length === 0
+						? 'All'
+						: `${visibleLanguages.length} of ${languages.length}`,
+					visibleLanguageControl
+				)}
+			{/if}
 
 			{@render heading('Corpus')}
 			{@render stacked(
@@ -297,6 +407,14 @@
 				null,
 				statusControl
 			)}
+			{#if multilingual}
+				{@render stacked(
+					'Languages',
+					'Which languages the chunks are drawn from. Applied in SQL before anything is embedded into the projection, so the axes, the clusters and every purity figure are computed over the languages left — a real narrowing of the corpus, and a recompute. To keep the whole map and just look at one language, use Show under Colour.',
+					filterLanguages.length === 0 ? 'All' : `${filterLanguages.length} of ${languages.length}`,
+					filterLanguageControl
+				)}
+			{/if}
 			{@render inline(
 				'Include test runs',
 				'Synthetic interviews, run to try the guide out rather than answered by a respondent. Off by default: they are rarely findings.',

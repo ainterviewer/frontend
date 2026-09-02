@@ -10,7 +10,9 @@
 		EmbeddingStatus,
 		GroupKind,
 		InterviewStatus,
-		Projection
+		LanguageCode,
+		Projection,
+		ProjectLanguage
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { OUTLIER_COLOR, mapColor } from '$lib/config/chartColors';
@@ -48,6 +50,9 @@
 
 	let { data }: { data: PageData } = $props();
 
+	/** One option in the language controls. `count` is null until status lands. */
+	type ExploreLanguage = { code: LanguageCode; name: string; count: number | null };
+
 	const formatNumber = format(',');
 	const formatPercent = format('.0%');
 
@@ -72,9 +77,14 @@
 	let centerByQuestion = $state(DEFAULT_CENTER_BY_QUESTION);
 	let centerByLanguage = $state(DEFAULT_CENTER_BY_LANGUAGE);
 	let interviewStatus = $state<InterviewStatus | null>(defaultFilters().status);
+	let filterLanguages = $state<LanguageCode[]>(defaultFilters().languages);
 	let includeSynthetic = $state(defaultFilters().include_synthetic);
 
-	let filters = $derived({ status: interviewStatus, include_synthetic: includeSynthetic });
+	let filters = $derived({
+		status: interviewStatus,
+		languages: filterLanguages,
+		include_synthetic: includeSynthetic
+	});
 	let settings = $derived<ClusterSettings>({
 		kind,
 		projection,
@@ -109,6 +119,16 @@
 	let focusedGroup = $state<string | null>(null);
 	let hoveredId = $state<string | null>(null);
 
+	/**
+	 * Languages the reader is looking at, empty for all of them.
+	 *
+	 * Not part of `ClusterSettings`, and deliberately so: this is the same
+	 * projection with some of it faded back, which costs a recolour rather than
+	 * a request. `filters.languages` is the other half — it narrows the corpus
+	 * before it is projected, so it moves every point and does cost one.
+	 */
+	let visibleLanguages = $state<LanguageCode[]>([]);
+
 	// Open to begin with: a reader who has not seen this page before should not
 	// have to find the controls, and the map has room for both at this width.
 	let railOpen = $state(true);
@@ -130,6 +150,61 @@
 
 	/** Text search is the one thing here that needs the inference server. */
 	let searchAvailable = $derived(status?.healthy ?? false);
+
+	/**
+	 * The languages the two language controls offer.
+	 *
+	 * Never read from the plotted points, which are whatever the current unit
+	 * and filters returned: a filter built on those would delete its own options
+	 * the moment it was used — pick Danish, and English is no longer on offer to
+	 * pick back.
+	 *
+	 * The project's own localizations are the list at first paint. They come
+	 * down with the layout load, so they are here before this component is, and
+	 * the controls are on screen from the first frame rather than appearing a
+	 * beat later when a request answers. They also carry real names, which two
+	 * letters do not.
+	 *
+	 * The status call adds the counts when it lands, and appends any language
+	 * the corpus holds that the project no longer declares — a localization can
+	 * be removed after interviews were run in it, and a list that claims to be
+	 * complete has to say so. It does not take options away: a language nobody
+	 * was interviewed in stays on offer, reading `0`, which is a more useful
+	 * thing to be told than a chip that quietly never existed.
+	 *
+	 * The project's order is kept for the same reason it is the source: it is
+	 * fixed and alphabetical, so the chips do not rearrange themselves under the
+	 * pointer when the counts arrive.
+	 */
+	// `page.data` is loosely typed at this depth, so the shape is stated here.
+	let projectLanguages = $derived<ProjectLanguage[]>(page.data.project?.available_languages ?? []);
+
+	let languages = $derived.by((): ExploreLanguage[] => {
+		const counts = status
+			? new Map(
+					Object.entries(status.languages ?? {}).map(([code, count]) => [code.toUpperCase(), count])
+				)
+			: null;
+
+		const declared = projectLanguages.map((language) => ({
+			code: language.code,
+			name: language.name,
+			// Null while the status is still out — the project knows its
+			// languages, not how much of each is embedded — and 0 once it has
+			// answered and had nothing to say about this one.
+			count: counts ? (counts.get(language.code.toUpperCase()) ?? 0) : null
+		}));
+
+		if (!counts) return declared;
+
+		const known = new Set(declared.map((language) => language.code.toUpperCase()));
+		const undeclared = [...counts]
+			.filter(([code]) => !known.has(code))
+			.sort(([, a], [, b]) => b - a)
+			.map(([code, count]) => ({ code, name: code, count }));
+
+		return [...declared, ...undeclared];
+	});
 
 	// -- status ---------------------------------------------------------------
 
@@ -400,23 +475,44 @@
 	let groupLabels = $derived(new Map(groups.map((group) => [group.key, group.label])));
 
 	/**
-	 * Whether there is more than one language on the map.
+	 * Whether the project holds more than one language.
 	 *
 	 * On a single-language project, colouring by language paints every point
 	 * the same colour and the purity of every cluster is 1.0 — a control that
 	 * can only ever say one thing, and a warning that can only ever be noise.
-	 * So the mode and the badge are offered only where they can distinguish.
+	 * So the mode, the badge and both language controls are offered only where
+	 * they can distinguish.
+	 *
+	 * Asked of the project rather than of the plotted points, because the
+	 * language filter is one of the things that decides what is plotted: read
+	 * off the points, narrowing to Danish would remove the control that did the
+	 * narrowing and strand the reader there.
 	 */
-	let multilingual = $derived(new Set(points.map((point) => point.language)).size > 1);
+	let multilingual = $derived(languages.length > 1);
+
+	/** Whether a point is one of the languages currently on show. */
+	function visible(point: EmbeddingClusterPoint) {
+		return visibleLanguages.length === 0 || visibleLanguages.includes(point.language);
+	}
+
+	// Hiding a language and excluding it from the corpus are separate controls,
+	// and set against each other they leave a map with nothing lit on it. The
+	// filter wins: it is the one that says what the map is of.
+	$effect(() => {
+		if (filterLanguages.length === 0 || visibleLanguages.length === 0) return;
+		const kept = visibleLanguages.filter((code) => filterLanguages.includes(code));
+		if (kept.length !== visibleLanguages.length) visibleLanguages = kept;
+	});
 
 	/** Shared by the rail's reset button and the button that reopens the rail. */
 	let offDefault = $derived(offDefaultCount(settings, multilingual));
 
 	let modes = $derived(GROUP_MODES.filter((mode) => mode.value !== 'language' || multilingual));
 
-	// A filter can take the last of a second language off the map while it is
-	// what the points are coloured by, which would leave the reader on a mode
-	// whose button has just gone.
+	// The status call is what says whether there is a second language, and it
+	// lands after the first paint — so the mode can be gone by the time the
+	// answer arrives, and a reader who got to it first would be left on a mode
+	// whose button no longer exists.
 	$effect(() => {
 		if (groupMode === 'language' && !multilingual) changeGroupMode('cluster');
 	});
@@ -609,9 +705,12 @@
 				bind:centerByQuestion
 				bind:centerByLanguage
 				bind:interviewStatus
+				bind:filterLanguages
 				bind:includeSynthetic
+				bind:visibleLanguages
 				bind:scoreCutoff
 				searching={searchResponse !== null}
+				{languages}
 				{multilingual}
 				{offDefault}
 				ongroupmode={changeGroupMode}
@@ -693,6 +792,7 @@
 							{colorOf}
 							{grouped}
 							{strengthOf}
+							{visible}
 							{describe}
 							resetKey={`${kind}:${projection}`}
 							stale={clusterLoading}
@@ -763,6 +863,19 @@
 						{/if}
 						{#if multilingual && !clusters.centered_by_language}
 							<span class="text-amber-700">Uncentred by language</span>
+						{/if}
+						<!-- Said here because every number in this strip is computed over
+						     the whole run, hidden points included: the reader is looking
+						     at a subset of a map that is still counted in full, and the
+						     alternative — recounting on a view toggle — would make two
+						     controls that look alike report different totals. -->
+						{#if visibleLanguages.length > 0}
+							<span class="flex items-center gap-1">
+								Showing {visibleLanguages.map((code) => code.toUpperCase()).join(', ')}
+								<HoverInfo
+									text="A view filter: the map is unchanged and the other languages are faded, not removed. The counts here still describe every plotted chunk. To leave a language out of the projection and the clustering, use Languages under Corpus in the controls."
+								/>
+							</span>
 						{/if}
 
 						{#if clusterLoading}

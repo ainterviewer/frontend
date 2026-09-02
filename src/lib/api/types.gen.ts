@@ -1262,6 +1262,12 @@ export type EmbeddingStatus = {
         [key: string]: number;
     };
     /**
+     * Languages
+     */
+    languages?: {
+        [key: string]: number;
+    };
+    /**
      * Total
      */
     total?: number;
@@ -5072,7 +5078,7 @@ export type SearchEmbeddingsData = {
         /**
          * Language
          */
-        language?: string | null;
+        language?: Array<LanguageCode> | null;
         /**
          * Status
          */
@@ -5147,7 +5153,7 @@ export type FindSimilarEmbeddingsData = {
         /**
          * Language
          */
-        language?: string | null;
+        language?: Array<LanguageCode> | null;
         /**
          * Status
          */
@@ -5244,7 +5250,7 @@ export type ClusterEmbeddingsData = {
         /**
          * Language
          */
-        language?: string | null;
+        language?: Array<LanguageCode> | null;
         /**
          * Status
          */
