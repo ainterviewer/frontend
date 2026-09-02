@@ -109,7 +109,7 @@
 	{#each coverage as entry (entry.label)}
 		<span
 			><span class="font-medium text-gray-700">{formatNumber(entry.count)}</span>
-			{entry.label.toLowerCase()}</span
+			{entry.label}</span
 		>
 	{/each}
 

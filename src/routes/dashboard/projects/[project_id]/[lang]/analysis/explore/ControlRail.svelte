@@ -125,10 +125,14 @@
 	let codes = $derived(languages.map((language) => language.code));
 </script>
 
-{#snippet heading(text: string)}
+<!-- A rule and an icon per group: the rail is one long column of small
+     controls, and without a break between them the eye has to read the
+     headings to find where one group ends. -->
+{#snippet heading(text: string, icon: string)}
 	<h3
-		class="mt-5 mb-1.5 text-[0.6875rem] font-semibold tracking-wide text-gray-400 uppercase first:mt-0"
+		class="mt-4 mb-1.5 flex items-center gap-1.5 border-t border-gray-100 pt-4 text-[0.6875rem] font-semibold tracking-wide text-gray-500 uppercase first:mt-0 first:border-t-0 first:pt-0"
 	>
+		<i class="fas {icon} text-[0.6875rem] text-gray-500"></i>
 		{text}
 	</h3>
 {/snippet}
@@ -369,7 +373,7 @@
 		class="flex shrink-0 flex-col rounded-lg border border-gray-200 bg-white lg:min-h-[26rem] lg:w-[15rem]"
 	>
 		<div class="flex items-center justify-between border-b border-gray-100 px-3 py-2">
-			<h2 class="text-[0.6875rem] font-semibold tracking-wide text-gray-400 uppercase">Controls</h2>
+			<h2 class="text-[0.6875rem] font-semibold tracking-wide text-gray-500 uppercase">Controls</h2>
 			<button
 				type="button"
 				onclick={() => (open = false)}
@@ -381,7 +385,7 @@
 		</div>
 
 		<div class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-			{@render heading('Colour')}
+			{@render heading('Colour', 'fa-palette')}
 			{@render stacked('Group by', 'What the map is coloured by.', null, groupControl)}
 			{#if multilingual}
 				{@render stacked(
@@ -394,7 +398,7 @@
 				)}
 			{/if}
 
-			{@render heading('Corpus')}
+			{@render heading('Corpus', 'fa-layer-group')}
 			{@render stacked(
 				'Unit',
 				KINDS.find((option) => option.value === kind)?.hint ?? '',
@@ -421,7 +425,7 @@
 				syntheticControl
 			)}
 
-			{@render heading('Layout')}
+			{@render heading('Layout', 'fa-vector-square')}
 			{@render stacked(
 				'Projection',
 				PROJECTIONS.find((option) => option.value === projection)?.hint ?? '',
@@ -445,7 +449,7 @@
 				)}
 			{/if}
 
-			{@render heading('Clustering')}
+			{@render heading('Clustering', 'fa-circle-nodes')}
 			<!-- Dimmed away from the clusters, where it changes nothing that is on
 			     screen: the positions come from the projection, and the cluster ids
 			     it does change are not what the points are coloured by. The centring
@@ -478,7 +482,7 @@
 			{/if}
 
 			{#if searching}
-				{@render heading('Search results')}
+				{@render heading('Search results', 'fa-magnifying-glass')}
 				{@render stacked(
 					'Min score',
 					'A real cosine similarity, so the cut-off is meaningful. Applied to the results already fetched — moving it does not re-run the search.',
