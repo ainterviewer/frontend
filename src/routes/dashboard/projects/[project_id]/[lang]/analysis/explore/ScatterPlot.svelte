@@ -2,6 +2,7 @@
 	import type { EmbeddingClusterPoint } from '$lib/api/types.gen';
 	import { extent } from 'd3-array';
 	import { scaleLinear } from 'd3-scale';
+	import SweepBar from './SweepBar.svelte';
 
 	let {
 		points,
@@ -14,7 +15,6 @@
 		describe,
 		resetKey = null,
 		stale = false,
-		reserveTopLeft = false,
 		onselect
 	}: {
 		points: EmbeddingClusterPoint[];
@@ -57,17 +57,10 @@
 		 * is what the reader is steering by, and taking it away on every nudge of
 		 * a slider costs them their place — but they are no longer the answer to
 		 * the question on screen, and saying so is the difference between a
-		 * picture that is behind and a picture that is wrong.
+		 * picture that is behind and a picture that is wrong. The bar draws it;
+		 * the card's footer names it.
 		 */
 		stale?: boolean;
-		/**
-		 * Whether something else already sits in the top-left corner. The map does
-		 * not own that corner outright — the page puts the control that reopens
-		 * the rail there when the rail is away — so the busy chip drops below it
-		 * rather than under it. Down rather than across because the button's width
-		 * changes with its badge, and a vertical offset does not have to guess.
-		 */
-		reserveTopLeft?: boolean;
 		onselect: (id: string | null) => void;
 	} = $props();
 
@@ -259,16 +252,7 @@
 
 <div class="relative h-full w-full rounded-lg bg-white">
 	{#if stale}
-		<!-- An indeterminate bar rather than a percentage: the server reports no
-		     progress, and a bar that pretends to know how far along it is would be
-		     making it up. Along the top edge of the card so it reads as belonging
-		     to the map rather than floating over it, and out of the way of both
-		     the hover card and the reset button. -->
-		<div
-			class="pointer-events-none absolute inset-x-0 top-0 z-20 h-0.5 overflow-hidden rounded-t-lg"
-		>
-			<div class="sweep h-full w-1/3 bg-primary"></div>
-		</div>
+		<SweepBar />
 	{/if}
 
 	<div bind:this={plot} bind:clientWidth={width} bind:clientHeight={height} class="h-full w-full">
@@ -344,20 +328,6 @@
 		</div>
 	{/if}
 
-	{#if stale}
-		<!-- Named as well as drawn. The bar says something is happening; this says
-		     what, which is the part a reader who has just moved a slider needs in
-		     order to know the map they are looking at is not yet the answer. -->
-		<span
-			class="pointer-events-none absolute left-2 z-20 flex items-center gap-1.5 rounded-md bg-white/90 px-2 py-1 text-xs text-gray-500 shadow-sm"
-			class:top-2={!reserveTopLeft}
-			class:top-11={reserveTopLeft}
-		>
-			<i class="fa-solid fa-spinner fa-spin text-[0.625rem] text-gray-400"></i>
-			Reclustering…
-		</span>
-	{/if}
-
 	{#if transformed}
 		<button
 			type="button"
@@ -368,38 +338,3 @@
 		</button>
 	{/if}
 </div>
-
-<style>
-	/* Left to right and back, so the bar never appears to restart from nothing
-	   on a recompute that takes several seconds. */
-	.sweep {
-		animation: sweep 1.4s ease-in-out infinite alternate;
-	}
-
-	@keyframes sweep {
-		from {
-			transform: translateX(-100%);
-		}
-		to {
-			transform: translateX(300%);
-		}
-	}
-
-	/* A reader who has asked for less motion still has to be told the map is
-	   busy; a pulse in place carries that without anything travelling. */
-	@media (prefers-reduced-motion: reduce) {
-		.sweep {
-			width: 100%;
-			animation: pulse 1.4s ease-in-out infinite alternate;
-		}
-
-		@keyframes pulse {
-			from {
-				opacity: 0.25;
-			}
-			to {
-				opacity: 0.9;
-			}
-		}
-	}
-</style>

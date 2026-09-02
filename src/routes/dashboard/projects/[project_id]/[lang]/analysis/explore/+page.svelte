@@ -19,6 +19,7 @@
 	import DetailPanel from './DetailPanel.svelte';
 	import ControlRail from './ControlRail.svelte';
 	import ScatterPlot from './ScatterPlot.svelte';
+	import SweepBar from './SweepBar.svelte';
 	import StatusStrip from './StatusStrip.svelte';
 	import {
 		DEFAULT_CENTER_BY_LANGUAGE,
@@ -119,6 +120,13 @@
 	 * recolour rather than a request.
 	 */
 	let groupMode = $state<GroupKind>(DEFAULT_GROUP_MODE);
+
+	/**
+	 * How many chunks of the current unit are embedded, from the status call —
+	 * which lands well before the clustering does, so the wait can say what it is
+	 * waiting on. Null until it arrives, and the copy does without it.
+	 */
+	let embeddedCount = $derived(status?.coverage?.[kind] ?? null);
 
 	/** Text search is the one thing here that needs the inference server. */
 	let searchAvailable = $derived(status?.healthy ?? false);
@@ -643,7 +651,35 @@
 					{#if clusterError && !clusters}
 						<p class="p-5 text-sm text-gray-500">{clusterError}</p>
 					{:else if !clusters}
-						<div class="h-full w-full animate-pulse rounded-lg bg-gray-100"></div>
+						<!-- The first run has nothing to keep on screen, so this is all
+						     there is to look at. A grey box says only that something is
+						     missing; naming the work and roughly how long it takes is the
+						     difference between waiting and wondering whether it is broken. -->
+						<SweepBar />
+						<div
+							class="flex h-full w-full flex-col items-center justify-center gap-3 p-8 text-center"
+						>
+							<i class="fa-solid fa-spinner fa-spin text-lg text-gray-300"></i>
+							<div>
+								<p class="text-sm font-medium text-gray-700">
+									{projection === 'umap' ? 'Projecting and clustering' : 'Clustering'}
+								</p>
+								<p class="mx-auto mt-1 max-w-sm text-xs text-gray-500">
+									{#if projection === 'umap'}
+										UMAP is fitting {embeddedCount === null
+											? 'the corpus'
+											: `${formatNumber(embeddedCount)} chunks`} down to two dimensions and running HDBSCAN
+										in them. A few seconds — longer on the first run after the server starts, which compiles
+										the projection.
+									{:else}
+										Reducing {embeddedCount === null
+											? 'the corpus'
+											: `${formatNumber(embeddedCount)} chunks`} to 50 principal components and running
+										HDBSCAN over them.
+									{/if}
+								</p>
+							</div>
+						</div>
 					{:else if points.length === 0}
 						<p class="p-5 text-sm text-gray-500">
 							No chunks of this kind match the filters, so there is nothing to plot.
@@ -660,7 +696,6 @@
 							{describe}
 							resetKey={`${kind}:${projection}`}
 							stale={clusterLoading}
-							reserveTopLeft={!railOpen}
 							onselect={(id) => {
 								selectedId = id;
 								if (id) focusedGroup = null;
@@ -729,6 +764,18 @@
 						{#if multilingual && !clusters.centered_by_language}
 							<span class="text-amber-700">Uncentred by language</span>
 						{/if}
+
+						{#if clusterLoading}
+							<!-- Named here rather than over the map: this strip is already
+							     where the run describes itself, and a pill floating on the
+							     scatter covered the corner the reader drags from. The bar
+							     along the top edge is what catches the eye; this says which
+							     of the numbers beside it are about to change. -->
+							<span class="ml-auto flex items-center gap-1.5 text-gray-400">
+								<i class="fa-solid fa-spinner fa-spin text-[0.625rem]"></i>
+								Reclustering…
+							</span>
+						{/if}
 					</div>
 				{/if}
 			</div>
@@ -736,10 +783,11 @@
 			<div class="flex min-h-[26rem] shrink-0 lg:w-[24rem]">
 				<div class="w-full">
 					<DetailPanel
-						clusters={clusters?.clusters ?? []}
+						clusters={clusters?.clusters ?? null}
 						{groups}
 						{groupMode}
 						{multilingual}
+						clustersLoading={clusterLoading && clusters === null}
 						search={visibleSearch}
 						{searchLoading}
 						{searchError}

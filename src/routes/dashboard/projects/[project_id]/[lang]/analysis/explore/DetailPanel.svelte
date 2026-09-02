@@ -18,6 +18,7 @@
 		groups,
 		groupMode,
 		multilingual,
+		clustersLoading,
 		search,
 		searchLoading,
 		searchError,
@@ -30,7 +31,12 @@
 		onselect,
 		onfocusgroup
 	}: {
-		clusters: EmbeddingCluster[];
+		/**
+		 * The clusters of the run on screen, or `null` when there is no run —
+		 * still out, or failed. An empty array is a finding; no array is not, and
+		 * conflating them is how a panel ends up explaining a result it never got.
+		 */
+		clusters: EmbeddingCluster[] | null;
 		/** Every guide group the plotted points fall into, of both kinds. */
 		groups: EmbeddingGroup[];
 		groupMode: GroupKind;
@@ -41,6 +47,11 @@
 		 * would go.
 		 */
 		multilingual: boolean;
+		/**
+		 * Whether the first clustering run is still out. What separates a `null`
+		 * `clusters` that is on its way from one that failed.
+		 */
+		clustersLoading: boolean;
 		search: EmbeddingSearchResponse | null;
 		searchLoading: boolean;
 		searchError: string | null;
@@ -66,6 +77,10 @@
 	} = $props();
 
 	let listed = $derived(guideGroups(groups, groupMode));
+	/** No run, and none coming: the map alongside carries the reason. */
+	let unavailable = $derived(clusters === null && !clustersLoading);
+	/** The rows to list. Only reached once the two states above are ruled out. */
+	let listedClusters = $derived(clusters ?? []);
 	let modeLabel = $derived(
 		GROUP_MODES.find((mode) => mode.value === groupMode)?.label ?? 'Clusters'
 	);
@@ -109,6 +124,30 @@
 	Colour carries the severity instead — grey is a cluster that spans the axis,
 	amber is one the axis has taken over.
 -->
+<!--
+	What stands in the panel while the first run is out. Shaped like the rows it
+	replaces rather than a spinner, so the panel does not change size when they
+	arrive — and silent about how many there will be, because nothing knows yet.
+-->
+{#snippet waiting()}
+	<div class="flex flex-col gap-2" aria-hidden="true">
+		{#each [0, 1, 2] as index (index)}
+			<div class="rounded-lg border border-gray-200 px-3 py-2">
+				<div class="flex items-center gap-2">
+					<span class="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-gray-200"></span>
+					<span class="h-3 w-20 animate-pulse rounded bg-gray-100"></span>
+					<span class="h-3 w-14 animate-pulse rounded bg-gray-100"></span>
+				</div>
+				<div class="mt-2 flex gap-1">
+					<span class="h-4 w-24 animate-pulse rounded bg-gray-100"></span>
+					<span class="h-4 w-24 animate-pulse rounded bg-gray-100"></span>
+				</div>
+			</div>
+		{/each}
+	</div>
+	<p class="mt-3 text-xs text-gray-400">Waiting for the first run.</p>
+{/snippet}
+
 {#snippet purity(value: number | null | undefined, noun: string)}
 	{#if value !== null && value !== undefined}
 		<span
@@ -225,7 +264,11 @@
 		</header>
 
 		<div class="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-			{#if listed.length === 0}
+			{#if clustersLoading}
+				{@render waiting()}
+			{:else if unavailable}
+				<p class="text-sm text-gray-500">Nothing to group — the map alongside says why.</p>
+			{:else if listed.length === 0}
 				<p class="text-sm text-gray-500">
 					{groupMode === 'language'
 						? 'No languages are listed for the plotted chunks.'
@@ -274,14 +317,18 @@
 		</header>
 
 		<div class="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-			{#if clusters.length === 0}
+			{#if clustersLoading}
+				{@render waiting()}
+			{:else if unavailable}
+				<p class="text-sm text-gray-500">Nothing to group — the map alongside says why.</p>
+			{:else if listedClusters.length === 0}
 				<p class="text-sm text-gray-500">
 					No clusters at this setting — every chunk was left unplaced. Lower the minimum cluster
 					size.
 				</p>
 			{:else}
 				<div class="flex flex-col gap-2">
-					{#each clusters as cluster (cluster.id)}
+					{#each listedClusters as cluster (cluster.id)}
 						{@const open = focusedGroup === String(cluster.id)}
 						<div class="rounded-lg border border-gray-200">
 							<button
