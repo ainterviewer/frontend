@@ -13,6 +13,7 @@
 		strengthOf,
 		describe,
 		resetKey = null,
+		stale = false,
 		onselect
 	}: {
 		points: EmbeddingClusterPoint[];
@@ -47,6 +48,17 @@
 		 * empty space with no indication of why.
 		 */
 		resetKey?: unknown;
+		/**
+		 * Whether a recompute is in flight, which makes what is drawn the previous
+		 * run rather than the current settings.
+		 *
+		 * The old points stay up instead of being replaced by a spinner — the map
+		 * is what the reader is steering by, and taking it away on every nudge of
+		 * a slider costs them their place — but they are no longer the answer to
+		 * the question on screen, and saying so is the difference between a
+		 * picture that is behind and a picture that is wrong.
+		 */
+		stale?: boolean;
 		onselect: (id: string | null) => void;
 	} = $props();
 
@@ -237,10 +249,31 @@
 </script>
 
 <div class="relative h-full w-full rounded-lg bg-white">
+	{#if stale}
+		<!-- An indeterminate bar rather than a percentage: the server reports no
+		     progress, and a bar that pretends to know how far along it is would be
+		     making it up. Along the top edge of the card so it reads as belonging
+		     to the map rather than floating over it, and out of the way of both
+		     the hover card and the reset button. -->
+		<div
+			class="pointer-events-none absolute inset-x-0 top-0 z-20 h-0.5 overflow-hidden rounded-t-lg"
+		>
+			<div class="sweep h-full w-1/3 bg-primary"></div>
+		</div>
+	{/if}
+
 	<div bind:this={plot} bind:clientWidth={width} bind:clientHeight={height} class="h-full w-full">
 		{#if width > 0 && height > 0}
 			<svg {width} {height} class="pointer-events-none block" aria-hidden="true">
-				<g transform="translate({zoom.x},{zoom.y}) scale({zoom.k})">
+				<!-- One opacity over the whole cloud rather than a change to each
+				     point: it multiplies with the per-point opacity that search and
+				     membership already own, so a dimmed map still reads as a dimmed
+				     map underneath, and nothing has to know about both at once. -->
+				<g
+					class="transition-opacity duration-200"
+					class:opacity-40={stale}
+					transform="translate({zoom.x},{zoom.y}) scale({zoom.k})"
+				>
 					{#each ordered as point (point.id)}
 						<circle
 							cx={scales.x(point.x)}
@@ -302,6 +335,18 @@
 		</div>
 	{/if}
 
+	{#if stale}
+		<!-- Named as well as drawn. The bar says something is happening; this says
+		     what, which is the part a reader who has just moved a slider needs in
+		     order to know the map they are looking at is not yet the answer. -->
+		<span
+			class="pointer-events-none absolute top-2 left-2 z-20 flex items-center gap-1.5 rounded-md bg-white/90 px-2 py-1 text-xs text-gray-500 shadow-sm"
+		>
+			<i class="fa-solid fa-spinner fa-spin text-[0.625rem] text-gray-400"></i>
+			Reclustering…
+		</span>
+	{/if}
+
 	{#if transformed}
 		<button
 			type="button"
@@ -312,3 +357,38 @@
 		</button>
 	{/if}
 </div>
+
+<style>
+	/* Left to right and back, so the bar never appears to restart from nothing
+	   on a recompute that takes several seconds. */
+	.sweep {
+		animation: sweep 1.4s ease-in-out infinite alternate;
+	}
+
+	@keyframes sweep {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: translateX(300%);
+		}
+	}
+
+	/* A reader who has asked for less motion still has to be told the map is
+	   busy; a pulse in place carries that without anything travelling. */
+	@media (prefers-reduced-motion: reduce) {
+		.sweep {
+			width: 100%;
+			animation: pulse 1.4s ease-in-out infinite alternate;
+		}
+
+		@keyframes pulse {
+			from {
+				opacity: 0.25;
+			}
+			to {
+				opacity: 0.9;
+			}
+		}
+	}
+</style>

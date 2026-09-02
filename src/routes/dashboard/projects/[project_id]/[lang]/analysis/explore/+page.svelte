@@ -9,7 +9,8 @@
 		EmbeddingSimilarResponse,
 		EmbeddingStatus,
 		GroupKind,
-		InterviewStatus
+		InterviewStatus,
+		Projection
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { OUTLIER_COLOR, mapColor } from '$lib/config/chartColors';
@@ -20,15 +21,22 @@
 	import ScatterPlot from './ScatterPlot.svelte';
 	import StatusStrip from './StatusStrip.svelte';
 	import {
+		DEFAULT_CENTER_BY_LANGUAGE,
 		DEFAULT_CENTER_BY_QUESTION,
 		DEFAULT_GROUP_MODE,
 		DEFAULT_K,
 		DEFAULT_KIND,
 		DEFAULT_MIN_CLUSTER_SIZE,
+		DEFAULT_MIN_DIST,
+		DEFAULT_N_NEIGHBORS,
+		DEFAULT_PROJECTION,
 		DEFAULT_TASK,
 		GROUP_MODES,
 		KINDS,
 		MIN_CLUSTER_SIZE_RANGE,
+		MIN_DIST_RANGE,
+		N_NEIGHBORS_RANGE,
+		PROJECTIONS,
 		clusterQuery,
 		defaultFilters,
 		describeError,
@@ -56,18 +64,26 @@
 	let statusError = $state<string | null>(null);
 
 	// The knobs. `kind` and the filters are shared by every request on the page;
-	// the other two belong to the clustering alone.
+	// the rest belong to the clustering alone.
 	let kind = $state<EmbeddingKind>(DEFAULT_KIND);
+	let projection = $state<Projection>(DEFAULT_PROJECTION);
+	let nNeighbors = $state(DEFAULT_N_NEIGHBORS);
+	let minDist = $state(DEFAULT_MIN_DIST);
 	let minClusterSize = $state(DEFAULT_MIN_CLUSTER_SIZE);
 	let centerByQuestion = $state(DEFAULT_CENTER_BY_QUESTION);
+	let centerByLanguage = $state(DEFAULT_CENTER_BY_LANGUAGE);
 	let interviewStatus = $state<InterviewStatus | null>(defaultFilters().status);
 	let includeSynthetic = $state(defaultFilters().include_synthetic);
 
 	let filters = $derived({ status: interviewStatus, include_synthetic: includeSynthetic });
 	let settings = $derived<ClusterSettings>({
 		kind,
+		projection,
+		n_neighbors: nNeighbors,
+		min_dist: minDist,
 		min_cluster_size: minClusterSize,
 		center_by_question: centerByQuestion,
+		center_by_language: centerByLanguage,
 		filters
 	});
 
@@ -135,12 +151,12 @@
 	/**
 	 * How long to sit on a settings change before asking.
 	 *
-	 * A full recompute is around 200 ms, which is what makes the minimum cluster
-	 * size a slider rather than a form field — but a drag across the track still
-	 * emits a value per pixel, and every one of those is a request the reader
-	 * has already moved past.
+	 * A drag across a slider track emits a value per pixel, and every one of
+	 * those is a request the reader has already moved past. PCA recomputes in
+	 * around 200 ms, which is what makes these sliders rather than form fields;
+	 * UMAP is seconds, so it waits longer before committing to one.
 	 */
-	const CLUSTER_DEBOUNCE_MS = 250;
+	const CLUSTER_DEBOUNCE_MS = { pca: 250, umap: 500 } as const;
 
 	let clusterProjectId: string | null = null;
 	let seenClusterPreload: PageData['clusters'] | null = null;
@@ -193,7 +209,7 @@
 				clusters = body;
 				clusterError = null;
 			},
-			adopting ? 0 : CLUSTER_DEBOUNCE_MS
+			adopting ? 0 : CLUSTER_DEBOUNCE_MS[query.projection]
 		);
 
 		return () => {
@@ -362,6 +378,29 @@
 
 	let groupLabels = $derived(new Map(groups.map((group) => [group.key, group.label])));
 
+	/**
+	 * Whether there is more than one language on the map.
+	 *
+	 * On a single-language project, colouring by language paints every point
+	 * the same colour and the purity of every cluster is 1.0 — a control that
+	 * can only ever say one thing, and a warning that can only ever be noise.
+	 * So the mode and the badge are offered only where they can distinguish.
+	 */
+	let multilingual = $derived(new Set(points.map((point) => point.language)).size > 1);
+
+	let modes = $derived(GROUP_MODES.filter((mode) => mode.value !== 'language' || multilingual));
+
+	// A filter can take the last of a second language off the map while it is
+	// what the points are coloured by, which would leave the reader on a mode
+	// whose button has just gone.
+	$effect(() => {
+		if (groupMode === 'language' && !multilingual) changeGroupMode('cluster');
+	});
+
+	let modeLabel = $derived(
+		GROUP_MODES.find((mode) => mode.value === groupMode)?.label ?? 'Clusters'
+	);
+
 	let groupCount = $derived(groups.filter((group) => group.kind === groupMode).length);
 	// Chunks the guide cannot place: an interview-level chunk spans the whole
 	// guide and carries no coordinates at all.
@@ -375,7 +414,9 @@
 				: `Cluster ${key} · ${Math.round(point.probability * 100)}% member`;
 		}
 		if (key === null) return 'No guide coordinates';
-		return groupLabels.get(key) ?? key;
+		// A language key is a bare code and the API lists no group for it under
+		// some filters; upper-casing it reads as a label either way.
+		return groupLabels.get(key) ?? (groupMode === 'language' ? key.toUpperCase() : key);
 	}
 
 	// A key from one grouping means nothing under the next, and clustering knobs
@@ -532,12 +573,72 @@
 
 			<div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-600">
 				<div class="flex items-center gap-1.5">
+					<span class="text-gray-500">Projection</span>
+					<!-- The one control that changes what the picture *is* rather than
+					     how it is coloured, so it leads. Both cluster in the space they
+					     plot; they disagree about what that space should be, and the
+					     only way to tell which is right about this corpus is to look at
+					     both. -->
+					<div class="flex overflow-hidden rounded-md border border-gray-200">
+						{#each PROJECTIONS as option (option.value)}
+							<button
+								type="button"
+								onclick={() => (projection = option.value)}
+								aria-pressed={projection === option.value}
+								class="cursor-pointer px-2 py-1 font-medium transition-colors {projection ===
+								option.value
+									? 'bg-primary text-on-primary'
+									: 'bg-white text-gray-500 hover:text-gray-900'}"
+							>
+								{option.label}
+							</button>
+						{/each}
+					</div>
+					<HoverInfo text={PROJECTIONS.find((option) => option.value === projection)?.hint ?? ''} />
+				</div>
+
+				{#if projection === 'umap'}
+					<!-- UMAP's shape knobs, shown only where they do anything. PCA takes
+					     neither, and the page does not send them under it. -->
+					<label class="flex items-center gap-2">
+						<span class="text-gray-500">Neighbours</span>
+						<input
+							type="range"
+							min={N_NEIGHBORS_RANGE.min}
+							max={N_NEIGHBORS_RANGE.max}
+							bind:value={nNeighbors}
+							class="w-28 accent-primary"
+						/>
+						<span class="w-6 font-mono tabular-nums">{nNeighbors}</span>
+						<HoverInfo
+							text="How much of the corpus each point is fitted against. Low keeps local detail and fragments the map; high recovers global structure and smooths the detail away. 15 is a reasonable middle."
+						/>
+					</label>
+
+					<label class="flex items-center gap-2">
+						<span class="text-gray-500">Min distance</span>
+						<input
+							type="range"
+							min={MIN_DIST_RANGE.min}
+							max={MIN_DIST_RANGE.max}
+							step={MIN_DIST_RANGE.step}
+							bind:value={minDist}
+							class="w-24 accent-primary"
+						/>
+						<span class="w-8 font-mono tabular-nums">{minDist.toFixed(2)}</span>
+						<HoverInfo
+							text="How tightly points may pack. 0 gives the clumped layout HDBSCAN reads best; raising it spreads each blob out, which is easier to look at and harder to cluster."
+						/>
+					</label>
+				{/if}
+
+				<div class="flex items-center gap-1.5">
 					<span class="text-gray-500">Group by</span>
-					<!-- A segmented control rather than a select: three options, one of
-					     which is the reason to look at the other two, and the comparison
+					<!-- A segmented control rather than a select: the alternatives are
+					     the reason to look at the clusters at all, and the comparison
 					     only works if switching between them is a single click. -->
 					<div class="flex overflow-hidden rounded-md border border-gray-200">
-						{#each GROUP_MODES as mode (mode.value)}
+						{#each modes as mode (mode.value)}
 							<button
 								type="button"
 								onclick={() => changeGroupMode(mode.value)}
@@ -551,7 +652,7 @@
 							</button>
 						{/each}
 					</div>
-					<HoverInfo text={GROUP_MODES.find((mode) => mode.value === groupMode)?.hint ?? ''} />
+					<HoverInfo text={modes.find((mode) => mode.value === groupMode)?.hint ?? ''} />
 				</div>
 
 				<label class="flex items-center gap-1.5">
@@ -586,9 +687,11 @@
 					/>
 					<span class="w-6 font-mono tabular-nums">{minClusterSize}</span>
 					<HoverInfo
-						text={groupMode === 'cluster'
-							? 'The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Recomputes in about a fifth of a second, so drag it.'
-							: 'Only affects the clusters, which is not what the map is coloured by right now. Switch back to Clusters to use it.'}
+						text={groupMode !== 'cluster'
+							? 'Only affects the clusters, which is not what the map is coloured by right now. Switch back to Clusters to use it.'
+							: projection === 'pca'
+								? 'The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Recomputes in about a fifth of a second, so drag it.'
+								: 'The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Under UMAP each change is a few seconds, so nudge it rather than dragging.'}
 					/>
 				</label>
 
@@ -607,6 +710,27 @@
 						text="Every respondent was asked the same questions, and a chunk contains its question verbatim — so left alone, clustering recovers the interview guide rather than what anyone said. Centring subtracts each question's average before grouping, leaving the variation between answers. Turn it off to see the raw structure."
 					/>
 				</div>
+
+				{#if multilingual}
+					<!-- Offered only on a corpus with more than one language in it, where
+					     it is the difference between a map of what people said and a map
+					     of which language they said it in. -->
+					<div class="flex items-center gap-2">
+						<Switch.Root
+							id="center-by-language"
+							bind:checked={centerByLanguage}
+							class="inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+						>
+							<Switch.Thumb
+								class="pointer-events-none block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.125rem]"
+							/>
+						</Switch.Root>
+						<label for="center-by-language" class="cursor-pointer">Centre by language</label>
+						<HoverInfo
+							text="Language is one of the loudest signals in an embedding: left alone, the Danish answers sit with the Danish answers whatever anybody said. Centring subtracts each language's average before grouping, so the map is about what was said rather than what it was said in. Turn it off to see how much of the structure was language."
+						/>
+					</div>
+				{/if}
 
 				<div class="flex items-center gap-2">
 					<Switch.Root
@@ -675,19 +799,13 @@
 							{grouped}
 							{strengthOf}
 							{describe}
-							resetKey={kind}
+							resetKey={`${kind}:${projection}`}
+							stale={clusterLoading}
 							onselect={(id) => {
 								selectedId = id;
 								if (id) focusedGroup = null;
 							}}
 						/>
-						{#if clusterLoading}
-							<span
-								class="absolute top-2 left-2 rounded-md bg-white/90 px-2 py-1 text-xs text-gray-400"
-							>
-								Reclustering…
-							</span>
-						{/if}
 					{/if}
 				</div>
 
@@ -703,7 +821,7 @@
 						{:else}
 							<span>
 								<span class="font-medium text-gray-700">{formatNumber(groupCount)}</span>
-								{groupMode === 'question' ? 'questions' : 'sections'}
+								{modeLabel.toLowerCase()}
 							</span>
 							{#if ungrouped > 0}
 								<span class="flex items-center gap-1.5">
@@ -721,19 +839,35 @@
 								{formatNumber(clusters.n_outliers)} unplaced
 							</span>
 						{/if}
-						<span class="flex items-center gap-1">
-							{formatPercent(clusters.explained_variance_2d)} of the spread shown
-							<!-- Stated rather than left to be assumed. Around a third is
-							     normal for text embeddings: points far apart really are far
-							     apart, but points close together need not be. -->
-							<HoverInfo
-								text="The map is a flat shadow of a {clusters.components}-dimensional space, and shows about {formatPercent(
-									clusters.explained_variance_2d
-								)} of the variation in it. Read distance as a navigation aid, not as evidence — things far apart on screen are genuinely far apart, but things close together may not be."
-							/>
-						</span>
+						<!-- What the two axes are worth, stated rather than left to be
+						     assumed. PCA can put a number on it; UMAP cannot, and the
+						     honest thing there is to say what the picture is instead of
+						     borrowing a figure it did not produce. -->
+						{#if clusters.explained_variance_2d !== null && clusters.explained_variance_2d !== undefined}
+							<span class="flex items-center gap-1">
+								{formatPercent(clusters.explained_variance_2d)} of the spread shown
+								<!-- Around a third is normal for text embeddings: points far
+								     apart really are far apart, but points close together need
+								     not be. -->
+								<HoverInfo
+									text="The map is a flat shadow of a {clusters.components}-dimensional space, and shows about {formatPercent(
+										clusters.explained_variance_2d
+									)} of the variation in it. Read distance as a navigation aid, not as evidence — things far apart on screen are genuinely far apart, but things close together may not be."
+								/>
+							</span>
+						{:else}
+							<span class="flex items-center gap-1">
+								Neighbourhood layout — distances are not to scale
+								<HoverInfo
+									text="UMAP is fitted to keep neighbours together, not to preserve distance, so there is no share-of-variance to report. Read which points sit with which; do not read how far apart two blobs are, or how big one is. A theme split across two blobs is a real possibility here — check each one's representatives before treating them as separate findings."
+								/>
+							</span>
+						{/if}
 						{#if !clusters.centered_by_question}
-							<span class="text-amber-700">Uncentred</span>
+							<span class="text-amber-700">Uncentred by question</span>
+						{/if}
+						{#if multilingual && !clusters.centered_by_language}
+							<span class="text-amber-700">Uncentred by language</span>
 						{/if}
 					</div>
 				{/if}
@@ -745,6 +879,7 @@
 						clusters={clusters?.clusters ?? []}
 						{groups}
 						{groupMode}
+						{multilingual}
 						search={visibleSearch}
 						{searchLoading}
 						{searchError}

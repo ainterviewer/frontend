@@ -4,6 +4,7 @@ import type {
 	EmbeddingKind,
 	GroupKind,
 	InterviewStatus,
+	Projection,
 	QueryTask
 } from '$lib/api/types.gen';
 
@@ -49,6 +50,44 @@ export const DEFAULT_K = 10;
 /** Bounds the API enforces on `k`, checked here so 422 is never the first feedback. */
 export const K_RANGE = { min: 1, max: 100 } as const;
 
+/**
+ * How the vectors are reduced before HDBSCAN runs and before anything is
+ * plotted. Both options cluster in exactly the space the scatter shows, so a
+ * blob on screen is never a shape the clustering did not see — they differ in
+ * what that space is.
+ */
+export const PROJECTIONS: { value: Projection; label: string; hint: string }[] = [
+	{
+		value: 'umap',
+		label: 'UMAP',
+		hint: 'Non-linear, straight to two dimensions. Separates neighbourhoods far more sharply and is usually the readable picture. Costs seconds rather than milliseconds, reports no variance figure, and can split one topic in two — check the representatives before believing a split.'
+	},
+	{
+		value: 'pca',
+		label: 'PCA',
+		hint: 'Linear, 50 components, milliseconds — and the two plotted axes carry a stated share of the total variance. Its weakness is that 50 dimensions of text embedding are still enough for distances to concentrate, so HDBSCAN tends to find a few large blobs rather than themes.'
+	}
+];
+
+/** The API's default, and the better first look. */
+export const DEFAULT_PROJECTION: Projection = 'umap';
+
+/**
+ * UMAP's two shape knobs, at the API's defaults.
+ *
+ * `n_neighbors` is how much of the corpus each point is fitted against: low
+ * values keep local detail and fragment, high values recover global structure
+ * and smooth it away. `min_dist` is how tightly points may pack — 0 gives the
+ * clumped layout HDBSCAN reads best, and raising it spreads a blob out for
+ * looking at rather than for clustering.
+ */
+export const DEFAULT_N_NEIGHBORS = 15;
+export const DEFAULT_MIN_DIST = 0;
+
+/** Bounds the API enforces, checked here so 422 is never the first feedback. */
+export const N_NEIGHBORS_RANGE = { min: 2, max: 200 } as const;
+export const MIN_DIST_RANGE = { min: 0, max: 1, step: 0.05 } as const;
+
 export const DEFAULT_MIN_CLUSTER_SIZE = 5;
 
 /** Bounds the API enforces on `min_cluster_size`, same reasoning as `K_RANGE`. */
@@ -71,6 +110,22 @@ export const MIN_CLUSTER_SIZE_RANGE = { min: 2, max: 500 } as const;
  * hiding it.
  */
 export const DEFAULT_CENTER_BY_QUESTION = true;
+
+/**
+ * Centring on language, on by default for the same reason.
+ *
+ * A multilingual corpus embeds language as one of the loudest signals in the
+ * vector: the Danish answers sit with the Danish answers whatever anybody
+ * said. Subtracting each language's mean vector removes that and leaves what
+ * the answers are about, which is the only question the map is being asked.
+ * On a corpus that is entirely one language it subtracts a single mean from
+ * everything and changes nothing, so it costs a monolingual project nothing to
+ * leave on.
+ *
+ * The API defaults it to `false`; the page turns it on visibly, with a toggle
+ * and a purity figure per cluster, exactly as it does for questions.
+ */
+export const DEFAULT_CENTER_BY_LANGUAGE = true;
 
 /** Representative chunks per cluster. Three fits the panel without scrolling. */
 export const N_REPRESENTATIVES = 3;
@@ -106,16 +161,24 @@ export function filterQuery(filters: ExploreFilters) {
 /** Every knob the scatter is drawn from. */
 export type ClusterSettings = {
 	kind: EmbeddingKind;
+	projection: Projection;
+	n_neighbors: number;
+	min_dist: number;
 	min_cluster_size: number;
 	center_by_question: boolean;
+	center_by_language: boolean;
 	filters: ExploreFilters;
 };
 
 export function defaultClusterSettings(): ClusterSettings {
 	return {
 		kind: DEFAULT_KIND,
+		projection: DEFAULT_PROJECTION,
+		n_neighbors: DEFAULT_N_NEIGHBORS,
+		min_dist: DEFAULT_MIN_DIST,
 		min_cluster_size: DEFAULT_MIN_CLUSTER_SIZE,
 		center_by_question: DEFAULT_CENTER_BY_QUESTION,
+		center_by_language: DEFAULT_CENTER_BY_LANGUAGE,
 		filters: defaultFilters()
 	};
 }
@@ -123,8 +186,15 @@ export function defaultClusterSettings(): ClusterSettings {
 export function clusterQuery(settings: ClusterSettings) {
 	return {
 		kind: settings.kind,
+		projection: settings.projection,
+		// Left off under PCA, which ignores them: sending them anyway would make
+		// a UMAP knob the reader is not currently using into a reason to refetch.
+		...(settings.projection === 'umap'
+			? { n_neighbors: settings.n_neighbors, min_dist: settings.min_dist }
+			: {}),
 		min_cluster_size: settings.min_cluster_size,
 		center_by_question: settings.center_by_question,
+		center_by_language: settings.center_by_language,
 		n_representatives: N_REPRESENTATIVES,
 		...filterQuery(settings.filters)
 	};
@@ -135,8 +205,12 @@ export function isDefaultClusterSettings(settings: ClusterSettings) {
 	const fallback = defaultClusterSettings();
 	return (
 		settings.kind === fallback.kind &&
+		settings.projection === fallback.projection &&
+		settings.n_neighbors === fallback.n_neighbors &&
+		settings.min_dist === fallback.min_dist &&
 		settings.min_cluster_size === fallback.min_cluster_size &&
 		settings.center_by_question === fallback.center_by_question &&
+		settings.center_by_language === fallback.center_by_language &&
 		settings.filters.status === fallback.filters.status &&
 		settings.filters.include_synthetic === fallback.filters.include_synthetic
 	);
@@ -169,10 +243,11 @@ export function describeError(status: number | undefined, fallback: string) {
 /**
  * What the map is coloured by.
  *
- * `cluster` is what HDBSCAN found; the other two are what the interview guide
- * declared. Offering both is the point: a cluster is only a finding if it is
- * *not* the guide, and the fastest way to see that is to recolour the same
- * scatter by question and watch whether the blobs stay put.
+ * `cluster` is what HDBSCAN found; the rest are declared rather than
+ * discovered — two by the interview guide, one by the respondent. Offering
+ * them is the point: a cluster is only a finding if it is *not* one of these,
+ * and the fastest way to see that is to recolour the same scatter and watch
+ * whether the blobs stay put.
  */
 export const GROUP_MODES: { value: GroupKind; label: string; hint: string }[] = [
 	{
@@ -189,6 +264,11 @@ export const GROUP_MODES: { value: GroupKind; label: string; hint: string }[] = 
 		value: 'section',
 		label: 'Sections',
 		hint: 'The guide’s sections. Broader than questions, and the quickest read on whether the map is recovering the guide’s structure.'
+	},
+	{
+		value: 'language',
+		label: 'Languages',
+		hint: 'The language each interview was answered in. If the blobs line up with these, the map has found which language people spoke rather than what they said — turn on centring by language.'
 	}
 ];
 
@@ -205,13 +285,16 @@ export const DEFAULT_GROUP_MODE: GroupKind = 'cluster';
  */
 export function groupKeyOf(point: EmbeddingClusterPoint, mode: GroupKind): string | null {
 	if (mode === 'cluster') return point.cluster === null ? null : String(point.cluster);
+	// Every chunk has a language, guide coordinates or not, so this one never
+	// leaves a point ungrouped.
+	if (mode === 'language') return point.language;
 	if (point.section === null || point.section === undefined) return null;
 	if (mode === 'section') return String(point.section);
 	if (point.main_question === null || point.main_question === undefined) return null;
 	return `${point.section}.${point.main_question}`;
 }
 
-/** The guide groups of one kind, in the order the guide declares them. */
+/** The declared groups of one kind, in the order the API lists them. */
 export function guideGroups(groups: EmbeddingGroup[], mode: GroupKind): EmbeddingGroup[] {
 	if (mode === 'cluster') return [];
 	return groups.filter((group) => group.kind === mode);
@@ -220,7 +303,7 @@ export function guideGroups(groups: EmbeddingGroup[], mode: GroupKind): Embeddin
 /**
  * Group key to palette position, so a colour belongs to a group rather than to
  * whatever order the points happened to arrive in. Cluster ids are already
- * positions; guide keys take their place in the legend.
+ * positions; every other key takes its place in the legend.
  */
 export function groupOrder(groups: EmbeddingGroup[], mode: GroupKind): Map<string, number> {
 	return new Map(guideGroups(groups, mode).map((group, index) => [group.key, index]));

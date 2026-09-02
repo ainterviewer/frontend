@@ -978,6 +978,10 @@ export type EmbeddingCluster = {
      * Question Purity
      */
     question_purity?: number | null;
+    /**
+     * Language Purity
+     */
+    language_purity?: number | null;
 };
 
 /**
@@ -1022,6 +1026,10 @@ export type EmbeddingClusterPoint = {
      * Sub Question
      */
     sub_question?: number | null;
+    /**
+     * Language
+     */
+    language: string;
 };
 
 /**
@@ -1041,6 +1049,7 @@ export type EmbeddingClusterResponse = {
      * N Outliers
      */
     n_outliers: number;
+    projection: Projection;
     /**
      * Components
      */
@@ -1048,11 +1057,15 @@ export type EmbeddingClusterResponse = {
     /**
      * Explained Variance 2D
      */
-    explained_variance_2d: number;
+    explained_variance_2d?: number | null;
     /**
      * Centered By Question
      */
     centered_by_question: boolean;
+    /**
+     * Centered By Language
+     */
+    centered_by_language?: boolean;
     /**
      * Clusters
      */
@@ -1549,11 +1562,13 @@ export type GitHashes = {
  *
  * What a cluster map's points are grouped by.
  *
- * `CLUSTER` is what HDBSCAN found; the other two are the interview guide's own
- * structure, which is not discovered but declared -- and is the baseline the
- * clusters are worth reading against.
+ * `CLUSTER` is what HDBSCAN found; the rest are declared rather than
+ * discovered, and are the baseline the clusters are worth reading against. If
+ * colouring by one of them reproduces the clustering, the clustering found
+ * that -- the interview guide, or the respondent's language -- and not a
+ * theme.
  */
-export type GroupKind = 'cluster' | 'question' | 'section';
+export type GroupKind = 'cluster' | 'question' | 'section' | 'language';
 
 /**
  * GuideSection
@@ -3175,6 +3190,29 @@ export type ProjectTitleUpdateRequest = {
      */
     title: string;
 };
+
+/**
+ * Projection
+ *
+ * How embedding vectors are reduced before clustering and plotting.
+ *
+ * Both run HDBSCAN in exactly the space the scatter shows, so a cluster can
+ * never be a shape the picture does not contain -- they differ in what that
+ * space is.
+ *
+ * `PCA` is linear and fast: 50 components, milliseconds, and the two plotted
+ * axes carry a reported share of the total variance. Its weakness is that
+ * 50 dimensions of text embedding are still high enough for distances to
+ * concentrate, so HDBSCAN tends to find few large blobs.
+ *
+ * `UMAP` reduces to 2 non-linear dimensions, which separates neighbourhoods
+ * far more sharply and is usually the readable picture. Three costs: it is
+ * seconds rather than milliseconds (plus a one-off numba compile on the first
+ * call of a process), there is no variance ratio to report, and clustering in
+ * two dimensions can split one topic into several. Read `question_purity`
+ * and the representatives before trusting a split.
+ */
+export type Projection = 'pca' | 'umap';
 
 /**
  * QueryTask
@@ -5170,6 +5208,7 @@ export type ClusterEmbeddingsData = {
     };
     query?: {
         kind?: EmbeddingKind;
+        projection?: Projection;
         /**
          * Min Cluster Size
          */
@@ -5179,9 +5218,21 @@ export type ClusterEmbeddingsData = {
          */
         min_samples?: number | null;
         /**
+         * N Neighbors
+         */
+        n_neighbors?: number;
+        /**
+         * Min Dist
+         */
+        min_dist?: number;
+        /**
          * Center By Question
          */
         center_by_question?: boolean;
+        /**
+         * Center By Language
+         */
+        center_by_language?: boolean;
         /**
          * N Representatives
          */

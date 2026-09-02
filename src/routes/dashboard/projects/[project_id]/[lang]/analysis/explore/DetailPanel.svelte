@@ -17,6 +17,7 @@
 		clusters,
 		groups,
 		groupMode,
+		multilingual,
 		search,
 		searchLoading,
 		searchError,
@@ -33,6 +34,13 @@
 		/** Every guide group the plotted points fall into, of both kinds. */
 		groups: EmbeddingGroup[];
 		groupMode: GroupKind;
+		/**
+		 * Whether the plotted corpus holds more than one language. On a
+		 * single-language project every cluster is 100% one language, and a badge
+		 * saying so on every row is noise standing exactly where a real warning
+		 * would go.
+		 */
+		multilingual: boolean;
 		search: EmbeddingSearchResponse | null;
 		searchLoading: boolean;
 		searchError: string | null;
@@ -49,8 +57,8 @@
 		selectedId: string | null;
 		/**
 		 * The group picked out on the map, as `EmbeddingGroup.key` — a cluster id
-		 * written out, or guide coordinates. One field for all three groupings,
-		 * because focusing is one act however the map is coloured.
+		 * written out, guide coordinates, or a language code. One field for every
+		 * grouping, because focusing is one act however the map is coloured.
 		 */
 		focusedGroup: string | null;
 		onselect: (id: string | null) => void;
@@ -65,8 +73,20 @@
 	const formatNumber = format(',');
 	const formatPercent = format('.0%');
 
+	/**
+	 * Where a purity stops describing a cluster and starts explaining it away.
+	 * Below this the cluster spans the axis, which is what a theme looks like;
+	 * at or above it, the axis *is* the cluster.
+	 */
+	const PURITY_WARNING = 0.8;
+
 	function anchor(hit: EmbeddingSearchHit) {
 		onselect(hit.id);
+	}
+
+	/** A predicate, so the notes below can print the figure without re-guarding it. */
+	function high(purity: number | null | undefined): purity is number {
+		return purity !== null && purity !== undefined && purity >= PURITY_WARNING;
 	}
 
 	// The scroller is reset when the anchor changes rather than left where it
@@ -79,6 +99,29 @@
 		scroller?.scrollTo({ top: 0 });
 	});
 </script>
+
+<!--
+	How much of a cluster comes from one question, or one language.
+
+	Always rendered where the API reports a figure, and always in the same shape
+	for both axes: a chip that appears only above a threshold reads as missing
+	data rather than as a low number, which is the opposite of what it means.
+	Colour carries the severity instead — grey is a cluster that spans the axis,
+	amber is one the axis has taken over.
+-->
+{#snippet purity(value: number | null | undefined, noun: string)}
+	{#if value !== null && value !== undefined}
+		<span
+			class="rounded px-1.5 py-0.5 text-[0.6875rem] font-medium whitespace-nowrap"
+			class:bg-amber-50={value >= PURITY_WARNING}
+			class:text-amber-700={value >= PURITY_WARNING}
+			class:bg-gray-100={value < PURITY_WARNING}
+			class:text-gray-500={value < PURITY_WARNING}
+		>
+			{formatPercent(value)} one {noun}
+		</span>
+	{/if}
+{/snippet}
 
 <aside class="flex h-full min-h-0 flex-col rounded-lg border border-gray-200 bg-white">
 	{#if selectedId}
@@ -165,7 +208,7 @@
 			{/if}
 		</div>
 	{:else if groupMode !== 'cluster'}
-		<!-- Guide groups. Unlike a cluster these arrive named, and there is
+		<!-- Declared groups. Unlike a cluster these arrive named, and there is
 		     nothing to read to find out what they are — so a row is a legend
 		     entry and a way to pick its points out of the map, not a card. -->
 		<header class="border-b border-gray-100 px-4 py-3">
@@ -174,7 +217,9 @@
 			>
 				{modeLabel}
 				<HoverInfo
-					text="Taken from the project's default guide, matched to each chunk by the position it was asked in. A question the guide no longer has keeps its number and loses its wording."
+					text={groupMode === 'language'
+						? 'The language each interview was conducted in, as recorded on the interview rather than detected from the text.'
+						: "Taken from the project's default guide, matched to each chunk by the position it was asked in. A question the guide no longer has keeps its number and loses its wording."}
 				/>
 			</h2>
 		</header>
@@ -182,8 +227,9 @@
 		<div class="min-h-0 flex-1 overflow-y-auto px-4 py-3">
 			{#if listed.length === 0}
 				<p class="text-sm text-gray-500">
-					None of the plotted chunks carry guide coordinates, so there is nothing to group them by.
-					Interview-level chunks span the whole guide and have none.
+					{groupMode === 'language'
+						? 'No languages are listed for the plotted chunks.'
+						: 'None of the plotted chunks carry guide coordinates, so there is nothing to group them by. Interview-level chunks span the whole guide and have none.'}
 				</p>
 			{:else}
 				<div class="flex flex-col gap-1">
@@ -241,42 +287,47 @@
 							<button
 								type="button"
 								onclick={() => onfocusgroup(open ? null : String(cluster.id))}
-								class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left"
+								class="flex w-full cursor-pointer items-start gap-2 px-3 py-2 text-left"
 							>
 								<span
-									class="h-2.5 w-2.5 shrink-0 rounded-full"
+									class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
 									style="background:{mapColor(cluster.id)}"
 								></span>
-								<span class="text-sm font-medium text-gray-800">Cluster {cluster.id}</span>
-								<span class="text-xs text-gray-400">{formatNumber(cluster.size)} chunks</span>
-
-								{#if cluster.question_purity !== null && cluster.question_purity !== undefined}
-									<!-- The number that decides whether the cluster is worth
-									     reading at all. Near 1.0 it has grouped one interview
-									     question rather than one idea, and the only thing it tells
-									     you is which question. -->
-									<span
-										class="ml-auto rounded px-1.5 py-0.5 text-[0.6875rem] font-medium"
-										class:bg-amber-50={cluster.question_purity >= 0.8}
-										class:text-amber-700={cluster.question_purity >= 0.8}
-										class:bg-gray-100={cluster.question_purity < 0.8}
-										class:text-gray-500={cluster.question_purity < 0.8}
-									>
-										{formatPercent(cluster.question_purity)} one question
+								<span class="min-w-0 flex-1">
+									<span class="flex items-baseline gap-2">
+										<span class="text-sm font-medium text-gray-800">Cluster {cluster.id}</span>
+										<span class="text-xs text-gray-400">{formatNumber(cluster.size)} chunks</span>
 									</span>
-								{/if}
+									<!-- Both purities on a line of their own. Two of them will not
+									     fit beside the name in this panel, and reading them as a
+									     pair is the point anyway: a cluster that is low on both is
+									     a theme, and one that is high on either is the axis it is
+									     high on. -->
+									<span class="mt-1 flex flex-wrap items-center gap-1">
+										{@render purity(cluster.question_purity, 'question')}
+										{#if multilingual}
+											{@render purity(cluster.language_purity, 'language')}
+										{/if}
+									</span>
+								</span>
 								<i
-									class="fas fa-chevron-down ml-1 text-[0.625rem] text-gray-300 transition-transform"
+									class="fas fa-chevron-down mt-1 shrink-0 text-[0.625rem] text-gray-300 transition-transform"
 									class:rotate-180={open}
 								></i>
 							</button>
 
 							{#if open}
 								<div class="flex flex-col gap-2 border-t border-gray-100 px-3 py-2">
-									{#if cluster.question_purity !== null && cluster.question_purity !== undefined && cluster.question_purity >= 0.8}
+									{#if high(cluster.question_purity)}
 										<p class="text-xs text-amber-700">
 											{formatPercent(cluster.question_purity)} of these come from the same interview question.
 											This cluster is a question, not a theme — try centring by question.
+										</p>
+									{/if}
+									{#if multilingual && high(cluster.language_purity)}
+										<p class="text-xs text-amber-700">
+											{formatPercent(cluster.language_purity)} of these were answered in the same language.
+											This cluster may be a language rather than a theme — try centring by language.
 										</p>
 									{/if}
 									{#each cluster.representatives ?? [] as representative (representative.id)}

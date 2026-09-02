@@ -339,22 +339,55 @@ export class Analysis {
      *
      * Cluster a project's chunks and project them to 2D.
      *
-     * HDBSCAN over the first 50 principal components, with the scatter taken from
-     * the first two of that same projection -- so the picture is a sub-projection
-     * of the space the clusters were found in, not a separate fit. HDBSCAN rather
-     * than k-means because exploratory work does not know `k` up front, and
-     * because points it cannot place come back as outliers instead of being forced
-     * into the nearest blob.
+     * HDBSCAN in whatever space `projection` reduces to, with the scatter taken
+     * from the first two dimensions of that *same* space -- so the picture is
+     * always a sub-projection of where the clusters were found, never a separate
+     * fit. HDBSCAN rather than k-means because exploratory work does not know `k`
+     * up front, and because points it cannot place come back as outliers instead
+     * of being forced into the nearest blob.
      *
-     * **Read `question_purity` before reading the clusters.** A QA-pair chunk
-     * repeats its interview question verbatim, and every respondent was asked the
-     * same one, so uncentred clustering tends to recover the interview guide
-     * rather than what anyone said. `center_by_question=true` subtracts each
-     * question's mean vector first, which removes that shared component and costs
-     * no re-embedding.
+     * `projection=umap` (the default) reduces non-linearly to 2 dimensions and
+     * clusters in them. It separates neighbourhoods far more sharply than PCA,
+     * which is what makes the picture readable, but it costs seconds rather than
+     * milliseconds, reports no `explained_variance_2d`, and can manufacture a
+     * split between neighbourhoods that are not really apart -- check a suspicious
+     * cluster's representatives before believing it. **Distances on a UMAP
+     * scatter carry no meaning**: read which points sit together, never how far
+     * apart two clusters are or how large one looks. `projection=pca` is the fast
+     * linear alternative, and the one to use when the plot's geometry has to mean
+     * something.
      *
-     * Computed per request -- milliseconds at this corpus size -- so
-     * `min_cluster_size` is an interactive control, not a migration.
+     * `n_neighbors` and `min_dist` are read under UMAP only -- the first trades
+     * local detail against global structure, the second how tightly points may
+     * pack.
+     *
+     * **Read the purities before reading the clusters.** Two things an embedding
+     * encodes that are scaffolding rather than content, both of which clustering
+     * will happily recover instead of a theme:
+     *
+     * - A QA-pair chunk repeats its interview question verbatim, and every
+     * respondent was asked the same one. `question_purity` near 1.0 means the
+     * cluster is a question; `center_by_question=true` subtracts each question's
+     * mean vector first.
+     * - A multilingual project embeds every language into one space, and the model
+     * separates languages before it separates topics -- on a Danish/English
+     * project the two largest clusters were simply Danish and English.
+     * `language_purity` near 1.0 means the cluster is a language;
+     * `center_by_language=true` subtracts each language's mean vector.
+     *
+     * Both centre on the composite key when set together, subtracting the mean of
+     * each language-within-question cell, which removes both confounds in one pass
+     * and costs no re-embedding. The cost is thinner cells: a cell of one chunk
+     * becomes the zero vector and collects at the origin. Filtering to a single
+     * `language` is the blunter alternative -- it analyses one language properly
+     * instead of comparing across them.
+     *
+     * `groups` carries a `language` row per language in scope alongside the guide
+     * rows, so the same scatter can be coloured by language directly. That is
+     * usually the fastest way to see whether a split is real.
+     *
+     * Computed per request rather than stored, so `min_cluster_size` stays an
+     * interactive control rather than a migration.
      */
     public static clusterEmbeddings<ThrowOnError extends boolean = false>(options: Options<ClusterEmbeddingsData, ThrowOnError>): RequestResult<ClusterEmbeddingsResponses, ClusterEmbeddingsErrors, ThrowOnError> {
         return (options.client ?? client).get<ClusterEmbeddingsResponses, ClusterEmbeddingsErrors, ThrowOnError>({

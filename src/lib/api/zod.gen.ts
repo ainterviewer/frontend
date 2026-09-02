@@ -497,7 +497,8 @@ export const zEmbeddingClusterPoint = z.object({
     preview: z.string().nullish(),
     section: z.int().nullish(),
     main_question: z.int().nullish(),
-    sub_question: z.int().nullish()
+    sub_question: z.int().nullish(),
+    language: z.string()
 });
 
 /**
@@ -668,14 +669,17 @@ export const zGitHashes = z.object({
  *
  * What a cluster map's points are grouped by.
  *
- * `CLUSTER` is what HDBSCAN found; the other two are the interview guide's own
- * structure, which is not discovered but declared -- and is the baseline the
- * clusters are worth reading against.
+ * `CLUSTER` is what HDBSCAN found; the rest are declared rather than
+ * discovered, and are the baseline the clusters are worth reading against. If
+ * colouring by one of them reproduces the clustering, the clustering found
+ * that -- the interview guide, or the respondent's language -- and not a
+ * theme.
  */
 export const zGroupKind = z.enum([
     'cluster',
     'question',
-    'section'
+    'section',
+    'language'
 ]);
 
 /**
@@ -1403,6 +1407,29 @@ export const zProjectTitleUpdateRequest = z.object({
 });
 
 /**
+ * Projection
+ *
+ * How embedding vectors are reduced before clustering and plotting.
+ *
+ * Both run HDBSCAN in exactly the space the scatter shows, so a cluster can
+ * never be a shape the picture does not contain -- they differ in what that
+ * space is.
+ *
+ * `PCA` is linear and fast: 50 components, milliseconds, and the two plotted
+ * axes carry a reported share of the total variance. Its weakness is that
+ * 50 dimensions of text embedding are still high enough for distances to
+ * concentrate, so HDBSCAN tends to find few large blobs.
+ *
+ * `UMAP` reduces to 2 non-linear dimensions, which separates neighbourhoods
+ * far more sharply and is usually the readable picture. Three costs: it is
+ * seconds rather than milliseconds (plus a one-off numba compile on the first
+ * call of a process), there is no variance ratio to report, and clustering in
+ * two dimensions can split one topic into several. Read `question_purity`
+ * and the representatives before trusting a split.
+ */
+export const zProjection = z.enum(['pca', 'umap']);
+
+/**
  * QueryTask
  */
 export const zQueryTask = z.enum([
@@ -1983,7 +2010,8 @@ export const zEmbeddingCluster = z.object({
     id: z.int(),
     size: z.int(),
     representatives: z.array(zEmbeddingSearchHit).optional().default([]),
-    question_purity: z.number().nullish()
+    question_purity: z.number().nullish(),
+    language_purity: z.number().nullish()
 });
 
 /**
@@ -1994,9 +2022,11 @@ export const zEmbeddingClusterResponse = z.object({
     n_points: z.int(),
     n_clusters: z.int(),
     n_outliers: z.int(),
+    projection: zProjection,
     components: z.int(),
-    explained_variance_2d: z.number(),
+    explained_variance_2d: z.number().nullish(),
     centered_by_question: z.boolean(),
+    centered_by_language: z.boolean().optional().default(false),
     clusters: z.array(zEmbeddingCluster).optional().default([]),
     groups: z.array(zEmbeddingGroup).optional().default([]),
     points: z.array(zEmbeddingClusterPoint).optional().default([])
@@ -2735,9 +2765,13 @@ export const zClusterEmbeddingsPath = z.object({
 
 export const zClusterEmbeddingsQuery = z.object({
     kind: zEmbeddingKind.optional().default('qa_pair'),
+    projection: zProjection.optional().default('umap'),
     min_cluster_size: z.int().gte(2).lte(500).optional().default(5),
     min_samples: z.int().gte(1).lte(500).nullish(),
+    n_neighbors: z.int().gte(2).lte(200).optional().default(15),
+    min_dist: z.number().gte(0).lte(1).optional().default(0),
     center_by_question: z.boolean().optional().default(false),
+    center_by_language: z.boolean().optional().default(false),
     n_representatives: z.int().gte(1).lte(10).optional().default(3),
     folder_id: z.string().nullish(),
     language: z.string().nullish(),
