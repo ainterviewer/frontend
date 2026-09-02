@@ -95,20 +95,6 @@ export const zAnswerLength = z.enum([
 ]);
 
 /**
- * AnswerSample
- *
- * One answer's numeric value, kept verbatim rather than binned.
- *
- * A histogram needs enough answers to have a shape. Under
- * `MAX_SAMPLE_ANSWERS` the individual values are returned instead, so the
- * page can plot the answers themselves and not a row of one-tall bars.
- */
-export const zAnswerSample = z.object({
-    value: z.number(),
-    language: z.string()
-});
-
-/**
  * AuthorPublic
  *
  * Who wrote an annotation or a comment.
@@ -181,18 +167,6 @@ export const zBodyUploadParticipantReminderEmailAttachments = z.object({
  */
 export const zBodyUploadParticipants = z.object({
     file: z.string()
-});
-
-/**
- * CategoryCount
- *
- * One bar of a categorical distribution.
- */
-export const zCategoryCount = z.object({
-    label: z.string(),
-    count: z.int(),
-    is_other: z.boolean().optional().default(false),
-    by_language: z.record(z.string(), z.int()).optional()
 });
 
 /**
@@ -393,18 +367,6 @@ export const zDeleteParticipantsRequest = z.object({
 });
 
 /**
- * DistributionBucket
- *
- * A histogram bucket carrying the same per-language split as a bar.
- */
-export const zDistributionBucket = z.object({
-    value: z.int(),
-    count: z.int(),
-    label: z.string(),
-    by_language: z.record(z.string(), z.int()).optional()
-});
-
-/**
  * DistributionKind
  *
  * Which of the distribution fields carries this item's data.
@@ -484,24 +446,6 @@ export const zEmbeddingBackfillResponse = z.object({
 });
 
 /**
- * EmbeddingClusterPoint
- *
- * One chunk's position in the scatter plot.
- */
-export const zEmbeddingClusterPoint = z.object({
-    id: z.string(),
-    cluster: z.int().nullable(),
-    probability: z.number(),
-    x: z.number(),
-    y: z.number(),
-    preview: z.string().nullish(),
-    section: z.int().nullish(),
-    main_question: z.int().nullish(),
-    sub_question: z.int().nullish(),
-    language: z.string()
-});
-
-/**
  * EmbeddingKind
  *
  * The unit of text an embedding vector represents.
@@ -518,23 +462,6 @@ export const zEmbeddingKind = z.enum([
     'section',
     'interview'
 ]);
-
-/**
- * EmbeddingStatus
- *
- * Whether a project's corpus is embedded, and whether it could be.
- */
-export const zEmbeddingStatus = z.object({
-    enabled: z.boolean(),
-    healthy: z.boolean(),
-    model: z.string(),
-    dimension: z.int(),
-    coverage: z.record(z.string(), z.int()).optional().default({}),
-    languages: z.record(z.string(), z.int()).optional().default({}),
-    total: z.int().optional().default(0),
-    queue_depth: z.int().optional().default(0),
-    queue_dropped: z.int().optional().default(0)
-});
 
 /**
  * ErrorResponse
@@ -925,6 +852,20 @@ export const zInvitationsDeleteRequest = z.object({
 export const zLanguageCode = z.string().length(2);
 
 /**
+ * AnswerSample
+ *
+ * One answer's numeric value, kept verbatim rather than binned.
+ *
+ * A histogram needs enough answers to have a shape. Under
+ * `MAX_SAMPLE_ANSWERS` the individual values are returned instead, so the
+ * page can plot the answers themselves and not a row of one-tall bars.
+ */
+export const zAnswerSample = z.object({
+    value: z.number(),
+    language: zLanguageCode
+});
+
+/**
  * Body_add_project_language
  */
 export const zBodyAddProjectLanguage = z.object({
@@ -933,11 +874,70 @@ export const zBodyAddProjectLanguage = z.object({
 });
 
 /**
+ * CategoryCount
+ *
+ * One bar of a categorical distribution.
+ */
+export const zCategoryCount = z.object({
+    label: z.string(),
+    count: z.int(),
+    is_other: z.boolean().optional().default(false),
+    by_language: z.record(z.string(), z.int()).optional()
+});
+
+/**
  * CreateProjectRequest
  */
 export const zCreateProjectRequest = z.object({
     title: z.string(),
     default_language: zLanguageCode
+});
+
+/**
+ * DistributionBucket
+ *
+ * A histogram bucket carrying the same per-language split as a bar.
+ */
+export const zDistributionBucket = z.object({
+    value: z.int(),
+    count: z.int(),
+    label: z.string(),
+    by_language: z.record(z.string(), z.int()).optional()
+});
+
+/**
+ * EmbeddingClusterPoint
+ *
+ * One chunk's position in the scatter plot.
+ */
+export const zEmbeddingClusterPoint = z.object({
+    id: z.string(),
+    cluster: z.int().nullable(),
+    probability: z.number(),
+    x: z.number(),
+    y: z.number(),
+    preview: z.string().nullish(),
+    section: z.int().nullish(),
+    main_question: z.int().nullish(),
+    sub_question: z.int().nullish(),
+    language: zLanguageCode
+});
+
+/**
+ * EmbeddingStatus
+ *
+ * Whether a project's corpus is embedded, and whether it could be.
+ */
+export const zEmbeddingStatus = z.object({
+    enabled: z.boolean(),
+    healthy: z.boolean(),
+    model: z.string(),
+    dimension: z.int(),
+    coverage: z.record(z.string(), z.int()).optional().default({}),
+    languages: z.record(z.string(), z.int()).optional().default({}),
+    total: z.int().optional().default(0),
+    queue_depth: z.int().optional().default(0),
+    queue_dropped: z.int().optional().default(0)
 });
 
 /**
@@ -2036,27 +2036,33 @@ export const zEmbeddingClusterResponse = z.object({
 /**
  * EmbeddingSearchResponse
  *
- * Top-k results for one query.
+ * One page of results for one query.
  *
- * Not paginated: k is chosen up front and the whole point of a ranked search
- * is that results past the cut-off are not worth a page.
+ * Paged with `limit`/`offset` like the rest of the dashboard's lists, but
+ * `total` is not a promise that every row is worth reading: the tail of a
+ * ranked scan is whatever scored least, not a further set of matches. The
+ * scores are in the response so a client can cut its own cut-off.
  */
 export const zEmbeddingSearchResponse = z.object({
     query: z.string(),
     kind: zEmbeddingKind,
     task: z.string(),
     candidates: z.int().optional().default(0),
+    total: z.int().optional().default(0),
+    offset: z.int().optional().default(0),
     items: z.array(zEmbeddingSearchHit).optional().default([])
 });
 
 /**
  * EmbeddingSimilarResponse
  *
- * Neighbours of a chunk already in the corpus.
+ * One page of the neighbours of a chunk already in the corpus.
  */
 export const zEmbeddingSimilarResponse = z.object({
     source: zEmbeddingSearchHit,
     candidates: z.int().optional().default(0),
+    total: z.int().optional().default(0),
+    offset: z.int().optional().default(0),
     items: z.array(zEmbeddingSearchHit).optional().default([])
 });
 
@@ -2722,7 +2728,6 @@ export const zSearchEmbeddingsQuery = z.object({
     query: z.string().min(1).max(2000),
     kind: zEmbeddingKind.optional().default('qa_pair'),
     task: zQueryTask.optional().default('retrieval'),
-    k: z.int().gte(1).lte(100).optional().default(10),
     folder_id: z.string().nullish(),
     language: z.array(zLanguageCode).nullish(),
     status: zInterviewStatus.nullish(),
@@ -2730,7 +2735,9 @@ export const zSearchEmbeddingsQuery = z.object({
     created_after: z.iso.datetime().nullish(),
     created_before: z.iso.datetime().nullish(),
     interview_id: z.array(z.string()).nullish(),
-    include_synthetic: z.boolean().optional().default(false)
+    include_synthetic: z.boolean().optional().default(false),
+    limit: z.int().gte(1).lte(100).optional().default(10),
+    offset: z.int().gte(0).optional().default(0)
 });
 
 /**
@@ -2744,7 +2751,6 @@ export const zFindSimilarEmbeddingsPath = z.object({
 });
 
 export const zFindSimilarEmbeddingsQuery = z.object({
-    k: z.int().gte(1).lte(100).optional().default(10),
     folder_id: z.string().nullish(),
     language: z.array(zLanguageCode).nullish(),
     status: zInterviewStatus.nullish(),
@@ -2752,7 +2758,9 @@ export const zFindSimilarEmbeddingsQuery = z.object({
     created_after: z.iso.datetime().nullish(),
     created_before: z.iso.datetime().nullish(),
     interview_id: z.array(z.string()).nullish(),
-    include_synthetic: z.boolean().optional().default(false)
+    include_synthetic: z.boolean().optional().default(false),
+    limit: z.int().gte(1).lte(100).optional().default(10),
+    offset: z.int().gte(0).optional().default(0)
 });
 
 /**

@@ -42,8 +42,6 @@
 		filterLanguages = $bindable(),
 		includeSynthetic = $bindable(),
 		visibleLanguages = $bindable(),
-		scoreCutoff = $bindable(),
-		searching,
 		languages,
 		multilingual,
 		offDefault,
@@ -77,9 +75,6 @@
 		 * why it sits under Colour rather than beside the filters.
 		 */
 		visibleLanguages: LanguageCode[];
-		scoreCutoff: number;
-		/** Whether a search is up, which is the only time a score cut-off means anything. */
-		searching: boolean;
 		/**
 		 * The languages on offer: the project's own localizations at first paint,
 		 * replaced by what the corpus actually holds once the status call lands.
@@ -356,18 +351,6 @@
 	{@render languageChips('Languages included', filterLanguages, (next) => (filterLanguages = next))}
 {/snippet}
 
-{#snippet cutoffControl()}
-	<input
-		type="range"
-		min="0"
-		max="0.95"
-		step="0.01"
-		bind:value={scoreCutoff}
-		aria-label="Min score"
-		class="w-full accent-primary"
-	/>
-{/snippet}
-
 {#if open}
 	<div
 		class="flex shrink-0 flex-col rounded-lg border border-gray-200 bg-white lg:min-h-[26rem] lg:w-[15rem]"
@@ -478,16 +461,6 @@
 					'Centre by language',
 					"Language is one of the loudest signals in an embedding: left alone, the Danish answers sit with the Danish answers whatever anybody said. Centring subtracts each language's average before grouping, so the map is about what was said rather than what it was said in. Turn it off to see how much of the structure was language.",
 					languageControl
-				)}
-			{/if}
-
-			{#if searching}
-				{@render heading('Search results', 'fa-magnifying-glass')}
-				{@render stacked(
-					'Min score',
-					'A real cosine similarity, so the cut-off is meaningful. Applied to the results already fetched — moving it does not re-run the search.',
-					scoreCutoff.toFixed(2),
-					cutoffControl
 				)}
 			{/if}
 		</div>

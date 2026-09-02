@@ -11,7 +11,7 @@
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { format } from 'd3-format';
 	import HitCard from './HitCard.svelte';
-	import { GROUP_MODES, guideGroups } from './explore';
+	import { GROUP_MODES, PAGE_SIZE, guideGroups, type ListPaging } from './explore';
 
 	let {
 		clusters,
@@ -22,14 +22,15 @@
 		search,
 		searchLoading,
 		searchError,
-		cutoffHiding,
+		searchPaging,
 		detail,
 		detailLoading,
 		detailError,
 		selectedId,
 		focusedGroup,
 		onselect,
-		onfocusgroup
+		onfocusgroup,
+		neighbourPaging
 	}: {
 		/**
 		 * The clusters of the run on screen, or `null` when there is no run —
@@ -56,12 +57,15 @@
 		searchLoading: boolean;
 		searchError: string | null;
 		/**
-		 * How many hits the score cut-off is holding back. An empty list because
-		 * the reader raised a slider is a different thing from an empty list
-		 * because nothing matched, and saying so is the difference between a
-		 * control they understand and one that appears to have broken the search.
+		 * How much of the ranked scan is on screen, how much the cut-off is
+		 * holding back, and how to ask for the next page.
+		 *
+		 * The cut-off count matters on its own: an empty list because the reader
+		 * raised a slider is a different thing from an empty list because nothing
+		 * matched, and saying so is the difference between a control they
+		 * understand and one that appears to have broken the search.
 		 */
-		cutoffHiding: number;
+		searchPaging: ListPaging;
 		detail: EmbeddingSimilarResponse | null;
 		detailLoading: boolean;
 		detailError: string | null;
@@ -74,6 +78,8 @@
 		focusedGroup: string | null;
 		onselect: (id: string | null) => void;
 		onfocusgroup: (key: string | null) => void;
+		/** The same, for the neighbours of the anchored chunk. */
+		neighbourPaging: ListPaging;
 	} = $props();
 
 	let listed = $derived(guideGroups(groups, groupMode));
@@ -148,6 +154,50 @@
 	<p class="mt-3 text-xs text-gray-400">Waiting for the first run.</p>
 {/snippet}
 
+<!--
+	The foot of a ranked list: what is on screen, what is left, and the way to
+	ask for the next page. Shared by results and neighbours because they are the
+	same thing twice — a page of a scan the server counted in full.
+
+	It says nothing at all once the list is complete or the scores have fallen
+	past the cut-off. A disabled button explaining that there is no more would
+	be chrome standing where the reader has just finished reading.
+-->
+{#snippet loadMore(paging: ListPaging, noun: string)}
+	{#if paging.more || paging.moreError}
+		<div class="mt-3 flex flex-col items-center gap-1.5">
+			<button
+				type="button"
+				onclick={paging.onmore}
+				disabled={paging.moreLoading}
+				class="w-full cursor-pointer rounded-md border border-gray-200 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
+			>
+				{#if paging.moreLoading}
+					<i class="fa-solid fa-spinner fa-spin mr-1 text-[0.625rem]"></i>Loading…
+				{:else}
+					Load {formatNumber(Math.min(PAGE_SIZE, (paging.total ?? 0) - paging.loaded))} more
+					{#if paging.total !== null}
+						<span class="font-normal text-gray-400">
+							of {formatNumber(paging.total)}
+							{noun}
+						</span>
+					{/if}
+				{/if}
+			</button>
+			{#if paging.moreError}
+				<p class="text-xs text-gray-500">{paging.moreError}</p>
+			{/if}
+		</div>
+	{:else if paging.hiddenByCutoff > 0 && paging.loaded > paging.hiddenByCutoff}
+		<!-- Why the list stopped where it did. Without this the cut-off looks
+		     like it merely shortened the list, when what it also did was decide
+		     there was nothing further down worth fetching. -->
+		<p class="mt-3 text-center text-xs text-gray-400">
+			{formatNumber(paging.hiddenByCutoff)} below the cut-off. Lower it for more.
+		</p>
+	{/if}
+{/snippet}
+
 {#snippet purity(value: number | null | undefined, noun: string)}
 	{#if value !== null && value !== undefined}
 		<span
@@ -191,15 +241,23 @@
 				</h3>
 				{#if (detail.items ?? []).length === 0}
 					<p class="text-sm text-gray-500">
-						Nothing else of this kind is near it — which, with
-						{formatNumber(detail.candidates ?? 0)} chunks in the filtered pool, is itself a finding.
+						{#if neighbourPaging.hiddenByCutoff > 0}
+							{formatNumber(neighbourPaging.hiddenByCutoff)}
+							{neighbourPaging.hiddenByCutoff === 1 ? 'neighbour is' : 'neighbours are'} below the score
+							cut-off. Lower it to see {neighbourPaging.hiddenByCutoff === 1 ? 'it' : 'them'}.
+						{:else}
+							Nothing else of this kind is near it — which, with
+							{formatNumber(detail.candidates ?? 0)} chunks in the filtered pool, is itself a finding.
+						{/if}
 					</p>
+					{@render loadMore(neighbourPaging, 'neighbours')}
 				{:else}
 					<div class="flex flex-col gap-2">
 						{#each detail.items ?? [] as neighbour (neighbour.id)}
 							<HitCard hit={neighbour} onanchor={anchor} />
 						{/each}
 					</div>
+					{@render loadMore(neighbourPaging, 'neighbours')}
 				{/if}
 			{/if}
 		</div>
@@ -207,9 +265,17 @@
 		<header class="border-b border-gray-100 px-4 py-3">
 			<h2 class="text-xs font-semibold tracking-wide text-gray-400 uppercase">Results</h2>
 			{#if search}
+				<!-- Three numbers, and they mean three different things: what is on
+				     screen, how many the scan ranked, and how big the pool it ranked
+				     them out of was. A list of ten out of a total of two hundred is a
+				     first page; a total of two hundred out of ten thousand scored is
+				     how much of the corpus was even in the running. -->
 				<p class="mt-0.5 text-xs text-gray-500">
-					{formatNumber((search.items ?? []).length)} of
-					{formatNumber(search.candidates ?? 0)} chunks scored
+					{formatNumber((search.items ?? []).length)}
+					{#if searchPaging.total !== null}
+						of {formatNumber(searchPaging.total)} ranked
+					{/if}
+					· {formatNumber(search.candidates ?? 0)} chunks scored
 				</p>
 			{/if}
 		</header>
@@ -228,10 +294,10 @@
 				     nothing scored is a filter that left nothing to search; an empty
 				     list with thousands scored is a query nothing answers. -->
 				<p class="text-sm text-gray-500">
-					{#if cutoffHiding > 0}
-						{formatNumber(cutoffHiding)}
-						{cutoffHiding === 1 ? 'result is' : 'results are'} below the score cut-off. Lower it to see
-						{cutoffHiding === 1 ? 'it' : 'them'}.
+					{#if searchPaging.hiddenByCutoff > 0}
+						{formatNumber(searchPaging.hiddenByCutoff)}
+						{searchPaging.hiddenByCutoff === 1 ? 'result is' : 'results are'} below the score cut-off.
+						Lower it to see {searchPaging.hiddenByCutoff === 1 ? 'it' : 'them'}.
 					{:else if (search.candidates ?? 0) === 0}
 						Your filters left nothing to search. Widen them and try again.
 					{:else}
@@ -244,6 +310,7 @@
 						<HitCard {hit} onanchor={anchor} />
 					{/each}
 				</div>
+				{@render loadMore(searchPaging, 'results')}
 			{/if}
 		</div>
 	{:else if groupMode !== 'cluster'}

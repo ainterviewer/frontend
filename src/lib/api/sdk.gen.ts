@@ -300,6 +300,13 @@ export class Analysis {
      * vectors are task-free, so switching tasks costs a query embedding and
      * nothing else. `kind` picks the unit searched -- QA pairs by default, since a
      * lone answer is often too short to mean anything out of context.
+     *
+     * Paged with `limit`/`offset`, which together may not reach further than
+     * `MAX_SEARCH_DEPTH` into the ranking. Every page re-embeds the query and
+     * re-scores the candidate set, which is what keeps a page a function of the
+     * query and the corpus rather than of a cached ranking -- and `total` is the
+     * length of that ranking, not a count of things worth reading. Deep pages of
+     * a semantic search are the chunks that scored least.
      */
     public static searchEmbeddings<ThrowOnError extends boolean = false>(options: Options<SearchEmbeddingsData, ThrowOnError>): RequestResult<SearchEmbeddingsResponses, SearchEmbeddingsErrors, ThrowOnError> {
         return (options.client ?? client).get<SearchEmbeddingsResponses, SearchEmbeddingsErrors, ThrowOnError>({
@@ -320,7 +327,10 @@ export class Analysis {
      *
      * Costs no inference: the query vector is the one already stored, so this
      * works even when the embedding server is down. Searches within the source's
-     * own kind and never returns the source itself.
+     * own kind and never returns the source itself, which is why `total` is one
+     * below `candidates` whenever the source survives the filters.
+     *
+     * Paged with `limit`/`offset` on the same terms as the search endpoint.
      */
     public static findSimilarEmbeddings<ThrowOnError extends boolean = false>(options: Options<FindSimilarEmbeddingsData, ThrowOnError>): RequestResult<FindSimilarEmbeddingsResponses, FindSimilarEmbeddingsErrors, ThrowOnError> {
         return (options.client ?? client).get<FindSimilarEmbeddingsResponses, FindSimilarEmbeddingsErrors, ThrowOnError>({

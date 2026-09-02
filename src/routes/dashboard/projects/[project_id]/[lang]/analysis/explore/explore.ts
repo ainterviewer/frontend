@@ -42,14 +42,20 @@ export const DEFAULT_KIND: EmbeddingKind = 'qa_pair';
 export const DEFAULT_TASK: QueryTask = 'retrieval';
 
 /**
- * How many hits a search asks for. The endpoint is not paginated by design —
- * past the cut-off a ranked list stops being worth a page — so this is the
- * whole result set, not the first screen of it.
+ * How many hits one page of a ranked list holds, for both search and
+ * neighbours.
+ *
+ * Both endpoints take `limit`/`offset` and report a `total`, so the list on
+ * screen is the first screen of a ranked scan rather than the whole of it. Ten
+ * is what fits the panel without scrolling past the point where the scores
+ * stop meaning much; the tail is a page away for a reader who wants it.
+ *
+ * `total` counts everything that scored, which is not the same as everything
+ * worth reading — the bottom of a ranked scan is whatever scored least. That
+ * is what the score cut-off is for, and why paging stops offering more once
+ * the list has dropped below it.
  */
-export const DEFAULT_K = 10;
-
-/** Bounds the API enforces on `k`, checked here so 422 is never the first feedback. */
-export const K_RANGE = { min: 1, max: 100 } as const;
+export const PAGE_SIZE = 10;
 
 /**
  * How the vectors are reduced before HDBSCAN runs and before anything is
@@ -91,7 +97,8 @@ export const MIN_DIST_RANGE = { min: 0, max: 1, step: 0.05 } as const;
 
 export const DEFAULT_MIN_CLUSTER_SIZE = 5;
 
-/** Bounds the API enforces on `min_cluster_size`, same reasoning as `K_RANGE`. */
+/** Bounds the API enforces on `min_cluster_size`, checked here so 422 is never
+ * the first feedback. */
 export const MIN_CLUSTER_SIZE_RANGE = { min: 2, max: 500 } as const;
 
 /**
@@ -171,6 +178,36 @@ export function filterQuery(filters: ExploreFilters) {
 		include_synthetic: filters.include_synthetic
 	};
 }
+
+/**
+ * What a paged list of hits needs to describe itself and ask for more.
+ *
+ * Both ranked lists on this page — a search and a chunk's neighbours — are
+ * pages of a scan the server counted in full, and both are read through the
+ * same score cut-off. The panel renders them the same way, so it is handed the
+ * same shape rather than seven parallel props twice over.
+ */
+export type ListPaging = {
+	/** Hits fetched so far, cut-off aside. */
+	loaded: number;
+	/** Everything that scored, or null where the server did not say. */
+	total: number | null;
+	/** Of the fetched hits, how many the cut-off is holding back. */
+	hiddenByCutoff: number;
+	/**
+	 * Whether more is worth offering. False once the list has reached `total`,
+	 * and false once its tail has dropped below the cut-off — everything after
+	 * that scored less again, so a further page would arrive already hidden.
+	 */
+	more: boolean;
+	moreLoading: boolean;
+	/**
+	 * A page that failed on its own. Kept apart from the list's error because
+	 * this one leaves what is already on screen perfectly good.
+	 */
+	moreError: string | null;
+	onmore: () => void;
+};
 
 /** Whether two language selections hold the same codes, order aside. */
 export function sameLanguages(a: LanguageCode[], b: LanguageCode[]) {

@@ -1185,10 +1185,12 @@ export type EmbeddingSearchHit = {
 /**
  * EmbeddingSearchResponse
  *
- * Top-k results for one query.
+ * One page of results for one query.
  *
- * Not paginated: k is chosen up front and the whole point of a ranked search
- * is that results past the cut-off are not worth a page.
+ * Paged with `limit`/`offset` like the rest of the dashboard's lists, but
+ * `total` is not a promise that every row is worth reading: the tail of a
+ * ranked scan is whatever scored least, not a further set of matches. The
+ * scores are in the response so a client can cut its own cut-off.
  */
 export type EmbeddingSearchResponse = {
     /**
@@ -1205,6 +1207,14 @@ export type EmbeddingSearchResponse = {
      */
     candidates?: number;
     /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
+    /**
      * Items
      */
     items?: Array<EmbeddingSearchHit>;
@@ -1213,7 +1223,7 @@ export type EmbeddingSearchResponse = {
 /**
  * EmbeddingSimilarResponse
  *
- * Neighbours of a chunk already in the corpus.
+ * One page of the neighbours of a chunk already in the corpus.
  */
 export type EmbeddingSimilarResponse = {
     source: EmbeddingSearchHit;
@@ -1221,6 +1231,14 @@ export type EmbeddingSimilarResponse = {
      * Candidates
      */
     candidates?: number;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
     /**
      * Items
      */
@@ -5059,10 +5077,6 @@ export type SearchEmbeddingsData = {
         kind?: EmbeddingKind;
         task?: QueryTask;
         /**
-         * K
-         */
-        k?: number;
-        /**
          * Folder Id
          */
         folder_id?: string | null;
@@ -5094,6 +5108,14 @@ export type SearchEmbeddingsData = {
          * Include Synthetic
          */
         include_synthetic?: boolean;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/search';
 };
@@ -5134,10 +5156,6 @@ export type FindSimilarEmbeddingsData = {
     };
     query?: {
         /**
-         * K
-         */
-        k?: number;
-        /**
          * Folder Id
          */
         folder_id?: string | null;
@@ -5169,6 +5187,14 @@ export type FindSimilarEmbeddingsData = {
          * Include Synthetic
          */
         include_synthetic?: boolean;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/{embedding_id}/similar';
 };

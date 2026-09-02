@@ -5,6 +5,7 @@
 		EmbeddingClusterPoint,
 		EmbeddingClusterResponse,
 		EmbeddingKind,
+		EmbeddingSearchHit,
 		EmbeddingSearchResponse,
 		EmbeddingSimilarResponse,
 		EmbeddingStatus,
@@ -27,7 +28,6 @@
 		DEFAULT_CENTER_BY_LANGUAGE,
 		DEFAULT_CENTER_BY_QUESTION,
 		DEFAULT_GROUP_MODE,
-		DEFAULT_K,
 		DEFAULT_KIND,
 		DEFAULT_MIN_CLUSTER_SIZE,
 		DEFAULT_MIN_DIST,
@@ -36,6 +36,7 @@
 		DEFAULT_TASK,
 		GROUP_MODES,
 		MIN_CLUSTER_SIZE_RANGE,
+		PAGE_SIZE,
 		clusterQuery,
 		defaultFilters,
 		describeError,
@@ -45,7 +46,8 @@
 		isDefaultClusterSettings,
 		isToolbarChange,
 		offDefaultCount,
-		type ClusterSettings
+		type ClusterSettings,
+		type ListPaging
 	} from './explore';
 
 	let { data }: { data: PageData } = $props();
@@ -106,15 +108,39 @@
 	// it is would put a request behind every letter.
 	let queryText = $state('');
 	let submitted = $state('');
+	/**
+	 * The envelope of the most recent page — the query it was run for, how many
+	 * chunks were scored, how many there are in all. The hits themselves are
+	 * held separately because they accumulate: a second page is appended to the
+	 * list rather than swapped in for it, so a ranked list is read downwards
+	 * the way it is written.
+	 */
 	let searchResponse = $state<EmbeddingSearchResponse | null>(null);
+	let searchHits = $state<EmbeddingSearchHit[]>([]);
 	let searchLoading = $state(false);
 	let searchError = $state<string | null>(null);
+	let searchMoreLoading = $state(false);
+	let searchMoreError = $state<string | null>(null);
+
+	/**
+	 * The score below which a hit is not shown, applied to whichever ranked list
+	 * is on screen — search results and a chunk's neighbours are the same cosine
+	 * measure, so one control covers both.
+	 *
+	 * Applied here rather than sent to the server. The score is a real cosine
+	 * value, so the reader can judge it — but only once they have seen the
+	 * numbers the query actually produced, and re-running the search to drop
+	 * three rows would cost another inference call for nothing.
+	 */
 	let scoreCutoff = $state(0);
 
 	let selectedId = $state<string | null>(null);
 	let detail = $state<EmbeddingSimilarResponse | null>(null);
+	let detailHits = $state<EmbeddingSearchHit[]>([]);
 	let detailLoading = $state(false);
 	let detailError = $state<string | null>(null);
+	let detailMoreLoading = $state(false);
+	let detailMoreError = $state<string | null>(null);
 
 	let focusedGroup = $state<string | null>(null);
 	let hoveredId = $state<string | null>(null);
@@ -317,14 +343,29 @@
 
 	// -- search ---------------------------------------------------------------
 
+	/**
+	 * Which request a page belongs to.
+	 *
+	 * "Load more" runs outside the effect that owns the search, so it has no
+	 * abort signal to be cancelled by. The counter is what a late page checks
+	 * itself against before appending to a list that has since been replaced by
+	 * a different query, unit or filter.
+	 */
+	let searchRun = 0;
+
 	$effect(() => {
 		const projectId = data.project_id;
 		const query = submitted.trim();
 		const currentKind = kind;
 		const currentFilters = filterQuery(filters);
 
+		searchRun += 1;
+		searchMoreLoading = false;
+		searchMoreError = null;
+
 		if (!query) {
 			searchResponse = null;
+			searchHits = [];
 			searchError = null;
 			searchLoading = false;
 			return;
@@ -341,7 +382,14 @@
 				response
 			} = await Analysis.searchEmbeddings({
 				path: { project_id: projectId },
-				query: { query, kind: currentKind, task: DEFAULT_TASK, k: DEFAULT_K, ...currentFilters },
+				query: {
+					query,
+					kind: currentKind,
+					task: DEFAULT_TASK,
+					limit: PAGE_SIZE,
+					offset: 0,
+					...currentFilters
+				},
 				signal: controller.signal
 			});
 			if (disposed) return;
@@ -349,11 +397,13 @@
 			searchLoading = false;
 			if (error || !body) {
 				searchResponse = null;
+				searchHits = [];
 				searchError = describeError(response?.status, 'The search could not be run.');
 				return;
 			}
 
 			searchResponse = body;
+			searchHits = body.items ?? [];
 			searchError = null;
 		})();
 
@@ -364,29 +414,66 @@
 	});
 
 	/**
-	 * The cut-off is applied here rather than sent to the server. The score is a
-	 * real cosine value, so the reader can judge it — but only once they have
-	 * seen the numbers the query actually produced, and re-running the search to
-	 * drop three rows would cost another inference call for nothing.
+	 * The next page of results, appended.
+	 *
+	 * Costs another inference call — the server re-embeds the query to score the
+	 * next slice — which is the reason this is a button rather than something
+	 * the scroller does on the reader's behalf.
 	 */
-	let visibleSearch = $derived.by((): EmbeddingSearchResponse | null => {
-		if (!searchResponse) return null;
-		if (scoreCutoff <= 0) return searchResponse;
-		return {
-			...searchResponse,
-			items: (searchResponse.items ?? []).filter((hit) => hit.score >= scoreCutoff)
-		};
-	});
+	async function loadMoreSearch() {
+		const query = submitted.trim();
+		if (searchMoreLoading || !searchResponse || !query) return;
+
+		const run = searchRun;
+		searchMoreLoading = true;
+		searchMoreError = null;
+
+		const {
+			data: body,
+			error,
+			response
+		} = await Analysis.searchEmbeddings({
+			path: { project_id: data.project_id },
+			query: {
+				query,
+				kind,
+				task: DEFAULT_TASK,
+				limit: PAGE_SIZE,
+				offset: searchHits.length,
+				...filterQuery(filters)
+			}
+		});
+		if (run !== searchRun) return;
+
+		searchMoreLoading = false;
+		if (error || !body) {
+			// The list already on screen is untouched and still correct, so this
+			// says so beside the button rather than replacing the results.
+			searchMoreError = describeError(response?.status, 'Could not load more results.');
+			return;
+		}
+
+		searchResponse = body;
+		searchHits = [...searchHits, ...(body.items ?? [])];
+	}
 
 	// -- chunk detail ---------------------------------------------------------
+
+	/** The same guard as `searchRun`, for the neighbours list. */
+	let detailRun = 0;
 
 	$effect(() => {
 		const projectId = data.project_id;
 		const id = selectedId;
 		const currentFilters = filterQuery(filters);
 
+		detailRun += 1;
+		detailMoreLoading = false;
+		detailMoreError = null;
+
 		if (!id) {
 			detail = null;
+			detailHits = [];
 			detailError = null;
 			detailLoading = false;
 			return;
@@ -405,7 +492,7 @@
 				response
 			} = await Analysis.findSimilarEmbeddings({
 				path: { project_id: projectId, embedding_id: id },
-				query: { k: DEFAULT_K, ...currentFilters },
+				query: { limit: PAGE_SIZE, offset: 0, ...currentFilters },
 				signal: controller.signal
 			});
 			if (disposed) return;
@@ -413,11 +500,13 @@
 			detailLoading = false;
 			if (error || !body) {
 				detail = null;
+				detailHits = [];
 				detailError = describeError(response?.status, 'Could not load this chunk.');
 				return;
 			}
 
 			detail = body;
+			detailHits = body.items ?? [];
 			detailError = null;
 		})();
 
@@ -426,6 +515,104 @@
 			controller.abort();
 		};
 	});
+
+	/** The next page of neighbours. Stored vectors, so this one is cheap. */
+	async function loadMoreNeighbours() {
+		const id = selectedId;
+		if (detailMoreLoading || !detail || !id) return;
+
+		const run = detailRun;
+		detailMoreLoading = true;
+		detailMoreError = null;
+
+		const {
+			data: body,
+			error,
+			response
+		} = await Analysis.findSimilarEmbeddings({
+			path: { project_id: data.project_id, embedding_id: id },
+			query: { limit: PAGE_SIZE, offset: detailHits.length, ...filterQuery(filters) }
+		});
+		if (run !== detailRun) return;
+
+		detailMoreLoading = false;
+		if (error || !body) {
+			detailMoreError = describeError(response?.status, 'Could not load more neighbours.');
+			return;
+		}
+
+		detail = body;
+		detailHits = [...detailHits, ...(body.items ?? [])];
+	}
+
+	// -- the score cut-off ----------------------------------------------------
+
+	/** One cut-off, applied to whichever ranked list is being read. */
+	function aboveCutoff(hits: EmbeddingSearchHit[]) {
+		return scoreCutoff <= 0 ? hits : hits.filter((hit) => hit.score >= scoreCutoff);
+	}
+
+	/**
+	 * Whether another page is worth offering.
+	 *
+	 * Two reasons it is not. The obvious one is that the list has reached what
+	 * the server counted. The other is the cut-off: a ranked scan only goes
+	 * down, so once the last hit fetched has fallen below the line, everything
+	 * a further page could return would arrive already hidden — and a button
+	 * whose only effect is to spend a request and change nothing on screen is
+	 * worse than no button.
+	 */
+	function moreWorthOffering(hits: EmbeddingSearchHit[], total: number | null) {
+		if (total === null || hits.length >= total) return false;
+		const last = hits[hits.length - 1];
+		return !last || scoreCutoff <= 0 || last.score >= scoreCutoff;
+	}
+
+	function paging(
+		hits: EmbeddingSearchHit[],
+		total: number | null | undefined,
+		moreLoading: boolean,
+		moreError: string | null,
+		onmore: () => void
+	): ListPaging {
+		const counted = total ?? null;
+		return {
+			loaded: hits.length,
+			total: counted,
+			hiddenByCutoff: hits.length - aboveCutoff(hits).length,
+			more: moreWorthOffering(hits, counted),
+			moreLoading,
+			moreError,
+			onmore
+		};
+	}
+
+	/** The results as the panel and the map see them: fetched, then filtered. */
+	let visibleSearch = $derived.by((): EmbeddingSearchResponse | null =>
+		searchResponse ? { ...searchResponse, items: aboveCutoff(searchHits) } : null
+	);
+
+	/**
+	 * The neighbours, filtered the same way. `source` is never filtered — it is
+	 * the chunk the reader anchored on, not a result they are ranking.
+	 */
+	let visibleDetail = $derived.by((): EmbeddingSimilarResponse | null =>
+		detail ? { ...detail, items: aboveCutoff(detailHits) } : null
+	);
+
+	let searchPaging = $derived(
+		paging(searchHits, searchResponse?.total, searchMoreLoading, searchMoreError, loadMoreSearch)
+	);
+	let neighbourPaging = $derived(
+		paging(detailHits, detail?.total, detailMoreLoading, detailMoreError, loadMoreNeighbours)
+	);
+
+	/**
+	 * Whether the cut-off has a list to act on. Tied to what was asked for
+	 * rather than to what has come back, so the control does not appear a beat
+	 * after the results and shift the row it sits in.
+	 */
+	let cutoffApplies = $derived(submitted.trim() !== '' || selectedId !== null);
 
 	// -- map highlighting -----------------------------------------------------
 
@@ -579,7 +766,11 @@
 	function clearSearch() {
 		queryText = '';
 		submitted = '';
-		scoreCutoff = 0;
+		// The cut-off is left where the reader put it. It used to be reset here,
+		// when it lived in a rail that could be collapsed over it and only ever
+		// applied to a search; now it is in the search row, in sight, and it is
+		// also what the neighbours list is being read through — clearing a query
+		// is not a reason to move a control the reader can see and is still using.
 	}
 
 	// Ids belong to the run that produced them, so a change of kind invalidates
@@ -657,8 +848,10 @@
 
 		<!-- Search stands alone above the map. It is what most readers come for,
 		     and everything that shapes the map is in the rail beside it. -->
-		<div class="rounded-lg border border-gray-200 bg-white px-4 py-3">
-			<form onsubmit={search} class="flex items-center gap-2">
+		<div
+			class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-gray-200 bg-white px-4 py-3"
+		>
+			<form onsubmit={search} class="flex min-w-[18rem] flex-1 items-center gap-2">
 				<div class="relative flex-1">
 					<i
 						class="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs text-gray-300"
@@ -689,6 +882,33 @@
 					</button>
 				{/if}
 			</form>
+
+			<!-- The cut-off sits with the query rather than in the rail, because it
+			     is a property of the list of hits and not of the map: it filters
+			     what came back, and the rail can be collapsed over it. It applies to
+			     whichever ranked list the panel is showing — results, or a chunk's
+			     neighbours — which is why it is out here rather than in either. -->
+			{#if cutoffApplies}
+				<div class="flex items-center gap-2">
+					<label for="score-cutoff" class="text-xs whitespace-nowrap text-gray-500">Min score</label
+					>
+					<input
+						id="score-cutoff"
+						type="range"
+						min="0"
+						max="0.95"
+						step="0.01"
+						bind:value={scoreCutoff}
+						class="w-24 accent-primary"
+					/>
+					<span class="w-8 font-mono text-xs text-gray-600 tabular-nums">
+						{scoreCutoff.toFixed(2)}
+					</span>
+					<HoverInfo
+						text="A real cosine similarity, so the cut-off means something. Applied to the hits already fetched — moving it does not re-run anything — and to the neighbours of an anchored chunk as well as to search results. Past it, there is no more to load: a ranked list only goes down."
+					/>
+				</div>
+			{/if}
 		</div>
 
 		<div class="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
@@ -708,8 +928,6 @@
 				bind:filterLanguages
 				bind:includeSynthetic
 				bind:visibleLanguages
-				bind:scoreCutoff
-				searching={searchResponse !== null}
 				{languages}
 				{multilingual}
 				{offDefault}
@@ -904,11 +1122,11 @@
 						search={visibleSearch}
 						{searchLoading}
 						{searchError}
-						cutoffHiding={(searchResponse?.items ?? []).length -
-							(visibleSearch?.items ?? []).length}
-						{detail}
+						{searchPaging}
+						detail={visibleDetail}
 						{detailLoading}
 						{detailError}
+						{neighbourPaging}
 						{selectedId}
 						{focusedGroup}
 						onselect={(id) => (selectedId = id)}
