@@ -12,6 +12,7 @@
 		grouped,
 		strengthOf,
 		describe,
+		resetKey = null,
 		onselect
 	}: {
 		points: EmbeddingClusterPoint[];
@@ -39,6 +40,13 @@
 		strengthOf: (point: EmbeddingClusterPoint) => number;
 		/** The second line of the hover card: which group this point is in. */
 		describe: (point: EmbeddingClusterPoint) => string;
+		/**
+		 * Identifies the run being plotted. When it changes the pan and zoom go
+		 * back to the whole map: a viewport is a position in one cloud of points,
+		 * and carrying it into a different cloud leaves the reader zoomed into
+		 * empty space with no indication of why.
+		 */
+		resetKey?: unknown;
 		onselect: (id: string | null) => void;
 	} = $props();
 
@@ -191,6 +199,11 @@
 	function reset() {
 		zoom = { k: 1, x: 0, y: 0 };
 	}
+
+	$effect(() => {
+		void resetKey;
+		reset();
+	});
 
 	// The keyboard path over the map. The panel beside it — cluster list, search
 	// results, representatives — is the better one for a screen reader, but a

@@ -675,6 +675,7 @@
 							{grouped}
 							{strengthOf}
 							{describe}
+							resetKey={kind}
 							onselect={(id) => {
 								selectedId = id;
 								if (id) focusedGroup = null;
