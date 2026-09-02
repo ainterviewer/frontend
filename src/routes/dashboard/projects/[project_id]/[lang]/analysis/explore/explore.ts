@@ -200,6 +200,52 @@ export function clusterQuery(settings: ClusterSettings) {
 	};
 }
 
+/**
+ * The settings the toolbar owns, as one string.
+ *
+ * Everything else lives behind the tuning panel, and the two are used
+ * differently: the toolbar's controls are dragged and flicked through while
+ * reading the map, the panel's are set once and left. That difference is worth
+ * a different debounce, and this is the only thing that tells them apart —
+ * there is no event to listen to, because both write the same settings object.
+ */
+function toolbarFingerprint(settings: ClusterSettings) {
+	return `${settings.kind}:${settings.min_cluster_size}`;
+}
+
+/**
+ * Whether a settings change came from the toolbar rather than the panel. A
+ * first run counts as one, so nothing waits longer than it has to on load.
+ */
+export function isToolbarChange(previous: ClusterSettings | null, next: ClusterSettings) {
+	return previous === null || toolbarFingerprint(previous) !== toolbarFingerprint(next);
+}
+
+/**
+ * How many settings are away from where the page starts.
+ *
+ * Lives here rather than in the rail because it is read in two places — the
+ * rail's reset button and the button that reopens it — and two counts that can
+ * disagree are worse than no count at all.
+ *
+ * `center_by_language` counts only where it does anything: a monolingual
+ * project would otherwise wear a badge for a setting it is not shown and could
+ * not change.
+ */
+export function offDefaultCount(settings: ClusterSettings, multilingual: boolean) {
+	const fallback = defaultClusterSettings();
+	return [
+		settings.projection !== fallback.projection,
+		settings.projection === 'umap' && settings.n_neighbors !== fallback.n_neighbors,
+		settings.projection === 'umap' && settings.min_dist !== fallback.min_dist,
+		settings.min_cluster_size !== fallback.min_cluster_size,
+		settings.center_by_question !== fallback.center_by_question,
+		multilingual && settings.center_by_language !== fallback.center_by_language,
+		settings.filters.status !== fallback.filters.status,
+		settings.filters.include_synthetic !== fallback.filters.include_synthetic
+	].filter(Boolean).length;
+}
+
 /** Whether the response `load` preloaded answers these settings. */
 export function isDefaultClusterSettings(settings: ClusterSettings) {
 	const fallback = defaultClusterSettings();

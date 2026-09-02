@@ -14,10 +14,10 @@
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { OUTLIER_COLOR, mapColor } from '$lib/config/chartColors';
-	import { Switch } from 'bits-ui';
 	import { format } from 'd3-format';
 	import type { PageData } from './$types';
 	import DetailPanel from './DetailPanel.svelte';
+	import ControlRail from './ControlRail.svelte';
 	import ScatterPlot from './ScatterPlot.svelte';
 	import StatusStrip from './StatusStrip.svelte';
 	import {
@@ -32,11 +32,7 @@
 		DEFAULT_PROJECTION,
 		DEFAULT_TASK,
 		GROUP_MODES,
-		KINDS,
 		MIN_CLUSTER_SIZE_RANGE,
-		MIN_DIST_RANGE,
-		N_NEIGHBORS_RANGE,
-		PROJECTIONS,
 		clusterQuery,
 		defaultFilters,
 		describeError,
@@ -44,6 +40,8 @@
 		groupKeyOf,
 		groupOrder,
 		isDefaultClusterSettings,
+		isToolbarChange,
+		offDefaultCount,
 		type ClusterSettings
 	} from './explore';
 
@@ -110,6 +108,10 @@
 	let focusedGroup = $state<string | null>(null);
 	let hoveredId = $state<string | null>(null);
 
+	// Open to begin with: a reader who has not seen this page before should not
+	// have to find the controls, and the map has room for both at this width.
+	let railOpen = $state(true);
+
 	/**
 	 * What the map is coloured by. Not part of `ClusterSettings`: all three
 	 * groupings are read off one response — the clustering the server ran, and
@@ -153,13 +155,21 @@
 	 *
 	 * A drag across a slider track emits a value per pixel, and every one of
 	 * those is a request the reader has already moved past. PCA recomputes in
-	 * around 200 ms, which is what makes these sliders rather than form fields;
-	 * UMAP is seconds, so it waits longer before committing to one.
+	 * around 200 ms, which is what makes the toolbar's controls sliders rather
+	 * than form fields; UMAP is seconds, so it waits longer before committing.
+	 *
+	 * The tuning panel waits longer still. Nothing in it is dragged to explore —
+	 * it is opened, adjusted, and closed — so the only thing a short wait buys
+	 * there is UMAP runs for the values passed through on the way.
 	 */
-	const CLUSTER_DEBOUNCE_MS = { pca: 250, umap: 500 } as const;
+	const TOOLBAR_DEBOUNCE_MS = { pca: 250, umap: 500 } as const;
+	const PANEL_DEBOUNCE_MS = 800;
 
 	let clusterProjectId: string | null = null;
 	let seenClusterPreload: PageData['clusters'] | null = null;
+	// Deliberately not `$state`: this only ever decides how long the next
+	// request waits, and making it reactive would re-run the effect that sets it.
+	let lastClusterSettings: ClusterSettings | null = null;
 
 	$effect(() => {
 		const projectId = data.project_id;
@@ -177,6 +187,9 @@
 
 		const adopting = preloaded !== seenClusterPreload && isDefaultClusterSettings(settings);
 		seenClusterPreload = preloaded;
+
+		const fromToolbar = isToolbarChange(lastClusterSettings, settings);
+		lastClusterSettings = settings;
 
 		clusterLoading = true;
 		let disposed = false;
@@ -209,7 +222,7 @@
 				clusters = body;
 				clusterError = null;
 			},
-			adopting ? 0 : CLUSTER_DEBOUNCE_MS[query.projection]
+			adopting ? 0 : fromToolbar ? TOOLBAR_DEBOUNCE_MS[query.projection] : PANEL_DEBOUNCE_MS
 		);
 
 		return () => {
@@ -388,6 +401,9 @@
 	 */
 	let multilingual = $derived(new Set(points.map((point) => point.language)).size > 1);
 
+	/** Shared by the rail's reset button and the button that reopens the rail. */
+	let offDefault = $derived(offDefaultCount(settings, multilingual));
+
 	let modes = $derived(GROUP_MODES.filter((mode) => mode.value !== 'language' || multilingual));
 
 	// A filter can take the last of a second language off the map while it is
@@ -535,10 +551,9 @@
 			</p>
 		{/if}
 
-		<!-- Controls. Search on top because it is what most readers come for;
-		     the clustering knobs beneath it because they change what the map
-		     means and deserve to be read, not hunted for. -->
-		<div class="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3">
+		<!-- Search stands alone above the map. It is what most readers come for,
+		     and everything that shapes the map is in the rail beside it. -->
+		<div class="rounded-lg border border-gray-200 bg-white px-4 py-3">
 			<form onsubmit={search} class="flex items-center gap-2">
 				<div class="relative flex-1">
 					<i
@@ -570,217 +585,61 @@
 					</button>
 				{/if}
 			</form>
-
-			<div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-600">
-				<div class="flex items-center gap-1.5">
-					<span class="text-gray-500">Projection</span>
-					<!-- The one control that changes what the picture *is* rather than
-					     how it is coloured, so it leads. Both cluster in the space they
-					     plot; they disagree about what that space should be, and the
-					     only way to tell which is right about this corpus is to look at
-					     both. -->
-					<div class="flex overflow-hidden rounded-md border border-gray-200">
-						{#each PROJECTIONS as option (option.value)}
-							<button
-								type="button"
-								onclick={() => (projection = option.value)}
-								aria-pressed={projection === option.value}
-								class="cursor-pointer px-2 py-1 font-medium transition-colors {projection ===
-								option.value
-									? 'bg-primary text-on-primary'
-									: 'bg-white text-gray-500 hover:text-gray-900'}"
-							>
-								{option.label}
-							</button>
-						{/each}
-					</div>
-					<HoverInfo text={PROJECTIONS.find((option) => option.value === projection)?.hint ?? ''} />
-				</div>
-
-				{#if projection === 'umap'}
-					<!-- UMAP's shape knobs, shown only where they do anything. PCA takes
-					     neither, and the page does not send them under it. -->
-					<label class="flex items-center gap-2">
-						<span class="text-gray-500">Neighbours</span>
-						<input
-							type="range"
-							min={N_NEIGHBORS_RANGE.min}
-							max={N_NEIGHBORS_RANGE.max}
-							bind:value={nNeighbors}
-							class="w-28 accent-primary"
-						/>
-						<span class="w-6 font-mono tabular-nums">{nNeighbors}</span>
-						<HoverInfo
-							text="How much of the corpus each point is fitted against. Low keeps local detail and fragments the map; high recovers global structure and smooths the detail away. 15 is a reasonable middle."
-						/>
-					</label>
-
-					<label class="flex items-center gap-2">
-						<span class="text-gray-500">Min distance</span>
-						<input
-							type="range"
-							min={MIN_DIST_RANGE.min}
-							max={MIN_DIST_RANGE.max}
-							step={MIN_DIST_RANGE.step}
-							bind:value={minDist}
-							class="w-24 accent-primary"
-						/>
-						<span class="w-8 font-mono tabular-nums">{minDist.toFixed(2)}</span>
-						<HoverInfo
-							text="How tightly points may pack. 0 gives the clumped layout HDBSCAN reads best; raising it spreads each blob out, which is easier to look at and harder to cluster."
-						/>
-					</label>
-				{/if}
-
-				<div class="flex items-center gap-1.5">
-					<span class="text-gray-500">Group by</span>
-					<!-- A segmented control rather than a select: the alternatives are
-					     the reason to look at the clusters at all, and the comparison
-					     only works if switching between them is a single click. -->
-					<div class="flex overflow-hidden rounded-md border border-gray-200">
-						{#each modes as mode (mode.value)}
-							<button
-								type="button"
-								onclick={() => changeGroupMode(mode.value)}
-								aria-pressed={groupMode === mode.value}
-								class="cursor-pointer px-2 py-1 font-medium transition-colors {groupMode ===
-								mode.value
-									? 'bg-primary text-on-primary'
-									: 'bg-white text-gray-500 hover:text-gray-900'}"
-							>
-								{mode.label}
-							</button>
-						{/each}
-					</div>
-					<HoverInfo text={modes.find((mode) => mode.value === groupMode)?.hint ?? ''} />
-				</div>
-
-				<label class="flex items-center gap-1.5">
-					<span class="text-gray-500">Unit</span>
-					<select
-						value={kind}
-						onchange={(event) => changeKind(event.currentTarget.value as EmbeddingKind)}
-						class="rounded-md border border-gray-200 py-1 pr-7 pl-2 text-xs focus:border-primary focus:ring-0"
-					>
-						{#each KINDS as option (option.value)}
-							<option value={option.value}>{option.label}</option>
-						{/each}
-					</select>
-					<HoverInfo text={KINDS.find((option) => option.value === kind)?.hint ?? ''} />
-				</label>
-
-				<!-- Greyed out away from the clusters, where it changes nothing that
-				     is on screen: the positions come from the projection, and the
-				     cluster ids it does change are not what the points are coloured
-				     by. Centring below stays live in every mode — it moves the points
-				     themselves, and watching a question's colour scatter as it comes
-				     on is the whole reason to colour by question. -->
-				<label class="flex items-center gap-2" class:opacity-40={groupMode !== 'cluster'}>
-					<span class="text-gray-500">Min cluster size</span>
-					<input
-						type="range"
-						min={MIN_CLUSTER_SIZE_RANGE.min}
-						max={maxClusterSize}
-						bind:value={minClusterSize}
-						disabled={groupMode !== 'cluster'}
-						class="w-32 accent-primary disabled:cursor-not-allowed"
-					/>
-					<span class="w-6 font-mono tabular-nums">{minClusterSize}</span>
-					<HoverInfo
-						text={groupMode !== 'cluster'
-							? 'Only affects the clusters, which is not what the map is coloured by right now. Switch back to Clusters to use it.'
-							: projection === 'pca'
-								? 'The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Recomputes in about a fifth of a second, so drag it.'
-								: 'The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Under UMAP each change is a few seconds, so nudge it rather than dragging.'}
-					/>
-				</label>
-
-				<div class="flex items-center gap-2">
-					<Switch.Root
-						id="center-by-question"
-						bind:checked={centerByQuestion}
-						class="inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-					>
-						<Switch.Thumb
-							class="pointer-events-none block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.125rem]"
-						/>
-					</Switch.Root>
-					<label for="center-by-question" class="cursor-pointer">Centre by question</label>
-					<HoverInfo
-						text="Every respondent was asked the same questions, and a chunk contains its question verbatim — so left alone, clustering recovers the interview guide rather than what anyone said. Centring subtracts each question's average before grouping, leaving the variation between answers. Turn it off to see the raw structure."
-					/>
-				</div>
-
-				{#if multilingual}
-					<!-- Offered only on a corpus with more than one language in it, where
-					     it is the difference between a map of what people said and a map
-					     of which language they said it in. -->
-					<div class="flex items-center gap-2">
-						<Switch.Root
-							id="center-by-language"
-							bind:checked={centerByLanguage}
-							class="inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-						>
-							<Switch.Thumb
-								class="pointer-events-none block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.125rem]"
-							/>
-						</Switch.Root>
-						<label for="center-by-language" class="cursor-pointer">Centre by language</label>
-						<HoverInfo
-							text="Language is one of the loudest signals in an embedding: left alone, the Danish answers sit with the Danish answers whatever anybody said. Centring subtracts each language's average before grouping, so the map is about what was said rather than what it was said in. Turn it off to see how much of the structure was language."
-						/>
-					</div>
-				{/if}
-
-				<div class="flex items-center gap-2">
-					<Switch.Root
-						id="include-synthetic"
-						bind:checked={includeSynthetic}
-						class="inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-					>
-						<Switch.Thumb
-							class="pointer-events-none block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.125rem]"
-						/>
-					</Switch.Root>
-					<label for="include-synthetic" class="cursor-pointer">Include test runs</label>
-				</div>
-
-				<label class="flex items-center gap-1.5">
-					<span class="text-gray-500">Interviews</span>
-					<select
-						bind:value={interviewStatus}
-						class="rounded-md border border-gray-200 py-1 pr-7 pl-2 text-xs focus:border-primary focus:ring-0"
-					>
-						<option value={null}>Any status</option>
-						<option value="completed">Completed</option>
-						<option value="active">Active</option>
-						<option value="inactive">Inactive</option>
-					</select>
-				</label>
-
-				{#if searchResponse}
-					<label class="flex items-center gap-2">
-						<span class="text-gray-500">Min score</span>
-						<input
-							type="range"
-							min="0"
-							max="0.95"
-							step="0.01"
-							bind:value={scoreCutoff}
-							class="w-24 accent-primary"
-						/>
-						<span class="w-8 font-mono tabular-nums">{scoreCutoff.toFixed(2)}</span>
-						<HoverInfo
-							text="A real cosine similarity, so the cut-off is meaningful. Applied to the results already fetched — moving it does not re-run the search."
-						/>
-					</label>
-				{/if}
-			</div>
 		</div>
 
 		<div class="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
-			<div class="flex min-h-[26rem] flex-1 flex-col rounded-lg border border-gray-200 bg-white">
+			<ControlRail
+				bind:open={railOpen}
+				{groupMode}
+				{modes}
+				{kind}
+				bind:projection
+				bind:nNeighbors
+				bind:minDist
+				bind:minClusterSize
+				{maxClusterSize}
+				bind:centerByQuestion
+				bind:centerByLanguage
+				bind:interviewStatus
+				bind:includeSynthetic
+				bind:scoreCutoff
+				searching={searchResponse !== null}
+				{multilingual}
+				{offDefault}
+				ongroupmode={changeGroupMode}
+				onkind={changeKind}
+			/>
+
+			<!-- `min-w-0` is load-bearing: the scatter renders an <svg> with an
+			     explicit pixel width, which becomes this item's intrinsic minimum
+			     under the default `min-width: auto`. Without it the card keeps the
+			     width it had while the rail was collapsed, and re-opening the rail
+			     pushes the row wider than the page. -->
+			<div
+				class="flex min-h-[26rem] min-w-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white"
+			>
 				<div class="relative min-h-0 flex-1">
+					{#if !railOpen}
+						<!-- The rail's way back. Over the map rather than beside it, so a
+						     collapsed rail gives the map the whole width instead of
+						     trading one strip of chrome for another. -->
+						<button
+							type="button"
+							onclick={() => (railOpen = true)}
+							aria-label="Show controls"
+							title={offDefault > 0 ? `Controls — ${offDefault} away from default` : 'Controls'}
+							class="absolute top-2 left-2 z-30 flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 bg-white/90 px-2 py-1 text-xs font-medium text-gray-600 shadow-sm hover:text-gray-900"
+						>
+							<i class="fa-solid fa-sliders text-[0.6875rem] text-gray-400"></i>
+							{#if offDefault > 0}
+								<span
+									class="rounded-full bg-primary px-1.5 text-[0.625rem] font-semibold text-on-primary"
+								>
+									{offDefault}
+								</span>
+							{/if}
+						</button>
+					{/if}
 					{#if clusterError && !clusters}
 						<p class="p-5 text-sm text-gray-500">{clusterError}</p>
 					{:else if !clusters}
@@ -801,6 +660,7 @@
 							{describe}
 							resetKey={`${kind}:${projection}`}
 							stale={clusterLoading}
+							reserveTopLeft={!railOpen}
 							onselect={(id) => {
 								selectedId = id;
 								if (id) focusedGroup = null;

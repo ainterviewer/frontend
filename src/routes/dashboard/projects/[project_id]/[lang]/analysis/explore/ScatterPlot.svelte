@@ -14,6 +14,7 @@
 		describe,
 		resetKey = null,
 		stale = false,
+		reserveTopLeft = false,
 		onselect
 	}: {
 		points: EmbeddingClusterPoint[];
@@ -59,6 +60,14 @@
 		 * picture that is behind and a picture that is wrong.
 		 */
 		stale?: boolean;
+		/**
+		 * Whether something else already sits in the top-left corner. The map does
+		 * not own that corner outright — the page puts the control that reopens
+		 * the rail there when the rail is away — so the busy chip drops below it
+		 * rather than under it. Down rather than across because the button's width
+		 * changes with its badge, and a vertical offset does not have to guess.
+		 */
+		reserveTopLeft?: boolean;
 		onselect: (id: string | null) => void;
 	} = $props();
 
@@ -340,7 +349,9 @@
 		     what, which is the part a reader who has just moved a slider needs in
 		     order to know the map they are looking at is not yet the answer. -->
 		<span
-			class="pointer-events-none absolute top-2 left-2 z-20 flex items-center gap-1.5 rounded-md bg-white/90 px-2 py-1 text-xs text-gray-500 shadow-sm"
+			class="pointer-events-none absolute left-2 z-20 flex items-center gap-1.5 rounded-md bg-white/90 px-2 py-1 text-xs text-gray-500 shadow-sm"
+			class:top-2={!reserveTopLeft}
+			class:top-11={reserveTopLeft}
 		>
 			<i class="fa-solid fa-spinner fa-spin text-[0.625rem] text-gray-400"></i>
 			Reclustering…
