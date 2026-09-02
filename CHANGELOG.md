@@ -4,6 +4,31 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.3.0] - 2026-09-02
+
+### Features
+
+- (demo) Add initial implementation of analysis visualization / report subpage
+- Implement lazy mounting of charts, increases load time for chart heavy pages
+- Fetch project information in same Promise as the rest in dashboard layout loads. Should result in slightly fewer round trips
+- Improve page load performance and data loading, mounting and visualizations
+- Improved comments, including authoring and replies
+- Consilidate view for interview transcription and analysis display.
+- Minor improvements to style and consistency across report and monitoring pages
+
+### Bug Fixes
+
+- Improve filtering requests
+- Allow users to close the dropdown in the header by pressing escape
+
+### Internal
+
+- Add CITATION.cff to .prettierignore
+- Rename visualizations --> report
+- Rename analysis route h1 from visualizations --> analysis
+- Redundant SvelteDate changed to Date
+- (ui) Change icon used for report in sidebar
+
 ## [0.2.90] - 2026-08-27
 
 ### Features
