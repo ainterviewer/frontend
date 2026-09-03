@@ -88,19 +88,31 @@
 		message.text && !customToken && TOKEN_PATTERN.test(message.text)
 	);
 
-	// Process text to replace embedded tokens with styled badges
-	function processTextWithTokens(text: string): string {
-		return text.replace(new RegExp(TOKEN_PATTERN.source, 'g'), (match) => {
-			const config = TOKEN_CONFIG[match as CustomToken];
-			if (!config) return match;
-			return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${config.color}"><i class="${config.icon}"></i> ${config.label}</span>`;
-		});
-	}
+	// Split the text into plain runs and embedded tokens, so the tokens can be
+	// rendered as elements. Message text is respondent input and is never
+	// treated as markup.
+	type TextSegment =
+		| { kind: 'text'; value: string }
+		| { kind: 'token'; config: (typeof TOKEN_CONFIG)[CustomToken] };
 
-	let processedText = $derived.by(() => {
-		let text = hasEmbeddedTokens ? processTextWithTokens(message.text) : message.text;
-		if (text) text = text.replace(/\n/g, '<br>');
-		return text;
+	let textSegments = $derived.by((): TextSegment[] => {
+		const text: string = message.text ?? '';
+		if (!text) return [];
+		if (!hasEmbeddedTokens) return [{ kind: 'text', value: text }];
+
+		const segments: TextSegment[] = [];
+		let cursor = 0;
+		for (const match of text.matchAll(new RegExp(TOKEN_PATTERN.source, 'g'))) {
+			const config = TOKEN_CONFIG[match[0] as CustomToken];
+			if (!config || match.index === undefined) continue;
+			if (match.index > cursor) {
+				segments.push({ kind: 'text', value: text.slice(cursor, match.index) });
+			}
+			segments.push({ kind: 'token', config });
+			cursor = match.index + match[0].length;
+		}
+		if (cursor < text.length) segments.push({ kind: 'text', value: text.slice(cursor) });
+		return segments;
 	});
 </script>
 
@@ -149,9 +161,20 @@
 			{#if message.audio}
 				<AudioMessage blob={message.audio.blob} duration={message.audio.duration} />
 			{/if}
-			{#if processedText}
-				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-				{@html processedText}
+			{#if textSegments.length}
+				<span class="whitespace-pre-wrap">
+					{#each textSegments as segment, i (i)}
+						{#if segment.kind === 'token'}
+							<span
+								class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium {segment
+									.config.color}"
+							>
+								<i class={segment.config.icon}></i>
+								{segment.config.label}
+							</span>
+						{:else}{segment.value}{/if}
+					{/each}
+				</span>
 			{/if}
 			{#if message.survey_item}
 				<div class="whitespace-normal">
