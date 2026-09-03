@@ -18,6 +18,9 @@ vendored client runtime stays on the pinned @hey-api/openapi-ts in package.json.
 generate-sdk:
     openapi-ts --input {{ OPENAPI_URL }} --output {{ SDK_OUTPUT_PATH }}
 
+dev:
+    bun run dev --open
+
 [doc("Compile the static fallback error page (e.g. 502) for nginx to serve when the app is down. Renders the shared ErrorPage.svelte to a self-contained HTML file in deploy/setup/nginx/.")]
 [group("Frontend")]
 build-error-page:
