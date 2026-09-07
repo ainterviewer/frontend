@@ -2736,6 +2736,7 @@ export const zSearchEmbeddingsQuery = z.object({
     created_before: z.iso.datetime().nullish(),
     interview_id: z.array(z.string()).nullish(),
     include_synthetic: z.boolean().optional().default(false),
+    question: z.array(z.string()).nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -2759,6 +2760,7 @@ export const zFindSimilarEmbeddingsQuery = z.object({
     created_before: z.iso.datetime().nullish(),
     interview_id: z.array(z.string()).nullish(),
     include_synthetic: z.boolean().optional().default(false),
+    question: z.array(z.string()).nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -2789,7 +2791,8 @@ export const zClusterEmbeddingsQuery = z.object({
     created_after: z.iso.datetime().nullish(),
     created_before: z.iso.datetime().nullish(),
     interview_id: z.array(z.string()).nullish(),
-    include_synthetic: z.boolean().optional().default(false)
+    include_synthetic: z.boolean().optional().default(false),
+    question: z.array(z.string()).nullish()
 });
 
 /**

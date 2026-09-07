@@ -2,12 +2,14 @@
 	import type {
 		EmbeddingKind,
 		GroupKind,
+		InterviewGuide,
 		InterviewStatus,
 		LanguageCode,
 		Projection
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { Switch } from 'bits-ui';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { format } from 'd3-format';
 	import type { Snippet } from 'svelte';
 	import {
@@ -23,7 +25,10 @@
 		N_NEIGHBORS_RANGE,
 		PROJECTIONS,
 		defaultFilters,
-		toggleLanguage
+		hasQuestion,
+		toggleLanguage,
+		toggleQuestion,
+		toggleSection
 	} from './explore';
 
 	let {
@@ -41,6 +46,8 @@
 		interviewStatus = $bindable(),
 		filterLanguages = $bindable(),
 		includeSynthetic = $bindable(),
+		filterQuestions = $bindable(),
+		guide,
 		visibleLanguages = $bindable(),
 		languages,
 		multilingual,
@@ -69,6 +76,19 @@
 		 */
 		filterLanguages: LanguageCode[];
 		includeSynthetic: boolean;
+		/**
+		 * Places in the interview guide the corpus is narrowed to, as
+		 * `[section, main_question]` pairs, empty for all of them. Like the
+		 * language filter and unlike `visibleLanguages`, this narrows the corpus
+		 * before it is projected: it costs a refetch and moves every point.
+		 */
+		filterQuestions: [number, number][];
+		/**
+		 * The guide the question filter offers, or null while it is loading or if
+		 * it failed. Null simply hides the control — a filter is not worth an
+		 * error banner over a working map.
+		 */
+		guide: InterviewGuide | null;
 		/**
 		 * Languages currently on show, empty for all of them. Costs nothing and
 		 * moves nothing — the same projection with the rest faded out — which is
@@ -107,6 +127,7 @@
 		interviewStatus = defaultFilters().status;
 		filterLanguages = defaultFilters().languages;
 		includeSynthetic = defaultFilters().include_synthetic;
+		filterQuestions = defaultFilters().questions;
 		// Not counted by `offDefault` — it is a view, not a setting — but a reader
 		// reaching for the way back means the whole map, not most of it.
 		visibleLanguages = [];
@@ -118,6 +139,42 @@
 
 	/** The order a selection is kept in, so two chips read the same either way. */
 	let codes = $derived(languages.map((language) => language.code));
+
+	/** The guide's sections, or none — which is what hides the question filter. */
+	let sections = $derived(guide?.question_sections ?? []);
+
+	/**
+	 * Whether the question filter is worth offering.
+	 *
+	 * Not under the `interview` unit: an interview chunk spans the whole guide
+	 * and carries no coordinates, so every pair would filter the map empty. The
+	 * page empties the filter for that unit to match; the selection itself is
+	 * kept, so switching back to Q&A pairs brings it back.
+	 */
+	let questionsAvailable = $derived(kind !== 'interview' && sections.length > 0);
+
+	/** How many questions the guide holds, for the "n of m" the heading shows. */
+	let questionCount = $derived(
+		sections.reduce((total, section) => total + (section.questions?.length ?? 0), 0)
+	);
+
+	/** Which sections are expanded. Collapsed to begin with: a guide of any size
+	    is taller than the rail, and the sections are what a reader scans first. */
+	const expanded = new SvelteSet<number>();
+
+	function toggleExpanded(index: number) {
+		if (expanded.has(index)) expanded.delete(index);
+		else expanded.add(index);
+	}
+
+	/** How many of a section's questions are selected, for its own count. */
+	function selectedInSection(index: number, count: number) {
+		let selected = 0;
+		for (let question = 0; question < count; question++) {
+			if (hasQuestion(filterQuestions, index, question)) selected++;
+		}
+		return selected;
+	}
 </script>
 
 <!-- A rule and an icon per group: the rail is one long column of small
@@ -351,6 +408,109 @@
 	{@render languageChips('Languages included', filterLanguages, (next) => (filterLanguages = next))}
 {/snippet}
 
+<!-- The guide as a two-level list: a section per row, its questions under it
+     when opened. A flat list of every question does not fit the rail and reads
+     as noise; a section-only list cannot isolate the one question a finding is
+     about. Both levels write the same `[section, question]` pairs, so a section
+     is exactly "all of its questions" and never a second kind of filter. -->
+{#snippet guideQuestionControl()}
+	<div class="rounded-md border border-gray-200">
+		<div class="flex items-center justify-between gap-2 border-b border-gray-100 px-1.5 py-1">
+			<span class="text-[0.6875rem] text-gray-500">
+				{filterQuestions.length === 0
+					? 'All questions'
+					: `${filterQuestions.length} of ${questionCount}`}
+			</span>
+			{#if filterQuestions.length > 0}
+				<button
+					type="button"
+					onclick={() => (filterQuestions = [])}
+					class="cursor-pointer text-[0.6875rem] font-medium text-gray-500 transition-colors hover:text-gray-900"
+				>
+					Clear
+				</button>
+			{/if}
+		</div>
+
+		<div class="max-h-56 overflow-y-auto py-0.5" role="group" aria-label="Questions included">
+			{#each sections as section, sectionIdx (sectionIdx)}
+				{@const count = section.questions?.length ?? 0}
+				{#if count > 0}
+					{@const selected = selectedInSection(sectionIdx, count)}
+					<div class="px-1">
+						<div class="flex items-center gap-1">
+							<!-- Separate from the label so opening a section to read it is
+							     not the same gesture as selecting the whole of it. -->
+							<button
+								type="button"
+								onclick={() => toggleExpanded(sectionIdx)}
+								aria-expanded={expanded.has(sectionIdx)}
+								aria-label="{expanded.has(sectionIdx) ? 'Collapse' : 'Expand'} section {sectionIdx +
+									1}"
+								class="cursor-pointer rounded p-0.5 text-gray-400 transition-colors hover:text-gray-700"
+							>
+								<i
+									class="fas fa-chevron-right text-[0.5625rem] transition-transform {expanded.has(
+										sectionIdx
+									)
+										? 'rotate-90'
+										: ''}"
+								></i>
+							</button>
+							<button
+								type="button"
+								aria-pressed={selected === count}
+								title={section.description}
+								onclick={() =>
+									(filterQuestions = toggleSection(filterQuestions, sectionIdx, count))}
+								class="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-1.5 rounded px-1 py-0.5 text-left text-[0.6875rem] transition-colors {selected ===
+								count
+									? 'font-semibold text-primary'
+									: 'text-gray-600 hover:text-gray-900'}"
+							>
+								<span class="truncate">
+									{sectionIdx + 1}. {section.description}
+								</span>
+								<!-- A partly selected section reads "2/5" rather than looking
+								     unselected: the section row is the only thing on screen
+								     when it is collapsed. -->
+								{#if selected > 0}
+									<span class="shrink-0 font-mono text-[0.625rem] text-gray-400 tabular-nums">
+										{selected === count ? count : `${selected}/${count}`}
+									</span>
+								{/if}
+							</button>
+						</div>
+
+						{#if expanded.has(sectionIdx)}
+							<div class="mb-0.5 ml-4 flex flex-col">
+								{#each section.questions ?? [] as question, questionIdx (questionIdx)}
+									{@const on = hasQuestion(filterQuestions, sectionIdx, questionIdx)}
+									<button
+										type="button"
+										aria-pressed={on}
+										title={question.main_question}
+										onclick={() =>
+											(filterQuestions = toggleQuestion(filterQuestions, sectionIdx, questionIdx))}
+										class="flex cursor-pointer items-baseline gap-1.5 rounded px-1 py-0.5 text-left text-[0.6875rem] transition-colors {on
+											? 'bg-primary text-on-primary'
+											: 'text-gray-500 hover:text-gray-900'}"
+									>
+										<span class="shrink-0 font-mono text-[0.625rem] tabular-nums">
+											{sectionIdx + 1}.{questionIdx + 1}
+										</span>
+										<span class="truncate">{question.main_question}</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				{/if}
+			{/each}
+		</div>
+	</div>
+{/snippet}
+
 {#if open}
 	<div
 		class="flex shrink-0 flex-col rounded-lg border border-gray-200 bg-white lg:min-h-[26rem] lg:w-[15rem]"
@@ -400,6 +560,14 @@
 					'Which languages the chunks are drawn from. Applied in SQL before anything is embedded into the projection, so the axes, the clusters and every purity figure are computed over the languages left — a real narrowing of the corpus, and a recompute. To keep the whole map and just look at one language, use Show under Colour.',
 					filterLanguages.length === 0 ? 'All' : `${filterLanguages.length} of ${languages.length}`,
 					filterLanguageControl
+				)}
+			{/if}
+			{#if questionsAvailable}
+				{@render stacked(
+					'Questions',
+					'Which parts of the interview guide the chunks are drawn from. Applied in SQL before anything is embedded into the projection, exactly as the language filter is — so the axes, the clusters and every purity figure are computed over the questions left. Narrowing to one question is the way to cluster within an answer rather than across the guide, and it makes centring by question redundant: there is only one question left to subtract.',
+					filterQuestions.length === 0 ? 'All' : `${filterQuestions.length} of ${questionCount}`,
+					guideQuestionControl
 				)}
 			{/if}
 			{@render inline(

@@ -5109,6 +5109,10 @@ export type SearchEmbeddingsData = {
          */
         include_synthetic?: boolean;
         /**
+         * Question
+         */
+        question?: Array<string> | null;
+        /**
          * Limit
          */
         limit?: number;
@@ -5187,6 +5191,10 @@ export type FindSimilarEmbeddingsData = {
          * Include Synthetic
          */
         include_synthetic?: boolean;
+        /**
+         * Question
+         */
+        question?: Array<string> | null;
         /**
          * Limit
          */
@@ -5292,6 +5300,10 @@ export type ClusterEmbeddingsData = {
          * Include Synthetic
          */
         include_synthetic?: boolean;
+        /**
+         * Question
+         */
+        question?: Array<string> | null;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/clusters';
 };

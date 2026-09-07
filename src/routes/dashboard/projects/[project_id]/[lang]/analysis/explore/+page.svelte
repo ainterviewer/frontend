@@ -10,6 +10,7 @@
 		EmbeddingSimilarResponse,
 		EmbeddingStatus,
 		GroupKind,
+		InterviewGuide,
 		InterviewStatus,
 		LanguageCode,
 		Projection,
@@ -81,11 +82,27 @@
 	let interviewStatus = $state<InterviewStatus | null>(defaultFilters().status);
 	let filterLanguages = $state<LanguageCode[]>(defaultFilters().languages);
 	let includeSynthetic = $state(defaultFilters().include_synthetic);
+	let filterQuestions = $state<[number, number][]>(defaultFilters().questions);
+
+	/**
+	 * The question filter, as the requests should carry it.
+	 *
+	 * Emptied under the `interview` unit rather than sent: an interview chunk
+	 * spans the whole guide and carries no coordinates, so any pair would filter
+	 * every point away and leave an empty map with no visible cause. The rail
+	 * hides the control there for the same reason; this is the half that makes
+	 * the requests agree with it, and the selection is kept so switching back to
+	 * Q&A pairs restores it rather than silently discarding what was picked.
+	 */
+	let effectiveQuestions = $derived<[number, number][]>(
+		kind === 'interview' ? [] : filterQuestions
+	);
 
 	let filters = $derived({
 		status: interviewStatus,
 		languages: filterLanguages,
-		include_synthetic: includeSynthetic
+		include_synthetic: includeSynthetic,
+		questions: effectiveQuestions
 	});
 	let settings = $derived<ClusterSettings>({
 		kind,
@@ -258,6 +275,34 @@
 			}
 			status = body;
 			statusError = null;
+		})();
+
+		return () => {
+			disposed = true;
+		};
+	});
+
+	// -- guide ----------------------------------------------------------------
+
+	/**
+	 * The interview guide, for the question filter's option list.
+	 *
+	 * Its failure is deliberately quiet: the guide is one control's list of
+	 * options, not the page. If it never lands the rail simply does not offer a
+	 * question filter, and everything the map does is unaffected — an error
+	 * banner over a working scatter would be reporting a problem the reader
+	 * cannot act on and did not ask about.
+	 */
+	let guide = $state<InterviewGuide | null>(null);
+
+	$effect(() => {
+		const request = data.guide;
+
+		let disposed = false;
+		(async () => {
+			const { data: body } = await request;
+			if (disposed) return;
+			guide = body ?? null;
 		})();
 
 		return () => {
@@ -935,6 +980,8 @@
 				bind:interviewStatus
 				bind:filterLanguages
 				bind:includeSynthetic
+				bind:filterQuestions
+				{guide}
 				bind:visibleLanguages
 				{languages}
 				{multilingual}

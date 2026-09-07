@@ -160,10 +160,90 @@ export type ExploreFilters = {
 	status: InterviewStatus | null;
 	languages: LanguageCode[];
 	include_synthetic: boolean;
+	/**
+	 * Which places in the interview guide the chunks are drawn from, as
+	 * `[section, main_question]` pairs — the same coordinates the annotate view
+	 * filters messages with, so a question means the same thing in both places.
+	 * An empty list is every question, which is the default.
+	 *
+	 * A whole section is asked for by listing its questions rather than by a
+	 * second section-shaped filter: the picker holds the guide and so knows what
+	 * a section contains, and one shape of filter cannot disagree with itself.
+	 *
+	 * Interview-level chunks carry no guide coordinates — a transcript spans the
+	 * guide — so any selection here excludes them outright. That is why the
+	 * control is not offered under the `interview` unit rather than offered and
+	 * quietly returning nothing.
+	 */
+	questions: [number, number][];
 };
 
 export function defaultFilters(): ExploreFilters {
-	return { status: null, languages: [], include_synthetic: false };
+	return { status: null, languages: [], include_synthetic: false, questions: [] };
+}
+
+/** Whether two question selections hold the same pairs, order aside. */
+export function sameQuestions(a: [number, number][], b: [number, number][]) {
+	return (
+		a.length === b.length &&
+		a.every(([section, question]) =>
+			b.some(([other, otherQuestion]) => other === section && otherQuestion === question)
+		)
+	);
+}
+
+/** Whether a selection already holds one pair. */
+export function hasQuestion(selected: [number, number][], section: number, question: number) {
+	return selected.some(([s, q]) => s === section && q === question);
+}
+
+/**
+ * One question added or removed, kept in guide order so the chips under the
+ * picker read down the guide rather than in the order they were clicked.
+ */
+export function toggleQuestion(
+	selected: [number, number][],
+	section: number,
+	question: number
+): [number, number][] {
+	const next = hasQuestion(selected, section, question)
+		? selected.filter(([s, q]) => !(s === section && q === question))
+		: [...selected, [section, question] as [number, number]];
+	return sortQuestions(next);
+}
+
+/**
+ * A whole section added or removed at once. Selecting is all-or-nothing on the
+ * questions the section actually has, so a section that is already fully
+ * selected clears rather than duplicating itself.
+ */
+export function toggleSection(
+	selected: [number, number][],
+	section: number,
+	questionCount: number
+): [number, number][] {
+	const indices = Array.from({ length: questionCount }, (_, index) => index);
+	const whole = indices.every((question) => hasQuestion(selected, section, question));
+	if (whole) return selected.filter(([s]) => s !== section);
+
+	const missing = indices
+		.filter((question) => !hasQuestion(selected, section, question))
+		.map((question) => [section, question] as [number, number]);
+	return sortQuestions([...selected, ...missing]);
+}
+
+/** Guide order: by section, then by question within it. */
+function sortQuestions(questions: [number, number][]): [number, number][] {
+	return [...questions].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+}
+
+/**
+ * The wire spelling of a guide coordinate, `section,main_question`, zero-based.
+ * Matches the `?question=` parameter the annotate view already writes, and the
+ * pair the API parses.
+ */
+export function questionParam([section, question]: [number, number]) {
+	return `${section},${question}`;
 }
 
 /**
@@ -175,6 +255,7 @@ export function filterQuery(filters: ExploreFilters) {
 	return {
 		...(filters.status ? { status: filters.status } : {}),
 		...(filters.languages.length > 0 ? { language: filters.languages } : {}),
+		...(filters.questions.length > 0 ? { question: filters.questions.map(questionParam) } : {}),
 		include_synthetic: filters.include_synthetic
 	};
 }
@@ -311,6 +392,7 @@ export function offDefaultCount(settings: ClusterSettings, multilingual: boolean
 		multilingual && settings.center_by_language !== fallback.center_by_language,
 		settings.filters.status !== fallback.filters.status,
 		multilingual && settings.filters.languages.length > 0,
+		settings.filters.questions.length > 0,
 		settings.filters.include_synthetic !== fallback.filters.include_synthetic
 	].filter(Boolean).length;
 }
@@ -328,6 +410,7 @@ export function isDefaultClusterSettings(settings: ClusterSettings) {
 		settings.center_by_language === fallback.center_by_language &&
 		settings.filters.status === fallback.filters.status &&
 		sameLanguages(settings.filters.languages, fallback.filters.languages) &&
+		sameQuestions(settings.filters.questions, fallback.filters.questions) &&
 		settings.filters.include_synthetic === fallback.filters.include_synthetic
 	);
 }
