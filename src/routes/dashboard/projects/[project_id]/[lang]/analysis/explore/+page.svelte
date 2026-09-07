@@ -208,7 +208,15 @@
 	let languages = $derived.by((): ExploreLanguage[] => {
 		const counts = status
 			? new Map(
-					Object.entries(status.languages ?? {}).map(([code, count]) => [code.toUpperCase(), count])
+					// The generated type makes every language key optional, so an
+					// entry's count reads as possibly undefined even though the
+					// server only ever writes one where it has a number. Coalescing
+					// here keeps the map's value type `number`, which is what the
+					// sort and the chip counts below want.
+					Object.entries(status.languages ?? {}).map(([code, count]): [string, number] => [
+						code.toUpperCase(),
+						count ?? 0
+					])
 				)
 			: null;
 
