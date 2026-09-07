@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { CustomToken } from '$lib/api';
+	import { sanitizeMarkup } from '$lib/utils/sanitize';
 	import AudioMessage from './AudioMessage.svelte';
 	import FeedbackToggle from './FeedbackToggle.svelte';
 	import SkipButton from './SkipButton.svelte';
@@ -88,17 +89,27 @@
 		message.text && !customToken && TOKEN_PATTERN.test(message.text)
 	);
 
+	// Interviewer text is written by the project's collaborators in the
+	// interview guide and may contain markup -- an outro that links to a
+	// support page, say -- so it is sanitised down to an inline allowlist.
+	// Respondent text is untrusted input and is rendered as text, never markup.
+	let allowMarkup = $derived(isReceived);
+
 	// Split the text into plain runs and embedded tokens, so the tokens can be
-	// rendered as elements. Message text is respondent input and is never
-	// treated as markup.
+	// rendered as elements. Each run is sanitised on its own, which keeps the
+	// emitted markup balanced around the token badges.
 	type TextSegment =
-		| { kind: 'text'; value: string }
+		| { kind: 'text'; value: string; html: string | null }
 		| { kind: 'token'; config: (typeof TOKEN_CONFIG)[CustomToken] };
+
+	function textSegment(value: string): TextSegment {
+		return { kind: 'text', value, html: allowMarkup ? sanitizeMarkup(value) : null };
+	}
 
 	let textSegments = $derived.by((): TextSegment[] => {
 		const text: string = message.text ?? '';
 		if (!text) return [];
-		if (!hasEmbeddedTokens) return [{ kind: 'text', value: text }];
+		if (!hasEmbeddedTokens) return [textSegment(text)];
 
 		const segments: TextSegment[] = [];
 		let cursor = 0;
@@ -106,12 +117,12 @@
 			const config = TOKEN_CONFIG[match[0] as CustomToken];
 			if (!config || match.index === undefined) continue;
 			if (match.index > cursor) {
-				segments.push({ kind: 'text', value: text.slice(cursor, match.index) });
+				segments.push(textSegment(text.slice(cursor, match.index)));
 			}
 			segments.push({ kind: 'token', config });
 			cursor = match.index + match[0].length;
 		}
-		if (cursor < text.length) segments.push({ kind: 'text', value: text.slice(cursor) });
+		if (cursor < text.length) segments.push(textSegment(text.slice(cursor)));
 		return segments;
 	});
 </script>
@@ -162,7 +173,11 @@
 				<AudioMessage blob={message.audio.blob} duration={message.audio.duration} />
 			{/if}
 			{#if textSegments.length}
-				<span class="whitespace-pre-wrap">
+				<!-- Tailwind's preflight strips link styling, and sanitised markup is
+				     outside the reach of scoped CSS, so style anchors from here. -->
+				<span
+					class="whitespace-pre-wrap [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2"
+				>
 					{#each textSegments as segment, i (i)}
 						{#if segment.kind === 'token'}
 							<span
@@ -172,6 +187,9 @@
 								<i class={segment.config.icon}></i>
 								{segment.config.label}
 							</span>
+						{:else if segment.html !== null}
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html segment.html}
 						{:else}{segment.value}{/if}
 					{/each}
 				</span>
