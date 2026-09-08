@@ -24,7 +24,17 @@ import { keywordProblem as findKeywordProblem } from './keywordQuery';
  */
 export type ExploreView = 'map' | 'list';
 
-export const DEFAULT_VIEW: ExploreView = 'map';
+/**
+ * The list opens first.
+ *
+ * Both views answer questions about the same corpus, but only one of them
+ * answers a question a reader arrives with. "Show me where people talk about
+ * stress" is a search; the map answers "what is in here at all", which is a
+ * question you have after reading some of it rather than before. The map also
+ * costs a UMAP fit to draw and reads as a scatter of nothing until the corpus
+ * is indexed, so opening on it spends the most and says the least.
+ */
+export const DEFAULT_VIEW: ExploreView = 'list';
 
 /**
  * Every knob both views read, in one place.

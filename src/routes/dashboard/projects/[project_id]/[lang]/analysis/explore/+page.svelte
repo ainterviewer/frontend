@@ -63,10 +63,6 @@
 	);
 
 	let status = $state<EmbeddingStatus | null>(null);
-	// Whether the reader has picked a view themselves. A plain `let`, like the
-	// other run-guards here: reactive state read and written by the same effect
-	// is how this page earned an `effect_update_depth_exceeded` once already.
-	let viewChosen = false;
 	let statusError = $state<string | null>(null);
 
 	/**
@@ -272,12 +268,6 @@
 			}
 			status = body;
 			statusError = null;
-			// Nothing indexed: the map would open on an explanation, so open on
-			// the half that works. Only before the reader has touched the toggle
-			// — after that the view is theirs, and moving it would be the page
-			// arguing with them. Assigned here rather than in an effect so
-			// nothing re-runs on the view it just set.
-			if ((body.total ?? 0) === 0 && !viewChosen) explore.view = 'list';
 		})();
 
 		return () => {
@@ -350,12 +340,6 @@
 			clusterError = null;
 		}
 
-		const adopting = preloaded !== seenClusterPreload && isDefaultClusterSettings(settings);
-		seenClusterPreload = preloaded;
-
-		const fromToolbar = isToolbarChange(lastClusterSettings, settings);
-		lastClusterSettings = settings;
-
 		// Nothing in the list reads a cluster, and UMAP is seconds of server CPU
 		// per run — so typing a keyword while listing would refit a projection
 		// for a scatter nobody is looking at, once per debounced keystroke. The
@@ -367,6 +351,19 @@
 			clusterLoading = false;
 			return;
 		}
+
+		// Below the return on purpose. The page opens on the list, so the first
+		// run of this effect is a run that draws nothing — and stamping the
+		// preload there would mark it seen without anyone having looked at it,
+		// leaving the first switch to the map to refit a projection the load
+		// function had already asked for. Same for the debounce: a settings
+		// change made while listing is the reader arriving at the map with it,
+		// not flicking a control on it.
+		const adopting = preloaded !== seenClusterPreload && isDefaultClusterSettings(settings);
+		seenClusterPreload = preloaded;
+
+		const fromToolbar = isToolbarChange(lastClusterSettings, settings);
+		lastClusterSettings = settings;
 
 		clusterLoading = true;
 		let disposed = false;
@@ -1081,13 +1078,10 @@
 				aria-label="View"
 				class="flex overflow-hidden rounded-md border border-gray-200"
 			>
-				{#each [{ value: 'map', label: 'Map', icon: 'fa-diagram-project' }, { value: 'list', label: 'List', icon: 'fa-list' }] as option (option.value)}
+				{#each [{ value: 'list', label: 'List', icon: 'fa-list' }, { value: 'map', label: 'Map', icon: 'fa-diagram-project' }] as option (option.value)}
 					<button
 						type="button"
-						onclick={() => {
-							viewChosen = true;
-							explore.view = option.value as ExploreView;
-						}}
+						onclick={() => (explore.view = option.value as ExploreView)}
 						aria-pressed={explore.view === option.value}
 						class="flex cursor-pointer items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium transition-colors {explore.view ===
 						option.value
