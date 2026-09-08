@@ -30,6 +30,7 @@
 		toggleQuestion,
 		toggleSection
 	} from './explore';
+	import type { KeywordScope } from './explore';
 
 	let {
 		open = $bindable(),
@@ -48,6 +49,7 @@
 		includeSynthetic = $bindable(),
 		filterQuestions = $bindable(),
 		keyword = $bindable(),
+		keywordScope = $bindable(),
 		guide,
 		listing,
 		visibleLanguages = $bindable(),
@@ -96,6 +98,9 @@
 		 * has to clear it, or "back to default" would leave the corpus narrowed.
 		 */
 		keyword: string;
+		/** Reset only, for the same reason: clearing the words but leaving the
+		 * toggle on "Questions" would show a scope that is filtering nothing. */
+		keywordScope: KeywordScope;
 		guide: InterviewGuide | null;
 		/**
 		 * Whether the list is showing rather than the map.
@@ -137,6 +142,7 @@
 
 	function reset() {
 		keyword = '';
+		keywordScope = defaultFilters().keyword_scope;
 		projection = DEFAULT_PROJECTION;
 		nNeighbors = DEFAULT_N_NEIGHBORS;
 		minDist = DEFAULT_MIN_DIST;

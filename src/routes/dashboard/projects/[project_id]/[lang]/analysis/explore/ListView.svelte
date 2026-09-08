@@ -63,15 +63,6 @@
 
 	const formatNumber = format(',');
 
-	/**
-	 * Whether anything is being searched for at all.
-	 *
-	 * The ring on a matched turn says "this is the bit you asked about", and
-	 * with neither a query nor a keyword nobody asked about anything — every
-	 * card would wear it, which is decoration pretending to be a finding.
-	 */
-	let searching = $derived(ranked || keyword.trim().length > 0);
-
 	/** Whether a walk is under way, including the beat before the anchor lands. */
 	let walking = $derived(anchor !== null || anchorLoading);
 </script>
@@ -204,7 +195,6 @@
 						<HitCard
 							{hit}
 							showScore={ranked}
-							highlightMatch={searching}
 							onanchor={hit.embedded === false ? undefined : onanchor}
 						/>
 					</div>

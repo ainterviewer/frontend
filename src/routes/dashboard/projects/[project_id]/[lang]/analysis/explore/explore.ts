@@ -177,8 +177,13 @@ export type ExploreFilters = {
 	 */
 	questions: [number, number][];
 	/**
-	 * A literal string the chunk's respondent messages must contain, empty for
-	 * no keyword filter.
+	 * What the chunk's respondent messages must say, empty for no keyword
+	 * filter.
+	 *
+	 * A boolean query rather than a string to look for — `dog OR cat`,
+	 * `kids -school`, `(dog OR cat) AND "my neighbour"` — parsed by
+	 * `keywordQuery.ts` here and by `app/db/keyword_query.py` there. Terms match
+	 * whole words, case-insensitively, with `*` to open an edge.
 	 *
 	 * A filter and not a query, which is the whole design of the two searches:
 	 * this narrows the candidate set in SQL, and the semantic query then ranks
@@ -192,10 +197,16 @@ export type ExploreFilters = {
 	 * would let a word the interviewer said count as a word somebody answered.
 	 */
 	keyword: string;
-	/** Whole message rather than any part of it, as the annotate view means it. */
-	keyword_exact: boolean;
-	keyword_case_sensitive: boolean;
+	/**
+	 * Which side of the exchange a bare term is matched against. `q:`/`a:` in
+	 * the query override it for one term, which is how a scope no single control
+	 * can express — "asked about X, answered Y" — gets written.
+	 */
+	keyword_scope: KeywordScope;
 };
+
+/** Answers, the interviewer's questions, or either. */
+export type KeywordScope = 'answer' | 'question' | 'both';
 
 export function defaultFilters(): ExploreFilters {
 	return {
@@ -204,8 +215,7 @@ export function defaultFilters(): ExploreFilters {
 		include_synthetic: false,
 		questions: [],
 		keyword: '',
-		keyword_exact: false,
-		keyword_case_sensitive: false
+		keyword_scope: 'answer'
 	};
 }
 
@@ -283,16 +293,13 @@ export function filterQuery(filters: ExploreFilters) {
 		...(filters.status ? { status: filters.status } : {}),
 		...(filters.languages.length > 0 ? { language: filters.languages } : {}),
 		...(filters.questions.length > 0 ? { question: filters.questions.map(questionParam) } : {}),
-		// Left off entirely when blank, and with its two modifiers: sending
-		// `keyword=''` would be a request for chunks containing nothing, and
-		// sending the modifiers without it makes two settings that cannot
-		// change the answer into two reasons to refetch.
+		// Left off entirely when blank: sending `keyword=''` would be a request
+		// for chunks containing nothing.
+		// The scope rides with the keyword and is left off without one: alone it
+		// cannot change an answer, and sending it would be one more reason to
+		// refetch that changes nothing.
 		...(filters.keyword.trim()
-			? {
-					keyword: filters.keyword.trim(),
-					exact_match: filters.keyword_exact,
-					case_sensitive: filters.keyword_case_sensitive
-				}
+			? { keyword: filters.keyword.trim(), keyword_scope: filters.keyword_scope }
 			: {}),
 		include_synthetic: filters.include_synthetic
 	};

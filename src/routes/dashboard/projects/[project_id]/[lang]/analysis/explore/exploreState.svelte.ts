@@ -11,6 +11,7 @@ import {
 	type ExploreFilters,
 	defaultFilters
 } from './explore';
+import { keywordProblem as findKeywordProblem } from './keywordQuery';
 
 /**
  * Which of the two readings of the corpus is on screen.
@@ -50,10 +51,43 @@ export class ExploreState {
 	 * the candidate set in SQL, and whatever semantic query there is then ranks
 	 * what survived. Matched against respondent messages, so a word the
 	 * interviewer said does not count as a word anybody answered.
+	 *
+	 * A boolean expression — see `keywordQuery.ts` — so it can be malformed in
+	 * a way a plain string could not. `keywordProblem` is what the input shows
+	 * and `searchableKeyword` is what the requests are allowed to use.
 	 */
 	keyword = $state(defaultFilters().keyword);
-	exactMatch = $state(defaultFilters().keyword_exact);
-	caseSensitive = $state(defaultFilters().keyword_case_sensitive);
+
+	/**
+	 * Which side of the exchange a bare term is looked for in.
+	 *
+	 * "answer" by default, and not merely for continuity: on a real corpus the
+	 * guide's own words swamp the respondents'. Searching questions is a
+	 * different question — "where did we ask about X" rather than "who talked
+	 * about X" — and worth asking for deliberately.
+	 */
+	keywordScope = $state(defaultFilters().keyword_scope);
+
+	/**
+	 * What is wrong with the keyword as typed, or null while it reads.
+	 *
+	 * Derived rather than checked on submit because the box has no submit: the
+	 * views refetch as you type, so "not yet valid" is a state the reader passes
+	 * through on the way to every query with a bracket in it. Showing the
+	 * problem there beats a request that comes back 422.
+	 */
+	keywordProblem = $derived(findKeywordProblem(this.keyword));
+
+	/**
+	 * The keyword the requests may carry: what was typed, or nothing while it
+	 * does not parse.
+	 *
+	 * Falling back to no keyword rather than to the last good one, because a
+	 * filter that stays applied while the box shows something else is a view
+	 * disagreeing with its own controls. Half-typed brackets simply do not
+	 * narrow anything yet.
+	 */
+	searchableKeyword = $derived(this.keywordProblem === null ? this.keyword : '');
 
 	// -- the map's own --------------------------------------------------------
 
@@ -90,9 +124,8 @@ export class ExploreState {
 		languages: this.filterLanguages,
 		include_synthetic: this.includeSynthetic,
 		questions: this.effectiveQuestions,
-		keyword: this.keyword,
-		keyword_exact: this.exactMatch,
-		keyword_case_sensitive: this.caseSensitive
+		keyword: this.searchableKeyword,
+		keyword_scope: this.keywordScope
 	});
 
 	settings = $derived<ClusterSettings>({
@@ -107,5 +140,5 @@ export class ExploreState {
 	});
 
 	/** Whether a keyword is actually narrowing anything. */
-	filteringByKeyword = $derived(this.keyword.trim().length > 0);
+	filteringByKeyword = $derived(this.searchableKeyword.trim().length > 0);
 }

@@ -1348,6 +1348,20 @@ export type EmbeddingTurn = {
      * Match
      */
     match?: boolean;
+    /**
+     * Matches
+     */
+    matches?: Array<[
+        number,
+        number
+    ]>;
+    /**
+     * Excluded
+     */
+    excluded?: Array<[
+        number,
+        number
+    ]>;
 };
 
 /**
@@ -5147,13 +5161,9 @@ export type SearchEmbeddingsData = {
          */
         keyword?: string | null;
         /**
-         * Exact Match
+         * Keyword Scope
          */
-        exact_match?: boolean;
-        /**
-         * Case Sensitive
-         */
-        case_sensitive?: boolean;
+        keyword_scope?: 'answer' | 'question' | 'both';
         /**
          * Limit
          */
@@ -5239,13 +5249,9 @@ export type BrowseEmbeddingsData = {
          */
         keyword?: string | null;
         /**
-         * Exact Match
+         * Keyword Scope
          */
-        exact_match?: boolean;
-        /**
-         * Case Sensitive
-         */
-        case_sensitive?: boolean;
+        keyword_scope?: 'answer' | 'question' | 'both';
         /**
          * Limit
          */
@@ -5334,13 +5340,9 @@ export type FindSimilarEmbeddingsData = {
          */
         keyword?: string | null;
         /**
-         * Exact Match
+         * Keyword Scope
          */
-        exact_match?: boolean;
-        /**
-         * Case Sensitive
-         */
-        case_sensitive?: boolean;
+        keyword_scope?: 'answer' | 'question' | 'both';
         /**
          * Limit
          */
@@ -5455,13 +5457,9 @@ export type ClusterEmbeddingsData = {
          */
         keyword?: string | null;
         /**
-         * Exact Match
+         * Keyword Scope
          */
-        exact_match?: boolean;
-        /**
-         * Case Sensitive
-         */
-        case_sensitive?: boolean;
+        keyword_scope?: 'answer' | 'question' | 'both';
     };
     url: '/api/projects/{project_id}/analysis/embeddings/clusters';
 };

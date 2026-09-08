@@ -10,7 +10,6 @@
 		hit,
 		showScore = true,
 		anchored = false,
-		highlightMatch = false,
 		onanchor
 	}: {
 		hit: EmbeddingSearchHit;
@@ -22,8 +21,6 @@
 		showScore?: boolean;
 		/** This chunk is the one the neighbours are measured from. */
 		anchored?: boolean;
-		/** Ring the turn this chunk is about. Only meaningful while searching. */
-		highlightMatch?: boolean;
 		onanchor?: (hit: EmbeddingSearchHit) => void;
 	} = $props();
 
@@ -165,7 +162,7 @@
 						? ';mask-image:linear-gradient(to bottom,#000 75%,transparent);-webkit-mask-image:linear-gradient(to bottom,#000 75%,transparent)'
 						: '')}
 		>
-			<ChunkTranscript {turns} {highlightMatch} />
+			<ChunkTranscript {turns} />
 		</div>
 	{:else}
 		<p

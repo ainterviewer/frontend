@@ -21,6 +21,7 @@
 	import type { PageData } from './$types';
 	import DetailPanel from './DetailPanel.svelte';
 	import ControlRail from './ControlRail.svelte';
+	import KeywordInput from './KeywordInput.svelte';
 	import ListView from './ListView.svelte';
 	import { ExploreState, type ExploreView } from './exploreState.svelte';
 	import ScatterPlot from './ScatterPlot.svelte';
@@ -61,6 +62,10 @@
 	);
 
 	let status = $state<EmbeddingStatus | null>(null);
+	// Whether the reader has picked a view themselves. A plain `let`, like the
+	// other run-guards here: reactive state read and written by the same effect
+	// is how this page earned an `effect_update_depth_exceeded` once already.
+	let viewChosen = false;
 	let statusError = $state<string | null>(null);
 
 	/**
@@ -158,7 +163,21 @@
 	let embeddedCount = $derived(status?.coverage?.[kind] ?? null);
 
 	/** Text search is the one thing here that needs the inference server. */
-	let searchAvailable = $derived(status?.healthy ?? false);
+	/**
+	 * Nothing in this project has been indexed.
+	 *
+	 * Distinct from the server being unreachable: the server is fine, there is
+	 * simply nothing stored to compare against. Everything that reads vectors —
+	 * the map, semantic search, nearest neighbours — has nothing to work with;
+	 * everything that reads message rows still does, which is the whole list
+	 * view. So this narrows the page rather than replacing it.
+	 */
+	let unindexed = $derived(status !== null && (status.total ?? 0) === 0);
+
+	// Healthy is not enough: the query would be embedded successfully and then
+	// compared against an empty corpus, which is a blank result with no reason
+	// attached rather than an answer.
+	let searchAvailable = $derived((status?.healthy ?? false) && !unindexed);
 
 	/**
 	 * The languages the two language controls offer.
@@ -241,6 +260,12 @@
 			}
 			status = body;
 			statusError = null;
+			// Nothing indexed: the map would open on an explanation, so open on
+			// the half that works. Only before the reader has touched the toggle
+			// — after that the view is theirs, and moving it would be the page
+			// arguing with them. Assigned here rather than in an effect so
+			// nothing re-runs on the view it just set.
+			if ((body.total ?? 0) === 0 && !viewChosen) explore.view = 'list';
 		})();
 
 		return () => {
@@ -979,8 +1004,14 @@
 <div class="flex min-h-0 flex-1 flex-col gap-3">
 	<header>
 		<h1 class="text-2xl font-semibold text-gray-800">Explore</h1>
+		<!-- What the page is for, in one line and in every state. The controls
+		     say what is available right now -- a disabled query box, an
+		     unindexed map -- and a subtitle that also tried to would be two
+		     things to keep true instead of one. It no longer says "by meaning
+		     rather than by wording": keyword search is a real half of the page,
+		     not the thing the page is an alternative to. -->
 		<p class="mt-1 max-w-2xl text-sm text-gray-500">
-			Search the transcripts by meaning rather than by wording, and see how the answers group.
+			Search the transcripts by wording or by meaning, and see how the answers group.
 		</p>
 	</header>
 
@@ -999,21 +1030,6 @@
 			<p class="mx-auto mt-1 max-w-md text-sm text-gray-500">
 				This deployment does not run an embedding server, so transcripts are not indexed for
 				meaning. Everything else about the project is unaffected.
-			</p>
-		</div>
-	{:else if status && (status.total ?? 0) === 0}
-		<StatusStrip
-			{status}
-			projectId={data.project_id}
-			{canBackfill}
-			onstatus={(next) => (status = next)}
-		/>
-		<div class="rounded-lg border border-gray-200 bg-white px-5 py-8 text-center">
-			<p class="text-sm font-medium text-gray-700">Nothing is embedded yet</p>
-			<p class="mx-auto mt-1 max-w-md text-sm text-gray-500">
-				{canBackfill
-					? 'Run “Re-embed project” above to index this project’s transcripts. It takes a few minutes and only has to be done once.'
-					: 'This project’s transcripts have not been indexed. An editor can start that from this page.'}
 			</p>
 		</div>
 	{:else}
@@ -1056,7 +1072,10 @@
 				{#each [{ value: 'map', label: 'Map', icon: 'fa-diagram-project' }, { value: 'list', label: 'List', icon: 'fa-list' }] as option (option.value)}
 					<button
 						type="button"
-						onclick={() => (explore.view = option.value as ExploreView)}
+						onclick={() => {
+							viewChosen = true;
+							explore.view = option.value as ExploreView;
+						}}
 						aria-pressed={explore.view === option.value}
 						class="flex cursor-pointer items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium transition-colors {explore.view ===
 						option.value
@@ -1072,15 +1091,21 @@
 			<form onsubmit={search} class="flex min-w-[18rem] flex-1 items-center gap-2">
 				<div class="relative flex-1">
 					<i
-						class="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs text-gray-300"
+						class="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs {searchAvailable
+							? 'text-gray-300'
+							: 'text-gray-400'}"
 					></i>
 					<input
 						type="search"
 						bind:value={queryText}
 						disabled={!searchAvailable}
-						placeholder="How do people describe trust?"
+						placeholder={searchAvailable
+							? 'How do people describe trust?'
+							: unindexed
+								? 'Needs indexing — see the map'
+								: 'Needs the embedding server'}
 						aria-label="Search the transcripts by meaning"
-						class="w-full rounded-md border border-gray-200 py-1.5 pr-3 pl-8 text-sm placeholder:text-gray-300 focus:border-primary focus:ring-0 disabled:bg-gray-50"
+						class="w-full rounded-md border border-gray-200 py-1.5 pr-3 pl-8 text-sm placeholder:text-gray-300 focus:border-primary focus:ring-0 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 disabled:placeholder:text-gray-400"
 					/>
 				</div>
 				<button
@@ -1101,29 +1126,11 @@
 				{/if}
 			</form>
 
-			<!-- Keyword is a filter, not a second search box, and it reads as one:
-			     it narrows the corpus in SQL and whatever query there is then
-			     ranks what survived. Both together is the question worth asking —
-			     "passages about X that literally say Y" — and neither search can
-			     answer it alone. Unlike the query it needs no inference server, so
-			     it stays usable when the query box does not. -->
-			<div class="flex items-center gap-2">
-				<div class="relative">
-					<i
-						class="fas fa-quote-left pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[0.625rem] text-gray-300"
-					></i>
-					<input
-						type="search"
-						bind:value={explore.keyword}
-						placeholder="contains…"
-						aria-label="Filter to chunks whose answers contain this text"
-						class="w-40 rounded-md border border-gray-200 py-1.5 pr-3 pl-8 text-sm placeholder:text-gray-300 focus:border-primary focus:ring-0"
-					/>
-				</div>
-				<HoverInfo
-					text="A literal filter, applied before anything is scored, so it narrows the corpus rather than the result list — it moves the map and the clusters too, not just this list. Matched against what respondents wrote, never against the question they were asked: a chunk restates its question, and a word the interviewer said is not a word anybody answered."
-				/>
-			</div>
+			<KeywordInput
+				bind:value={explore.keyword}
+				bind:scope={explore.keywordScope}
+				problem={explore.keywordProblem}
+			/>
 
 			<!-- The cut-off sits with the query rather than in the rail, because it
 			     is a property of the list of hits and not of the map: it filters
@@ -1171,6 +1178,7 @@
 				bind:includeSynthetic={explore.includeSynthetic}
 				bind:filterQuestions={explore.filterQuestions}
 				bind:keyword={explore.keyword}
+				bind:keywordScope={explore.keywordScope}
 				{guide}
 				bind:visibleLanguages={explore.visibleLanguages}
 				{listing}
@@ -1189,7 +1197,7 @@
 					error={listError}
 					paging={listPaging}
 					ranked={listRanked}
-					keyword={explore.keyword}
+					keyword={explore.searchableKeyword}
 					anchor={listAnchor}
 					anchorLoading={walking && detail === null}
 					onanchor={(hit) => (selectedId = selectedId === hit.id ? null : hit.id)}
@@ -1231,7 +1239,32 @@
 								{/if}
 							</button>
 						{/if}
-						{#if clusterError && !clusters}
+						{#if unindexed}
+							<!-- Before any cluster error, because "nothing is embedded" is
+							     the cause of whatever the clustering endpoint said and the
+							     reader can act on it. The list needs none of this, which is
+							     why the page is not gated on it -- browsing and keyword
+							     search read message rows, not vectors. -->
+							<div
+								class="flex h-full w-full flex-col items-center justify-center gap-3 p-8 text-center"
+							>
+								<i class="fa-solid fa-diagram-project text-lg text-gray-300"></i>
+								<div>
+									<p class="text-sm font-medium text-gray-700">Nothing is embedded yet</p>
+									<p class="mx-auto mt-1 max-w-md text-sm text-gray-500">
+										The map plots stored vectors, so there is nothing to draw until this project's
+										transcripts are indexed.
+										{canBackfill
+											? 'Run “Re-embed project” above — it takes a few minutes and only has to be done once.'
+											: 'An editor can start that from this page.'}
+									</p>
+									<p class="mx-auto mt-2 max-w-md text-xs text-gray-500">
+										The list view works either way: browsing and keyword search read the transcripts
+										themselves.
+									</p>
+								</div>
+							</div>
+						{:else if clusterError && !clusters}
 							<p class="p-5 text-sm text-gray-500">{clusterError}</p>
 						{:else if !clusters}
 							<!-- The first run has nothing to keep on screen, so this is all

@@ -1971,7 +1971,9 @@ export const zEmbeddingTurn = z.object({
     role: zTurnRole,
     text: z.string(),
     survey_label: z.string().nullish(),
-    match: z.boolean().optional().default(false)
+    match: z.boolean().optional().default(false),
+    matches: z.array(z.tuple([z.int(), z.int()])).optional(),
+    excluded: z.array(z.tuple([z.int(), z.int()])).optional()
 });
 
 /**
@@ -1986,7 +1988,7 @@ export const zEmbeddingTurn = z.object({
  * existing annotation, comment and message-context endpoints.
  */
 export const zEmbeddingSearchHit = z.object({
-    id: z.string(),
+    id: z.uuid(),
     score: z.number().nullish(),
     embedded: z.boolean().optional().default(true),
     kind: zEmbeddingKind,
@@ -2756,8 +2758,11 @@ export const zSearchEmbeddingsQuery = z.object({
     include_synthetic: z.boolean().optional().default(false),
     question: z.array(z.string()).nullish(),
     keyword: z.string().max(2000).nullish(),
-    exact_match: z.boolean().optional().default(false),
-    case_sensitive: z.boolean().optional().default(false),
+    keyword_scope: z.enum([
+        'answer',
+        'question',
+        'both'
+    ]).optional().default('answer'),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -2783,8 +2788,11 @@ export const zBrowseEmbeddingsQuery = z.object({
     include_synthetic: z.boolean().optional().default(false),
     question: z.array(z.string()).nullish(),
     keyword: z.string().max(2000).nullish(),
-    exact_match: z.boolean().optional().default(false),
-    case_sensitive: z.boolean().optional().default(false),
+    keyword_scope: z.enum([
+        'answer',
+        'question',
+        'both'
+    ]).optional().default('answer'),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -2810,8 +2818,11 @@ export const zFindSimilarEmbeddingsQuery = z.object({
     include_synthetic: z.boolean().optional().default(false),
     question: z.array(z.string()).nullish(),
     keyword: z.string().max(2000).nullish(),
-    exact_match: z.boolean().optional().default(false),
-    case_sensitive: z.boolean().optional().default(false),
+    keyword_scope: z.enum([
+        'answer',
+        'question',
+        'both'
+    ]).optional().default('answer'),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -2845,8 +2856,11 @@ export const zClusterEmbeddingsQuery = z.object({
     include_synthetic: z.boolean().optional().default(false),
     question: z.array(z.string()).nullish(),
     keyword: z.string().max(2000).nullish(),
-    exact_match: z.boolean().optional().default(false),
-    case_sensitive: z.boolean().optional().default(false)
+    keyword_scope: z.enum([
+        'answer',
+        'question',
+        'both'
+    ]).optional().default('answer')
 });
 
 /**

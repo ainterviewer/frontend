@@ -309,7 +309,7 @@
 			{:else if search}
 				<div class="flex flex-col gap-2">
 					{#each search.items ?? [] as hit (hit.id)}
-						<HitCard {hit} highlightMatch onanchor={anchor} />
+						<HitCard {hit} onanchor={anchor} />
 					{/each}
 				</div>
 				{@render loadMore(searchPaging, 'results')}

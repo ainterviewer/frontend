@@ -136,25 +136,18 @@ describe('filterQuery keyword', () => {
 		expect('keyword' in filterQuery(defaultFilters())).toBe(false);
 	});
 
-	it('carries its modifiers only when there is a keyword', () => {
-		// Two settings that cannot change the answer would otherwise be two
-		// reasons to refetch.
-		const query = filterQuery({ ...defaultFilters(), keyword_exact: true });
-
-		expect('exact_match' in query).toBe(false);
-	});
-
-	it('is trimmed, with its modifiers', () => {
-		const query = filterQuery({
-			...defaultFilters(),
-			keyword: '  funding  ',
-			keyword_exact: true,
-			keyword_case_sensitive: true
-		});
+	it('is trimmed', () => {
+		const query = filterQuery({ ...defaultFilters(), keyword: '  funding  ' });
 
 		expect(query.keyword).toBe('funding');
-		expect(query.exact_match).toBe(true);
-		expect(query.case_sensitive).toBe(true);
+	});
+
+	it('carries the operators through untouched', () => {
+		// The backend parses the query, so the client sends what was typed
+		// rather than anything it has taken apart.
+		const query = filterQuery({ ...defaultFilters(), keyword: '(hund OR kat) -fisk' });
+
+		expect(query.keyword).toBe('(hund OR kat) -fisk');
 	});
 
 	it('counts as off-default and defeats the preloaded response', () => {
