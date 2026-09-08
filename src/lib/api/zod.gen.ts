@@ -2111,7 +2111,19 @@ export const zTranscriptTurn = z.object({
     id: z.uuid(),
     section: z.int().nullish(),
     main_question: z.int().nullish(),
-    sub_question: z.int().nullish()
+    sub_question: z.int().nullish(),
+    survey_item: z.union([
+        zRadioItem,
+        zCheckboxItem,
+        zLikertItem,
+        zSliderItem,
+        zNumberItem,
+        zDateItem,
+        zDatetimeItem,
+        zTimeItem
+    ]).nullish(),
+    skipped: z.boolean().optional().default(false),
+    image: zImage.nullish()
 });
 
 /**

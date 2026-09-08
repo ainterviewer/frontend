@@ -3987,6 +3987,15 @@ export type TranscriptTurn = {
      * Sub Question
      */
     sub_question?: number | null;
+    /**
+     * Survey Item
+     */
+    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    /**
+     * Skipped
+     */
+    skipped?: boolean;
+    image?: Image | null;
 };
 
 /**

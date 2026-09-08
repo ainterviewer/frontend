@@ -168,17 +168,6 @@
 	let date = $derived(
 		hit?.interview_created_at ? formatDate(new Date(hit.interview_created_at)) : null
 	);
-
-	/**
-	 * A number for the group's place in the guide, when it has one.
-	 *
-	 * The same `Q1.2` the card carries, so the reader can see they have landed
-	 * where the card said they would.
-	 */
-	function questionLabel(group: Group): string | null {
-		if (group.section === null || group.mainQuestion === null) return null;
-		return `Q${group.section + 1}.${group.mainQuestion + 1}`;
-	}
 </script>
 
 <Dialog.Root
@@ -291,7 +280,7 @@
 										class="mb-1.5 flex items-center gap-1.5 text-[0.625rem] font-semibold tracking-wide text-primary uppercase"
 									>
 										<i class="fas fa-location-dot"></i>
-										{questionLabel(group) ?? 'The chunk you came from'}
+										The chunk you came from
 									</p>
 								{/if}
 								<ChunkTranscript turns={group.turns} compact={false} />

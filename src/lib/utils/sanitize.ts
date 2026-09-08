@@ -84,6 +84,31 @@ function escapeText(text: string): string {
 	return out;
 }
 
+/**
+ * A range of the *source* string to wrap in a `<mark>`.
+ *
+ * Offsets index the string handed to `sanitizeMarkup`, not its output — which
+ * is the whole reason marking happens in here rather than around the result.
+ * The sanitiser already walks the source with a cursor and knows where every
+ * text run it emits began, so it can wrap a range while it escapes one.
+ *
+ * A range that falls inside a tag is silently not marked, because it never
+ * reaches a text run. That is the correct answer rather than a limitation: a
+ * keyword search runs against the raw message, so it happily "matches" a word
+ * inside an `href` — `Stressand` in a support-page URL — and highlighting that
+ * would tell a reader somebody said a word that nobody said.
+ *
+ * Ranges are expected not to overlap each other. Overlapping ones would each
+ * be wrapped, which is well-formed but not meaningful.
+ */
+export type MarkRange = {
+	start: number;
+	end: number;
+	/** Classes for the `<mark>`. Escaped as an attribute before it is emitted. */
+	className: string;
+	title?: string;
+};
+
 /** Escape a value going into a double-quoted attribute. */
 function escapeAttribute(value: string): string {
 	return value
@@ -91,6 +116,37 @@ function escapeAttribute(value: string): string {
 		.replace(/"/g, '&quot;')
 		.replace(/</g, '&lt;')
 		.replace(/>/g, '&gt;');
+}
+
+/**
+ * Escape the source between `from` and `to`, wrapping any marks that fall in it.
+ *
+ * Each mark opens and closes inside a single run, so the balancing the main
+ * loop does for guide tags is untouched by them.
+ */
+function escapeRun(source: string, from: number, to: number, marks: readonly MarkRange[]): string {
+	const inside = marks
+		.filter((mark) => mark.end > from && mark.start < to)
+		.sort((a, b) => a.start - b.start);
+	if (inside.length === 0) return escapeText(source.slice(from, to));
+
+	let out = '';
+	let cursor = from;
+	for (const mark of inside) {
+		// Clipped to the run: a match can straddle a tag — `stre<b>ss</b>ed` —
+		// and each half is then marked where it sits.
+		const start = Math.max(mark.start, cursor);
+		const end = Math.min(mark.end, to);
+		if (start >= end) continue;
+		if (start > cursor) out += escapeText(source.slice(cursor, start));
+		const title = mark.title ? ` title="${escapeAttribute(mark.title)}"` : '';
+		out += `<mark class="${escapeAttribute(mark.className)}"${title}>`;
+		out += escapeText(source.slice(start, end));
+		out += '</mark>';
+		cursor = end;
+	}
+	if (cursor < to) out += escapeText(source.slice(cursor, to));
+	return out;
 }
 
 function decodeEntities(value: string): string {
@@ -158,8 +214,12 @@ function openTag(name: string, attributes: Map<string, string>): string | null {
  * The output is balanced: stray closing tags are dropped and anything still
  * open at the end is closed, so the result is safe to hand to `{@html}`
  * without it swallowing the markup that follows it.
+ *
+ * `marks` are ranges of `html` to wrap in a `<mark>` as it goes — see
+ * `MarkRange`. They are the keyword search's hits, and they are applied here
+ * rather than to the result because the offsets index the input.
  */
-export function sanitizeMarkup(html: string): string {
+export function sanitizeMarkup(html: string, marks: readonly MarkRange[] = []): string {
 	if (!html) return '';
 
 	let out = '';
@@ -181,7 +241,7 @@ export function sanitizeMarkup(html: string): string {
 			continue;
 		}
 
-		out += escapeText(html.slice(cursor, index));
+		out += escapeRun(html, cursor, index, marks);
 		cursor = index + tag.length;
 
 		if (OPAQUE_TAGS.has(name)) {
@@ -190,7 +250,10 @@ export function sanitizeMarkup(html: string): string {
 		}
 
 		if (!(name in ALLOWED_TAGS)) {
-			// Not in the allowlist: show the author what they typed.
+			// Not in the allowlist: show the author what they typed. Not marked,
+			// even though it is now visible text: the server drops a span that
+			// lands inside anything tag-shaped, and the two have to agree on
+			// what counts as prose or a result arrives with no evidence in it.
 			out += escapeText(tag);
 			continue;
 		}
@@ -216,7 +279,7 @@ export function sanitizeMarkup(html: string): string {
 		stack.push({ name, emitted: rendered !== null });
 	}
 
-	if (!skipUntil) out += escapeText(html.slice(cursor));
+	if (!skipUntil) out += escapeRun(html, cursor, html.length, marks);
 	for (let i = stack.length - 1; i >= 0; i--) {
 		if (stack[i].emitted) out += `</${stack[i].name}>`;
 	}

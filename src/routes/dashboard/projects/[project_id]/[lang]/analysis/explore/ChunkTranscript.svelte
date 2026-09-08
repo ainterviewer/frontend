@@ -1,82 +1,104 @@
 <script lang="ts">
-	import type { EmbeddingTurn } from '$lib/api/types.gen';
+	import type { EmbeddingTurn, TranscriptTurn } from '$lib/api/types.gen';
+	import MessageBubble from '$lib/components/interview/MessageBubble.svelte';
+	import type { SurveyItemUnion } from '$lib/components/interview/types';
+
 	let {
 		turns,
 		compact = true
 	}: {
-		turns: EmbeddingTurn[];
+		/**
+		 * A chunk's turns, or a whole interview's.
+		 *
+		 * `TranscriptTurn` is an `EmbeddingTurn` with the guide coordinates and
+		 * the survey item added, so the two are one list as far as this is
+		 * concerned: what a turn carries decides what its bubble shows, and a
+		 * card simply carries less than a transcript does.
+		 */
+		turns: (EmbeddingTurn | TranscriptTurn)[];
 		/**
 		 * Sized for the results panel rather than for the interview screen. The
-		 * bubbles are the same ones — same sides, same colours — because a
-		 * researcher reading a hit here and the transcript there is reading one
-		 * conversation, and two renderings of it would be two things to learn.
+		 * bubbles are the same ones — `MessageBubble`, shared with the interview
+		 * and the transcript page — because a researcher reading a hit here and
+		 * the transcript there is reading one conversation, and two renderings of
+		 * it would be two things to learn.
 		 */
 		compact?: boolean;
 	} = $props();
 
+	function isTranscript(turn: EmbeddingTurn | TranscriptTurn): turn is TranscriptTurn {
+		return 'section' in turn;
+	}
+
 	/**
-	 * A turn split into runs, each labelled with why it is marked.
+	 * The attached image, in the shape the bubble draws.
 	 *
-	 * The ranges come from the server — it ran the query, so it is the only side
-	 * that knows whether a word in an interviewer's turn counted under the scope
-	 * that was asked for. Segments rather than marked-up HTML: respondent text is
-	 * escaped before it is displayed, and building a string of tags around it
-	 * would be the one place that stopped being true.
-	 *
-	 * `excluded` are words the query asked *not* to see, which can still be on
-	 * screen — in text the scope never searched, or in a sibling turn of a
-	 * grouped chunk. The server has already made sure the two lists do not
-	 * overlap, so the merge below cannot mark a character twice.
+	 * `data` is nullable on the wire — an image row whose payload was never
+	 * stored — and an `<img>` with no source is a broken icon where the reader
+	 * expects a picture, so a missing one is simply no image.
 	 */
-	type Mark = 'match' | 'excluded' | null;
+	function picture(turn: EmbeddingTurn | TranscriptTurn): { data: string; alt?: string } | null {
+		if (!isTranscript(turn) || !turn.image?.data) return null;
+		return { data: turn.image.data, alt: turn.image.alt };
+	}
 
-	function segments(turn: EmbeddingTurn): { text: string; mark: Mark }[] {
-		const spans: { start: number; end: number; mark: Mark }[] = [
-			...(turn.matches ?? []).map(([start, end]) => ({ start, end, mark: 'match' as const })),
-			...(turn.excluded ?? []).map(([start, end]) => ({ start, end, mark: 'excluded' as const }))
-		].sort((a, b) => a.start - b.start);
+	/**
+	 * The survey item this turn's answer was chosen from, when the caller has it.
+	 *
+	 * Only a transcript carries the whole item; a card carries its type, which
+	 * `survey_label` renders as a badge instead.
+	 */
+	function survey(turn: EmbeddingTurn | TranscriptTurn): SurveyItemUnion | null {
+		return isTranscript(turn) ? (turn.survey_item ?? null) : null;
+	}
 
-		if (spans.length === 0) return [{ text: turn.text, mark: null }];
+	/**
+	 * The turn's text, or nothing where the option set says it better.
+	 *
+	 * A chosen option is stored as its own label — the answer to a radio is the
+	 * string "Male" — so rendering both the text and the item would print the
+	 * answer twice, once bare and once inside the control it was picked in. The
+	 * transcript page drops the text for exactly this reason; doing it here is
+	 * the same rule in the one place both now go through.
+	 */
+	function body(turn: EmbeddingTurn | TranscriptTurn): string {
+		return survey(turn) ? '' : turn.text;
+	}
 
-		const parts: { text: string; mark: Mark }[] = [];
-		let last = 0;
-		for (const span of spans) {
-			if (span.start > last) parts.push({ text: turn.text.slice(last, span.start), mark: null });
-			parts.push({ text: turn.text.slice(span.start, span.end), mark: span.mark });
-			last = span.end;
+	/**
+	 * The guide number, spelled the way the transcript page spells it: `3.1` for
+	 * a main question, `3.2.1` for the first probe under it.
+	 *
+	 * Only a transcript turn has the coordinates. A results card has no room for
+	 * a number on every bubble and says its question once in the footer instead,
+	 * which is why this comes back null there rather than being switched off by
+	 * a flag.
+	 */
+	function label(turn: EmbeddingTurn | TranscriptTurn): string | null {
+		if (!isTranscript(turn) || turn.section === null || turn.section === undefined) return null;
+		let out = `${turn.section + 1}`;
+		if (turn.main_question !== null && turn.main_question !== undefined) {
+			out += `.${turn.main_question + 1}`;
+			if (turn.sub_question) out += `.${turn.sub_question}`;
 		}
-		if (last < turn.text.length) parts.push({ text: turn.text.slice(last), mark: null });
-		return parts;
+		return out;
 	}
 </script>
 
-<div class="flex flex-col gap-1.5">
+<div class="flex flex-col {compact ? 'gap-1.5' : ''}">
 	{#each turns as turn, index (index)}
-		{@const respondent = turn.role === 'respondent'}
-		<div class="flex w-full" class:justify-end={respondent}>
-			<div
-				class="max-w-[90%] rounded-xl break-words hyphens-auto whitespace-pre-line
-					{compact ? 'px-2.5 py-1.5 text-[0.8125rem]' : 'p-2.5 text-sm'}
-					{respondent ? 'rounded-br-sm bg-primary text-on-primary' : 'rounded-bl-sm bg-[#eee] text-gray-900'}"
-			>
-				{#if turn.survey_label}
-					<!-- An identical "Agree" from forty respondents is a click, not a
-					     consensus, and a bubble that does not say so reads as writing. -->
-					<span
-						class="mb-1 inline-block rounded bg-black/10 px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide uppercase"
-					>
-						{turn.survey_label}
-					</span>
-					<br />
-				{/if}{#each segments(turn) as segment, part (part)}{#if segment.mark === 'match'}<mark
-							class="rounded-sm bg-yellow-300/90 px-0.5 text-gray-900"
-							title="Matched your search">{segment.text}</mark
-						>{:else if segment.mark === 'excluded'}<mark
-							class="rounded-sm bg-red-200/90 px-0.5 text-gray-900 line-through decoration-red-700/50"
-							title="You excluded this word — it is here, but it is not why this chunk is in the results"
-							>{segment.text}</mark
-						>{:else}{segment.text}{/if}{/each}
-			</div>
-		</div>
+		<MessageBubble
+			interviewer={turn.role !== 'respondent'}
+			text={body(turn)}
+			label={label(turn)}
+			surveyItem={survey(turn)}
+			surveyLabel={turn.survey_label ?? null}
+			image={picture(turn)}
+			answer={turn.text}
+			matches={turn.matches ?? []}
+			excluded={turn.excluded ?? []}
+			skipped={isTranscript(turn) ? (turn.skipped ?? false) : false}
+			{compact}
+		/>
 	{/each}
 </div>
