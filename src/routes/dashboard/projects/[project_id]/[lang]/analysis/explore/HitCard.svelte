@@ -10,6 +10,7 @@
 		hit,
 		showScore = true,
 		anchored = false,
+		highlightMatch = false,
 		onanchor
 	}: {
 		hit: EmbeddingSearchHit;
@@ -21,6 +22,8 @@
 		showScore?: boolean;
 		/** This chunk is the one the neighbours are measured from. */
 		anchored?: boolean;
+		/** Ring the turn this chunk is about. Only meaningful while searching. */
+		highlightMatch?: boolean;
 		onanchor?: (hit: EmbeddingSearchHit) => void;
 	} = $props();
 
@@ -75,18 +78,23 @@
 	 * What the reader has said about this card, or `null` while they have said
 	 * nothing — in which case the anchor decides.
 	 *
-	 * The anchor opens expanded: it is the chunk they just clicked, on the map or
-	 * on a neighbour, and clamping the one thing they asked for makes "Show more"
-	 * the first move of every read. The neighbours around it stay clamped, being
-	 * a list to scan rather than the thing being read.
+	 * Open by default, everywhere.
 	 *
-	 * Held as "unset" rather than initialised from `anchored` so the default
-	 * follows a card that becomes the anchor, and so the first server-rendered
-	 * paint is already right — an effect correcting it afterwards would show the
-	 * clamp for a frame.
+	 * A chunk is a conversation, and the part of it that survives clamping is
+	 * the interviewer's question — which every respondent was asked identically
+	 * and which therefore says nothing about this one. Clamped, a list of Q&A
+	 * pairs is a column of the same sentence repeated, with the answers, the
+	 * only part that differs, below the fold. The context *is* the content here.
+	 *
+	 * "Show less" stays for a reader scanning rather than reading, but it is
+	 * theirs to ask for rather than the state they start in.
+	 *
+	 * Held as "unset" rather than as `true` so a card that the reader collapsed
+	 * stays collapsed while it is the same chunk, and so the first paint is
+	 * already right — an effect correcting it afterwards would flash the clamp.
 	 */
 	let toggled = $state<boolean | null>(null);
-	let open = $derived(toggled ?? anchored);
+	let open = $derived(toggled ?? true);
 
 	// Whether the clamp is actually hiding anything. A character count is the
 	// obvious stand-in and the wrong one: a chunk can run well past any
@@ -129,9 +137,9 @@
 		return () => observer.disconnect();
 	});
 
-	// A chunk the reader expanded, then anchored, then came back to should not
-	// still be open behind a different chunk's text — and an anchor that becomes
-	// a different anchor opens again, since it is again what was asked for.
+	// A card collapsed by the reader must not stay collapsed behind a different
+	// chunk's text: the panel and the list both reuse these cards as the reader
+	// moves around, so a new `id` is a new chunk and starts open like any other.
 	$effect(() => {
 		void hit.id;
 		toggled = null;
@@ -157,7 +165,7 @@
 						? ';mask-image:linear-gradient(to bottom,#000 75%,transparent);-webkit-mask-image:linear-gradient(to bottom,#000 75%,transparent)'
 						: '')}
 		>
-			<ChunkTranscript {turns} />
+			<ChunkTranscript {turns} {highlightMatch} />
 		</div>
 	{:else}
 		<p
@@ -182,7 +190,10 @@
 	{/if}
 
 	<div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem] text-gray-400">
-		{#if showScore}
+		<!-- A browsed row carries no score, so `showScore` alone is not enough:
+		     the card is the same card either way, and the badge is simply not
+		     one of the things it can say about this row. -->
+		{#if showScore && hit.score !== null && hit.score !== undefined}
 			<span class="rounded bg-gray-100 px-1.5 py-0.5 font-mono font-medium text-gray-600">
 				{formatScore(hit.score)}
 			</span>
@@ -202,23 +213,33 @@
 		{/if}
 
 		<span class="ml-auto flex items-center gap-3">
-			{#if anchored}
-				<span class="flex items-center gap-1 font-medium text-primary">
-					<i class="fas fa-anchor text-[0.625rem]"></i>Anchor
-				</span>
-			{:else if onanchor}
+			{#if onanchor}
 				<!-- Re-anchoring is how the reader walks the space: every chunk's
 				     neighbours are a different question than the last one's, and
 				     `/similar` reuses the stored vector, so a step costs no inference
-				     and works even with the embedding server down. -->
+				     and works even with the embedding server down.
+
+				     The same control releases the anchor when it is already this
+				     chunk's. A reader who anchored by clicking here looks here to
+				     undo it, and a toggle is one thing to learn rather than two. -->
 				<button
 					type="button"
 					onclick={() => onanchor?.(hit)}
-					class="flex cursor-pointer items-center gap-1 font-medium text-gray-500 hover:text-primary"
-					title="Show what is nearest this chunk"
+					aria-pressed={anchored}
+					class="flex cursor-pointer items-center gap-1 font-medium {anchored
+						? 'text-primary'
+						: 'text-gray-500 hover:text-primary'}"
+					title={anchored
+						? 'Stop showing what is nearest this chunk'
+						: 'Show what is nearest this chunk'}
 				>
 					<i class="fas fa-anchor text-[0.625rem]"></i>Anchor
 				</button>
+			{:else if anchored}
+				<!-- Anchored, but with nothing to release it: a label, not a button. -->
+				<span class="flex items-center gap-1 font-medium text-primary">
+					<i class="fas fa-anchor text-[0.625rem]"></i>Anchor
+				</span>
 			{/if}
 			<a href={interviewHref} class="font-medium text-primary hover:underline">Transcript</a>
 		</span>

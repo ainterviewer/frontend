@@ -102,7 +102,9 @@
 	const PURITY_WARNING = 0.8;
 
 	function anchor(hit: EmbeddingSearchHit) {
-		onselect(hit.id);
+		// Clicking the anchor of the chunk already anchored releases it, which is
+		// the way back out of a neighbour list without hunting for another one.
+		onselect(hit.id === selectedId ? null : hit.id);
 	}
 
 	/** A predicate, so the notes below can print the figure without re-guarding it. */
@@ -234,7 +236,7 @@
 			{:else if detailError}
 				<p class="text-sm text-gray-500">{detailError}</p>
 			{:else if detail}
-				<HitCard hit={detail.source} showScore={false} anchored />
+				<HitCard hit={detail.source} showScore={false} anchored onanchor={anchor} />
 
 				<h3 class="mt-5 mb-2 text-xs font-semibold tracking-wide text-gray-400 uppercase">
 					Nearest neighbours
@@ -307,7 +309,7 @@
 			{:else if search}
 				<div class="flex flex-col gap-2">
 					{#each search.items ?? [] as hit (hit.id)}
-						<HitCard {hit} onanchor={anchor} />
+						<HitCard {hit} highlightMatch onanchor={anchor} />
 					{/each}
 				</div>
 				{@render loadMore(searchPaging, 'results')}

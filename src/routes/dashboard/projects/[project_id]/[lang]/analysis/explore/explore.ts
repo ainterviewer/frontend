@@ -176,10 +176,37 @@ export type ExploreFilters = {
 	 * quietly returning nothing.
 	 */
 	questions: [number, number][];
+	/**
+	 * A literal string the chunk's respondent messages must contain, empty for
+	 * no keyword filter.
+	 *
+	 * A filter and not a query, which is the whole design of the two searches:
+	 * this narrows the candidate set in SQL, and the semantic query then ranks
+	 * whatever survived. Enter only a keyword and you get a filtered list; only
+	 * a query and you get today's semantic search; both, and you get "passages
+	 * about X that literally say Y" — which is usually the question worth
+	 * asking, and one neither search can answer alone.
+	 *
+	 * Matched against the respondent's own messages rather than the chunk text,
+	 * because a chunk restates the question it answers: matching the rendering
+	 * would let a word the interviewer said count as a word somebody answered.
+	 */
+	keyword: string;
+	/** Whole message rather than any part of it, as the annotate view means it. */
+	keyword_exact: boolean;
+	keyword_case_sensitive: boolean;
 };
 
 export function defaultFilters(): ExploreFilters {
-	return { status: null, languages: [], include_synthetic: false, questions: [] };
+	return {
+		status: null,
+		languages: [],
+		include_synthetic: false,
+		questions: [],
+		keyword: '',
+		keyword_exact: false,
+		keyword_case_sensitive: false
+	};
 }
 
 /** Whether two question selections hold the same pairs, order aside. */
@@ -256,6 +283,17 @@ export function filterQuery(filters: ExploreFilters) {
 		...(filters.status ? { status: filters.status } : {}),
 		...(filters.languages.length > 0 ? { language: filters.languages } : {}),
 		...(filters.questions.length > 0 ? { question: filters.questions.map(questionParam) } : {}),
+		// Left off entirely when blank, and with its two modifiers: sending
+		// `keyword=''` would be a request for chunks containing nothing, and
+		// sending the modifiers without it makes two settings that cannot
+		// change the answer into two reasons to refetch.
+		...(filters.keyword.trim()
+			? {
+					keyword: filters.keyword.trim(),
+					exact_match: filters.keyword_exact,
+					case_sensitive: filters.keyword_case_sensitive
+				}
+			: {}),
 		include_synthetic: filters.include_synthetic
 	};
 }
@@ -381,18 +419,23 @@ export function isToolbarChange(previous: ClusterSettings | null, next: ClusterS
  * project would otherwise wear a badge for controls it is not shown and could
  * not change.
  */
-export function offDefaultCount(settings: ClusterSettings, multilingual: boolean) {
+export function offDefaultCount(settings: ClusterSettings, multilingual: boolean, listing = false) {
 	const fallback = defaultClusterSettings();
+	// The layout and clustering knobs are not shown in the list, so they are not
+	// counted there either: a badge for controls the reader cannot see is a
+	// promise of something to find that is not there.
+	const mapping = !listing;
 	return [
-		settings.projection !== fallback.projection,
-		settings.projection === 'umap' && settings.n_neighbors !== fallback.n_neighbors,
-		settings.projection === 'umap' && settings.min_dist !== fallback.min_dist,
-		settings.min_cluster_size !== fallback.min_cluster_size,
-		settings.center_by_question !== fallback.center_by_question,
-		multilingual && settings.center_by_language !== fallback.center_by_language,
+		mapping && settings.projection !== fallback.projection,
+		mapping && settings.projection === 'umap' && settings.n_neighbors !== fallback.n_neighbors,
+		mapping && settings.projection === 'umap' && settings.min_dist !== fallback.min_dist,
+		mapping && settings.min_cluster_size !== fallback.min_cluster_size,
+		mapping && settings.center_by_question !== fallback.center_by_question,
+		mapping && multilingual && settings.center_by_language !== fallback.center_by_language,
 		settings.filters.status !== fallback.filters.status,
 		multilingual && settings.filters.languages.length > 0,
 		settings.filters.questions.length > 0,
+		settings.filters.keyword.trim().length > 0,
 		settings.filters.include_synthetic !== fallback.filters.include_synthetic
 	].filter(Boolean).length;
 }
@@ -411,6 +454,7 @@ export function isDefaultClusterSettings(settings: ClusterSettings) {
 		settings.filters.status === fallback.filters.status &&
 		sameLanguages(settings.filters.languages, fallback.filters.languages) &&
 		sameQuestions(settings.filters.questions, fallback.filters.questions) &&
+		settings.filters.keyword.trim() === fallback.filters.keyword &&
 		settings.filters.include_synthetic === fallback.filters.include_synthetic
 	);
 }

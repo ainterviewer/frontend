@@ -956,6 +956,32 @@ export type EmbeddingBackfillResponse = {
 };
 
 /**
+ * EmbeddingBrowseResponse
+ *
+ * One page of the corpus with no query behind it.
+ *
+ * The list view's resting state: the filters alone decide what is in it, and
+ * guide order decides the sequence. `total` here *is* a count of things worth
+ * reading, unlike the ranked endpoints -- nothing was scored, so nothing is
+ * tailing off.
+ */
+export type EmbeddingBrowseResponse = {
+    kind: EmbeddingKind;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
+    /**
+     * Items
+     */
+    items?: Array<EmbeddingSearchHit>;
+};
+
+/**
  * EmbeddingCluster
  */
 export type EmbeddingCluster = {
@@ -1135,7 +1161,11 @@ export type EmbeddingSearchHit = {
     /**
      * Score
      */
-    score: number;
+    score?: number | null;
+    /**
+     * Embedded
+     */
+    embedded?: boolean;
     kind: EmbeddingKind;
     /**
      * Text
@@ -5113,6 +5143,18 @@ export type SearchEmbeddingsData = {
          */
         question?: Array<string> | null;
         /**
+         * Keyword
+         */
+        keyword?: string | null;
+        /**
+         * Exact Match
+         */
+        exact_match?: boolean;
+        /**
+         * Case Sensitive
+         */
+        case_sensitive?: boolean;
+        /**
          * Limit
          */
         limit?: number;
@@ -5145,6 +5187,98 @@ export type SearchEmbeddingsResponses = {
 };
 
 export type SearchEmbeddingsResponse = SearchEmbeddingsResponses[keyof SearchEmbeddingsResponses];
+
+export type BrowseEmbeddingsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        kind?: EmbeddingKind;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+        /**
+         * Language
+         */
+        language?: Array<LanguageCode> | null;
+        /**
+         * Status
+         */
+        status?: InterviewStatus | null;
+        /**
+         * Participant Id
+         */
+        participant_id?: string | null;
+        /**
+         * Created After
+         */
+        created_after?: string | null;
+        /**
+         * Created Before
+         */
+        created_before?: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id?: Array<string> | null;
+        /**
+         * Include Synthetic
+         */
+        include_synthetic?: boolean;
+        /**
+         * Question
+         */
+        question?: Array<string> | null;
+        /**
+         * Keyword
+         */
+        keyword?: string | null;
+        /**
+         * Exact Match
+         */
+        exact_match?: boolean;
+        /**
+         * Case Sensitive
+         */
+        case_sensitive?: boolean;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/projects/{project_id}/analysis/embeddings/browse';
+};
+
+export type BrowseEmbeddingsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type BrowseEmbeddingsError = BrowseEmbeddingsErrors[keyof BrowseEmbeddingsErrors];
+
+export type BrowseEmbeddingsResponses = {
+    /**
+     * Successful Response
+     */
+    200: EmbeddingBrowseResponse;
+};
+
+export type BrowseEmbeddingsResponse = BrowseEmbeddingsResponses[keyof BrowseEmbeddingsResponses];
 
 export type FindSimilarEmbeddingsData = {
     body?: never;
@@ -5195,6 +5329,18 @@ export type FindSimilarEmbeddingsData = {
          * Question
          */
         question?: Array<string> | null;
+        /**
+         * Keyword
+         */
+        keyword?: string | null;
+        /**
+         * Exact Match
+         */
+        exact_match?: boolean;
+        /**
+         * Case Sensitive
+         */
+        case_sensitive?: boolean;
         /**
          * Limit
          */
@@ -5304,6 +5450,18 @@ export type ClusterEmbeddingsData = {
          * Question
          */
         question?: Array<string> | null;
+        /**
+         * Keyword
+         */
+        keyword?: string | null;
+        /**
+         * Exact Match
+         */
+        exact_match?: boolean;
+        /**
+         * Case Sensitive
+         */
+        case_sensitive?: boolean;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/clusters';
 };

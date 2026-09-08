@@ -3,7 +3,8 @@
 
 	let {
 		turns,
-		compact = true
+		compact = true,
+		highlightMatch = false
 	}: {
 		turns: EmbeddingTurn[];
 		/**
@@ -13,6 +14,16 @@
 		 * conversation, and two renderings of it would be two things to learn.
 		 */
 		compact?: boolean;
+		/**
+		 * Whether to ring the turn the chunk is about.
+		 *
+		 * Off unless something is actually being searched for. `match` marks
+		 * which turn a chunk is *of*, not which turn answered a question the
+		 * reader asked — so with no query and no keyword the ring highlights
+		 * every card identically, which is the same as highlighting nothing
+		 * while looking like it means something.
+		 */
+		highlightMatch?: boolean;
 	} = $props();
 </script>
 
@@ -24,9 +35,9 @@
 				class="max-w-[90%] rounded-xl break-words hyphens-auto whitespace-pre-line
 					{compact ? 'px-2.5 py-1.5 text-[0.8125rem]' : 'p-2.5 text-sm'}
 					{respondent ? 'rounded-br-sm bg-primary text-on-primary' : 'rounded-bl-sm bg-[#eee] text-gray-900'}"
-				class:ring-2={turn.match}
-				class:ring-primary={turn.match}
-				class:ring-offset-1={turn.match}
+				class:ring-2={highlightMatch && turn.match}
+				class:ring-primary={highlightMatch && turn.match}
+				class:ring-offset-1={highlightMatch && turn.match}
 			>
 				{#if turn.survey_label}
 					<!-- An identical "Agree" from forty respondents is a click, not a

@@ -47,7 +47,9 @@
 		filterLanguages = $bindable(),
 		includeSynthetic = $bindable(),
 		filterQuestions = $bindable(),
+		keyword = $bindable(),
 		guide,
+		listing,
 		visibleLanguages = $bindable(),
 		languages,
 		multilingual,
@@ -88,7 +90,23 @@
 		 * it failed. Null simply hides the control — a filter is not worth an
 		 * error banner over a working map.
 		 */
+		/**
+		 * The literal filter, empty for none. Lives in the toolbar rather than
+		 * here — it is typed while reading, not set once — but the rail's reset
+		 * has to clear it, or "back to default" would leave the corpus narrowed.
+		 */
+		keyword: string;
 		guide: InterviewGuide | null;
+		/**
+		 * Whether the list is showing rather than the map.
+		 *
+		 * The Colour and Layout groups describe a scatter — how it is projected,
+		 * how tightly it packs, what the dots are coloured by — and a list has
+		 * none of that. They are hidden rather than disabled: a control that
+		 * cannot do anything is still something to read past, and the corpus
+		 * filters are the whole rail in this view.
+		 */
+		listing: boolean;
 		/**
 		 * Languages currently on show, empty for all of them. Costs nothing and
 		 * moves nothing — the same projection with the rest faded out — which is
@@ -118,6 +136,7 @@
 	} = $props();
 
 	function reset() {
+		keyword = '';
 		projection = DEFAULT_PROJECTION;
 		nNeighbors = DEFAULT_N_NEIGHBORS;
 		minDist = DEFAULT_MIN_DIST;
@@ -528,9 +547,11 @@
 		</div>
 
 		<div class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-			{@render heading('Colour', 'fa-palette')}
-			{@render stacked('Group by', 'What the map is coloured by.', null, groupControl)}
-			{#if multilingual}
+			{#if !listing}
+				{@render heading('Colour', 'fa-palette')}
+				{@render stacked('Group by', 'What the map is coloured by.', null, groupControl)}
+			{/if}
+			{#if !listing && multilingual}
 				{@render stacked(
 					'Show',
 					'Which languages to look at. The map is not recomputed — the same points stay where they are and the rest fade back, so a language can be picked out of the layout the whole corpus produced. Cluster sizes, counts and purity still describe every point. To leave a language out of the projection itself, use the filter under Corpus.',
@@ -576,60 +597,64 @@
 				syntheticControl
 			)}
 
-			{@render heading('Layout', 'fa-vector-square')}
-			{@render stacked(
-				'Projection',
-				PROJECTIONS.find((option) => option.value === projection)?.hint ?? '',
-				null,
-				projectionControl
-			)}
-			{#if projection === 'umap'}
-				<!-- UMAP's shape knobs, shown only where they do anything. PCA takes
-				     neither, and the page does not send them under it. -->
+			<!-- Everything below shapes a scatter: how it is projected, how tightly
+			     it packs, and what HDBSCAN calls a cluster. A list has none of it. -->
+			{#if !listing}
+				{@render heading('Layout', 'fa-vector-square')}
 				{@render stacked(
-					'Neighbours',
-					'How much of the corpus each point is fitted against. Low keeps local detail and fragments the map; high recovers global structure and smooths the detail away. 15 is a reasonable middle.',
-					String(nNeighbors),
-					neighborsControl
+					'Projection',
+					PROJECTIONS.find((option) => option.value === projection)?.hint ?? '',
+					null,
+					projectionControl
 				)}
-				{@render stacked(
-					'Min distance',
-					'How tightly points may pack. 0 gives the clumped layout HDBSCAN reads best; raising it spreads each blob out, which is easier to look at and harder to cluster.',
-					minDist.toFixed(2),
-					minDistControl
-				)}
-			{/if}
+				{#if projection === 'umap'}
+					<!-- UMAP's shape knobs, shown only where they do anything. PCA takes
+					     neither, and the page does not send them under it. -->
+					{@render stacked(
+						'Neighbours',
+						'How much of the corpus each point is fitted against. Low keeps local detail and fragments the map; high recovers global structure and smooths the detail away. 15 is a reasonable middle.',
+						String(nNeighbors),
+						neighborsControl
+					)}
+					{@render stacked(
+						'Min distance',
+						'How tightly points may pack. 0 gives the clumped layout HDBSCAN reads best; raising it spreads each blob out, which is easier to look at and harder to cluster.',
+						minDist.toFixed(2),
+						minDistControl
+					)}
+				{/if}
 
-			{@render heading('Clustering', 'fa-circle-nodes')}
-			<!-- Dimmed away from the clusters, where it changes nothing that is on
-			     screen: the positions come from the projection, and the cluster ids
-			     it does change are not what the points are coloured by. The centring
-			     toggles below stay live in every mode — they move the points
-			     themselves, and watching a question's colour scatter as centring
-			     comes on is the whole reason to colour by question. -->
-			<div class:opacity-40={!clustering}>
-				{@render stacked(
-					'Min cluster size',
-					clustering
-						? projection === 'pca'
-							? 'The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Recomputes in about a fifth of a second, so drag it.'
-							: 'The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Under UMAP each change is a few seconds, so nudge it rather than dragging.'
-						: 'Only affects the clusters, which is not what the map is coloured by right now. Switch back to Clusters to use it.',
-					String(minClusterSize),
-					clusterSizeControl
-				)}
-			</div>
-			{@render inline(
-				'Centre by question',
-				"Every respondent was asked the same questions, and a chunk contains its question verbatim — so left alone, clustering recovers the interview guide rather than what anyone said. Centring subtracts each question's average before grouping, leaving the variation between answers. Turn it off to see the raw structure.",
-				questionControl
-			)}
-			{#if multilingual}
+				{@render heading('Clustering', 'fa-circle-nodes')}
+				<!-- Dimmed away from the clusters, where it changes nothing that is on
+				     screen: the positions come from the projection, and the cluster ids
+				     it does change are not what the points are coloured by. The centring
+				     toggles below stay live in every mode — they move the points
+				     themselves, and watching a question's colour scatter as centring
+				     comes on is the whole reason to colour by question. -->
+				<div class:opacity-40={!clustering}>
+					{@render stacked(
+						'Min cluster size',
+						clustering
+							? projection === 'pca'
+								? 'The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Recomputes in about a fifth of a second, so drag it.'
+								: 'The smallest group HDBSCAN will call a cluster. Lower it to break the map into finer themes; raise it for a few broad ones. Under UMAP each change is a few seconds, so nudge it rather than dragging.'
+							: 'Only affects the clusters, which is not what the map is coloured by right now. Switch back to Clusters to use it.',
+						String(minClusterSize),
+						clusterSizeControl
+					)}
+				</div>
 				{@render inline(
-					'Centre by language',
-					"Language is one of the loudest signals in an embedding: left alone, the Danish answers sit with the Danish answers whatever anybody said. Centring subtracts each language's average before grouping, so the map is about what was said rather than what it was said in. Turn it off to see how much of the structure was language.",
-					languageControl
+					'Centre by question',
+					"Every respondent was asked the same questions, and a chunk contains its question verbatim — so left alone, clustering recovers the interview guide rather than what anyone said. Centring subtracts each question's average before grouping, leaving the variation between answers. Turn it off to see the raw structure.",
+					questionControl
 				)}
+				{#if multilingual}
+					{@render inline(
+						'Centre by language',
+						"Language is one of the loudest signals in an embedding: left alone, the Danish answers sit with the Danish answers whatever anybody said. Centring subtracts each language's average before grouping, so the map is about what was said rather than what it was said in. Turn it off to see how much of the structure was language.",
+						languageControl
+					)}
+				{/if}
 			{/if}
 		</div>
 

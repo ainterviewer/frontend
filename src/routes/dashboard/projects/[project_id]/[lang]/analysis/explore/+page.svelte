@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { Analysis } from '$lib/api';
 	import type {
+		EmbeddingBrowseResponse,
 		EmbeddingClusterPoint,
 		EmbeddingClusterResponse,
 		EmbeddingKind,
@@ -11,9 +12,7 @@
 		EmbeddingStatus,
 		GroupKind,
 		InterviewGuide,
-		InterviewStatus,
 		LanguageCode,
-		Projection,
 		ProjectLanguage
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
@@ -22,24 +21,18 @@
 	import type { PageData } from './$types';
 	import DetailPanel from './DetailPanel.svelte';
 	import ControlRail from './ControlRail.svelte';
+	import ListView from './ListView.svelte';
+	import { ExploreState, type ExploreView } from './exploreState.svelte';
 	import ScatterPlot from './ScatterPlot.svelte';
 	import SweepBar from './SweepBar.svelte';
 	import StatusStrip from './StatusStrip.svelte';
 	import {
-		DEFAULT_CENTER_BY_LANGUAGE,
-		DEFAULT_CENTER_BY_QUESTION,
 		DEFAULT_GROUP_MODE,
-		DEFAULT_KIND,
-		DEFAULT_MIN_CLUSTER_SIZE,
-		DEFAULT_MIN_DIST,
-		DEFAULT_N_NEIGHBORS,
-		DEFAULT_PROJECTION,
 		DEFAULT_TASK,
 		GROUP_MODES,
 		MIN_CLUSTER_SIZE_RANGE,
 		PAGE_SIZE,
 		clusterQuery,
-		defaultFilters,
 		describeError,
 		filterQuery,
 		groupKeyOf,
@@ -70,50 +63,23 @@
 	let status = $state<EmbeddingStatus | null>(null);
 	let statusError = $state<string | null>(null);
 
-	// The knobs. `kind` and the filters are shared by every request on the page;
-	// the rest belong to the clustering alone.
-	let kind = $state<EmbeddingKind>(DEFAULT_KIND);
-	let projection = $state<Projection>(DEFAULT_PROJECTION);
-	let nNeighbors = $state(DEFAULT_N_NEIGHBORS);
-	let minDist = $state(DEFAULT_MIN_DIST);
-	let minClusterSize = $state(DEFAULT_MIN_CLUSTER_SIZE);
-	let centerByQuestion = $state(DEFAULT_CENTER_BY_QUESTION);
-	let centerByLanguage = $state(DEFAULT_CENTER_BY_LANGUAGE);
-	let interviewStatus = $state<InterviewStatus | null>(defaultFilters().status);
-	let filterLanguages = $state<LanguageCode[]>(defaultFilters().languages);
-	let includeSynthetic = $state(defaultFilters().include_synthetic);
-	let filterQuestions = $state<[number, number][]>(defaultFilters().questions);
-
 	/**
-	 * The question filter, as the requests should carry it.
+	 * Every knob both views read, and the view toggle itself.
 	 *
-	 * Emptied under the `interview` unit rather than sent: an interview chunk
-	 * spans the whole guide and carries no coordinates, so any pair would filter
-	 * every point away and leave an empty map with no visible cause. The rail
-	 * hides the control there for the same reason; this is the half that makes
-	 * the requests agree with it, and the selection is kept so switching back to
-	 * Q&A pairs restores it rather than silently discarding what was picked.
+	 * Shared deliberately: the map and the list are two renderings of one query,
+	 * so switching between them must never quietly change which chunks are in
+	 * play. The page keeps the fetching — the debounce and preload
+	 * reconciliation below are intricate enough that two copies of them would
+	 * be two things to get wrong — and the state module keeps the knobs.
 	 */
-	let effectiveQuestions = $derived<[number, number][]>(
-		kind === 'interview' ? [] : filterQuestions
-	);
+	const explore = new ExploreState();
 
-	let filters = $derived({
-		status: interviewStatus,
-		languages: filterLanguages,
-		include_synthetic: includeSynthetic,
-		questions: effectiveQuestions
-	});
-	let settings = $derived<ClusterSettings>({
-		kind,
-		projection,
-		n_neighbors: nNeighbors,
-		min_dist: minDist,
-		min_cluster_size: minClusterSize,
-		center_by_question: centerByQuestion,
-		center_by_language: centerByLanguage,
-		filters
-	});
+	// Local aliases for the few read in a dozen places each. Everything else is
+	// spelled `explore.x` at its use site, which is where it reads best.
+	let kind = $derived(explore.kind);
+	let filters = $derived(explore.filters);
+	let settings = $derived(explore.settings);
+	let listing = $derived(explore.view === 'list');
 
 	let clusters = $state<EmbeddingClusterResponse | null>(null);
 	let clusterLoading = $state(true);
@@ -353,6 +319,18 @@
 		const fromToolbar = isToolbarChange(lastClusterSettings, settings);
 		lastClusterSettings = settings;
 
+		// Nothing in the list reads a cluster, and UMAP is seconds of server CPU
+		// per run — so typing a keyword while listing would refit a projection
+		// for a scatter nobody is looking at, once per debounced keystroke. The
+		// last map stays in memory rather than being cleared: the filters that
+		// produced it are still the current ones, so switching back to the map
+		// shows it immediately and the effect re-runs from here to catch up on
+		// anything that changed meanwhile.
+		if (listing) {
+			clusterLoading = false;
+			return;
+		}
+
 		clusterLoading = true;
 		let disposed = false;
 		const controller = new AbortController();
@@ -510,6 +488,125 @@
 		searchHits = [...searchHits, ...(body.items ?? [])];
 	}
 
+	// -- browsing -------------------------------------------------------------
+
+	/**
+	 * The list's resting state: the corpus in guide order, with no query behind
+	 * it.
+	 *
+	 * Only fetched for the list, and only while nothing is being searched — a
+	 * semantic query ranks the same filtered corpus, so the search above already
+	 * answers that case and browsing it too would be a second request for a list
+	 * nobody is looking at.
+	 *
+	 * Needs no vectors at all, which is the point: keyword search and structural
+	 * filtering work on a project the day it finishes collecting, rather than
+	 * after somebody remembers to run a backfill.
+	 */
+	let browseResponse = $state<EmbeddingBrowseResponse | null>(null);
+	let browseHits = $state<EmbeddingSearchHit[]>([]);
+	let browseLoading = $state(false);
+	let browseError = $state<string | null>(null);
+	let browseMoreLoading = $state(false);
+	let browseMoreError = $state<string | null>(null);
+	// The same guard as `searchRun`, and deliberately not `$state`: the effect
+	// below both reads and writes it, which for reactive state is an effect that
+	// retriggers itself until Svelte gives up with `effect_update_depth_exceeded`.
+	// Nothing renders it either — it only ever decides whether a late page still
+	// belongs to the list it was fetched for.
+	let browseRun = 0;
+
+	/** Whether a semantic query is ordering the list rather than the guide. */
+	let ranked = $derived(submitted.trim().length > 0);
+
+	$effect(() => {
+		const projectId = data.project_id;
+		const currentKind = kind;
+		const currentFilters = filterQuery(filters);
+		const wanted = listing && !ranked && selectedId === null;
+
+		browseRun += 1;
+		browseMoreLoading = false;
+		browseMoreError = null;
+
+		if (!wanted) {
+			browseResponse = null;
+			browseHits = [];
+			browseError = null;
+			browseLoading = false;
+			return;
+		}
+
+		browseLoading = true;
+		let disposed = false;
+		const controller = new AbortController();
+
+		(async () => {
+			const {
+				data: body,
+				error,
+				response
+			} = await Analysis.browseEmbeddings({
+				path: { project_id: projectId },
+				query: { kind: currentKind, limit: PAGE_SIZE, offset: 0, ...currentFilters },
+				signal: controller.signal
+			});
+			if (disposed) return;
+
+			browseLoading = false;
+			if (error || !body) {
+				browseResponse = null;
+				browseHits = [];
+				browseError = describeError(response?.status, 'The corpus could not be read.');
+				return;
+			}
+
+			browseResponse = body;
+			browseHits = body.items ?? [];
+			browseError = null;
+		})();
+
+		return () => {
+			disposed = true;
+			controller.abort();
+		};
+	});
+
+	/** The next page, appended. Costs no inference: nothing here is scored. */
+	async function loadMoreBrowse() {
+		if (browseMoreLoading || !browseResponse) return;
+
+		const run = browseRun;
+		browseMoreLoading = true;
+		browseMoreError = null;
+
+		const {
+			data: body,
+			error,
+			response
+		} = await Analysis.browseEmbeddings({
+			path: { project_id: data.project_id },
+			query: {
+				kind,
+				limit: PAGE_SIZE,
+				offset: browseHits.length,
+				...filterQuery(filters)
+			}
+		});
+
+		// The filters may have moved while this was in flight, in which case the
+		// effect above has already replaced the list this was a page of.
+		if (run !== browseRun) return;
+
+		browseMoreLoading = false;
+		if (error || !body) {
+			browseMoreError = describeError(response?.status, 'That page could not be loaded.');
+			return;
+		}
+
+		browseHits = [...browseHits, ...(body.items ?? [])];
+	}
+
 	// -- chunk detail ---------------------------------------------------------
 
 	/** The same guard as `searchRun`, for the neighbours list. */
@@ -602,7 +699,13 @@
 
 	/** One cut-off, applied to whichever ranked list is being read. */
 	function aboveCutoff(hits: EmbeddingSearchHit[]) {
-		return scoreCutoff <= 0 ? hits : hits.filter((hit) => hit.score >= scoreCutoff);
+		// A browsed row has no score at all and is never cut: the cut-off is a
+		// statement about a ranking, and there is none behind it to read.
+		return scoreCutoff <= 0
+			? hits
+			: hits.filter(
+					(hit) => hit.score === null || hit.score === undefined || hit.score >= scoreCutoff
+				);
 	}
 
 	/**
@@ -618,7 +721,8 @@
 	function moreWorthOffering(hits: EmbeddingSearchHit[], total: number | null) {
 		if (total === null || hits.length >= total) return false;
 		const last = hits[hits.length - 1];
-		return !last || scoreCutoff <= 0 || last.score >= scoreCutoff;
+		if (!last || scoreCutoff <= 0) return true;
+		return last.score === null || last.score === undefined || last.score >= scoreCutoff;
 	}
 
 	function paging(
@@ -656,9 +760,44 @@
 	let searchPaging = $derived(
 		paging(searchHits, searchResponse?.total, searchMoreLoading, searchMoreError, loadMoreSearch)
 	);
+
+	let browsePaging = $derived(
+		paging(browseHits, browseResponse?.total, browseMoreLoading, browseMoreError, loadMoreBrowse)
+	);
+
 	let neighbourPaging = $derived(
 		paging(detailHits, detail?.total, detailMoreLoading, detailMoreError, loadMoreNeighbours)
 	);
+
+	/**
+	 * What the list shows, from whichever of three requests answers it.
+	 *
+	 * With an anchor it is that chunk's neighbours; with a query, the search
+	 * endpoint's ranking of the filtered corpus; with neither, the browse
+	 * endpoint's same corpus in guide order. One list in all three cases, so a
+	 * reader narrows, searches and walks without ever crossing into a different
+	 * screen — and the strip above it says which of the three they are reading,
+	 * because the top of a ranking and the top of a corpus mean different things.
+	 */
+	let walking = $derived(listing && selectedId !== null);
+
+	let listHits = $derived.by(() => {
+		if (walking) return aboveCutoff(detailHits);
+		return ranked ? aboveCutoff(searchHits) : browseHits;
+	});
+	let listTotal = $derived.by(() => {
+		if (walking) return detail?.total ?? null;
+		return ranked ? (searchResponse?.total ?? null) : (browseResponse?.total ?? null);
+	});
+	let listLoading = $derived(walking ? detailLoading : ranked ? searchLoading : browseLoading);
+	let listError = $derived(walking ? detailError : ranked ? searchError : browseError);
+	let listPaging = $derived(walking ? neighbourPaging : ranked ? searchPaging : browsePaging);
+
+	/** The chunk being walked from, once its neighbours have landed. */
+	let listAnchor = $derived(walking ? (detail?.source ?? null) : null);
+
+	/** Neighbours carry a real similarity score, exactly as search hits do. */
+	let listRanked = $derived(walking || ranked);
 
 	/**
 	 * Whether the cut-off has a list to act on. Tied to what was asked for
@@ -739,13 +878,15 @@
 	// and set against each other they leave a map with nothing lit on it. The
 	// filter wins: it is the one that says what the map is of.
 	$effect(() => {
-		if (filterLanguages.length === 0 || visibleLanguages.length === 0) return;
-		const kept = visibleLanguages.filter((code) => filterLanguages.includes(code));
-		if (kept.length !== visibleLanguages.length) visibleLanguages = kept;
+		const included = explore.filterLanguages;
+		const shown = explore.visibleLanguages;
+		if (included.length === 0 || shown.length === 0) return;
+		const kept = shown.filter((code) => included.includes(code));
+		if (kept.length !== shown.length) explore.visibleLanguages = kept;
 	});
 
 	/** Shared by the rail's reset button and the button that reopens the rail. */
-	let offDefault = $derived(offDefaultCount(settings, multilingual));
+	let offDefault = $derived(offDefaultCount(settings, multilingual, listing));
 
 	let modes = $derived(GROUP_MODES.filter((mode) => mode.value !== 'language' || multilingual));
 
@@ -787,7 +928,7 @@
 	}
 
 	$effect(() => {
-		void minClusterSize;
+		void explore.minClusterSize;
 		void clusters;
 		if (groupMode === 'cluster') focusedGroup = null;
 	});
@@ -805,7 +946,7 @@
 	// slider, which leaves a control that looks stuck at the wrong number. The
 	// write converges — it only ever lowers, and only while it is out of range.
 	$effect(() => {
-		if (minClusterSize > maxClusterSize) minClusterSize = maxClusterSize;
+		if (explore.minClusterSize > maxClusterSize) explore.minClusterSize = maxClusterSize;
 	});
 
 	function search(event: SubmitEvent) {
@@ -904,6 +1045,30 @@
 		<div
 			class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-gray-200 bg-white px-4 py-3"
 		>
+			<!-- The two readings of one query, and a toggle rather than two routes:
+			     everything that decides which chunks are in play is shared, so
+			     switching must not quietly change the corpus being looked at. -->
+			<div
+				role="group"
+				aria-label="View"
+				class="flex overflow-hidden rounded-md border border-gray-200"
+			>
+				{#each [{ value: 'map', label: 'Map', icon: 'fa-diagram-project' }, { value: 'list', label: 'List', icon: 'fa-list' }] as option (option.value)}
+					<button
+						type="button"
+						onclick={() => (explore.view = option.value as ExploreView)}
+						aria-pressed={explore.view === option.value}
+						class="flex cursor-pointer items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium transition-colors {explore.view ===
+						option.value
+							? 'bg-primary text-on-primary'
+							: 'bg-white text-gray-500 hover:text-gray-900'}"
+					>
+						<i class="fas {option.icon} text-[0.6875rem]"></i>
+						{option.label}
+					</button>
+				{/each}
+			</div>
+
 			<form onsubmit={search} class="flex min-w-[18rem] flex-1 items-center gap-2">
 				<div class="relative flex-1">
 					<i
@@ -935,6 +1100,30 @@
 					</button>
 				{/if}
 			</form>
+
+			<!-- Keyword is a filter, not a second search box, and it reads as one:
+			     it narrows the corpus in SQL and whatever query there is then
+			     ranks what survived. Both together is the question worth asking —
+			     "passages about X that literally say Y" — and neither search can
+			     answer it alone. Unlike the query it needs no inference server, so
+			     it stays usable when the query box does not. -->
+			<div class="flex items-center gap-2">
+				<div class="relative">
+					<i
+						class="fas fa-quote-left pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[0.625rem] text-gray-300"
+					></i>
+					<input
+						type="search"
+						bind:value={explore.keyword}
+						placeholder="contains…"
+						aria-label="Filter to chunks whose answers contain this text"
+						class="w-40 rounded-md border border-gray-200 py-1.5 pr-3 pl-8 text-sm placeholder:text-gray-300 focus:border-primary focus:ring-0"
+					/>
+				</div>
+				<HoverInfo
+					text="A literal filter, applied before anything is scored, so it narrows the corpus rather than the result list — it moves the map and the clusters too, not just this list. Matched against what respondents wrote, never against the question they were asked: a chunk restates its question, and a word the interviewer said is not a word anybody answered."
+				/>
+			</div>
 
 			<!-- The cut-off sits with the query rather than in the rail, because it
 			     is a property of the list of hits and not of the map: it filters
@@ -970,19 +1159,21 @@
 				{groupMode}
 				{modes}
 				{kind}
-				bind:projection
-				bind:nNeighbors
-				bind:minDist
-				bind:minClusterSize
+				bind:projection={explore.projection}
+				bind:nNeighbors={explore.nNeighbors}
+				bind:minDist={explore.minDist}
+				bind:minClusterSize={explore.minClusterSize}
 				{maxClusterSize}
-				bind:centerByQuestion
-				bind:centerByLanguage
-				bind:interviewStatus
-				bind:filterLanguages
-				bind:includeSynthetic
-				bind:filterQuestions
+				bind:centerByQuestion={explore.centerByQuestion}
+				bind:centerByLanguage={explore.centerByLanguage}
+				bind:interviewStatus={explore.interviewStatus}
+				bind:filterLanguages={explore.filterLanguages}
+				bind:includeSynthetic={explore.includeSynthetic}
+				bind:filterQuestions={explore.filterQuestions}
+				bind:keyword={explore.keyword}
 				{guide}
-				bind:visibleLanguages
+				bind:visibleLanguages={explore.visibleLanguages}
+				{listing}
 				{languages}
 				{multilingual}
 				{offDefault}
@@ -990,205 +1181,228 @@
 				onkind={changeKind}
 			/>
 
-			<!-- `min-w-0` is load-bearing: the scatter renders an <svg> with an
-			     explicit pixel width, which becomes this item's intrinsic minimum
-			     under the default `min-width: auto`. Without it the card keeps the
-			     width it had while the rail was collapsed, and re-opening the rail
-			     pushes the row wider than the page. -->
-			<div
-				class="flex min-h-[26rem] min-w-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white"
-			>
-				<div class="relative min-h-0 flex-1">
-					{#if !railOpen}
-						<!-- The rail's way back. Over the map rather than beside it, so a
-						     collapsed rail gives the map the whole width instead of
-						     trading one strip of chrome for another. -->
-						<button
-							type="button"
-							onclick={() => (railOpen = true)}
-							aria-label="Show controls"
-							title={offDefault > 0 ? `Controls — ${offDefault} away from default` : 'Controls'}
-							class="absolute top-2 left-2 z-30 flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 bg-white/90 px-2 py-1 text-xs font-medium text-gray-600 shadow-sm hover:text-gray-900"
-						>
-							<i class="fa-solid fa-sliders text-[0.6875rem] text-gray-400"></i>
-							{#if offDefault > 0}
-								<span
-									class="rounded-full bg-primary px-1.5 text-[0.625rem] font-semibold text-on-primary"
-								>
-									{offDefault}
-								</span>
-							{/if}
-						</button>
-					{/if}
-					{#if clusterError && !clusters}
-						<p class="p-5 text-sm text-gray-500">{clusterError}</p>
-					{:else if !clusters}
-						<!-- The first run has nothing to keep on screen, so this is all
-						     there is to look at. A grey box says only that something is
-						     missing; naming the work and roughly how long it takes is the
-						     difference between waiting and wondering whether it is broken. -->
-						<SweepBar />
-						<div
-							class="flex h-full w-full flex-col items-center justify-center gap-3 p-8 text-center"
-						>
-							<i class="fa-solid fa-spinner fa-spin text-lg text-gray-300"></i>
-							<div>
-								<p class="text-sm font-medium text-gray-700">
-									{projection === 'umap' ? 'Projecting and clustering' : 'Clustering'}
-								</p>
-								<p class="mx-auto mt-1 max-w-sm text-xs text-gray-500">
-									{#if projection === 'umap'}
-										UMAP is fitting {embeddedCount === null
-											? 'the corpus'
-											: `${formatNumber(embeddedCount)} chunks`} down to two dimensions and running HDBSCAN
-										in them. A few seconds — longer on the first run after the server starts, which compiles
-										the projection.
-									{:else}
-										Reducing {embeddedCount === null
-											? 'the corpus'
-											: `${formatNumber(embeddedCount)} chunks`} to 50 principal components and running
-										HDBSCAN over them.
-									{/if}
-								</p>
+			{#if listing}
+				<ListView
+					hits={listHits}
+					total={listTotal}
+					loading={listLoading}
+					error={listError}
+					paging={listPaging}
+					ranked={listRanked}
+					keyword={explore.keyword}
+					anchor={listAnchor}
+					anchorLoading={walking && detail === null}
+					onanchor={(hit) => (selectedId = selectedId === hit.id ? null : hit.id)}
+					{railOpen}
+					{offDefault}
+					onshowcontrols={() => (railOpen = true)}
+					onclearanchor={() => (selectedId = null)}
+				/>
+			{:else}
+				<!-- `min-w-0` is load-bearing: the scatter renders an <svg> with an
+				     explicit pixel width, which becomes this item's intrinsic minimum
+				     under the default `min-width: auto`. Without it the card keeps the
+				     width it had while the rail was collapsed, and re-opening the rail
+				     pushes the row wider than the page. -->
+				<div
+					class="flex min-h-[26rem] min-w-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white"
+				>
+					<div class="relative min-h-0 flex-1">
+						{#if !railOpen}
+							<!-- The rail's way back. Over the map rather than beside it, so
+							     a collapsed rail gives the map the whole width instead of
+							     trading one strip of chrome for another. The list has no
+							     empty corner to float over and carries its own, in the
+							     strip above its results. -->
+							<button
+								type="button"
+								onclick={() => (railOpen = true)}
+								aria-label="Show controls"
+								title={offDefault > 0 ? `Controls — ${offDefault} away from default` : 'Controls'}
+								class="absolute top-2 left-2 z-30 flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 bg-white/90 px-2 py-1 text-xs font-medium text-gray-600 shadow-sm hover:text-gray-900"
+							>
+								<i class="fa-solid fa-sliders text-[0.6875rem] text-gray-400"></i>
+								{#if offDefault > 0}
+									<span
+										class="rounded-full bg-primary px-1.5 text-[0.625rem] font-semibold text-on-primary"
+									>
+										{offDefault}
+									</span>
+								{/if}
+							</button>
+						{/if}
+						{#if clusterError && !clusters}
+							<p class="p-5 text-sm text-gray-500">{clusterError}</p>
+						{:else if !clusters}
+							<!-- The first run has nothing to keep on screen, so this is all
+							     there is to look at. A grey box says only that something is
+							     missing; naming the work and roughly how long it takes is the
+							     difference between waiting and wondering whether it is broken. -->
+							<SweepBar />
+							<div
+								class="flex h-full w-full flex-col items-center justify-center gap-3 p-8 text-center"
+							>
+								<i class="fa-solid fa-spinner fa-spin text-lg text-gray-300"></i>
+								<div>
+									<p class="text-sm font-medium text-gray-700">
+										{explore.projection === 'umap' ? 'Projecting and clustering' : 'Clustering'}
+									</p>
+									<p class="mx-auto mt-1 max-w-sm text-xs text-gray-500">
+										{#if explore.projection === 'umap'}
+											UMAP is fitting {embeddedCount === null
+												? 'the corpus'
+												: `${formatNumber(embeddedCount)} chunks`} down to two dimensions and running
+											HDBSCAN in them. A few seconds — longer on the first run after the server starts,
+											which compiles the projection.
+										{:else}
+											Reducing {embeddedCount === null
+												? 'the corpus'
+												: `${formatNumber(embeddedCount)} chunks`} to 50 principal components and running
+											HDBSCAN over them.
+										{/if}
+									</p>
+								</div>
 							</div>
-						</div>
-					{:else if points.length === 0}
-						<p class="p-5 text-sm text-gray-500">
-							No chunks of this kind match the filters, so there is nothing to plot.
-						</p>
-					{:else}
-						<ScatterPlot
-							{points}
-							{selectedId}
-							bind:hoveredId
-							{matchedIds}
-							{colorOf}
-							{grouped}
-							{strengthOf}
-							{visible}
-							{describe}
-							resetKey={`${kind}:${projection}`}
-							stale={clusterLoading}
-							onselect={(id) => {
-								selectedId = id;
-								if (id) focusedGroup = null;
-							}}
-						/>
-					{/if}
-				</div>
-
-				{#if clusters}
-					<div
-						class="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 px-4 py-2 text-xs text-gray-500"
-					>
-						{#if groupMode === 'cluster'}
-							<span>
-								<span class="font-medium text-gray-700">{formatNumber(clusters.n_clusters)}</span>
-								clusters
-							</span>
+						{:else if points.length === 0}
+							<p class="p-5 text-sm text-gray-500">
+								No chunks of this kind match the filters, so there is nothing to plot.
+							</p>
 						{:else}
-							<span>
-								<span class="font-medium text-gray-700">{formatNumber(groupCount)}</span>
-								{modeLabel.toLowerCase()}
-							</span>
-							{#if ungrouped > 0}
+							<ScatterPlot
+								{points}
+								{selectedId}
+								bind:hoveredId
+								{matchedIds}
+								{colorOf}
+								{grouped}
+								{strengthOf}
+								{visible}
+								{describe}
+								resetKey={`${kind}:${explore.projection}`}
+								stale={clusterLoading}
+								onselect={(id) => {
+									selectedId = id;
+									if (id) focusedGroup = null;
+								}}
+							/>
+						{/if}
+					</div>
+
+					{#if clusters}
+						<div
+							class="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 px-4 py-2 text-xs text-gray-500"
+						>
+							{#if groupMode === 'cluster'}
+								<span>
+									<span class="font-medium text-gray-700">{formatNumber(clusters.n_clusters)}</span>
+									clusters
+								</span>
+							{:else}
+								<span>
+									<span class="font-medium text-gray-700">{formatNumber(groupCount)}</span>
+									{modeLabel.toLowerCase()}
+								</span>
+								{#if ungrouped > 0}
+									<span class="flex items-center gap-1.5">
+										<span
+											class="inline-block h-2 w-2 rounded-full"
+											style="background:{OUTLIER_COLOR}"
+										></span>
+										{formatNumber(ungrouped)} without coordinates
+									</span>
+								{/if}
+							{/if}
+							<span>{formatNumber(clusters.n_points)} chunks</span>
+							{#if groupMode === 'cluster'}
 								<span class="flex items-center gap-1.5">
 									<span class="inline-block h-2 w-2 rounded-full" style="background:{OUTLIER_COLOR}"
 									></span>
-									{formatNumber(ungrouped)} without coordinates
+									{formatNumber(clusters.n_outliers)} unplaced
 								</span>
 							{/if}
-						{/if}
-						<span>{formatNumber(clusters.n_points)} chunks</span>
-						{#if groupMode === 'cluster'}
-							<span class="flex items-center gap-1.5">
-								<span class="inline-block h-2 w-2 rounded-full" style="background:{OUTLIER_COLOR}"
-								></span>
-								{formatNumber(clusters.n_outliers)} unplaced
-							</span>
-						{/if}
-						<!-- What the two axes are worth, stated rather than left to be
-						     assumed. PCA can put a number on it; UMAP cannot, and the
-						     honest thing there is to say what the picture is instead of
-						     borrowing a figure it did not produce. -->
-						{#if clusters.explained_variance_2d !== null && clusters.explained_variance_2d !== undefined}
-							<span class="flex items-center gap-1">
-								{formatPercent(clusters.explained_variance_2d)} of the spread shown
-								<!-- Around a third is normal for text embeddings: points far
-								     apart really are far apart, but points close together need
-								     not be. -->
-								<HoverInfo
-									text="The map is a flat shadow of a {clusters.components}-dimensional space, and shows about {formatPercent(
-										clusters.explained_variance_2d
-									)} of the variation in it. Read distance as a navigation aid, not as evidence — things far apart on screen are genuinely far apart, but things close together may not be."
-								/>
-							</span>
-						{:else}
-							<span class="flex items-center gap-1">
-								Neighbourhood layout — distances are not to scale
-								<HoverInfo
-									text="UMAP is fitted to keep neighbours together, not to preserve distance, so there is no share-of-variance to report. Read which points sit with which; do not read how far apart two blobs are, or how big one is. A theme split across two blobs is a real possibility here — check each one's representatives before treating them as separate findings."
-								/>
-							</span>
-						{/if}
-						{#if !clusters.centered_by_question}
-							<span class="text-amber-700">Uncentred by question</span>
-						{/if}
-						{#if multilingual && !clusters.centered_by_language}
-							<span class="text-amber-700">Uncentred by language</span>
-						{/if}
-						<!-- Said here because every number in this strip is computed over
-						     the whole run, hidden points included: the reader is looking
-						     at a subset of a map that is still counted in full, and the
-						     alternative — recounting on a view toggle — would make two
-						     controls that look alike report different totals. -->
-						{#if visibleLanguages.length > 0}
-							<span class="flex items-center gap-1">
-								Showing {visibleLanguages.map((code) => code.toUpperCase()).join(', ')}
-								<HoverInfo
-									text="A view filter: the map is unchanged and the other languages are faded, not removed. The counts here still describe every plotted chunk. To leave a language out of the projection and the clustering, use Languages under Corpus in the controls."
-								/>
-							</span>
-						{/if}
+							<!-- What the two axes are worth, stated rather than left to be
+							     assumed. PCA can put a number on it; UMAP cannot, and the
+							     honest thing there is to say what the picture is instead of
+							     borrowing a figure it did not produce. -->
+							{#if clusters.explained_variance_2d !== null && clusters.explained_variance_2d !== undefined}
+								<span class="flex items-center gap-1">
+									{formatPercent(clusters.explained_variance_2d)} of the spread shown
+									<!-- Around a third is normal for text embeddings: points far
+									     apart really are far apart, but points close together need
+									     not be. -->
+									<HoverInfo
+										text="The map is a flat shadow of a {clusters.components}-dimensional space, and shows about {formatPercent(
+											clusters.explained_variance_2d
+										)} of the variation in it. Read distance as a navigation aid, not as evidence — things far apart on screen are genuinely far apart, but things close together may not be."
+									/>
+								</span>
+							{:else}
+								<span class="flex items-center gap-1">
+									Neighbourhood layout — distances are not to scale
+									<HoverInfo
+										text="UMAP is fitted to keep neighbours together, not to preserve distance, so there is no share-of-variance to report. Read which points sit with which; do not read how far apart two blobs are, or how big one is. A theme split across two blobs is a real possibility here — check each one's representatives before treating them as separate findings."
+									/>
+								</span>
+							{/if}
+							{#if !clusters.centered_by_question}
+								<span class="text-amber-700">Uncentred by question</span>
+							{/if}
+							{#if multilingual && !clusters.centered_by_language}
+								<span class="text-amber-700">Uncentred by language</span>
+							{/if}
+							<!-- Said here because every number in this strip is computed over
+							     the whole run, hidden points included: the reader is looking
+							     at a subset of a map that is still counted in full, and the
+							     alternative — recounting on a view toggle — would make two
+							     controls that look alike report different totals. -->
+							{#if visibleLanguages.length > 0}
+								<span class="flex items-center gap-1">
+									Showing {visibleLanguages.map((code) => code.toUpperCase()).join(', ')}
+									<HoverInfo
+										text="A view filter: the map is unchanged and the other languages are faded, not removed. The counts here still describe every plotted chunk. To leave a language out of the projection and the clustering, use Languages under Corpus in the controls."
+									/>
+								</span>
+							{/if}
 
-						{#if clusterLoading}
-							<!-- Named here rather than over the map: this strip is already
-							     where the run describes itself, and a pill floating on the
-							     scatter covered the corner the reader drags from. The bar
-							     along the top edge is what catches the eye; this says which
-							     of the numbers beside it are about to change. -->
-							<span class="ml-auto flex items-center gap-1.5 text-gray-400">
-								<i class="fa-solid fa-spinner fa-spin text-[0.625rem]"></i>
-								Reclustering…
-							</span>
-						{/if}
-					</div>
-				{/if}
-			</div>
-
-			<div class="flex min-h-[26rem] shrink-0 lg:w-[24rem]">
-				<div class="w-full">
-					<DetailPanel
-						clusters={clusters?.clusters ?? null}
-						{groups}
-						{groupMode}
-						{multilingual}
-						clustersLoading={clusterLoading && clusters === null}
-						search={visibleSearch}
-						{searchLoading}
-						{searchError}
-						{searchPaging}
-						detail={visibleDetail}
-						{detailLoading}
-						{detailError}
-						{neighbourPaging}
-						{selectedId}
-						{focusedGroup}
-						onselect={(id) => (selectedId = id)}
-						onfocusgroup={(key) => (focusedGroup = key)}
-					/>
+							{#if clusterLoading}
+								<!-- Named here rather than over the map: this strip is already
+								     where the run describes itself, and a pill floating on the
+								     scatter covered the corner the reader drags from. The bar
+								     along the top edge is what catches the eye; this says which
+								     of the numbers beside it are about to change. -->
+								<span class="ml-auto flex items-center gap-1.5 text-gray-400">
+									<i class="fa-solid fa-spinner fa-spin text-[0.625rem]"></i>
+									Reclustering…
+								</span>
+							{/if}
+						</div>
+					{/if}
 				</div>
-			</div>
+
+				<div class="flex min-h-[26rem] shrink-0 lg:w-[24rem]">
+					<div class="w-full">
+						<DetailPanel
+							clusters={clusters?.clusters ?? null}
+							{groups}
+							{groupMode}
+							{multilingual}
+							clustersLoading={clusterLoading && clusters === null}
+							search={visibleSearch}
+							{searchLoading}
+							{searchError}
+							{searchPaging}
+							detail={visibleDetail}
+							{detailLoading}
+							{detailError}
+							{neighbourPaging}
+							{selectedId}
+							{focusedGroup}
+							onselect={(id) => (selectedId = id)}
+							onfocusgroup={(key) => (focusedGroup = key)}
+						/>
+					</div>
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>

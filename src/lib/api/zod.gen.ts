@@ -1987,7 +1987,8 @@ export const zEmbeddingTurn = z.object({
  */
 export const zEmbeddingSearchHit = z.object({
     id: z.string(),
-    score: z.number(),
+    score: z.number().nullish(),
+    embedded: z.boolean().optional().default(true),
     kind: zEmbeddingKind,
     text: z.string().nullable(),
     interview_id: z.string(),
@@ -2002,6 +2003,23 @@ export const zEmbeddingSearchHit = z.object({
     participant_id: z.string().nullish(),
     participant_pid: z.string().nullish(),
     turns: z.array(zEmbeddingTurn).optional().default([])
+});
+
+/**
+ * EmbeddingBrowseResponse
+ *
+ * One page of the corpus with no query behind it.
+ *
+ * The list view's resting state: the filters alone decide what is in it, and
+ * guide order decides the sequence. `total` here *is* a count of things worth
+ * reading, unlike the ranked endpoints -- nothing was scored, so nothing is
+ * tailing off.
+ */
+export const zEmbeddingBrowseResponse = z.object({
+    kind: zEmbeddingKind,
+    total: z.int().optional().default(0),
+    offset: z.int().optional().default(0),
+    items: z.array(zEmbeddingSearchHit).optional().default([])
 });
 
 /**
@@ -2737,6 +2755,9 @@ export const zSearchEmbeddingsQuery = z.object({
     interview_id: z.array(z.string()).nullish(),
     include_synthetic: z.boolean().optional().default(false),
     question: z.array(z.string()).nullish(),
+    keyword: z.string().max(2000).nullish(),
+    exact_match: z.boolean().optional().default(false),
+    case_sensitive: z.boolean().optional().default(false),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -2745,6 +2766,33 @@ export const zSearchEmbeddingsQuery = z.object({
  * Successful Response
  */
 export const zSearchEmbeddingsResponse = zEmbeddingSearchResponse;
+
+export const zBrowseEmbeddingsPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zBrowseEmbeddingsQuery = z.object({
+    kind: zEmbeddingKind.optional().default('qa_pair'),
+    folder_id: z.string().nullish(),
+    language: z.array(zLanguageCode).nullish(),
+    status: zInterviewStatus.nullish(),
+    participant_id: z.string().nullish(),
+    created_after: z.iso.datetime().nullish(),
+    created_before: z.iso.datetime().nullish(),
+    interview_id: z.array(z.string()).nullish(),
+    include_synthetic: z.boolean().optional().default(false),
+    question: z.array(z.string()).nullish(),
+    keyword: z.string().max(2000).nullish(),
+    exact_match: z.boolean().optional().default(false),
+    case_sensitive: z.boolean().optional().default(false),
+    limit: z.int().gte(1).lte(100).optional().default(10),
+    offset: z.int().gte(0).optional().default(0)
+});
+
+/**
+ * Successful Response
+ */
+export const zBrowseEmbeddingsResponse = zEmbeddingBrowseResponse;
 
 export const zFindSimilarEmbeddingsPath = z.object({
     project_id: z.string().nullable(),
@@ -2761,6 +2809,9 @@ export const zFindSimilarEmbeddingsQuery = z.object({
     interview_id: z.array(z.string()).nullish(),
     include_synthetic: z.boolean().optional().default(false),
     question: z.array(z.string()).nullish(),
+    keyword: z.string().max(2000).nullish(),
+    exact_match: z.boolean().optional().default(false),
+    case_sensitive: z.boolean().optional().default(false),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -2792,7 +2843,10 @@ export const zClusterEmbeddingsQuery = z.object({
     created_before: z.iso.datetime().nullish(),
     interview_id: z.array(z.string()).nullish(),
     include_synthetic: z.boolean().optional().default(false),
-    question: z.array(z.string()).nullish()
+    question: z.array(z.string()).nullish(),
+    keyword: z.string().max(2000).nullish(),
+    exact_match: z.boolean().optional().default(false),
+    case_sensitive: z.boolean().optional().default(false)
 });
 
 /**

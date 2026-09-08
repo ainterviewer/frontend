@@ -130,6 +130,63 @@ describe('filterQuery', () => {
 	});
 });
 
+describe('filterQuery keyword', () => {
+	it('is left off entirely when blank', () => {
+		// Sending `keyword=''` would be a request for chunks containing nothing.
+		expect('keyword' in filterQuery(defaultFilters())).toBe(false);
+	});
+
+	it('carries its modifiers only when there is a keyword', () => {
+		// Two settings that cannot change the answer would otherwise be two
+		// reasons to refetch.
+		const query = filterQuery({ ...defaultFilters(), keyword_exact: true });
+
+		expect('exact_match' in query).toBe(false);
+	});
+
+	it('is trimmed, with its modifiers', () => {
+		const query = filterQuery({
+			...defaultFilters(),
+			keyword: '  funding  ',
+			keyword_exact: true,
+			keyword_case_sensitive: true
+		});
+
+		expect(query.keyword).toBe('funding');
+		expect(query.exact_match).toBe(true);
+		expect(query.case_sensitive).toBe(true);
+	});
+
+	it('counts as off-default and defeats the preloaded response', () => {
+		const settings = defaultClusterSettings();
+		settings.filters.keyword = 'funding';
+
+		expect(offDefaultCount(settings, false)).toBe(1);
+		expect(isDefaultClusterSettings(settings)).toBe(false);
+	});
+});
+
+describe('offDefaultCount in the list', () => {
+	it('does not count controls the list does not show', () => {
+		// A badge promising settings to find is worse than no badge when the
+		// layout and clustering groups are not on screen to find them in.
+		const settings = defaultClusterSettings();
+		settings.projection = 'pca';
+		settings.min_cluster_size = 99;
+
+		expect(offDefaultCount(settings, false, false)).toBe(2);
+		expect(offDefaultCount(settings, false, true)).toBe(0);
+	});
+
+	it('still counts the corpus filters, which the list does show', () => {
+		const settings = defaultClusterSettings();
+		settings.filters.keyword = 'funding';
+		settings.filters.questions = [[0, 0]];
+
+		expect(offDefaultCount(settings, false, true)).toBe(2);
+	});
+});
+
 describe('settings comparison', () => {
 	it('counts a question filter as off-default', () => {
 		const settings = defaultClusterSettings();
