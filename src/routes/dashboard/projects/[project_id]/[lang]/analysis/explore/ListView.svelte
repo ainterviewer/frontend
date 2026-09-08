@@ -2,7 +2,7 @@
 	import type { EmbeddingSearchHit } from '$lib/api/types.gen';
 	import { format } from 'd3-format';
 	import HitCard from './HitCard.svelte';
-	import type { ListPaging } from './explore';
+	import { PAGE_SIZE, type ListPaging } from './explore';
 
 	let {
 		hits,
@@ -15,6 +15,7 @@
 		anchor,
 		anchorLoading,
 		onanchor,
+		ontranscript,
 		onclearanchor,
 		railOpen,
 		offDefault,
@@ -46,6 +47,8 @@
 		anchorLoading: boolean;
 		/** Walk to a chunk's neighbours. */
 		onanchor: (hit: EmbeddingSearchHit) => void;
+		/** Open the whole interview a chunk came from. */
+		ontranscript: (hit: EmbeddingSearchHit) => void;
 		/** Back to whatever the list was before the walk started. */
 		onclearanchor: () => void;
 		/**
@@ -65,6 +68,27 @@
 
 	/** Whether a walk is under way, including the beat before the anchor lands. */
 	let walking = $derived(anchor !== null || anchorLoading);
+
+	/**
+	 * The hits cut back into the pages they arrived in.
+	 *
+	 * One masonry per page rather than one masonry over everything, because CSS
+	 * columns balance: appending a card re-balances every column and moves cards
+	 * the reader was in the middle of. A finished page is a closed box that
+	 * cannot be re-balanced, so "Load more" only ever adds below.
+	 *
+	 * Cut by size rather than tracked from the fetches, which is the same cut:
+	 * pages arrive whole and in order, and the score cut-off filters a prefix,
+	 * never the middle. Only the last group can still grow, and only until it is
+	 * full.
+	 */
+	let pages = $derived.by(() => {
+		const groups: { start: number; hits: EmbeddingSearchHit[] }[] = [];
+		for (let start = 0; start < hits.length; start += PAGE_SIZE) {
+			groups.push({ start, hits: hits.slice(start, start + PAGE_SIZE) });
+		}
+		return groups;
+	});
 </script>
 
 <div class="flex min-h-0 min-w-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
@@ -134,7 +158,7 @@
 			     from a neighbour re-anchors, which is how a reader crosses the
 			     corpus a step at a time. -->
 			<div class="mb-3">
-				<HitCard hit={anchor} showScore={false} anchored {onanchor} />
+				<HitCard hit={anchor} showScore={false} anchored {onanchor} {ontranscript} />
 			</div>
 		{:else if anchorLoading}
 			<div class="mb-3 h-32 animate-pulse rounded-lg bg-gray-100"></div>
@@ -169,37 +193,55 @@
 				</p>
 			</div>
 		{:else}
-			<!-- A mosaic rather than a column. The cards open expanded, so they are
-			     tall and wildly uneven — a single column of them wastes most of a
-			     wide screen and puts three chunks on a screenful. CSS columns is
-			     the right masonry here precisely because the heights are unknown:
-			     a grid would align rows and leave a ragged gap under every card
-			     shorter than the tallest in its row.
+			<!-- A mosaic rather than a column. The cards are never clamped, so they
+			     are tall and wildly uneven — a single column of them wastes most of
+			     a wide screen and puts two chunks on a screenful. CSS columns is the
+			     right masonry here precisely because the heights are unknown: a grid
+			     would align rows and leave a ragged gap under every card shorter
+			     than the tallest in its row.
 
-			     The cost is reading order — down a column, then across, rather
-			     than left to right. For a list in guide order that is the ordinary
-			     newspaper reading and no worse than a long scroll; it would be
-			     wrong for a ranking, which is why the count strip above says which
-			     of the two this is. -->
-			<div class="columns-1 gap-3 md:columns-2 2xl:columns-3">
-				{#each hits as hit (hit.id)}
-					<!-- `break-inside-avoid` is load-bearing: without it a card is
-					     split down the middle across two columns. The margin does the
-					     vertical spacing, since `gap` on a multi-column box is the
-					     column gap only. -->
-					<div class="mb-3 break-inside-avoid">
-						<!-- No anchor offered on a row with no vector: browsing works on
-						     an un-embedded corpus, but "what is nearest this" is a
-						     question only a vector can answer, and the endpoint would
-						     404. The button is absent rather than present and failing. -->
-						<HitCard
-							{hit}
-							showScore={ranked}
-							onanchor={hit.embedded === false ? undefined : onanchor}
-						/>
+			     The cost is reading order — down a column, then across, rather than
+			     left to right. For a list in guide order that is the ordinary
+			     newspaper reading and no worse than a long scroll; it would be wrong
+			     for a ranking, which is why the count strip above says which of the
+			     two this is. Per page it is also a short fall: ten cards over three
+			     columns is four down at most, not a hundred. -->
+			{#each pages as group (group.start)}
+				{#if group.start > 0}
+					<!-- Where the last "Load more" landed. Faint on purpose: it is a
+					     seam, not a heading, and its job is to explain why the packing
+					     restarts here rather than to be read. The numbers are positions
+					     in what is on screen, which is what a reader counting down the
+					     mosaic is counting. -->
+					<div class="my-1 flex items-center gap-3 text-[0.625rem] text-gray-300">
+						<div class="h-px flex-1 bg-gray-100"></div>
+						<span class="font-medium tracking-widest tabular-nums">
+							{group.start + 1}–{group.start + group.hits.length}
+						</span>
+						<div class="h-px flex-1 bg-gray-100"></div>
 					</div>
-				{/each}
-			</div>
+				{/if}
+				<div class="columns-1 gap-3 md:columns-2 2xl:columns-3">
+					{#each group.hits as hit (hit.id)}
+						<!-- `break-inside-avoid` is load-bearing: without it a card is
+						     split down the middle across two columns. The margin does the
+						     vertical spacing, since `gap` on a multi-column box is the
+						     column gap only. -->
+						<div class="mb-3 break-inside-avoid">
+							<!-- No anchor offered on a row with no vector: browsing works on
+							     an un-embedded corpus, but "what is nearest this" is a
+							     question only a vector can answer, and the endpoint would
+							     404. The button is absent rather than present and failing. -->
+							<HitCard
+								{hit}
+								showScore={ranked}
+								onanchor={hit.embedded === false ? undefined : onanchor}
+								{ontranscript}
+							/>
+						</div>
+					{/each}
+				</div>
+			{/each}
 
 			{#if paging.more}
 				<div class="mt-3 flex flex-col items-center gap-1.5">

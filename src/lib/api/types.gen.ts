@@ -2093,6 +2093,28 @@ export type InterviewTimeOfDayCount = {
 };
 
 /**
+ * InterviewTranscript
+ *
+ * A whole interview as turns, marked with what the keyword query found.
+ *
+ * Separate from the messages endpoint the transcript *page* loads, which
+ * serves annotations and comments and knows nothing about a keyword query.
+ * This one exists so the explore view can open a transcript without a
+ * navigation, and it answers only that: read it, see the search in it, go
+ * back. Annotating is still the page's.
+ */
+export type InterviewTranscript = {
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * Turns
+     */
+    turns: Array<TranscriptTurn>;
+};
+
+/**
  * InterviewType
  */
 export type InterviewType = 'manual_test' | 'synthetic_test' | 'distributed';
@@ -3907,6 +3929,67 @@ export type TimedMessage = {
 };
 
 /**
+ * TranscriptTurn
+ *
+ * One turn of a whole interview, for reading a hit in its context.
+ *
+ * An `EmbeddingTurn` with the guide coordinates it was said at, so the reader
+ * can be put back where they came from: the card that opened this knows its
+ * own section and question, and the turns carrying theirs is what lets the
+ * view scroll to them and shade them apart from the rest.
+ *
+ * Inherits `matches`/`excluded` rather than restating them, so a transcript
+ * renders through the same component a chunk does -- the search is still
+ * marked once the reader has left the mosaic, which is most of the point of
+ * reading the transcript at all.
+ */
+export type TranscriptTurn = {
+    role: TurnRole;
+    /**
+     * Text
+     */
+    text: string;
+    /**
+     * Survey Label
+     */
+    survey_label?: string | null;
+    /**
+     * Match
+     */
+    match?: boolean;
+    /**
+     * Matches
+     */
+    matches?: Array<[
+        number,
+        number
+    ]>;
+    /**
+     * Excluded
+     */
+    excluded?: Array<[
+        number,
+        number
+    ]>;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Section
+     */
+    section?: number | null;
+    /**
+     * Main Question
+     */
+    main_question?: number | null;
+    /**
+     * Sub Question
+     */
+    sub_question?: number | null;
+};
+
+/**
  * TurnRole
  *
  * Who is speaking in a rendered chunk of interview text.
@@ -5285,6 +5368,57 @@ export type BrowseEmbeddingsResponses = {
 };
 
 export type BrowseEmbeddingsResponse = BrowseEmbeddingsResponses[keyof BrowseEmbeddingsResponses];
+
+export type ReadInterviewTranscriptData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id: string;
+    };
+    query?: {
+        /**
+         * Keyword
+         */
+        keyword?: string | null;
+        /**
+         * Keyword Scope
+         */
+        keyword_scope?: 'answer' | 'question' | 'both';
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/embeddings/interviews/{interview_id}/transcript';
+};
+
+export type ReadInterviewTranscriptErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadInterviewTranscriptError = ReadInterviewTranscriptErrors[keyof ReadInterviewTranscriptErrors];
+
+export type ReadInterviewTranscriptResponses = {
+    /**
+     * Successful Response
+     */
+    200: InterviewTranscript;
+};
+
+export type ReadInterviewTranscriptResponse = ReadInterviewTranscriptResponses[keyof ReadInterviewTranscriptResponses];
 
 export type FindSimilarEmbeddingsData = {
     body?: never;

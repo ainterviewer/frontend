@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
 	import type { EmbeddingSearchHit } from '$lib/api/types.gen';
 	import { format } from 'd3-format';
 	import { timeFormat } from 'd3-time-format';
@@ -10,7 +8,8 @@
 		hit,
 		showScore = true,
 		anchored = false,
-		onanchor
+		onanchor,
+		ontranscript
 	}: {
 		hit: EmbeddingSearchHit;
 		/**
@@ -22,39 +21,25 @@
 		/** This chunk is the one the neighbours are measured from. */
 		anchored?: boolean;
 		onanchor?: (hit: EmbeddingSearchHit) => void;
+		/**
+		 * Read the whole interview this came from.
+		 *
+		 * A callback rather than a link to the transcript page: a card is a
+		 * fragment of a conversation, and deciding whether it means what it looks
+		 * like it means almost always takes the turn before or after it. Navigating
+		 * away to find that costs the reader the list, the filters and their place
+		 * in the mosaic, and they were only ever going to come straight back.
+		 */
+		ontranscript: (hit: EmbeddingSearchHit) => void;
 	} = $props();
 
 	const formatScore = format('.2f');
 	const formatDate = timeFormat('%d %b %Y');
 
-	/**
-	 * How much of a chunk to show before clamping.
-	 *
-	 * A Q&A pair is a small transcript — question, answer, and every probe that
-	 * followed — so a list of them unclamped is a wall, and a list of them
-	 * clamped to two lines is a column of identical questions. Six is enough to
-	 * clear the question and reach the answer, which is the part being compared.
-	 */
-	const CLAMP_LINES = 6;
-
-	/**
-	 * The same clamp for the bubble rendering, where lines are not the unit: a
-	 * bubble has padding and a gap around it, so six lines of text occupy more
-	 * than six lines of box. Roughly the same amount of chunk, measured in the
-	 * only thing a stack of bubbles has in common with a paragraph — height.
-	 */
-	const CLAMP_HEIGHT_REM = 9.5;
-
 	// A chunk the interview's own messages could be found for reads as the
 	// conversation it was; one whose messages no longer line up with its
 	// coordinates still has the text the model saw, and falls back to it.
 	let turns = $derived(hit.turns ?? []);
-
-	let interviewHref = $derived(
-		resolve(
-			`/dashboard/projects/${page.params.project_id}/${page.params.lang ?? 'en'}/interviews/${hit.interview_id}`
-		)
-	);
 
 	// Question numbering as the guide writes it, when the chunk has one. An
 	// interview-level chunk has none, and a message that came before the first
@@ -68,79 +53,6 @@
 	let date = $derived(
 		hit.interview_created_at ? formatDate(new Date(hit.interview_created_at)) : null
 	);
-
-	let body = $state<HTMLElement | null>(null);
-
-	/**
-	 * What the reader has said about this card, or `null` while they have said
-	 * nothing — in which case the anchor decides.
-	 *
-	 * Open by default, everywhere.
-	 *
-	 * A chunk is a conversation, and the part of it that survives clamping is
-	 * the interviewer's question — which every respondent was asked identically
-	 * and which therefore says nothing about this one. Clamped, a list of Q&A
-	 * pairs is a column of the same sentence repeated, with the answers, the
-	 * only part that differs, below the fold. The context *is* the content here.
-	 *
-	 * "Show less" stays for a reader scanning rather than reading, but it is
-	 * theirs to ask for rather than the state they start in.
-	 *
-	 * Held as "unset" rather than as `true` so a card that the reader collapsed
-	 * stays collapsed while it is the same chunk, and so the first paint is
-	 * already right — an effect correcting it afterwards would flash the clamp.
-	 */
-	let toggled = $state<boolean | null>(null);
-	let open = $derived(toggled ?? true);
-
-	// Whether the clamp is actually hiding anything. A character count is the
-	// obvious stand-in and the wrong one: a chunk can run well past any
-	// threshold and still fit its lines at this width, which leaves a "Show
-	// more" that reveals nothing. Only the layout knows, so ask the layout.
-	//
-	// Deliberately not shared with the report's `ClampedText`: that one is a
-	// paragraph of caption text at its own size and colour, and the two would
-	// have to grow a styling API to stay one component. The measurement is
-	// short; the abstraction would not be.
-	let overflowing = $state(false);
-
-	$effect(() => {
-		const element = body;
-		if (!element) return;
-
-		// Re-measure when the text itself changes, not only when the box resizes:
-		// the panel reuses these cards as the reader moves between chunks.
-		void hit.text;
-		void turns;
-
-		const measure = () => {
-			// Against the clamp rather than against the element's own box, which is
-			// only the clamp while the card is collapsed. An anchor opens expanded,
-			// and asking an expanded element whether it overflows always answers no
-			// — which is how the card that most needs "Show less" ended up without
-			// one. `scrollHeight` is the full content height in both states.
-			const style = getComputedStyle(element);
-			const line = parseFloat(style.lineHeight);
-			const limit =
-				turns.length > 0
-					? CLAMP_HEIGHT_REM * parseFloat(getComputedStyle(document.documentElement).fontSize)
-					: CLAMP_LINES * (Number.isFinite(line) ? line : parseFloat(style.fontSize) * 1.5);
-			overflowing = element.scrollHeight > limit + 1;
-		};
-
-		measure();
-		const observer = new ResizeObserver(measure);
-		observer.observe(element);
-		return () => observer.disconnect();
-	});
-
-	// A card collapsed by the reader must not stay collapsed behind a different
-	// chunk's text: the panel and the list both reuse these cards as the reader
-	// moves around, so a new `id` is a new chunk and starts open like any other.
-	$effect(() => {
-		void hit.id;
-		toggled = null;
-	});
 </script>
 
 <div
@@ -148,42 +60,18 @@
 	class:border-primary={anchored}
 	class:border-gray-200={!anchored}
 >
+	<!-- Whole, never clamped. A chunk is a conversation and the part a clamp
+	     takes off is the answer -- the only half that differs between
+	     respondents. A card that stopped short was a card asking to be opened
+	     before it could be read, which is what the mosaic is supposed to save
+	     the reader from. Length is information here: a long card is a long
+	     answer, and seeing that at a glance is worth the scrolling. -->
 	{#if turns.length > 0}
-		<!-- Faded at the cut rather than sliced. A height clamp lands wherever it
-		     lands, which for a bubble is usually mid-word through a coloured box
-		     — that reads as a rendering fault, where a fade reads as "there is
-		     more", which is what the button below it says. -->
-		<div
-			bind:this={body}
-			style={open
-				? undefined
-				: `max-height:${CLAMP_HEIGHT_REM}rem;overflow:hidden` +
-					(overflowing
-						? ';mask-image:linear-gradient(to bottom,#000 75%,transparent);-webkit-mask-image:linear-gradient(to bottom,#000 75%,transparent)'
-						: '')}
-		>
-			<ChunkTranscript {turns} />
-		</div>
+		<ChunkTranscript {turns} />
 	{:else}
-		<p
-			bind:this={body}
-			class="text-sm whitespace-pre-line text-gray-800"
-			style={open
-				? undefined
-				: `display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:${CLAMP_LINES};overflow:hidden`}
-		>
+		<p class="text-sm whitespace-pre-line text-gray-800">
 			{hit.text ?? 'No text stored for this chunk.'}
 		</p>
-	{/if}
-
-	{#if overflowing}
-		<button
-			type="button"
-			onclick={() => (toggled = !open)}
-			class="mt-1 cursor-pointer text-xs font-medium text-primary hover:underline"
-		>
-			{open ? 'Show less' : 'Show more'}
-		</button>
 	{/if}
 
 	<div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem] text-gray-400">
@@ -238,7 +126,14 @@
 					<i class="fas fa-anchor text-[0.625rem]"></i>Anchor
 				</span>
 			{/if}
-			<a href={interviewHref} class="font-medium text-primary hover:underline">Transcript</a>
+			<button
+				type="button"
+				onclick={() => ontranscript(hit)}
+				class="cursor-pointer font-medium text-primary hover:underline"
+				title="Read the whole interview this is from"
+			>
+				Transcript
+			</button>
 		</span>
 	</div>
 </div>

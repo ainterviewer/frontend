@@ -30,6 +30,7 @@
 		focusedGroup,
 		onselect,
 		onfocusgroup,
+		ontranscript,
 		neighbourPaging
 	}: {
 		/**
@@ -79,6 +80,8 @@
 		onselect: (id: string | null) => void;
 		onfocusgroup: (key: string | null) => void;
 		/** The same, for the neighbours of the anchored chunk. */
+		/** Open the whole interview a chunk came from, without leaving the map. */
+		ontranscript: (hit: EmbeddingSearchHit) => void;
 		neighbourPaging: ListPaging;
 	} = $props();
 
@@ -236,7 +239,7 @@
 			{:else if detailError}
 				<p class="text-sm text-gray-500">{detailError}</p>
 			{:else if detail}
-				<HitCard hit={detail.source} showScore={false} anchored onanchor={anchor} />
+				<HitCard hit={detail.source} showScore={false} anchored onanchor={anchor} {ontranscript} />
 
 				<h3 class="mt-5 mb-2 text-xs font-semibold tracking-wide text-gray-400 uppercase">
 					Nearest neighbours
@@ -256,7 +259,7 @@
 				{:else}
 					<div class="flex flex-col gap-2">
 						{#each detail.items ?? [] as neighbour (neighbour.id)}
-							<HitCard hit={neighbour} onanchor={anchor} />
+							<HitCard hit={neighbour} onanchor={anchor} {ontranscript} />
 						{/each}
 					</div>
 					{@render loadMore(neighbourPaging, 'neighbours')}
@@ -309,7 +312,7 @@
 			{:else if search}
 				<div class="flex flex-col gap-2">
 					{#each search.items ?? [] as hit (hit.id)}
-						<HitCard {hit} onanchor={anchor} />
+						<HitCard {hit} onanchor={anchor} {ontranscript} />
 					{/each}
 				</div>
 				{@render loadMore(searchPaging, 'results')}
@@ -447,7 +450,12 @@
 										</p>
 									{/if}
 									{#each cluster.representatives ?? [] as representative (representative.id)}
-										<HitCard hit={representative} showScore={false} onanchor={anchor} />
+										<HitCard
+											hit={representative}
+											showScore={false}
+											onanchor={anchor}
+											{ontranscript}
+										/>
 									{/each}
 								</div>
 							{/if}

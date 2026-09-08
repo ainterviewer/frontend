@@ -2087,6 +2087,50 @@ export const zEmbeddingSimilarResponse = z.object({
 });
 
 /**
+ * TranscriptTurn
+ *
+ * One turn of a whole interview, for reading a hit in its context.
+ *
+ * An `EmbeddingTurn` with the guide coordinates it was said at, so the reader
+ * can be put back where they came from: the card that opened this knows its
+ * own section and question, and the turns carrying theirs is what lets the
+ * view scroll to them and shade them apart from the rest.
+ *
+ * Inherits `matches`/`excluded` rather than restating them, so a transcript
+ * renders through the same component a chunk does -- the search is still
+ * marked once the reader has left the mosaic, which is most of the point of
+ * reading the transcript at all.
+ */
+export const zTranscriptTurn = z.object({
+    role: zTurnRole,
+    text: z.string(),
+    survey_label: z.string().nullish(),
+    match: z.boolean().optional().default(false),
+    matches: z.array(z.tuple([z.int(), z.int()])).optional(),
+    excluded: z.array(z.tuple([z.int(), z.int()])).optional(),
+    id: z.uuid(),
+    section: z.int().nullish(),
+    main_question: z.int().nullish(),
+    sub_question: z.int().nullish()
+});
+
+/**
+ * InterviewTranscript
+ *
+ * A whole interview as turns, marked with what the keyword query found.
+ *
+ * Separate from the messages endpoint the transcript *page* loads, which
+ * serves annotations and comments and knows nothing about a keyword query.
+ * This one exists so the explore view can open a transcript without a
+ * navigation, and it answers only that: read it, see the search in it, go
+ * back. Annotating is still the page's.
+ */
+export const zInterviewTranscript = z.object({
+    interview_id: z.uuid(),
+    turns: z.array(zTranscriptTurn)
+});
+
+/**
  * UpdateBackgroundInfoRequest
  */
 export const zUpdateBackgroundInfoRequest = z.object({
@@ -2801,6 +2845,26 @@ export const zBrowseEmbeddingsQuery = z.object({
  * Successful Response
  */
 export const zBrowseEmbeddingsResponse = zEmbeddingBrowseResponse;
+
+export const zReadInterviewTranscriptPath = z.object({
+    project_id: z.string().nullable(),
+    interview_id: z.string()
+});
+
+export const zReadInterviewTranscriptQuery = z.object({
+    keyword: z.string().nullish(),
+    keyword_scope: z.enum([
+        'answer',
+        'question',
+        'both'
+    ]).optional().default('answer'),
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zReadInterviewTranscriptResponse = zInterviewTranscript;
 
 export const zFindSimilarEmbeddingsPath = z.object({
     project_id: z.string().nullable(),

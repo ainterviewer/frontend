@@ -23,6 +23,7 @@
 	import ControlRail from './ControlRail.svelte';
 	import KeywordInput from './KeywordInput.svelte';
 	import ListView from './ListView.svelte';
+	import TranscriptModal from './TranscriptModal.svelte';
 	import { ExploreState, type ExploreView } from './exploreState.svelte';
 	import ScatterPlot from './ScatterPlot.svelte';
 	import SweepBar from './SweepBar.svelte';
@@ -121,6 +122,17 @@
 	 * three rows would cost another inference call for nothing.
 	 */
 	let scoreCutoff = $state(0);
+
+	/**
+	 * The chunk whose interview is open in the transcript dialog, or null.
+	 *
+	 * The hit and not its id: the dialog needs the coordinates to find the place
+	 * in the transcript and the participant to title itself, and every one of
+	 * those is already on the card the reader clicked. Held here rather than in
+	 * the list, because the map's detail panel opens the same dialog and there is
+	 * only ever one of them on screen.
+	 */
+	let transcriptOf = $state<EmbeddingSearchHit | null>(null);
 
 	let selectedId = $state<string | null>(null);
 	let detail = $state<EmbeddingSimilarResponse | null>(null);
@@ -1201,6 +1213,7 @@
 					anchor={listAnchor}
 					anchorLoading={walking && detail === null}
 					onanchor={(hit) => (selectedId = selectedId === hit.id ? null : hit.id)}
+					ontranscript={(hit) => (transcriptOf = hit)}
 					{railOpen}
 					{offDefault}
 					onshowcontrols={() => (railOpen = true)}
@@ -1432,6 +1445,7 @@
 							{focusedGroup}
 							onselect={(id) => (selectedId = id)}
 							onfocusgroup={(key) => (focusedGroup = key)}
+							ontranscript={(hit) => (transcriptOf = hit)}
 						/>
 					</div>
 				</div>
@@ -1439,3 +1453,14 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Outside the layout entirely: it portals to the body, and the reader opening
+     it has not navigated anywhere — the list, the filters and the scroll
+     position are all still behind it, which is the whole reason it is a dialog
+     and not the transcript page. -->
+<TranscriptModal
+	hit={transcriptOf}
+	keyword={explore.searchableKeyword}
+	keywordScope={explore.keywordScope}
+	onclose={() => (transcriptOf = null)}
+/>
