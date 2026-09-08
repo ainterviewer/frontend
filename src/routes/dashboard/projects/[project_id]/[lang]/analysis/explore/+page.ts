@@ -24,6 +24,11 @@ export const load: PageLoad = ({ params }) => {
 		// currently filtered: a picker built from those would lose the option
 		// that is filtering it, leaving no way back. Small next to the cluster
 		// payload and started alongside it, so it is not what the page waits on.
-		guide: Projects.getGuide({ path: { project_id: params.project_id, lang: params.lang } })
+		guide: Projects.getGuide({ path: { project_id: params.project_id, lang: params.lang } }),
+		// The survey answers the cohort filter is built from. Deliberately not
+		// narrowed by anything: the counts beside the values describe the whole
+		// corpus, so filtering cannot make an option vanish from under the
+		// selection that produced it. Small, and started with the rest.
+		surveyFacets: Analysis.readSurveyFacets({ path })
 	};
 };

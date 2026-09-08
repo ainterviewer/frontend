@@ -5,7 +5,8 @@
 		InterviewGuide,
 		InterviewStatus,
 		LanguageCode,
-		Projection
+		Projection,
+		SurveyFacet
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { Switch } from 'bits-ui';
@@ -26,11 +27,15 @@
 		PROJECTIONS,
 		defaultFilters,
 		hasQuestion,
+		hasSurveyValue,
+		setSurveyRange,
+		surveyValueToken,
+		toggleSurveyValue,
 		toggleLanguage,
 		toggleQuestion,
 		toggleSection
 	} from './explore';
-	import type { KeywordScope } from './explore';
+	import type { KeywordScope, SurveyRanges, SurveySelection } from './explore';
 
 	let {
 		open = $bindable(),
@@ -50,7 +55,10 @@
 		filterQuestions = $bindable(),
 		keyword = $bindable(),
 		keywordScope = $bindable(),
+		surveyValues = $bindable(),
+		surveyRanges = $bindable(),
 		guide,
+		surveyFacets,
 		listing,
 		visibleLanguages = $bindable(),
 		languages,
@@ -101,7 +109,24 @@
 		/** Reset only, for the same reason: clearing the words but leaving the
 		 * toggle on "Questions" would show a scope that is filtering nothing. */
 		keywordScope: KeywordScope;
+		/**
+		 * Which survey answers the interviews behind the chunks must hold, keyed
+		 * by `section,main_question`. A cohort filter: it selects respondents by
+		 * what they answered and keeps everything they said, so it narrows the
+		 * corpus the same way the language filter does — a refetch, and every
+		 * point moves.
+		 */
+		surveyValues: SurveySelection;
+		/** The same, for the items answered with a number or a date. */
+		surveyRanges: SurveyRanges;
 		guide: InterviewGuide | null;
+		/**
+		 * The survey items to offer, with the answers respondents actually gave
+		 * and how many gave each. Null while it loads, and empty for a project
+		 * whose guide asks nothing closed — both hide the control, because a
+		 * picker with nothing in it is a promise of something to find.
+		 */
+		surveyFacets: SurveyFacet[] | null;
 		/**
 		 * Whether the list is showing rather than the map.
 		 *
@@ -153,6 +178,8 @@
 		filterLanguages = defaultFilters().languages;
 		includeSynthetic = defaultFilters().include_synthetic;
 		filterQuestions = defaultFilters().questions;
+		surveyValues = defaultFilters().survey;
+		surveyRanges = defaultFilters().survey_ranges;
 		// Not counted by `offDefault` — it is a view, not a setting — but a reader
 		// reaching for the way back means the whole map, not most of it.
 		visibleLanguages = [];
@@ -182,6 +209,62 @@
 	let questionCount = $derived(
 		sections.reduce((total, section) => total + (section.questions?.length ?? 0), 0)
 	);
+
+	/** The items worth offering: the ones somebody answered. */
+	let facets = $derived(surveyFacets ?? []);
+
+	/** How many items the survey filter narrows by, for the "n of m" heading. */
+	let surveyItems = $derived(
+		new Set([...Object.keys(surveyValues), ...Object.keys(surveyRanges)]).size
+	);
+
+	/** Which survey items are expanded. Collapsed to begin with, like the guide's
+	    sections: a project can ask a dozen of these, and the questions are what a
+	    reader scans first. */
+	const openFacets = new SvelteSet<string>();
+
+	function toggleFacet(key: string) {
+		if (openFacets.has(key)) openFacets.delete(key);
+		else openFacets.add(key);
+	}
+
+	/** The wire spelling of a coordinate, and the key everything here is by. */
+	function facetKey(facet: SurveyFacet) {
+		return `${facet.section},${facet.main_question}`;
+	}
+
+	/**
+	 * What to call the item.
+	 *
+	 * The authored wording where the guide still has the question, and the
+	 * coordinate where it does not — an answer to a deleted question is still an
+	 * answer, and a blank row could not be told from a bug.
+	 */
+	function facetLabel(facet: SurveyFacet) {
+		return facet.question || `Question ${facet.section + 1}.${facet.main_question + 1}`;
+	}
+
+	/** How many of an item's values are chosen, for its own count. */
+	function chosenIn(facet: SurveyFacet) {
+		const key = facetKey(facet);
+		if (facet.filter === 'range') return surveyRanges[key] ? 1 : 0;
+		return (surveyValues[key] ?? []).length;
+	}
+
+	/**
+	 * The input a range end is typed into.
+	 *
+	 * The item knows what its answers are, so the browser can offer the right
+	 * keyboard and picker — and a date typed into a date field comes back in the
+	 * ISO spelling the API parses, which is the same reason it is not a text box
+	 * with a placeholder saying "YYYY-MM-DD".
+	 */
+	function rangeInputType(type: string) {
+		if (type === 'date') return 'date';
+		if (type === 'datetime') return 'datetime-local';
+		if (type === 'time') return 'time';
+		return 'number';
+	}
 
 	/** Which sections are expanded. Collapsed to begin with: a guide of any size
 	    is taller than the rail, and the sections are what a reader scans first. */
@@ -536,6 +619,149 @@
 	</div>
 {/snippet}
 
+<!-- The survey items as a list of collapsed rows, opened one at a time. Same
+     shape as the guide picker above it, because it is the same gesture on a
+     different axis: that one narrows which questions the chunks answer, this
+     one narrows whose chunks they are.
+
+     Every value carries the number of interviews behind it. A cohort filter is
+     the easiest one to empty a view with — two values nobody holds at once
+     return nothing — and the count is what makes that visible before the click
+     rather than after it. -->
+{#snippet surveyControl()}
+	<div class="rounded-md border border-gray-200">
+		<div class="flex items-center justify-between gap-2 border-b border-gray-100 px-1.5 py-1">
+			<span class="text-[0.6875rem] text-gray-500">
+				{surveyItems === 0 ? 'All respondents' : `${surveyItems} of ${facets.length}`}
+			</span>
+			{#if surveyItems > 0}
+				<button
+					type="button"
+					onclick={() => {
+						surveyValues = {};
+						surveyRanges = {};
+					}}
+					class="cursor-pointer text-[0.6875rem] font-medium text-gray-500 transition-colors hover:text-gray-900"
+				>
+					Clear
+				</button>
+			{/if}
+		</div>
+
+		<div class="max-h-56 overflow-y-auto py-0.5" role="group" aria-label="Survey answers">
+			{#each facets as facet (facetKey(facet))}
+				{@const key = facetKey(facet)}
+				{@const chosen = chosenIn(facet)}
+				<div class="px-1">
+					<button
+						type="button"
+						onclick={() => toggleFacet(key)}
+						aria-expanded={openFacets.has(key)}
+						title={facetLabel(facet)}
+						class="flex w-full cursor-pointer items-center gap-1 rounded px-1 py-0.5 text-left text-[0.6875rem] transition-colors {chosen >
+						0
+							? 'font-semibold text-primary'
+							: 'text-gray-600 hover:text-gray-900'}"
+					>
+						<i
+							class="fas fa-chevron-right w-2 shrink-0 text-[0.5625rem] text-gray-400 transition-transform {openFacets.has(
+								key
+							)
+								? 'rotate-90'
+								: ''}"
+						></i>
+						<span class="min-w-0 flex-1 truncate">{facetLabel(facet)}</span>
+						<!-- A chosen item reads its count when collapsed, which is the
+						     only thing on screen once it is. -->
+						{#if chosen > 0}
+							<span class="shrink-0 font-mono text-[0.625rem] text-gray-400 tabular-nums">
+								{facet.filter === 'range' ? 'set' : chosen}
+							</span>
+						{/if}
+					</button>
+
+					{#if openFacets.has(key)}
+						<div class="mb-1 ml-3 flex flex-col gap-0.5">
+							{#if facet.filter === 'range'}
+								{@const bounds = surveyRanges[key] ?? ['', '']}
+								<!-- Both ends optional: "everyone over 60" is a range with
+								     one side, and asking for the other would be asking the
+								     reader to invent a number. The observed ends are the
+								     placeholders, so the field says what it would mean
+								     empty. -->
+								<div class="flex items-center gap-1 py-0.5">
+									<input
+										type={rangeInputType(facet.type)}
+										value={bounds[0]}
+										placeholder={facet.low ?? ''}
+										aria-label="{facetLabel(facet)}, from"
+										oninput={(event) =>
+											(surveyRanges = setSurveyRange(
+												surveyRanges,
+												key,
+												event.currentTarget.value,
+												bounds[1]
+											))}
+										class="w-full min-w-0 rounded border border-gray-200 px-1 py-0.5 text-[0.6875rem] focus:border-primary focus:ring-0"
+									/>
+									<span class="text-[0.625rem] text-gray-400">to</span>
+									<input
+										type={rangeInputType(facet.type)}
+										value={bounds[1]}
+										placeholder={facet.high ?? ''}
+										aria-label="{facetLabel(facet)}, to"
+										oninput={(event) =>
+											(surveyRanges = setSurveyRange(
+												surveyRanges,
+												key,
+												bounds[0],
+												event.currentTarget.value
+											))}
+										class="w-full min-w-0 rounded border border-gray-200 px-1 py-0.5 text-[0.6875rem] focus:border-primary focus:ring-0"
+									/>
+								</div>
+								<span class="px-1 pb-0.5 text-[0.625rem] text-gray-400">
+									{formatNumber(facet.n_answered ?? 0)} answered
+								</span>
+							{:else}
+								{#each facet.values ?? [] as value (surveyValueToken(value.option, value.label))}
+									{@const token = surveyValueToken(value.option, value.label)}
+									{@const on = hasSurveyValue(surveyValues, key, token)}
+									<!-- A value nobody gave is shown and disabled rather than
+									     hidden: "nobody chose this" is a result, and a filter
+									     that can only be set to something is a filter that
+									     cannot say so. -->
+									<button
+										type="button"
+										aria-pressed={on}
+										disabled={value.count === 0}
+										title={value.option === null ? `${value.label} — written in` : value.label}
+										onclick={() => (surveyValues = toggleSurveyValue(surveyValues, key, token))}
+										class="flex items-baseline gap-1.5 rounded px-1 py-0.5 text-left text-[0.6875rem] transition-colors {on
+											? 'bg-primary text-on-primary'
+											: value.count === 0
+												? 'cursor-default text-gray-300'
+												: 'cursor-pointer text-gray-500 hover:text-gray-900'}"
+									>
+										<span class="min-w-0 flex-1 truncate">{value.label}</span>
+										<span
+											class="shrink-0 font-mono text-[0.625rem] tabular-nums {on
+												? 'opacity-70'
+												: 'text-gray-400'}"
+										>
+											{formatNumber(value.count)}
+										</span>
+									</button>
+								{/each}
+							{/if}
+						</div>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	</div>
+{/snippet}
+
 {#if open}
 	<div
 		class="flex shrink-0 flex-col rounded-lg border border-gray-200 bg-white lg:min-h-[26rem] lg:w-[15rem]"
@@ -595,6 +821,14 @@
 					'Which parts of the interview guide the chunks are drawn from. Applied in SQL before anything is embedded into the projection, exactly as the language filter is — so the axes, the clusters and every purity figure are computed over the questions left. Narrowing to one question is the way to cluster within an answer rather than across the guide, and it makes centring by question redundant: there is only one question left to subtract.',
 					filterQuestions.length === 0 ? 'All' : `${filterQuestions.length} of ${questionCount}`,
 					guideQuestionControl
+				)}
+			{/if}
+			{#if facets.length > 0}
+				{@render stacked(
+					'Survey answers',
+					'Who the chunks come from, rather than which question they answer. Filtering on an answer keeps every chunk of every interview whose respondent gave it — "what did the dissatisfied ones talk about" — so it narrows the corpus before it is projected, exactly as the language and question filters do. Values within one item are OR-ed and items are AND-ed. The number beside each value is how many interviews gave it, over the whole corpus rather than what is currently filtered: a count that moved as you filtered would let an option vanish from under the selection that produced it.',
+					surveyItems === 0 ? 'All' : `${surveyItems} of ${facets.length}`,
+					surveyControl
 				)}
 			{/if}
 			{@render inline(

@@ -1654,6 +1654,44 @@ export const zSpeechRequest = z.object({
 });
 
 /**
+ * SurveyFacetValue
+ *
+ * One answer on offer in the survey filter, with how many gave it.
+ */
+export const zSurveyFacetValue = z.object({
+    option: z.int().nullish(),
+    label: z.string(),
+    count: z.int()
+});
+
+/**
+ * SurveyFacet
+ *
+ * One survey item, as something to filter a cohort by.
+ */
+export const zSurveyFacet = z.object({
+    section: z.int(),
+    main_question: z.int(),
+    question: z.string(),
+    type: z.string(),
+    filter: z.enum(['values', 'range']),
+    multiple: z.boolean().optional().default(false),
+    values: z.array(zSurveyFacetValue).optional().default([]),
+    low: z.string().nullish(),
+    high: z.string().nullish(),
+    n_answered: z.int().optional().default(0)
+});
+
+/**
+ * SurveyFacets
+ *
+ * Every survey item a project's interviews carry an answer to.
+ */
+export const zSurveyFacets = z.object({
+    items: z.array(zSurveyFacet).optional().default([])
+});
+
+/**
  * SynthesizeRequest
  */
 export const zSynthesizeRequest = z.object({
@@ -2634,7 +2672,11 @@ export const zInvitationPublicWritable = z.object({
 });
 
 export const zGetAnalysisCategoriesPath = z.object({
-    project_id: z.string()
+    project_id: z.string().nullable()
+});
+
+export const zGetAnalysisCategoriesQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2647,7 +2689,11 @@ export const zGetAnalysisCategoriesResponse = z.array(zAnalysisCategoryPublic);
 export const zCreateAnalysisCategoryBody = zAnalysisCategoryCreate;
 
 export const zCreateAnalysisCategoryPath = z.object({
-    project_id: z.string()
+    project_id: z.string().nullable()
+});
+
+export const zCreateAnalysisCategoryQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 export const zDeleteAnalysisCategoryPath = z.object({
@@ -2705,7 +2751,11 @@ export const zUpdateMessageAnnotationResponse = zMessageAnnotationPublic;
 export const zGetFilteredMessagesCountBody = zFilteredMessagesRequest;
 
 export const zGetFilteredMessagesCountPath = z.object({
-    project_id: z.string()
+    project_id: z.string().nullable()
+});
+
+export const zGetFilteredMessagesCountQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2718,12 +2768,13 @@ export const zGetFilteredMessagesCountResponse = z.int();
 export const zGetFilteredMessagesBody = zFilteredMessagesRequest;
 
 export const zGetFilteredMessagesPath = z.object({
-    project_id: z.string()
+    project_id: z.string().nullable()
 });
 
 export const zGetFilteredMessagesQuery = z.object({
     skip: z.int().optional().default(0),
-    limit: z.int().optional().default(20)
+    limit: z.int().optional().default(20),
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2734,9 +2785,13 @@ export const zGetFilteredMessagesQuery = z.object({
 export const zGetFilteredMessagesResponse = z.array(zMessagePublic);
 
 export const zGetMessageContextBeforePath = z.object({
-    project_id: z.string(),
+    project_id: z.string().nullable(),
     interview_id: z.string(),
     message_id: z.string()
+});
+
+export const zGetMessageContextBeforeQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2747,9 +2802,13 @@ export const zGetMessageContextBeforePath = z.object({
 export const zGetMessageContextBeforeResponse = z.array(zMessagePublic);
 
 export const zGetMessageContextAfterPath = z.object({
-    project_id: z.string(),
+    project_id: z.string().nullable(),
     interview_id: z.string(),
     message_id: z.string()
+});
+
+export const zGetMessageContextAfterQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2819,6 +2878,8 @@ export const zSearchEmbeddingsQuery = z.object({
         'question',
         'both'
     ]).optional().default('answer'),
+    survey: z.array(z.string()).nullish(),
+    survey_range: z.array(z.string()).nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -2849,6 +2910,8 @@ export const zBrowseEmbeddingsQuery = z.object({
         'question',
         'both'
     ]).optional().default('answer'),
+    survey: z.array(z.string()).nullish(),
+    survey_range: z.array(z.string()).nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -2857,6 +2920,20 @@ export const zBrowseEmbeddingsQuery = z.object({
  * Successful Response
  */
 export const zBrowseEmbeddingsResponse = zEmbeddingBrowseResponse;
+
+export const zReadSurveyFacetsPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zReadSurveyFacetsQuery = z.object({
+    include_synthetic: z.boolean().optional().default(false),
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zReadSurveyFacetsResponse = zSurveyFacets;
 
 export const zReadInterviewTranscriptPath = z.object({
     project_id: z.string().nullable(),
@@ -2899,6 +2976,8 @@ export const zFindSimilarEmbeddingsQuery = z.object({
         'question',
         'both'
     ]).optional().default('answer'),
+    survey: z.array(z.string()).nullish(),
+    survey_range: z.array(z.string()).nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -2936,7 +3015,9 @@ export const zClusterEmbeddingsQuery = z.object({
         'answer',
         'question',
         'both'
-    ]).optional().default('answer')
+    ]).optional().default('answer'),
+    survey: z.array(z.string()).nullish(),
+    survey_range: z.array(z.string()).nullish()
 });
 
 /**
@@ -2971,14 +3052,15 @@ export const zTriggerEmbeddingBackfillQuery = z.object({
 export const zTriggerEmbeddingBackfillResponse = zEmbeddingBackfillResponse;
 
 export const zGetProjectMonitoringStatsPath = z.object({
-    project_id: z.string()
+    project_id: z.string().nullable()
 });
 
 export const zGetProjectMonitoringStatsQuery = z.object({
     interview_types: z.array(zInterviewType).optional(),
     start_date: z.iso.datetime().nullish(),
     end_date: z.iso.datetime().nullish(),
-    deduplicate_by_pid: z.boolean().optional().default(false)
+    deduplicate_by_pid: z.boolean().optional().default(false),
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2987,13 +3069,14 @@ export const zGetProjectMonitoringStatsQuery = z.object({
 export const zGetProjectMonitoringStatsResponse = zMonitoringStats;
 
 export const zGetProjectItemDistributionsPath = z.object({
-    project_id: z.string()
+    project_id: z.string().nullable()
 });
 
 export const zGetProjectItemDistributionsQuery = z.object({
     interview_types: z.array(zInterviewType).optional(),
     languages: z.array(z.string()).nullish(),
-    completed_only: z.boolean().optional().default(false)
+    completed_only: z.boolean().optional().default(false),
+    folder_id: z.string().nullish()
 });
 
 /**

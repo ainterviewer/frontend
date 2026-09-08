@@ -7,8 +7,11 @@ import {
 	offDefaultCount,
 	sameQuestions,
 	defaultClusterSettings,
+	setSurveyRange,
+	surveyValueToken,
 	toggleQuestion,
-	toggleSection
+	toggleSection,
+	toggleSurveyValue
 } from './explore';
 
 describe('toggleQuestion', () => {
@@ -193,5 +196,78 @@ describe('settings comparison', () => {
 		settings.filters.questions = [[0, 0]];
 
 		expect(isDefaultClusterSettings(settings)).toBe(false);
+	});
+});
+
+describe('the survey cohort filter', () => {
+	it('adds a chosen value under its coordinate', () => {
+		expect(toggleSurveyValue({}, '0,2', 'option:1')).toEqual({ '0,2': ['option:1'] });
+	});
+
+	it('drops the item once its last value is unchosen', () => {
+		// Not left behind as an empty list: an item filtering on no values is
+		// not a filter, and the key would make "a survey filter is applied"
+		// true forever after the first click.
+		expect(toggleSurveyValue({ '0,2': ['option:1'] }, '0,2', 'option:1')).toEqual({});
+	});
+
+	it('names an option by position and a write-in by its text', () => {
+		expect(surveyValueToken(1, 'Male')).toBe('option:1');
+		expect(surveyValueToken(null, 'genderqueer')).toBe('text:genderqueer');
+	});
+
+	it('clears a range whose ends are both empty', () => {
+		// Both ends open is every answer, which is what no filter looks like.
+		expect(setSurveyRange({ '0,3': ['25', '34'] }, '0,3', '', '')).toEqual({});
+	});
+
+	it('keeps a range with one end open', () => {
+		expect(setSurveyRange({}, '0,3', '25', '')).toEqual({ '0,3': ['25', ''] });
+	});
+
+	it('sends one parameter per value, each carrying its coordinate', () => {
+		const query = filterQuery({
+			...defaultFilters(),
+			survey: { '0,2': ['option:1', 'option:2'], '1,0': ['text:kayaking'] },
+			survey_ranges: { '0,3': ['25', '34'] }
+		});
+
+		expect(query.survey).toEqual(['0,2=option:1', '0,2=option:2', '1,0=text:kayaking']);
+		expect(query.survey_range).toEqual(['0,3=25..34']);
+	});
+
+	it('sends nothing at all when nothing is chosen', () => {
+		const query = filterQuery(defaultFilters());
+
+		expect('survey' in query).toBe(false);
+		expect('survey_range' in query).toBe(false);
+	});
+
+	it('counts as one setting off default, however many items are chosen', () => {
+		// The badge counts controls the reader has moved, and this is one
+		// control to open.
+		const settings = defaultClusterSettings();
+		const before = offDefaultCount(settings, false);
+		const filtered = {
+			...settings,
+			filters: {
+				...settings.filters,
+				survey: { '0,2': ['option:1'] },
+				survey_ranges: { '0,3': ['25', ''] } as Record<string, [string, string]>
+			}
+		};
+
+		expect(offDefaultCount(filtered, false)).toBe(before + 1);
+	});
+
+	it('is not what the preloaded cluster response answers', () => {
+		const settings = defaultClusterSettings();
+
+		expect(
+			isDefaultClusterSettings({
+				...settings,
+				filters: { ...settings.filters, survey: { '0,2': ['option:1'] } }
+			})
+		).toBe(false);
 	});
 });

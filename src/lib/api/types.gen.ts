@@ -3723,6 +3723,86 @@ export type SpeechRequest = {
 };
 
 /**
+ * SurveyFacet
+ *
+ * One survey item, as something to filter a cohort by.
+ */
+export type SurveyFacet = {
+    /**
+     * Section
+     */
+    section: number;
+    /**
+     * Main Question
+     */
+    main_question: number;
+    /**
+     * Question
+     */
+    question: string;
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Filter
+     */
+    filter: 'values' | 'range';
+    /**
+     * Multiple
+     */
+    multiple?: boolean;
+    /**
+     * Values
+     */
+    values?: Array<SurveyFacetValue>;
+    /**
+     * Low
+     */
+    low?: string | null;
+    /**
+     * High
+     */
+    high?: string | null;
+    /**
+     * N Answered
+     */
+    n_answered?: number;
+};
+
+/**
+ * SurveyFacetValue
+ *
+ * One answer on offer in the survey filter, with how many gave it.
+ */
+export type SurveyFacetValue = {
+    /**
+     * Option
+     */
+    option?: number | null;
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * SurveyFacets
+ *
+ * Every survey item a project's interviews carry an answer to.
+ */
+export type SurveyFacets = {
+    /**
+     * Items
+     */
+    items?: Array<SurveyFacet>;
+};
+
+/**
  * SynthesizeRequest
  */
 export type SynthesizeRequest = {
@@ -4628,9 +4708,14 @@ export type GetAnalysisCategoriesData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/analysis/categories';
 };
 
@@ -4664,9 +4749,14 @@ export type CreateAnalysisCategoryData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/projects/{project_id}/analysis/categories';
 };
 
@@ -4898,9 +4988,14 @@ export type GetFilteredMessagesCountData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/analysis/{project_id}/messages/count';
 };
 
@@ -4934,7 +5029,7 @@ export type GetFilteredMessagesData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
     query?: {
         /**
@@ -4945,6 +5040,10 @@ export type GetFilteredMessagesData = {
          * Limit
          */
         limit?: number;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
     };
     url: '/api/analysis/{project_id}/messages';
 };
@@ -4979,7 +5078,7 @@ export type GetMessageContextBeforeData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Interview Id
          */
@@ -4989,7 +5088,12 @@ export type GetMessageContextBeforeData = {
          */
         message_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/analysis/{project_id}/interviews/{interview_id}/messages/{message_id}/context_before';
 };
 
@@ -5023,7 +5127,7 @@ export type GetMessageContextAfterData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
         /**
          * Interview Id
          */
@@ -5033,7 +5137,12 @@ export type GetMessageContextAfterData = {
          */
         message_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
     url: '/api/analysis/{project_id}/interviews/{interview_id}/messages/{message_id}/context_after';
 };
 
@@ -5257,6 +5366,14 @@ export type SearchEmbeddingsData = {
          */
         keyword_scope?: 'answer' | 'question' | 'both';
         /**
+         * Survey
+         */
+        survey?: Array<string> | null;
+        /**
+         * Survey Range
+         */
+        survey_range?: Array<string> | null;
+        /**
          * Limit
          */
         limit?: number;
@@ -5345,6 +5462,14 @@ export type BrowseEmbeddingsData = {
          */
         keyword_scope?: 'answer' | 'question' | 'both';
         /**
+         * Survey
+         */
+        survey?: Array<string> | null;
+        /**
+         * Survey Range
+         */
+        survey_range?: Array<string> | null;
+        /**
          * Limit
          */
         limit?: number;
@@ -5377,6 +5502,49 @@ export type BrowseEmbeddingsResponses = {
 };
 
 export type BrowseEmbeddingsResponse = BrowseEmbeddingsResponses[keyof BrowseEmbeddingsResponses];
+
+export type ReadSurveyFacetsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Include Synthetic
+         */
+        include_synthetic?: boolean;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/embeddings/survey-facets';
+};
+
+export type ReadSurveyFacetsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadSurveyFacetsError = ReadSurveyFacetsErrors[keyof ReadSurveyFacetsErrors];
+
+export type ReadSurveyFacetsResponses = {
+    /**
+     * Successful Response
+     */
+    200: SurveyFacets;
+};
+
+export type ReadSurveyFacetsResponse = ReadSurveyFacetsResponses[keyof ReadSurveyFacetsResponses];
 
 export type ReadInterviewTranscriptData = {
     body?: never;
@@ -5486,6 +5654,14 @@ export type FindSimilarEmbeddingsData = {
          * Keyword Scope
          */
         keyword_scope?: 'answer' | 'question' | 'both';
+        /**
+         * Survey
+         */
+        survey?: Array<string> | null;
+        /**
+         * Survey Range
+         */
+        survey_range?: Array<string> | null;
         /**
          * Limit
          */
@@ -5603,6 +5779,14 @@ export type ClusterEmbeddingsData = {
          * Keyword Scope
          */
         keyword_scope?: 'answer' | 'question' | 'both';
+        /**
+         * Survey
+         */
+        survey?: Array<string> | null;
+        /**
+         * Survey Range
+         */
+        survey_range?: Array<string> | null;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/clusters';
 };
@@ -5713,7 +5897,7 @@ export type GetProjectMonitoringStatsData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
     query?: {
         /**
@@ -5732,6 +5916,10 @@ export type GetProjectMonitoringStatsData = {
          * Deduplicate By Pid
          */
         deduplicate_by_pid?: boolean;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
     };
     url: '/api/monitoring/projects/{project_id}/stats';
 };
@@ -5764,7 +5952,7 @@ export type GetProjectItemDistributionsData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
     query?: {
         /**
@@ -5783,6 +5971,10 @@ export type GetProjectItemDistributionsData = {
          * Count only interviews that reached the end
          */
         completed_only?: boolean;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
     };
     url: '/api/report/projects/{project_id}/item-distributions';
 };

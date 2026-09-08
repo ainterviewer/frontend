@@ -203,7 +203,108 @@ export type ExploreFilters = {
 	 * can express — "asked about X, answered Y" — gets written.
 	 */
 	keyword_scope: KeywordScope;
+	/**
+	 * Which survey answers the interviews behind the chunks must hold, keyed by
+	 * the coordinate of the item they answer.
+	 *
+	 * A *cohort* filter: it selects interviews and then keeps everything they
+	 * said, so "Male" here does not mean "show me the answers that say Male" —
+	 * it means "show me what the men talked about". Values within one item are
+	 * OR-ed and items are AND-ed, which is what a checklist per item reads as.
+	 *
+	 * Values are stored in the spelling the API takes them in: `option:1` for
+	 * the second option of the item, `text:kayaking` for a write-in. Position
+	 * rather than text because the same item asked in two languages offers the
+	 * same choices translated — filtering on "Female" would silently drop
+	 * everyone interviewed in Danish. `SurveyFacetValue.option` is the number.
+	 */
+	survey: SurveySelection;
+	/**
+	 * The same filter for the items whose answers are ordered rather than
+	 * chosen — numbers, dates, times — as `[low, high]` in the item's own
+	 * spelling. Either side may be empty for an open end.
+	 */
+	survey_ranges: SurveyRanges;
 };
+
+/**
+ * Chosen survey values, keyed by `section,main_question` — the same spelling
+ * the question filter writes, so one coordinate reads the same everywhere.
+ */
+export type SurveySelection = Record<string, string[]>;
+
+/** A `[low, high]` pair per item, either side empty for an open end. */
+export type SurveyRanges = Record<string, [string, string]>;
+
+/** The wire spelling of one chosen value. */
+export function surveyValueToken(option: number | null | undefined, label: string) {
+	return option === null || option === undefined ? `text:${label}` : `option:${option}`;
+}
+
+/** Whether a value is currently chosen. */
+export function hasSurveyValue(selection: SurveySelection, key: string, token: string) {
+	return (selection[key] ?? []).includes(token);
+}
+
+/**
+ * One value added or removed.
+ *
+ * An item left with nothing chosen is dropped rather than kept as an empty
+ * list: an item filtering on no values is not a filter, and leaving the key
+ * behind would make "any survey filter applied" true forever after the first
+ * click.
+ */
+export function toggleSurveyValue(
+	selection: SurveySelection,
+	key: string,
+	token: string
+): SurveySelection {
+	const current = selection[key] ?? [];
+	const next = current.includes(token)
+		? current.filter((other) => other !== token)
+		: [...current, token];
+	const { [key]: _dropped, ...rest } = selection;
+	return next.length > 0 ? { ...rest, [key]: next } : rest;
+}
+
+/**
+ * A range set, or cleared where both ends are empty.
+ *
+ * Both ends open is every answer, which is what no filter looks like — and a
+ * range nothing can fail should not count as one, or the reset badge would
+ * offer a way back from a filter that is not applied.
+ */
+export function setSurveyRange(
+	ranges: SurveyRanges,
+	key: string,
+	low: string,
+	high: string
+): SurveyRanges {
+	const { [key]: _dropped, ...rest } = ranges;
+	return low.trim() || high.trim() ? { ...rest, [key]: [low.trim(), high.trim()] } : rest;
+}
+
+/** How many items the survey filter narrows by, for the chips and the badge. */
+export function surveyItemCount(filters: ExploreFilters) {
+	return new Set([...Object.keys(filters.survey), ...Object.keys(filters.survey_ranges)]).size;
+}
+
+/** Whether two survey selections ask for the same thing. */
+export function sameSurvey(a: ExploreFilters, b: ExploreFilters) {
+	const values = (selection: SurveySelection) =>
+		Object.entries(selection)
+			.map(([key, tokens]) => `${key}=${[...tokens].sort().join('|')}`)
+			.sort()
+			.join(';');
+	const ranges = (all: SurveyRanges) =>
+		Object.entries(all)
+			.map(([key, [low, high]]) => `${key}=${low}..${high}`)
+			.sort()
+			.join(';');
+	return (
+		values(a.survey) === values(b.survey) && ranges(a.survey_ranges) === ranges(b.survey_ranges)
+	);
+}
 
 /** Answers, the interviewer's questions, or either. */
 export type KeywordScope = 'answer' | 'question' | 'both';
@@ -215,7 +316,9 @@ export function defaultFilters(): ExploreFilters {
 		include_synthetic: false,
 		questions: [],
 		keyword: '',
-		keyword_scope: 'answer'
+		keyword_scope: 'answer',
+		survey: {},
+		survey_ranges: {}
 	};
 }
 
@@ -300,6 +403,23 @@ export function filterQuery(filters: ExploreFilters) {
 		// refetch that changes nothing.
 		...(filters.keyword.trim()
 			? { keyword: filters.keyword.trim(), keyword_scope: filters.keyword_scope }
+			: {}),
+		// One parameter per chosen value and per range, each carrying the
+		// coordinate it applies to: `?survey=0,2=option:1`. Left off entirely
+		// when nothing is chosen, like every other filter here.
+		...(Object.keys(filters.survey).length > 0
+			? {
+					survey: Object.entries(filters.survey).flatMap(([key, tokens]) =>
+						tokens.map((token) => `${key}=${token}`)
+					)
+				}
+			: {}),
+		...(Object.keys(filters.survey_ranges).length > 0
+			? {
+					survey_range: Object.entries(filters.survey_ranges).map(
+						([key, [low, high]]) => `${key}=${low}..${high}`
+					)
+				}
 			: {}),
 		include_synthetic: filters.include_synthetic
 	};
@@ -443,6 +563,9 @@ export function offDefaultCount(settings: ClusterSettings, multilingual: boolean
 		multilingual && settings.filters.languages.length > 0,
 		settings.filters.questions.length > 0,
 		settings.filters.keyword.trim().length > 0,
+		// One, however many items are chosen: the badge counts controls a
+		// reader has moved, and the survey filter is one control to open.
+		surveyItemCount(settings.filters) > 0,
 		settings.filters.include_synthetic !== fallback.filters.include_synthetic
 	].filter(Boolean).length;
 }
@@ -462,6 +585,7 @@ export function isDefaultClusterSettings(settings: ClusterSettings) {
 		sameLanguages(settings.filters.languages, fallback.filters.languages) &&
 		sameQuestions(settings.filters.questions, fallback.filters.questions) &&
 		settings.filters.keyword.trim() === fallback.filters.keyword &&
+		sameSurvey(settings.filters, fallback.filters) &&
 		settings.filters.include_synthetic === fallback.filters.include_synthetic
 	);
 }

@@ -9,6 +9,8 @@ import {
 	DEFAULT_PROJECTION,
 	type ClusterSettings,
 	type ExploreFilters,
+	type SurveyRanges,
+	type SurveySelection,
 	defaultFilters
 } from './explore';
 import { keywordProblem as findKeywordProblem } from './keywordQuery';
@@ -67,6 +69,19 @@ export class ExploreState {
 	 * and `searchableKeyword` is what the requests are allowed to use.
 	 */
 	keyword = $state(defaultFilters().keyword);
+
+	/**
+	 * Which survey answers the interviews behind the chunks must hold, keyed by
+	 * guide coordinate. A cohort filter: it selects respondents and keeps
+	 * everything they said, rather than picking out their survey answers.
+	 *
+	 * Unlike the question filter this stays applied under the `interview` unit.
+	 * An interview-level chunk has no guide coordinates of its own, but it does
+	 * belong to an interview, and whose interview it is is exactly what this
+	 * asks about.
+	 */
+	surveyValues = $state<SurveySelection>(defaultFilters().survey);
+	surveyRanges = $state<SurveyRanges>(defaultFilters().survey_ranges);
 
 	/**
 	 * Which side of the exchange a bare term is looked for in.
@@ -135,7 +150,9 @@ export class ExploreState {
 		include_synthetic: this.includeSynthetic,
 		questions: this.effectiveQuestions,
 		keyword: this.searchableKeyword,
-		keyword_scope: this.keywordScope
+		keyword_scope: this.keywordScope,
+		survey: this.surveyValues,
+		survey_ranges: this.surveyRanges
 	});
 
 	settings = $derived<ClusterSettings>({

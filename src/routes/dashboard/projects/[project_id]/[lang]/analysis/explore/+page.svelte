@@ -13,7 +13,8 @@
 		GroupKind,
 		InterviewGuide,
 		LanguageCode,
-		ProjectLanguage
+		ProjectLanguage,
+		SurveyFacet
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { OUTLIER_COLOR, mapColor } from '$lib/config/chartColors';
@@ -296,6 +297,30 @@
 			const { data: body } = await request;
 			if (disposed) return;
 			guide = body ?? null;
+		})();
+
+		return () => {
+			disposed = true;
+		};
+	});
+
+	/**
+	 * The survey items the cohort filter offers, or null while they load.
+	 *
+	 * Null hides the control, exactly as a missing guide hides the question
+	 * filter: a project whose interviews carry no survey items has nothing to
+	 * offer here, and an empty picker would be a promise of something to find.
+	 */
+	let surveyFacets = $state<SurveyFacet[] | null>(null);
+
+	$effect(() => {
+		const request = data.surveyFacets;
+
+		let disposed = false;
+		(async () => {
+			const { data: body } = await request;
+			if (disposed) return;
+			surveyFacets = body?.items ?? null;
 		})();
 
 		return () => {
@@ -1185,7 +1210,10 @@
 				bind:filterQuestions={explore.filterQuestions}
 				bind:keyword={explore.keyword}
 				bind:keywordScope={explore.keywordScope}
+				bind:surveyValues={explore.surveyValues}
+				bind:surveyRanges={explore.surveyRanges}
 				{guide}
+				{surveyFacets}
 				bind:visibleLanguages={explore.visibleLanguages}
 				{listing}
 				{languages}
