@@ -44,7 +44,7 @@
 	// others are shown read-only. Comments are a separate, threaded discussion.
 	const messageAnnotations = new SvelteMap<string, MessageAnnotationPublic>();
 	const otherAnnotations = new SvelteMap<string, MessageAnnotationPublic[]>();
-	const comments = new MessageComments();
+	const comments = new MessageComments(() => data.project_id);
 
 	// Initialize annotations and comment threads from server data
 	$effect(() => {
@@ -181,7 +181,7 @@
 			if (existingAnnotation) {
 				// Update existing annotation
 				const { data: updatedAnnotation, error } = await Analysis.updateMessageAnnotation({
-					path: { annotation_id: existingAnnotation.id },
+					path: { project_id: data.project_id, annotation_id: existingAnnotation.id },
 					body: {
 						message_id: messageId,
 						user_id: userId,
@@ -201,7 +201,7 @@
 			} else {
 				// Create new annotation
 				const { data: newAnnotation, error } = await Analysis.addMessageAnnotation({
-					path: { message_id: messageId },
+					path: { project_id: data.project_id, message_id: messageId },
 					body: {
 						message_id: messageId,
 						user_id: userId,
@@ -240,7 +240,7 @@
 		savingAnnotation = true;
 		try {
 			const { error } = await Analysis.deleteMessageAnnotation({
-				path: { annotation_id: annotation.id }
+				path: { project_id: data.project_id, annotation_id: annotation.id }
 			});
 
 			if (error) {

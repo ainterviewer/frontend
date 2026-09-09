@@ -350,7 +350,7 @@
 	// rest are shown read-only so disagreement between coders stays visible.
 	const messageAnnotations = new SvelteMap<string, MessageAnnotationPublic>();
 	const otherAnnotations = new SvelteMap<string, MessageAnnotationPublic[]>();
-	const comments = new MessageComments();
+	const comments = new MessageComments(() => projectId);
 
 	$effect(() => {
 		messageAnnotations.clear();
@@ -600,7 +600,7 @@
 
 			if (existingAnnotation) {
 				const { data: updatedAnnotation, error } = await Analysis.updateMessageAnnotation({
-					path: { annotation_id: existingAnnotation.id },
+					path: { project_id: projectId, annotation_id: existingAnnotation.id },
 					body: {
 						message_id: messageId,
 						user_id: userId,
@@ -613,7 +613,7 @@
 				}
 			} else {
 				const { data: newAnnotation, error } = await Analysis.addMessageAnnotation({
-					path: { message_id: messageId },
+					path: { project_id: projectId, message_id: messageId },
 					body: {
 						message_id: messageId,
 						user_id: userId,
@@ -643,7 +643,7 @@
 		savingAnnotation = true;
 		try {
 			const { error } = await Analysis.deleteMessageAnnotation({
-				path: { annotation_id: annotation.id }
+				path: { project_id: projectId, annotation_id: annotation.id }
 			});
 			if (error) throw error;
 			messageAnnotations.delete(messageId);

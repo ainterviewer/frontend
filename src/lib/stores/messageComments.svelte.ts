@@ -17,9 +17,26 @@ import { toast } from 'svelte-sonner';
  * it knows will be refused, and surfaces the 403 if the server disagrees.
  */
 export class MessageComments {
+	/**
+	 * The project the messages belong to, read at the moment of the request.
+	 *
+	 * Every request carries it: the API takes a comment's project from the URL
+	 * and refuses an id from anywhere else, so a thread cannot be read or
+	 * written through a project the caller is not on.
+	 *
+	 * A function rather than a string because the pages holding one of these
+	 * derive the id from the route, and a value copied in the constructor would
+	 * be the project that was open when the component was created — which after
+	 * a client-side navigation is not the project on screen.
+	 */
+	#projectId: () => string;
 	#threads = new SvelteMap<string, MessageCommentPublic[]>();
 	/** Message ids with a write in flight, so composers can disable themselves. */
 	#pending = new SvelteSet<string>();
+
+	constructor(projectId: () => string) {
+		this.#projectId = projectId;
+	}
 
 	/**
 	 * Adopt the comments that came embedded in freshly loaded messages.
@@ -63,7 +80,7 @@ export class MessageComments {
 		this.#pending.add(messageId);
 		try {
 			const { data, error } = await Analysis.addMessageComment({
-				path: { message_id: messageId },
+				path: { project_id: this.#projectId(), message_id: messageId },
 				body: { body: text, parent_id: parentId }
 			});
 			if (error || !data) throw error ?? new Error('No comment returned');
@@ -95,7 +112,7 @@ export class MessageComments {
 		this.#pending.add(messageId);
 		try {
 			const { data, error } = await Analysis.updateMessageComment({
-				path: { comment_id: commentId },
+				path: { project_id: this.#projectId(), comment_id: commentId },
 				body: { body: text }
 			});
 			if (error || !data) throw error ?? new Error('No comment returned');
@@ -126,7 +143,7 @@ export class MessageComments {
 		this.#pending.add(messageId);
 		try {
 			const { error } = await Analysis.deleteMessageComment({
-				path: { comment_id: commentId }
+				path: { project_id: this.#projectId(), comment_id: commentId }
 			});
 			if (error) throw error;
 

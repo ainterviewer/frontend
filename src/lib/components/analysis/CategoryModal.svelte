@@ -62,7 +62,7 @@
 		if (category) {
 			// Update
 			const res = await Analysis.updateAnalysisCategory({
-				path: { category_id: category.id },
+				path: { project_id: projectId, category_id: category.id },
 				body: {
 					project_id: projectId,
 					name: newName,

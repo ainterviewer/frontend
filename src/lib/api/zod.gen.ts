@@ -2697,13 +2697,23 @@ export const zCreateAnalysisCategoryQuery = z.object({
 });
 
 export const zDeleteAnalysisCategoryPath = z.object({
+    project_id: z.string().nullable(),
     category_id: z.string()
+});
+
+export const zDeleteAnalysisCategoryQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 export const zUpdateAnalysisCategoryBody = zAnalysisCategoryCreate;
 
 export const zUpdateAnalysisCategoryPath = z.object({
+    project_id: z.string().nullable(),
     category_id: z.string()
+});
+
+export const zUpdateAnalysisCategoryQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2712,7 +2722,12 @@ export const zUpdateAnalysisCategoryPath = z.object({
 export const zUpdateAnalysisCategoryResponse = zAnalysisCategoryPublic;
 
 export const zGetMessageAnnotationsPath = z.object({
+    project_id: z.string().nullable(),
     message_id: z.string()
+});
+
+export const zGetMessageAnnotationsQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2725,7 +2740,12 @@ export const zGetMessageAnnotationsResponse = z.array(zMessageAnnotationPublic);
 export const zAddMessageAnnotationBody = zMessageAnnotationCreate;
 
 export const zAddMessageAnnotationPath = z.object({
+    project_id: z.string().nullable(),
     message_id: z.string()
+});
+
+export const zAddMessageAnnotationQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2734,13 +2754,23 @@ export const zAddMessageAnnotationPath = z.object({
 export const zAddMessageAnnotationResponse = zMessageAnnotationPublic;
 
 export const zDeleteMessageAnnotationPath = z.object({
+    project_id: z.string().nullable(),
     annotation_id: z.string()
+});
+
+export const zDeleteMessageAnnotationQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 export const zUpdateMessageAnnotationBody = zMessageAnnotationCreate;
 
 export const zUpdateMessageAnnotationPath = z.object({
+    project_id: z.string().nullable(),
     annotation_id: z.string()
+});
+
+export const zUpdateMessageAnnotationQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2819,7 +2849,12 @@ export const zGetMessageContextAfterQuery = z.object({
 export const zGetMessageContextAfterResponse = z.array(zMessagePublic);
 
 export const zGetMessageCommentsPath = z.object({
+    project_id: z.string().nullable(),
     message_id: z.string()
+});
+
+export const zGetMessageCommentsQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2832,7 +2867,12 @@ export const zGetMessageCommentsResponse = z.array(zMessageCommentPublic);
 export const zAddMessageCommentBody = zMessageCommentCreate;
 
 export const zAddMessageCommentPath = z.object({
+    project_id: z.string().nullable(),
     message_id: z.string()
+});
+
+export const zAddMessageCommentQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -2841,13 +2881,23 @@ export const zAddMessageCommentPath = z.object({
 export const zAddMessageCommentResponse = zMessageCommentPublic;
 
 export const zDeleteMessageCommentPath = z.object({
+    project_id: z.string().nullable(),
     comment_id: z.string()
+});
+
+export const zDeleteMessageCommentQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 export const zUpdateMessageCommentBody = zMessageCommentUpdate;
 
 export const zUpdateMessageCommentPath = z.object({
+    project_id: z.string().nullable(),
     comment_id: z.string()
+});
+
+export const zUpdateMessageCommentQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 /**

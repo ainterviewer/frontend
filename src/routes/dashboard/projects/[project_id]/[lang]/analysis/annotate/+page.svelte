@@ -68,7 +68,7 @@
 	async function deleteCategory(id: string) {
 		if (!confirm('Are you sure you want to delete this category?')) return;
 		const { error } = await Analysis.deleteAnalysisCategory({
-			path: { category_id: id }
+			path: { project_id: projectId ?? '', category_id: id }
 		});
 		if (error) {
 			console.error('Failed to delete category', error);

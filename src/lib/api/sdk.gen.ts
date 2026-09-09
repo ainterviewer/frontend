@@ -63,7 +63,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/analysis/categories/{category_id}',
+            url: '/api/projects/{project_id}/analysis/categories/{category_id}',
             ...options
         });
     }
@@ -78,7 +78,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/analysis/categories/{category_id}',
+            url: '/api/projects/{project_id}/analysis/categories/{category_id}',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/messages/{message_id}/annotations',
+            url: '/api/projects/{project_id}/messages/{message_id}/annotations',
             ...options
         });
     }
@@ -112,7 +112,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/messages/{message_id}/annotations',
+            url: '/api/projects/{project_id}/messages/{message_id}/annotations',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/analysis/annotations/{annotation_id}',
+            url: '/api/projects/{project_id}/analysis/annotations/{annotation_id}',
             ...options
         });
     }
@@ -146,7 +146,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/analysis/annotations/{annotation_id}',
+            url: '/api/projects/{project_id}/analysis/annotations/{annotation_id}',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -233,7 +233,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/messages/{message_id}/comments',
+            url: '/api/projects/{project_id}/messages/{message_id}/comments',
             ...options
         });
     }
@@ -248,7 +248,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/messages/{message_id}/comments',
+            url: '/api/projects/{project_id}/messages/{message_id}/comments',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -267,7 +267,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/analysis/comments/{comment_id}',
+            url: '/api/projects/{project_id}/analysis/comments/{comment_id}',
             ...options
         });
     }
@@ -282,7 +282,7 @@ export class Analysis {
                     name: 'access_token',
                     type: 'apiKey'
                 }],
-            url: '/api/analysis/comments/{comment_id}',
+            url: '/api/projects/{project_id}/analysis/comments/{comment_id}',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

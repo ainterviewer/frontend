@@ -4784,12 +4784,21 @@ export type DeleteAnalysisCategoryData = {
     body?: never;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
          * Category Id
          */
         category_id: string;
     };
-    query?: never;
-    url: '/api/analysis/categories/{category_id}';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/categories/{category_id}';
 };
 
 export type DeleteAnalysisCategoryErrors = {
@@ -4816,12 +4825,21 @@ export type UpdateAnalysisCategoryData = {
     body: AnalysisCategoryCreate;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
          * Category Id
          */
         category_id: string;
     };
-    query?: never;
-    url: '/api/analysis/categories/{category_id}';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/categories/{category_id}';
 };
 
 export type UpdateAnalysisCategoryErrors = {
@@ -4850,12 +4868,21 @@ export type GetMessageAnnotationsData = {
     body?: never;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
          * Message Id
          */
         message_id: string;
     };
-    query?: never;
-    url: '/api/messages/{message_id}/annotations';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/messages/{message_id}/annotations';
 };
 
 export type GetMessageAnnotationsErrors = {
@@ -4886,12 +4913,21 @@ export type AddMessageAnnotationData = {
     body: MessageAnnotationCreate;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
          * Message Id
          */
         message_id: string;
     };
-    query?: never;
-    url: '/api/messages/{message_id}/annotations';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/messages/{message_id}/annotations';
 };
 
 export type AddMessageAnnotationErrors = {
@@ -4920,12 +4956,21 @@ export type DeleteMessageAnnotationData = {
     body?: never;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
          * Annotation Id
          */
         annotation_id: string;
     };
-    query?: never;
-    url: '/api/analysis/annotations/{annotation_id}';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/annotations/{annotation_id}';
 };
 
 export type DeleteMessageAnnotationErrors = {
@@ -4952,12 +4997,21 @@ export type UpdateMessageAnnotationData = {
     body: MessageAnnotationCreate;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
          * Annotation Id
          */
         annotation_id: string;
     };
-    query?: never;
-    url: '/api/analysis/annotations/{annotation_id}';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/annotations/{annotation_id}';
 };
 
 export type UpdateMessageAnnotationErrors = {
@@ -5174,12 +5228,21 @@ export type GetMessageCommentsData = {
     body?: never;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
          * Message Id
          */
         message_id: string;
     };
-    query?: never;
-    url: '/api/messages/{message_id}/comments';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/messages/{message_id}/comments';
 };
 
 export type GetMessageCommentsErrors = {
@@ -5210,12 +5273,21 @@ export type AddMessageCommentData = {
     body: MessageCommentCreate;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
          * Message Id
          */
         message_id: string;
     };
-    query?: never;
-    url: '/api/messages/{message_id}/comments';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/messages/{message_id}/comments';
 };
 
 export type AddMessageCommentErrors = {
@@ -5244,12 +5316,21 @@ export type DeleteMessageCommentData = {
     body?: never;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
          * Comment Id
          */
         comment_id: string;
     };
-    query?: never;
-    url: '/api/analysis/comments/{comment_id}';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/comments/{comment_id}';
 };
 
 export type DeleteMessageCommentErrors = {
@@ -5276,12 +5357,21 @@ export type UpdateMessageCommentData = {
     body: MessageCommentUpdate;
     path: {
         /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
          * Comment Id
          */
         comment_id: string;
     };
-    query?: never;
-    url: '/api/analysis/comments/{comment_id}';
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/comments/{comment_id}';
 };
 
 export type UpdateMessageCommentErrors = {
