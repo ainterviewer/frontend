@@ -391,6 +391,31 @@ export function questionParam([section, question]: [number, number]) {
  * left off entirely — the API reads a missing `language` as "every one", and
  * sending `[]` would be a request for none.
  */
+/**
+ * The filters the cohort picker's own counts are read under.
+ *
+ * Everything that selects *interviews*, and nothing that selects chunks: the
+ * keyword and question filters are left off because the endpoint ignores them
+ * — a facet counts people, and "interviews holding a matching chunk" is a
+ * different unit — and because a picker that renumbered itself on every
+ * keystroke in the keyword box would be unreadable.
+ */
+export function cohortQuery(filters: ExploreFilters) {
+	const { keyword, keyword_scope, question, ...rest } = filterQuery(filters);
+	// Referenced so the destructuring reads as the removal it is rather than as
+	// three unused names.
+	void keyword;
+	void keyword_scope;
+	void question;
+	return rest;
+}
+
+/** Whether a cohort query asks for anything the preloaded one did not. */
+export function isWholeCorpus(query: ReturnType<typeof cohortQuery>) {
+	const { include_synthetic, ...narrowing } = query;
+	return include_synthetic === false && Object.keys(narrowing).length === 0;
+}
+
 export function filterQuery(filters: ExploreFilters) {
 	return {
 		...(filters.status ? { status: filters.status } : {}),

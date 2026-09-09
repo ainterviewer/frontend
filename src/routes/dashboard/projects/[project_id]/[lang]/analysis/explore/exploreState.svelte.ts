@@ -39,6 +39,55 @@ export type ExploreView = 'map' | 'list';
 export const DEFAULT_VIEW: ExploreView = 'list';
 
 /**
+ * The order an unranked list is read in.
+ *
+ * Only ever applies to the browse: a search and a walk are ordered by score,
+ * and that order *is* the answer.
+ */
+export type ListOrder = 'random' | 'interview_asc' | 'interview_desc';
+
+export const LIST_ORDERS: { value: ListOrder; label: string; hint: string }[] = [
+	{
+		value: 'random',
+		label: 'Random',
+		hint: 'A new shuffle each visit. The top of a list is read more carefully than the bottom, so a fixed order decides whose answers get the close reading — this spreads that around instead. One interview’s chunks still stay together.'
+	},
+	{
+		value: 'interview_asc',
+		label: 'Oldest first',
+		hint: 'By when the interview was started, earliest first — interview #1 at the top.'
+	},
+	{
+		value: 'interview_desc',
+		label: 'Newest first',
+		hint: 'By when the interview was started, most recent first. What a collection still running has just added.'
+	}
+];
+
+/**
+ * Shuffled by default, which is a claim about reading rather than about data.
+ *
+ * A researcher reads the first cards closely and the later ones faster, so
+ * whatever order the corpus happens to arrive in silently chooses whose
+ * answers get the attention. Guide order — interview id, then question — is
+ * particularly bad at this: it is stable, so it is the *same* people every
+ * time, and it looks meaningful without being so.
+ */
+export const DEFAULT_LIST_ORDER: ListOrder = 'random';
+
+/**
+ * The seed behind one visit's shuffle.
+ *
+ * Drawn once per page load and sent with every browse request, which is what
+ * makes "Load more" continue the same shuffle rather than deal a new one — and
+ * what makes a refresh deal a new one, deliberately. Kept to the characters the
+ * endpoint accepts.
+ */
+function shuffleSeed(): string {
+	return Math.random().toString(36).slice(2, 12);
+}
+
+/**
  * Every knob both views read, in one place.
  *
  * A class rather than a pile of `$state` declarations in the page, because the
@@ -49,6 +98,18 @@ export const DEFAULT_VIEW: ExploreView = 'list';
 export class ExploreState {
 	/** Which view is showing. Not a filter — it changes nothing about the corpus. */
 	view = $state<ExploreView>(DEFAULT_VIEW);
+
+	/** How the unranked list is ordered. Not a filter either: nothing leaves. */
+	listOrder = $state<ListOrder>(DEFAULT_LIST_ORDER);
+
+	/**
+	 * This visit's shuffle, fixed for as long as the page is open.
+	 *
+	 * Not `$state`: it is read by the requests and never changes, and making it
+	 * reactive would only invite something to reshuffle the list under a reader
+	 * mid-scroll.
+	 */
+	readonly seed = shuffleSeed();
 
 	// -- shared by both views -------------------------------------------------
 

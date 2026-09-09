@@ -972,6 +972,10 @@ export type EmbeddingBrowseResponse = {
      */
     total?: number;
     /**
+     * Interviews
+     */
+    interviews?: number;
+    /**
      * Offset
      */
     offset?: number;
@@ -1207,6 +1211,10 @@ export type EmbeddingSearchHit = {
      */
     participant_pid?: string | null;
     /**
+     * Interview Number
+     */
+    interview_number?: number | null;
+    /**
      * Turns
      */
     turns?: Array<EmbeddingTurn>;
@@ -1241,6 +1249,10 @@ export type EmbeddingSearchResponse = {
      */
     total?: number;
     /**
+     * Interviews
+     */
+    interviews?: number;
+    /**
      * Offset
      */
     offset?: number;
@@ -1265,6 +1277,10 @@ export type EmbeddingSimilarResponse = {
      * Total
      */
     total?: number;
+    /**
+     * Interviews
+     */
+    interviews?: number;
     /**
      * Offset
      */
@@ -1362,6 +1378,18 @@ export type EmbeddingTurn = {
         number,
         number
     ]>;
+    /**
+     * Section
+     */
+    section?: number | null;
+    /**
+     * Main Question
+     */
+    main_question?: number | null;
+    /**
+     * Sub Question
+     */
+    sub_question?: number | null;
 };
 
 /**
@@ -4013,10 +4041,10 @@ export type TimedMessage = {
  *
  * One turn of a whole interview, for reading a hit in its context.
  *
- * An `EmbeddingTurn` with the guide coordinates it was said at, so the reader
- * can be put back where they came from: the card that opened this knows its
- * own section and question, and the turns carrying theirs is what lets the
- * view scroll to them and shade them apart from the rest.
+ * An `EmbeddingTurn` with everything a chunk has no room for: the message
+ * row's own id, the survey item in full, the image, and whether the guide
+ * skipped past it. The coordinates it is scrolled to are the base model's
+ * now, since a card numbers its messages from them too.
  *
  * Inherits `matches`/`excluded` rather than restating them, so a transcript
  * renders through the same component a chunk does -- the search is still
@@ -4052,10 +4080,6 @@ export type TranscriptTurn = {
         number
     ]>;
     /**
-     * Id
-     */
-    id: string;
-    /**
      * Section
      */
     section?: number | null;
@@ -4067,6 +4091,10 @@ export type TranscriptTurn = {
      * Sub Question
      */
     sub_question?: number | null;
+    /**
+     * Id
+     */
+    id: string;
     /**
      * Survey Item
      */
@@ -5508,6 +5536,14 @@ export type BrowseEmbeddingsData = {
     query?: {
         kind?: EmbeddingKind;
         /**
+         * Order
+         */
+        order?: 'random' | 'interview_asc' | 'interview_desc';
+        /**
+         * Seed
+         */
+        seed?: string;
+        /**
          * Folder Id
          */
         folder_id?: string | null;
@@ -5603,13 +5639,57 @@ export type ReadSurveyFacetsData = {
     };
     query?: {
         /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+        /**
+         * Language
+         */
+        language?: Array<LanguageCode> | null;
+        /**
+         * Status
+         */
+        status?: InterviewStatus | null;
+        /**
+         * Participant Id
+         */
+        participant_id?: string | null;
+        /**
+         * Created After
+         */
+        created_after?: string | null;
+        /**
+         * Created Before
+         */
+        created_before?: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id?: Array<string> | null;
+        /**
          * Include Synthetic
          */
         include_synthetic?: boolean;
         /**
-         * Folder Id
+         * Question
          */
-        folder_id?: string | null;
+        question?: Array<string> | null;
+        /**
+         * Keyword
+         */
+        keyword?: string | null;
+        /**
+         * Keyword Scope
+         */
+        keyword_scope?: 'answer' | 'question' | 'both';
+        /**
+         * Survey
+         */
+        survey?: Array<string> | null;
+        /**
+         * Survey Range
+         */
+        survey_range?: Array<string> | null;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/survey-facets';
 };

@@ -3,10 +3,13 @@
 	import { format } from 'd3-format';
 	import HitCard from './HitCard.svelte';
 	import { PAGE_SIZE, type ListPaging } from './explore';
+	import { LIST_ORDERS, type ListOrder } from './exploreState.svelte';
 
 	let {
 		hits,
 		total,
+		interviews,
+		order = $bindable(),
 		loading,
 		error,
 		paging,
@@ -24,6 +27,24 @@
 		hits: EmbeddingSearchHit[];
 		/** Everything that matched, which the page is a slice of. */
 		total: number | null;
+		/**
+		 * How many distinct interviews those chunks came from.
+		 *
+		 * The count of chunks says how much there is to read; this says how many
+		 * people it is. Forty chunks from three interviews and forty from forty
+		 * are the same list to scroll and very different things to conclude
+		 * from, and the difference is invisible in a mosaic where nothing repeats
+		 * a name.
+		 */
+		interviews: number | null;
+		/**
+		 * How the unranked list is ordered.
+		 *
+		 * Bound rather than reported, because the page turns it straight back
+		 * into a request: the order is SQL's, not the mosaic's, so choosing one
+		 * refetches page one.
+		 */
+		order: ListOrder;
 		loading: boolean;
 		error: string | null;
 		paging: ListPaging;
@@ -68,6 +89,16 @@
 
 	/** Whether a walk is under way, including the beat before the anchor lands. */
 	let walking = $derived(anchor !== null || anchorLoading);
+
+	/**
+	 * Whether an order is the reader's to choose.
+	 *
+	 * A search and a walk are ordered by score, and that order is the answer to
+	 * what was asked — a control offering to shuffle it would be offering to
+	 * throw the ranking away. So the picker is absent there rather than present
+	 * and disabled: there is nothing to choose, not something withheld.
+	 */
+	let sortable = $derived(!ranked && !walking);
 
 	/**
 	 * The hits cut back into the pages they arrived in.
@@ -120,17 +151,23 @@
 			<span>
 				<span class="font-medium text-gray-700">{formatNumber(total)}</span>
 				{total === 1 ? 'chunk' : 'chunks'}
+				{#if interviews !== null}
+					from
+					<span class="font-medium text-gray-700">{formatNumber(interviews)}</span>
+					{interviews === 1 ? 'interview' : 'interviews'}
+				{/if}
 			</span>
 		{/if}
-		<span>
-			{#if walking}
-				nearest this chunk
-			{:else if ranked}
-				ranked by similarity to the query
-			{:else}
-				in guide order — interview, then question
-			{/if}
-		</span>
+		<!-- Only where there is nothing else saying it. A ranking and a walk have
+		     no control of their own, so the strip is the only thing that can tell
+		     the reader that the top of this list means something; the browse has
+		     the picker at the other end of the same row, and saying it twice made
+		     one of them look like it might be the other. -->
+		{#if walking}
+			<span>nearest this chunk</span>
+		{:else if ranked}
+			<span>ranked by similarity to the query</span>
+		{/if}
 		{#if walking}
 			<!-- The way back, beside the label that says where you are. A walk
 			     replaces the list under it rather than navigating away, so this
@@ -143,12 +180,30 @@
 				Back to results
 			</button>
 		{/if}
-		{#if loading}
-			<span class="ml-auto flex items-center gap-1.5 text-gray-400">
-				<i class="fa-solid fa-spinner fa-spin text-[0.625rem]"></i>
-				Loading…
-			</span>
-		{/if}
+		<span class="ml-auto flex items-center gap-3">
+			{#if loading}
+				<span class="flex items-center gap-1.5 text-gray-400">
+					<i class="fa-solid fa-spinner fa-spin text-[0.625rem]"></i>
+					Loading…
+				</span>
+			{/if}
+			{#if sortable}
+				<!-- Right-hand end, away from the counts: those describe what the
+				     list *is*, and this changes what it is. -->
+				<label class="flex items-center gap-1.5">
+					<span class="sr-only">Order the list</span>
+					<select
+						bind:value={order}
+						title="How the interviews are ordered. Random is the default: the top of a list gets the closest reading, so a fixed order would always give it to the same people."
+						class="cursor-pointer rounded-md border border-gray-200 bg-white py-0.5 pr-6 pl-2 text-xs text-gray-600 focus:border-primary focus:ring-0"
+					>
+						{#each LIST_ORDERS as option (option.value)}
+							<option value={option.value} title={option.hint}>{option.label}</option>
+						{/each}
+					</select>
+				</label>
+			{/if}
+		</span>
 	</div>
 
 	<div class="min-h-0 flex-1 overflow-y-auto p-3">

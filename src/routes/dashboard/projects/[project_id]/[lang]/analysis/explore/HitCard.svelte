@@ -41,15 +41,6 @@
 	// coordinates still has the text the model saw, and falls back to it.
 	let turns = $derived(hit.turns ?? []);
 
-	// Question numbering as the guide writes it, when the chunk has one. An
-	// interview-level chunk has none, and a message that came before the first
-	// question has none either.
-	let questionLabel = $derived(
-		hit.section !== null && hit.main_question !== null
-			? `Q${hit.section + 1}.${hit.main_question + 1}${hit.sub_question !== null ? `.${hit.sub_question + 1}` : ''}`
-			: null
-	);
-
 	let date = $derived(
 		hit.interview_created_at ? formatDate(new Date(hit.interview_created_at)) : null
 	);
@@ -83,16 +74,25 @@
 				{formatScore(hit.score)}
 			</span>
 		{/if}
-		{#if questionLabel}
-			<span>{questionLabel}</span>
+		<!-- Which interview, in two forms that are not alternatives to each
+		     other. The number identifies the interview inside this project and is
+		     always there; the pid identifies a person across projects and usually
+		     is not. The number is here mainly so a reader scanning the mosaic can
+		     see at a glance which cards are the same conversation, which is
+		     otherwise only knowable by opening them.
+
+		     The question number used to sit here too. It is on the messages now:
+		     a card is a question group, its probes carry different numbers, and
+		     one number in the footer could only ever be the group's. -->
+		{#if hit.interview_number}
+			<span class="font-mono" title="Interview {hit.interview_number} in this project">
+				#{hit.interview_number}
+			</span>
 		{/if}
 		{#if hit.participant_pid}
 			<span>{hit.participant_pid}</span>
 		{/if}
 		<span class="uppercase">{hit.language}</span>
-		{#if hit.interview_status}
-			<span>{hit.interview_status}</span>
-		{/if}
 		{#if date}
 			<span>{date}</span>
 		{/if}

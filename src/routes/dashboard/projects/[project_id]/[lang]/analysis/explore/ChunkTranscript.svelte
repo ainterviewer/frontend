@@ -26,8 +26,11 @@
 		compact?: boolean;
 	} = $props();
 
+	// Keyed on `id` rather than on a coordinate: both kinds of turn carry the
+	// guide coordinates now, and only a transcript turn carries the message row
+	// it came from.
 	function isTranscript(turn: EmbeddingTurn | TranscriptTurn): turn is TranscriptTurn {
-		return 'section' in turn;
+		return 'id' in turn;
 	}
 
 	/**
@@ -69,13 +72,17 @@
 	 * The guide number, spelled the way the transcript page spells it: `3.1` for
 	 * a main question, `3.2.1` for the first probe under it.
 	 *
-	 * Only a transcript turn has the coordinates. A results card has no room for
-	 * a number on every bubble and says its question once in the footer instead,
-	 * which is why this comes back null there rather than being switched off by
-	 * a flag.
+	 * On the message rather than in the card's footer, which is where the card
+	 * used to say it once for the whole chunk. A chunk is a question group and
+	 * its probes are numbered apart — the footer could only ever say the group's
+	 * number, and saying it on each turn is both truer and what the transcript
+	 * this opens into already does.
+	 *
+	 * Null where the guide never numbered the turn: an interview-level chunk, or
+	 * a message said before the first question.
 	 */
 	function label(turn: EmbeddingTurn | TranscriptTurn): string | null {
-		if (!isTranscript(turn) || turn.section === null || turn.section === undefined) return null;
+		if (turn.section === null || turn.section === undefined) return null;
 		let out = `${turn.section + 1}`;
 		if (turn.main_question !== null && turn.main_question !== undefined) {
 			out += `.${turn.main_question + 1}`;

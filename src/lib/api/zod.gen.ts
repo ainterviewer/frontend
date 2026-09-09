@@ -2011,7 +2011,10 @@ export const zEmbeddingTurn = z.object({
     survey_label: z.string().nullish(),
     match: z.boolean().optional().default(false),
     matches: z.array(z.tuple([z.int(), z.int()])).optional(),
-    excluded: z.array(z.tuple([z.int(), z.int()])).optional()
+    excluded: z.array(z.tuple([z.int(), z.int()])).optional(),
+    section: z.int().nullish(),
+    main_question: z.int().nullish(),
+    sub_question: z.int().nullish()
 });
 
 /**
@@ -2042,6 +2045,7 @@ export const zEmbeddingSearchHit = z.object({
     interview_type: zInterviewType.nullish(),
     participant_id: z.string().nullish(),
     participant_pid: z.string().nullish(),
+    interview_number: z.int().nullish(),
     turns: z.array(zEmbeddingTurn).optional().default([])
 });
 
@@ -2058,6 +2062,7 @@ export const zEmbeddingSearchHit = z.object({
 export const zEmbeddingBrowseResponse = z.object({
     kind: zEmbeddingKind,
     total: z.int().optional().default(0),
+    interviews: z.int().optional().default(0),
     offset: z.int().optional().default(0),
     items: z.array(zEmbeddingSearchHit).optional().default([])
 });
@@ -2107,6 +2112,7 @@ export const zEmbeddingSearchResponse = z.object({
     task: z.string(),
     candidates: z.int().optional().default(0),
     total: z.int().optional().default(0),
+    interviews: z.int().optional().default(0),
     offset: z.int().optional().default(0),
     items: z.array(zEmbeddingSearchHit).optional().default([])
 });
@@ -2120,6 +2126,7 @@ export const zEmbeddingSimilarResponse = z.object({
     source: zEmbeddingSearchHit,
     candidates: z.int().optional().default(0),
     total: z.int().optional().default(0),
+    interviews: z.int().optional().default(0),
     offset: z.int().optional().default(0),
     items: z.array(zEmbeddingSearchHit).optional().default([])
 });
@@ -2129,10 +2136,10 @@ export const zEmbeddingSimilarResponse = z.object({
  *
  * One turn of a whole interview, for reading a hit in its context.
  *
- * An `EmbeddingTurn` with the guide coordinates it was said at, so the reader
- * can be put back where they came from: the card that opened this knows its
- * own section and question, and the turns carrying theirs is what lets the
- * view scroll to them and shade them apart from the rest.
+ * An `EmbeddingTurn` with everything a chunk has no room for: the message
+ * row's own id, the survey item in full, the image, and whether the guide
+ * skipped past it. The coordinates it is scrolled to are the base model's
+ * now, since a card numbers its messages from them too.
  *
  * Inherits `matches`/`excluded` rather than restating them, so a transcript
  * renders through the same component a chunk does -- the search is still
@@ -2146,10 +2153,10 @@ export const zTranscriptTurn = z.object({
     match: z.boolean().optional().default(false),
     matches: z.array(z.tuple([z.int(), z.int()])).optional(),
     excluded: z.array(z.tuple([z.int(), z.int()])).optional(),
-    id: z.uuid(),
     section: z.int().nullish(),
     main_question: z.int().nullish(),
     sub_question: z.int().nullish(),
+    id: z.uuid(),
     survey_item: z.union([
         zRadioItem,
         zCheckboxItem,
@@ -2945,6 +2952,12 @@ export const zBrowseEmbeddingsPath = z.object({
 
 export const zBrowseEmbeddingsQuery = z.object({
     kind: zEmbeddingKind.optional().default('qa_pair'),
+    order: z.enum([
+        'random',
+        'interview_asc',
+        'interview_desc'
+    ]).optional().default('random'),
+    seed: z.string().max(64).regex(/^[A-Za-z0-9_-]*$/).optional().default(''),
     folder_id: z.string().nullish(),
     language: z.array(zLanguageCode).nullish(),
     status: zInterviewStatus.nullish(),
@@ -2976,8 +2989,23 @@ export const zReadSurveyFacetsPath = z.object({
 });
 
 export const zReadSurveyFacetsQuery = z.object({
+    folder_id: z.string().nullish(),
+    language: z.array(zLanguageCode).nullish(),
+    status: zInterviewStatus.nullish(),
+    participant_id: z.string().nullish(),
+    created_after: z.iso.datetime().nullish(),
+    created_before: z.iso.datetime().nullish(),
+    interview_id: z.array(z.string()).nullish(),
     include_synthetic: z.boolean().optional().default(false),
-    folder_id: z.string().nullish()
+    question: z.array(z.string()).nullish(),
+    keyword: z.string().max(2000).nullish(),
+    keyword_scope: z.enum([
+        'answer',
+        'question',
+        'both'
+    ]).optional().default('answer'),
+    survey: z.array(z.string()).nullish(),
+    survey_range: z.array(z.string()).nullish()
 });
 
 /**

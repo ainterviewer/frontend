@@ -338,6 +338,14 @@ export class Analysis {
      * Paged with `limit`/`offset` like the ranked endpoints, but `total` means
      * something stronger here: nothing was scored, so every row it counts is a row
      * that matched the filters rather than the tail of a ranking.
+     *
+     * `order` defaults to `random`, which is a claim about reading rather than
+     * about data: a researcher reads the top of this list far more carefully than
+     * the bottom, so a fixed order means the same interviews are always the
+     * closely-read ones. `seed` is what makes a shuffle survive paging -- the
+     * same seed is the same order, so page two continues page one -- and a client
+     * that draws a fresh seed per page load gets a fresh shuffle per visit.
+     * Ignored by the other orders, which need no seed to be stable.
      */
     public static browseEmbeddings<ThrowOnError extends boolean = false>(options: Options<BrowseEmbeddingsData, ThrowOnError>): RequestResult<BrowseEmbeddingsResponses, BrowseEmbeddingsErrors, ThrowOnError> {
         return (options.client ?? client).get<BrowseEmbeddingsResponses, BrowseEmbeddingsErrors, ThrowOnError>({
@@ -356,11 +364,21 @@ export class Analysis {
      *
      * What the cohort filter in the explore view is built from.
      *
-     * Deliberately not narrowed by the filters the view currently has applied.
-     * The counts would then move as the reader filters, and an option that
-     * reached zero would vanish from under the selection that produced it --
-     * leaving no way back. The language filter is offered from the whole corpus
-     * for the same reason.
+     * The *items and their options* come from the whole project, always: a filter
+     * must never remove the control that would undo it, so an option nobody left
+     * in view chose reads zero rather than disappearing, and the language filter
+     * is offered from the whole corpus for the same reason.
+     *
+     * The *counts* are of the cohort the view is currently showing -- the
+     * interview filters, and the selections made in the other survey items. A
+     * count that ignored them said 62 male interviews beside a list drawn from 52,
+     * which reads as a bug in one of the two numbers rather than as two different
+     * questions. Each item is exempt from its own selection; `_facet_cohorts` has
+     * why.
+     *
+     * The keyword and question filters are deliberately not applied: they choose
+     * chunks, not people, and "interviews holding a matching chunk" is a
+     * different unit than the one every other number here is counted in.
      */
     public static readSurveyFacets<ThrowOnError extends boolean = false>(options: Options<ReadSurveyFacetsData, ThrowOnError>): RequestResult<ReadSurveyFacetsResponses, ReadSurveyFacetsErrors, ThrowOnError> {
         return (options.client ?? client).get<ReadSurveyFacetsResponses, ReadSurveyFacetsErrors, ThrowOnError>({

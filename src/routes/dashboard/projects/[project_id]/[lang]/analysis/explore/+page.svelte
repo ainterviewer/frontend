@@ -36,12 +36,14 @@
 		MIN_CLUSTER_SIZE_RANGE,
 		PAGE_SIZE,
 		clusterQuery,
+		cohortQuery,
 		describeError,
 		filterQuery,
 		groupKeyOf,
 		groupOrder,
 		isDefaultClusterSettings,
 		isToolbarChange,
+		isWholeCorpus,
 		offDefaultCount,
 		type ClusterSettings,
 		type ListPaging
@@ -313,14 +315,36 @@
 	 */
 	let surveyFacets = $state<SurveyFacet[] | null>(null);
 
+	/**
+	 * Re-read whenever the cohort changes.
+	 *
+	 * The items and their options come back the same every time — they describe
+	 * the project — but the counts beside them are of the interviews currently
+	 * in view, and a picker reading "62 male" beside a list drawn from 52
+	 * interviews reads as one of the two numbers being wrong. Each item is
+	 * exempt from its own selection, so choosing an option never collapses the
+	 * options beside it; that is the server's rule, not this one's.
+	 *
+	 * The preloaded request is reused whenever nothing is narrowing the corpus,
+	 * which is exactly what it asked for — including on the way back, after a
+	 * reader clears their filters.
+	 */
 	$effect(() => {
-		const request = data.surveyFacets;
+		const projectId = data.project_id;
+		const query = cohortQuery(filters);
+		const preloaded = data.surveyFacets;
 
 		let disposed = false;
 		(async () => {
-			const { data: body } = await request;
+			const { data: body } = isWholeCorpus(query)
+				? await preloaded
+				: await Analysis.readSurveyFacets({ path: { project_id: projectId }, query });
 			if (disposed) return;
-			surveyFacets = body?.items ?? null;
+			// Left standing on failure rather than blanked: the picker's options
+			// are still the project's options, and a control that vanished
+			// because its counts could not be refreshed would take the reader's
+			// current selection with it.
+			if (body) surveyFacets = body.items ?? null;
 		})();
 
 		return () => {
@@ -582,6 +606,10 @@
 		const projectId = data.project_id;
 		const currentKind = kind;
 		const currentFilters = filterQuery(filters);
+		// Read here rather than at the call below, so changing the order refetches
+		// — the list is ordered in SQL, and page one of a shuffle is not something
+		// the client could re-derive from the page it is holding.
+		const currentOrder = explore.listOrder;
 		const wanted = listing && !ranked && selectedId === null;
 
 		browseRun += 1;
@@ -607,7 +635,14 @@
 				response
 			} = await Analysis.browseEmbeddings({
 				path: { project_id: projectId },
-				query: { kind: currentKind, limit: PAGE_SIZE, offset: 0, ...currentFilters },
+				query: {
+					kind: currentKind,
+					limit: PAGE_SIZE,
+					offset: 0,
+					order: currentOrder,
+					seed: explore.seed,
+					...currentFilters
+				},
 				signal: controller.signal
 			});
 			if (disposed) return;
@@ -649,6 +684,10 @@
 				kind,
 				limit: PAGE_SIZE,
 				offset: browseHits.length,
+				// The same seed as the page above it, so this continues that shuffle
+				// rather than dealing a second one over the same corpus.
+				order: explore.listOrder,
+				seed: explore.seed,
 				...filterQuery(filters)
 			}
 		});
@@ -847,6 +886,19 @@
 	let listTotal = $derived.by(() => {
 		if (walking) return detail?.total ?? null;
 		return ranked ? (searchResponse?.total ?? null) : (browseResponse?.total ?? null);
+	});
+	/**
+	 * How many interviews the list is drawn from, as the server counted them.
+	 *
+	 * Server-side rather than counted over `listHits`, which is a page: a count
+	 * of what is loaded climbs with every "Load more", and a reader watching a
+	 * number go up reads that as the corpus growing rather than as their own
+	 * scrolling. Null while nothing has come back, so the strip says nothing
+	 * rather than saying zero.
+	 */
+	let listInterviews = $derived.by(() => {
+		if (walking) return detail?.interviews ?? null;
+		return ranked ? (searchResponse?.interviews ?? null) : (browseResponse?.interviews ?? null);
 	});
 	let listLoading = $derived(walking ? detailLoading : ranked ? searchLoading : browseLoading);
 	let listError = $derived(walking ? detailError : ranked ? searchError : browseError);
@@ -1157,17 +1209,17 @@
 				{/if}
 			</form>
 
-			<KeywordInput
-				bind:value={explore.keyword}
-				bind:scope={explore.keywordScope}
-				problem={explore.keywordProblem}
-			/>
-
 			<!-- The cut-off sits with the query rather than in the rail, because it
 			     is a property of the list of hits and not of the map: it filters
 			     what came back, and the rail can be collapsed over it. It applies to
 			     whichever ranked list the panel is showing — results, or a chunk's
-			     neighbours — which is why it is out here rather than in either. -->
+			     neighbours — which is why it is out here rather than in either.
+
+			     Between the two boxes because it belongs to the one above it: only
+			     a semantic query or a walk produces a score to cut, and the keyword
+			     box below is a filter with no score at all. Sitting past the keyword
+			     box made it look like a third, unrelated control rather than the
+			     dial on the search it qualifies. -->
 			{#if cutoffApplies}
 				<div class="flex items-center gap-2">
 					<label for="score-cutoff" class="text-xs whitespace-nowrap text-gray-500">Min score</label
@@ -1189,6 +1241,12 @@
 					/>
 				</div>
 			{/if}
+
+			<KeywordInput
+				bind:value={explore.keyword}
+				bind:scope={explore.keywordScope}
+				problem={explore.keywordProblem}
+			/>
 		</div>
 
 		<div class="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
@@ -1227,6 +1285,8 @@
 				<ListView
 					hits={listHits}
 					total={listTotal}
+					interviews={listInterviews}
+					bind:order={explore.listOrder}
 					loading={listLoading}
 					error={listError}
 					paging={listPaging}

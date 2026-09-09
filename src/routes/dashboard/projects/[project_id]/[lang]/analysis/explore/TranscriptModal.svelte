@@ -190,10 +190,16 @@
 					<Dialog.Title class="text-sm font-semibold text-gray-900">
 						Interview transcript
 					</Dialog.Title>
-					<!-- The same facts the card footer carried, in the same order, so
-					     the reader can tell at a glance that this is that card's
-					     interview and not a neighbouring one. -->
+					<!-- The facts the card footer carried, in the same order, so the
+					     reader can tell at a glance that this is that card's interview
+					     and not a neighbouring one. With the interview's status, which
+					     the footer no longer has room for: a header is one line about
+					     one interview, where a card footer is the same line repeated
+					     down a mosaic of them. -->
 					<p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-[0.6875rem] text-gray-400">
+						{#if hit?.interview_number}
+							<span class="font-mono">#{hit.interview_number}</span>
+						{/if}
 						{#if hit?.participant_pid}
 							<span>{hit.participant_pid}</span>
 						{/if}

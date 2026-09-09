@@ -106,12 +106,29 @@
 		{status.healthy ? 'Embedding server up' : 'Embedding server unreachable'}
 	</span>
 
-	{#each coverage as entry (entry.label)}
-		<span
-			><span class="font-medium text-gray-700">{formatNumber(entry.count)}</span>
-			{entry.label}</span
-		>
-	{/each}
+	<!-- Chunks with a stored vector, per unit — not a description of the
+	     project. "114 Interviews" here means 114 interview-level chunks are
+	     embedded, which is a smaller number than the interviews the project has
+	     whenever something is newly collected or was never embeddable. The
+	     counts below the toolbar are the other thing: what the current filters
+	     leave. Two counts of different things, a few centimetres apart, so the
+	     word `embedded` earns its place. -->
+	{#if coverage.length > 0}
+		<span class="flex flex-wrap items-center gap-x-3 gap-y-1">
+			{#each coverage as entry (entry.label)}
+				<span
+					><span class="font-medium text-gray-700">{formatNumber(entry.count)}</span>
+					{entry.label}</span
+				>
+			{/each}
+			<span class="flex items-center gap-1">
+				embedded
+				<HoverInfo
+					text="Chunks with a stored vector, counted over the whole project — the filters do not narrow these. An interview counts once as an interview chunk, again as each of its Q&A pairs, and again as each message, so the three are different cuts of the same transcripts rather than parts of a total. Fewer than the project holds means something has not been embedded yet."
+				/>
+			</span>
+		</span>
+	{/if}
 
 	{#if (status.queue_depth ?? 0) > 0}
 		<span>{formatNumber(status.queue_depth ?? 0)} queued</span>
