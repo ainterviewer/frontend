@@ -52,6 +52,7 @@
 	image={message.image ?? null}
 	surveyItem={message.survey_item ?? null}
 	answer={message.answer ?? ''}
+	condition={message.condition ?? null}
 	skipped={message.skipped_by_condition ?? false}
 	{readonly}
 	{lang}

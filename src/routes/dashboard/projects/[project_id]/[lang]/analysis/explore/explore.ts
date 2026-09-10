@@ -21,13 +21,18 @@ import type {
 export const KINDS: { value: EmbeddingKind; label: string; hint: string }[] = [
 	{
 		value: 'message',
-		label: 'Messages',
-		hint: 'One respondent message of free text. Short, but grouped by what was said rather than what was asked.'
+		label: 'Single Q&As',
+		hint: 'One question and the answer it drew — a probe on its own. Short, but grouped by what was said rather than by what was asked.'
 	},
 	{
 		value: 'qa_pair',
-		label: 'Q&A pairs',
+		label: 'Main questions',
 		hint: 'A main question, its answer, and every probe that followed. The unit most analysis wants.'
+	},
+	{
+		value: 'section',
+		label: 'Sections',
+		hint: 'A whole section of the guide. The unit to read when a section opens with a closed question — “how often were you stressed?” — and then asks the open ones about it: the answer to the first is context for the rest, and no smaller unit holds both.'
 	},
 	{
 		value: 'interview',

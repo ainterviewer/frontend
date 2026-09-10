@@ -195,14 +195,14 @@ export class ExploreState {
 	/**
 	 * The question filter as the requests should carry it.
 	 *
-	 * Emptied under the `interview` unit rather than sent: an interview chunk
-	 * spans the whole guide and carries no coordinates, so any pair would filter
-	 * every row away and leave an empty view with no visible cause. The
-	 * selection itself is kept, so switching back to Q&A pairs restores it
-	 * rather than silently discarding what was picked.
+	 * Emptied under the two spanning units rather than sent: a section chunk
+	 * carries a section and no question, an interview chunk carries neither, so
+	 * any pair would filter every row away and leave an empty view with no
+	 * visible cause. The selection itself is kept, so switching back to main
+	 * questions restores it rather than silently discarding what was picked.
 	 */
 	effectiveQuestions = $derived<[number, number][]>(
-		this.kind === 'interview' ? [] : this.filterQuestions
+		this.kind === 'interview' || this.kind === 'section' ? [] : this.filterQuestions
 	);
 
 	filters = $derived<ExploreFilters>({

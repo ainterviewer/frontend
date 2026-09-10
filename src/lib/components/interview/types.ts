@@ -15,6 +15,12 @@ export interface Message {
 	type: MessageType;
 	message_id?: number | string;
 	skipped_by_condition?: boolean;
+	/**
+	 * The guide rule this question is subject to, as one line of prose — see
+	 * `$lib/analysis/conditions`. Resolved by whoever builds the message, since
+	 * the guide is one object and the messages are many.
+	 */
+	condition?: string | null;
 	feedback?: 'positive' | 'negative' | null;
 	survey_item?: SurveyItemUnion | null;
 	image?: { data: string; alt?: string; primer?: string };

@@ -11,7 +11,12 @@
 	import ClampedText from './ClampedText.svelte';
 	import { DISTRIBUTED_ONLY, isDefaultQuery, WITH_TESTS } from './filters';
 	import { reveal } from '$lib/utils/reveal';
-	import { buildGateMap, questionKey, questionNumber, summarizeConditions } from './conditions';
+	import {
+		buildGateMap,
+		questionKey,
+		questionNumber,
+		summarizeConditions
+	} from '$lib/analysis/conditions';
 	import ItemCard from './ItemCard.svelte';
 
 	let { data }: { data: PageData } = $props();

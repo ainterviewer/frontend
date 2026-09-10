@@ -198,12 +198,15 @@
 	/**
 	 * Whether the question filter is worth offering.
 	 *
-	 * Not under the `interview` unit: an interview chunk spans the whole guide
-	 * and carries no coordinates, so every pair would filter the map empty. The
-	 * page empties the filter for that unit to match; the selection itself is
-	 * kept, so switching back to Q&A pairs brings it back.
+	 * Not under the units that span questions: a section chunk carries a section
+	 * and no question, an interview chunk carries neither, so every pair would
+	 * filter the map empty. The page empties the filter for those units to
+	 * match; the selection itself is kept, so switching back to main questions
+	 * brings it back.
 	 */
-	let questionsAvailable = $derived(kind !== 'interview' && sections.length > 0);
+	let questionsAvailable = $derived(
+		kind !== 'interview' && kind !== 'section' && sections.length > 0
+	);
 
 	/** How many questions the guide holds, for the "n of m" the heading shows. */
 	let questionCount = $derived(

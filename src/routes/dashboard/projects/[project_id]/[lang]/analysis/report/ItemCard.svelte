@@ -4,7 +4,12 @@
 	import AnswerRateBar from './AnswerRateBar.svelte';
 	import { reveal } from '$lib/utils/reveal';
 	import ConditionNote from './ConditionNote.svelte';
-	import { describeGates, questionNumber, summarizeConditions, type Gate } from './conditions';
+	import {
+		describeGates,
+		questionNumber,
+		summarizeConditions,
+		type Gate
+	} from '$lib/analysis/conditions';
 	import DistributionChart, { type Bar } from './DistributionChart.svelte';
 	import { badgeFor } from './itemTypes';
 	import OptionBars from './OptionBars.svelte';

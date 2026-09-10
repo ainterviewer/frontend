@@ -6,8 +6,10 @@
 	import type {
 		AnalysisCategoryPublic,
 		AnnotationValueCreate,
+		InterviewGuide,
 		MessageAnnotationPublic
 	} from '$lib/api/types.gen';
+	import { guideConditions, questionKey } from '$lib/analysis/conditions';
 	import AnnotatedMessage from '$lib/components/analysis/AnnotatedMessage.svelte';
 	import MessageCommentModal from '$lib/components/analysis/MessageCommentModal.svelte';
 	import AudioPlayer from '$lib/components/interview/AudioPlayer.svelte';
@@ -19,6 +21,12 @@
 	interface InterviewData {
 		messages: MessagePublic[];
 		categories: AnalysisCategoryPublic[];
+		/**
+		 * The project's guide, for the conditions its questions carry. Null
+		 * where it could not be read, which costs the condition notes and
+		 * nothing else.
+		 */
+		guide?: InterviewGuide | null;
 		project_id: string;
 		lang: string;
 		interview_id: string;
@@ -72,9 +80,32 @@
 		surface.syncWidth();
 	});
 
+	/** The guide's conditions, keyed by question. Empty without a guide. */
+	let conditions = $derived(guideConditions(data.guide));
+
 	// Transform API messages to ChatClient Message format
 	let messages = $derived.by(() => {
 		if (!data.messages) return [];
+
+		// A gate belongs to the question, not to any one message inside it, so
+		// it is stated on the first message of the group and not again on its
+		// probes — a question with three probes would otherwise repeat the same
+		// sentence four times down the transcript.
+		// A plain record rather than a Set: scratch inside a derived, rebuilt on
+		// every run, never read as state.
+		const stated: Record<string, true> = {};
+
+		const conditionFor = (msg: MessagePublic): string | null => {
+			if (msg.section === null || msg.section === undefined) return null;
+			if (msg.main_question === null || msg.main_question === undefined) return null;
+			const key = questionKey(msg.section, msg.main_question);
+			if (stated[key]) return null;
+			const text = conditions.get(key)?.text ?? null;
+			// Only a stated rule closes the group: a question with no gate must
+			// not stop a later one from showing its own.
+			if (text) stated[key] = true;
+			return text;
+		};
 
 		const transformed = data.messages.map((msg) => {
 			// Determine message type based on role
@@ -135,6 +166,11 @@
 				user_image: false,
 				audio_file: msg.audio_file,
 				question_label,
+				// The rule this question is subject to, resolved here rather than
+				// looked up per bubble. A skipped question is drawn faded and
+				// otherwise unexplained; a conditional one that *was* asked
+				// looks like any other, which is the more misleading of the two.
+				condition: conditionFor(msg),
 				section: msg.section,
 				options: undefined,
 				required: false

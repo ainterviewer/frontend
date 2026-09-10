@@ -4,6 +4,7 @@
 	import { Analysis } from '$lib/api';
 	import type { EmbeddingSearchHit, TranscriptTurn } from '$lib/api/types.gen';
 	import ChunkTranscript from './ChunkTranscript.svelte';
+	import type { ConditionSummary } from '$lib/analysis/conditions';
 	import type { KeywordScope } from './explore';
 	import { Dialog } from 'bits-ui';
 	import { timeFormat } from 'd3-time-format';
@@ -12,6 +13,7 @@
 		hit,
 		keyword,
 		keywordScope,
+		conditions = new Map(),
 		onclose
 	}: {
 		/**
@@ -23,6 +25,14 @@
 		 * scroll to, which to shade, and what to put in the header.
 		 */
 		hit: EmbeddingSearchHit | null;
+		/**
+		 * The guide's conditions, keyed by question.
+		 *
+		 * A whole transcript is where these matter most: a reader working down
+		 * one sees the holes the guide left, and without the rule beside them a
+		 * skipped question is indistinguishable from one nobody answered.
+		 */
+		conditions?: Map<string, ConditionSummary>;
 		/**
 		 * The keyword as the requests carry it — already known to parse, since
 		 * the state only exposes a query it could read. Sent along so the
@@ -289,7 +299,7 @@
 										The chunk you came from
 									</p>
 								{/if}
-								<ChunkTranscript turns={group.turns} compact={false} />
+								<ChunkTranscript turns={group.turns} {conditions} compact={false} />
 							</div>
 						{/each}
 					</div>

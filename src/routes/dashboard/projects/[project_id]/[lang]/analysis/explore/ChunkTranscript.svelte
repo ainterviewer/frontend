@@ -2,9 +2,11 @@
 	import type { EmbeddingTurn, TranscriptTurn } from '$lib/api/types.gen';
 	import MessageBubble from '$lib/components/interview/MessageBubble.svelte';
 	import type { SurveyItemUnion } from '$lib/components/interview/types';
+	import { questionKey, type ConditionSummary } from '$lib/analysis/conditions';
 
 	let {
 		turns,
+		conditions = new Map(),
 		compact = true
 	}: {
 		/**
@@ -16,6 +18,16 @@
 		 * card simply carries less than a transcript does.
 		 */
 		turns: (EmbeddingTurn | TranscriptTurn)[];
+		/**
+		 * The guide's conditions, keyed by question — see
+		 * `$lib/analysis/conditions`.
+		 *
+		 * Passed in rather than fetched here because one guide serves a whole
+		 * mosaic of these, and a component that fetched its own would fetch it
+		 * once per card. Empty by default: a caller without the guide draws the
+		 * turns and says nothing about gates, which is what it knows.
+		 */
+		conditions?: Map<string, ConditionSummary>;
 		/**
 		 * Sized for the results panel rather than for the interview screen. The
 		 * bubbles are the same ones — `MessageBubble`, shared with the interview
@@ -90,6 +102,33 @@
 		}
 		return out;
 	}
+	/**
+	 * The rule each turn's question is subject to, by position in `turns`.
+	 *
+	 * Once per question group, on the first turn of it that is drawn. A gate
+	 * belongs to the question and not to any one exchange inside it, so a group
+	 * with three probes would otherwise print the same sentence four times down
+	 * one card. Taking the first turn drawn rather than the main question means
+	 * a Single Q&A card — which holds a probe and nothing above it — still says
+	 * what its question depended on.
+	 *
+	 * Interviewer turns only: it is a fact about what was asked, and under the
+	 * answer it would read as something the respondent was told.
+	 */
+	let notes = $derived.by(() => {
+		// A plain record rather than a Set: this is scratch inside a derived,
+		// rebuilt from nothing on every run, and nothing reads it as state.
+		const seen: Record<string, true> = {};
+		return turns.map((turn) => {
+			if (turn.role === 'respondent') return null;
+			if (turn.section === null || turn.section === undefined) return null;
+			if (turn.main_question === null || turn.main_question === undefined) return null;
+			const key = questionKey(turn.section, turn.main_question);
+			if (seen[key]) return null;
+			seen[key] = true;
+			return conditions.get(key)?.text ?? null;
+		});
+	});
 </script>
 
 <div class="flex flex-col {compact ? 'gap-1.5' : ''}">
@@ -104,6 +143,7 @@
 			answer={turn.text}
 			matches={turn.matches ?? []}
 			excluded={turn.excluded ?? []}
+			condition={notes[index]}
 			skipped={isTranscript(turn) ? (turn.skipped ?? false) : false}
 			{compact}
 		/>

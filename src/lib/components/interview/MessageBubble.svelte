@@ -95,6 +95,7 @@
 		answer = '',
 		matches = [],
 		excluded = [],
+		condition = null,
 		skipped = false,
 		compact = false,
 		readonly = true,
@@ -132,6 +133,18 @@
 		 */
 		matches?: [number, number][];
 		excluded?: [number, number][];
+		/**
+		 * The guide rule this question is subject to, in one line — see
+		 * `$lib/analysis/conditions`.
+		 *
+		 * Worth carrying on a message rather than left to the guide because a
+		 * conditional question reads exactly like an unconditional one once it
+		 * is answered: the answers are a subset of the cohort chosen somewhere
+		 * else, and nothing on screen says so. On a question the guide skipped
+		 * it is the other half of the same sentence — the fade says something
+		 * was skipped, this says why.
+		 */
+		condition?: string | null;
 		skipped?: boolean;
 		/**
 		 * Sized for a results card rather than for a full-width chat column: no
@@ -288,6 +301,22 @@
 	 *  one: the option set is its own card and looks wrong inside a second box. */
 	let bare = $derived(!interviewer && surveyItem !== null);
 
+	/**
+	 * The survey badge, in indigo on whichever ground it lands on.
+	 *
+	 * Indigo is the guide editor's colour for a survey item, and it is the
+	 * saturated one that actually reads as indigo — a wash of it against the
+	 * green turns into a grey-blue nothing. So the dark ground gets the colour
+	 * itself as the fill, which is small, unmistakably indigo, and darker than
+	 * the pale chip that was competing with the answer above it. Light grounds
+	 * keep the editor's own chip, since that is the card it was drawn for.
+	 */
+	let badgeTone = $derived(
+		interviewer || bare
+			? 'bg-indigo-50 text-indigo-600 ring-indigo-500/20'
+			: 'ring-indigo-500 bg-indigo-500'
+	);
+
 	let gutter = $derived(compact ? '' : 'mb-[15px] px-[10px] sm:px-[50px]');
 </script>
 
@@ -316,19 +345,38 @@
 					: `rounded-br-sm bg-primary text-on-primary ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`}"
 			{lang}
 		>
-			{#if label}
-				<div class="mb-1 text-xs font-bold opacity-60">{label}</div>
-			{/if}
-			{#if surveyLabel && !surveyItem}
-				<!-- The item's type where the item itself is not to hand. Says the
-				     answer was a click, which is the part a reader must not read as
-				     writing. -->
-				<span
-					class="mb-1 inline-block rounded bg-black/10 px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide uppercase"
-				>
-					{surveyLabel}
-				</span>
-				<br />
+			{#if label || (surveyLabel && !surveyItem)}
+				<!-- One header line for everything that says what this message *is*,
+				     rather than what it says: the guide number, and whether the
+				     answer under it was a click. Both are labels on the same thing,
+				     and stacking them cost a line of height on every survey bubble
+				     for two items that fit side by side.
+
+				     The badge is the item's type, where the item itself is not to
+				     hand — the part a reader must not read as writing. Its poll icon
+				     and indigo are the guide editor's, so a reader crossing from one
+				     to the other recognises the thing rather than learning it twice;
+				     which indigo depends on what it sits on, see `badgeTone`.
+
+				     Pushed to the far edge rather than set beside the number: the
+				     number is read down a column as the reader scans the guide
+				     order, and a badge butted against it shifts with the digits —
+				     `3.1` and `3.2.1` are different widths. `ml-auto` rather than
+				     `justify-between` on the row, so it stays right on a bubble
+				     with no number to sit opposite. -->
+				<div class="mb-1 flex flex-wrap items-center gap-1.5">
+					{#if label}
+						<span class="text-xs font-bold opacity-60">{label}</span>
+					{/if}
+					{#if surveyLabel && !surveyItem}
+						<span
+							class="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide uppercase ring-1 {badgeTone}"
+						>
+							<i class="fa-solid fa-square-poll-horizontal text-[0.6875rem]"></i>
+							{surveyLabel}
+						</span>
+					{/if}
+				</div>
 			{/if}
 			{#if image}
 				<img
@@ -373,6 +421,20 @@
 						{answer}
 						onAnswer={(given: unknown) => onSurveyAnswer?.(given)}
 					/>
+				</div>
+			{/if}
+			{#if condition}
+				<!-- Under the question rather than beside it: it is a footnote on
+				     what was asked, and amber with a branch icon because that is
+				     what a condition looks like in the guide editor and on the
+				     report page. Inside the bubble so a faded, skipped question
+				     carries its own explanation rather than leaving a bright line
+				     under a grey box. -->
+				<div
+					class="mt-1.5 flex items-start gap-1.5 border-t border-black/5 pt-1.5 text-[0.6875rem] whitespace-normal text-amber-700"
+				>
+					<i class="fa-solid fa-code-branch mt-0.5 shrink-0 text-[0.625rem] text-amber-500"></i>
+					<span class="min-w-0">{condition}</span>
 				</div>
 			{/if}
 		</div>

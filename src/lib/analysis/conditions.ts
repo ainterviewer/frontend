@@ -2,11 +2,12 @@ import type {
 	Condition,
 	ConditionEvaluation,
 	Conditions,
+	InterviewGuide,
 	ItemDistribution
 } from '$lib/api/types.gen';
 
 /**
- * Reading a guide's conditions off the report page.
+ * Reading a guide's conditions, wherever answers to them are shown.
  *
  * A conditional question is the one place where the cards on this page are not
  * independent: its numbers describe a subset of the cohort chosen by an answer
@@ -19,6 +20,11 @@ import type {
  * The action fires when the conditions are *met* (see the guide editor's
  * "Action when conditions are met"), so the summaries are worded as "when",
  * not as "only if".
+ *
+ * In `$lib` rather than beside the report page because the same sentence is
+ * owed to a reader of a transcript: a question that was skipped is a hole they
+ * can see and cannot explain, and one that was asked conditionally looks
+ * exactly like one that was asked of everybody.
  */
 
 /** The question a condition reads, by its position in the guide. */
@@ -181,4 +187,30 @@ export function describeGates(gates: Gate[]): string {
 	return [...byAction.entries()]
 		.map(([action, numbers]) => `${ACTION_GATE_VERB[action] ?? 'affects'} ${numbers.join(', ')}`)
 		.join(' · ');
+}
+
+/**
+ * Every condition in a guide, keyed by the question that carries it.
+ *
+ * Read off the guide rather than off the interview, so it says what the rule
+ * *is* and not merely that something happened. The draft guide is used, which
+ * is an approximation: interviews ran against per-interview snapshots, so a
+ * condition edited since is described as it reads now. The report page makes
+ * the same trade, for the same reason -- the alternative is a guide per
+ * interview on screen at once.
+ */
+export function guideConditions(
+	guide: InterviewGuide | null | undefined
+): Map<string, ConditionSummary> {
+	const summaries = new Map<string, ConditionSummary>();
+	if (!guide) return summaries;
+
+	guide.question_sections?.forEach((section, sectionIndex) => {
+		section.questions?.forEach((question, questionIndex) => {
+			const summary = summarizeConditions(question.conditions);
+			if (summary) summaries.set(questionKey(sectionIndex, questionIndex), summary);
+		});
+	});
+
+	return summaries;
 }

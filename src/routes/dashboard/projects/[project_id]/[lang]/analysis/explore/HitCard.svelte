@@ -3,15 +3,19 @@
 	import { format } from 'd3-format';
 	import { timeFormat } from 'd3-time-format';
 	import ChunkTranscript from './ChunkTranscript.svelte';
+	import type { ConditionSummary } from '$lib/analysis/conditions';
 
 	let {
 		hit,
+		conditions = new Map(),
 		showScore = true,
 		anchored = false,
 		onanchor,
 		ontranscript
 	}: {
 		hit: EmbeddingSearchHit;
+		/** The guide's conditions, for the questions on this card. */
+		conditions?: Map<string, ConditionSummary>;
 		/**
 		 * A score is a distance from something. It means something for a search
 		 * hit or a neighbour and nothing for a cluster representative, which was
@@ -58,7 +62,7 @@
 	     the reader from. Length is information here: a long card is a long
 	     answer, and seeing that at a glance is worth the scrolling. -->
 	{#if turns.length > 0}
-		<ChunkTranscript {turns} />
+		<ChunkTranscript {turns} {conditions} />
 	{:else}
 		<p class="text-sm whitespace-pre-line text-gray-800">
 			{hit.text ?? 'No text stored for this chunk.'}

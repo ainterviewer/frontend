@@ -48,6 +48,7 @@
 		type ClusterSettings,
 		type ListPaging
 	} from './explore';
+	import { guideConditions } from '$lib/analysis/conditions';
 
 	let { data }: { data: PageData } = $props();
 
@@ -313,6 +314,16 @@
 	 * filter: a project whose interviews carry no survey items has nothing to
 	 * offer here, and an empty picker would be a promise of something to find.
 	 */
+	/**
+	 * The guide's conditions, keyed by question, for every transcript on screen.
+	 *
+	 * Derived from the guide the page already loads for the question filter, so
+	 * showing a gate costs no request. Empty until it lands, which is the right
+	 * shape for a card that is drawn either way: no rule stated is better than
+	 * a rule appearing under a bubble the reader has already read past.
+	 */
+	let conditions = $derived(guideConditions(guide));
+
 	let surveyFacets = $state<SurveyFacet[] | null>(null);
 
 	/**
@@ -999,14 +1010,33 @@
 	/** Shared by the rail's reset button and the button that reopens the rail. */
 	let offDefault = $derived(offDefaultCount(settings, multilingual, listing));
 
-	let modes = $derived(GROUP_MODES.filter((mode) => mode.value !== 'language' || multilingual));
+	/**
+	 * Colouring the map by a group only makes sense where the chunks carry one.
+	 *
+	 * Language needs a second language to be worth a colour at all. Questions
+	 * need the unit to *have* a question: a section chunk carries a section and
+	 * no question, an interview chunk carries neither, and colouring by a
+	 * coordinate none of the points hold paints one grey legend row.
+	 */
+	let spansQuestions = $derived(kind === 'section' || kind === 'interview');
+	let modes = $derived(
+		GROUP_MODES.filter(
+			(mode) =>
+				(mode.value !== 'language' || multilingual) &&
+				(mode.value !== 'question' || !spansQuestions)
+		)
+	);
 
-	// The status call is what says whether there is a second language, and it
-	// lands after the first paint — so the mode can be gone by the time the
-	// answer arrives, and a reader who got to it first would be left on a mode
-	// whose button no longer exists.
+	// A mode can stop existing under the reader: the status call is what says
+	// whether there is a second language and it lands after the first paint,
+	// and the unit is theirs to change at any time. Either way they would be
+	// left on a mode whose button is no longer there.
 	$effect(() => {
 		if (groupMode === 'language' && !multilingual) changeGroupMode('cluster');
+	});
+
+	$effect(() => {
+		if (groupMode === 'question' && spansQuestions) changeGroupMode('section');
 	});
 
 	let modeLabel = $derived(
@@ -1286,6 +1316,7 @@
 					hits={listHits}
 					total={listTotal}
 					interviews={listInterviews}
+					{conditions}
 					bind:order={explore.listOrder}
 					loading={listLoading}
 					error={listError}
@@ -1544,5 +1575,6 @@
 	hit={transcriptOf}
 	keyword={explore.searchableKeyword}
 	keywordScope={explore.keywordScope}
+	{conditions}
 	onclose={() => (transcriptOf = null)}
 />

@@ -4,11 +4,13 @@
 	import HitCard from './HitCard.svelte';
 	import { PAGE_SIZE, type ListPaging } from './explore';
 	import { LIST_ORDERS, type ListOrder } from './exploreState.svelte';
+	import type { ConditionSummary } from '$lib/analysis/conditions';
 
 	let {
 		hits,
 		total,
 		interviews,
+		conditions = new Map(),
 		order = $bindable(),
 		loading,
 		error,
@@ -37,6 +39,13 @@
 		 * a name.
 		 */
 		interviews: number | null;
+		/**
+		 * The guide's conditions, passed down to every card.
+		 *
+		 * One map for the page rather than a lookup per card: the guide is one
+		 * object and the mosaic is thirty cards deep.
+		 */
+		conditions?: Map<string, ConditionSummary>;
 		/**
 		 * How the unranked list is ordered.
 		 *
@@ -213,7 +222,7 @@
 			     from a neighbour re-anchors, which is how a reader crosses the
 			     corpus a step at a time. -->
 			<div class="mb-3">
-				<HitCard hit={anchor} showScore={false} anchored {onanchor} {ontranscript} />
+				<HitCard hit={anchor} {conditions} showScore={false} anchored {onanchor} {ontranscript} />
 			</div>
 		{:else if anchorLoading}
 			<div class="mb-3 h-32 animate-pulse rounded-lg bg-gray-100"></div>
@@ -289,6 +298,7 @@
 							     404. The button is absent rather than present and failing. -->
 							<HitCard
 								{hit}
+								{conditions}
 								showScore={ranked}
 								onanchor={hit.embedded === false ? undefined : onanchor}
 								{ontranscript}
