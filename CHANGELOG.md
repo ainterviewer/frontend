@@ -4,6 +4,47 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.4.0] - 2026-09-10
+
+### Features
+
+- Add analysis explore view
+- Implement better service unavailability detection and user facing warnings
+- Change color-on-primary to white
+- Add questions, sections and turn information to embedding entries
+- Improved anchored question display in embedding view
+- Reset view when changing embedding unit
+- Add language and more clustering controls to embedding exploration
+- Move exploration controls to a collapsible sidebar
+- Improve embeddings view loading state and move reconnecting pill to view footer strip
+- Improve language filtering in exploration
+- Improve exploration control pane grouping
+- Implement pagination for similarity queries in exploration
+- Escape user input messages before displaying them in messages
+- Add question/section filtering to exploration
+- Add browsing interviews by list with semantic search, keywords and corpus filtering shared with embeddings view
+- Improve match highlighting for keyword searches
+- (explore) Remove show more / less from chunks; page loading no longer changes the order of existing chunks; transcripts now show in a modal
+- Refactor and consolidate interview message display across sites
+- (explore) Make list the default exploration view
+- (explore) Add survey corpus filtering
+- (explore) Minor improvements to list view and controls
+- (explore) Add sections as unit/kind and display survey item types and conditions in chunks
+
+### Bug Fixes
+
+- (build) Commit only release files in publish recipe
+- Better availability gate for explore page when embeddings services is down
+- Sanitize and render interview guide messages
+- Harden API authorization for annotations
+
+### Internal
+
+- Remove redundant comment in justfile
+- Update SDK
+- Add `just dev` command
+- Fix linting
+
 ## [0.3.0] - 2026-09-02
 
 ### Features
