@@ -45,6 +45,18 @@
 	// coordinates still has the text the model saw, and falls back to it.
 	let turns = $derived(hit.turns ?? []);
 
+	/**
+	 * How many turns this card is not showing.
+	 *
+	 * Only an interview-level chunk is ever windowed — it spans a whole
+	 * transcript, and ten of those stacked is not a list anybody can scan — but
+	 * the test is on the counts rather than on the kind, so a card is honest
+	 * about being a window whoever decided to make it one.
+	 *
+	 * Zero where the card holds the whole chunk, which is every other unit.
+	 */
+	let withheld = $derived(Math.max(0, (hit.n_turns ?? turns.length) - turns.length));
+
 	let date = $derived(
 		hit.interview_created_at ? formatDate(new Date(hit.interview_created_at)) : null
 	);
@@ -55,14 +67,34 @@
 	class:border-primary={anchored}
 	class:border-gray-200={!anchored}
 >
-	<!-- Whole, never clamped. A chunk is a conversation and the part a clamp
-	     takes off is the answer -- the only half that differs between
-	     respondents. A card that stopped short was a card asking to be opened
-	     before it could be read, which is what the mosaic is supposed to save
-	     the reader from. Length is information here: a long card is a long
-	     answer, and seeing that at a glance is worth the scrolling. -->
+	<!-- Never clamped. A chunk is a conversation and the part a clamp takes off
+	     is the answer -- the only half that differs between respondents. A card
+	     that stopped short was a card asking to be opened before it could be
+	     read, which is what the mosaic is supposed to save the reader from.
+	     Length is information here: a long card is a long answer, and seeing
+	     that at a glance is worth the scrolling.
+
+	     Whole, too, for every unit but the interview: that one spans a whole
+	     transcript, so the API sends a window onto it and the card says how much
+	     it is standing in for. A truncated *turn* would still be the wrong
+	     trade -- what arrives is fewer turns, each of them entire. -->
 	{#if turns.length > 0}
 		<ChunkTranscript {turns} {conditions} />
+		<!-- A window says so, in the same breath as the way out of it. The
+		     alternative was six turns presented as an interview, which reads as
+		     a very short conversation rather than as the opening of a long one
+		     — and a reader cannot see the difference by looking. -->
+		{#if withheld > 0}
+			<button
+				type="button"
+				onclick={() => ontranscript(hit)}
+				class="mt-1.5 cursor-pointer text-xs text-gray-500 hover:text-primary hover:underline"
+				title="Read the whole interview this is from"
+			>
+				{withheld}
+				{withheld === 1 ? 'more turn' : 'more turns'}...
+			</button>
+		{/if}
 	{:else}
 		<p class="text-sm whitespace-pre-line text-gray-800">
 			{hit.text ?? 'No text stored for this chunk.'}

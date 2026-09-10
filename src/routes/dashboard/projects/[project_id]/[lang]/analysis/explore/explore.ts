@@ -37,11 +37,11 @@ export const KINDS: { value: EmbeddingKind; label: string; hint: string }[] = [
 	{
 		value: 'interview',
 		label: 'Interviews',
-		hint: 'A whole transcript, for finding comparable conversations rather than comparable answers.'
+		hint: 'A whole transcript, for finding comparable conversations rather than comparable answers. The card shows the opening of one — or the part the keyword hit — and links to the rest.'
 	}
 ];
 
-export const DEFAULT_KIND: EmbeddingKind = 'qa_pair';
+export const DEFAULT_KIND: EmbeddingKind = 'interview';
 
 /** Search is a retrieval task: a question, matched against passages that answer it. */
 export const DEFAULT_TASK: QueryTask = 'retrieval';

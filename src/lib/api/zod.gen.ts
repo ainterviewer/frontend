@@ -2046,7 +2046,8 @@ export const zEmbeddingSearchHit = z.object({
     participant_id: z.string().nullish(),
     participant_pid: z.string().nullish(),
     interview_number: z.int().nullish(),
-    turns: z.array(zEmbeddingTurn).optional().default([])
+    turns: z.array(zEmbeddingTurn).optional().default([]),
+    n_turns: z.int().nullish()
 });
 
 /**

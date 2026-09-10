@@ -1218,6 +1218,10 @@ export type EmbeddingSearchHit = {
      * Turns
      */
     turns?: Array<EmbeddingTurn>;
+    /**
+     * N Turns
+     */
+    n_turns?: number | null;
 };
 
 /**
