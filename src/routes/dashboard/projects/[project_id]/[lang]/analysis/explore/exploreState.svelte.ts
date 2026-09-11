@@ -65,6 +65,41 @@ export const LIST_ORDERS: { value: ListOrder; label: string; hint: string }[] = 
 ];
 
 /**
+ * Which axis a page of the list is blocked along.
+ *
+ * Not a filter and not quite a sort: nothing leaves and nothing is scored, but
+ * the two read the corpus as different things. By interview is a stack of
+ * conversations — one person, then the next — which is how a reader gets a
+ * sense of what an interview *is*. By guide turns that inside out: everyone's
+ * answer to question 1.1 together, then everyone's answer to 1.2, which is the
+ * shape any comparison across respondents wants and is otherwise a matter of
+ * filtering to one question at a time.
+ */
+export type ListGrouping = 'interview' | 'guide';
+
+export const LIST_GROUPINGS: { value: ListGrouping; label: string; hint: string }[] = [
+	{
+		value: 'interview',
+		label: 'Interview',
+		hint: 'One conversation at a time: an interview’s chunks stay together and the interviews move past each other in whatever order is chosen.'
+	},
+	{
+		value: 'guide',
+		label: 'Guide',
+		hint: 'One question at a time: every respondent’s answer to the first question, then every answer to the second. The order then decides whose answer comes first inside each question.'
+	}
+];
+
+/**
+ * Interviews first, because that is what a card already says it is.
+ *
+ * A card carries an interview number and a conversation; reading down a list
+ * where consecutive cards are the same interview matches that. Grouping by the
+ * guide is the deliberate act of comparing, and worth asking for.
+ */
+export const DEFAULT_LIST_GROUPING: ListGrouping = 'interview';
+
+/**
  * Shuffled by default, which is a claim about reading rather than about data.
  *
  * A researcher reads the first cards closely and the later ones faster, so
@@ -103,6 +138,13 @@ export class ExploreState {
 	listOrder = $state<ListOrder>(DEFAULT_LIST_ORDER);
 
 	/**
+	 * Which axis the unranked list is blocked along. Ordered in SQL like
+	 * `listOrder`, and for the same reason: a client holding page one cannot
+	 * re-derive a page that was cut from a differently ordered scan.
+	 */
+	listGrouping = $state<ListGrouping>(DEFAULT_LIST_GROUPING);
+
+	/**
 	 * This visit's shuffle, fixed for as long as the page is open.
 	 *
 	 * Not `$state`: it is read by the requests and never changes, and making it
@@ -117,6 +159,17 @@ export class ExploreState {
 	interviewStatus = $state<InterviewStatus | null>(defaultFilters().status);
 	filterLanguages = $state<LanguageCode[]>(defaultFilters().languages);
 	includeSynthetic = $state(defaultFilters().include_synthetic);
+	/**
+	 * Where in the guide the chunks come from, empty for all of it.
+	 *
+	 * Sent as picked whatever the unit is. It used to be emptied under the two
+	 * spanning units, because a section chunk carries a section and no question
+	 * and an interview chunk carries neither, so an exact-pair filter left an
+	 * empty view with nothing on screen to explain it. The API reads the
+	 * selection against the unit instead — a section is kept when a question
+	 * inside it is picked, an interview when it answered one — so there is one
+	 * control, and it means the same thing wherever the reader is.
+	 */
 	filterQuestions = $state<[number, number][]>(defaultFilters().questions);
 
 	/**
@@ -192,24 +245,11 @@ export class ExploreState {
 	 */
 	visibleLanguages = $state<LanguageCode[]>([]);
 
-	/**
-	 * The question filter as the requests should carry it.
-	 *
-	 * Emptied under the two spanning units rather than sent: a section chunk
-	 * carries a section and no question, an interview chunk carries neither, so
-	 * any pair would filter every row away and leave an empty view with no
-	 * visible cause. The selection itself is kept, so switching back to main
-	 * questions restores it rather than silently discarding what was picked.
-	 */
-	effectiveQuestions = $derived<[number, number][]>(
-		this.kind === 'interview' || this.kind === 'section' ? [] : this.filterQuestions
-	);
-
 	filters = $derived<ExploreFilters>({
 		status: this.interviewStatus,
 		languages: this.filterLanguages,
 		include_synthetic: this.includeSynthetic,
-		questions: this.effectiveQuestions,
+		questions: this.filterQuestions,
 		keyword: this.searchableKeyword,
 		keyword_scope: this.keywordScope,
 		survey: this.surveyValues,

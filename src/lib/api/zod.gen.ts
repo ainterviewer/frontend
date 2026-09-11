@@ -2921,6 +2921,7 @@ export const zSearchEmbeddingsQuery = z.object({
     query: z.string().min(1).max(2000),
     kind: zEmbeddingKind.optional().default('qa_pair'),
     task: zQueryTask.optional().default('retrieval'),
+    whole_interviews: z.boolean().optional().default(false),
     folder_id: z.string().nullish(),
     language: z.array(zLanguageCode).nullish(),
     status: zInterviewStatus.nullish(),
@@ -2958,7 +2959,9 @@ export const zBrowseEmbeddingsQuery = z.object({
         'interview_asc',
         'interview_desc'
     ]).optional().default('random'),
+    group_by: z.enum(['interview', 'guide']).optional().default('interview'),
     seed: z.string().max(64).regex(/^[A-Za-z0-9_-]*$/).optional().default(''),
+    whole_interviews: z.boolean().optional().default(false),
     folder_id: z.string().nullish(),
     language: z.array(zLanguageCode).nullish(),
     status: zInterviewStatus.nullish(),
@@ -3040,6 +3043,7 @@ export const zFindSimilarEmbeddingsPath = z.object({
 });
 
 export const zFindSimilarEmbeddingsQuery = z.object({
+    whole_interviews: z.boolean().optional().default(false),
     folder_id: z.string().nullish(),
     language: z.array(zLanguageCode).nullish(),
     status: zInterviewStatus.nullish(),

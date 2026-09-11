@@ -41,7 +41,7 @@ export const KINDS: { value: EmbeddingKind; label: string; hint: string }[] = [
 	}
 ];
 
-export const DEFAULT_KIND: EmbeddingKind = 'interview';
+export const DEFAULT_KIND: EmbeddingKind = 'section';
 
 /** Search is a retrieval task: a question, matched against passages that answer it. */
 export const DEFAULT_TASK: QueryTask = 'retrieval';
@@ -175,10 +175,13 @@ export type ExploreFilters = {
 	 * second section-shaped filter: the picker holds the guide and so knows what
 	 * a section contains, and one shape of filter cannot disagree with itself.
 	 *
-	 * Interview-level chunks carry no guide coordinates — a transcript spans the
-	 * guide — so any selection here excludes them outright. That is why the
-	 * control is not offered under the `interview` unit rather than offered and
-	 * quietly returning nothing.
+	 * The API reads the same selection against whatever unit is asked for, which
+	 * is what lets one picker serve all four. A message or a question group
+	 * matches its coordinates exactly; a section matches when a question inside
+	 * it is picked; an interview matches when the transcript answered one. The
+	 * unit is never cut down to the selection — a kept section is still a whole
+	 * section — so this chooses which chunks are on screen and never what is
+	 * inside one.
 	 */
 	questions: [number, number][];
 	/**

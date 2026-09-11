@@ -196,17 +196,16 @@
 	let sections = $derived(guide?.question_sections ?? []);
 
 	/**
-	 * Whether the question filter is worth offering.
+	 * Whether the question filter is worth offering: wherever the guide has
+	 * questions in it.
 	 *
-	 * Not under the units that span questions: a section chunk carries a section
-	 * and no question, an interview chunk carries neither, so every pair would
-	 * filter the map empty. The page empties the filter for those units to
-	 * match; the selection itself is kept, so switching back to main questions
-	 * brings it back.
+	 * Offered at every unit, including the two that span questions. The API
+	 * reads the selection against the unit — a section is kept when a question
+	 * inside it is picked, an interview when it answered one — so the control
+	 * does something everywhere rather than disappearing exactly where a reader
+	 * who has just narrowed to a question goes looking for it.
 	 */
-	let questionsAvailable = $derived(
-		kind !== 'interview' && kind !== 'section' && sections.length > 0
-	);
+	let questionsAvailable = $derived(sections.length > 0);
 
 	/** How many questions the guide holds, for the "n of m" the heading shows. */
 	let questionCount = $derived(
@@ -821,7 +820,7 @@
 			{#if questionsAvailable}
 				{@render stacked(
 					'Questions',
-					'Which parts of the interview guide the chunks are drawn from. Applied in SQL before anything is embedded into the projection, exactly as the language filter is — so the axes, the clusters and every purity figure are computed over the questions left. Narrowing to one question is the way to cluster within an answer rather than across the guide, and it makes centring by question redundant: there is only one question left to subtract.',
+					'Which parts of the interview guide the chunks are drawn from. Read against the unit on screen: a single Q&A or a main question matches the questions picked, a section is kept when a question inside it is picked, and an interview is kept when it answered one — a kept chunk is always shown whole. Applied in SQL before anything is embedded into the projection, exactly as the language filter is, so the axes, the clusters and every purity figure are computed over what is left. Narrowing to one question is the way to cluster within an answer rather than across the guide, and it makes centring by question redundant: there is only one question left to subtract.',
 					filterQuestions.length === 0 ? 'All' : `${filterQuestions.length} of ${questionCount}`,
 					guideQuestionControl
 				)}

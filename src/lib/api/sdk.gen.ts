@@ -307,6 +307,10 @@ export class Analysis {
      * query and the corpus rather than of a cached ranking -- and `total` is the
      * length of that ranking, not a count of things worth reading. Deep pages of
      * a semantic search are the chunks that scored least.
+     *
+     * `whole_interviews` sends interview-unit hits whole rather than as the
+     * six-turn window a card normally gets -- see the browse endpoint, which is
+     * where a list of interviews usually comes from.
      */
     public static searchEmbeddings<ThrowOnError extends boolean = false>(options: Options<SearchEmbeddingsData, ThrowOnError>): RequestResult<SearchEmbeddingsResponses, SearchEmbeddingsErrors, ThrowOnError> {
         return (options.client ?? client).get<SearchEmbeddingsResponses, SearchEmbeddingsErrors, ThrowOnError>({
@@ -346,6 +350,19 @@ export class Analysis {
      * same seed is the same order, so page two continues page one -- and a client
      * that draws a fresh seed per page load gets a fresh shuffle per visit.
      * Ignored by the other orders, which need no seed to be stable.
+     *
+     * `group_by` is the other half of that ordering and changes what the page is a
+     * page *of*: `interview` runs one conversation at a time, `guide` runs one
+     * question at a time with every respondent's answer to it together, which is
+     * the shape a cross-interview reading wants. Nothing leaves either way, and
+     * `order` still decides whose answer comes first inside a block. Ignored under
+     * the interview unit, which has no coordinates to block by.
+     *
+     * `whole_interviews` sends interview-unit hits as whole transcripts rather
+     * than as the six-turn window a card normally gets. A list of interviews is a
+     * list of transcripts, and a window onto each of ten of them is ten openings;
+     * the cost is the whole corpus on the wire a page at a time, so it is asked
+     * for rather than assumed.
      */
     public static browseEmbeddings<ThrowOnError extends boolean = false>(options: Options<BrowseEmbeddingsData, ThrowOnError>): RequestResult<BrowseEmbeddingsResponses, BrowseEmbeddingsErrors, ThrowOnError> {
         return (options.client ?? client).get<BrowseEmbeddingsResponses, BrowseEmbeddingsErrors, ThrowOnError>({

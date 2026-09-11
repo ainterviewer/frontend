@@ -3,7 +3,12 @@
 	import { format } from 'd3-format';
 	import HitCard from './HitCard.svelte';
 	import { PAGE_SIZE, type ListPaging } from './explore';
-	import { LIST_ORDERS, type ListOrder } from './exploreState.svelte';
+	import {
+		LIST_GROUPINGS,
+		LIST_ORDERS,
+		type ListGrouping,
+		type ListOrder
+	} from './exploreState.svelte';
 	import type { ConditionSummary } from '$lib/analysis/conditions';
 
 	let {
@@ -12,10 +17,12 @@
 		interviews,
 		conditions = new Map(),
 		order = $bindable(),
+		grouping = $bindable(),
 		loading,
 		error,
 		paging,
 		ranked,
+		groupable,
 		keyword,
 		anchor,
 		anchorLoading,
@@ -54,6 +61,19 @@
 		 * refetches page one.
 		 */
 		order: ListOrder;
+		/**
+		 * Which axis the list is blocked along — a conversation at a time, or a
+		 * question at a time. Bound for the same reason the order is: the blocks
+		 * are cut in SQL, so choosing one refetches page one rather than
+		 * re-sorting what is here.
+		 */
+		grouping: ListGrouping;
+		/**
+		 * Whether the unit on screen has guide coordinates to block by. An
+		 * interview spans the guide, so there is no question to gather its cards
+		 * under and the grouping picker is absent rather than inert.
+		 */
+		groupable: boolean;
 		loading: boolean;
 		error: string | null;
 		paging: ListPaging;
@@ -196,11 +216,32 @@
 					Loading…
 				</span>
 			{/if}
+			{#if sortable && groupable}
+				<!-- Beside the order rather than above it: the two together are one
+				     sentence about the list — these blocks, in this order — and
+				     reading it as two settings in two places was reading it twice. -->
+				<label class="flex items-center gap-1.5">
+					<!-- Spelled out rather than left to the option text. Two bare
+					     dropdowns side by side in a strip of counts are two settings a
+					     reader has to open to identify; the axis each one turns is the
+					     part worth reading without clicking. -->
+					<span>Group by:</span>
+					<select
+						bind:value={grouping}
+						title="What a page of the list is blocked into. By interview reads one conversation at a time; by guide gathers every respondent's answer to the same question, which is what comparing across people needs."
+						class="cursor-pointer rounded-md border border-gray-200 bg-white py-0.5 pr-6 pl-2 text-xs text-gray-600 focus:border-primary focus:ring-0"
+					>
+						{#each LIST_GROUPINGS as option (option.value)}
+							<option value={option.value} title={option.hint}>{option.label}</option>
+						{/each}
+					</select>
+				</label>
+			{/if}
 			{#if sortable}
 				<!-- Right-hand end, away from the counts: those describe what the
 				     list *is*, and this changes what it is. -->
 				<label class="flex items-center gap-1.5">
-					<span class="sr-only">Order the list</span>
+					<span>Sort by:</span>
 					<select
 						bind:value={order}
 						title="How the interviews are ordered. Random is the default: the top of a list gets the closest reading, so a fixed order would always give it to the same people."
@@ -234,7 +275,7 @@
 			<!-- Uneven on purpose, and in the mosaic's own columns: a skeleton that
 			     does not resemble what replaces it is a layout shift announced one
 			     beat early. -->
-			<div class="columns-1 gap-3 md:columns-2 2xl:columns-3">
+			<div class="mosaic columns-1 gap-3 md:columns-2 2xl:columns-3">
 				{#each [16, 26, 20, 32, 18, 24] as height, index (index)}
 					<div
 						class="mb-3 animate-pulse break-inside-avoid rounded-lg bg-gray-100"
@@ -285,7 +326,7 @@
 						<div class="h-px flex-1 bg-gray-100"></div>
 					</div>
 				{/if}
-				<div class="columns-1 gap-3 md:columns-2 2xl:columns-3">
+				<div class="mosaic columns-1 gap-3 md:columns-2 2xl:columns-3">
 					{#each group.hits as hit (hit.id)}
 						<!-- `break-inside-avoid` is load-bearing: without it a card is
 						     split down the middle across two columns. The margin does the
@@ -328,3 +369,19 @@
 		{/if}
 	</div>
 </div>
+
+<style>
+	/*
+	 * A rule down each column gap. The mosaic packs top to bottom and only then
+	 * across, which is not how a page of cards is read by default -- a reader who
+	 * takes it left to right gets the cards in an order nothing intended. The
+	 * line is what says "this column is the thing to follow"; there is no
+	 * Tailwind utility for `column-rule`, so it is written here.
+	 *
+	 * Hairline and gray-100: as faint as the seam between two loaded pages,
+	 * because it is the same kind of mark. A heavier rule would read as a table.
+	 */
+	.mosaic {
+		column-rule: 1px solid var(--color-gray-100);
+	}
+</style>

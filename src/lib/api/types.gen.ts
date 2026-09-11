@@ -5444,6 +5444,10 @@ export type SearchEmbeddingsData = {
         kind?: EmbeddingKind;
         task?: QueryTask;
         /**
+         * Whole Interviews
+         */
+        whole_interviews?: boolean;
+        /**
          * Folder Id
          */
         folder_id?: string | null;
@@ -5544,9 +5548,17 @@ export type BrowseEmbeddingsData = {
          */
         order?: 'random' | 'interview_asc' | 'interview_desc';
         /**
+         * Group By
+         */
+        group_by?: 'interview' | 'guide';
+        /**
          * Seed
          */
         seed?: string;
+        /**
+         * Whole Interviews
+         */
+        whole_interviews?: boolean;
         /**
          * Folder Id
          */
@@ -5784,6 +5796,10 @@ export type FindSimilarEmbeddingsData = {
         embedding_id: string;
     };
     query?: {
+        /**
+         * Whole Interviews
+         */
+        whole_interviews?: boolean;
         /**
          * Folder Id
          */

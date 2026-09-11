@@ -483,6 +483,7 @@
 		const query = submitted.trim();
 		const currentKind = kind;
 		const currentFilters = filterQuery(filters);
+		const currentWhole = wholeInterviews;
 
 		searchRun += 1;
 		searchMoreLoading = false;
@@ -513,6 +514,7 @@
 					task: DEFAULT_TASK,
 					limit: PAGE_SIZE,
 					offset: 0,
+					whole_interviews: currentWhole,
 					...currentFilters
 				},
 				signal: controller.signal
@@ -565,6 +567,7 @@
 				task: DEFAULT_TASK,
 				limit: PAGE_SIZE,
 				offset: searchHits.length,
+				whole_interviews: wholeInterviews,
 				...filterQuery(filters)
 			}
 		});
@@ -610,6 +613,16 @@
 	// belongs to the list it was fetched for.
 	let browseRun = 0;
 
+	/**
+	 * Whether the list should carry whole transcripts rather than windows.
+	 *
+	 * Only under the interview unit, and only for the list: a list of interviews
+	 * is a list of transcripts, and a six-turn window onto each is a page of
+	 * openings. Every other unit is already whole, and the map's
+	 * representatives are a legend rather than a reading — they keep the window.
+	 */
+	let wholeInterviews = $derived(kind === 'interview');
+
 	/** Whether a semantic query is ordering the list rather than the guide. */
 	let ranked = $derived(submitted.trim().length > 0);
 
@@ -621,6 +634,10 @@
 		// — the list is ordered in SQL, and page one of a shuffle is not something
 		// the client could re-derive from the page it is holding.
 		const currentOrder = explore.listOrder;
+		// Read here for the same reason: the blocks are cut in SQL, so a page one
+		// grouped by the guide is a different scan and not a re-sort of this one.
+		const currentGrouping = explore.listGrouping;
+		const currentWhole = wholeInterviews;
 		const wanted = listing && !ranked && selectedId === null;
 
 		browseRun += 1;
@@ -651,7 +668,9 @@
 					limit: PAGE_SIZE,
 					offset: 0,
 					order: currentOrder,
+					group_by: currentGrouping,
 					seed: explore.seed,
+					whole_interviews: currentWhole,
 					...currentFilters
 				},
 				signal: controller.signal
@@ -698,7 +717,9 @@
 				// The same seed as the page above it, so this continues that shuffle
 				// rather than dealing a second one over the same corpus.
 				order: explore.listOrder,
+				group_by: explore.listGrouping,
 				seed: explore.seed,
+				whole_interviews: wholeInterviews,
 				...filterQuery(filters)
 			}
 		});
@@ -725,6 +746,7 @@
 		const projectId = data.project_id;
 		const id = selectedId;
 		const currentFilters = filterQuery(filters);
+		const currentWhole = wholeInterviews;
 
 		detailRun += 1;
 		detailMoreLoading = false;
@@ -751,7 +773,12 @@
 				response
 			} = await Analysis.findSimilarEmbeddings({
 				path: { project_id: projectId, embedding_id: id },
-				query: { limit: PAGE_SIZE, offset: 0, ...currentFilters },
+				query: {
+					limit: PAGE_SIZE,
+					offset: 0,
+					whole_interviews: currentWhole,
+					...currentFilters
+				},
 				signal: controller.signal
 			});
 			if (disposed) return;
@@ -790,7 +817,12 @@
 			response
 		} = await Analysis.findSimilarEmbeddings({
 			path: { project_id: data.project_id, embedding_id: id },
-			query: { limit: PAGE_SIZE, offset: detailHits.length, ...filterQuery(filters) }
+			query: {
+				limit: PAGE_SIZE,
+				offset: detailHits.length,
+				whole_interviews: wholeInterviews,
+				...filterQuery(filters)
+			}
 		});
 		if (run !== detailRun) return;
 
@@ -1111,7 +1143,12 @@
 	// Ids belong to the run that produced them, so a change of kind invalidates
 	// every selection made against the previous one.
 	function changeKind(next: EmbeddingKind) {
-		kind = next;
+		// Written to the state and not to the local `$derived` view of it: an
+		// override on a derived holds only until its dependency next changes, and
+		// everything reading the unit off `explore` — the question filter's own
+		// emptying under the spanning units, above all — would go on seeing the
+		// old one. That is what silently threw the question filter away.
+		explore.kind = next;
 		selectedId = null;
 		focusedGroup = null;
 	}
@@ -1318,6 +1355,8 @@
 					interviews={listInterviews}
 					{conditions}
 					bind:order={explore.listOrder}
+					bind:grouping={explore.listGrouping}
+					groupable={kind !== 'interview'}
 					loading={listLoading}
 					error={listError}
 					paging={listPaging}
