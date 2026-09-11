@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Analysis } from '$lib/api';
 	import type {
@@ -30,7 +31,6 @@
 	import SweepBar from './SweepBar.svelte';
 	import StatusStrip from './StatusStrip.svelte';
 	import {
-		DEFAULT_GROUP_MODE,
 		DEFAULT_TASK,
 		GROUP_MODES,
 		MIN_CLUSTER_SIZE_RANGE,
@@ -41,13 +41,14 @@
 		filterQuery,
 		groupKeyOf,
 		groupOrder,
-		isDefaultClusterSettings,
 		isToolbarChange,
-		isWholeCorpus,
 		offDefaultCount,
+		sameClusterSettings,
+		sameCohortQuery,
 		type ClusterSettings,
 		type ListPaging
 	} from './explore';
+	import { exploreUrlSearch, readExploreUrl } from './exploreUrl';
 	import { guideConditions } from '$lib/analysis/conditions';
 
 	let { data }: { data: PageData } = $props();
@@ -78,7 +79,18 @@
 	 * reconciliation below are intricate enough that two copies of them would
 	 * be two things to get wrong — and the state module keeps the knobs.
 	 */
-	const explore = new ExploreState();
+	/**
+	 * What the link this page was opened with asks for.
+	 *
+	 * Read once, at construction, rather than watched: the URL is where a view
+	 * is *restored* from, and the page writes to it continuously thereafter.
+	 * Re-reading it on every change would be the page taking dictation from
+	 * itself, one frame behind. A later navigation to a different link remounts
+	 * the component, which reads it again.
+	 */
+	const opened = readExploreUrl(page.url.searchParams);
+
+	const explore = new ExploreState(opened);
 
 	// Local aliases for the few read in a dozen places each. Everything else is
 	// spelled `explore.x` at its use site, which is where it reads best.
@@ -95,8 +107,8 @@
 	// for. Kept apart because a semantic search costs an inference call — this
 	// is not a filter box that narrows a list on every keystroke, and pretending
 	// it is would put a request behind every letter.
-	let queryText = $state('');
-	let submitted = $state('');
+	let queryText = $state(opened.query);
+	let submitted = $state(opened.query);
 	/**
 	 * The envelope of the most recent page — the query it was run for, how many
 	 * chunks were scored, how many there are in all. The hits themselves are
@@ -165,7 +177,7 @@
 	 * the guide coordinates it now returns per point — so switching costs a
 	 * recolour rather than a request.
 	 */
-	let groupMode = $state<GroupKind>(DEFAULT_GROUP_MODE);
+	let groupMode = $state<GroupKind>(opened.groupMode);
 
 	/**
 	 * How many chunks of the current unit are embedded, from the status call —
@@ -347,7 +359,7 @@
 
 		let disposed = false;
 		(async () => {
-			const { data: body } = isWholeCorpus(query)
+			const { data: body } = sameCohortQuery(query, data.facetQuery)
 				? await preloaded
 				: await Analysis.readSurveyFacets({ path: { project_id: projectId }, query });
 			if (disposed) return;
@@ -378,6 +390,8 @@
 	 * there is UMAP runs for the values passed through on the way.
 	 */
 	const TOOLBAR_DEBOUNCE_MS = { pca: 250, umap: 500 } as const;
+	/** How long the address bar lags the controls. See the effect that writes it. */
+	const URL_DEBOUNCE_MS = 400;
 	const PANEL_DEBOUNCE_MS = 800;
 
 	let clusterProjectId: string | null = null;
@@ -419,7 +433,8 @@
 		// function had already asked for. Same for the debounce: a settings
 		// change made while listing is the reader arriving at the map with it,
 		// not flicking a control on it.
-		const adopting = preloaded !== seenClusterPreload && isDefaultClusterSettings(settings);
+		const adopting =
+			preloaded !== seenClusterPreload && sameClusterSettings(settings, data.clusterSettings);
 		seenClusterPreload = preloaded;
 
 		const fromToolbar = isToolbarChange(lastClusterSettings, settings);
@@ -1120,6 +1135,38 @@
 	// write converges — it only ever lowers, and only while it is out of range.
 	$effect(() => {
 		if (explore.minClusterSize > maxClusterSize) explore.minClusterSize = maxClusterSize;
+	});
+
+	/**
+	 * The view, written back to the address bar.
+	 *
+	 * `replaceState` rather than `goto`: this is the same page describing itself,
+	 * not a navigation, so `load` must not re-run — it would refetch the cluster
+	 * payload on every keystroke in the keyword box. Replacing rather than
+	 * pushing for the same reason on the other side: a filter is adjusted dozens
+	 * of times in a sitting, and a history entry per adjustment turns Back into
+	 * a slow walk through everything the reader has already discarded rather
+	 * than the way out of the page.
+	 *
+	 * Compared before writing because the effect re-runs on anything it reads,
+	 * and a `replaceState` per unchanged re-run is a write the browser does not
+	 * need — and, while a modal or an anchor has pushed a state of its own, one
+	 * that would quietly clobber it.
+	 */
+	$effect(() => {
+		const search = exploreUrlSearch(explore.urlState(submitted, groupMode));
+		if (search === page.url.search) return;
+
+		// Held for a beat first. Every letter typed into the keyword box is a
+		// change here, and browsers rate-limit history writes — Safari throws
+		// past a hundred in thirty seconds. The address bar has no reader
+		// mid-word anyway; what has to be right is where it lands.
+		const timer = setTimeout(() => {
+			// eslint-disable-next-line svelte/no-navigation-without-resolve -- this page with a different query string, not a route
+			replaceState(`${page.url.pathname}${search}`, page.state);
+		}, URL_DEBOUNCE_MS);
+
+		return () => clearTimeout(timer);
 	});
 
 	function search(event: SubmitEvent) {

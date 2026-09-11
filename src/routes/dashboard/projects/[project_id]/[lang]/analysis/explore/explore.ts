@@ -603,9 +603,14 @@ export function offDefaultCount(settings: ClusterSettings, multilingual: boolean
 	].filter(Boolean).length;
 }
 
-/** Whether the response `load` preloaded answers these settings. */
-export function isDefaultClusterSettings(settings: ClusterSettings) {
-	const fallback = defaultClusterSettings();
+/**
+ * Whether two runs would ask the server the same question.
+ *
+ * The keyword is compared trimmed because that is how it is sent, and the
+ * survey selections by value rather than by identity — the pickers rebuild
+ * those objects on every click.
+ */
+export function sameClusterSettings(settings: ClusterSettings, fallback: ClusterSettings) {
 	return (
 		settings.kind === fallback.kind &&
 		settings.projection === fallback.projection &&
@@ -621,6 +626,31 @@ export function isDefaultClusterSettings(settings: ClusterSettings) {
 		sameSurvey(settings.filters, fallback.filters) &&
 		settings.filters.include_synthetic === fallback.filters.include_synthetic
 	);
+}
+
+/** Whether the response `load` preloaded answers these settings. */
+export function isDefaultClusterSettings(settings: ClusterSettings) {
+	return sameClusterSettings(settings, defaultClusterSettings());
+}
+
+/**
+ * Whether two cohort queries ask for the same interviews.
+ *
+ * Serialized rather than walked: the values are strings and arrays of strings
+ * built fresh on every change, so identity says nothing and there is no nesting
+ * to get lost in.
+ */
+export function sameCohortQuery(
+	a: ReturnType<typeof cohortQuery>,
+	b: ReturnType<typeof cohortQuery>
+) {
+	const spell = (query: ReturnType<typeof cohortQuery>) =>
+		JSON.stringify(
+			Object.entries(query as Record<string, unknown>)
+				.map(([key, value]) => [key, Array.isArray(value) ? [...value].sort() : value])
+				.sort((one, other) => String(one[0]).localeCompare(String(other[0])))
+		);
+	return spell(a) === spell(b);
 }
 
 /**

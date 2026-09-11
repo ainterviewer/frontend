@@ -1,4 +1,10 @@
-import type { EmbeddingKind, InterviewStatus, LanguageCode, Projection } from '$lib/api/types.gen';
+import type {
+	EmbeddingKind,
+	GroupKind,
+	InterviewStatus,
+	LanguageCode,
+	Projection
+} from '$lib/api/types.gen';
 import {
 	DEFAULT_CENTER_BY_LANGUAGE,
 	DEFAULT_CENTER_BY_QUESTION,
@@ -14,6 +20,9 @@ import {
 	defaultFilters
 } from './explore';
 import { keywordProblem as findKeywordProblem } from './keywordQuery';
+// Type-only on purpose: `exploreUrl` reads this module's defaults, so a value
+// import here would make the two a cycle at run time for no gain.
+import type { ExploreUrlState } from './exploreUrl';
 
 /**
  * Which of the two readings of the corpus is on screen.
@@ -269,4 +278,69 @@ export class ExploreState {
 
 	/** Whether a keyword is actually narrowing anything. */
 	filteringByKeyword = $derived(this.searchableKeyword.trim().length > 0);
+
+	/**
+	 * Opened where a link says, rather than always at the defaults.
+	 *
+	 * Taken as a whole snapshot rather than field by field: the URL module owns
+	 * what a link can say and what a malformed one falls back to, and passing it
+	 * through as one object keeps that in one place instead of spreading a dozen
+	 * `?? DEFAULT_X` through here.
+	 *
+	 * Assigned in the constructor rather than defaulted in the declarations
+	 * because the declarations are what document where the page opens; a reader
+	 * of this class should not have to follow a parameter to find out.
+	 */
+	constructor(initial?: ExploreUrlState) {
+		// No link to open at: the declarations above already say where the page
+		// starts, and re-assigning them from a default snapshot would be the same
+		// values written twice.
+		if (!initial) return;
+
+		this.view = initial.view;
+		this.kind = initial.kind;
+		this.listOrder = initial.listOrder;
+		this.listGrouping = initial.listGrouping;
+		this.interviewStatus = initial.filters.status;
+		this.filterLanguages = initial.filters.languages;
+		this.includeSynthetic = initial.filters.include_synthetic;
+		this.filterQuestions = initial.filters.questions;
+		this.keyword = initial.filters.keyword;
+		this.keywordScope = initial.filters.keyword_scope;
+		this.surveyValues = initial.filters.survey;
+		this.surveyRanges = initial.filters.survey_ranges;
+		this.projection = initial.projection;
+		this.nNeighbors = initial.nNeighbors;
+		this.minDist = initial.minDist;
+		this.minClusterSize = initial.minClusterSize;
+		this.centerByQuestion = initial.centerByQuestion;
+		this.centerByLanguage = initial.centerByLanguage;
+		this.visibleLanguages = initial.visibleLanguages;
+	}
+
+	/**
+	 * Everything this holds that belongs in the URL.
+	 *
+	 * The two the page owns rather than this — the semantic query that was run,
+	 * and what the scatter is coloured by — are passed in, so the caller
+	 * assembles one object and the URL module is never handed two halves.
+	 */
+	urlState(query: string, groupMode: GroupKind): ExploreUrlState {
+		return {
+			view: this.view,
+			kind: this.kind,
+			query,
+			filters: this.filters,
+			listOrder: this.listOrder,
+			listGrouping: this.listGrouping,
+			groupMode,
+			projection: this.projection,
+			nNeighbors: this.nNeighbors,
+			minDist: this.minDist,
+			minClusterSize: this.minClusterSize,
+			centerByQuestion: this.centerByQuestion,
+			centerByLanguage: this.centerByLanguage,
+			visibleLanguages: this.visibleLanguages
+		};
+	}
 }
