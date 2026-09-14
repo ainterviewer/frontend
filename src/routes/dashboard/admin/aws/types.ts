@@ -8,8 +8,10 @@ export interface Instance {
 	// 'embedding', and whatever the proxy grows next.
 	service: string;
 	// Health of whichever inference server this pool runs -- vLLM, TEI, ...
+	// 'busy' is a server that took the connection but did not answer in time:
+	// loaded, still routable, and deliberately not the same as 'error'.
 	server: {
-		status: string;
+		status: 'success' | 'busy' | 'error';
 		models?: { name: string }[];
 	};
 	connections: number;
