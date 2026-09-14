@@ -58,6 +58,31 @@
 
 	const formatPercent = format('.0%');
 
+	// A rule read off this question's own answer routed nobody past the
+	// question -- it is read *from* the answer -- so the cohort share beside it
+	// would always be "100% were asked". How often it fired is the thing it
+	// actually decided, counted over the evaluations that reached a verdict.
+	//
+	// Absent rather than zero when the backend cannot attribute the firings:
+	// interviews that ran before the evaluation recorded which question carried
+	// the rule are only countable where no neighbouring question could have
+	// written the same row.
+	let conditionEvaluated = $derived(item.n_condition_evaluated ?? 0);
+	let conditionFired = $derived(item.n_condition_fired ?? 0);
+
+	let conditionTrailing = $derived.by(() => {
+		if (!condition) return null;
+
+		if (condition.outcome) {
+			if (conditionEvaluated <= 0) return null;
+			return `${formatPercent(conditionFired / conditionEvaluated)} (${conditionFired}) ${condition.outcome}`;
+		}
+
+		if (notAsked <= 0) return null;
+		const share = conditionCohort > 0 ? formatPercent(item.n_asked / conditionCohort) : '—';
+		return `${share} (${item.n_asked}) were asked`;
+	});
+
 	let unit = $derived(item.kind === 'text' ? 'words' : 'value');
 
 	// A histogram bucket's `value` is its lower edge, which is unique within the
@@ -153,9 +178,7 @@
 					text={condition.text}
 					numbers={condition.refs.map((ref) => questionNumber(ref.section, ref.question))}
 					titleFor={questionTitleFor}
-					trailing={notAsked > 0
-						? `${conditionCohort > 0 ? formatPercent(item.n_asked / conditionCohort) : '—'} (${item.n_asked}) were asked`
-						: null}
+					trailing={conditionTrailing}
 				/>
 			{/if}
 			{#if gateText}

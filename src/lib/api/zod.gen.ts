@@ -1840,6 +1840,8 @@ export const zItemDistribution = z.object({
     n_answered: z.int(),
     n_skipped: z.int(),
     n_not_asked_by_condition: z.int().optional().default(0),
+    n_condition_evaluated: z.int().optional().default(0),
+    n_condition_fired: z.int().optional().default(0),
     counts: z.array(zCategoryCount),
     buckets: z.array(zDistributionBucket),
     stats: zNumericStats.nullable(),

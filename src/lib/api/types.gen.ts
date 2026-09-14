@@ -2317,6 +2317,14 @@ export type ItemDistribution = {
      */
     n_not_asked_by_condition?: number;
     /**
+     * N Condition Evaluated
+     */
+    n_condition_evaluated?: number;
+    /**
+     * N Condition Fired
+     */
+    n_condition_fired?: number;
+    /**
      * Counts
      */
     counts: Array<CategoryCount>;

@@ -50,6 +50,15 @@ export type ConditionSummary = {
 	text: string;
 	/** The questions the rule reads, in the order it reads them. */
 	refs: ConditionRef[];
+	/**
+	 * What the interview did on the occasions this rule was met, past tense and
+	 * ready to follow a count, e.g. `moved on`.
+	 *
+	 * Only set for a rule read off the question's own answer. Any other rule
+	 * decides whether the question was put at all, which the card already says
+	 * as a share of the cohort it let through.
+	 */
+	outcome: string | null;
 };
 
 /** What one question's conditions do to the questions they gate. */
@@ -83,6 +92,19 @@ const SELF_ACTION_PREFIX: Record<Conditions['action'], string> = {
 	skip_probes: 'Not probed further when',
 	skip_section: 'Section ends when',
 	end_interview: 'Interview ends when'
+};
+
+/**
+ * What firing did, for the count beside a rule read off its own answer.
+ *
+ * Past tense and agreeing with the prefix above, so the line reads as one
+ * sentence: "Moves on when this answer is about X · 14% (12) moved on".
+ */
+const SELF_ACTION_OUTCOME: Record<Conditions['action'], string> = {
+	skip_question: 'moved on',
+	skip_probes: 'stopped the probes',
+	skip_section: 'ended the section',
+	end_interview: 'ended the interview'
 };
 
 /**
@@ -217,7 +239,8 @@ export function summarizeConditions(
 			.map((condition) => ({
 				section: condition.question_context.section,
 				question: condition.question_context.question
-			}))
+			})),
+		outcome: selfOnly ? (SELF_ACTION_OUTCOME[conditions.action] ?? 'applied') : null
 	};
 }
 
