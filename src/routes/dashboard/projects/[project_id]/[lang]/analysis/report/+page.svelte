@@ -11,6 +11,7 @@
 	import ClampedText from './ClampedText.svelte';
 	import { DISTRIBUTED_ONLY, isDefaultQuery, WITH_TESTS } from './filters';
 	import { reveal } from '$lib/utils/reveal';
+	import { sanitizeMarkup } from '$lib/utils/sanitize';
 	import {
 		buildGateMap,
 		questionKey,
@@ -187,11 +188,14 @@
 	// set to know whether it is named by another's condition.
 	let gateMap = $derived(buildGateMap(stats?.items ?? []));
 
+	// Sanitized rather than raw: these are the wording behind a question number,
+	// and every place they are shown -- the condition links' tooltips, the
+	// answer-rate rows -- renders the guide's markup rather than its tags.
 	let questionTitles = $derived(
 		new Map(
 			(stats?.items ?? []).map((item) => [
 				questionNumber(item.section, item.main_question),
-				item.question
+				sanitizeMarkup(item.question)
 			])
 		)
 	);
@@ -451,7 +455,8 @@
 									<HoverInfo asChild contentClass="max-w-sm">
 										{#snippet content()}
 											<div class="flex flex-col gap-1">
-												<span>{item.question}</span>
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+												<span>{@html sanitizeMarkup(item.question)}</span>
 												{#if hint}
 													<!-- The rate beside it is over the respondents who were asked, so a
 													     conditional question's row is a rate within its own subset and
@@ -471,7 +476,8 @@
 														aria-label="Conditional question"
 													></i>
 												{/if}
-												{item.question}
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+												{@html sanitizeMarkup(item.question)}
 											</div>
 										{/snippet}
 									</HoverInfo>

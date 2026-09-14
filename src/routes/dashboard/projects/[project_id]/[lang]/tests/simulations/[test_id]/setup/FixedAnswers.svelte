@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Synthesize, type Question, type TestSetupPublic } from '$lib/api';
 	import { untrack } from 'svelte';
+	import { sanitizeMarkup } from '$lib/utils/sanitize';
 	import { toast } from 'svelte-sonner';
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 
@@ -82,7 +83,8 @@
 					<h4 class="mt-8 mb-2.5 text-gray-500">
 						Question {sectionIndex + 1}.{questionIndex + 1}
 					</h4>
-					<span class="italic">{question.main_question}</span>
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+					<span class="italic">{@html sanitizeMarkup(question.main_question)}</span>
 					{#if question.can_answer === true}
 						<div class="mt-2.5 flex flex-col">
 							<label for="question-{sectionIndex}-{questionIndex}-answer">Answer: </label>

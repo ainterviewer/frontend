@@ -285,3 +285,23 @@ export function sanitizeMarkup(html: string, marks: readonly MarkRange[] = []): 
 	}
 	return out;
 }
+
+/**
+ * The same markup rendered as plain text: allowed tags dropped, character
+ * references resolved, a `<br>` become a newline.
+ *
+ * For the places authored text has to be a bare string — a `title` attribute,
+ * an aria label, a canvas label — where `<u>` would otherwise be shown to the
+ * one reader who hovered. It is `sanitizeMarkup`'s output with the tags taken
+ * off rather than its own pass over the source, so the two agree on what is
+ * markup: a tag outside the allowlist is visible text there and stays visible
+ * text here.
+ */
+export function plainMarkup(html: string): string {
+	if (!html) return '';
+	return decodeEntities(
+		sanitizeMarkup(html)
+			.replace(/<br>/g, '\n')
+			.replace(/<[^>]*>/g, '')
+	);
+}

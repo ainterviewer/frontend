@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { plainMarkup } from '$lib/utils/sanitize';
 	import { Analysis, Projects, type Image, type MessagePublic } from '$lib/api';
 	import type {
 		AnalysisCategoryPublic,
@@ -546,7 +547,17 @@
 		const sectionData = guide.question_sections[section];
 		if (!sectionData?.questions) return '';
 		const questionData = sectionData.questions[question];
-		return questionData?.main_question || '';
+		// As text: the only reader of this is a `title` attribute, where the
+		// guide's inline markup would be shown as tags.
+		return plainMarkup(questionData?.main_question ?? '');
+	}
+
+	// One picker row's worth of a question. Truncated as text rather than as
+	// markup: the guide is authored with inline tags, and cutting the wording
+	// mid-tag would leave a half-open element behind.
+	function questionPreview(text: string): string {
+		const plain = plainMarkup(text);
+		return plain.length > 60 ? plain.substring(0, 60) + '...' : plain;
 	}
 
 	function getSectionDescription(section: number): string {
@@ -861,9 +872,7 @@
 																		{sectionIdx + 1}.{questionIdx + 1}
 																	</span>
 																	<span class="flex-1 text-gray-700">
-																		{question.main_question.length > 60
-																			? question.main_question.substring(0, 60) + '...'
-																			: question.main_question}
+																		{questionPreview(question.main_question)}
 																	</span>
 																</button>
 															{/each}

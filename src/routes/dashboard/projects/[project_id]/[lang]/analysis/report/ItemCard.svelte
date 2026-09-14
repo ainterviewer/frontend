@@ -14,6 +14,7 @@
 	import { badgeFor } from './itemTypes';
 	import OptionBars from './OptionBars.svelte';
 	import SampleDots from './SampleDots.svelte';
+	import { sanitizeMarkup } from '$lib/utils/sanitize';
 
 	let {
 		item,
@@ -39,6 +40,14 @@
 	let badge = $derived(badgeFor(item));
 
 	let number = $derived(questionNumber(item.section, item.main_question));
+
+	// The guide is authored with inline markup -- an underlined phrase the
+	// interviewer is meant to stress -- and the respondent was read the rendered
+	// version, so the report renders it too rather than showing the reader tags
+	// the respondent never saw. Same allowlist as the interview transcript.
+	let title = $derived(
+		sanitizeMarkup(item.question || (isStatement ? 'Untitled statement' : 'Untitled question'))
+	);
 
 	// What had to hold for this question to be asked, and what its own answer
 	// decides. Both are stated on the card, because a card whose cohort was
@@ -159,8 +168,12 @@
 			<!-- Cards flow down one column and up the next, so where a card sits on
 			     screen no longer says where its question sits in the guide. The
 			     number says it. -->
-			<span class="mr-1.5 font-normal text-gray-400 tabular-nums">{number}</span>{item.question ||
-				(isStatement ? 'Untitled statement' : 'Untitled question')}
+			<!-- Written hard against the number's span: the heading is `pre-line`, so
+			     a newline between them would become a space on top of the margin.
+			     Disabled as a block rather than for the next line, since a
+			     line-scoped directive does not survive the formatter here. -->
+			<!-- eslint-disable svelte/no-at-html-tags -->
+			<span class="mr-1.5 font-normal text-gray-400 tabular-nums">{number}</span>{@html title}
 		</h3>
 		<span
 			class="flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[0.625rem] font-medium tracking-wide uppercase {badge.tone}"

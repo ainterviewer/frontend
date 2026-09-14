@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { sanitizeMarkup } from '$lib/utils/sanitize';
 	import { BarChart, Text, Tooltip, type ChartState } from 'layerchart';
 
 	type DropoutBar = {
@@ -144,7 +145,8 @@
 								<div
 									class="max-w-2xs text-xs font-normal text-pretty whitespace-pre-line text-gray-600"
 								>
-									{data.questionText}
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+									{@html sanitizeMarkup(data.questionText)}
 								</div>
 							{/if}
 						</Tooltip.Header>

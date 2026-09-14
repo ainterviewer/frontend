@@ -9,6 +9,7 @@
 		SurveyFacet
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { plainMarkup, sanitizeMarkup } from '$lib/utils/sanitize';
 	import { Switch } from 'bits-ui';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { format } from 'd3-format';
@@ -599,7 +600,7 @@
 									<button
 										type="button"
 										aria-pressed={on}
-										title={question.main_question}
+										title={plainMarkup(question.main_question)}
 										onclick={() =>
 											(filterQuestions = toggleQuestion(filterQuestions, sectionIdx, questionIdx))}
 										class="flex cursor-pointer items-baseline gap-1.5 rounded px-1 py-0.5 text-left text-[0.6875rem] transition-colors {on
@@ -609,7 +610,10 @@
 										<span class="shrink-0 font-mono text-[0.625rem] tabular-nums">
 											{sectionIdx + 1}.{questionIdx + 1}
 										</span>
-										<span class="truncate">{question.main_question}</span>
+										<!-- The guide is authored with inline markup, so the picker shows the
+										     wording the respondent was read rather than its tags. -->
+										<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+										<span class="truncate">{@html sanitizeMarkup(question.main_question)}</span>
 									</button>
 								{/each}
 							</div>

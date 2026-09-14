@@ -2,6 +2,7 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
 	import type { GuideQuestion } from './types';
+	import { plainMarkup, sanitizeMarkup } from '$lib/utils/sanitize';
 
 	interface Props {
 		question: GuideQuestion;
@@ -42,8 +43,9 @@
 		draggable="false"
 		class="block min-w-0 flex-1 truncate py-1 pr-2 text-xs text-gray-500 transition-colors
 			{activeId === question.id ? 'text-primary' : ''}"
-		title={question.main_question || `Question ${questionIndex + 1}`}
+		title={plainMarkup(question.main_question) || `Question ${questionIndex + 1}`}
 	>
-		{question.main_question || `Question ${questionIndex + 1}`}
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+		{@html sanitizeMarkup(question.main_question) || `Question ${questionIndex + 1}`}
 	</a>
 </div>
