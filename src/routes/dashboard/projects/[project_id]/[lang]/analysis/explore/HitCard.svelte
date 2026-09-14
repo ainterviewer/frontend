@@ -154,7 +154,11 @@
 						? 'Stop showing what is nearest this chunk'
 						: 'Show what is nearest this chunk'}
 				>
-					<i class="fas fa-anchor text-[0.625rem]"></i>Anchor
+					{#if anchored}
+						<i class="fas fa-anchor text-[0.625rem]"></i>Release
+					{:else}
+						<i class="fas fa-anchor text-[0.625rem]"></i>Show similar
+					{/if}
 				</button>
 			{:else if anchored}
 				<!-- Anchored, but with nothing to release it: a label, not a button. -->
