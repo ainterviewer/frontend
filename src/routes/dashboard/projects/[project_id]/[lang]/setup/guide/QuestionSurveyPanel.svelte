@@ -74,8 +74,8 @@
 						}
 					}}
 				>
-					<option value="radio">Single Choice (Radio)</option>
-					<option value="checkbox">Multiple Choice (Checkbox)</option>
+					<option value="radio">Single Choice</option>
+					<option value="checkbox">Multiple Choice</option>
 					<option value="likert">Likert Scale</option>
 					<option value="slider">Slider</option>
 					<option value="number">Number</option>
