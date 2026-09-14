@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CategoryCount } from '$lib/api/types.gen';
 	import { pooledColor, WRITE_IN_COLOR } from '$lib/config/chartColors';
+	import { printing } from '$lib/utils/printing.svelte';
 	import { format } from 'd3-format';
 
 	let {
@@ -41,8 +42,10 @@
 	// authored order instead could hide the tallest bar and leave the card
 	// showing a shape that is not the distribution. They are then put back into
 	// authored order, so the ones on screen read in the order they were asked.
+	// Print has no toggle to press, and a card that says "show all 12 options"
+	// on paper is a card missing two of them.
 	let visible = $derived.by(() => {
-		if (!collapsible || expanded) return counts;
+		if (!collapsible || expanded || printing.active) return counts;
 
 		return counts
 			.map((entry, index) => ({ entry, index }))
@@ -134,7 +137,7 @@
 			<button
 				type="button"
 				onclick={() => (expanded = !expanded)}
-				class="text-xs font-medium text-primary hover:underline"
+				class="text-xs font-medium text-primary hover:underline print:hidden"
 			>
 				{expanded ? 'Show fewer' : `Show all ${counts.length} options`}
 			</button>

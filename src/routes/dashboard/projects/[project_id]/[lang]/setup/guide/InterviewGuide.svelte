@@ -433,7 +433,11 @@
 	}}
 />
 
-<div>
+<!-- `print-guide` scopes this route's print rules in `app.css`. They shape the
+     guide specifically -- hiding its edit affordances, flattening its
+     textareas -- and used to be written unscoped, which left them reaching
+     into every other printable route. -->
+<div class="print-guide">
 	<div class="flex justify-between">
 		<h1 class="page-title">Interview Guide</h1>
 		<div class="mb-2 flex gap-2">

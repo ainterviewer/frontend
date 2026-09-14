@@ -10,6 +10,7 @@
 	import ChartSkeleton from './ChartSkeleton.svelte';
 	import ClampedText from './ClampedText.svelte';
 	import { DISTRIBUTED_ONLY, isDefaultQuery, WITH_TESTS } from './filters';
+	import { watchPrinting } from '$lib/utils/printing.svelte';
 	import { reveal } from '$lib/utils/reveal';
 	import { sanitizeMarkup } from '$lib/utils/sanitize';
 	import {
@@ -40,9 +41,10 @@
 	let deduplicateByPid = $state(false);
 
 	// Whether every bar is broken down by the language the interview ran in.
-	// On by default, because a cohort spanning two languages is two recruitment
-	// channels as often as it is one; off pools them into a single series for a
-	// reader who is after the shape of the answers and not who gave them.
+	// Off by default, pooling the languages into a single series: the shape of
+	// the answers is what the card is for, and the same items were asked either
+	// way. On, every bar is split by the language the interview ran in, for a
+	// reader who suspects two languages mean two recruitment channels.
 	let splitByLanguage = $state(false);
 
 	// Held across refetches so the language chips do not disappear while a
@@ -86,7 +88,7 @@
 		completedOnly = false;
 		includeTests = false;
 		deduplicateByPid = false;
-		splitByLanguage = true;
+		splitByLanguage = false;
 		availableLanguages = [];
 	});
 
@@ -287,6 +289,25 @@
 		return blocks.length > 0 ? blocks : [[]];
 	}
 
+	// The page is meant to be printed, and print is the one render nobody can
+	// scroll: cards still behind a lazy placeholder, collapsed option lists and
+	// clamped descriptions all have to be opened before the snapshot is taken.
+	$effect(() => watchPrinting());
+
+	const formatDate = new Intl.DateTimeFormat(undefined, { dateStyle: 'long' });
+
+	// The cohort the numbers describe, spelled out for the printed header. On
+	// screen the toggles say this themselves; on paper they are gone, and a
+	// distribution without its filters is not a finding anyone can cite.
+	let filterSummary = $derived([
+		selectedLanguages.length > 0
+			? `Languages: ${selectedLanguages.map((l) => l.toUpperCase()).join(', ')}`
+			: 'All languages pooled',
+		completedOnly ? 'Completed interviews only' : 'Completed and partial interviews',
+		deduplicateByPid ? 'One interview per participant' : 'Every interview counted',
+		includeTests ? 'Test runs included' : 'Test runs excluded'
+	]);
+
 	function toggleLanguage(language: string) {
 		selectedLanguages = selectedLanguages.includes(language)
 			? selectedLanguages.filter((l) => l !== language)
@@ -294,307 +315,362 @@
 	}
 </script>
 
-<div class="flex flex-wrap items-center justify-between gap-4">
-	<h1 class="page-title">Report</h1>
+<!-- `display: contents`, so the wrapper is a hook for the print rules in
+     `app.css` and nothing else: it draws no box and the screen layout is the
+     one it would have been without it. -->
+<div class="print-report contents">
+	<!-- The printed report's cover. It carries what the toolbar below says on
+	     screen and paper cannot: which project, which cohort, and when the
+	     numbers were read. -->
+	<div class="hidden print:mb-6 print:block">
+		<h1 class="text-xl font-bold">{data.project?.title || 'Untitled project'}</h1>
+		<p class="mt-0.5 text-sm text-gray-600">
+			Answer distributions · {formatDate.format(new Date())}
+		</p>
+		<dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-600">
+			<!-- The filters hold whether or not the counts have landed; the counts
+			     are left out until they have, since a cover reading "0 of 0
+			     questions asked" over a document of skeletons is a finding nobody
+			     made. -->
+			{#if !loading}
+				<div class="flex gap-1.5">
+					<dt class="text-gray-500">Interviews</dt>
+					<dd class="font-medium tabular-nums">{formatNumber(stats?.total_interviews ?? 0)}</dd>
+				</div>
+				<div class="flex gap-1.5">
+					<dt class="text-gray-500">Answer rate</dt>
+					<dd class="font-medium tabular-nums">
+						{formatPercent(overallAnswerRate)}
+						<span class="font-normal text-gray-500">
+							({formatNumber(totalAnswered)} of {formatNumber(totalAsked)} questions asked)
+						</span>
+					</dd>
+				</div>
+			{/if}
+			<div class="flex gap-1.5">
+				<dt class="text-gray-500">Filters</dt>
+				<dd class="font-medium">{filterSummary.join(' · ')}</dd>
+			</div>
+		</dl>
+	</div>
 
-	<div class="flex flex-wrap items-center gap-4">
-		{#if availableLanguages.length > 1}
-			<div class="flex items-center gap-1.5">
-				<span class="text-sm text-gray-700">Language</span>
-				{#each availableLanguages as language (language)}
-					{@const active = selectedLanguages.includes(language)}
-					<!-- The swatch is the legend: it is the colour this language takes
+	<div class="flex flex-wrap items-center justify-between gap-4 print:hidden">
+		<h1 class="page-title">Report</h1>
+
+		<div class="flex flex-wrap items-center gap-4">
+			{#if availableLanguages.length > 1}
+				<div class="flex items-center gap-1.5">
+					<span class="text-sm text-gray-700">Language</span>
+					{#each availableLanguages as language (language)}
+						{@const active = selectedLanguages.includes(language)}
+						<!-- The swatch is the legend: it is the colour this language takes
 					     in every stacked bar below, so the charts need no legend of
 					     their own. -->
-					<button
-						type="button"
-						onclick={() => toggleLanguage(language)}
-						aria-pressed={active}
-						class="flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors {active
-							? 'border-gray-400 bg-surface-200 text-gray-800'
-							: 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}"
-					>
-						<span
-							class="h-2 w-2 shrink-0 rounded-full"
-							style="background-color: {colorFor(language)}"
-						></span>
-						{language.toUpperCase()}
-					</button>
-				{/each}
-				<HoverInfo
-					text="Pool answers across every language, or pick the ones to count. The items are the same either way — only their wording is translated."
-				/>
-			</div>
-		{/if}
+						<button
+							type="button"
+							onclick={() => toggleLanguage(language)}
+							aria-pressed={active}
+							class="flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors {active
+								? 'border-gray-400 bg-surface-200 text-gray-800'
+								: 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}"
+						>
+							<span
+								class="h-2 w-2 shrink-0 rounded-full"
+								style="background-color: {colorFor(language)}"
+							></span>
+							{language.toUpperCase()}
+						</button>
+					{/each}
+					<HoverInfo
+						text="Pool answers across every language, or pick the ones to count. The items are the same either way — only their wording is translated."
+					/>
+				</div>
+			{/if}
 
-		{#if availableLanguages.length > 1}
+			{#if availableLanguages.length > 1}
+				<div class="flex items-center gap-2">
+					<Switch.Root
+						id="split-by-language"
+						bind:checked={splitByLanguage}
+						class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+					>
+						<Switch.Thumb
+							class="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
+						/>
+					</Switch.Root>
+					<label for="split-by-language" class="cursor-pointer text-sm text-gray-700">
+						Split by language
+					</label>
+					<HoverInfo
+						text="Break every bar down by the language the interview ran in. Turn off to pool them into one series — the counts are the same either way."
+					/>
+				</div>
+			{/if}
+
 			<div class="flex items-center gap-2">
 				<Switch.Root
-					id="split-by-language"
-					bind:checked={splitByLanguage}
+					id="completed-only"
+					bind:checked={completedOnly}
 					class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
 				>
 					<Switch.Thumb
 						class="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
 					/>
 				</Switch.Root>
-				<label for="split-by-language" class="cursor-pointer text-sm text-gray-700">
-					Split by language
+				<label for="completed-only" class="cursor-pointer text-sm text-gray-700">
+					Completed only
 				</label>
 				<HoverInfo
-					text="Break every bar down by the language the interview ran in. Turn off to pool them into one series — the counts are the same either way."
+					text="Count only interviews that reached the end. Turn off to include answers from interviews that were abandoned part-way."
 				/>
 			</div>
-		{/if}
 
-		<div class="flex items-center gap-2">
-			<Switch.Root
-				id="completed-only"
-				bind:checked={completedOnly}
-				class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-			>
-				<Switch.Thumb
-					class="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
+			<div class="flex items-center gap-2">
+				<Switch.Root
+					id="deduplicate-by-pid"
+					bind:checked={deduplicateByPid}
+					class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+				>
+					<Switch.Thumb
+						class="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
+					/>
+				</Switch.Root>
+				<label for="deduplicate-by-pid" class="cursor-pointer text-sm text-gray-700">
+					Deduplicate by participant
+				</label>
+				<HoverInfo
+					text="Counts one interview per participant ID, keeping the one with most progress. Turn off to count every interview, including repeat visits from the same participant."
 				/>
-			</Switch.Root>
-			<label for="completed-only" class="cursor-pointer text-sm text-gray-700">
-				Completed only
-			</label>
-			<HoverInfo
-				text="Count only interviews that reached the end. Turn off to include answers from interviews that were abandoned part-way."
-			/>
-		</div>
+			</div>
 
-		<div class="flex items-center gap-2">
-			<Switch.Root
-				id="deduplicate-by-pid"
-				bind:checked={deduplicateByPid}
-				class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-			>
-				<Switch.Thumb
-					class="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
+			<div class="flex items-center gap-2">
+				<Switch.Root
+					id="include-tests"
+					bind:checked={includeTests}
+					class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+				>
+					<Switch.Thumb
+						class="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
+					/>
+				</Switch.Root>
+				<label for="include-tests" class="cursor-pointer text-sm text-gray-700">
+					Include test runs
+				</label>
+				<HoverInfo
+					text="Adds your own manual test interviews and synthetic ones to the counts. Off by default, so the distributions describe real respondents."
 				/>
-			</Switch.Root>
-			<label for="deduplicate-by-pid" class="cursor-pointer text-sm text-gray-700">
-				Deduplicate by participant
-			</label>
-			<HoverInfo
-				text="Counts one interview per participant ID, keeping the one with most progress. Turn off to count every interview, including repeat visits from the same participant."
-			/>
-		</div>
-
-		<div class="flex items-center gap-2">
-			<Switch.Root
-				id="include-tests"
-				bind:checked={includeTests}
-				class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
-			>
-				<Switch.Thumb
-					class="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
-				/>
-			</Switch.Root>
-			<label for="include-tests" class="cursor-pointer text-sm text-gray-700">
-				Include test runs
-			</label>
-			<HoverInfo
-				text="Adds your own manual test interviews and synthetic ones to the counts. Off by default, so the distributions describe real respondents."
-			/>
+			</div>
 		</div>
 	</div>
-</div>
 
-{#if error}
-	<div class="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
-{:else}
-	<div class="my-8 flex flex-col gap-8">
-		<!-- Overview: the cohort these distributions are read against, and where
+	{#if error}
+		<div class="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>
+	{:else}
+		<div class="report-body my-8 flex flex-col gap-8">
+			<!-- Overview: the cohort these distributions are read against, and where
 		     in the guide answers stop coming. -->
-		<div class="grid gap-4 lg:grid-cols-[1fr_2fr]">
-			<div class="grid grid-cols-2 gap-4">
-				<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-					<div class="text-sm font-medium text-gray-700">Interviews</div>
-					{#if loading}
-						<div class="mt-2 h-9 w-20 animate-pulse rounded bg-surface-200"></div>
-					{:else}
-						<div class="mt-2 text-3xl font-bold">
-							{formatNumber(stats?.total_interviews ?? 0)}
-						</div>
-						<div class="mt-1 text-xs text-gray-500">In the current filter</div>
-					{/if}
-				</div>
-				<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-					<div class="text-sm font-medium text-gray-700">Answer Rate</div>
-					{#if loading}
-						<div class="mt-2 h-9 w-20 animate-pulse rounded bg-surface-200"></div>
-						<div class="mt-3 h-2 w-full animate-pulse rounded-full bg-surface-200"></div>
-					{:else}
-						<div class="mt-2 text-3xl font-bold">{formatPercent(overallAnswerRate)}</div>
-						<div
-							class="mt-3 h-2 w-full overflow-hidden rounded-full"
-							style="background-color: {ANSWER_STATE_COLORS.skipped}"
-						>
-							<div
-								class="h-full transition-all duration-500 ease-out"
-								style="width: {overallAnswerRate *
-									100}%; background-color: {ANSWER_STATE_COLORS.answered}"
-							></div>
-						</div>
-						<div class="mt-1 text-xs text-gray-500">
-							{formatNumber(totalAnswered)} of {formatNumber(totalAsked)} questions asked
-						</div>
-					{/if}
-				</div>
-			</div>
-
-			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-				<div class="flex items-center justify-between gap-4">
-					<div class="text-sm font-medium text-gray-700">Answer Rate by Question</div>
-					<div class="flex flex-wrap gap-x-3 gap-y-1">
-						{#each [['Answered', ANSWER_STATE_COLORS.answered], ['Skipped', ANSWER_STATE_COLORS.skipped], ['Dropped out', ANSWER_STATE_COLORS.dropped]] as [label, color] (label)}
-							<div class="flex items-center gap-1.5">
-								<div class="h-2 w-2 shrink-0 rounded-full" style="background-color: {color}"></div>
-								<span class="text-xs text-gray-500">{label}</span>
+			<div class="report-overview grid gap-4 lg:grid-cols-[1fr_2fr]">
+				<div class="report-stats grid grid-cols-2 gap-4">
+					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+						<div class="text-sm font-medium text-gray-700">Interviews</div>
+						{#if loading}
+							<div class="mt-2 h-9 w-20 animate-pulse rounded bg-surface-200"></div>
+						{:else}
+							<div class="mt-2 text-3xl font-bold">
+								{formatNumber(stats?.total_interviews ?? 0)}
 							</div>
-						{/each}
+							<div class="mt-1 text-xs text-gray-500">In the current filter</div>
+						{/if}
+					</div>
+					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+						<div class="text-sm font-medium text-gray-700">Answer Rate</div>
+						{#if loading}
+							<div class="mt-2 h-9 w-20 animate-pulse rounded bg-surface-200"></div>
+							<div class="mt-3 h-2 w-full animate-pulse rounded-full bg-surface-200"></div>
+						{:else}
+							<div class="mt-2 text-3xl font-bold">{formatPercent(overallAnswerRate)}</div>
+							<div
+								class="mt-3 h-2 w-full overflow-hidden rounded-full"
+								style="background-color: {ANSWER_STATE_COLORS.skipped}"
+							>
+								<div
+									class="h-full transition-all duration-500 ease-out"
+									style="width: {overallAnswerRate *
+										100}%; background-color: {ANSWER_STATE_COLORS.answered}"
+								></div>
+							</div>
+							<div class="mt-1 text-xs text-gray-500">
+								{formatNumber(totalAnswered)} of {formatNumber(totalAsked)} questions asked
+							</div>
+						{/if}
 					</div>
 				</div>
-				<div class="mt-4">
-					{#if loading}
-						<ChartSkeleton rows bars={6} />
-					{:else if answerRateRows.length === 0}
-						<div class="py-6 text-center text-sm text-gray-500">
-							This project's interview guide has no questions yet.
+
+				<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+					<div class="flex items-center justify-between gap-4">
+						<div class="text-sm font-medium text-gray-700">Answer Rate by Question</div>
+						<div class="flex flex-wrap gap-x-3 gap-y-1">
+							{#each [['Answered', ANSWER_STATE_COLORS.answered], ['Skipped', ANSWER_STATE_COLORS.skipped], ['Dropped out', ANSWER_STATE_COLORS.dropped]] as [label, color] (label)}
+								<div class="flex items-center gap-1.5">
+									<div
+										class="h-2 w-2 shrink-0 rounded-full"
+										style="background-color: {color}"
+									></div>
+									<span class="text-xs text-gray-500">{label}</span>
+								</div>
+							{/each}
 						</div>
-					{:else}
-						<div class="flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">
-							{#each answerRateRows as item (`${item.section}-${item.main_question}`)}
-								{@const hint = conditionHint(item)}
-								<!-- Revealed per row, not per list: the list scrolls, so revealing
+					</div>
+					<div class="mt-4">
+						{#if loading}
+							<ChartSkeleton rows bars={6} />
+						{:else if answerRateRows.length === 0}
+							<div class="py-6 text-center text-sm text-gray-500">
+								This project's interview guide has no questions yet.
+							</div>
+						{:else}
+							<div class="report-rates flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">
+								{#each answerRateRows as item (`${item.section}-${item.main_question}`)}
+									{@const hint = conditionHint(item)}
+									<!-- Revealed per row, not per list: the list scrolls, so revealing
 								     it whole would animate every row below its own fold unseen. -->
-								<div
-									{@attach reveal()}
-									class="grid grid-cols-[minmax(0,15rem)_1fr] items-center gap-3"
-								>
-									<!-- One tooltip for the whole label rather than one on the row and
+									<div
+										{@attach reveal()}
+										class="grid grid-cols-[minmax(0,15rem)_1fr] items-center gap-3"
+									>
+										<!-- One tooltip for the whole label rather than one on the row and
 									     another on the branch icon: nesting a trigger inside a trigger makes
 									     which one is showing depend on where the pointer happened to land. -->
-									<HoverInfo asChild contentClass="max-w-sm">
-										{#snippet content()}
-											<div class="flex flex-col gap-1">
-												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-												<span>{@html sanitizeMarkup(item.question)}</span>
-												{#if hint}
-													<!-- The rate beside it is over the respondents who were asked, so a
+										<HoverInfo asChild contentClass="max-w-sm">
+											{#snippet content()}
+												<div class="flex flex-col gap-1">
+													<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+													<span>{@html sanitizeMarkup(item.question)}</span>
+													{#if hint}
+														<!-- The rate beside it is over the respondents who were asked, so a
 													     conditional question's row is a rate within its own subset and
 													     not within the cohort. -->
-													<span class="text-amber-700">{hint}</span>
-												{/if}
-											</div>
-										{/snippet}
-										{#snippet children({ props })}
-											<div {...props} class="truncate text-left text-xs text-gray-700">
-												<span class="text-gray-400 tabular-nums">
-													{item.section + 1}.{item.main_question + 1}
-												</span>
-												{#if hint}
-													<i
-														class="fa-solid fa-code-branch text-[0.625rem] text-amber-500"
-														aria-label="Conditional question"
-													></i>
-												{/if}
-												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-												{@html sanitizeMarkup(item.question)}
-											</div>
-										{/snippet}
-									</HoverInfo>
-									<AnswerRateBar
-										asked={item.n_asked}
-										answered={item.n_answered}
-										skipped={item.n_skipped}
-										compact
-									/>
+														<span class="text-amber-700">{hint}</span>
+													{/if}
+												</div>
+											{/snippet}
+											{#snippet children({ props })}
+												<div {...props} class="truncate text-left text-xs text-gray-700">
+													<span class="text-gray-400 tabular-nums">
+														{item.section + 1}.{item.main_question + 1}
+													</span>
+													{#if hint}
+														<i
+															class="fa-solid fa-code-branch text-[0.625rem] text-amber-500"
+															aria-label="Conditional question"
+														></i>
+													{/if}
+													<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+													{@html sanitizeMarkup(item.question)}
+												</div>
+											{/snippet}
+										</HoverInfo>
+										<AnswerRateBar
+											asked={item.n_asked}
+											answered={item.n_answered}
+											skipped={item.n_skipped}
+											compact
+										/>
+									</div>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				</div>
+			</div>
+
+			<!-- The distributions themselves, grouped the way the guide is written. -->
+			{#if loading}
+				{#each [0, 1] as group (group)}
+					<section class="flex flex-col gap-4">
+						<div class="h-4 w-40 animate-pulse rounded bg-surface-200"></div>
+						<div class="grid items-start gap-4 lg:grid-cols-2">
+							{#each [0, 1] as card (card)}
+								<div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+									<div class="h-4 w-2/3 animate-pulse rounded bg-surface-200"></div>
+									<div class="mt-4">
+										<ChartSkeleton rows bars={4} />
+									</div>
 								</div>
 							{/each}
 						</div>
-					{/if}
-				</div>
-			</div>
-		</div>
-
-		<!-- The distributions themselves, grouped the way the guide is written. -->
-		{#if loading}
-			{#each [0, 1] as group (group)}
-				<section class="flex flex-col gap-4">
-					<div class="h-4 w-40 animate-pulse rounded bg-surface-200"></div>
-					<div class="grid items-start gap-4 lg:grid-cols-2">
-						{#each [0, 1] as card (card)}
-							<div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-								<div class="h-4 w-2/3 animate-pulse rounded bg-surface-200"></div>
-								<div class="mt-4">
-									<ChartSkeleton rows bars={4} />
-								</div>
-							</div>
-						{/each}
+					</section>
+				{/each}
+			{:else if groups.length === 0}
+				<div class="rounded-lg border border-gray-200 bg-white p-10 text-center text-gray-500">
+					<div class="text-sm font-medium">Nothing to plot yet</div>
+					<div class="mt-1 text-sm">
+						Distributions appear here once the guide has questions and interviews have been
+						answered.
 					</div>
-				</section>
-			{/each}
-		{:else if groups.length === 0}
-			<div class="rounded-lg border border-gray-200 bg-white p-10 text-center text-gray-500">
-				<div class="text-sm font-medium">Nothing to plot yet</div>
-				<div class="mt-1 text-sm">
-					Distributions appear here once the guide has questions and interviews have been answered.
 				</div>
-			</div>
-		{:else}
-			{#each groups as group, groupIndex (group.section)}
-				<!-- The heading sits inside a column and so is only half the page
+			{:else}
+				{#each groups as group, groupIndex (group.section)}
+					<!-- The heading sits inside a column and so is only half the page
 				     wide; a rule across the full width is what actually marks where
 				     one section ends and the next begins. -->
-				<section
-					class="flex flex-col gap-4 {groupIndex > 0 ? 'border-t border-gray-200 pt-8' : ''}"
-				>
-					<!-- Columns, not a grid: a grid row is as tall as its tallest card,
+					<section
+						class="report-section flex flex-col gap-4 {groupIndex > 0
+							? 'border-t border-gray-200 pt-8'
+							: ''}"
+					>
+						<!-- Columns, not a grid: a grid row is as tall as its tallest card,
 					     and option counts vary enough that half of every row was
 					     whitespace. -->
-					{#each blocksOf(group.items, COLUMN_BLOCK) as block, index (index)}
-						<div class="-mb-4 gap-4 lg:columns-2">
-							<!-- The heading flows in the first column rather than spanning
+						{#each blocksOf(group.items, COLUMN_BLOCK) as block, index (index)}
+							<div class="-mb-4 gap-4 lg:columns-2">
+								<!-- The heading flows in the first column rather than spanning
 							     the section, so it sits where reading starts and the eye
-							     is pointed down the column instead of across. It also
-							     balances as an item, which is why the first block rarely
-							     ends ragged. -->
-							{#if index === 0}
-								{@render sectionHeading(group)}
-								{#if group.items.length === 0}
-									<p class="mb-4 text-xs text-gray-400 italic">
-										No answerable questions in this section.
-									</p>
+							     is pointed down the column instead of across. It is boxed
+							     with the card under it because `break-after: avoid` is
+							     Chrome-only: left to itself the heading prints at the foot
+							     of a page, with its section starting on the next one. -->
+								{#if index === 0}
+									<div class="break-inside-avoid">
+										{@render sectionHeading(group)}
+										{#if block.length === 0}
+											<p class="mb-4 text-xs text-gray-400 italic">
+												No answerable questions in this section.
+											</p>
+										{:else}
+											{@render card(block[0])}
+										{/if}
+									</div>
 								{/if}
-							{/if}
-							{#each block as item (`${item.section}-${item.main_question}`)}
-								<div class="mb-4 break-inside-avoid">
-									<ItemCard
-										{item}
-										languages={chartLanguages}
-										{colorFor}
-										gates={gateMap.get(questionKey(item.section, item.main_question)) ?? []}
-										{questionTitleFor}
-									/>
-								</div>
-							{/each}
-						</div>
-					{/each}
-				</section>
-			{/each}
-		{/if}
+								{#each index === 0 ? block.slice(1) : block as item (`${item.section}-${item.main_question}`)}
+									{@render card(item)}
+								{/each}
+							</div>
+						{/each}
+					</section>
+				{/each}
+			{/if}
+		</div>
+	{/if}
+</div>
+
+{#snippet card(item: ItemDistribution)}
+	<div class="report-card mb-4 break-inside-avoid">
+		<ItemCard
+			{item}
+			languages={chartLanguages}
+			{colorFor}
+			gates={gateMap.get(questionKey(item.section, item.main_question)) ?? []}
+			{questionTitleFor}
+		/>
 	</div>
-{/if}
+{/snippet}
 
 <!-- A section's `description` is prompt context for the prober, not a heading:
      it routinely runs to a paragraph. The heading is the position, and the
      description sits under it as prose, clamped until asked for. -->
 {#snippet sectionHeading(group: (typeof groups)[number])}
-	<div class="mb-4 break-inside-avoid">
+	<div class="report-section-heading mb-4 break-inside-avoid">
 		<h2 class="text-sm font-semibold text-gray-700">Section {group.section + 1}</h2>
 		{#if group.description}
 			<ClampedText text={group.description} />

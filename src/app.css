@@ -104,7 +104,37 @@
 	}
 }
 
-/* Print styles – show only interview guide content */
+/*
+ * The per-page top and bottom margin, and the only thing that can produce one:
+ * padding on a block that fragments across pages is applied to its first and
+ * last fragment, so as a page margin it gives a gap at the top of page one and
+ * the foot of the last and nothing in between. The sides are padding's job
+ * instead (see `main > div` below), since padding does hold there on every
+ * page.
+ *
+ * Firefox lets the print dialog's own Margins setting override this outright,
+ * and a reader who has picked "None" gets no vertical gap on the inner pages
+ * whatever is written here -- hence the padding-top below, which at least
+ * holds the first page off the paper edge either way. Declared outside
+ * `@media print` because it applies only to print regardless, and nesting it
+ * is one more thing that has to be honoured for the margin to land.
+ */
+@page {
+	size: A4;
+	margin: 12mm 0;
+}
+
+/*
+ * Print styles.
+ *
+ * Two routes are meant to be printed and they want opposite things, so the
+ * rules that shape content are scoped: `.print-guide` on the interview guide,
+ * `.print-report` on the analysis report. Only the rules that undo the
+ * dashboard shell -- which every printable route sits inside -- are shared.
+ * They were not scoped originally, and the guide's `* { overflow: visible }`
+ * in particular reached the report and took its truncation and its scrolling
+ * panels with it.
+ */
 @media print {
 	/* Hide shell: header, sidebar, floating elements */
 	header,
@@ -123,10 +153,19 @@
 		border-radius: 0 !important;
 	}
 
+	/* The dashboard centres its routes in 90% of the viewport; on paper the
+	   content takes the full box and sets its own margin as padding. */
 	main > div {
 		width: 100% !important;
-		padding: 1cm !important;
 		box-sizing: border-box !important;
+		/* Sides on every page; a top gap on the first page only, which is all
+		   padding can do (see `@page` above) but is worth having when the
+		   reader's print dialog has overridden `@page` away. No bottom: its
+		   trailing half overflows into a blank page of its own. */
+		padding: 8mm 12mm 0 !important;
+		/* `min-h-full` is measured against the print box rather than against the
+		   content, which buys a blank page at the end of every document. */
+		min-height: 0 !important;
 	}
 
 	body,
@@ -135,47 +174,49 @@
 		background: white !important;
 	}
 
+	/* ---------------------------------------------------------------- guide */
+
 	/* Hide interactive/edit-only elements */
-	[title='Move Section'],
-	[title='Move Question'],
-	button:has(.fa-trash),
-	button:has(.fa-wand-magic-sparkles),
-	button:has(.fa-plus),
-	button:has(.fa-floppy-disk),
-	button:has(.fa-file-export),
-	button:has(.fa-person-circle-question),
-	button:has(.fa-gear),
-	.grid.grid-cols-2 {
+	.print-guide [title='Move Section'],
+	.print-guide [title='Move Question'],
+	.print-guide button:has(.fa-trash),
+	.print-guide button:has(.fa-wand-magic-sparkles),
+	.print-guide button:has(.fa-plus),
+	.print-guide button:has(.fa-floppy-disk),
+	.print-guide button:has(.fa-file-export),
+	.print-guide button:has(.fa-person-circle-question),
+	.print-guide button:has(.fa-gear),
+	.print-guide .grid.grid-cols-2 {
 		display: none !important;
 	}
 
 	/* Hide guide sidebar nav & sticky action bar */
-	.sticky {
+	.print-guide .sticky {
 		display: none !important;
 	}
 
 	/* Hide helper description texts */
-	.page-title + p {
+	.print-guide .page-title + p {
 		display: none !important;
 	}
 
-	h3 + p.text-sm {
+	.print-guide h3 + p.text-sm {
 		display: none !important;
 	}
 
 	/* Allow content to flow across pages */
-	* {
+	.print-guide * {
 		overflow: visible !important;
 	}
 
 	/* Avoid page breaks inside questions; allow sections to break */
-	.scroll-mt-24 {
+	.print-guide .scroll-mt-24 {
 		break-inside: avoid;
 		page-break-inside: avoid;
 	}
 
 	/* Replace textareas with plain text appearance */
-	textarea {
+	.print-guide textarea {
 		border: none !important;
 		background: transparent !important;
 		resize: none !important;
@@ -187,42 +228,114 @@
 	}
 
 	/* Hide empty textareas (placeholder-only) */
-	textarea:placeholder-shown {
+	.print-guide textarea:placeholder-shown {
 		display: none !important;
 	}
 
 	/* Clean up section and question card styling for print */
-	.bg-secondary {
+	.print-guide .bg-secondary {
 		background: #f9f7f2 !important;
 		border-color: #d1d5db !important;
 	}
 
 	/* Remove the thick left border on questions (drag indicator) */
-	.border-l-primary {
+	.print-guide .border-l-primary {
 		border-left-color: #d1d5db !important;
 	}
 
-	.border-l-4 {
+	.print-guide .border-l-4 {
 		border-left-width: 2px !important;
 	}
 
 	/* Checkboxes - preserve colors */
-	input[type='checkbox'] {
+	.print-guide input[type='checkbox'] {
 		print-color-adjust: exact;
 		-webkit-print-color-adjust: exact;
 	}
 
 	/* Tighten spacing */
-	.space-y-8 > * + * {
+	.print-guide .space-y-8 > * + * {
 		margin-top: 1rem !important;
 	}
 
-	.space-y-6 > * + * {
+	.print-guide .space-y-6 > * + * {
 		margin-top: 0.75rem !important;
 	}
 
-	.space-y-4 > * + * {
+	.print-guide .space-y-4 > * + * {
 		margin-top: 0.5rem !important;
+	}
+
+	/* --------------------------------------------------------------- report */
+
+	/* Colour *is* the data on this page: a stack segment with its background
+	   dropped is an unlabelled gap. */
+	.print-report,
+	.print-report * {
+		print-color-adjust: exact;
+		-webkit-print-color-adjust: exact;
+	}
+
+	/* The cohort figures are already on the cover, so the two stat cards are
+	   the same two numbers a second time. Dropping them lets the answer-rate
+	   list have the full measure, which is what its wrapped question labels
+	   actually need -- in a third of the width they ran to four lines each and
+	   the list alone filled a page. */
+	.print-report .report-stats {
+		display: none !important;
+	}
+
+	.print-report .report-overview {
+		display: block !important;
+	}
+
+	/* The cover already separates itself from what follows, and the page ends
+	   where the content ends. */
+	.print-report .report-body {
+		margin-top: 0.5rem !important;
+		margin-bottom: 0 !important;
+	}
+
+	/* The answer-rate list scrolls inside its card on screen. Paper has no
+	   scrollbar: the rows below the fold would simply be missing. The rows are
+	   tightened up at the same time, since the list is now as long as the guide
+	   rather than as tall as its card. */
+	.print-report .report-rates {
+		max-height: none !important;
+		overflow: visible !important;
+		gap: 0.375rem !important;
+	}
+
+	/* On screen the label column is capped at 15rem because the card sits in
+	   half a viewport. Printed full-width it has room, and needs it: every
+	   label wraps here rather than truncating, so a wider column is the
+	   difference between an 18-row list that fits under the cover and one that
+	   takes a page of its own. The bars stay comparable either way -- they are
+	   all measured against the same track. */
+	.print-report .report-rates > div {
+		grid-template-columns: minmax(0, 55%) 1fr !important;
+	}
+
+	/* Truncating a label is a promise that hovering shows the rest, and print
+	   cannot keep it, so the label wraps instead. */
+	.print-report .report-rates .truncate {
+		overflow: visible !important;
+		text-overflow: clip !important;
+		white-space: normal !important;
+	}
+
+	/* Keep each card whole -- and only the cards. The answer-rate list runs a
+	   page tall on a long guide, and an unbreakable box that size does not
+	   avoid a break so much as push a blank page ahead of itself. */
+	.print-report .report-card {
+		break-inside: avoid;
+		page-break-inside: avoid;
+	}
+
+	/* Section rules and the padding under them are screen furniture; on paper
+	   the break itself does the separating. */
+	.print-report .report-section {
+		padding-top: 0.75rem !important;
 	}
 }
 

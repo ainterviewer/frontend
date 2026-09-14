@@ -63,6 +63,13 @@
 	/** Reached by the user, so worth mounting before anything further down. */
 	const urgent: Mount[] = [];
 	const pending: Mount[] = [];
+
+	// Every instance still showing its placeholder, queued or not. The queues
+	// are not that set: past `PREFETCH_LIMIT` an instance is left out of them
+	// entirely and waits to be scrolled to, which is exactly the case
+	// `mountAllLazy` exists for.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- module-level bookkeeping, never read reactively
+	const waiting = new Set<Mount>();
 	let scheduled: { priority: Priority; cancel: () => void } | null = null;
 
 	let scrolling = false;
@@ -176,10 +183,26 @@
 
 	/** Navigating away must not mount into components that are already gone. */
 	function dequeue(mount: Mount) {
+		waiting.delete(mount);
 		for (const queue of [urgent, pending]) {
 			const index = queue.indexOf(mount);
 			if (index !== -1) queue.splice(index, 1);
 		}
+	}
+
+	/**
+	 * Mounts every outstanding instance at once, deferral abandoned.
+	 *
+	 * For print, which paints the whole document in one go: an instance that
+	 * has not been scrolled to would otherwise put its placeholder on paper,
+	 * and no amount of waiting fixes it, since the queue drains on idle
+	 * callbacks the print snapshot does not wait for. Costly by design -- the
+	 * caller is trading a stalled frame for a complete page.
+	 */
+	export function mountAllLazy() {
+		// Copied first: mounting removes the instance from the set it is
+		// being iterated over.
+		for (const mount of [...waiting]) mount();
 	}
 
 	// The window viewport is the wrong yardstick for "can the user see this"
@@ -267,6 +290,10 @@
 			animate = animateOnMount && !prefersReducedMotion();
 			mounted = true;
 		};
+
+		// Known to the module from here on, so a print can force it open even
+		// if it is never queued.
+		waiting.add(mount);
 
 		// Nothing to defer against without an observer, so mount rather than
 		// leaving the placeholder up forever.

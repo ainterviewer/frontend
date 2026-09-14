@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { printing } from '$lib/utils/printing.svelte';
+
 	let { text, lines = 3 }: { text: string; lines?: number } = $props();
 
 	let paragraph = $state<HTMLParagraphElement | null>(null);
@@ -36,7 +38,7 @@
 <p
 	bind:this={paragraph}
 	class="mt-1 text-xs text-pretty text-gray-500"
-	style={open
+	style={open || printing.active
 		? undefined
 		: `display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:${lines};overflow:hidden`}
 >
@@ -46,7 +48,7 @@
 	<button
 		type="button"
 		onclick={() => (open = !open)}
-		class="mt-1 text-xs font-medium text-primary hover:underline"
+		class="mt-1 text-xs font-medium text-primary hover:underline print:hidden"
 	>
 		{open ? 'Show less' : 'Show more'}
 	</button>
