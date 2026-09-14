@@ -43,13 +43,17 @@
 	// What had to hold for this question to be asked, and what its own answer
 	// decides. Both are stated on the card, because a card whose cohort was
 	// chosen by another answer cannot be compared with the one beside it.
-	let condition = $derived(summarizeConditions(item.conditions));
+	let condition = $derived(
+		summarizeConditions(item.conditions, { section: item.section, question: item.main_question })
+	);
 	let gateText = $derived(gates.length > 0 ? describeGates(gates) : null);
 	let notAsked = $derived(item.n_not_asked_by_condition ?? 0);
 
 	// Everyone the condition could have applied to: those it let through plus
 	// those it routed past. Not the interview total -- a question nested under
-	// another condition was never on the path for some of them at all.
+	// another condition was never on the path for some of them at all. It is
+	// the denominator of the "were asked" share beside the rule, which is the
+	// cohort the card's own numbers describe.
 	let conditionCohort = $derived(item.n_asked + notAsked);
 
 	const formatPercent = format('.0%');
@@ -150,7 +154,7 @@
 					numbers={condition.refs.map((ref) => questionNumber(ref.section, ref.question))}
 					titleFor={questionTitleFor}
 					trailing={notAsked > 0
-						? `${conditionCohort > 0 ? formatPercent(notAsked / conditionCohort) : '—'} (${notAsked}) skipped past it`
+						? `${conditionCohort > 0 ? formatPercent(item.n_asked / conditionCohort) : '—'} (${item.n_asked}) were asked`
 						: null}
 				/>
 			{/if}

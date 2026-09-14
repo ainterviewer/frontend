@@ -21,6 +21,21 @@ import type {
  * "Action when conditions are met"), so the summaries are worded as "when",
  * not as "only if".
  *
+ * Three of the four actions are worded as a skip, and a card that states when
+ * it was *not* asked leaves the reader to invert the rule themselves -- twice
+ * over when the condition is itself negated ("Not asked when 5.1 is not
+ * 'Never'"). Those summaries therefore state the negation of the authored
+ * rule: each condition's polarity flips and the operators joining them swap
+ * (De Morgan), which is the same rule read from the other side.
+ *
+ * A question can also condition on its own answer, which is how an author says
+ * "stop here once they say they have nothing to add". That rule cannot decide
+ * whether the question was asked -- it is read from the answer, so the question
+ * was -- and stating it that way is circular ("Asked when 6.1 is not about
+ * ..."). Such a rule is therefore left unflipped, says what it actually ends,
+ * and calls its trigger "this answer" rather than pointing the reader at the
+ * card they are already on.
+ *
  * In `$lib` rather than beside the report page because the same sentence is
  * owed to a reader of a transcript: a question that was skipped is a hole they
  * can see and cannot explain, and one that was asked conditionally looks
@@ -31,7 +46,7 @@ import type {
 export type ConditionRef = { section: number; question: number };
 
 export type ConditionSummary = {
-	/** The rule in one line, e.g. `Not asked when 1.2 is "Yes"`. */
+	/** The rule in one line, e.g. `Asked when 1.2 is "Yes"`. */
 	text: string;
 	/** The questions the rule reads, in the order it reads them. */
 	refs: ConditionRef[];
@@ -50,16 +65,47 @@ export function questionNumber(section: number, question: number): string {
 }
 
 const ACTION_PREFIX: Record<Conditions['action'], string> = {
-	skip_question: 'Not asked when',
-	skip_probes: 'Not probed when',
-	skip_section: 'Section skipped when',
+	skip_question: 'Asked when',
+	skip_probes: 'Probed when',
+	skip_section: 'Section asked when',
 	end_interview: 'Interview ends when'
 };
 
+/**
+ * The prefix for a rule that reads only this question's own answer.
+ *
+ * Stated forwards, and in terms of what it stops rather than what it allows:
+ * the question has already been put by the time the rule can be evaluated, so
+ * the only thing left for it to decide is how much further the interview goes.
+ */
+const SELF_ACTION_PREFIX: Record<Conditions['action'], string> = {
+	skip_question: 'Moves on when',
+	skip_probes: 'Not probed further when',
+	skip_section: 'Section ends when',
+	end_interview: 'Interview ends when'
+};
+
+/**
+ * Whether the prefix above states the *opposite* of the authored rule.
+ *
+ * Ending the interview is the one action with nothing to invert: it is not a
+ * statement about whether this question was put, and "Interview continues
+ * when" is not what the author wrote down.
+ */
+const ACTION_NEGATES: Record<Conditions['action'], boolean> = {
+	skip_question: true,
+	skip_probes: true,
+	skip_section: true,
+	end_interview: false
+};
+
+// "Skips" is also what a participant does mid-interview, and the answer rate
+// bar beside this line already counts those; the gating verb is kept clear of
+// it.
 const ACTION_GATE_VERB: Record<Conditions['action'], string> = {
-	skip_question: 'skips',
-	skip_probes: 'stops the probes on',
-	skip_section: 'skips the section of',
+	skip_question: 'gates',
+	skip_probes: 'gates the probes on',
+	skip_section: 'gates the section of',
 	end_interview: 'can end the interview at'
 };
 
@@ -94,20 +140,36 @@ function join(parts: string[], operators: (string | null | undefined)[]): string
 	}, '');
 }
 
-function describeCondition(condition: Condition): string {
-	const classifying = condition.trigger_type === 'classification';
-	const target = questionNumber(
-		condition.question_context.section,
-		condition.question_context.question
-	);
+/** The operator that joins the negation of two clauses joined by this one. */
+function negateOperator(operator: 'AND' | 'OR' | null | undefined): 'AND' | 'OR' {
+	return (operator ?? 'AND') === 'AND' ? 'OR' : 'AND';
+}
 
-	const verb = classifying
-		? condition.negated
-			? 'is not about'
-			: 'is about'
-		: condition.negated
-			? 'is not'
-			: 'is';
+/** Whether a condition reads the answer to the question that carries it. */
+function readsSelf(condition: Condition, self: ConditionRef | undefined): boolean {
+	return (
+		self !== undefined &&
+		condition.question_context.section === self.section &&
+		condition.question_context.question === self.question
+	);
+}
+
+function describeCondition(
+	condition: Condition,
+	negate: boolean,
+	self: ConditionRef | undefined
+): string {
+	const classifying = condition.trigger_type === 'classification';
+	// A number that links back to the card the reader is on is a dead end, and
+	// reads as a different question besides.
+	const target = readsSelf(condition, self)
+		? 'this answer'
+		: questionNumber(condition.question_context.section, condition.question_context.question);
+
+	// The condition's own polarity, read from whichever side the prefix states.
+	const negated = negate ? !condition.negated : condition.negated;
+
+	const verb = classifying ? (negated ? 'is not about' : 'is about') : negated ? 'is not' : 'is';
 
 	const values = join(
 		condition.evaluation.map((evaluation) => describeEvaluation(evaluation, classifying)),
@@ -117,23 +179,45 @@ function describeCondition(condition: Condition): string {
 	return `${target} ${verb} ${values}`;
 }
 
-/** The rule on a question, or `null` when it has none to state. */
+/**
+ * The rule on a question, or `null` when it has none to state.
+ *
+ * `self` is the question carrying the rule, when the caller knows it; passing
+ * it is what lets a rule read off the question's own answer be told apart from
+ * one read off somebody else's.
+ */
 export function summarizeConditions(
-	conditions: Conditions | null | undefined
+	conditions: Conditions | null | undefined,
+	self?: ConditionRef
 ): ConditionSummary | null {
 	if (!conditions || conditions.conditions.length === 0) return null;
 
+	// Only a rule that reads nothing *but* its own answer gets the forward
+	// wording: one that also reads another question still decides whether this
+	// one was put, and the reader needs it said that way.
+	const selfOnly = conditions.conditions.every((condition) => readsSelf(condition, self));
+	const negate = !selfOnly && (ACTION_NEGATES[conditions.action] ?? false);
+
 	const text = join(
-		conditions.conditions.map(describeCondition),
-		conditions.conditions.map((condition) => condition.combine_next)
+		conditions.conditions.map((condition) => describeCondition(condition, negate, self)),
+		conditions.conditions.map((condition) =>
+			negate ? negateOperator(condition.combine_next) : condition.combine_next
+		)
 	);
 
+	const prefix = selfOnly
+		? (SELF_ACTION_PREFIX[conditions.action] ?? 'Applies when')
+		: (ACTION_PREFIX[conditions.action] ?? 'Applies when');
+
 	return {
-		text: `${ACTION_PREFIX[conditions.action] ?? 'Applies when'} ${text}`,
-		refs: conditions.conditions.map((condition) => ({
-			section: condition.question_context.section,
-			question: condition.question_context.question
-		}))
+		text: `${prefix} ${text}`,
+		// Self-references are spelled "this answer" and have no number to link.
+		refs: conditions.conditions
+			.filter((condition) => !readsSelf(condition, self))
+			.map((condition) => ({
+				section: condition.question_context.section,
+				question: condition.question_context.question
+			}))
 	};
 }
 
@@ -151,6 +235,10 @@ export function buildGateMap(items: ItemDistribution[]): Map<string, Gate[]> {
 		if (!conditions) continue;
 
 		for (const condition of conditions.conditions) {
+			// A question gating itself is not a relationship between two cards;
+			// it is one card's own rule, and its summary already states it.
+			if (readsSelf(condition, { section: item.section, question: item.main_question })) continue;
+
 			const key = questionKey(
 				condition.question_context.section,
 				condition.question_context.question
@@ -173,7 +261,7 @@ export function buildGateMap(items: ItemDistribution[]): Map<string, Gate[]> {
 	return gates;
 }
 
-/** The gate line for a question that decides others, e.g. `skips 2.3, 2.4`. */
+/** The gate line for a question that decides others, e.g. `gates 2.3, 2.4`. */
 export function describeGates(gates: Gate[]): string {
 	// Grouped by what the answer does, so a question that both skips one
 	// question and ends the interview says both rather than lumping them.
@@ -207,7 +295,10 @@ export function guideConditions(
 
 	guide.question_sections?.forEach((section, sectionIndex) => {
 		section.questions?.forEach((question, questionIndex) => {
-			const summary = summarizeConditions(question.conditions);
+			const summary = summarizeConditions(question.conditions, {
+				section: sectionIndex,
+				question: questionIndex
+			});
 			if (summary) summaries.set(questionKey(sectionIndex, questionIndex), summary);
 		});
 	});

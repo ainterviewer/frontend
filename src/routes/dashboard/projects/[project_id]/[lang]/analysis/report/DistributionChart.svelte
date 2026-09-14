@@ -8,6 +8,7 @@
 	import { format } from 'd3-format';
 	import LazyMount from '$lib/components/LazyMount.svelte';
 	import { BarChart, Tooltip, type ChartState } from 'layerchart';
+	import { Text } from 'layerchart/svg';
 	import ChartSkeleton from './ChartSkeleton.svelte';
 
 	let {
@@ -135,7 +136,7 @@
 	// comparison arithmetic the reader has to do. The counts they land on are
 	// whatever those shares come to.
 	const PERCENT_STEPS = [0.05, 0.1, 0.2, 0.25, 0.5];
-	const MAX_TICKS = 4;
+	const MAX_TICKS = 3;
 
 	let maxCount = $derived(bands.length > 0 ? Math.max(...bands.map((b) => b.count)) : 0);
 
@@ -145,12 +146,21 @@
 		const maxShare = maxCount / total;
 		const step = PERCENT_STEPS.find((s) => maxShare / s <= MAX_TICKS) ?? 1;
 
-		const ticks = [0];
-		// Only ticks the axis can actually show: the domain tops out at the
-		// tallest bar, so anything past it would be dropped anyway.
-		for (let share = step; share <= maxShare + 1e-9; share += step) ticks.push(share * total);
-		return ticks;
+		// The first tick strictly above the tallest bar, so the bar reads against
+		// a ceiling rather than running into the top of the plot. Counted from
+		// the tick *below* it: a bar that stops just short of a tick already has
+		// its line, and rounding up first would put two of them overhead.
+		// Capped at the whole sample, though -- an axis running to 150% of the
+		// respondents is headroom nothing can reach.
+		const below = Math.floor(maxShare / step + 1e-9);
+		const steps = (below + 1) * step > 1 + 1e-9 ? Math.ceil(maxShare / step - 1e-9) : below + 1;
+
+		return Array.from({ length: steps + 1 }, (_, index) => index * step * total);
 	});
+
+	// The ticks above are only drawn if the scale reaches them, and it otherwise
+	// tops out at the tallest bar -- which is the headroom tick's whole point.
+	let countDomain = $derived(percentTicks ? [0, percentTicks[percentTicks.length - 1]] : undefined);
 
 	// A count on its own answers "how many" but not "how much of the sample",
 	// which is the question a reader comparing two cards with different n is
@@ -166,6 +176,22 @@
 		return `${Math.round(value)} · ${formatPercent(value / total)}`;
 	}
 </script>
+
+<!-- The share is the second half of a count tick ("16 · 20%") and is dimmed the
+     way the option bars dim theirs: it is the same number said again, and at
+     full weight it competes with the count for a label this small. Drawn as two
+     tspans of one label rather than two labels, so they stay one line. -->
+{#snippet countTickLabel({ props }: { props: Record<string, unknown> })}
+	{@const parts = String(props.value ?? '').split(' · ')}
+	<Text
+		{...props}
+		value={undefined}
+		segments={parts.map((part, index) => ({
+			value: index === 0 ? part : ` · ${part}`,
+			class: index === 0 ? undefined : 'fill-gray-400'
+		}))}
+	/>
+{/snippet}
 
 <!-- The caption used to sit under the chart box and now sits inside it, so the
      box takes over the height it had: the plot keeps the room it had before. -->
@@ -185,6 +211,7 @@
 					bind:context={chartContext}
 					data={bands}
 					x="key"
+					yDomain={countDomain}
 					{series}
 					seriesLayout={stacked ? 'stack' : 'overlap'}
 					bandPadding={shifted ? 0 : undefined}
@@ -199,6 +226,7 @@
 						yAxis: {
 							format: formatCount,
 							ticks: percentTicks,
+							tickLabel: countTickLabel,
 							label: yLabel ?? undefined,
 							labelProps: AXIS_LABEL_PROPS,
 							classes: { tickLabel: 'text-[0.625rem]' }

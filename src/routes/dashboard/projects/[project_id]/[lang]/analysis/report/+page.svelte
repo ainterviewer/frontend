@@ -204,10 +204,13 @@
 	// so a low rate that is really "most people never reached this" is not read
 	// as a question everybody refused.
 	function conditionHint(item: ItemDistribution) {
-		const summary = summarizeConditions(item.conditions);
+		const summary = summarizeConditions(item.conditions, {
+			section: item.section,
+			question: item.main_question
+		});
 		if (!summary) return null;
 		const notAsked = item.n_not_asked_by_condition ?? 0;
-		return notAsked > 0 ? `${summary.text} — ${notAsked} never asked` : summary.text;
+		return notAsked > 0 ? `${summary.text} — ${item.n_asked} were asked` : summary.text;
 	}
 
 	type Group = { section: number; description: string; items: ItemDistribution[] };
