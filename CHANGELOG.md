@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.4.4] - 2026-09-14
+
+### Features
+
+- Add busy state to admin aws dashboard
+- Improve action bar placement and page content bottom margin
+- Streamline labels across explore and report
+- Switch label from Anchor to -> Show similar
+- Remove radio and checkbox labels from survey item panel
+- Minor improvements to report; including histogram y grids and labels, and conditions.
+
 ## [0.4.3] - 2026-09-11
 
 ### Features
