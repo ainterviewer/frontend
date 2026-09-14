@@ -4,6 +4,12 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.4.6] - 2026-09-14
+
+### Features
+
+- Render markup from interview guide questions across the dashboard
+
 ## [0.4.5] - 2026-09-14
 
 ### Features
