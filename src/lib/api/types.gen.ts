@@ -6170,6 +6170,12 @@ export type GetProjectItemDistributionsData = {
          */
         completed_only?: boolean;
         /**
+         * Deduplicate By Pid
+         *
+         * Count one interview per participant ID, keeping the one that got furthest
+         */
+        deduplicate_by_pid?: boolean;
+        /**
          * Folder Id
          */
         folder_id?: string | null;

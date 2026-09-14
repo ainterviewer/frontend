@@ -15,6 +15,7 @@ export type ReportQuery = {
 	interview_types: InterviewType[];
 	completed_only: boolean;
 	languages: string[];
+	deduplicate_by_pid: boolean;
 };
 
 /**
@@ -33,7 +34,11 @@ export function defaultQuery(): ReportQuery {
 		completed_only: false,
 		// The generated client omits an empty array, which is exactly the "no
 		// language filter" the backend expects.
-		languages: []
+		languages: [],
+		// Every interview counts, repeat visits included. Off by default for
+		// the same reason as on the monitoring page: collapsing them is a claim
+		// about who the respondents are, and the raw count is what was measured.
+		deduplicate_by_pid: false
 	};
 }
 
@@ -46,6 +51,7 @@ export function isDefaultQuery(query: ReportQuery) {
 	const fallback = defaultQuery();
 	return (
 		query.completed_only === fallback.completed_only &&
+		query.deduplicate_by_pid === fallback.deduplicate_by_pid &&
 		sameList(query.languages, fallback.languages) &&
 		sameList(query.interview_types, fallback.interview_types)
 	);

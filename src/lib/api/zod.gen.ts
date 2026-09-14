@@ -3161,6 +3161,7 @@ export const zGetProjectItemDistributionsQuery = z.object({
     interview_types: z.array(zInterviewType).optional(),
     languages: z.array(z.string()).nullish(),
     completed_only: z.boolean().optional().default(false),
+    deduplicate_by_pid: z.boolean().optional().default(false),
     folder_id: z.string().nullish()
 });
 

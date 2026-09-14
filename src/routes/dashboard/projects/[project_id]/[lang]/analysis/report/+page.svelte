@@ -33,6 +33,12 @@
 	let completedOnly = $state(false);
 	let includeTests = $state(false);
 
+	// Whether a respondent who restarted counts once or once per visit. Off by
+	// default, because the raw count is what was measured; on, a repeat visitor
+	// contributes the interview that got furthest, so a question they answered
+	// twice stops reading as two respondents agreeing.
+	let deduplicateByPid = $state(false);
+
 	// Whether every bar is broken down by the language the interview ran in.
 	// On by default, because a cohort spanning two languages is two recruitment
 	// channels as often as it is one; off pools them into a single series for a
@@ -79,6 +85,7 @@
 		selectedLanguages = [];
 		completedOnly = false;
 		includeTests = false;
+		deduplicateByPid = false;
 		splitByLanguage = true;
 		availableLanguages = [];
 	});
@@ -94,7 +101,8 @@
 			completed_only: completedOnly,
 			// The generated client omits an empty array, which is exactly the
 			// "no language filter" the backend expects.
-			languages: selectedLanguages
+			languages: selectedLanguages,
+			deduplicate_by_pid: deduplicateByPid
 		};
 
 		// Switching projects: never show the previous project's distributions as
@@ -354,6 +362,24 @@
 			</label>
 			<HoverInfo
 				text="Count only interviews that reached the end. Turn off to include answers from interviews that were abandoned part-way."
+			/>
+		</div>
+
+		<div class="flex items-center gap-2">
+			<Switch.Root
+				id="deduplicate-by-pid"
+				bind:checked={deduplicateByPid}
+				class="inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-gray-200 bg-gray-200 transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+			>
+				<Switch.Thumb
+					class="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[1.375rem]"
+				/>
+			</Switch.Root>
+			<label for="deduplicate-by-pid" class="cursor-pointer text-sm text-gray-700">
+				Deduplicate by participant
+			</label>
+			<HoverInfo
+				text="Counts one interview per participant ID, keeping the one with most progress. Turn off to count every interview, including repeat visits from the same participant."
 			/>
 		</div>
 
