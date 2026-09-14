@@ -2,6 +2,7 @@
 	import type { CustomToken } from '$lib/api';
 	import { sanitizeMarkup, type MarkRange } from '$lib/utils/sanitize';
 	import SurveyItem from './SurveyItem.svelte';
+	import { badgeForType } from '$lib/survey/itemTypes';
 	import type { SurveyItemUnion } from './types';
 	import type { Snippet } from 'svelte';
 
@@ -117,10 +118,15 @@
 		 */
 		surveyItem?: SurveyItemUnion | null;
 		/**
-		 * The item's *type* alone, where the whole item is more than the caller
-		 * has. A results card carries this rather than the full item: a mosaic of
-		 * option sets would be a page of radio buttons, and the badge still says
-		 * the answer was a click and not writing.
+		 * The item's *type* alone, as the API spells it — `radio`, `datetime` —
+		 * where the whole item is more than the caller has. A results card
+		 * carries this rather than the full item: a mosaic of option sets would
+		 * be a page of radio buttons, and the badge still says the answer was a
+		 * click and not writing.
+		 *
+		 * Named for the reader by `badgeForType` rather than printed as it
+		 * arrives: `radio` is the widget the guide editor offers, and what the
+		 * reader needs to know is that the answer was one choice out of several.
 		 */
 		surveyLabel?: string | null;
 		/** What was chosen, for the survey item to show as selected. */
@@ -317,6 +323,17 @@
 			: 'ring-indigo-500 bg-indigo-500'
 	);
 
+	/**
+	 * The badge's own words and icon, from the one table of item types the app
+	 * keeps — the same one the report's cards read.
+	 *
+	 * Only the label and the icon are taken. The table's `tone` groups types by
+	 * hue on a pale card, and this badge is indigo on a ground that changes
+	 * under it; a teal chip on the green bubble would be a second colour
+	 * scheme arguing with the first over a distinction this badge is not making.
+	 */
+	let badge = $derived(badgeForType(surveyLabel));
+
 	let gutter = $derived(compact ? '' : 'mb-[15px] px-[10px] sm:px-[50px]');
 </script>
 
@@ -345,7 +362,7 @@
 					: `rounded-br-sm bg-primary text-on-primary ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`}"
 			{lang}
 		>
-			{#if label || (surveyLabel && !surveyItem)}
+			{#if label || (badge && !surveyItem)}
 				<!-- One header line for everything that says what this message *is*,
 				     rather than what it says: the guide number, and whether the
 				     answer under it was a click. Both are labels on the same thing,
@@ -353,10 +370,12 @@
 				     for two items that fit side by side.
 
 				     The badge is the item's type, where the item itself is not to
-				     hand — the part a reader must not read as writing. Its poll icon
-				     and indigo are the guide editor's, so a reader crossing from one
-				     to the other recognises the thing rather than learning it twice;
-				     which indigo depends on what it sits on, see `badgeTone`.
+				     hand — the part a reader must not read as writing. It names the
+				     type in the words the report's cards use and takes that type's
+				     icon, so the same item is the same thing on both pages. The
+				     indigo is the guide editor's, so a reader crossing from one to
+				     the other recognises a survey item rather than learning it
+				     twice; which indigo depends on what it sits on, see `badgeTone`.
 
 				     Pushed to the far edge rather than set beside the number: the
 				     number is read down a column as the reader scans the guide
@@ -368,12 +387,17 @@
 					{#if label}
 						<span class="text-xs font-bold opacity-60">{label}</span>
 					{/if}
-					{#if surveyLabel && !surveyItem}
+					{#if badge && !surveyItem}
+						<!-- Sentence case, not the shout it used to be. "RADIO" was the
+						     wire's word set in caps and letter-spaced, which made the
+						     one thing on the line that is not English the widest thing
+						     on it. "Single choice" is longer as a string and narrower on
+						     the card, and it is what the badge was always trying to say. -->
 						<span
-							class="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.625rem] font-medium tracking-wide uppercase ring-1 {badgeTone}"
+							class="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.625rem] font-medium ring-1 {badgeTone}"
 						>
-							<i class="fa-solid fa-square-poll-horizontal text-[0.6875rem]"></i>
-							{surveyLabel}
+							<i class="{badge.icon} text-[0.6875rem]"></i>
+							{badge.label}
 						</span>
 					{/if}
 				</div>
