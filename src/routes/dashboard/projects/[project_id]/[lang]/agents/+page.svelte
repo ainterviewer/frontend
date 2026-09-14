@@ -596,6 +596,7 @@
 	</section>
 
 	<div
+		data-action-bar
 		class="sticky bottom-0 ml-auto flex w-fit items-center gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
 	>
 		<div class="flex rounded-full bg-gray-100 p-1">

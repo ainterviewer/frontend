@@ -256,7 +256,12 @@
 		</div>
 	</div>
 
-	<div class="mt-auto pt-6">
+	<!-- display:contents, not a plain wrapper: a sticky element cannot leave its
+	     parent's box, so a wrapper with a box of its own would pin the bar to its
+	     flow position instead of the foot of the scroll container. The spacer takes
+	     the free space that the wrapper's mt-auto used to. -->
+	<div class="contents">
+		<div aria-hidden="true" class="mt-auto h-6"></div>
 		<SetupActionBar
 			{projectId}
 			lang={language}

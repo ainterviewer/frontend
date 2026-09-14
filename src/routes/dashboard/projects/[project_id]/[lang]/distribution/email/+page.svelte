@@ -670,6 +670,7 @@
 	</div>
 
 	<div
+		data-action-bar
 		class="sticky bottom-0 mt-4 ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
 	>
 		<ProjectLanguagePicker

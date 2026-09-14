@@ -25,7 +25,8 @@
 	<!-- How tall a table card may grow before it scrolls its own rows instead of
 	     pushing the page down; DataTable reads this. Derived from this element:
 	     the viewport less the header above it (mt-11), its own py-10, and the
-	     spacer at the foot of the column below, leaving roughly a page heading's
+	     trailing spacer an action bar brings with it (2.5rem -- the worst case,
+	     since a table page may sit above one), leaving roughly a page heading's
 	     worth of room so the card still ends inside the viewport. -->
 	<main
 		style="--table-max-h: calc(100vh - 2.75rem - 5rem - 2.5rem - 3.5rem)"
@@ -34,9 +35,14 @@
 			sidebar.collapsed ? 'ml-[70px]' : 'ml-[250px]'
 		].join(' ')}
 	>
-		<div class="flex min-h-full w-[90%] flex-col">
+		<!-- The spacer keeps a route's sticky action bar clear of the container's
+		     bottom edge, and has to live out here: inside the route's own
+		     min-h-full column it would push the bar up instead of adding scroll
+		     below it. It collapses on routes that render no bar, which would
+		     otherwise end in dead whitespace. -->
+		<div class="group flex min-h-full w-[90%] flex-col">
 			{@render children()}
-			<div aria-hidden="true" class="h-10 shrink-0"></div>
+			<div aria-hidden="true" class="h-0 shrink-0 group-has-[[data-action-bar]]:h-10"></div>
 		</div>
 	</main>
 </div>
