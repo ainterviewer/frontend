@@ -157,6 +157,11 @@ export const projectSidebarItems: SidebarItem[] = [
 				icon: 'fas fa-tags'
 			},
 			{
+				label: 'Coding',
+				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/coding',
+				icon: 'fas fa-sitemap'
+			},
+			{
 				label: 'Report',
 				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/report',
 				icon: 'fas fa-magnifying-glass-chart'
