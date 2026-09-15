@@ -1,4 +1,5 @@
 import type { Edge, Node } from '@xyflow/svelte';
+import { getContext, setContext } from 'svelte';
 import {
 	addCode,
 	ancestorsOf,
@@ -74,7 +75,28 @@ export class CodingTreeState {
 
 	layoutMode = $state<LayoutMode>('auto');
 	direction = $state<LayoutDirection>('TB');
-	selectedId = $state<CodeId | null>(null);
+
+	#selectedId = $state<CodeId | null>(null);
+	#nameFocusFor = $state<CodeId | null>(null);
+
+	get selectedId(): CodeId | null {
+		return this.#selectedId;
+	}
+
+	/**
+	 * Selecting anything drops a pending rename.
+	 *
+	 * Behind a setter so that it cannot be forgotten at a call site. A rename
+	 * request names the code it is for, but the inspector is unmounted whenever
+	 * nothing is selected, so an unconsumed request outlives the panel that was
+	 * meant to answer it -- and would then be answered by the next panel to
+	 * appear, turning an ordinary click into an edit.
+	 */
+	set selectedId(id: CodeId | null) {
+		if (id === this.#selectedId) return;
+		this.#selectedId = id;
+		this.#nameFocusFor = null;
+	}
 
 	nodes = $state.raw<CodeNode[]>([]);
 	edges = $state.raw<Edge[]>([]);
@@ -94,6 +116,25 @@ export class CodingTreeState {
 	 * rule the canvas has to infer.
 	 */
 	refits = $state(0);
+
+	/**
+	 * The code whose name the inspector should put the caret in, or `null`.
+	 *
+	 * Asked for at the moments renaming is what the reader is about to do: a
+	 * code that has just been created and is still called `New code`, and a
+	 * double click on a node. Deliberately *not* on selection -- a single click
+	 * is how the reader opens a code to read it, and stealing the caret then
+	 * means every later keystroke has to be aimed back at the field it was taken
+	 * from.
+	 *
+	 * An id that is consumed, rather than a counter that is bumped. A counter
+	 * says only that *someone* asked at some point, which an inspector mounting
+	 * fresh cannot tell from a request meant for it -- so reselecting a code
+	 * after a rename re-ran the old request.
+	 */
+	get nameFocusFor(): CodeId | null {
+		return this.#nameFocusFor;
+	}
 
 	/** The node under the pointer mid-drag, and whether dropping there is legal. */
 	#dragging: CodeId | null = null;
@@ -176,7 +217,12 @@ export class CodingTreeState {
 			...childDraftKind(parent)
 		});
 		this.#commit(addCode(this.#codes, code));
+		// Selection first: it is what clears any rename left over from the code
+		// that was open before.
 		this.selectedId = code.id;
+		// A code arrives called `New code`, so the name is the one field the
+		// reader always has to touch next.
+		this.#nameFocusFor = code.id;
 		return code.id;
 	}
 
@@ -193,6 +239,16 @@ export class CodingTreeState {
 		const id = this.addChild(null);
 		this.refits += 1;
 		return id;
+	}
+
+	/** Puts the caret in the name field of whatever is selected. */
+	focusName() {
+		this.#nameFocusFor = this.#selectedId;
+	}
+
+	/** Called by the inspector once it has answered the request. */
+	consumeNameFocus() {
+		this.#nameFocusFor = null;
 	}
 
 	/** A sibling of `id`, i.e. a child of its parent. */
@@ -426,4 +482,22 @@ export class CodingTreeState {
 				deletable: false
 			}));
 	}
+}
+
+/**
+ * Renaming, handed to the node components.
+ *
+ * A node is drawn by Svelte Flow from a `nodeTypes` map, so it is never given
+ * props by the code that owns the tree and cannot be passed the state directly.
+ * Context carries the one thing it needs -- rather than the whole state, which
+ * would let a node reach parts of the editor it has no business touching.
+ */
+const RENAME_KEY = Symbol('coding-tree-rename');
+
+export function provideRename(rename: () => void) {
+	setContext(RENAME_KEY, rename);
+}
+
+export function useRename(): () => void {
+	return getContext<(() => void) | undefined>(RENAME_KEY) ?? (() => {});
 }

@@ -8,13 +8,17 @@
 		useSvelteFlow
 	} from '@xyflow/svelte';
 	import { tick } from 'svelte';
-	import type { CodingTreeState } from './codingTreeState.svelte';
+	import { provideRename, type CodingTreeState } from './codingTreeState.svelte';
 	import CodeNode from './CodeNode.svelte';
 	import { dropTargetId, NODE_HEIGHT, NODE_WIDTH } from './treeLayout';
 
 	let { tree }: { tree: CodingTreeState } = $props();
 
 	const nodeTypes = { code: CodeNode };
+
+	// The nodes are built by Svelte Flow from `nodeTypes`, so a double click on
+	// one has no way back to the editor except through context.
+	provideRename(() => tree.focusName());
 
 	/**
 	 * `screenToFlowPosition` is why the canvas is its own component: the hook

@@ -52,6 +52,11 @@
 		} else if (event.key === 'Tab') {
 			event.preventDefault();
 			tree.addChild(selected);
+		} else if (event.key === 'F2') {
+			// The keyboard half of double-clicking a node, and the conventional
+			// rename key -- without it renaming is only reachable by mouse.
+			event.preventDefault();
+			tree.focusName();
 		} else if (event.key === 'Delete' || event.key === 'Backspace') {
 			event.preventDefault();
 			deleteCode(selected);
@@ -96,24 +101,28 @@
 					<p class="text-sm text-gray-500">Select a code to edit it.</p>
 					<dl class="space-y-1 text-left text-xs text-gray-400">
 						<div>
-							<dt class="inline font-medium">Drag onto a code</dt>
-							— make it a sub-code
+							<dt class="inline font-medium">Drag onto a code:</dt>
+							make it a sub-code
 						</div>
 						<div>
-							<dt class="inline font-medium">Drag from a handle</dt>
-							— onto a code to re-parent, onto empty canvas for a new sub-code
+							<dt class="inline font-medium">Drag from a handle:</dt>
+							onto a code to re-parent, onto empty canvas for a new sub-code
 						</div>
 						<div>
-							<dt class="inline font-medium">Enter</dt>
-							— new code beside the selected one
+							<dt class="inline font-medium">Double click a code:</dt>
+							rename it
 						</div>
 						<div>
-							<dt class="inline font-medium">Tab</dt>
-							— new sub-code under it
+							<dt class="inline font-medium">Enter:</dt>
+							new code beside the selected one
 						</div>
 						<div>
-							<dt class="inline font-medium">Delete</dt>
-							— remove it and its sub-codes
+							<dt class="inline font-medium">Tab:</dt>
+							new sub-code under it
+						</div>
+						<div>
+							<dt class="inline font-medium">Delete:</dt>
+							remove it and its sub-codes
 						</div>
 					</dl>
 				</aside>

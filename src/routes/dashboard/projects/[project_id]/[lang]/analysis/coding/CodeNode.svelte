@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { Handle, Position, type NodeProps } from '@xyflow/svelte';
 	import { displayName, scoreRangeLabel } from './codingTree';
-	import type { CodeNode } from './codingTreeState.svelte';
+	import { useRename, type CodeNode } from './codingTreeState.svelte';
 	import { NODE_HEIGHT, NODE_WIDTH } from './treeLayout';
 
 	let { data, selected }: NodeProps<CodeNode> = $props();
+
+	const rename = useRename();
 
 	const code = $derived(data.code);
 
@@ -58,9 +60,18 @@
 	<!-- The ring colour has to be set on the ringed element itself: Tailwind
 	     registers `--tw-ring-color` as a non-inheriting custom property, so a
 	     value set on the wrapper never reaches here. -->
+	<!-- A double click renames. The first click of it has already selected the
+	     code, so this is the second half of a gesture the reader has started,
+	     rather than a shortcut they have to know about. Stopped here so it does
+	     not also reach the pane, which reads a double click as zoom in. -->
 	<div
 		class="relative h-full overflow-hidden rounded-lg bg-white shadow-sm transition-shadow hover:shadow-md {ring}"
 		style:--tw-ring-color={selected && data.drop === 'none' ? code.color : undefined}
+		ondblclick={(event) => {
+			event.stopPropagation();
+			rename();
+		}}
+		role="presentation"
 	>
 		<!-- The branch's colour, carried on every node under it. -->
 		<div class="absolute inset-y-0 left-0 w-1" style:background-color={code.color}></div>

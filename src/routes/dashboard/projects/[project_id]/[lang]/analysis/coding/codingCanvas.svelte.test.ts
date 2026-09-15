@@ -112,3 +112,65 @@ test('keeps focus in a score range while it is being typed', async () => {
 	await expect.element(max).toHaveValue(10);
 	expect(document.activeElement).toBe(max.element());
 });
+
+test('a single click opens a code without taking the caret', async () => {
+	// Selecting is how the reader opens a code to *read* it. Focusing the name
+	// on selection makes the panel unusable with the keyboard: every subsequent
+	// keystroke has to be aimed back at the field it was taken from.
+	await page.viewport(DESKTOP.width, DESKTOP.height);
+	render(CodingPage);
+
+	await page.getByText('Who is responsible').first().click();
+
+	const name = page.getByPlaceholder('Untitled code');
+	await expect.element(name).toBeVisible();
+	expect(document.activeElement).not.toBe(name.element());
+});
+
+test('a double click on a node selects the name, ready to be typed over', async () => {
+	await page.viewport(DESKTOP.width, DESKTOP.height);
+	render(CodingPage);
+
+	await page.getByText('Who is responsible').first().dblClick();
+
+	const name = page.getByPlaceholder('Untitled code').element() as HTMLInputElement;
+	expect(document.activeElement).toBe(name);
+	// Selected, not merely focused: a double click is a rename, and the name it
+	// lands on is one the reader has already decided is wrong.
+	expect(name.selectionStart).toBe(0);
+	expect(name.selectionEnd).toBe(name.value.length);
+});
+
+test('a new code lands in the name field', async () => {
+	await page.viewport(DESKTOP.width, DESKTOP.height);
+	render(CodingPage);
+
+	await page.getByRole('button', { name: 'New code' }).click();
+
+	const name = page.getByPlaceholder('Untitled code').element() as HTMLInputElement;
+	expect(document.activeElement).toBe(name);
+	expect(name.value).toBe('New code');
+});
+
+test('a rename does not outlive the panel that was asked for it', async () => {
+	// The inspector is unmounted whenever nothing is selected, so a rename
+	// request that is never consumed comes back to life with the next panel:
+	// rename, click away, click anything, and an ordinary click opened an edit.
+	await page.viewport(DESKTOP.width, DESKTOP.height);
+	render(CodingPage);
+
+	await page.getByText('Who is responsible').first().dblClick();
+	await expect.element(page.getByPlaceholder('Untitled code')).toHaveValue('Who is responsible');
+
+	// Away, so the inspector is torn down, and back onto a different code. The
+	// pane is clicked near a corner: its middle is where the tree is.
+	const pane = document.querySelector('.svelte-flow__pane') as HTMLElement;
+	await page.elementLocator(pane).click({ position: { x: 8, y: 8 } });
+	await expect.element(page.getByText('Select a code to edit it.')).toBeVisible();
+
+	await page.getByText('What makes acting hard').first().click();
+
+	const name = page.getByPlaceholder('Untitled code');
+	await expect.element(name).toHaveValue('What makes acting hard');
+	expect(document.activeElement).not.toBe(name.element());
+});

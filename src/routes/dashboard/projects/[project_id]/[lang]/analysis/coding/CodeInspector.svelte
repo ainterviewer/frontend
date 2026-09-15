@@ -45,26 +45,25 @@
 	let nameField = $state<HTMLInputElement | null>(null);
 
 	/**
-	 * The id this panel has already focused for.
+	 * The caret goes to the name only when something asks for it -- a code just
+	 * created, or a double click on a node -- never merely because the selection
+	 * changed.
 	 *
-	 * A plain variable, not `$state`: it is how the effect below remembers what
-	 * it has done, and making it reactive would feed that back in as a
-	 * dependency and re-run the effect on its own writes.
+	 * The request is matched against this code and then consumed, so it is
+	 * answered exactly once by exactly the panel it was meant for. The match is
+	 * also what keeps this from firing between keystrokes: every edit hands the
+	 * panel a fresh code object, so this effect re-runs on each character typed
+	 * and has to have a reason to do nothing.
+	 *
+	 * The name is selected, not just focused: both callers are renames, and the
+	 * text being replaced is a placeholder or a name the reader has decided is
+	 * wrong.
 	 */
-	let focusedId: string | null = null;
-
-	// Focus follows selection: selecting a code on the canvas is usually the
-	// first half of "and rename it".
-	//
-	// The comparison is what makes that true. Every edit replaces the code
-	// object, so this effect re-runs on each keystroke whatever it reads off the
-	// prop -- without the guard, typing in the definition or in a score's range
-	// pulled the caret back up to the name after the first character.
 	$effect(() => {
-		const id = code.id;
-		if (id === focusedId) return;
-		focusedId = id;
+		if (tree.nameFocusFor !== code.id) return;
+		tree.consumeNameFocus();
 		nameField?.focus();
+		nameField?.select();
 	});
 </script>
 
