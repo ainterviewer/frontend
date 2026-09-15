@@ -12,7 +12,7 @@
 <div class="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-white px-3 py-2">
 	<button
 		class="rounded bg-primary px-3 py-1.5 text-sm font-medium text-on-primary hover:opacity-90"
-		onclick={() => tree.addChild(null)}
+		onclick={() => tree.addRootCode()}
 	>
 		<i class="fas fa-plus mr-1"></i> New code
 	</button>

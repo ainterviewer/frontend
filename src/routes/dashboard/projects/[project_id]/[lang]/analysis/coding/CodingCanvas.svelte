@@ -7,6 +7,7 @@
 		SvelteFlow,
 		useSvelteFlow
 	} from '@xyflow/svelte';
+	import { tick } from 'svelte';
 	import type { CodingTreeState } from './codingTreeState.svelte';
 	import CodeNode from './CodeNode.svelte';
 	import { dropTargetId, NODE_HEIGHT, NODE_WIDTH } from './treeLayout';
@@ -29,6 +30,34 @@
 	 * rather than to say what they mean.
 	 */
 	const CONNECTION_RADIUS = 60;
+
+	/**
+	 * How long the viewport takes to settle after the tree has been rearranged.
+	 * Long enough to read as the same tree moving rather than a new one
+	 * appearing, short enough not to be waited on.
+	 */
+	const REFIT_MS = 250;
+
+	/**
+	 * Refit the viewport when the tree asks for it.
+	 *
+	 * Turning the tree on its side swaps its proportions -- a wide, shallow
+	 * codebook becomes a tall, narrow one -- so whatever the reader was looking
+	 * at ends up off screen at a zoom chosen for the other orientation. A new
+	 * top-level code widens the tree for the same reason. The `fitView` prop only
+	 * runs once, at mount, so the refit has to be asked for.
+	 *
+	 * Keyed on `tree.refits` and nothing else, so an ordinary edit never yanks
+	 * the viewport away from what the reader is working on.
+	 */
+	$effect(() => {
+		if (tree.refits === 0) return;
+		const reduced =
+			typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+		// After the nodes Svelte Flow has just been handed are measured; fitting
+		// against the previous arrangement would fit the wrong bounds.
+		void tick().then(() => flow.fitView({ padding: 0.12, duration: reduced ? 0 : REFIT_MS }));
+	});
 
 	/**
 	 * Which node the drag is currently over, carried from the drag to the drop.

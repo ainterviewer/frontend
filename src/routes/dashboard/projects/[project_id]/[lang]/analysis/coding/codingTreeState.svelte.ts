@@ -75,6 +75,22 @@ export class CodingTreeState {
 	nodes = $state.raw<CodeNode[]>([]);
 	edges = $state.raw<Edge[]>([]);
 
+	/**
+	 * Bumped when the canvas should refit its viewport.
+	 *
+	 * Two things ask for it: the arrangement being rewritten wholesale -- turning
+	 * the tree on its side, or handing it back to the layout -- and a code being
+	 * added that the reader now has to be able to see.
+	 *
+	 * A counter rather than the canvas watching `direction`, `layoutMode` and the
+	 * codes directly, because most changes to those should *not* move the
+	 * viewport: breaking out to `free` leaves every node where it was, and an
+	 * edit must never yank the canvas away from what is being worked on. Asking
+	 * explicitly keeps that decision here, at each call site, instead of in a
+	 * rule the canvas has to infer.
+	 */
+	refits = $state(0);
+
 	/** The node under the pointer mid-drag, and whether dropping there is legal. */
 	#dragging: CodeId | null = null;
 
@@ -157,6 +173,21 @@ export class CodingTreeState {
 		this.#commit(addCode(this.#codes, code));
 		this.selectedId = code.id;
 		return code.id;
+	}
+
+	/**
+	 * A new top-level code, from the toolbar.
+	 *
+	 * Distinct from `addChild(null)` only in asking for a refit. A new branch is
+	 * laid out beside the existing ones and widens the whole tree, so it lands
+	 * off screen as often as not -- which is no use when the next thing the
+	 * reader does is type its name. Adding a sub-code does not refit: it appears
+	 * beside a parent the reader is already looking at.
+	 */
+	addRootCode(): CodeId {
+		const id = this.addChild(null);
+		this.refits += 1;
+		return id;
 	}
 
 	/** A sibling of `id`, i.e. a child of its parent. */
@@ -268,6 +299,7 @@ export class CodingTreeState {
 	setDirection(direction: LayoutDirection) {
 		if (direction === this.direction) return;
 		this.direction = direction;
+		this.refits += 1;
 		this.sync();
 	}
 
@@ -275,6 +307,7 @@ export class CodingTreeState {
 	resetPositions() {
 		this.#codes = this.#codes.map((code) => ({ ...code, position: null }));
 		this.layoutMode = 'auto';
+		this.refits += 1;
 		this.sync();
 	}
 
