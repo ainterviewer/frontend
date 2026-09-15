@@ -114,10 +114,7 @@
 					></button>
 				{/each}
 			</div>
-			<p class="mt-2 text-[11px] text-gray-400">
-				Applies to this code and everything under it. Moving the code into another branch repaints
-				it again.
-			</p>
+			<p class="mt-2 text-[11px] text-gray-400">Applies to this code and everything under it.</p>
 		</div>
 
 		<div>

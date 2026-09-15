@@ -76,3 +76,35 @@ test('a refused move changes nothing, colour included', () => {
 	expect(colorOf(tree, CONSTRAINTS)).toBe(before);
 	expect(tree.canUndo).toBe(false);
 });
+
+test('rings the code it selects, however it was selected', () => {
+	// Which node is ringed lives in the projection, so a selection that does not
+	// rebuild it is only half made: the inspector opens on the new code while the
+	// canvas goes on ringing the old one. Clicking a node hid this, because there
+	// Svelte Flow sets its own selection and the projection only has to agree.
+	const tree = new CodingTreeState();
+	const [first, second] = tree.codes;
+
+	tree.selectedId = first.id;
+	expect(tree.nodes.filter((node) => node.selected).map((node) => node.id)).toEqual([first.id]);
+
+	tree.selectedId = second.id;
+	expect(tree.nodes.filter((node) => node.selected).map((node) => node.id)).toEqual([second.id]);
+
+	tree.selectedId = null;
+	expect(tree.nodes.some((node) => node.selected)).toBe(false);
+});
+
+test('rings a code created by dragging off a handle', () => {
+	// The gesture that exposed it: the new code is selected, but `addChild`
+	// commits before it changes the selection, so the rebuild the commit does
+	// still describes the code the reader dragged *from*.
+	const tree = new CodingTreeState();
+	const parent = tree.codes[0];
+	tree.selectedId = parent.id;
+
+	const created = tree.addChild(parent.id, { x: 10, y: 20 });
+
+	expect(tree.selectedId).toBe(created);
+	expect(tree.nodes.filter((node) => node.selected).map((node) => node.id)).toEqual([created]);
+});

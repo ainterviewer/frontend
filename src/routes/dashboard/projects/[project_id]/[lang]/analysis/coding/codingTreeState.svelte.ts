@@ -84,18 +84,46 @@ export class CodingTreeState {
 	}
 
 	/**
-	 * Selecting anything drops a pending rename.
+	 * Selecting rebuilds the canvas, and drops any pending rename.
 	 *
-	 * Behind a setter so that it cannot be forgotten at a call site. A rename
-	 * request names the code it is for, but the inspector is unmounted whenever
-	 * nothing is selected, so an unconsumed request outlives the panel that was
-	 * meant to answer it -- and would then be answered by the next panel to
-	 * appear, turning an ordinary click into an edit.
+	 * Behind a setter because both of those have to happen at every call site
+	 * and neither is obvious from `selectedId = x`.
+	 *
+	 * Repainting the ring is what makes the selection visible. Which node is
+	 * ringed is part of the projection, so a selection that does not touch it is
+	 * only half made: the inspector opens on the new code while the canvas goes
+	 * on ringing the old one. It went unnoticed because the one path that did
+	 * work -- clicking a node -- is the one where Svelte Flow sets its own
+	 * selection first and our projection merely agrees with it afterwards.
+	 *
+	 * A rename request names the code it is for, but the inspector is unmounted
+	 * whenever nothing is selected, so an unconsumed request outlives the panel
+	 * that was meant to answer it -- and would then be answered by the next
+	 * panel to appear, turning an ordinary click into an edit.
 	 */
 	set selectedId(id: CodeId | null) {
 		if (id === this.#selectedId) return;
 		this.#selectedId = id;
 		this.#nameFocusFor = null;
+		this.#applySelection();
+	}
+
+	/**
+	 * Moves the ring, and touches nothing else.
+	 *
+	 * Deliberately not a full `sync()`. Selection changes in the middle of a
+	 * click that Svelte Flow is still handling, and handing it a wholly rebuilt
+	 * set of nodes at that moment -- positions recomputed, every node a new
+	 * object -- loses the gesture: the element under the pointer is replaced
+	 * before the second half of a double click lands on it. So this patches the
+	 * one field that changed, as `markDropTarget` does mid-drag, and leaves
+	 * every node that was already right untouched.
+	 */
+	#applySelection() {
+		this.nodes = this.nodes.map((node) => {
+			const selected = node.id === this.#selectedId;
+			return node.selected === selected ? node : { ...node, selected };
+		});
 	}
 
 	nodes = $state.raw<CodeNode[]>([]);
