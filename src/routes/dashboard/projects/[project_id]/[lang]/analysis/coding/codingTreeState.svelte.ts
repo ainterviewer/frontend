@@ -1,19 +1,26 @@
 import type { Edge, Node } from '@xyflow/svelte';
 import { getContext, setContext } from 'svelte';
+import { generateColor } from '$lib/utils/colors';
 import {
+	DEFAULT_PALETTE,
 	addCode,
+	addPaletteColor,
 	ancestorsOf,
 	canReparent,
 	childDraftKind,
 	childrenOf,
+	countCodesUsing,
 	createCode,
 	descendantIds,
 	findCode,
 	nextRootColor,
 	recolorSubtree,
+	removePaletteColor,
 	removeSubtree,
 	reparent,
+	repaintCodes,
 	setKind,
+	setPaletteColor,
 	setScoreBound,
 	subtreeOf,
 	updateCode,
@@ -66,10 +73,21 @@ export type LayoutMode = 'auto' | 'free';
 /** How many steps back the reader can go. Deep enough to cover a misdrag. */
 const HISTORY_LIMIT = 50;
 
+/**
+ * What undo restores.
+ *
+ * The palette travels with the codes rather than beside them because editing it
+ * repaints codes: dropping a colour from the palette recolours every branch
+ * that wore it, and an undo that took back only half of that would leave the
+ * reader a codebook painted in a hue they can no longer pick.
+ */
+type Snapshot = { codes: Code[]; palette: string[] };
+
 export class CodingTreeState {
 	#codes = $state.raw<Code[]>(seedCodes());
-	#past: Code[][] = [];
-	#future: Code[][] = [];
+	#palette = $state.raw<string[]>([...DEFAULT_PALETTE]);
+	#past: Snapshot[] = [];
+	#future: Snapshot[] = [];
 	/** What the last commit was, so consecutive keystrokes can share an entry. */
 	#lastEdit: string | null = null;
 
@@ -175,6 +193,11 @@ export class CodingTreeState {
 		return this.#codes;
 	}
 
+	/** The colours this codebook offers for a branch, in the order they are shown. */
+	get palette(): readonly string[] {
+		return this.#palette;
+	}
+
 	get selected(): Code | undefined {
 		return findCode(this.#codes, this.selectedId);
 	}
@@ -210,14 +233,20 @@ export class CodingTreeState {
 	 * name is one undo rather than one per keystroke.
 	 */
 	#commit(next: Code[], edit: string | null = null) {
-		if (next === this.#codes) return;
+		this.#commitAll({ codes: next, palette: this.#palette }, edit);
+	}
+
+	/** As `#commit`, for the edits that change the palette and the codes at once. */
+	#commitAll(next: Snapshot, edit: string | null = null) {
+		if (next.codes === this.#codes && next.palette === this.#palette) return;
 		if (edit === null || edit !== this.#lastEdit) {
-			this.#past.push(this.#codes);
+			this.#past.push({ codes: this.#codes, palette: this.#palette });
 			if (this.#past.length > HISTORY_LIMIT) this.#past.shift();
 		}
 		this.#lastEdit = edit;
 		this.#future = [];
-		this.#codes = next;
+		this.#codes = next.codes;
+		this.#palette = next.palette;
 		this.sync();
 	}
 
@@ -240,7 +269,7 @@ export class CodingTreeState {
 		const code = createCode({
 			parentId,
 			name: parent ? 'New sub-code' : 'New code',
-			color: parent ? parent.color : nextRootColor(this.#codes),
+			color: parent ? parent.color : nextRootColor(this.#codes, this.#palette),
 			position: at ?? placeNewCode(this.#codes, parentId, this.#positions()),
 			...childDraftKind(parent)
 		});
@@ -318,6 +347,58 @@ export class CodingTreeState {
 		this.#commit(recolorSubtree(this.#codes, id, color));
 	}
 
+	// --- palette -------------------------------------------------------------
+
+	/**
+	 * Adds a colour to the palette without applying it to anything.
+	 *
+	 * Without an argument it suggests one as far as possible from those already
+	 * there, which is the case that matters: the reader who has run out of
+	 * distinguishable hues wants another distinguishable hue, not a second
+	 * decision about which.
+	 */
+	addColor(color?: string): string | null {
+		const next = addPaletteColor(this.#palette, color ?? generateColor([...this.#palette]));
+		if (next === this.#palette) return null;
+		this.#commitAll({ codes: this.#codes, palette: next });
+		return next[next.length - 1];
+	}
+
+	/**
+	 * Moves a palette entry, taking every branch painted from it along.
+	 *
+	 * Coalesced per entry, so dragging a native colour picker across the wheel is
+	 * one undo and not one per hue it passed through.
+	 */
+	setColor(index: number, color: string) {
+		const palette = setPaletteColor(this.#palette, index, color);
+		if (palette === this.#palette) return;
+		const codes = repaintCodes(this.#codes, this.#palette[index], palette[index]);
+		this.#commitAll({ codes, palette }, `palette:${index}`);
+	}
+
+	/**
+	 * Drops a palette entry, and repaints onto the first remaining colour any
+	 * branch that was wearing it.
+	 *
+	 * Deliberately not refused when the colour is in use. A palette entry is a
+	 * choice the analyst made about their own codebook, and the alternative --
+	 * "recolour these four branches before you may tidy this up" -- is busywork
+	 * for something one undo takes back. `colorUsage` lets the button say how
+	 * many branches will move before it is pressed.
+	 */
+	removeColor(index: number) {
+		const palette = removePaletteColor(this.#palette, index);
+		if (palette === this.#palette) return;
+		const codes = repaintCodes(this.#codes, this.#palette[index], palette[0]);
+		this.#commitAll({ codes, palette });
+	}
+
+	/** How many codes wear a colour -- what a delete would repaint. */
+	colorUsage(color: string): number {
+		return countCodesUsing(this.#codes, color);
+	}
+
 	/** Deletes a code and its subtree. Returns what was deleted, for the undo toast. */
 	remove(id: CodeId): { name: string; removed: number } | null {
 		const code = findCode(this.#codes, id);
@@ -353,7 +434,7 @@ export class CodingTreeState {
 		const parent = findCode(moved, parentId);
 		// Picked from the codebook *without* the moved branch: counting its own
 		// current hue would bias the choice towards the colour it is leaving.
-		const color = parent ? parent.color : nextRootColor(removeSubtree(moved, id));
+		const color = parent ? parent.color : nextRootColor(removeSubtree(moved, id), this.#palette);
 		this.#commit(recolorSubtree(moved, id, color));
 		return true;
 	}
@@ -362,9 +443,10 @@ export class CodingTreeState {
 		this.#lastEdit = null;
 		const previous = this.#past.pop();
 		if (!previous) return;
-		this.#future.push(this.#codes);
-		this.#codes = previous;
-		if (this.selectedId && !findCode(previous, this.selectedId)) this.selectedId = null;
+		this.#future.push({ codes: this.#codes, palette: this.#palette });
+		this.#codes = previous.codes;
+		this.#palette = previous.palette;
+		if (this.selectedId && !findCode(previous.codes, this.selectedId)) this.selectedId = null;
 		this.sync();
 	}
 
@@ -372,8 +454,9 @@ export class CodingTreeState {
 		this.#lastEdit = null;
 		const next = this.#future.pop();
 		if (!next) return;
-		this.#past.push(this.#codes);
-		this.#codes = next;
+		this.#past.push({ codes: this.#codes, palette: this.#palette });
+		this.#codes = next.codes;
+		this.#palette = next.palette;
 		this.sync();
 	}
 

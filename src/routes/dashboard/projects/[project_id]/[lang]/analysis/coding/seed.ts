@@ -1,5 +1,5 @@
 import {
-	CODE_COLORS,
+	DEFAULT_PALETTE,
 	DEFAULT_SCORE_MAX,
 	DEFAULT_SCORE_MIN,
 	type Code,
@@ -231,7 +231,8 @@ export function seedCodes(): Code[] {
 		nodes.forEach((node, index) => {
 			// Top-level codes take the next palette hue; everything under them
 			// inherits it, so a branch reads as one thing at a glance.
-			const branchColor = parentId === null ? CODE_COLORS[index % CODE_COLORS.length] : color;
+			const branchColor =
+				parentId === null ? DEFAULT_PALETTE[index % DEFAULT_PALETTE.length] : color;
 			const kind = node.kind ?? 'tag';
 			codes.push({
 				id: node.id,
@@ -248,6 +249,6 @@ export function seedCodes(): Code[] {
 			if (node.children) walk(node.children, node.id, branchColor);
 		});
 	};
-	walk(outline, null, CODE_COLORS[0]);
+	walk(outline, null, DEFAULT_PALETTE[0]);
 	return codes;
 }

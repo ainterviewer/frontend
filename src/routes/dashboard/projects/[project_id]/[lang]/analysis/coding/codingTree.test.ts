@@ -1,19 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import {
+	DEFAULT_PALETTE,
 	addCode,
+	addPaletteColor,
 	ancestorsOf,
 	canReparent,
 	childDraftKind,
 	childrenOf,
+	countCodesUsing,
 	createCode,
 	depthOf,
 	descendantIds,
 	displayName,
 	nextRootColor,
+	normalizeHex,
 	outlineOf,
 	recolorSubtree,
+	removePaletteColor,
 	removeSubtree,
+	repaintCodes,
 	reparent,
+	setPaletteColor,
 	scoreRangeLabel,
 	setKind,
 	setScoreBound,
@@ -186,14 +193,14 @@ describe('editing', () => {
 describe('colours', () => {
 	it('picks the least-used palette hue for a new top-level code', () => {
 		const { codes } = fixture();
-		const picked = nextRootColor(codes);
+		const picked = nextRootColor(codes, DEFAULT_PALETTE);
 		expect(picked).not.toBe('#0f766e');
 		expect(picked).not.toBe('#b45309');
 	});
 
 	it('reuses a hue freed by a deleted branch', () => {
 		const { codes, barriers } = fixture();
-		expect(nextRootColor(removeSubtree(codes, barriers.id))).toBe('#b45309');
+		expect(nextRootColor(removeSubtree(codes, barriers.id), DEFAULT_PALETTE)).toBe('#b45309');
 	});
 });
 
@@ -295,5 +302,46 @@ describe('new sub-codes', () => {
 
 	it('starts a top-level code as a tag', () => {
 		expect(childDraftKind(undefined)).toEqual({ kind: 'tag' });
+	});
+});
+
+describe('palette', () => {
+	it('reads a hex however it is written, and refuses what is not one', () => {
+		expect(normalizeHex('#0F766E')).toBe('#0f766e');
+		expect(normalizeHex('0f766e')).toBe('#0f766e');
+		expect(normalizeHex('#abc')).toBe('#aabbcc');
+		expect(normalizeHex('teal')).toBeNull();
+		expect(normalizeHex('#0f766')).toBeNull();
+	});
+
+	it('adds a colour once, and leaves the palette identical otherwise', () => {
+		const palette = ['#0f766e'];
+		expect(addPaletteColor(palette, '#B45309')).toEqual(['#0f766e', '#b45309']);
+		// A duplicate and a non-colour both return the same array, so the caller's
+		// commit is a no-op rather than an undo step that changed nothing.
+		expect(addPaletteColor(palette, '#0F766E')).toBe(palette);
+		expect(addPaletteColor(palette, 'nonsense')).toBe(palette);
+	});
+
+	it('allows an edit to pass through a hue already in the palette', () => {
+		// A native picker sends a value per movement; refusing the ones that
+		// collide would stick the swatch under the reader's cursor.
+		const palette = ['#0f766e', '#b45309'];
+		expect(setPaletteColor(palette, 1, '#0f766e')).toEqual(['#0f766e', '#0f766e']);
+		expect(setPaletteColor(palette, 5, '#000000')).toBe(palette);
+	});
+
+	it('never empties the palette', () => {
+		expect(removePaletteColor(['#0f766e'], 0)).toEqual(['#0f766e']);
+		expect(removePaletteColor(['#0f766e', '#b45309'], 0)).toEqual(['#b45309']);
+	});
+
+	it('repaints every code wearing a colour, and counts them', () => {
+		const { codes, barriers } = fixture();
+		const before = countCodesUsing(codes, barriers.color);
+		expect(before).toBeGreaterThan(0);
+		const repainted = repaintCodes(codes, barriers.color, '#123456');
+		expect(countCodesUsing(repainted, '#123456')).toBe(before);
+		expect(countCodesUsing(repainted, barriers.color)).toBe(0);
 	});
 });

@@ -85,13 +85,20 @@ export function scoreRangeLabel(code: Code): string {
 }
 
 /**
- * Hues for top-level codes, checked pairwise for colour-vision deficiency.
+ * The palette a codebook starts with: hues for top-level codes, checked
+ * pairwise for colour-vision deficiency.
  *
  * Deliberately not `LANGUAGE_COLORS`: a colour here says "same branch of the
  * codebook", and on a dashboard where green already means a language, reusing
  * that scale would make two unrelated things look like one.
+ *
+ * A starting point rather than the set: the palette is part of the document
+ * from here on, and an analyst can edit, add to and cut it down (see
+ * `setPaletteColor` and friends). Eight distinguishable hues is a reasonable
+ * default and a poor limit -- a study with eleven top-level themes should not
+ * have to paint two of them the same.
  */
-export const CODE_COLORS = [
+export const DEFAULT_PALETTE = [
 	'#0f766e',
 	'#b45309',
 	'#4338ca',
@@ -103,7 +110,7 @@ export const CODE_COLORS = [
 ];
 
 /** The colour a code falls back to when its own is missing or unreadable. */
-export const DEFAULT_CODE_COLOR = CODE_COLORS[0];
+export const DEFAULT_CODE_COLOR = DEFAULT_PALETTE[0];
 
 const ID_PREFIX = 'code';
 
@@ -337,6 +344,91 @@ export function recolorSubtree(codes: readonly Code[], id: CodeId, color: string
 }
 
 /**
+ * Reads a hex colour the way someone types one, or `null` if it is not one.
+ *
+ * `#abc`, `abc`, `#AABBCC` all arrive from somewhere real -- a pasted value, a
+ * native picker, a half-typed field -- and all mean a colour. Everything is
+ * normalised to lowercase `#rrggbb` so that two spellings of one hue are one
+ * palette entry, which matters because a code is matched to its palette colour
+ * by string equality.
+ */
+export function normalizeHex(raw: string): string | null {
+	const value = raw.trim().replace(/^#/, '').toLowerCase();
+	if (/^[0-9a-f]{3}$/.test(value)) {
+		return `#${value
+			.split('')
+			.map((char) => char + char)
+			.join('')}`;
+	}
+	return /^[0-9a-f]{6}$/.test(value) ? `#${value}` : null;
+}
+
+/**
+ * Adds a colour to the palette.
+ *
+ * Refuses duplicates: a palette with the same hue twice offers the reader a
+ * choice that is not one, and would leave `nextRootColor` picking between two
+ * entries that paint identically. Returns the palette unchanged in that case --
+ * and for anything that is not a colour -- so the caller's commit is a no-op
+ * rather than an undo step that changed nothing.
+ */
+export function addPaletteColor(palette: readonly string[], color: string): string[] {
+	const hex = normalizeHex(color);
+	if (hex === null || palette.includes(hex)) return palette as string[];
+	return [...palette, hex];
+}
+
+/**
+ * Changes one palette entry.
+ *
+ * Duplicates are allowed here, unlike `addPaletteColor`: a native colour picker
+ * sends a value on every movement, so an edit on its way from one hue to
+ * another passes through others, and refusing those would make the swatch stick
+ * under the reader's cursor. A palette left holding two identical entries is a
+ * mess the reader made and can see.
+ */
+export function setPaletteColor(
+	palette: readonly string[],
+	index: number,
+	color: string
+): string[] {
+	const hex = normalizeHex(color);
+	if (hex === null || index < 0 || index >= palette.length) return palette as string[];
+	if (palette[index] === hex) return palette as string[];
+	return palette.map((entry, at) => (at === index ? hex : entry));
+}
+
+/**
+ * Removes a palette entry.
+ *
+ * The last one cannot go: every code carries a colour, so an empty palette is a
+ * codebook whose colours no longer name anything the reader can choose again.
+ */
+export function removePaletteColor(palette: readonly string[], index: number): string[] {
+	if (index < 0 || index >= palette.length || palette.length <= 1) return palette as string[];
+	return palette.filter((_, at) => at !== index);
+}
+
+/**
+ * Repaints every code wearing one colour in another.
+ *
+ * What makes a palette entry editable rather than merely replaceable: the
+ * entry and the branches painted from it are the same statement, so moving the
+ * swatch has to move them too. Otherwise editing a colour would quietly orphan
+ * every branch already using it -- they would keep a hue the palette no longer
+ * offers, and no longer read as belonging to anything.
+ */
+export function repaintCodes(codes: readonly Code[], from: string, to: string): Code[] {
+	if (from === to) return codes as Code[];
+	return codes.map((code) => (code.color === from ? { ...code, color: to } : code));
+}
+
+/** How many codes wear a colour. Shown before deleting it from the palette. */
+export function countCodesUsing(codes: readonly Code[], color: string): number {
+	return codes.filter((code) => code.color === color).length;
+}
+
+/**
  * Changes what a code is, and keeps its range honest while doing so.
  *
  * The range lives on the code rather than beside it, so becoming a tag has to
@@ -388,13 +480,14 @@ export function setScoreBound(
  * fewest branches, so a codebook grown one code at a time stays distinguishable
  * instead of cycling back onto its first hue the moment one is deleted.
  */
-export function nextRootColor(codes: readonly Code[]): string {
-	const used = new Map<string, number>(CODE_COLORS.map((color) => [color, 0]));
+export function nextRootColor(codes: readonly Code[], palette: readonly string[]): string {
+	if (palette.length === 0) return DEFAULT_CODE_COLOR;
+	const used = new Map<string, number>(palette.map((color) => [color, 0]));
 	for (const code of rootCodes(codes)) {
 		const count = used.get(code.color);
 		if (count !== undefined) used.set(code.color, count + 1);
 	}
-	let best = CODE_COLORS[0];
+	let best = palette[0];
 	let bestCount = Number.POSITIVE_INFINITY;
 	for (const [color, count] of used) {
 		if (count < bestCount) {

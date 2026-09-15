@@ -108,3 +108,57 @@ test('rings a code created by dragging off a handle', () => {
 	expect(tree.selectedId).toBe(created);
 	expect(tree.nodes.filter((node) => node.selected).map((node) => node.id)).toEqual([created]);
 });
+
+test('editing a palette colour moves every branch painted from it', () => {
+	const tree = new CodingTreeState();
+	const before = tree.palette[0];
+	const wearing = tree.codes.filter((code) => code.color === before).map((code) => code.id);
+	expect(wearing.length).toBeGreaterThan(0);
+
+	tree.setColor(0, '#123456');
+
+	expect(tree.palette[0]).toBe('#123456');
+	expect(wearing.every((id) => colorOf(tree, id) === '#123456')).toBe(true);
+	// The edges are painted from the codes, so the canvas has to have followed too.
+	expect(tree.edges.some((edge) => String(edge.style).includes('#123456'))).toBe(true);
+});
+
+test('removing a palette colour repaints its branches, and one undo takes back both', () => {
+	const tree = new CodingTreeState();
+	const removed = tree.palette[1];
+	const wearing = tree.codes.filter((code) => code.color === removed).map((code) => code.id);
+	expect(wearing.length).toBeGreaterThan(0);
+
+	tree.removeColor(1);
+
+	expect(tree.palette).not.toContain(removed);
+	expect(wearing.every((id) => colorOf(tree, id) === tree.palette[0])).toBe(true);
+
+	// The half-undo this guards against: the palette back but the branches still
+	// wearing a colour it no longer offers.
+	tree.undo();
+	expect(tree.palette[1]).toBe(removed);
+	expect(wearing.every((id) => colorOf(tree, id) === removed)).toBe(true);
+});
+
+test('adding a colour offers one the palette does not already hold', () => {
+	const tree = new CodingTreeState();
+	const added = tree.addColor();
+
+	expect(added).not.toBeNull();
+	expect(tree.palette.filter((color) => color === added)).toHaveLength(1);
+	// New colours are offered, not applied: nothing is repainted by adding one.
+	expect(tree.codes.some((code) => code.color === added)).toBe(false);
+});
+
+test('a run of picker movements is one undo', () => {
+	const tree = new CodingTreeState();
+	const before = tree.palette[0];
+
+	tree.setColor(0, '#111111');
+	tree.setColor(0, '#222222');
+	tree.setColor(0, '#333333');
+	tree.undo();
+
+	expect(tree.palette[0]).toBe(before);
+});

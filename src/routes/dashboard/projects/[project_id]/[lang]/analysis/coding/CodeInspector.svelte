@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CODE_COLORS, CODE_KINDS, displayName, type Code, type CodeKind } from './codingTree';
+	import { CODE_KINDS, displayName, type Code, type CodeKind } from './codingTree';
 	import type { CodingTreeState } from './codingTreeState.svelte';
 
 	let {
@@ -43,6 +43,17 @@
 	}
 
 	let nameField = $state<HTMLInputElement | null>(null);
+
+	/**
+	 * Whether the swatches are being applied or edited.
+	 *
+	 * Two different scopes share one row of colours: clicking a swatch paints
+	 * this branch, while editing one changes the codebook's palette and every
+	 * branch already painted from it. Putting the second behind a switch keeps
+	 * the first a single unambiguous click, and makes the wider change something
+	 * the reader asked for rather than something they hit.
+	 */
+	let editingPalette = $state(false);
 
 	/**
 	 * The caret goes to the name only when something asks for it -- a code just
@@ -98,23 +109,88 @@
 
 	<div class="space-y-5 px-4 py-4">
 		<div>
-			<span class="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">
-				Branch colour
-			</span>
-			<div class="flex flex-wrap gap-2">
-				{#each CODE_COLORS as color (color)}
-					<button
-						class="h-6 w-6 rounded-full ring-offset-2 transition {code.color === color
-							? 'ring-2 ring-gray-400'
-							: 'hover:ring-2 hover:ring-gray-200'}"
-						style:background-color={color}
-						aria-label="Colour this branch {color}"
-						aria-pressed={code.color === color}
-						onclick={() => tree.recolorBranch(code.id, color)}
-					></button>
-				{/each}
+			<div class="mb-2 flex items-center justify-between">
+				<span class="text-xs font-medium tracking-wide text-gray-500 uppercase">
+					Branch colour
+				</span>
+				<button
+					class="text-[11px] text-gray-400 hover:text-gray-700 hover:underline"
+					onclick={() => (editingPalette = !editingPalette)}
+				>
+					{editingPalette ? 'Done' : 'Edit palette'}
+				</button>
 			</div>
-			<p class="mt-2 text-[11px] text-gray-400">Applies to this code and everything under it.</p>
+
+			{#if editingPalette}
+				<ul class="space-y-1.5">
+					{#each tree.palette as color, index (index)}
+						{@const usage = tree.colorUsage(color)}
+						<li class="flex items-center gap-2">
+							<input
+								class="h-6 w-6 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0"
+								type="color"
+								value={color}
+								aria-label="Palette colour {index + 1}"
+								oninput={(event) => tree.setColor(index, event.currentTarget.value)}
+								onblur={() => tree.endEdit()}
+							/>
+							<!-- Committed on change rather than on input: a half-typed hex is
+							     not a colour, and re-rendering the field under someone mid-word
+							     would move their caret. -->
+							<input
+								class="w-24 rounded border-gray-200 font-mono text-xs text-gray-600 uppercase focus:border-primary focus:ring-primary"
+								type="text"
+								value={color}
+								aria-label="Palette colour {index + 1} hex"
+								onchange={(event) => tree.setColor(index, event.currentTarget.value)}
+							/>
+							<span class="flex-1 truncate text-[11px] text-gray-400">
+								{usage === 0 ? 'unused' : `${usage} ${usage === 1 ? 'code' : 'codes'}`}
+							</span>
+							<button
+								class="rounded px-1.5 py-1 text-xs text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+								disabled={tree.palette.length <= 1}
+								title={tree.palette.length <= 1
+									? 'The palette needs at least one colour'
+									: usage === 0
+										? 'Remove this colour'
+										: `Remove this colour — ${usage} ${usage === 1 ? 'code' : 'codes'} will be repainted`}
+								aria-label="Remove palette colour {index + 1}"
+								onclick={() => tree.removeColor(index)}
+							>
+								<i class="fas fa-xmark"></i>
+							</button>
+						</li>
+					{/each}
+				</ul>
+				<button
+					class="mt-2 w-full rounded border border-dashed border-gray-200 px-2 py-1.5 text-[11px] text-gray-500 hover:border-gray-300 hover:text-gray-700"
+					onclick={() => tree.addColor()}
+				>
+					<i class="fas fa-plus mr-1"></i> Add colour
+				</button>
+				<p class="mt-2 text-[11px] text-gray-400">
+					The palette belongs to the codebook. Changing a colour moves every branch painted with it;
+					removing one repaints those branches with the first colour here.
+				</p>
+			{:else}
+				<div class="flex flex-wrap gap-2">
+					<!-- Keyed by position, not by colour: two entries may briefly hold the
+					     same hue while one is being edited. -->
+					{#each tree.palette as color, index (index)}
+						<button
+							class="h-6 w-6 rounded-full ring-offset-2 transition {code.color === color
+								? 'ring-2 ring-gray-400'
+								: 'hover:ring-2 hover:ring-gray-200'}"
+							style:background-color={color}
+							aria-label="Colour this branch {color}"
+							aria-pressed={code.color === color}
+							onclick={() => tree.recolorBranch(code.id, color)}
+						></button>
+					{/each}
+				</div>
+				<p class="mt-2 text-[11px] text-gray-400">Applies to this code and everything under it.</p>
+			{/if}
 		</div>
 
 		<div>
@@ -251,3 +327,27 @@
 		</button>
 	</div>
 </aside>
+
+<style>
+	/* The native colour input draws its own square swatch inside the element, so
+	   rounding the input alone leaves a square sitting in a circle -- and the two
+	   modes stop looking like the same row of colours. */
+	input[type='color'] {
+		-webkit-appearance: none;
+		appearance: none;
+	}
+
+	input[type='color']::-webkit-color-swatch-wrapper {
+		padding: 0;
+	}
+
+	input[type='color']::-webkit-color-swatch {
+		border: none;
+		border-radius: 9999px;
+	}
+
+	input[type='color']::-moz-color-swatch {
+		border: none;
+		border-radius: 9999px;
+	}
+</style>
