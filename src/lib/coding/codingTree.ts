@@ -503,3 +503,75 @@ export function displayName(name: string): string {
 	const trimmed = name.trim();
 	return trimmed === '' ? 'Untitled code' : trimmed;
 }
+
+/**
+ * Whether `id` may be placed under `parentId` at all -- including where it
+ * already is.
+ *
+ * `canReparent` is the narrower question the canvas asks, where landing back on
+ * the current parent means the drop did nothing. A table drags rows into an
+ * order, so staying under the same parent is the ordinary case and the only
+ * moves left to refuse are the ones that would cut a cycle out of the tree.
+ */
+export function canMove(codes: readonly Code[], id: CodeId, parentId: CodeId | null): boolean {
+	const code = findCode(codes, id);
+	if (!code) return false;
+	if (parentId === id) return false;
+	if (parentId !== null && !findCode(codes, parentId)) return false;
+	if (parentId !== null && descendantIds(codes, id).has(parentId)) return false;
+	return true;
+}
+
+/**
+ * Moves a code, with its subtree, to a given seat among a parent's children.
+ *
+ * `reparent` says *whose* child a code is; this also says *which* child, which
+ * is what a table has to answer -- rows sit in an order the reader can see and
+ * therefore drag, where the canvas has only the layout's arrangement.
+ *
+ * `index` counts the destination's children once the moved branch is out of the
+ * list, so a code dragged down within its own parent means the seat it is
+ * headed for and not the one it vacated. Out-of-range values clamp to the ends
+ * rather than being refused: a drop past the last row means "last".
+ *
+ * Array order is sibling order, so the move is a splice of the whole branch
+ * into the position its new previous sibling's subtree ends at -- which is what
+ * keeps the flat list in depth-first order, as `insertInOrder` does for a code
+ * that is new rather than moved.
+ */
+export function moveCode(
+	codes: readonly Code[],
+	id: CodeId,
+	parentId: CodeId | null,
+	index: number
+): Code[] {
+	if (!canMove(codes, id, parentId)) return codes as Code[];
+	const branch = subtreeOf(codes, id).map((code) =>
+		code.id === id ? { ...code, parentId } : code
+	);
+	const movingSet = new Set(branch.map((code) => code.id));
+	const remaining = codes.filter((code) => !movingSet.has(code.id));
+
+	const siblings = childrenOf(remaining, parentId);
+	const seat = Math.max(0, Math.min(index, siblings.length));
+
+	// Where that seat is in the flat array: just before the sibling now holding
+	// it, or -- when the seat is past the last sibling -- after everything the
+	// last one carries. With no siblings at all it is directly after the parent,
+	// and a new top-level branch with no siblings goes to the end.
+	let insertAt: number;
+	if (seat < siblings.length) {
+		insertAt = remaining.findIndex((code) => code.id === siblings[seat].id);
+	} else if (siblings.length > 0) {
+		const last = siblings[siblings.length - 1];
+		const under = descendantIds(remaining, last.id);
+		insertAt = remaining.findIndex((code) => code.id === last.id) + 1;
+		while (insertAt < remaining.length && under.has(remaining[insertAt].id)) insertAt += 1;
+	} else if (parentId === null) {
+		insertAt = remaining.length;
+	} else {
+		insertAt = remaining.findIndex((code) => code.id === parentId) + 1;
+	}
+
+	return [...remaining.slice(0, insertAt), ...branch, ...remaining.slice(insertAt)];
+}

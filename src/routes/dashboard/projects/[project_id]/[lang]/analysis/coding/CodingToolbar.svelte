@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { isApplicable } from './codingTree';
-	import type { CodingTreeState } from './codingTreeState.svelte';
+	import { isApplicable } from '$lib/coding/codingTree';
+	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
 
 	let { tree }: { tree: CodingTreeState } = $props();
 

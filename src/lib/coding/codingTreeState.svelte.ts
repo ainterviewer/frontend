@@ -6,6 +6,7 @@ import {
 	addCode,
 	addPaletteColor,
 	ancestorsOf,
+	canMove,
 	canReparent,
 	childDraftKind,
 	childrenOf,
@@ -13,6 +14,7 @@ import {
 	createCode,
 	descendantIds,
 	findCode,
+	moveCode,
 	nextRootColor,
 	recolorSubtree,
 	removePaletteColor,
@@ -434,6 +436,35 @@ export class CodingTreeState {
 		const parent = findCode(moved, parentId);
 		// Picked from the codebook *without* the moved branch: counting its own
 		// current hue would bias the choice towards the colour it is leaving.
+		const color = parent ? parent.color : nextRootColor(removeSubtree(moved, id), this.#palette);
+		this.#commit(recolorSubtree(moved, id, color));
+		return true;
+	}
+
+	canMoveTo(id: CodeId, parentId: CodeId | null): boolean {
+		return canMove(this.#codes, id, parentId);
+	}
+
+	/**
+	 * Moves a code to a seat among a parent's children -- what a dragged table
+	 * row means, where the canvas can only say whose child something is.
+	 *
+	 * Repaints only when the branch actually changed. `moveUnder` can repaint
+	 * unconditionally because it refuses a move that stays put; here staying
+	 * under the same parent is the common case, and recolouring on every nudge
+	 * up or down would overwrite a hand-set hue for a reorder that says nothing
+	 * about kinship.
+	 */
+	moveTo(id: CodeId, parentId: CodeId | null, index: number): boolean {
+		const before = findCode(this.#codes, id);
+		if (!before) return false;
+		const moved = moveCode(this.#codes, id, parentId, index);
+		if (moved === this.#codes) return false;
+		if (before.parentId === parentId) {
+			this.#commit(moved);
+			return true;
+		}
+		const parent = findCode(moved, parentId);
 		const color = parent ? parent.color : nextRootColor(removeSubtree(moved, id), this.#palette);
 		this.#commit(recolorSubtree(moved, id, color));
 		return true;

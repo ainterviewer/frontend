@@ -6,10 +6,15 @@
 	import CodeInspector from './CodeInspector.svelte';
 	import CodingCanvas from './CodingCanvas.svelte';
 	import CodingToolbar from './CodingToolbar.svelte';
-	import { CodingTreeState } from './codingTreeState.svelte';
-	import { displayName } from './codingTree';
+	import { codingTreeFor } from '$lib/coding/store.svelte';
+	import { displayName } from '$lib/coding/codingTree';
+	import type { PageData } from './$types';
 
-	const tree = new CodingTreeState();
+	let { data }: { data: PageData } = $props();
+
+	// The project's codebook rather than this page's: the explore page's code
+	// pane edits the same tree, and navigating between the two must not fork it.
+	const tree = $derived(codingTreeFor(data.project_id, data.lang));
 
 	function deleteCode(id: string) {
 		const removed = tree.remove(id);

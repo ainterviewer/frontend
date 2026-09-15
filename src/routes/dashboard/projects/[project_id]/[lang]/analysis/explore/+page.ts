@@ -20,6 +20,9 @@ export const load: PageLoad = ({ params, url }) => {
 
 	return {
 		project_id: params.project_id,
+		// Carried through so the page can reach this project's codebook, which the
+		// code pane shares with the coding canvas and which is keyed by both.
+		lang: params.lang,
 		// Returned alongside the requests so the component can tell whether its
 		// own state still asks what these asked. They start identical and part
 		// company on the reader's first click, and a comparison against the

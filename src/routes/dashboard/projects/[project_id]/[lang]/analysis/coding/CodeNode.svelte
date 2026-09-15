@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Handle, Position, type NodeProps } from '@xyflow/svelte';
-	import { displayName, scoreRangeLabel } from './codingTree';
-	import { useRename, type CodeNode } from './codingTreeState.svelte';
-	import { NODE_HEIGHT, NODE_WIDTH } from './treeLayout';
+	import { displayName, scoreRangeLabel } from '$lib/coding/codingTree';
+	import { useRename, type CodeNode } from '$lib/coding/codingTreeState.svelte';
+	import { NODE_HEIGHT, NODE_WIDTH } from '$lib/coding/treeLayout';
 
 	let { data, selected }: NodeProps<CodeNode> = $props();
 

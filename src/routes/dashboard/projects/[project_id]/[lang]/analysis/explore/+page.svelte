@@ -21,6 +21,7 @@
 	import { OUTLIER_COLOR, mapColor } from '$lib/config/chartColors';
 	import { format } from 'd3-format';
 	import type { PageData } from './$types';
+	import CodePanel from './CodePanel.svelte';
 	import DetailPanel from './DetailPanel.svelte';
 	import ControlRail from './ControlRail.svelte';
 	import KeywordInput from './KeywordInput.svelte';
@@ -30,6 +31,7 @@
 	import ScatterPlot from './ScatterPlot.svelte';
 	import SweepBar from './SweepBar.svelte';
 	import StatusStrip from './StatusStrip.svelte';
+	import { codingTreeFor } from '$lib/coding/store.svelte';
 	import {
 		DEFAULT_TASK,
 		GROUP_MODES,
@@ -58,6 +60,35 @@
 
 	const formatNumber = format(',');
 	const formatPercent = format('.0%');
+
+	// The project's codebook, shared with the coding canvas rather than a second
+	// copy of it -- see `codingTreeFor`. Derived, not captured: SvelteKit reuses
+	// this component across a change of language, and a captured store would go
+	// on showing the codebook of the language the reader has left.
+	const tree = $derived(codingTreeFor(data.project_id, data.lang));
+
+	/**
+	 * Which reading the right column is showing.
+	 *
+	 * A toggle rather than two columns: the codebook and the clusters are two
+	 * answers to the same question -- what is in this corpus -- and a reader is
+	 * looking at one or the other, never both at once. Two columns would cost the
+	 * map a third of its width to say so.
+	 *
+	 * The list view has no clusters to show, so it gets the pane with only the
+	 * codebook in it rather than a toggle with one dead half.
+	 */
+	let panel = $state<'clusters' | 'codes'>('clusters');
+
+	/**
+	 * Whether the code pane is showing, as the control rail's `railOpen` is.
+	 *
+	 * Held here rather than inside the pane because the column's width has to
+	 * answer to it: a minimised pane that left a 24rem gap behind would have
+	 * given the reader nothing.
+	 */
+	let codesOpen = $state(true);
+	const codesMinimised = $derived(panel === 'codes' && !codesOpen);
 
 	// Backfill is an editor's action, and the server will refuse it from anyone
 	// else — so the button is not offered to anyone else either. Absent
@@ -1418,6 +1449,17 @@
 					onshowcontrols={() => (railOpen = true)}
 					onclearanchor={() => (selectedId = null)}
 				/>
+
+				<!-- No toggle here: clustering is a reading of the map, and the list
+				     has none to show. The codebook is the same one either view edits,
+				     so switching between them does not leave it behind. -->
+				<div class="flex min-h-[26rem] shrink-0 {codesOpen ? 'lg:w-[22rem]' : ''}">
+					<div class="min-h-0 w-full">
+						{#key tree}
+							<CodePanel {tree} bind:open={codesOpen} />
+						{/key}
+					</div>
+				</div>
 			{:else}
 				<!-- `min-w-0` is load-bearing: the scatter renders an <svg> with an
 				     explicit pixel width, which becomes this item's intrinsic minimum
@@ -1624,28 +1666,70 @@
 					{/if}
 				</div>
 
-				<div class="flex min-h-[26rem] shrink-0 lg:w-[24rem]">
-					<div class="w-full">
-						<DetailPanel
-							clusters={clusters?.clusters ?? null}
-							{groups}
-							{groupMode}
-							{multilingual}
-							clustersLoading={clusterLoading && clusters === null}
-							search={visibleSearch}
-							{searchLoading}
-							{searchError}
-							{searchPaging}
-							detail={visibleDetail}
-							{detailLoading}
-							{detailError}
-							{neighbourPaging}
-							{selectedId}
-							{focusedGroup}
-							onselect={(id) => (selectedId = id)}
-							onfocusgroup={(key) => (focusedGroup = key)}
-							ontranscript={(hit) => (transcriptOf = hit)}
-						/>
+				<div
+					class="flex min-h-[26rem] shrink-0 flex-col gap-2 {codesMinimised ? '' : 'lg:w-[22rem]'}"
+				>
+					<!-- Two readings of what is in the corpus: the clusters the run
+					     found, and the codebook the analyst is building over it. A
+					     toggle rather than two columns — a reader is looking at one or
+					     the other, and two columns would cost the map a third of its
+					     width to say so. -->
+					<!-- Hidden while the code pane is minimised: it would hold open the
+					     width the reader just asked for back, and restoring the pane --
+					     the obvious next gesture -- brings it straight back. -->
+					{#if !codesMinimised}
+						<div
+							role="group"
+							aria-label="Right pane"
+							class="flex shrink-0 overflow-hidden rounded-md border border-gray-200"
+						>
+							{#each [{ value: 'clusters', label: 'Clusters', icon: 'fa-shapes' }, { value: 'codes', label: 'Codes', icon: 'fa-tags' }] as option (option.value)}
+								<button
+									type="button"
+									onclick={() => (panel = option.value as 'clusters' | 'codes')}
+									aria-pressed={panel === option.value}
+									class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-2.5 py-1.5 text-sm font-medium transition-colors {panel ===
+									option.value
+										? 'bg-primary text-on-primary'
+										: 'bg-white text-gray-500 hover:text-gray-900'}"
+								>
+									<i class="fas {option.icon} text-[0.6875rem]"></i>
+									{option.label}
+								</button>
+							{/each}
+						</div>
+					{/if}
+
+					<div class="min-h-0 w-full flex-1">
+						{#if panel === 'codes'}
+							<!-- Keyed: the pane holds expansion state keyed by code id, and
+							     a different codebook arriving in the same component would
+							     carry the old one's open branches with it. -->
+							{#key tree}
+								<CodePanel {tree} bind:open={codesOpen} />
+							{/key}
+						{:else}
+							<DetailPanel
+								clusters={clusters?.clusters ?? null}
+								{groups}
+								{groupMode}
+								{multilingual}
+								clustersLoading={clusterLoading && clusters === null}
+								search={visibleSearch}
+								{searchLoading}
+								{searchError}
+								{searchPaging}
+								detail={visibleDetail}
+								{detailLoading}
+								{detailError}
+								{neighbourPaging}
+								{selectedId}
+								{focusedGroup}
+								onselect={(id) => (selectedId = id)}
+								onfocusgroup={(key) => (focusedGroup = key)}
+								ontranscript={(hit) => (transcriptOf = hit)}
+							/>
+						{/if}
 					</div>
 				</div>
 			{/if}
