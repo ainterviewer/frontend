@@ -142,17 +142,30 @@
 
 	function isHere(group: Group): boolean {
 		if (!hit) return false;
-		if (hit.message_id) return group.turns.some((turn) => turn.id === hit.message_id);
-		if (hit.section === null || hit.main_question === null) return false;
-		return group.section === hit.section && group.mainQuestion === hit.main_question;
+		// By chunk level, because what a chunk *is* decides what part of the
+		// transcript it came from. A message is one turn inside a group, a Q&A
+		// pair is the group, a section is every group under it, and an interview
+		// is the whole thing — so an interview marks nothing, since marking all
+		// of it would say no more than the dialog already does.
+		if (hit.kind === 'message') {
+			return hit.message_id !== null && group.turns.some((turn) => turn.id === hit.message_id);
+		}
+		if (hit.section === null || hit.section === undefined) return false;
+		if (group.section !== hit.section) return false;
+		if (hit.kind === 'section') return true;
+		if (hit.kind !== 'qa_pair') return false;
+		if (hit.main_question === null || hit.main_question === undefined) return false;
+		return group.mainQuestion === hit.main_question;
 	}
 
 	/**
-	 * The first group the reader came from, which is what gets scrolled to.
+	 * The first group the reader came from, which is what gets scrolled to and
+	 * is the one that carries the label.
 	 *
-	 * A MESSAGE chunk marks one group and a Q&A pair one too, but a guide that
-	 * returns to a question can leave two — so the scroll goes to the first and
-	 * the rest are simply marked where they are.
+	 * A MESSAGE chunk marks one group and a Q&A pair one too, but a section
+	 * marks every group under it — and a guide that returns to a question can
+	 * leave two of any of them. So the scroll goes to the first and the rest are
+	 * simply marked where they are.
 	 */
 	let landingKey = $derived(groups.find((group) => group.here)?.key ?? null);
 
@@ -291,7 +304,7 @@
 									     does not mean two spellings of the same wrapper. -->
 									<span bind:this={landing} aria-hidden="true"></span>
 								{/if}
-								{#if group.here}
+								{#if group.key === landingKey}
 									<p
 										class="mb-1.5 flex items-center gap-1.5 text-[0.625rem] font-semibold tracking-wide text-primary uppercase"
 									>
