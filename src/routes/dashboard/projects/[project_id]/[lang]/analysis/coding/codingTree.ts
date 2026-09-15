@@ -255,6 +255,18 @@ export function reparent(codes: readonly Code[], id: CodeId, parentId: CodeId | 
 }
 
 /**
+ * Recolours a code and everything under it.
+ *
+ * Colour here means "same branch", not "this particular code", so it is always
+ * applied to a whole subtree -- which is also why a code that moves between
+ * branches has to be repainted rather than carrying its old hue across.
+ */
+export function recolorSubtree(codes: readonly Code[], id: CodeId, color: string): Code[] {
+	const branch = new Set(subtreeOf(codes, id).map((code) => code.id));
+	return codes.map((code) => (branch.has(code.id) ? { ...code, color } : code));
+}
+
+/**
  * The colour for a new top-level code: the palette hue currently carrying the
  * fewest branches, so a codebook grown one code at a time stays distinguishable
  * instead of cycling back onto its first hue the moment one is deleted.

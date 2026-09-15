@@ -86,9 +86,10 @@
 	<header class="mb-4">
 		<h1 class="page-title">Coding tree</h1>
 		<p class="max-w-2xl text-sm text-gray-500">
-			The project's codebook as a tree. Drag a code onto another to make it a sub-code, or drag from
-			a code's handle to the one it should sit under. Select a code to write its definition and
-			memo.
+			The project's codebook as a tree. Drag a code onto another to make it a sub-code; under Free
+			layout dragging arranges instead, and a code is re-parented by dragging from its handle to the
+			one it should sit under. A code moved into another branch takes that branch's colour. Select a
+			code to write its definition and memo.
 		</p>
 	</header>
 
@@ -165,6 +166,10 @@
 					<div>
 						<dt class="inline font-medium">Drag onto a code</dt>
 						— make it a sub-code
+					</div>
+					<div>
+						<dt class="inline font-medium">Drag from a handle</dt>
+						— re-parent explicitly
 					</div>
 					<div>
 						<dt class="inline font-medium">Enter</dt>

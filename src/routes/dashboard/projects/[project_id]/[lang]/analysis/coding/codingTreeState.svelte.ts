@@ -8,6 +8,7 @@ import {
 	descendantIds,
 	findCode,
 	nextRootColor,
+	recolorSubtree,
 	removeSubtree,
 	reparent,
 	subtreeOf,
@@ -171,9 +172,7 @@ export class CodingTreeState {
 	 * thing. Recolouring a leaf is just the leaf.
 	 */
 	recolorBranch(id: CodeId, color: string) {
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- a local lookup, discarded before the method returns
-		const branch = new Set(subtreeOf(this.#codes, id).map((code) => code.id));
-		this.#commit(this.#codes.map((code) => (branch.has(code.id) ? { ...code, color } : code)));
+		this.#commit(recolorSubtree(this.#codes, id, color));
 	}
 
 	/** Deletes a code and its subtree. Returns what was deleted, for the undo toast. */
@@ -191,9 +190,28 @@ export class CodingTreeState {
 		return canReparent(this.#codes, id, parentId);
 	}
 
+	/**
+	 * Moves a code, and repaints it into the branch it lands in.
+	 *
+	 * The colour means "this is one branch", so a code that keeps its old hue
+	 * after a move is actively misleading -- it goes on claiming kinship with the
+	 * branch it just left. Promoting to the top level makes it a branch of its
+	 * own, so it takes a fresh palette hue rather than the one it inherited.
+	 *
+	 * This does overwrite a colour the reader set by hand on a sub-branch. That
+	 * is the trade: under this scheme colour is a property of where a code sits,
+	 * and a hand-set hue on a code that then moves is a statement about a place
+	 * it no longer occupies. The move and the repaint are one commit, so a single
+	 * undo takes back both.
+	 */
 	moveUnder(id: CodeId, parentId: CodeId | null): boolean {
 		if (!this.canMoveUnder(id, parentId)) return false;
-		this.#commit(reparent(this.#codes, id, parentId));
+		const moved = reparent(this.#codes, id, parentId);
+		const parent = findCode(moved, parentId);
+		// Picked from the codebook *without* the moved branch: counting its own
+		// current hue would bias the choice towards the colour it is leaving.
+		const color = parent ? parent.color : nextRootColor(removeSubtree(moved, id));
+		this.#commit(recolorSubtree(moved, id, color));
 		return true;
 	}
 

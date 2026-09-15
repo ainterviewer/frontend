@@ -10,6 +10,7 @@ import {
 	displayName,
 	nextRootColor,
 	outlineOf,
+	recolorSubtree,
 	removeSubtree,
 	reparent,
 	subtreeOf,
@@ -179,6 +180,21 @@ describe('colours', () => {
 	it('reuses a hue freed by a deleted branch', () => {
 		const { codes, barriers } = fixture();
 		expect(nextRootColor(removeSubtree(codes, barriers.id))).toBe('#b45309');
+	});
+});
+
+describe('recolorSubtree', () => {
+	it('paints the code and everything under it', () => {
+		const { codes, trust, doctors, barriers } = fixture();
+		const painted = recolorSubtree(codes, trust.id, '#123456');
+		expect(painted.find((code) => code.id === doctors.id)?.color).toBe('#123456');
+		expect(painted.find((code) => code.id === barriers.id)?.color).toBe('#b45309');
+	});
+
+	it('paints a leaf as just that leaf', () => {
+		const { codes, cost } = fixture();
+		const painted = recolorSubtree(codes, cost.id, '#123456');
+		expect(painted.filter((code) => code.color === '#123456')).toHaveLength(1);
 	});
 });
 
