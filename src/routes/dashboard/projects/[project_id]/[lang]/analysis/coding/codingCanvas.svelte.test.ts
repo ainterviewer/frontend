@@ -80,3 +80,35 @@ test('no ancestor clips the connection handles', async () => {
 
 	expect(clipped).toHaveLength(0);
 });
+
+test('leaves the caret where the reader is typing', async () => {
+	// Every edit replaces the code object the inspector is given, so anything in
+	// this panel that reacts to the code as a whole re-runs between keystrokes.
+	// The one that steals focus is only visible as this: a field that takes the
+	// first character of a word and loses the rest to the name at the top.
+	await page.viewport(DESKTOP.width, DESKTOP.height);
+	render(CodingPage);
+
+	await page.getByText('Who is responsible').first().click();
+
+	const definition = page.getByPlaceholder('What counts as this code? What does not?');
+	await definition.fill('');
+	await definition.fill('Passages where');
+
+	await expect.element(definition).toHaveValue('Passages where');
+	expect(document.activeElement).toBe(definition.element());
+});
+
+test('keeps focus in a score range while it is being typed', async () => {
+	await page.viewport(DESKTOP.width, DESKTOP.height);
+	render(CodingPage);
+
+	await page.getByText('Elaboration').first().click();
+
+	// The second number field is the top of the scale; the first is its floor.
+	const max = page.getByRole('spinbutton').nth(1);
+	await max.fill('10');
+
+	await expect.element(max).toHaveValue(10);
+	expect(document.activeElement).toBe(max.element());
+});

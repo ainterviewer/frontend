@@ -34,9 +34,6 @@
 	const trail = $derived(tree.ancestorsOf(code.id).toReversed());
 	const children = $derived(tree.childrenOf(code.id));
 
-	// Focus follows selection: selecting a code on the canvas is usually the
-	// first half of "and rename it". Keyed on the id so it re-runs when the
-	// reader clicks a different node, not on every keystroke.
 	/** An empty number field is no value, not a zero. */
 	function numberOrNull(raw: string): number | null {
 		const trimmed = raw.trim();
@@ -46,9 +43,28 @@
 	}
 
 	let nameField = $state<HTMLInputElement | null>(null);
+
+	/**
+	 * The id this panel has already focused for.
+	 *
+	 * A plain variable, not `$state`: it is how the effect below remembers what
+	 * it has done, and making it reactive would feed that back in as a
+	 * dependency and re-run the effect on its own writes.
+	 */
+	let focusedId: string | null = null;
+
+	// Focus follows selection: selecting a code on the canvas is usually the
+	// first half of "and rename it".
+	//
+	// The comparison is what makes that true. Every edit replaces the code
+	// object, so this effect re-runs on each keystroke whatever it reads off the
+	// prop -- without the guard, typing in the definition or in a score's range
+	// pulled the caret back up to the name after the first character.
 	$effect(() => {
-		const selected = code.id;
-		if (selected) nameField?.focus();
+		const id = code.id;
+		if (id === focusedId) return;
+		focusedId = id;
+		nameField?.focus();
 	});
 </script>
 
