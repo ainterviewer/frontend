@@ -1,11 +1,15 @@
 <script lang="ts">
+	import { isApplicable } from './codingTree';
 	import type { CodingTreeState } from './codingTreeState.svelte';
 
 	let { tree }: { tree: CodingTreeState } = $props();
 
 	const codeCount = $derived(tree.codes.length);
+	// Groups are not counted: the warning means "nobody else could apply this",
+	// and nothing is ever applied to a group, so asking it for an inclusion rule
+	// would report a gap that is not one.
 	const undefinedCount = $derived(
-		tree.codes.filter((code) => code.definition.trim() === '').length
+		tree.codes.filter((code) => isApplicable(code) && code.definition.trim() === '').length
 	);
 </script>
 

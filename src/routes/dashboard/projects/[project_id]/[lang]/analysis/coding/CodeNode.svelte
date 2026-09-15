@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Handle, Position, type NodeProps } from '@xyflow/svelte';
-	import { displayName } from './codingTree';
+	import { displayName, scoreRangeLabel } from './codingTree';
 	import type { CodeNode } from './codingTreeState.svelte';
 	import { NODE_HEIGHT, NODE_WIDTH } from './treeLayout';
 
@@ -17,6 +17,24 @@
 
 	// A drag hovering this node says what letting go would do. `invalid` is the
 	// refusal the tree has to make: a code cannot be dropped into its own branch.
+	// What this code would do to a passage, said on the node rather than only in
+	// the inspector: a tree where a third of the codes are never applied to
+	// anything reads wrong unless you can see which third.
+	// The icon carries the kind and the tooltip names it; only a score writes
+	// anything out, because its scale is the code's own content rather than a
+	// label for what sort of code it is.
+	const kindMark = $derived(
+		code.kind === 'score'
+			? {
+					icon: 'fa-sliders',
+					label: scoreRangeLabel(code),
+					title: `Score, ${scoreRangeLabel(code)}`
+				}
+			: code.kind === 'group'
+				? { icon: 'fa-layer-group', label: '', title: 'Group — organises, never applied' }
+				: { icon: 'fa-tag', label: '', title: 'Tag' }
+	);
+
 	const ring = $derived(
 		data.drop === 'valid'
 			? 'ring-2 ring-emerald-500 ring-offset-1'
@@ -52,13 +70,18 @@
 				{displayName(code.name)}
 			</p>
 			<div class="flex items-center gap-2 text-[11px] text-gray-400">
+				<span class="flex items-center gap-1" title={kindMark.title}>
+					<i class="fas {kindMark.icon}"></i>
+					{#if kindMark.label}<span>{kindMark.label}</span>{/if}
+				</span>
 				{#if data.childCount > 0}
 					<span>{data.childCount} sub-code{data.childCount === 1 ? '' : 's'}</span>
 				{/if}
-				{#if code.definition.trim() === ''}
+				{#if code.definition.trim() === '' && code.kind !== 'group'}
 					<!-- A code without a definition is not yet a code anyone else can
 					     apply, so the gap is worth showing on the node rather than
-					     only in the inspector. -->
+					     only in the inspector. Not asked of a group: nothing is coded
+					     there, so there is no rule for a second coder to follow. -->
 					<span class="text-amber-600">no definition</span>
 				{/if}
 				{#if code.memo.trim() !== ''}

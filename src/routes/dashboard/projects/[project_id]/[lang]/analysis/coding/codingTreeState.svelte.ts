@@ -3,6 +3,7 @@ import {
 	addCode,
 	ancestorsOf,
 	canReparent,
+	childDraftKind,
 	childrenOf,
 	createCode,
 	descendantIds,
@@ -11,10 +12,13 @@ import {
 	recolorSubtree,
 	removeSubtree,
 	reparent,
+	setKind,
+	setScoreBound,
 	subtreeOf,
 	updateCode,
 	type Code,
 	type CodeId,
+	type CodeKind,
 	type XY
 } from './codingTree';
 import { seedCodes } from './seed';
@@ -168,7 +172,8 @@ export class CodingTreeState {
 			parentId,
 			name: parent ? 'New sub-code' : 'New code',
 			color: parent ? parent.color : nextRootColor(this.#codes),
-			position: at ?? placeNewCode(this.#codes, parentId, this.#positions())
+			position: at ?? placeNewCode(this.#codes, parentId, this.#positions()),
+			...childDraftKind(parent)
 		});
 		this.#commit(addCode(this.#codes, code));
 		this.selectedId = code.id;
@@ -201,6 +206,24 @@ export class CodingTreeState {
 	 */
 	patch(id: CodeId, fields: Partial<Omit<Code, 'id' | 'parentId'>>, edit?: string) {
 		this.#commit(updateCode(this.#codes, id, fields), edit ?? null);
+	}
+
+	/**
+	 * Changes what the code is: a tag, a score, or a group that only organises.
+	 *
+	 * One commit, so the range that comes or goes with the kind is taken back by
+	 * a single undo rather than leaving the reader a tag carrying a stale scale.
+	 */
+	setKind(id: CodeId, kind: CodeKind) {
+		this.#commit(setKind(this.#codes, id, kind));
+	}
+
+	/**
+	 * Moves one end of a score's scale. Coalesced per end, so typing `10` over a
+	 * `5` is one undo and not two.
+	 */
+	setScoreBound(id: CodeId, end: 'min' | 'max', value: number | null) {
+		this.#commit(setScoreBound(this.#codes, id, end, value), `${end}:${id}`);
 	}
 
 	/**

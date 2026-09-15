@@ -3,6 +3,7 @@ import {
 	addCode,
 	ancestorsOf,
 	canReparent,
+	childDraftKind,
 	childrenOf,
 	createCode,
 	depthOf,
@@ -13,10 +14,23 @@ import {
 	recolorSubtree,
 	removeSubtree,
 	reparent,
+	scoreRangeLabel,
+	setKind,
+	setScoreBound,
 	subtreeOf,
 	updateCode,
+	DEFAULT_SCORE_MAX,
+	DEFAULT_SCORE_MIN,
+	isApplicable,
 	type Code
 } from './codingTree';
+
+/** Reading a code back after an edit; failing loudly beats a silent undefined. */
+function findOrThrow(codes: readonly Code[], id: string): Code {
+	const code = codes.find((candidate) => candidate.id === id);
+	if (!code) throw new Error(`no code ${id}`);
+	return code;
+}
 
 /** A small codebook: two branches, one of them two levels deep. */
 function fixture() {
@@ -211,5 +225,75 @@ describe('descendants', () => {
 		const ids = descendantIds(codes, trust.id);
 		expect(ids.has(trust.id)).toBe(false);
 		expect(ids.has(doctors.id)).toBe(true);
+	});
+});
+
+describe('kind', () => {
+	it('starts a code as a tag', () => {
+		const code = createCode({ name: 'Trust' });
+		expect(code.kind).toBe('tag');
+		expect(code.minValue).toBeNull();
+	});
+
+	it('gives a code that becomes a score the default scale', () => {
+		const { codes, doctors } = fixture();
+		const scored = findOrThrow(setKind(codes, doctors.id, 'score'), doctors.id);
+		expect(scored.minValue).toBe(DEFAULT_SCORE_MIN);
+		expect(scored.maxValue).toBe(DEFAULT_SCORE_MAX);
+		expect(scoreRangeLabel(scored)).toBe(`${DEFAULT_SCORE_MIN}–${DEFAULT_SCORE_MAX}`);
+	});
+
+	it('clears the scale when a score stops being one', () => {
+		const { codes, doctors } = fixture();
+		const scored = setScoreBound(setKind(codes, doctors.id, 'score'), doctors.id, 'max', 10);
+		const tagged = findOrThrow(setKind(scored, doctors.id, 'tag'), doctors.id);
+		expect(tagged.minValue).toBeNull();
+		expect(tagged.maxValue).toBeNull();
+	});
+
+	it('changes only the code asked for, unlike colour', () => {
+		const { codes, trust, doctors } = fixture();
+		const next = setKind(codes, trust.id, 'group');
+		expect(findOrThrow(next, trust.id).kind).toBe('group');
+		expect(findOrThrow(next, doctors.id).kind).toBe('tag');
+	});
+
+	it('does not apply a group to anything', () => {
+		const { codes, trust } = fixture();
+		expect(isApplicable(findOrThrow(setKind(codes, trust.id, 'group'), trust.id))).toBe(false);
+		expect(isApplicable(findOrThrow(codes, trust.id))).toBe(true);
+	});
+
+	it('leaves the ends alone when they cross', () => {
+		const { codes, doctors } = fixture();
+		const scored = setScoreBound(setKind(codes, doctors.id, 'score'), doctors.id, 'min', 9);
+		expect(findOrThrow(scored, doctors.id).minValue).toBe(9);
+		expect(findOrThrow(scored, doctors.id).maxValue).toBe(DEFAULT_SCORE_MAX);
+	});
+
+	it('refuses a scale on a code that is not a score', () => {
+		const { codes, doctors } = fixture();
+		expect(findOrThrow(setScoreBound(codes, doctors.id, 'min', 3), doctors.id).minValue).toBeNull();
+	});
+});
+
+describe('new sub-codes', () => {
+	it('inherits a score scale from the parent', () => {
+		const { codes, trust } = fixture();
+		const parent = findOrThrow(
+			setScoreBound(setKind(codes, trust.id, 'score'), trust.id, 'max', 7),
+			trust.id
+		);
+		expect(childDraftKind(parent)).toEqual({ kind: 'score', minValue: 1, maxValue: 7 });
+	});
+
+	it('starts a child of a group as a tag, so it can be used', () => {
+		const { codes, trust } = fixture();
+		const parent = findOrThrow(setKind(codes, trust.id, 'group'), trust.id);
+		expect(childDraftKind(parent)).toEqual({ kind: 'tag' });
+	});
+
+	it('starts a top-level code as a tag', () => {
+		expect(childDraftKind(undefined)).toEqual({ kind: 'tag' });
 	});
 });

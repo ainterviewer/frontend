@@ -1,4 +1,10 @@
-import { CODE_COLORS, type Code } from './codingTree';
+import {
+	CODE_COLORS,
+	DEFAULT_SCORE_MAX,
+	DEFAULT_SCORE_MIN,
+	type Code,
+	type CodeKind
+} from './codingTree';
 
 /**
  * A worked codebook to open the canvas on.
@@ -23,6 +29,12 @@ import { CODE_COLORS, type Code } from './codingTree';
  * codebook that has nowhere to put it ends up smuggling it into the substantive
  * codes instead.
  *
+ * The branch after it shows the other two kinds a code can be. Its children are
+ * scores -- rated once per interview, with the ends of the scale written into
+ * the definition, because that is the whole difference between a score and a
+ * tag with a number stuck on it -- and the branch head itself is a group, a
+ * heading that is never applied to anything.
+ *
  * Written as an outline and flattened below, because that is how a codebook is
  * actually read. Ids are stable strings rather than generated ones so a reload
  * lands on the same tree.
@@ -33,6 +45,11 @@ type SeedNode = {
 	name: string;
 	definition: string;
 	memo?: string;
+	/** Defaults to `tag`, which is what most of a codebook is. */
+	kind?: CodeKind;
+	/** Only read for a `score`; the default scale is used when left off. */
+	min?: number;
+	max?: number;
 	children?: SeedNode[];
 };
 
@@ -170,6 +187,40 @@ const outline: SeedNode[] = [
 				memo: 'Do not code ordinary self-correction mid-sentence; the revision has to be treated as something needing repair.'
 			}
 		]
+	},
+	{
+		id: 'seed-quality',
+		name: 'How the interview went',
+		kind: 'group',
+		definition:
+			'A heading, not a code. Its children are rated once per interview rather than applied to passages, so nothing is ever coded here directly.',
+		memo: 'Kept as a group so the counts stay readable: these are properties of an interview, and pooling them with the passage codes above would make every table mix two units of analysis. Rate every interview, including the ones that went badly — a missing rating and a low one are not the same thing.',
+		children: [
+			{
+				id: 'seed-quality-elaboration',
+				name: 'Elaboration',
+				kind: 'score',
+				definition:
+					'How far the participant develops answers without being asked to. 1 = answers close on a sentence and have to be followed up every time; 3 = develops when prompted; 5 = volunteers episodes and examples unprompted.',
+				memo: 'The anchors are what makes this codable by a second rater — a score whose ends are not written down is one person’s impression with a number on it.'
+			},
+			{
+				id: 'seed-quality-rapport',
+				name: 'Rapport',
+				kind: 'score',
+				definition:
+					'How settled the participant seems with the interviewer. 1 = guarded or formal throughout; 3 = comfortable but careful; 5 = speaks freely, including about things that do not flatter them.',
+				memo: 'Reads against “Guessing what is wanted”: low rapport and heavy orientation to what is wanted tend to arrive together, which is the pattern to test rather than assume.'
+			},
+			{
+				id: 'seed-quality-steering',
+				name: 'Interviewer steering',
+				kind: 'score',
+				definition:
+					'How much of the content came from the interviewer rather than the participant. 1 = the participant sets the terms; 3 = ordinary prompting; 5 = the answers largely restate the question’s own framing.',
+				memo: 'The one rating that is about the instrument rather than the participant. High values are a reason to discount the substantive codes in that interview, so it is worth recording even when nothing else about the interview is remarkable.'
+			}
+		]
 	}
 ];
 
@@ -181,6 +232,7 @@ export function seedCodes(): Code[] {
 			// Top-level codes take the next palette hue; everything under them
 			// inherits it, so a branch reads as one thing at a glance.
 			const branchColor = parentId === null ? CODE_COLORS[index % CODE_COLORS.length] : color;
+			const kind = node.kind ?? 'tag';
 			codes.push({
 				id: node.id,
 				parentId,
@@ -188,7 +240,10 @@ export function seedCodes(): Code[] {
 				definition: node.definition,
 				memo: node.memo ?? '',
 				color: branchColor,
-				position: null
+				position: null,
+				kind,
+				minValue: kind === 'score' ? (node.min ?? DEFAULT_SCORE_MIN) : null,
+				maxValue: kind === 'score' ? (node.max ?? DEFAULT_SCORE_MAX) : null
 			});
 			if (node.children) walk(node.children, node.id, branchColor);
 		});

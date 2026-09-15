@@ -36,7 +36,53 @@ export type Code = {
 	 * the reader breaks out again, so it survives a round trip through `auto`.
 	 */
 	position: XY | null;
+	/** What applying this code to a passage would mean. See `CodeKind`. */
+	kind: CodeKind;
+	/**
+	 * The ends of the scale, inclusive. Both `null` unless `kind` is `score`;
+	 * `setKind` is what keeps that true, so nothing downstream has to ask
+	 * whether a range on a tag means anything.
+	 */
+	minValue: number | null;
+	maxValue: number | null;
 };
+
+/**
+ * What a code *is*, which decides what applying it to a passage produces.
+ *
+ * `tag` is the ordinary case: the code either applies or it does not. `score`
+ * asks the coder for a number in a fixed range, for the codes that are really
+ * degrees of something rather than presences of it. `group` is neither -- the
+ * code organises the branch under it and carries the thinking about it, but is
+ * never applied to anything itself.
+ *
+ * `group` exists because without it every container in a codebook has to
+ * pretend to be a tag, and the resulting counts are nonsense: a passage coded
+ * under a child is not coded under the family the child belongs to. Saying so
+ * on the code is cheaper than teaching every later report to guess it from
+ * whether a code has children -- a leaf can be a group too, when it is a
+ * heading waiting to be filled in.
+ */
+export type CodeKind = 'group' | 'tag' | 'score';
+
+export const CODE_KINDS: readonly CodeKind[] = ['group', 'tag', 'score'];
+
+/** The range a score starts on, when nobody has said otherwise. */
+export const DEFAULT_SCORE_MIN = 1;
+export const DEFAULT_SCORE_MAX = 5;
+
+/** Whether this code is one a coder can actually put on a passage. */
+export function isApplicable(code: Code): boolean {
+	return code.kind !== 'group';
+}
+
+/** The scale as it is written on the node and in the inspector, e.g. `1–5`. */
+export function scoreRangeLabel(code: Code): string {
+	if (code.kind !== 'score') return '';
+	const min = code.minValue ?? DEFAULT_SCORE_MIN;
+	const max = code.maxValue ?? DEFAULT_SCORE_MAX;
+	return `${min}–${max}`;
+}
 
 /**
  * Hues for top-level codes, checked pairwise for colour-vision deficiency.
@@ -85,9 +131,14 @@ export type CodeDraft = {
 	memo?: string;
 	color?: string;
 	position?: XY | null;
+	kind?: CodeKind;
+	minValue?: number | null;
+	maxValue?: number | null;
 };
 
 export function createCode(draft: CodeDraft = {}): Code {
+	const kind = draft.kind ?? 'tag';
+	const score = kind === 'score';
 	return {
 		id: newCodeId(),
 		parentId: draft.parentId ?? null,
@@ -95,8 +146,27 @@ export function createCode(draft: CodeDraft = {}): Code {
 		definition: draft.definition ?? '',
 		memo: draft.memo ?? '',
 		color: draft.color ?? DEFAULT_CODE_COLOR,
-		position: draft.position ?? null
+		position: draft.position ?? null,
+		kind,
+		minValue: score ? (draft.minValue ?? DEFAULT_SCORE_MIN) : null,
+		maxValue: score ? (draft.maxValue ?? DEFAULT_SCORE_MAX) : null
 	};
+}
+
+/**
+ * What a new code under `parent` should be.
+ *
+ * Sub-codes of a score are nearly always more of the same scale, so the kind
+ * and its range are inherited the way colour is. The exception is a `group`
+ * parent: a group is a heading, and inheriting it would hand the reader a new
+ * code that cannot be applied to anything -- so a child of a group starts as an
+ * ordinary tag, which is what a heading is usually waiting for.
+ */
+export function childDraftKind(
+	parent: Code | undefined
+): Pick<CodeDraft, 'kind' | 'minValue' | 'maxValue'> {
+	if (!parent || parent.kind === 'group') return { kind: 'tag' };
+	return { kind: parent.kind, minValue: parent.minValue, maxValue: parent.maxValue };
 }
 
 export function findCode(codes: readonly Code[], id: CodeId | null): Code | undefined {
@@ -264,6 +334,53 @@ export function reparent(codes: readonly Code[], id: CodeId, parentId: CodeId | 
 export function recolorSubtree(codes: readonly Code[], id: CodeId, color: string): Code[] {
 	const branch = new Set(subtreeOf(codes, id).map((code) => code.id));
 	return codes.map((code) => (branch.has(code.id) ? { ...code, color } : code));
+}
+
+/**
+ * Changes what a code is, and keeps its range honest while doing so.
+ *
+ * The range lives on the code rather than beside it, so becoming a tag has to
+ * clear it -- otherwise a code that was briefly a score goes on carrying a
+ * scale nothing reads, and saving it would persist a number that means nothing.
+ * Becoming a score gets the default scale rather than an empty one, so a fresh
+ * score code is usable without further input.
+ *
+ * Only this code changes. Unlike colour, the kind is not a property of the
+ * branch: a group heading over tags is the ordinary shape of a codebook, and
+ * pushing the kind down would make that impossible to express.
+ */
+export function setKind(codes: readonly Code[], id: CodeId, kind: CodeKind): Code[] {
+	return codes.map((code) => {
+		if (code.id !== id || code.kind === kind) return code;
+		if (kind !== 'score') return { ...code, kind, minValue: null, maxValue: null };
+		return {
+			...code,
+			kind,
+			minValue: code.minValue ?? DEFAULT_SCORE_MIN,
+			maxValue: code.maxValue ?? DEFAULT_SCORE_MAX
+		};
+	});
+}
+
+/**
+ * Moves one end of a score's scale.
+ *
+ * A blank field arrives as `null` and is left as one while the reader is
+ * clearing it to type something else; `scoreRangeLabel` falls back to the
+ * defaults, so a half-typed range still draws. Nothing is reordered when the
+ * ends cross -- swapping them under the cursor of someone mid-edit is worse
+ * than briefly showing `5–1`.
+ */
+export function setScoreBound(
+	codes: readonly Code[],
+	id: CodeId,
+	end: 'min' | 'max',
+	value: number | null
+): Code[] {
+	return codes.map((code) => {
+		if (code.id !== id || code.kind !== 'score') return code;
+		return end === 'min' ? { ...code, minValue: value } : { ...code, maxValue: value };
+	});
 }
 
 /**
