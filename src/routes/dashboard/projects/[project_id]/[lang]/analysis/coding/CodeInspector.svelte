@@ -27,7 +27,7 @@
 		score: {
 			label: 'Score',
 			icon: 'fa-sliders',
-			help: 'Asks for a number on a fixed scale. Write what each end means into the definition, or a second coder cannot reproduce it.'
+			help: 'Asks for a number on a fixed scale. Write what each end means into the definition, so a second coder can reproduce it.'
 		}
 	};
 
