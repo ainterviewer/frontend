@@ -64,7 +64,7 @@
 			     reads before deciding whether a passage belongs here. -->
 			<textarea
 				class="w-full resize-y rounded border-gray-200 text-sm text-gray-700 focus:border-primary focus:ring-primary"
-				rows="4"
+				rows="6"
 				value={code.definition}
 				placeholder="What counts as this code? What does not?"
 				oninput={(event) =>
@@ -82,7 +82,7 @@
 			     mixing the two is how codebooks become unusable to a second coder. -->
 			<textarea
 				class="w-full resize-y rounded border-gray-200 text-sm text-gray-700 focus:border-primary focus:ring-primary"
-				rows="3"
+				rows="5"
 				value={code.memo}
 				placeholder="Why this code exists, what it borders on, what you are unsure about."
 				oninput={(event) =>
