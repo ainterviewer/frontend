@@ -54,3 +54,29 @@ test('renaming a code in the inspector renames it on the canvas', async () => {
 
 	await expect.element(page.getByText('Interview artefacts').first()).toBeVisible();
 });
+
+test('no ancestor clips the connection handles', async () => {
+	await page.viewport(DESKTOP.width, DESKTOP.height);
+	render(CodingPage);
+
+	await expect.element(page.getByText('Who is responsible').first()).toBeVisible();
+
+	// Handles straddle the card's edge, so half of each one sits outside it. An
+	// ancestor with `overflow: hidden` clips that half away, and a clipped area
+	// does not answer the pointer -- which silently loses half the target for
+	// both gestures that start at a handle. The bug is invisible on screen,
+	// because the visible dot is drawn either way, so it is worth pinning here.
+	const clipped = Array.from(document.querySelectorAll('.svelte-flow__handle')).filter((handle) => {
+		for (
+			let el = handle.parentElement;
+			el && !el.classList.contains('svelte-flow__node');
+			el = el.parentElement
+		) {
+			const { overflow } = getComputedStyle(el);
+			if (overflow !== 'visible') return true;
+		}
+		return false;
+	});
+
+	expect(clipped).toHaveLength(0);
+});

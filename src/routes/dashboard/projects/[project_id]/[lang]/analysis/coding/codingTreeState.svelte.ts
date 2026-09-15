@@ -140,14 +140,19 @@ export class CodingTreeState {
 		this.#lastEdit = null;
 	}
 
-	addChild(parentId: CodeId | null): CodeId {
+	/**
+	 * `at` is where the reader put it -- a connection dropped on empty canvas
+	 * names a position the way a toolbar click cannot. Without one the code is
+	 * placed below its parent. Either way the position is only read under `free`;
+	 * the layout owns the arrangement otherwise.
+	 */
+	addChild(parentId: CodeId | null, at?: XY): CodeId {
 		const parent = findCode(this.#codes, parentId);
 		const code = createCode({
 			parentId,
 			name: parent ? 'New sub-code' : 'New code',
 			color: parent ? parent.color : nextRootColor(this.#codes),
-			// Only read in `free`, where nothing would otherwise place it.
-			position: placeNewCode(this.#codes, parentId, this.#positions())
+			position: at ?? placeNewCode(this.#codes, parentId, this.#positions())
 		});
 		this.#commit(addCode(this.#codes, code));
 		this.selectedId = code.id;
