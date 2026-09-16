@@ -4,6 +4,28 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.5.0] - 2026-09-16
+
+### Features
+
+- Add coding tree support
+- Recolor a node when it is moved from one subtree to another
+- Update seed text for coding route
+- Create node on edge drag
+- Better refitting on code creation
+- Add kinds (group, tag, score) to codes
+- Double click code node to rename it, single click to focus
+- Focus a new code node when creating through edge
+- Let the user edit palette colors used for coding
+- Add codes to explore
+- Switch from old annotations to new codebook analytical framework
+
+### Bug Fixes
+
+- Also highlight section chunks when moving from chunks view to full transcripts
+- Title field no longer hugs focus when editing other fields in the sidebar
+- Improve wording of score help
+
 ## [0.4.8] - 2026-09-15
 
 ### Features
