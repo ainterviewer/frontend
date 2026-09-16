@@ -102,7 +102,14 @@ export class CodingTreeState {
 	#lastEdit: string | null = null;
 
 	layoutMode = $state<LayoutMode>('auto');
-	direction = $state<LayoutDirection>('TB');
+	/**
+	 * Left-to-right by default: a codebook grows mostly by nesting, so it runs
+	 * deeper than it is wide, and the nodes are wide boxes. Laid out top-down
+	 * that shape fights the pane -- siblings spread far apart horizontally while
+	 * the depth is squeezed -- where across the page each level is one step
+	 * right and the pane scrolls the way the tree grows.
+	 */
+	direction = $state<LayoutDirection>('LR');
 
 	#selectedId = $state<CodeId | null>(null);
 	#nameFocusFor = $state<CodeId | null>(null);
