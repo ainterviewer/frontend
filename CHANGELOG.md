@@ -4,6 +4,20 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.5.1] - 2026-09-16
+
+### Features
+
+- Improve text coding menu and highlighting
+- Improve codebook default zoom
+- Change codebook tree default direction from top -> down to left -> right
+- Improve code menu ux
+- Improve duration monitoring by using answer gaps rather than total time, and highlight average duration in kpi card
+
+### Internal
+
+- Remove stale warning
+
 ## [0.5.0] - 2026-09-16
 
 ### Features
