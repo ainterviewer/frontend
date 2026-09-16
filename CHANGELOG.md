@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.5.3] - 2026-09-16
+
+### Features
+
+- (explore) Add a link to the codebook in the code sidebar if it's empty
+- (explore) Add hints on how to apply the codes to turns in the code sidebar
+
+### Internal
+
+- Rename coding -> codebook and annotate -> coding
+
 ## [0.5.2] - 2026-09-16
 
 ### Features
