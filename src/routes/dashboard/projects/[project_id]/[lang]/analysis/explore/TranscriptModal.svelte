@@ -7,6 +7,7 @@
 	import type { ConditionSummary } from '$lib/analysis/conditions';
 	import type { KeywordScope } from './explore';
 	import { Dialog } from 'bits-ui';
+	import type { Snippet } from 'svelte';
 	import { timeFormat } from 'd3-time-format';
 
 	let {
@@ -14,6 +15,7 @@
 		keyword,
 		keywordScope,
 		conditions = new Map(),
+		menu,
 		onclose
 	}: {
 		/**
@@ -43,6 +45,18 @@
 		 */
 		keyword: string;
 		keywordScope: KeywordScope;
+		/**
+		 * The page's code menu, drawn inside the dialog rather than behind it.
+		 *
+		 * The menu is one thing the page owns -- only one can be open, and it is
+		 * opened from cards out here as well as from the transcript in here --
+		 * but a dialog is a world of its own: it sits above everything, takes
+		 * the focus and closes on a click outside itself. A menu rendered next
+		 * to it on the page is therefore invisible, unfocusable and dismissing.
+		 * Handed in as a snippet, it is the same menu with the same state,
+		 * rendered on the inside where the dialog counts it as its own.
+		 */
+		menu?: Snippet;
 		onclose: () => void;
 	} = $props();
 
@@ -206,7 +220,7 @@
 		     already had one. Reading is the entire purpose of this thing, so it
 		     gets the room. -->
 		<Dialog.Content
-			class="fixed top-1/2 left-1/2 z-2000 flex h-[85vh] w-[min(56rem,92vw)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 outline-none"
+			class="fixed inset-0 z-2000 m-auto flex h-[85vh] w-[min(56rem,92vw)] flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/5 outline-none"
 		>
 			<div class="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-3">
 				<div class="min-w-0">
@@ -318,6 +332,13 @@
 					</div>
 				{/if}
 			</div>
+
+			<!-- Inside the content on purpose, and last so it draws over it. The
+			     menu positions itself `fixed` in viewport coordinates, which is
+			     why this box is centred with margins rather than a transform: a
+			     transformed ancestor would become the containing block and the
+			     menu would land somewhere else entirely. -->
+			{@render menu?.()}
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>

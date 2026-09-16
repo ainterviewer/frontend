@@ -9,6 +9,7 @@
 		type CodeId
 	} from '$lib/coding/codingTree';
 	import CodeMenuItems from './CodeMenuItems.svelte';
+	import { untrack } from 'svelte';
 
 	interface Props {
 		codes: readonly Code[];
@@ -90,12 +91,63 @@
 		};
 	});
 
+	/**
+	 * The correction from "where CSS put us" to "where the reader clicked".
+	 *
+	 * `fixed` is only viewport-relative while no ancestor establishes a
+	 * containing block for it -- a `transform`, `filter` or `contain` anywhere
+	 * above makes the offsets count from *that* box instead, and the menu lands
+	 * a whole dialog away from the cursor. Rather than forbidding those
+	 * properties in every host this menu is ever rendered into, it measures
+	 * where it actually landed once and shifts by the difference, which is zero
+	 * in the ordinary case.
+	 */
+	let shift = $state({ x: 0, y: 0 });
+
+	$effect(() => {
+		const node = menu;
+		if (!node) return;
+		const want = placement;
+		const box = node.getBoundingClientRect();
+		const dx = want.left - box.left;
+		const dy = want.top - box.top;
+		// Sub-pixel differences are the browser's rounding, not an offset
+		// ancestor, and chasing them would be a loop.
+		if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+		const applied = untrack(() => shift);
+		shift = { x: applied.x + dx, y: applied.y + dy };
+	});
+
+	/**
+	 * Escape closes the menu and nothing else.
+	 *
+	 * On the window and in the *capture* phase, which is the only place early
+	 * enough: this menu is often drawn inside a dialog, and a dialog listens for
+	 * Escape on the document. Handling it on the way down and stopping it there
+	 * means the key peels off one layer at a time -- the menu now, the dialog
+	 * behind it on the next press -- instead of taking both at once.
+	 */
+	function onescape(event: KeyboardEvent) {
+		if (event.key !== 'Escape') return;
+		event.stopPropagation();
+		event.preventDefault();
+		onclose();
+	}
+
+	/**
+	 * The filter takes the focus as the menu opens.
+	 *
+	 * Focused here rather than with `autofocus`, which the browser honours only
+	 * once per document: opening the menu a second time -- or opening it inside
+	 * a dialog, which has already spent the page's one attempt on itself -- left
+	 * the field unfocused, and typing went to whatever had the focus before.
+	 */
+	let field = $state<HTMLInputElement | null>(null);
+	$effect(() => {
+		field?.focus();
+	});
+
 	function onkeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape') {
-			event.stopPropagation();
-			onclose();
-			return;
-		}
 		// Enter takes the first match, which is what makes the filter a way
 		// *through* the menu rather than a way to look at a shorter one.
 		if (event.key === 'Enter' && hits.length > 0) {
@@ -117,7 +169,7 @@
 	}
 </script>
 
-<svelte:window {onpointerdown} onkeydown={(event) => event.key === 'Escape' && onclose()} />
+<svelte:window {onpointerdown} onkeydowncapture={onescape} />
 
 <div
 	bind:this={menu}
@@ -127,7 +179,7 @@
 	class="fixed z-50 w-60 rounded-md border border-gray-200 bg-white py-1 shadow-xl {filter.trim()
 		? 'max-h-80 overflow-y-auto'
 		: 'overflow-visible'}"
-	style="left: {placement.left}px; top: {placement.top}px"
+	style="left: {placement.left + shift.x}px; top: {placement.top + shift.y}px"
 >
 	{#if quote}
 		<p class="truncate border-b border-gray-100 px-3 pb-1.5 text-[11px] text-gray-400">
@@ -136,9 +188,8 @@
 	{/if}
 
 	<div class="px-2 py-1.5">
-		<!-- svelte-ignore a11y_autofocus -->
 		<input
-			autofocus
+			bind:this={field}
 			bind:value={filter}
 			placeholder="Filter codes"
 			class="w-full rounded border border-gray-200 px-2 py-1 text-xs focus:border-gray-400 focus:outline-none"

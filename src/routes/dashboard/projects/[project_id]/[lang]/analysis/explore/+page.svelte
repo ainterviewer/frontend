@@ -1851,17 +1851,27 @@
      it has not navigated anywhere — the list, the filters and the scroll
      position are all still behind it, which is the whole reason it is a dialog
      and not the transcript page. -->
-{#if codeMenu}
-	<!-- One menu for the page: a mosaic of cards would otherwise hold one per
-	     turn, and only one can ever be open. -->
-	<CodeMenu
-		codes={book.status === 'ready' ? book.tree.codes : []}
-		at={codeMenu.at}
-		quote={codeMenu.quote}
-		applied={appliedCodes(codings, codeMenu.messageId, userId, codeMenu.span)}
-		onpick={(code, value) => applyFromMenu(code.id, value)}
-		onclose={() => (codeMenu = null)}
-	/>
+<!-- One menu for the page: a mosaic of cards would otherwise hold one per
+     turn, and only one can ever be open. Written once as a snippet because it
+     is drawn in two places -- out here for the cards, and inside the transcript
+     dialog for the turns in it, which is the only way a dialog lets a menu be
+     seen, focused and clicked. Never both at once: the modal takes it whenever
+     it is open. -->
+{#snippet menuView()}
+	{#if codeMenu}
+		<CodeMenu
+			codes={book.status === 'ready' ? book.tree.codes : []}
+			at={codeMenu.at}
+			quote={codeMenu.quote}
+			applied={appliedCodes(codings, codeMenu.messageId, userId, codeMenu.span)}
+			onpick={(code, value) => applyFromMenu(code.id, value)}
+			onclose={() => (codeMenu = null)}
+		/>
+	{/if}
+{/snippet}
+
+{#if !transcriptOf}
+	{@render menuView()}
 {/if}
 
 <TranscriptModal
@@ -1869,5 +1879,6 @@
 	keyword={explore.searchableKeyword}
 	keywordScope={explore.keywordScope}
 	{conditions}
+	menu={menuView}
 	onclose={() => (transcriptOf = null)}
 />
