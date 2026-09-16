@@ -14,8 +14,12 @@
 		codes: readonly Code[];
 		/** Where the reader right-clicked, in viewport coordinates. */
 		at: { x: number; y: number };
-		/** Code ids the target already carries, drawn with a tick. */
-		applied: Set<string>;
+		/**
+		 * What this coder has already put on the target: code id to value. Ticks
+		 * and marked scale numbers come out of it, and picking one takes the
+		 * coding off again — see `applyFromMenu` on the explore page.
+		 */
+		applied: ReadonlyMap<string, number | null>;
 		/** The words the code will land on, quoted at the top so it is not a guess. */
 		quote?: string | null;
 		onpick: (code: Code, value: number | null) => void;
@@ -169,10 +173,16 @@
 								<div class="flex flex-wrap items-center gap-1 pl-4.5">
 									{#each { length: (hit.code.maxValue ?? 5) - (hit.code.minValue ?? 1) + 1 } as _, index (index)}
 										{@const value = (hit.code.minValue ?? 1) + index}
+										{@const held = applied.get(hit.code.id) === value}
+										<!-- The same marked number the cascade's scale draws. -->
 										<button
 											type="button"
 											role="menuitem"
-											class="flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-gray-50 text-xs text-gray-700 hover:bg-gray-200"
+											aria-pressed={held}
+											class="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-xs transition-colors {held
+												? 'text-white'
+												: 'bg-gray-50 text-gray-700 hover:bg-gray-200'}"
+											style={held ? `background-color: ${hit.code.color}` : ''}
 											onclick={() => onpick(hit.code, value)}
 										>
 											{value}

@@ -5,8 +5,13 @@
 	interface Props {
 		/** The codes at this level, each already carrying its own children. */
 		items: { code: Code; children: Props['items'] }[];
-		/** Code ids the target already carries, drawn with a tick. */
-		applied: Set<string>;
+		/**
+		 * What this coder has already put on the target: code id to value, the
+		 * value being the number a score holds and `null` for everything else.
+		 * Ticked rows and marked scale numbers both come out of it, and picking
+		 * one of them takes the coding off again.
+		 */
+		applied: ReadonlyMap<string, number | null>;
 		/** Open the submenu to the left, where the right edge is out of room. */
 		flip: boolean;
 		onpick: (code: Code, value: number | null) => void;
@@ -42,10 +47,16 @@
 			onmouseenter={() => (openId = folds ? code.id : null)}
 			onmouseleave={() => (openId = null)}
 		>
+			<!-- A group's row opens its branch and codes nothing, so it keeps the
+			     plain arrow: a pointer promises an action that picking it does not
+			     perform. -->
 			<button
 				type="button"
 				role="menuitem"
-				class="flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors hover:bg-gray-100 focus-visible:bg-gray-100 focus-visible:outline-none"
+				class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors hover:bg-gray-100 focus-visible:bg-gray-100 focus-visible:outline-none {code.kind ===
+				'group'
+					? 'cursor-default'
+					: 'cursor-pointer'}"
 				onclick={() => {
 					// A group organises the codebook and is never applied, so its row
 					// only ever opens its branch. Everything else applies on click and
@@ -108,17 +119,24 @@
 						     been chosen but says nothing yet. -->
 						<div class="flex items-center gap-1 p-1.5">
 							{#each scale(code) as value (value)}
+								<!-- The number the score already holds stays filled, the way
+								     hovering fills one: it is the same statement — this is what
+								     the passage would say — and it is what makes a second click
+								     on it legible as taking the score off. -->
+								{@const held = applied.get(code.id) === value}
 								<button
 									type="button"
 									role="menuitem"
+									aria-pressed={held}
 									class="flex h-7 w-7 cursor-pointer items-center justify-center rounded text-xs font-medium text-gray-700 transition-colors"
+									style={held ? `background-color: ${code.color}; color: #fff` : ''}
 									onmouseenter={(event) => {
 										event.currentTarget.style.backgroundColor = code.color;
 										event.currentTarget.style.color = '#fff';
 									}}
 									onmouseleave={(event) => {
-										event.currentTarget.style.backgroundColor = '';
-										event.currentTarget.style.color = '';
+										event.currentTarget.style.backgroundColor = held ? code.color : '';
+										event.currentTarget.style.color = held ? '#fff' : '';
 									}}
 									onclick={() => onpick(code, value)}
 								>

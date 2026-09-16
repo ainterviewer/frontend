@@ -35,11 +35,7 @@
 	import { codebookFor } from '$lib/coding/store.svelte';
 	import CodeMenu from '$lib/components/analysis/CodeMenu.svelte';
 	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
-	import {
-		appliedCodeIds,
-		provideCodingSurface,
-		type CodeMenuRequest
-	} from './codingSurface.svelte';
+	import { appliedCodes, provideCodingSurface, type CodeMenuRequest } from './codingSurface.svelte';
 	import {
 		DEFAULT_TASK,
 		GROUP_MODES,
@@ -127,14 +123,46 @@
 		track
 	});
 
+	/**
+	 * A pick in the code menu, which is a toggle rather than an apply.
+	 *
+	 * The menu ticks what this coder has already put on the passage, so the row
+	 * is drawn as a checkbox and has to behave as one: picking a ticked code
+	 * takes it off again. Anything else makes the tick a lie and the click a
+	 * no-op — before this, it was worse than a no-op, because the server refuses
+	 * the duplicate and the reader got an error for an act that had already
+	 * succeeded.
+	 *
+	 * A score is the exception worth stating: its numbers are one code, so
+	 * picking a *different* number is a re-score and changes the coding in
+	 * place. Only picking the number it already holds takes it off.
+	 */
 	async function applyFromMenu(codeId: string, value: number | null) {
 		const request = codeMenu;
 		if (!request) return;
 		codeMenu = null;
+		const start = request.span?.start ?? null;
+		const end = request.span?.end ?? null;
+		const existing = codings.has(request.messageId, userId, codeId, start, end);
+
+		if (existing) {
+			if (value !== null && (existing.value_int ?? null) !== value) {
+				await codings.update(request.messageId, existing.id, {
+					code_id: codeId,
+					start_offset: start,
+					end_offset: end,
+					value_int: value
+				});
+			} else {
+				await codings.remove(request.messageId, existing.id);
+			}
+			return;
+		}
+
 		await codings.add(request.messageId, {
 			code_id: codeId,
-			start_offset: request.span?.start ?? null,
-			end_offset: request.span?.end ?? null,
+			start_offset: start,
+			end_offset: end,
 			value_int: value
 		});
 	}
@@ -1830,7 +1858,7 @@
 		codes={book.status === 'ready' ? book.tree.codes : []}
 		at={codeMenu.at}
 		quote={codeMenu.quote}
-		applied={appliedCodeIds(codings, codeMenu.messageId, userId, codeMenu.span)}
+		applied={appliedCodes(codings, codeMenu.messageId, userId, codeMenu.span)}
 		onpick={(code, value) => applyFromMenu(code.id, value)}
 		onclose={() => (codeMenu = null)}
 	/>

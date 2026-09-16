@@ -68,21 +68,23 @@ export function turnIds(turns: readonly { id: string }[]): string[] {
 }
 
 /**
- * Whether a codings store already holds this store's own view of a coding.
+ * This coder's own codings of a passage, as code id to value.
  *
- * Exported for the menu: a code already on the passage should tick rather than
- * be applied again, and the server refuses a duplicate anyway.
+ * Exported for the menu, which reads it twice: a code already on the passage
+ * ticks rather than applies again, and a score's scale marks the number it is
+ * already set to — so a second click on it can mean "take it off" while a
+ * click on any other number means "make it that instead".
  */
-export function appliedCodeIds(
+export function appliedCodes(
 	codings: MessageCodings,
 	messageId: string,
 	userId: string,
 	span: TextSpan | null
-): Set<string> {
+): Map<string, number | null> {
 	const start = span?.start ?? null;
 	const end = span?.end ?? null;
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- rebuilt on every call from reactive reads; never itself state
-	return new Set(
+	return new Map(
 		codings
 			.get(messageId)
 			.filter(
@@ -91,6 +93,6 @@ export function appliedCodeIds(
 					(coding.start_offset ?? null) === start &&
 					(coding.end_offset ?? null) === end
 			)
-			.map((coding) => coding.code_id)
+			.map((coding) => [coding.code_id, coding.value_int ?? null])
 	);
 }
