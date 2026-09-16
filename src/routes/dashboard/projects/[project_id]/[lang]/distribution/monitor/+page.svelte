@@ -39,10 +39,12 @@
 
 	// Animated KPI values
 	const totalInterviews = Tween.of(() => stats?.total_interviews ?? 0, { duration: 400 });
-	const totalMessages = Tween.of(() => stats?.message_count_stats?.sum_messages ?? 0, {
+	const averageMessages = Tween.of(() => stats?.message_count_stats?.avg_messages ?? 0, {
 		duration: 400
 	});
-	const averageDuration = Tween.of(() => stats?.duration_stats?.avg_seconds ?? 0, { duration: 400 });
+	const averageDuration = Tween.of(() => stats?.duration_stats?.avg_seconds ?? 0, {
+		duration: 400
+	});
 	const completionRate = Tween.of(() => stats?.completion_rate ?? 0, { duration: 400 });
 	const participationRate = Tween.of(() => stats?.participation_rate ?? 0, { duration: 400 });
 
@@ -216,6 +218,16 @@
 			return `${Math.round(seconds / 3600)}h`;
 		}
 		return `${Math.round(seconds / 60)}m`;
+	}
+
+	// Totals run to tens or hundreds of hours, where `formatDuration`'s rounding
+	// to whole hours throws away up to half an hour. Carry the minutes.
+	function formatDurationPrecise(seconds: number): string {
+		if (seconds < 3600) return formatDuration(seconds);
+		const minutes = Math.round(seconds / 60);
+		const hours = Math.floor(minutes / 60);
+		const rest = minutes % 60;
+		return rest === 0 ? `${hours}h` : `${hours}h ${rest}m`;
 	}
 
 	function addClosingTick(buckets: HistogramBucket[] | undefined | null): HistogramBucket[] {
@@ -463,20 +475,20 @@
 				{/if}
 			</div>
 			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-				<div class="text-sm font-medium text-gray-700">Total Messages</div>
+				<div class="text-sm font-medium text-gray-700">Average Messages</div>
 				{#if loading}
 					<div class="mt-2 h-9 w-28 animate-pulse rounded bg-surface-200"></div>
 					<div class="mt-2 h-3 w-40 animate-pulse rounded bg-surface-200"></div>
 				{:else}
 					<div class="mt-2 text-3xl font-bold">
-						{formatNumber(Math.round(totalMessages.current))}
+						{formatNumber(Math.round(averageMessages.current))}
 					</div>
 				{/if}
 				{#if stats?.message_count_stats}
 					<div class="mt-1 text-xs text-gray-500">
-						Min {stats.message_count_stats.min_messages} · Avg {Math.round(
-							stats.message_count_stats.avg_messages
-						)} · Max {stats.message_count_stats.max_messages}
+						min {formatNumber(stats.message_count_stats.min_messages)} - max {formatNumber(
+							stats.message_count_stats.max_messages
+						)} - total {formatNumber(stats.message_count_stats.sum_messages)}
 					</div>
 				{/if}
 			</div>
@@ -521,7 +533,7 @@
 					<div class="mt-1 text-xs text-gray-500">
 						min {formatDuration(stats.duration_stats.min_seconds)} - max {formatDuration(
 							stats.duration_stats.max_seconds
-						)} - total {formatDuration(stats.duration_stats.sum_seconds)}
+						)} - total {formatDurationPrecise(stats.duration_stats.sum_seconds)}
 					</div>
 				{/if}
 			</div>
