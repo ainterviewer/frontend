@@ -1,12 +1,14 @@
 <script lang="ts">
-	import { createColumnHelper, createTable, tableFeatures } from '@tanstack/svelte-table';
-	import { untrack } from 'svelte';
-	import { toast } from 'svelte-sonner';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { dropPosition, resolveDrop } from '$lib/coding/codeDrop';
 	import { displayName } from '$lib/coding/codingTree';
 	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
 	import SaveState from '$lib/coding/SaveState.svelte';
 	import type { Codebook } from '$lib/coding/store.svelte';
+	import { createColumnHelper, createTable, tableFeatures } from '@tanstack/svelte-table';
+	import { untrack } from 'svelte';
+	import { toast } from 'svelte-sonner';
 	import { ROW_HEIGHT, toCodeRows, type CodeRow, type CodeRowLike } from './codeTable';
 	import { CodeDrag, provideCodeDrag } from './codeTableDrag.svelte';
 	import CodeTreeRow from './CodeTreeRow.svelte';
@@ -95,6 +97,16 @@
 	function toggleAll() {
 		openIds = allExpanded ? {} : Object.fromEntries(expandableIds.map((id) => [id, true]));
 	}
+
+	// The codebook page is the same project's, one route over. Derived rather
+	// than computed up front: the empty state is the only thing that reads it,
+	// and the pane is also rendered in tests, outside a router.
+	const codebookHref = $derived(
+		resolve('/dashboard/projects/[project_id]/[lang]/analysis/coding', {
+			project_id: page.params.project_id ?? '',
+			lang: page.params.lang ?? 'en'
+		})
+	);
 
 	const drag = new CodeDrag();
 	provideCodeDrag(drag);
@@ -297,7 +309,10 @@
 		>
 			{#if rootRows.length === 0}
 				<p class="px-4 py-8 text-center text-sm text-gray-500">
-					This project has no codes yet. Add one here, or build the tree out on the coding canvas.
+					This project has no codes yet. Add one here, or flesh it out in the <a
+						href={codebookHref}
+						class="font-medium text-primary underline-offset-2 hover:underline">codebook</a
+					>.
 				</p>
 			{:else}
 				{#each rootRows as row (row.id)}
