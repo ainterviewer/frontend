@@ -250,6 +250,16 @@
 			<h2 class="text-[0.6875rem] font-semibold tracking-wide text-gray-500 uppercase">Codes</h2>
 		</div>
 
+		<!-- How a code gets onto a passage, said once and where the codes are: the
+		     gesture is a right-click on a turn, which is not a thing a reader
+		     discovers by looking at a transcript. -->
+		<p
+			class="shrink-0 border-b border-gray-100 bg-gray-50/60 px-2.5 py-1.5 text-[0.625rem] leading-relaxed text-gray-500"
+		>
+			<i class="fa-solid fa-circle-info mr-1 text-gray-400"></i>
+			Right-click a turn to apply a code to it. Select part of it first to code just that passage.
+		</p>
+
 		<div class="flex shrink-0 items-center gap-0.5 border-b border-gray-200 px-1.5 py-1">
 			<button
 				type="button"
