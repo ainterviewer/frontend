@@ -7,7 +7,7 @@ import { page } from 'vitest/browser';
 import { expect, test } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { seededTree } from '$lib/coding/seed';
-import CodingWorkspace from './CodingWorkspace.svelte';
+import CodebookWorkspace from './CodebookWorkspace.svelte';
 
 /**
  * The canvas is the one part of this feature that cannot be checked by reasoning
@@ -31,7 +31,7 @@ const DESKTOP = { width: 1280, height: 900 };
  * the third.
  */
 function renderPage() {
-	return render(CodingWorkspace, { tree: seededTree() });
+	return render(CodebookWorkspace, { tree: seededTree() });
 }
 
 test('draws the seed codebook and opens the inspector on a code', async () => {

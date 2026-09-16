@@ -4,8 +4,8 @@
 	import { SvelteFlowProvider } from '@xyflow/svelte';
 	import { toast } from 'svelte-sonner';
 	import CodeInspector from './CodeInspector.svelte';
-	import CodingCanvas from './CodingCanvas.svelte';
-	import CodingToolbar from './CodingToolbar.svelte';
+	import CodebookCanvas from './CodebookCanvas.svelte';
+	import CodebookToolbar from './CodebookToolbar.svelte';
 	import { displayName } from '$lib/coding/codingTree';
 	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
 
@@ -75,17 +75,17 @@
 <svelte:window onkeydown={onKeydown} />
 
 <!-- The provider, not `SvelteFlow` itself, is what puts the flow's context in
-     scope; `CodingCanvas` needs it to turn a pointer position into a canvas one
+     scope; `CodebookCanvas` needs it to turn a pointer position into a canvas one
      when a connection is dropped on empty space. -->
 <SvelteFlowProvider>
 	<div
 		class="flex min-h-[36rem] flex-1 overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
 	>
 		<div class="flex min-w-0 flex-1 flex-col">
-			<CodingToolbar {tree} />
+			<CodebookToolbar {tree} />
 
 			<div class="min-h-0 flex-1">
-				<CodingCanvas {tree} />
+				<CodebookCanvas {tree} />
 			</div>
 		</div>
 

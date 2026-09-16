@@ -469,7 +469,7 @@
 		}
 		goto(
 			resolve(
-				`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?${params.toString()}`
+				`/dashboard/projects/${projectId}/${lang}/analysis/coding/messages?${params.toString()}`
 			),
 			{
 				replaceState: false,
@@ -490,7 +490,7 @@
 		);
 		goto(
 			resolve(
-				`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?${params.toString()}`
+				`/dashboard/projects/${projectId}/${lang}/analysis/coding/messages?${params.toString()}`
 			),
 			{
 				replaceState: false
@@ -670,7 +670,7 @@
 		<div class="flex items-center justify-between px-6 py-4">
 			<div class="flex items-center gap-4">
 				<a
-					href={resolve(`/dashboard/projects/${projectId}/${lang}/analysis/annotate`)}
+					href={resolve(`/dashboard/projects/${projectId}/${lang}/analysis/coding`)}
 					class="text-gray-500 transition-colors hover:text-gray-700"
 					aria-label="Back to the codebook"
 				>

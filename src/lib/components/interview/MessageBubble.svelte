@@ -10,7 +10,7 @@
 	 * One message, as a bubble, wherever a conversation is shown.
 	 *
 	 * There are three places a transcript is read — the live interview, the
-	 * annotate page, and the explore view's cards and transcript dialog — and
+	 * coding page, and the explore view's cards and transcript dialog — and
 	 * they were drifting apart: the explore side had grown its own bubble that
 	 * escaped guide markup into visible tags, reduced a survey answer to a word,
 	 * and dropped the question numbers. None of that was a decision; it was two

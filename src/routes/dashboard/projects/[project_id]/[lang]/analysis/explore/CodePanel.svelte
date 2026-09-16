@@ -102,7 +102,7 @@
 	// than computed up front: the empty state is the only thing that reads it,
 	// and the pane is also rendered in tests, outside a router.
 	const codebookHref = $derived(
-		resolve('/dashboard/projects/[project_id]/[lang]/analysis/coding', {
+		resolve('/dashboard/projects/[project_id]/[lang]/analysis/codebook', {
 			project_id: page.params.project_id ?? '',
 			lang: page.params.lang ?? 'en'
 		})

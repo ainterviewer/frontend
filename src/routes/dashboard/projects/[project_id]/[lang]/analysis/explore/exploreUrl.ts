@@ -141,7 +141,7 @@ function bounded(
  *
  * Guide coordinates are a pair and a query string has no type for one, so they
  * are spelled the way the API spells them — which is also the spelling the
- * annotate view uses, so a coordinate reads the same wherever it appears.
+ * coding view uses, so a coordinate reads the same wherever it appears.
  */
 function readQuestions(raw: string[]): [number, number][] {
 	const questions: [number, number][] = [];

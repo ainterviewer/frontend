@@ -167,7 +167,7 @@ export type ExploreFilters = {
 	include_synthetic: boolean;
 	/**
 	 * Which places in the interview guide the chunks are drawn from, as
-	 * `[section, main_question]` pairs — the same coordinates the annotate view
+	 * `[section, main_question]` pairs — the same coordinates the coding view
 	 * filters messages with, so a question means the same thing in both places.
 	 * An empty list is every question, which is the default.
 	 *
@@ -387,7 +387,7 @@ function sortQuestions(questions: [number, number][]): [number, number][] {
 
 /**
  * The wire spelling of a guide coordinate, `section,main_question`, zero-based.
- * Matches the `?question=` parameter the annotate view already writes, and the
+ * Matches the `?question=` parameter the coding view already writes, and the
  * pair the API parses.
  */
 export function questionParam([section, question]: [number, number]) {

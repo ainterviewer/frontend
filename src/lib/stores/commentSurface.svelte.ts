@@ -8,7 +8,7 @@ const MARGIN_BREAKPOINT = 1280;
  *
  * Wide screens float the thread in the right margin, so reading a discussion
  * never pushes the transcript around; narrower ones get a modal instead. Both
- * the annotate view and the interview transcript drive this the same way, so
+ * the coding view and the interview transcript drive this the same way, so
  * the two behave alike down to which key closes what.
  */
 export class CommentSurface {

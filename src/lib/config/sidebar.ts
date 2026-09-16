@@ -153,12 +153,12 @@ export const projectSidebarItems: SidebarItem[] = [
 			},
 			{
 				label: 'Codebook',
-				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/coding',
+				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/codebook',
 				icon: 'fas fa-sitemap'
 			},
 			{
 				label: 'Coding',
-				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
+				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/coding',
 				icon: 'fas fa-tags'
 			},
 			{
