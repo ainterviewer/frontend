@@ -65,8 +65,18 @@
 	 */
 	let pointedAt = $state<string | null>(null);
 
-	/** The stretch to mark in this turn, in the offsets its bubble counts. */
+	/**
+	 * The stretch to mark in this turn, in the offsets its bubble counts.
+	 *
+	 * The menu's pending span comes first: while it is open the reader is
+	 * deciding what to code *that* stretch as, and it outranks whatever chip
+	 * they happened to leave the pointer on.
+	 */
 	function litSpan(turn: EmbeddingTurn | TranscriptTurn): [number, number][] {
+		const request = coding?.pending;
+		if (request && request.messageId === turn.id && request.span) {
+			return [[request.span.start, request.span.end]];
+		}
 		if (pointedAt === null) return [];
 		const at = coding?.codingsFor(turn.id).find((candidate) => candidate.id === pointedAt);
 		if (!at || !isSpan(at)) return [];

@@ -208,13 +208,19 @@
 							aria-pressed={here !== undefined}
 							title={code.definition || undefined}
 						>
-							<span
-								class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[8px]"
-								style={here
-									? `background-color: ${code.color}; color: ${getContrastColor(code.color)}`
-									: `border: 1.5px solid ${code.color}`}
-							>
-								{#if here}<i class="fa-solid fa-check"></i>{/if}
+							<!-- The same two marks the right-click menu draws; see
+							     `CodeMenuItems`. -->
+							<span class="flex h-4 w-4 shrink-0 items-center justify-center">
+								{#if here}
+									<span
+										class="flex h-4 w-4 items-center justify-center rounded-full text-[8px]"
+										style="background-color: {code.color}; color: {getContrastColor(code.color)}"
+									>
+										<i class="fa-solid fa-check"></i>
+									</span>
+								{:else}
+									<span class="h-2 w-2 rounded-full" style="background-color: {code.color}"></span>
+								{/if}
 							</span>
 							<span class="truncate text-sm {here ? 'text-gray-900' : 'text-gray-600'}">
 								{displayName(code.name)}

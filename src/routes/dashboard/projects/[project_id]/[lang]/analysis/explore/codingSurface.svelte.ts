@@ -33,6 +33,15 @@ export type CodingSurface = {
 	codingsFor: (messageId: string) => CodingPublic[];
 	/** Right-click landed on a turn; the page owns the one menu. */
 	openMenu: (request: CodeMenuRequest) => void;
+	/**
+	 * The request the open menu is about, or `null` when nothing is open.
+	 *
+	 * Read back so the turn can keep showing which words are being coded. The
+	 * menu takes focus the moment it opens — its filter field does — and the
+	 * browser stops painting a selection that no longer has focus, so the
+	 * reader would be picking a code for a stretch of text nothing points at.
+	 */
+	readonly pending: CodeMenuRequest | null;
 	uncode: (messageId: string, codingId: string) => void;
 	/**
 	 * The turns now on screen, so their codings can be read in one request.

@@ -120,6 +120,9 @@
 		},
 		codingsFor: (messageId) => codings.get(messageId),
 		openMenu: (request) => (codeMenu = request),
+		get pending() {
+			return codeMenu;
+		},
 		uncode: (messageId, codingId) => void codings.remove(messageId, codingId),
 		track
 	});

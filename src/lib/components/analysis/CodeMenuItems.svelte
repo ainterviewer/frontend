@@ -60,13 +60,22 @@
 				aria-expanded={folds ? openId === code.id : undefined}
 				title={code.definition || undefined}
 			>
-				<span
-					class="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[7px] text-white"
-					style={applied.has(code.id)
-						? `background-color: ${code.color}`
-						: `border: 1.5px solid ${code.color}`}
-				>
-					{#if applied.has(code.id)}<i class="fa-solid fa-check"></i>{/if}
+				<!-- A fixed slot holding one of two marks. Unapplied, the code is a
+				     small filled dot, the size the code pane and the canvas draw it
+				     at — it says which code this is without competing with the name
+				     beside it. Applied, it grows into a ticked disc, because that is
+				     the exceptional state and the one worth noticing. -->
+				<span class="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+					{#if applied.has(code.id)}
+						<span
+							class="flex h-3.5 w-3.5 items-center justify-center rounded-full text-[7px] text-white"
+							style="background-color: {code.color}"
+						>
+							<i class="fa-solid fa-check"></i>
+						</span>
+					{:else}
+						<span class="h-2 w-2 rounded-full" style="background-color: {code.color}"></span>
+					{/if}
 				</span>
 				<span
 					class="min-w-0 flex-1 truncate {code.kind === 'group'

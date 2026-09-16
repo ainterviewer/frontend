@@ -190,13 +190,19 @@
 								class="flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-gray-100"
 								onclick={() => onpick(hit.code, null)}
 							>
-								<span
-									class="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[7px] text-white"
-									style={applied.has(hit.code.id)
-										? `background-color: ${hit.code.color}`
-										: `border: 1.5px solid ${hit.code.color}`}
-								>
-									{#if applied.has(hit.code.id)}<i class="fa-solid fa-check"></i>{/if}
+								<!-- The same two marks the cascade draws; see `CodeMenuItems`. -->
+								<span class="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+									{#if applied.has(hit.code.id)}
+										<span
+											class="flex h-3.5 w-3.5 items-center justify-center rounded-full text-[7px] text-white"
+											style="background-color: {hit.code.color}"
+										>
+											<i class="fa-solid fa-check"></i>
+										</span>
+									{:else}
+										<span class="h-2 w-2 rounded-full" style="background-color: {hit.code.color}"
+										></span>
+									{/if}
 								</span>
 								<span class="min-w-0 flex-1">
 									<span class="block truncate text-sm text-gray-800">
