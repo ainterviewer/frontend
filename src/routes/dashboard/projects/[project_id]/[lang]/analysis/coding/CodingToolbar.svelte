@@ -82,8 +82,5 @@
 		{#if undefinedCount > 0}
 			<span class="text-amber-600">{undefinedCount} without a definition</span>
 		{/if}
-		<!-- Said plainly rather than implied by a missing save button: there is no
-		     backend for this yet, and a reader who assumes otherwise loses work. -->
-		<span class="rounded bg-amber-50 px-2 py-0.5 text-amber-700"> Draft — not saved yet </span>
 	</div>
 </div>
