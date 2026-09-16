@@ -2982,7 +2982,7 @@ export const zUpdateMessageCommentQuery = z.object({
 export const zUpdateMessageCommentResponse = zMessageCommentPublic;
 
 export const zSearchEmbeddingsPath = z.object({
-    project_id: z.string().nullable()
+    project_id: z.string()
 });
 
 export const zSearchEmbeddingsQuery = z.object({
@@ -3007,6 +3007,10 @@ export const zSearchEmbeddingsQuery = z.object({
     ]).optional().default('answer'),
     survey: z.array(z.string()).nullish(),
     survey_range: z.array(z.string()).nullish(),
+    coded: z.enum(['any', 'none']).nullish(),
+    coded_mine: z.enum(['any', 'none']).nullish(),
+    coded_others: z.enum(['any', 'none']).nullish(),
+    coder_id: z.string().nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -3017,7 +3021,7 @@ export const zSearchEmbeddingsQuery = z.object({
 export const zSearchEmbeddingsResponse = zEmbeddingSearchResponse;
 
 export const zBrowseEmbeddingsPath = z.object({
-    project_id: z.string().nullable()
+    project_id: z.string()
 });
 
 export const zBrowseEmbeddingsQuery = z.object({
@@ -3047,6 +3051,10 @@ export const zBrowseEmbeddingsQuery = z.object({
     ]).optional().default('answer'),
     survey: z.array(z.string()).nullish(),
     survey_range: z.array(z.string()).nullish(),
+    coded: z.enum(['any', 'none']).nullish(),
+    coded_mine: z.enum(['any', 'none']).nullish(),
+    coded_others: z.enum(['any', 'none']).nullish(),
+    coder_id: z.string().nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -3057,7 +3065,7 @@ export const zBrowseEmbeddingsQuery = z.object({
 export const zBrowseEmbeddingsResponse = zEmbeddingBrowseResponse;
 
 export const zReadSurveyFacetsPath = z.object({
-    project_id: z.string().nullable()
+    project_id: z.string()
 });
 
 export const zReadSurveyFacetsQuery = z.object({
@@ -3077,7 +3085,11 @@ export const zReadSurveyFacetsQuery = z.object({
         'both'
     ]).optional().default('answer'),
     survey: z.array(z.string()).nullish(),
-    survey_range: z.array(z.string()).nullish()
+    survey_range: z.array(z.string()).nullish(),
+    coded: z.enum(['any', 'none']).nullish(),
+    coded_mine: z.enum(['any', 'none']).nullish(),
+    coded_others: z.enum(['any', 'none']).nullish(),
+    coder_id: z.string().nullish()
 });
 
 /**
@@ -3106,7 +3118,7 @@ export const zReadInterviewTranscriptQuery = z.object({
 export const zReadInterviewTranscriptResponse = zInterviewTranscript;
 
 export const zFindSimilarEmbeddingsPath = z.object({
-    project_id: z.string().nullable(),
+    project_id: z.string(),
     embedding_id: z.string()
 });
 
@@ -3129,6 +3141,10 @@ export const zFindSimilarEmbeddingsQuery = z.object({
     ]).optional().default('answer'),
     survey: z.array(z.string()).nullish(),
     survey_range: z.array(z.string()).nullish(),
+    coded: z.enum(['any', 'none']).nullish(),
+    coded_mine: z.enum(['any', 'none']).nullish(),
+    coded_others: z.enum(['any', 'none']).nullish(),
+    coder_id: z.string().nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -3139,7 +3155,7 @@ export const zFindSimilarEmbeddingsQuery = z.object({
 export const zFindSimilarEmbeddingsResponse = zEmbeddingSimilarResponse;
 
 export const zClusterEmbeddingsPath = z.object({
-    project_id: z.string().nullable()
+    project_id: z.string()
 });
 
 export const zClusterEmbeddingsQuery = z.object({
@@ -3168,7 +3184,11 @@ export const zClusterEmbeddingsQuery = z.object({
         'both'
     ]).optional().default('answer'),
     survey: z.array(z.string()).nullish(),
-    survey_range: z.array(z.string()).nullish()
+    survey_range: z.array(z.string()).nullish(),
+    coded: z.enum(['any', 'none']).nullish(),
+    coded_mine: z.enum(['any', 'none']).nullish(),
+    coded_others: z.enum(['any', 'none']).nullish(),
+    coder_id: z.string().nullish()
 });
 
 /**

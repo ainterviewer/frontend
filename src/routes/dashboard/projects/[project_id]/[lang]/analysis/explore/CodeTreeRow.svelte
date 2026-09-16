@@ -10,9 +10,11 @@
 		tree,
 		renamingId,
 		isExpanded,
+		isFiltering,
 		ontoggle,
 		onstartdrag,
-		onrename
+		onrename,
+		onfilter
 	}: {
 		row: CodeRowLike;
 		tree: CodingTreeState;
@@ -20,12 +22,21 @@
 		renamingId: string | null;
 		/** Whether a branch is open -- see `isExpanded` in `CodePanel`. */
 		isExpanded: (id: string) => boolean;
+		/**
+		 * Whether this code's reference is in the keyword box, and so is
+		 * narrowing the corpus. Read from the query rather than held beside it:
+		 * the box is the filter, and a second copy would have to be kept
+		 * agreeing with something the reader can edit by hand.
+		 */
+		isFiltering: (id: string) => boolean;
 		/** Opens a closed branch, or closes an open one. */
 		ontoggle: (id: string) => void;
 		/** Handed the pointer event that began a drag on this row's handle. */
 		onstartdrag: (id: string, event: PointerEvent) => void;
 		/** `null` ends the rename; an id starts one. */
 		onrename: (id: string | null) => void;
+		/** Puts this code's reference into the keyword box, or takes it out. */
+		onfilter: (id: string) => void;
 	} = $props();
 
 	const drag = useCodeDrag();
@@ -63,6 +74,16 @@
 	// away and the next branch's header pushes it out -- both for free, and both
 	// fiddly to reproduce by measuring.
 	const sticky = $derived(expandable && expanded);
+	const filtering = $derived(isFiltering(code.id));
+	// A branch filters as a branch: the reference the pane writes for a code
+	// with children carries `/*`, so the label should say what the click does.
+	const filterLabel = $derived(
+		filtering
+			? `Stop filtering by ${displayName(code.name)}`
+			: expandable
+				? `Filter to ${displayName(code.name)} and everything under it`
+				: `Filter to ${displayName(code.name)}`
+	);
 </script>
 
 <!-- The nested shape ARIA asks for -- an item that contains the group of its
@@ -208,19 +229,51 @@
 			{/if}
 		</div>
 
-		<span
-			class="flex shrink-0 items-center gap-1 text-[0.6875rem] text-gray-400"
-			title={mark.title}
-		>
-			<i class="fas {mark.icon}"></i>
-			{#if mark.label}<span class="tabular-nums">{mark.label}</span>{/if}
-		</span>
+		<div class="flex shrink-0 items-center gap-1.5">
+			<!-- Hidden until the row is hovered, like the drag handle, *unless* it
+			     is on: a filter that is narrowing what the reader is looking at has
+			     to be visible without hunting for it, and this row is where they
+			     would look to turn it off. -->
+			<button
+				type="button"
+				class="flex h-4 w-4 cursor-pointer items-center justify-center rounded-sm transition-opacity {filtering
+					? 'text-primary opacity-100'
+					: 'text-gray-300 opacity-0 group-hover/row:opacity-100 hover:text-gray-700 focus-visible:opacity-100'}"
+				aria-pressed={filtering}
+				title={filterLabel}
+				aria-label={filterLabel}
+				onclick={(event) => {
+					event.stopPropagation();
+					onfilter(code.id);
+				}}
+			>
+				<i class="fa-solid fa-filter text-[0.625rem]"></i>
+			</button>
+
+			<span
+				class="flex shrink-0 items-center gap-1 text-[0.6875rem] text-gray-400"
+				title={mark.title}
+			>
+				<i class="fas {mark.icon}"></i>
+				{#if mark.label}<span class="tabular-nums">{mark.label}</span>{/if}
+			</span>
+		</div>
 	</div>
 
 	{#if expanded && row.subRows.length > 0}
 		<div role="group">
 			{#each row.subRows as child (child.id)}
-				<Self row={child} {tree} {renamingId} {isExpanded} {ontoggle} {onstartdrag} {onrename} />
+				<Self
+					row={child}
+					{tree}
+					{renamingId}
+					{isExpanded}
+					{isFiltering}
+					{ontoggle}
+					{onstartdrag}
+					{onrename}
+					{onfilter}
+				/>
 			{/each}
 		</div>
 	{/if}

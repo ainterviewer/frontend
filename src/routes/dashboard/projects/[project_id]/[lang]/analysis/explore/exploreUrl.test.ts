@@ -148,3 +148,44 @@ describe('a hand-edited or stale link', () => {
 		expect(state.filters.languages).toEqual(['DA', 'EN']);
 	});
 });
+
+describe('the coverage axes', () => {
+	const review = { any: null, mine: 'none', others: 'any' } as const;
+
+	it('round-trips a combination', () => {
+		const written = exploreUrlSearch({ ...defaultExploreUrl(), coverage: review });
+
+		expect(written).toContain('mine=none');
+		expect(written).toContain('others=any');
+		expect(readExploreUrl(new URLSearchParams(written)).coverage).toEqual(review);
+	});
+
+	it('leaves an axis that asks nothing off the link', () => {
+		expect(exploreUrlSearch(defaultExploreUrl())).not.toContain('mine');
+		expect(exploreUrlSearch({ ...defaultExploreUrl(), coverage: review })).not.toContain('coded=');
+	});
+
+	it('reads the axes into the filters a request is built from', () => {
+		const opened = readExploreUrl(new URLSearchParams('mine=none&others=any'));
+
+		expect(opened.filters.coded_mine).toBe('none');
+		expect(opened.filters.coded_others).toBe('any');
+		expect(opened.filters.coded).toBeNull();
+	});
+
+	it('carries the axes, never the coder they are about', () => {
+		// The axes are roles: a shared link is the *reader's* review pass.
+		const written = exploreUrlSearch({ ...defaultExploreUrl(), coverage: review });
+		expect(written).not.toContain('coder');
+
+		const opened = readExploreUrl(new URLSearchParams('mine=none&coder_id=someone'));
+		expect(opened.filters.coder_id).toBeNull();
+	});
+
+	it('falls back to asking nothing on an axis it cannot read', () => {
+		const opened = readExploreUrl(new URLSearchParams('mine=nonsense&others=any'));
+
+		expect(opened.coverage.mine).toBeNull();
+		expect(opened.coverage.others).toBe('any');
+	});
+});

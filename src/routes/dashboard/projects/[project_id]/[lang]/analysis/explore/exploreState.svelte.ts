@@ -14,6 +14,8 @@ import {
 	DEFAULT_N_NEIGHBORS,
 	DEFAULT_PROJECTION,
 	type ClusterSettings,
+	defaultCoverage,
+	type CoverageAxes,
 	type ExploreFilters,
 	type SurveyRanges,
 	type SurveySelection,
@@ -182,6 +184,34 @@ export class ExploreState {
 	filterQuestions = $state<[number, number][]>(defaultFilters().questions);
 
 	/**
+	 * Whether the corpus is narrowed to what has been coded, to what has not, or
+	 * to neither.
+	 *
+	 * Beside the code filter rather than inside it, because it is a different
+	 * question: `code:` asks which codes a chunk carries and this asks whether
+	 * it carries any. Kept out of the keyword grammar deliberately -- see the
+	 * API's `coded` -- which costs `uncoded AND kids` as an expression and buys
+	 * a smaller grammar.
+	 */
+	/**
+	 * How the corpus is narrowed by who has coded what.
+	 *
+	 * The three axes the API takes, held as they are shown: one row of toggles
+	 * each. Named questions -- "To review", "Coded by both" -- are a *reading*
+	 * of a combination rather than the thing chosen, so any combination the
+	 * rows can make is legal.
+	 */
+	coverage = $state<CoverageAxes>(defaultCoverage());
+
+	/**
+	 * Who is reading, for resolving `coderScope`. Empty until the page has a
+	 * session, which is why "me" with no id falls back to everybody's codings
+	 * rather than to nobody's: a filter that silently matched nothing would look
+	 * like an empty corpus.
+	 */
+	userId = $state('');
+
+	/**
 	 * The literal half of searching. A filter rather than a query: it narrows
 	 * the candidate set in SQL, and whatever semantic query there is then ranks
 	 * what survived. Matched against respondent messages, so a word the
@@ -259,6 +289,10 @@ export class ExploreState {
 		languages: this.filterLanguages,
 		include_synthetic: this.includeSynthetic,
 		questions: this.filterQuestions,
+		coded: this.coverage.any,
+		coded_mine: this.coverage.mine,
+		coded_others: this.coverage.others,
+		coder_id: this.userId || null,
 		keyword: this.searchableKeyword,
 		keyword_scope: this.keywordScope,
 		survey: this.surveyValues,
@@ -305,6 +339,7 @@ export class ExploreState {
 		this.filterLanguages = initial.filters.languages;
 		this.includeSynthetic = initial.filters.include_synthetic;
 		this.filterQuestions = initial.filters.questions;
+		this.coverage = initial.coverage;
 		this.keyword = initial.filters.keyword;
 		this.keywordScope = initial.filters.keyword_scope;
 		this.surveyValues = initial.filters.survey;
@@ -327,6 +362,7 @@ export class ExploreState {
 	 */
 	urlState(query: string, groupMode: GroupKind): ExploreUrlState {
 		return {
+			coverage: this.coverage,
 			view: this.view,
 			kind: this.kind,
 			query,

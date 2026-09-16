@@ -1,3 +1,4 @@
+import type { KeywordProblem } from './keywordQuery';
 import type {
 	EmbeddingClusterPoint,
 	EmbeddingGroup,
@@ -184,6 +185,23 @@ export type ExploreFilters = {
 	 * inside one.
 	 */
 	questions: [number, number][];
+	/** Coverage over every coding, whoever made it. */
+	coded: Coded | null;
+	/** Coverage over the reader's own codings. */
+	coded_mine: Coded | null;
+	/** Coverage over everybody else's. */
+	coded_others: Coded | null;
+	/**
+	 * Who the reader is, for the two axes above — not "whose codings count",
+	 * which each axis says for itself.
+	 *
+	 * Three axes rather than one filter and a coder because the questions a
+	 * coder asks are conjunctions of two scopes: the review pass is
+	 * `coded_mine: 'none'` with `coded_others: 'any'`, and no single scope is a
+	 * filter on it. `coded` stays separate as the one reading that is a
+	 * disjunction — "somebody has coded this" is mine-or-theirs.
+	 */
+	coder_id: string | null;
 	/**
 	 * What the chunk's respondent messages must say, empty for no keyword
 	 * filter.
@@ -323,6 +341,10 @@ export function defaultFilters(): ExploreFilters {
 		languages: [],
 		include_synthetic: false,
 		questions: [],
+		coded: null,
+		coded_mine: null,
+		coded_others: null,
+		coder_id: null,
 		keyword: '',
 		keyword_scope: 'answer',
 		survey: {},
@@ -436,6 +458,13 @@ export function filterQuery(filters: ExploreFilters) {
 		// refetch that changes nothing.
 		...(filters.keyword.trim()
 			? { keyword: filters.keyword.trim(), keyword_scope: filters.keyword_scope }
+			: {}),
+		...(filters.coded ? { coded: filters.coded } : {}),
+		...(filters.coded_mine ? { coded_mine: filters.coded_mine } : {}),
+		...(filters.coded_others ? { coded_others: filters.coded_others } : {}),
+		// Only worth sending where an axis reads it.
+		...(filters.coder_id && (filters.coded_mine || filters.coded_others)
+			? { coder_id: filters.coder_id }
 			: {}),
 		// One parameter per chosen value and per range, each carrying the
 		// coordinate it applies to: `?survey=0,2=option:1`. Left off entirely
@@ -596,6 +625,11 @@ export function offDefaultCount(settings: ClusterSettings, multilingual: boolean
 		multilingual && settings.filters.languages.length > 0,
 		settings.filters.questions.length > 0,
 		settings.filters.keyword.trim().length > 0,
+		// One, however the question is phrased: the badge counts controls a
+		// reader has moved, and coverage is one control to open.
+		settings.filters.coded !== fallback.filters.coded ||
+			settings.filters.coded_mine !== fallback.filters.coded_mine ||
+			settings.filters.coded_others !== fallback.filters.coded_others,
 		// One, however many items are chosen: the badge counts controls a
 		// reader has moved, and the survey filter is one control to open.
 		surveyItemCount(settings.filters) > 0,
@@ -654,6 +688,125 @@ export function sameCohortQuery(
 }
 
 /**
+ * Whether a chunk must carry a coding, carry none, or may be either.
+ *
+ * The API's own spelling, narrowed from the generated union so the two cannot
+ * drift: `null` here is "no filter", which the query builder leaves off.
+ */
+export type Coded = 'any' | 'none';
+
+/**
+ * The three coverage axes, as the pane holds them.
+ *
+ * One field per axis rather than a named question, because the pane offers a
+ * row of toggles per axis and any combination of them is legal. The names are
+ * still worth having -- see `coverageLabel` -- but as a *reading* of the axes
+ * rather than as the thing being chosen.
+ */
+export type CoverageAxes = {
+	/** Over every coding, whoever made it. The one reading that is a disjunction. */
+	any: Coded | null;
+	/** Over the reader's own. */
+	mine: Coded | null;
+	/** Over everybody else's. */
+	others: Coded | null;
+};
+
+export function defaultCoverage(): CoverageAxes {
+	return { any: null, mine: null, others: null };
+}
+
+/** Whether any axis is narrowing anything. */
+export function isDefaultCoverage(axes: CoverageAxes): boolean {
+	return axes.any === null && axes.mine === null && axes.others === null;
+}
+
+/**
+ * The questions worth naming, and what they are as axes.
+ *
+ * A dictionary rather than a menu: the toggles are the control, and this turns
+ * whatever they add up to back into words. Most combinations have no name and
+ * do not need one -- the two rows already say what they are -- but the
+ * second-coder ones are worth recognising, because "mine: uncoded, others:
+ * coded" is the review pass and says so to nobody.
+ */
+const NAMED: { axes: CoverageAxes; label: string; hint: string }[] = [
+	{
+		axes: { any: 'any', mine: null, others: null },
+		label: 'Coded',
+		hint: 'Chunks somebody has applied a code to'
+	},
+	{
+		axes: { any: 'none', mine: null, others: null },
+		label: 'Uncoded',
+		hint: 'Chunks nobody has coded yet — what is left to read'
+	},
+	{
+		axes: { any: null, mine: 'any', others: null },
+		label: 'Coded by me',
+		hint: 'Chunks you have coded, whoever else has'
+	},
+	{
+		axes: { any: null, mine: 'none', others: null },
+		label: 'Not coded by me',
+		hint: 'Chunks you have not coded — including ones somebody else has'
+	},
+	{
+		axes: { any: null, mine: 'none', others: 'any' },
+		label: 'To review',
+		hint: 'Coded by somebody else and not by you — the second-coder pass'
+	},
+	{
+		axes: { any: null, mine: 'any', others: 'any' },
+		label: 'Coded by both',
+		hint: 'You and somebody else both coded it — where agreement can be checked'
+	},
+	{
+		axes: { any: null, mine: 'any', others: 'none' },
+		label: 'Only me',
+		hint: 'You coded it and nobody else has — your readings nobody has checked'
+	},
+	{
+		axes: { any: null, mine: 'none', others: 'none' },
+		label: 'Read by nobody',
+		hint: 'Neither you nor anybody else has coded it'
+	}
+];
+
+/** What this combination is called, or null where it has no name worth giving. */
+export function coverageLabel(axes: CoverageAxes): { label: string; hint: string } | null {
+	return (
+		NAMED.find(
+			(one) =>
+				one.axes.any === axes.any && one.axes.mine === axes.mine && one.axes.others === axes.others
+		) ?? null
+	);
+}
+
+/**
+ * A keyword problem the *server* found, or null where the failure was anything
+ * else.
+ *
+ * `keywordQuery.ts` catches everything a parser can catch without a project,
+ * which is most of what a reader gets wrong. It cannot catch the rest: whether
+ * `code:stress` names a code in this project, whether it names only one, and
+ * whether that code is a GROUP nothing is ever coded with. Those are answered
+ * where the codebook is, and come back as a 422 shaped like the client's own
+ * `KeywordProblem` so the box can show either without caring which found it.
+ *
+ * Read defensively: this is an error path, and a body that is not the shape it
+ * should be must not throw on the way to reporting that something went wrong.
+ */
+export function keywordProblemOf(error: unknown): KeywordProblem | null {
+	if (typeof error !== 'object' || error === null) return null;
+	const detail = (error as { detail?: unknown }).detail;
+	if (typeof detail !== 'object' || detail === null) return null;
+	const { error: kind, message, position } = detail as Record<string, unknown>;
+	if (kind !== 'invalid_keyword_query' || typeof message !== 'string') return null;
+	return { message, position: typeof position === 'number' ? position : null };
+}
+
+/**
  * What went wrong, in the reader's terms.
  *
  * The distinctions the API draws here are worth carrying through: a 409 is an
@@ -661,8 +814,13 @@ export function sameCohortQuery(
  * would send them chasing it for an afternoon, and a 404 deliberately does not
  * separate "no access" from "no such thing" — the API will not confirm that a
  * project exists to somebody with no role on it, and neither should this.
+ *
+ * A 422 the server explained is repeated verbatim. The generic line is a
+ * fallback and reads like one: told only that a query "could not be run as
+ * entered", a reader whose codebook holds two codes of one name has nothing to
+ * act on, and the server already wrote the sentence that says what to do.
  */
-export function describeError(status: number | undefined, fallback: string) {
+export function describeError(status: number | undefined, fallback: string, error?: unknown) {
 	switch (status) {
 		case 503:
 			return 'The embedding server is not reachable right now.';
@@ -671,7 +829,7 @@ export function describeError(status: number | undefined, fallback: string) {
 		case 404:
 			return 'Not found.';
 		case 422:
-			return 'The search could not be run as entered.';
+			return keywordProblemOf(error)?.message ?? 'The search could not be run as entered.';
 		default:
 			return fallback;
 	}

@@ -5535,7 +5535,7 @@ export type SearchEmbeddingsData = {
         /**
          * Project Id
          */
-        project_id: string | null;
+        project_id: string;
     };
     query: {
         /**
@@ -5601,6 +5601,22 @@ export type SearchEmbeddingsData = {
          */
         survey_range?: Array<string> | null;
         /**
+         * Coded
+         */
+        coded?: 'any' | 'none' | null;
+        /**
+         * Coded Mine
+         */
+        coded_mine?: 'any' | 'none' | null;
+        /**
+         * Coded Others
+         */
+        coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Id
+         */
+        coder_id?: string | null;
+        /**
          * Limit
          */
         limit?: number;
@@ -5640,7 +5656,7 @@ export type BrowseEmbeddingsData = {
         /**
          * Project Id
          */
-        project_id: string | null;
+        project_id: string;
     };
     query?: {
         kind?: EmbeddingKind;
@@ -5713,6 +5729,22 @@ export type BrowseEmbeddingsData = {
          */
         survey_range?: Array<string> | null;
         /**
+         * Coded
+         */
+        coded?: 'any' | 'none' | null;
+        /**
+         * Coded Mine
+         */
+        coded_mine?: 'any' | 'none' | null;
+        /**
+         * Coded Others
+         */
+        coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Id
+         */
+        coder_id?: string | null;
+        /**
          * Limit
          */
         limit?: number;
@@ -5752,7 +5784,7 @@ export type ReadSurveyFacetsData = {
         /**
          * Project Id
          */
-        project_id: string | null;
+        project_id: string;
     };
     query?: {
         /**
@@ -5807,6 +5839,22 @@ export type ReadSurveyFacetsData = {
          * Survey Range
          */
         survey_range?: Array<string> | null;
+        /**
+         * Coded
+         */
+        coded?: 'any' | 'none' | null;
+        /**
+         * Coded Mine
+         */
+        coded_mine?: 'any' | 'none' | null;
+        /**
+         * Coded Others
+         */
+        coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Id
+         */
+        coder_id?: string | null;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/survey-facets';
 };
@@ -5890,7 +5938,7 @@ export type FindSimilarEmbeddingsData = {
         /**
          * Project Id
          */
-        project_id: string | null;
+        project_id: string;
         /**
          * Embedding Id
          */
@@ -5954,6 +6002,22 @@ export type FindSimilarEmbeddingsData = {
          */
         survey_range?: Array<string> | null;
         /**
+         * Coded
+         */
+        coded?: 'any' | 'none' | null;
+        /**
+         * Coded Mine
+         */
+        coded_mine?: 'any' | 'none' | null;
+        /**
+         * Coded Others
+         */
+        coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Id
+         */
+        coder_id?: string | null;
+        /**
          * Limit
          */
         limit?: number;
@@ -5993,7 +6057,7 @@ export type ClusterEmbeddingsData = {
         /**
          * Project Id
          */
-        project_id: string | null;
+        project_id: string;
     };
     query?: {
         kind?: EmbeddingKind;
@@ -6078,6 +6142,22 @@ export type ClusterEmbeddingsData = {
          * Survey Range
          */
         survey_range?: Array<string> | null;
+        /**
+         * Coded
+         */
+        coded?: 'any' | 'none' | null;
+        /**
+         * Coded Mine
+         */
+        coded_mine?: 'any' | 'none' | null;
+        /**
+         * Coded Others
+         */
+        coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Id
+         */
+        coder_id?: string | null;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/clusters';
 };

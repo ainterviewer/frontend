@@ -11,13 +11,38 @@
 	import { toast } from 'svelte-sonner';
 	import { ROW_HEIGHT, toCodeRows, type CodeRow, type CodeRowLike } from './codeTable';
 	import { CodeDrag, provideCodeDrag } from './codeTableDrag.svelte';
+	import { codeTermFor, isFiltering as termIsFiltering, toggleCodeTerm } from './codeFilter';
+	import { coverageLabel, defaultCoverage, type Coded, type CoverageAxes } from './explore';
 	import CodeTreeRow from './CodeTreeRow.svelte';
 
 	let {
 		tree,
 		book = null,
-		open = $bindable(true)
-	}: { tree: CodingTreeState; book?: Codebook | null; open?: boolean } = $props();
+		open = $bindable(true),
+		keyword = $bindable(''),
+		coverage = $bindable(defaultCoverage())
+	}: {
+		tree: CodingTreeState;
+		book?: Codebook | null;
+		open?: boolean;
+		/**
+		 * The keyword box, which is where a code filter actually lives.
+		 *
+		 * Bound rather than held here: a reference the pane writes and one the
+		 * reader types are the same thing, and the box is already what the URL
+		 * carries and what the requests are built from. A separate "selected
+		 * codes" state would be a second answer to one question.
+		 */
+		keyword?: string;
+		/**
+		 * Which coverage question the corpus is narrowed by.
+		 *
+		 * Beside the codes rather than in the control rail because it is a
+		 * question about *them*: "what have I not read yet" is asked while
+		 * looking at the codebook, not while setting up a corpus.
+		 */
+		coverage?: CoverageAxes;
+	} = $props();
 
 	/**
 	 * The table registers no features at all.
@@ -83,6 +108,69 @@
 
 	function toggle(id: string) {
 		openIds = { ...openIds, [id]: !openIds[id] };
+	}
+
+	/**
+	 * The reference each row would write, by id.
+	 *
+	 * Built once per codebook edit rather than per row, because working out
+	 * whether a name needs qualifying reads the whole codebook -- doing that
+	 * inside every row would be quadratic in a pane that redraws on each
+	 * keystroke of a rename.
+	 */
+	const terms = $derived(
+		new Map(tree.codes.map((code) => [code.id, codeTermFor(code, tree.codes)]))
+	);
+
+	const isFiltering = $derived.by(() => {
+		const query = keyword;
+		const written = terms;
+		return (id: string) => {
+			const term = written.get(id);
+			return term !== undefined && termIsFiltering(query, term);
+		};
+	});
+
+	/**
+	 * The coverage states, in the order they narrow.
+	 *
+	 * "Uncoded" last because it is the one asked for deliberately: it is a
+	 * working pass rather than a reading of the corpus, and it is the only one
+	 * that can empty a view a reader was in the middle of.
+	 */
+	/**
+	 * One row per axis, because the three do not factor into fewer.
+	 *
+	 * "Mine" and "others" are a grid, and between them say everything a
+	 * conjunction can -- the review pass, the agreement set, what only I have
+	 * read. What a grid cannot say is "somebody has coded this", which is
+	 * mine-*or*-theirs; that is the third axis, and it is a plain toggle
+	 * because its other state ("nobody has") is already the grid's
+	 * uncoded/uncoded corner.
+	 */
+	const AXIS: { value: Coded | null; label: string }[] = [
+		{ value: null, label: 'Any' },
+		{ value: 'any', label: 'Coded' },
+		{ value: 'none', label: 'Uncoded' }
+	];
+
+	// What the three rows add up to, where that has a name. Most combinations
+	// have none and need none -- the rows say what they are -- but "mine:
+	// uncoded, others: coded" is the second-coder pass and says so to nobody.
+	const named = $derived(coverageLabel(coverage));
+
+	function filterBy(id: string) {
+		const term = terms.get(id);
+		if (term === undefined) return;
+
+		const next = toggleCodeTerm(keyword, term);
+		if (next === null) {
+			// Only reachable on a query this pane did not write. Saying so beats
+			// rewriting an expression the reader built by hand.
+			toast.info('Take this code out of the keyword box by hand');
+			return;
+		}
+		keyword = next;
 	}
 
 	/** Every code with something under it: the rows an expand-all is about. */
@@ -208,6 +296,38 @@
 	}
 </script>
 
+<!-- One axis, as a labelled row of exclusive states. Written once because the
+     two grid rows are the same control twice, and a row that drifted from its
+     twin would read as a difference in meaning. -->
+{#snippet axisRow(label: string, value: Coded | null, set: (next: Coded | null) => void)}
+	<div class="flex items-center gap-1.5">
+		<span
+			id="axis-{label}"
+			class="w-12 shrink-0 text-[0.625rem] font-medium tracking-wide text-gray-400 uppercase"
+			>{label}</span
+		>
+		<div
+			role="group"
+			aria-labelledby="axis-{label}"
+			class="flex overflow-hidden rounded-md border border-gray-200"
+		>
+			{#each AXIS as option (option.label)}
+				<button
+					type="button"
+					onclick={() => set(option.value)}
+					aria-pressed={value === option.value}
+					class="cursor-pointer px-1.5 py-0.5 text-[0.6875rem] font-medium whitespace-nowrap transition-colors {value ===
+					option.value
+						? 'bg-primary text-on-primary'
+						: 'bg-white text-gray-500 hover:text-gray-900'}"
+				>
+					{option.label}
+				</button>
+			{/each}
+		</div>
+	</div>
+{/snippet}
+
 {#if !open}
 	<!-- Minimised the way the control rail is, and self-contained: the strip
 	     carries its own way back, so a pane that is out of the way never needs
@@ -259,6 +379,47 @@
 			<i class="fa-solid fa-circle-info mr-1 text-gray-400"></i>
 			Right-click a turn to apply a code to it. Select part of it first to code just that passage.
 		</p>
+
+		<!-- Coverage, which is a different question from which codes a chunk
+		     carries: this one asks whether it carries any. A segmented control
+		     rather than two toggles, because the three states are exclusive and
+		     "Either" has to be reachable in one click from both. -->
+		<!-- Coverage: who has coded what, which is a different question from
+		     which codes a chunk carries. One row per axis -- see `AXIS`. -->
+		<div
+			role="group"
+			aria-label="Coverage"
+			class="flex shrink-0 flex-col gap-1 border-b border-gray-200 px-1.5 py-1.5"
+		>
+			{@render axisRow('Mine', coverage.mine, (next) => (coverage = { ...coverage, mine: next }))}
+			{@render axisRow(
+				'Others',
+				coverage.others,
+				(next) => (coverage = { ...coverage, others: next })
+			)}
+
+			<div class="flex items-center gap-1.5">
+				<span class="w-12 shrink-0"></span>
+				<button
+					type="button"
+					onclick={() => (coverage = { ...coverage, any: coverage.any === 'any' ? null : 'any' })}
+					aria-pressed={coverage.any === 'any'}
+					title="Chunks somebody has coded — either of you. The one reading the two rows above cannot give, because it is an or rather than an and."
+					class="cursor-pointer rounded-md border px-1.5 py-0.5 text-[0.6875rem] font-medium whitespace-nowrap transition-colors {coverage.any ===
+					'any'
+						? 'border-primary bg-primary text-on-primary'
+						: 'border-gray-200 bg-white text-gray-500 hover:text-gray-900'}"
+				>
+					Coded by anyone
+				</button>
+			</div>
+
+			{#if named}
+				<p class="pl-[3.375rem] text-[0.625rem] leading-relaxed text-gray-500">
+					<span class="font-medium text-gray-700">{named.label}</span> — {named.hint}
+				</p>
+			{/if}
+		</div>
 
 		<div class="flex shrink-0 items-center gap-0.5 border-b border-gray-200 px-1.5 py-1">
 			<button
@@ -331,9 +492,11 @@
 						{tree}
 						{renamingId}
 						{isExpanded}
+						{isFiltering}
 						ontoggle={toggle}
 						onstartdrag={startDrag}
 						onrename={(id) => (renamingId = id)}
+						onfilter={filterBy}
 					/>
 				{/each}
 			{/if}

@@ -111,3 +111,64 @@ describe('scope prefixes', () => {
 		expect(keywordProblem('q:')).toBeNull();
 	});
 });
+
+/**
+ * Code references, mirroring `TestCodeTerms` and `TestCodeErrors` on the
+ * backend. Only the *shape* is checked here — whether a name is one the
+ * codebook holds is the server's answer, and comes back as a 422.
+ */
+describe('code references', () => {
+	it.each([
+		'code:stress',
+		'code:stress/*',
+		'code:Stress/Often',
+		'code:"Stress/New code"',
+		'code:"Stress/New code"/*',
+		'code:"a*b"',
+		'a:code:stress',
+		'q:code:stress',
+		'-code:stress',
+		'code:or',
+		'CODE:stress',
+		'code:stress kids',
+		'code:stress -code:workload',
+		'(code:stress OR kids) AND q:arbejde',
+		'a:(code:stress OR kids)'
+	])('accepts %j', (query) => {
+		expect(keywordProblem(query)).toBeNull();
+	});
+
+	it.each([
+		['code:', 'needs the name of a code'],
+		['code: stress', 'needs the name of a code'],
+		['code:*', 'at the end'],
+		['code:stre*', 'at the end'],
+		['code:a//b', 'empty step'],
+		['code:/b', 'empty step'],
+		['code:"unclosed', 'Unclosed quote']
+	])('rejects %j', (query, fragment) => {
+		const problem = keywordProblem(query);
+		expect(problem?.message).toContain(fragment);
+		expect(problem?.position).not.toBeNull();
+	});
+
+	it('rejects a bare prefix, unlike a bare scope', () => {
+		// `q:` alone is the ordinary word "q:", because somebody might mean it.
+		// `code:` alone is a half-typed reference and nothing else.
+		expect(keywordProblem('q:')).toBeNull();
+		expect(keywordProblem('code:')).not.toBeNull();
+	});
+
+	it('counts a code reference towards the cap', () => {
+		const query = Array.from({ length: MAX_TERMS + 1 }, (_, n) => `code:c${n}`).join(' OR ');
+		expect(keywordProblem(query)?.message).toContain('Too many search terms');
+	});
+
+	it('points at the start of the reference, not inside it', () => {
+		expect(keywordProblem('kids AND code:stre*')?.position).toBe(9);
+	});
+
+	it('accepts a code reference next to everything else it can sit next to', () => {
+		expect(isValidKeyword('code:stress/* AND (kids OR q:"min nabo") -code:"Work/Load"')).toBe(true);
+	});
+});

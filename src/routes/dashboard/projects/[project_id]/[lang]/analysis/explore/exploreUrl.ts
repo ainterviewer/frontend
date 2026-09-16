@@ -50,6 +50,9 @@ import {
 	PROJECTIONS,
 	defaultFilters,
 	type ClusterSettings,
+	defaultCoverage,
+	type Coded,
+	type CoverageAxes,
 	type ExploreFilters,
 	type KeywordScope,
 	type SurveyRanges,
@@ -78,6 +81,13 @@ export type ExploreUrlState = {
 	/** The semantic query that was actually run, not what is half-typed in the box. */
 	query: string;
 	filters: ExploreFilters;
+	/**
+	 * How the corpus is narrowed by who has coded what.
+	 *
+	 * The axes are roles, not identities -- "mine" is whoever opens the link --
+	 * so the coder they resolve against is never in the URL.
+	 */
+	coverage: CoverageAxes;
 	listOrder: ListOrder;
 	listGrouping: ListGrouping;
 	/** What the scatter is coloured by. */
@@ -98,6 +108,7 @@ export function defaultExploreUrl(): ExploreUrlState {
 		kind: DEFAULT_KIND,
 		query: '',
 		filters: defaultFilters(),
+		coverage: defaultCoverage(),
 		listOrder: DEFAULT_LIST_ORDER,
 		listGrouping: DEFAULT_LIST_GROUPING,
 		groupMode: DEFAULT_GROUP_MODE,
@@ -114,6 +125,17 @@ export function defaultExploreUrl(): ExploreUrlState {
 /** One of a known set, or the fallback. */
 function oneOf<T extends string>(raw: string | null, allowed: readonly T[], fallback: T): T {
 	return raw !== null && (allowed as readonly string[]).includes(raw) ? (raw as T) : fallback;
+}
+
+/**
+ * One coverage axis, or null where the link says nothing readable.
+ *
+ * Absent is a real third state -- neither "coded" nor "uncoded" but "either" --
+ * so an unreadable value falls back to asking nothing rather than to one of
+ * the two, which would make a malformed link narrow the corpus.
+ */
+function readCoded(raw: string | null): Coded | null {
+	return raw === 'any' || raw === 'none' ? raw : null;
 }
 
 /** A flag, written `1`. Anything else is off, including a missing parameter. */
@@ -233,6 +255,12 @@ export function readExploreUrl(params: URLSearchParams): ExploreUrlState {
 			languages: readLanguages(params.getAll('language')),
 			include_synthetic: flag(params.get('synthetic'), filters.include_synthetic),
 			questions: readQuestions(params.getAll('question')),
+			coded: readCoded(params.get('coded')),
+			coded_mine: readCoded(params.get('mine')),
+			coded_others: readCoded(params.get('others')),
+			// Never off the link: the axes are roles, and which coder they are
+			// about is settled by whoever opens it.
+			coder_id: null,
 			keyword: params.get('keyword') ?? '',
 			keyword_scope: oneOf<KeywordScope>(
 				params.get('keyword_scope'),
@@ -241,6 +269,11 @@ export function readExploreUrl(params: URLSearchParams): ExploreUrlState {
 			),
 			survey: readSurvey(params.getAll('survey')),
 			survey_ranges: readSurveyRanges(params.getAll('survey_range'))
+		},
+		coverage: {
+			any: readCoded(params.get('coded')),
+			mine: readCoded(params.get('mine')),
+			others: readCoded(params.get('others'))
 		},
 		listOrder: oneOf(
 			params.get('sort'),
@@ -299,6 +332,11 @@ export function exploreUrlParams(state: ExploreUrlState): URLSearchParams {
 	for (const [section, question] of filters.questions) {
 		params.append('question', `${section},${question}`);
 	}
+	// The axes, never the coder they resolve against -- see
+	// `ExploreUrlState.coverage`.
+	if (state.coverage.any) params.set('coded', state.coverage.any);
+	if (state.coverage.mine) params.set('mine', state.coverage.mine);
+	if (state.coverage.others) params.set('others', state.coverage.others);
 	if (filters.keyword.trim()) {
 		params.set('keyword', filters.keyword.trim());
 		// The scope rides with the keyword and is left off without one: alone it

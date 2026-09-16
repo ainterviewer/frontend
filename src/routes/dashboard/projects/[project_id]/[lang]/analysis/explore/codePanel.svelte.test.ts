@@ -8,6 +8,7 @@ import { expect, test } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { seededTree } from '$lib/coding/seed';
 import CodePanel from './CodePanel.svelte';
+import { defaultCoverage, type CoverageAxes } from './explore';
 
 /**
  * The code pane on a codebook of its own.
@@ -196,4 +197,146 @@ test('dragging onto a row’s edge reorders without changing the parent', async 
 
 	const siblings = tree.codes.filter((code) => code.parentId === before).map((code) => code.name);
 	expect(siblings[0]).toBe('Interviewer steering');
+});
+
+/**
+ * Filtering from a row.
+ *
+ * The keyword box is where a code filter lives, so what these check is that a
+ * click writes the right reference into it and a second click takes the same
+ * one out. `codeFilter.test.ts` covers what gets written; this covers that the
+ * row is wired to it and says which state it is in.
+ */
+function renderFiltering(keyword = '') {
+	const tree = seededTree();
+	const box = $state({ keyword });
+	render(CodePanel, {
+		tree,
+		get keyword() {
+			return box.keyword;
+		},
+		set keyword(next: string) {
+			box.keyword = next;
+		}
+	});
+	return box;
+}
+
+test('filtering by a leaf writes its reference into the keyword box', async () => {
+	await page.viewport(PANE.width, PANE.height);
+	const box = renderFiltering();
+
+	await page.getByRole('button', { name: 'Filter to The state and regulation' }).click();
+
+	expect(box.keyword).toBe('code:"The state and regulation"');
+});
+
+test('filtering by a branch takes the branch', async () => {
+	await page.viewport(PANE.width, PANE.height);
+	const box = renderFiltering();
+
+	// The label says so before the click does it: a branch picked from a
+	// codebook almost always means the branch.
+	await page
+		.getByRole('button', { name: 'Filter to Who is responsible and everything under it' })
+		.click();
+
+	expect(box.keyword).toBe('code:"Who is responsible"/*');
+});
+
+test('a filtering row says so, and a second click takes it back out', async () => {
+	await page.viewport(PANE.width, PANE.height);
+	const box = renderFiltering();
+
+	const on = page.getByRole('button', { name: 'Filter to The state and regulation' });
+	await on.click();
+
+	const off = page.getByRole('button', { name: 'Stop filtering by The state and regulation' });
+	await expect.element(off).toHaveAttribute('aria-pressed', 'true');
+
+	await off.click();
+	expect(box.keyword).toBe('');
+});
+
+test('a reference already in the box is shown as filtering without a click', async () => {
+	await page.viewport(PANE.width, PANE.height);
+	renderFiltering('code:"The state and regulation"');
+
+	await expect
+		.element(page.getByRole('button', { name: 'Stop filtering by The state and regulation' }))
+		.toHaveAttribute('aria-pressed', 'true');
+});
+
+test('filtering by a second code narrows to both', async () => {
+	await page.viewport(PANE.width, PANE.height);
+	const box = renderFiltering('kids');
+
+	await page.getByRole('button', { name: 'Filter to The state and regulation' }).click();
+
+	// Adjacency is AND: two codes picked from a codebook mean what carries both.
+	expect(box.keyword).toBe('kids code:"The state and regulation"');
+});
+
+/**
+ * Coverage: who has coded what.
+ *
+ * One row of toggles per axis, because the three do not factor into fewer.
+ * `explore.test.ts` covers what a combination means; these cover that the rows
+ * set the axes and that a recognised combination says its name.
+ */
+function renderCoverage(coverage: CoverageAxes = defaultCoverage()) {
+	const tree = seededTree();
+	const box = $state<{ coverage: CoverageAxes }>({ coverage });
+	render(CodePanel, {
+		tree,
+		get coverage() {
+			return box.coverage;
+		},
+		set coverage(next: CoverageAxes) {
+			box.coverage = next;
+		}
+	});
+	return box;
+}
+
+test('each row sets its own axis', async () => {
+	await page.viewport(PANE.width, PANE.height);
+	const box = renderCoverage();
+
+	const mine = page.getByRole('group', { name: 'Mine' });
+	await mine.getByRole('button', { name: 'Uncoded', exact: true }).click();
+	expect(box.coverage).toEqual({ any: null, mine: 'none', others: null });
+
+	const others = page.getByRole('group', { name: 'Others' });
+	await others.getByRole('button', { name: 'Coded', exact: true }).click();
+	expect(box.coverage).toEqual({ any: null, mine: 'none', others: 'any' });
+});
+
+test('a recognised combination says what it is called', async () => {
+	await page.viewport(PANE.width, PANE.height);
+	renderCoverage({ any: null, mine: 'none', others: 'any' });
+
+	// "mine: uncoded, others: coded" is the second-coder pass, and says so to
+	// nobody until it is named.
+	await expect.element(page.getByText('To review', { exact: false })).toBeVisible();
+});
+
+test('a combination with no name says nothing', async () => {
+	await page.viewport(PANE.width, PANE.height);
+	renderCoverage({ any: 'any', mine: 'any', others: 'none' });
+
+	await expect.element(page.getByText('To review', { exact: false })).not.toBeInTheDocument();
+	await expect.element(page.getByText('Only me', { exact: false })).not.toBeInTheDocument();
+});
+
+test('coded-by-anyone is a toggle, because its other state is a grid corner', async () => {
+	await page.viewport(PANE.width, PANE.height);
+	const box = renderCoverage();
+
+	const anyone = page.getByRole('button', { name: 'Coded by anyone' });
+	await anyone.click();
+	expect(box.coverage.any).toBe('any');
+
+	await anyone.click();
+	expect(box.coverage.any).toBeNull();
 });

@@ -6,6 +6,7 @@
  *     (dog OR cat) AND "my neighbour"
  *     kids -school
  *     climate change
+ *     code:stress/* AND kids
  *
  * This is a *validator* and nothing more. Matching happens in SQL, where the
  * corpus is, and so does highlighting — the server reports the character ranges
@@ -36,12 +37,15 @@ export type KeywordProblem = {
 	position: number | null;
 };
 
-type TokenKind = 'term' | 'phrase' | 'and' | 'or' | 'not' | 'scope' | '(' | ')';
+type TokenKind = 'term' | 'phrase' | 'code' | 'and' | 'or' | 'not' | 'scope' | '(' | ')';
 
 type Token = {
 	kind: TokenKind;
 	text: string;
 	position: number;
+	/** One past the last character. Only set on a code token, which is the only
+	 * one anything needs to cut back out of the query. */
+	end?: number;
 };
 
 /**
@@ -60,6 +64,19 @@ const WORD_OPERATORS: Record<string, TokenKind> = {
 /** Characters that end a bare term. Everything else, punctuation included, is
  * part of it: `e-mail` and `kl.` are words people write. */
 const BREAKS = new Set([' ', '\t', '\r', '\n', '\f', '\v', '(', ')', '"']);
+
+/**
+ * What introduces a code reference — a code from the project's codebook rather
+ * than a word to look for.
+ *
+ * Which code it *is* is not decided here: placing a name in a codebook is the
+ * server's business, and this file has no project. All that is checked is that
+ * the reference is written in a way a name could be read out of.
+ */
+const CODE_PREFIX = 'code:';
+
+/** The suffix widening a code reference to its descendants. */
+const SUBTREE_SUFFIX = '/*';
 
 class ParseError extends Error {
 	position: number | null;
@@ -100,6 +117,15 @@ function tokenize(query: string): Token[] {
 		) {
 			tokens.push({ kind: 'scope', text: query.slice(index, index + 2), position: index });
 			index += 2;
+			continue;
+		}
+
+		// Read before the bare-term scan, which would otherwise swallow the whole
+		// reference, colon and all. Before it for a second reason too: the scan
+		// treats a word after a scope as a term and never an operator, so leaving
+		// this later would make `a:code:stress` one bare word.
+		if (query.slice(index, index + CODE_PREFIX.length).toLowerCase() === CODE_PREFIX) {
+			index = readCode(query, index, tokens);
 			continue;
 		}
 
@@ -149,16 +175,90 @@ function tokenize(query: string): Token[] {
 }
 
 /**
+ * The code reference at `start`, pushed onto `tokens`; returns where it ends.
+ *
+ * Two spellings, because a code's name is free text that may contain spaces or
+ * collide with another code's:
+ *
+ *     code:stress              a name
+ *     code:Stress/Often        a path, where the name alone is ambiguous
+ *     code:"Stress/New code"   quoted, where a step contains spaces
+ *
+ * A trailing `/*` widens the reference to the code's descendants and sits
+ * outside any quotes: the quotes delimit the name, the marker is grammar.
+ *
+ * Mirrors `_code_token` in `app/db/keyword_query.py`, down to the messages.
+ */
+function readCode(query: string, start: number, tokens: Token[]): number {
+	let index = start + CODE_PREFIX.length;
+	const quoted = query[index] === '"';
+	let text: string;
+
+	if (quoted) {
+		const end = query.indexOf('"', index + 1);
+		if (end === -1) {
+			throw new ParseError('Unclosed quote — add a closing ".', index);
+		}
+		text = query.slice(index + 1, end);
+		index = end + 1;
+		if (query.slice(index, index + 2) === SUBTREE_SUFFIX) index += 2;
+	} else {
+		const from = index;
+		while (index < query.length && !BREAKS.has(query[index])) index += 1;
+		text = query.slice(from, index);
+		// The scan runs straight through `/*`, neither character being a break.
+		if (text.endsWith(SUBTREE_SUFFIX)) text = text.slice(0, -SUBTREE_SUFFIX.length);
+	}
+
+	if (!text.trim()) {
+		throw new ParseError(
+			'“code:” needs the name of a code after it — for example code:stress.',
+			start
+		);
+	}
+	// Unquoted, `*` is rejected anywhere but the suffix: the alternative is
+	// `code:stre*` looking like a wildcard, parsing cleanly, and then failing
+	// much later as a name that matches nothing. Inside quotes it is the
+	// character, exactly as it is in a quoted phrase.
+	if (!quoted && text.includes('*')) {
+		throw new ParseError(
+			'“*” after a code means “and everything under it”, and is written as “/*” at the end — for example code:stress/*.',
+			start
+		);
+	}
+
+	const steps = text.split('/').map((step) => step.trim());
+	if (steps.some((step) => !step)) {
+		throw new ParseError(
+			'A code path cannot have an empty step — write it like code:"Stress/Often".',
+			start
+		);
+	}
+	for (const step of steps) {
+		if (step.length > MAX_TERM_LENGTH) {
+			throw new ParseError(
+				`“${step.slice(0, 20)}…” is too long (at most ${MAX_TERM_LENGTH} characters).`,
+				start
+			);
+		}
+	}
+
+	tokens.push({ kind: 'code', text, position: start, end: index });
+	return index;
+}
+
+/**
  * Recursive descent, the same grammar the backend implements:
  *
  *     query   := or
  *     or      := and (OR and)*
  *     and     := unary (AND? unary)*
  *     unary   := (NOT | '-') unary | primary
- *     primary := '(' or ')' | phrase | term
+ *     primary := '(' or ')' | phrase | term | code
  *
- * Only the term count comes back — nothing here needs the tree, and counting is
- * what `MAX_TERMS` is checked against.
+ * Only the leaf count comes back — nothing here needs the tree, and counting is
+ * what `MAX_TERMS` is checked against. A code term counts like a word: the cap
+ * bounds the SQL a query turns into, not how many *words* were asked for.
  */
 class Parser {
 	private index = 0;
@@ -215,7 +315,7 @@ class Parser {
 				continue;
 			}
 			// Adjacency is AND: two words in a search box mean both words.
-			if (this.at('term', 'phrase', 'not', 'scope', '(')) {
+			if (this.at('term', 'phrase', 'code', 'not', 'scope', '(')) {
 				this.parseUnary();
 				continue;
 			}
@@ -280,6 +380,14 @@ class Parser {
 			return;
 		}
 
+		// Already checked as far as this file can check it: whether the name is
+		// one the codebook holds is the server's answer, and comes back as a 422.
+		if (token.kind === 'code') {
+			this.advance();
+			this.terms += 1;
+			return;
+		}
+
 		// An operator where a term was expected: `AND dog`, `dog OR OR cat`.
 		if (after) {
 			throw new ParseError(
@@ -334,4 +442,47 @@ export function keywordProblem(query: string): KeywordProblem | null {
 /** Whether the query is safe to send. */
 export function isValidKeyword(query: string): boolean {
 	return keywordProblem(query) === null;
+}
+
+/** One `code:` reference, and where it sits in the query. */
+export type CodeTermSpan = {
+	/** The reference as written, without the `code:` or the `/*`. */
+	text: string;
+	/** Whether `/*` was on it. */
+	subtree: boolean;
+	/** Character offsets of the whole reference, `code:` prefix included. */
+	start: number;
+	end: number;
+};
+
+/**
+ * Every code reference in the query, with its extent.
+ *
+ * For the code pane, which has two things to do that the validator does not:
+ * show which codes are filtering, and take one back out again when its row is
+ * clicked a second time. Both need to know *where* a reference is, which only
+ * the tokenizer knows.
+ *
+ * Tokenizing rather than scanning for `code:` with a regular expression,
+ * because the two disagree exactly where it matters — inside a quoted phrase,
+ * `"say code:stress"` is four words somebody said and not a reference at all.
+ *
+ * A query that does not tokenize has no references worth reporting: the reader
+ * is mid-keystroke, and the box is already saying so.
+ */
+export function codeTermsIn(query: string): CodeTermSpan[] {
+	let tokens: Token[];
+	try {
+		tokens = tokenize(query);
+	} catch {
+		return [];
+	}
+	return tokens
+		.filter((token) => token.kind === 'code')
+		.map((token) => ({
+			text: token.text,
+			subtree: query.slice(token.position, token.end).endsWith(SUBTREE_SUFFIX),
+			start: token.position,
+			end: token.end ?? token.position
+		}));
 }

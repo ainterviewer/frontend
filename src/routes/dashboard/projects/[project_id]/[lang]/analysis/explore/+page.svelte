@@ -25,6 +25,7 @@
 	import DetailPanel from './DetailPanel.svelte';
 	import ControlRail from './ControlRail.svelte';
 	import KeywordInput from './KeywordInput.svelte';
+	import type { KeywordProblem } from './keywordQuery';
 	import ListView from './ListView.svelte';
 	import TranscriptModal from './TranscriptModal.svelte';
 	import { ExploreState, type ExploreView } from './exploreState.svelte';
@@ -44,6 +45,7 @@
 		clusterQuery,
 		cohortQuery,
 		describeError,
+		keywordProblemOf,
 		filterQuery,
 		groupKeyOf,
 		groupOrder,
@@ -222,6 +224,14 @@
 	const opened = readExploreUrl(page.url.searchParams);
 
 	const explore = new ExploreState(opened);
+
+	// Who is reading, for the code pane's "by me" scope. Kept in step rather
+	// than passed at construction: the session arrives with the layout data and
+	// the state is built from the URL before that, so a value read once here
+	// would be the empty string for the life of the page.
+	$effect(() => {
+		explore.userId = userId;
+	});
 
 	// Local aliases for the few read in a dozen places each. Everything else is
 	// spelled `explore.x` at its use site, which is where it reads best.
@@ -595,12 +605,17 @@
 				if (error || !body) {
 					// A failed recompute after a slider nudge leaves the previous map
 					// up; only a page with nothing on it gets an error in its place.
-					if (!clusters) clusterError = describeError(response?.status, 'Could not cluster.');
+					if (!clusters)
+						clusterError = describeError(response?.status, 'Could not cluster.', error);
+					// Recorded even where the map itself is left standing: the reason
+					// belongs under the box that caused it either way.
+					keywordServerProblem = keywordProblemOf(error) ?? keywordServerProblem;
 					return;
 				}
 
 				clusters = body;
 				clusterError = null;
+				keywordServerProblem = null;
 			},
 			adopting ? 0 : fromToolbar ? TOOLBAR_DEBOUNCE_MS[query.projection] : PANEL_DEBOUNCE_MS
 		);
@@ -671,13 +686,15 @@
 			if (error || !body) {
 				searchResponse = null;
 				searchHits = [];
-				searchError = describeError(response?.status, 'The search could not be run.');
+				searchError = describeError(response?.status, 'The search could not be run.', error);
+				keywordServerProblem = keywordProblemOf(error) ?? keywordServerProblem;
 				return;
 			}
 
 			searchResponse = body;
 			searchHits = body.items ?? [];
 			searchError = null;
+			keywordServerProblem = null;
 		})();
 
 		return () => {
@@ -749,6 +766,21 @@
 	let browseResponse = $state<EmbeddingBrowseResponse | null>(null);
 	let browseHits = $state<EmbeddingSearchHit[]>([]);
 	let browseLoading = $state(false);
+	/**
+	 * A keyword problem only the server could find, or null.
+	 *
+	 * `explore.keywordProblem` is everything a parser catches without a project;
+	 * this is the rest -- a `code:` naming nothing, naming two things, or naming
+	 * a GROUP that is never applied. Held here rather than on `ExploreState`
+	 * because it is a property of the last *response*, not of what is typed, and
+	 * state that described the query would have to be invalidated on every
+	 * keystroke to stay honest.
+	 *
+	 * Every request carrying a keyword refuses the same query, so whichever
+	 * lands first sets this and any success clears it.
+	 */
+	let keywordServerProblem = $state<KeywordProblem | null>(null);
+
 	let browseError = $state<string | null>(null);
 	let browseMoreLoading = $state(false);
 	let browseMoreError = $state<string | null>(null);
@@ -827,13 +859,15 @@
 			if (error || !body) {
 				browseResponse = null;
 				browseHits = [];
-				browseError = describeError(response?.status, 'The corpus could not be read.');
+				browseError = describeError(response?.status, 'The corpus could not be read.', error);
+				keywordServerProblem = keywordProblemOf(error) ?? keywordServerProblem;
 				return;
 			}
 
 			browseResponse = body;
 			browseHits = body.items ?? [];
 			browseError = null;
+			keywordServerProblem = null;
 		})();
 
 		return () => {
@@ -933,13 +967,15 @@
 			if (error || !body) {
 				detail = null;
 				detailHits = [];
-				detailError = describeError(response?.status, 'Could not load this chunk.');
+				detailError = describeError(response?.status, 'Could not load this chunk.', error);
+				keywordServerProblem = keywordProblemOf(error) ?? keywordServerProblem;
 				return;
 			}
 
 			detail = body;
 			detailHits = body.items ?? [];
 			detailError = null;
+			keywordServerProblem = null;
 		})();
 
 		return () => {
@@ -1490,7 +1526,7 @@
 			<KeywordInput
 				bind:value={explore.keyword}
 				bind:scope={explore.keywordScope}
-				problem={explore.keywordProblem}
+				problem={explore.keywordProblem ?? keywordServerProblem}
 			/>
 		</div>
 
@@ -1560,7 +1596,13 @@
 						{#key book}
 							<CodebookGate {book}>
 								{#snippet children(tree)}
-									<CodePanel {tree} {book} bind:open={codesOpen} />
+									<CodePanel
+										{tree}
+										{book}
+										bind:open={codesOpen}
+										bind:keyword={explore.keyword}
+										bind:coverage={explore.coverage}
+									/>
 								{/snippet}
 							</CodebookGate>
 						{/key}
@@ -1814,7 +1856,13 @@
 							{#key book}
 								<CodebookGate {book}>
 									{#snippet children(tree)}
-										<CodePanel {tree} {book} bind:open={codesOpen} />
+										<CodePanel
+											{tree}
+											{book}
+											bind:open={codesOpen}
+											bind:keyword={explore.keyword}
+											bind:coverage={explore.coverage}
+										/>
 									{/snippet}
 								</CodebookGate>
 							{/key}
