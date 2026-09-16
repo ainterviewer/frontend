@@ -765,7 +765,10 @@ export const zImage = z.object({
 /**
  * InterviewDurationStats
  *
- * Statistics about interview duration (time spent).
+ * Statistics about interview duration (active time spent).
+ *
+ * Over the same gap-capped durations the duration histogram is binned from,
+ * so the summary and the chart describe the same quantity.
  */
 export const zInterviewDurationStats = z.object({
     min_seconds: z.int(),
@@ -1199,8 +1202,8 @@ export const zMonitoringStats = z.object({
     duration_stats: zInterviewDurationStats.nullable(),
     message_count_stats: zMessageCountStats.nullable(),
     duration_histogram: z.array(zHistogramBucket),
-    duration_outliers_excluded: z.int(),
-    duration_outlier_threshold: z.int().nullable(),
+    duration_gaps_capped: z.int(),
+    duration_gap_cap_seconds: z.int(),
     message_count_histogram: z.array(zHistogramBucket),
     message_length_histogram: z.array(zHistogramBucket),
     dropout_stats: z.array(zDropoutPoint),

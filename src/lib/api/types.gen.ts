@@ -1945,7 +1945,10 @@ export type InterviewConfig = {
 /**
  * InterviewDurationStats
  *
- * Statistics about interview duration (time spent).
+ * Statistics about interview duration (active time spent).
+ *
+ * Over the same gap-capped durations the duration histogram is binned from,
+ * so the summary and the chart describe the same quantity.
  */
 export type InterviewDurationStats = {
     /**
@@ -2855,13 +2858,13 @@ export type MonitoringStats = {
      */
     duration_histogram: Array<HistogramBucket>;
     /**
-     * Duration Outliers Excluded
+     * Duration Gaps Capped
      */
-    duration_outliers_excluded: number;
+    duration_gaps_capped: number;
     /**
-     * Duration Outlier Threshold
+     * Duration Gap Cap Seconds
      */
-    duration_outlier_threshold: number | null;
+    duration_gap_cap_seconds: number;
     /**
      * Message Count Histogram
      */

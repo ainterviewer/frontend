@@ -42,7 +42,7 @@
 	const totalMessages = Tween.of(() => stats?.message_count_stats?.sum_messages ?? 0, {
 		duration: 400
 	});
-	const totalDuration = Tween.of(() => stats?.duration_stats?.sum_seconds ?? 0, { duration: 400 });
+	const averageDuration = Tween.of(() => stats?.duration_stats?.avg_seconds ?? 0, { duration: 400 });
 	const completionRate = Tween.of(() => stats?.completion_rate ?? 0, { duration: 400 });
 	const participationRate = Tween.of(() => stats?.participation_rate ?? 0, { duration: 400 });
 
@@ -506,20 +506,22 @@
 				</div>
 			{/if}
 			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-				<div class="text-sm font-medium text-gray-700">Total Duration</div>
+				<div class="text-sm font-medium text-gray-700">Average Duration</div>
 				{#if loading}
 					<div class="mt-2 h-9 w-24 animate-pulse rounded bg-surface-200"></div>
 					<div class="mt-2 h-3 w-40 animate-pulse rounded bg-surface-200"></div>
 				{:else}
 					<div class="mt-2 text-3xl font-bold">
-						{formatDuration(totalDuration.current)}
+						{formatDuration(averageDuration.current)}
 					</div>
 				{/if}
 				{#if stats?.duration_stats}
+					<!-- Active time, on the same gap-capped durations the duration
+					     histogram is binned from. -->
 					<div class="mt-1 text-xs text-gray-500">
-						Min {formatDuration(stats.duration_stats.min_seconds)} · Avg {formatDuration(
-							stats.duration_stats.avg_seconds
-						)} · Max {formatDuration(stats.duration_stats.max_seconds)}
+						min {formatDuration(stats.duration_stats.min_seconds)} - max {formatDuration(
+							stats.duration_stats.max_seconds
+						)} - total {formatDuration(stats.duration_stats.sum_seconds)}
 					</div>
 				{/if}
 			</div>
@@ -740,14 +742,14 @@
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<div class="mb-4">
 				<h3 class="text-lg font-medium">Duration</h3>
-				<!-- The bars leave out interviews left open for hours; the summary
-				     card above still counts them, so say so here rather than letting
-				     the two quietly disagree. -->
-				{#if stats && stats.duration_outliers_excluded > 0}
+				<!-- Active time: an interview left open for hours has that idle
+				     stretch capped rather than being dropped, so these bars and the
+				     summary card above describe the same quantity. -->
+				{#if stats && stats.duration_gaps_capped > 0}
 					<p class="text-sm text-gray-500">
-						Excludes {formatNumber(stats.duration_outliers_excluded)}
-						{stats.duration_outliers_excluded === 1 ? 'outlier' : 'outliers'} over
-						{formatDuration(stats.duration_outlier_threshold ?? 0)}
+						Active time &middot; {formatNumber(stats.duration_gaps_capped)}
+						{stats.duration_gaps_capped === 1 ? 'gap' : 'gaps'} capped at
+						{formatDuration(stats.duration_gap_cap_seconds)}
 					</p>
 				{/if}
 			</div>
