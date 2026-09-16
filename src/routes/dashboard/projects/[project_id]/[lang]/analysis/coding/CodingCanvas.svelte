@@ -43,6 +43,22 @@
 	const REFIT_MS = 250;
 
 	/**
+	 * How a fit frames the tree, and how far it is allowed to zoom in.
+	 *
+	 * A fit with nothing but its padding to go on fills the pane with whatever
+	 * it is given, so a codebook of four codes opens with each one the size of a
+	 * card -- more screen than a name and a definition line need, and no sense
+	 * of the tree they sit in. Capping the fit keeps a small codebook at its
+	 * natural size and leaves room to grow into; the reader can still zoom past
+	 * this by hand, up to `maxZoom`.
+	 *
+	 * Shared by every fit -- the one at mount, the refits below, and the
+	 * Controls' fit button, which takes its own options and would otherwise fill
+	 * the pane again on the first click.
+	 */
+	const FIT_OPTIONS = { padding: 0.12, maxZoom: 1 };
+
+	/**
 	 * Refit the viewport when the tree asks for it.
 	 *
 	 * Turning the tree on its side swaps its proportions -- a wide, shallow
@@ -60,7 +76,7 @@
 			typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 		// After the nodes Svelte Flow has just been handed are measured; fitting
 		// against the previous arrangement would fit the wrong bounds.
-		void tick().then(() => flow.fitView({ padding: 0.12, duration: reduced ? 0 : REFIT_MS }));
+		void tick().then(() => flow.fitView({ ...FIT_OPTIONS, duration: reduced ? 0 : REFIT_MS }));
 	});
 
 	/**
@@ -116,7 +132,7 @@
 	bind:edges={tree.edges}
 	{nodeTypes}
 	fitView
-	fitViewOptions={{ padding: 0.12 }}
+	fitViewOptions={FIT_OPTIONS}
 	minZoom={0.2}
 	maxZoom={1.75}
 	nodesConnectable
@@ -157,7 +173,7 @@
 	onconnectend={addCodeWhereDropped}
 >
 	<Background variant={BackgroundVariant.Dots} gap={18} size={1} bgColor="#f9fafb" />
-	<Controls showLock={false} />
+	<Controls showLock={false} fitViewOptions={FIT_OPTIONS} />
 	<MiniMap
 		nodeColor={(node) => (node.data as { code: { color: string } }).code.color}
 		pannable
