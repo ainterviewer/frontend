@@ -152,14 +152,14 @@ export const projectSidebarItems: SidebarItem[] = [
 				icon: 'fas fa-compass'
 			},
 			{
-				label: 'Annotate',
-				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
-				icon: 'fas fa-tags'
+				label: 'Codebook',
+				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/coding',
+				icon: 'fas fa-sitemap'
 			},
 			{
 				label: 'Coding',
-				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/coding',
-				icon: 'fas fa-sitemap'
+				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/annotate',
+				icon: 'fas fa-tags'
 			},
 			{
 				label: 'Report',

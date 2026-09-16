@@ -36,56 +36,6 @@ export const zAgentConfig = z.object({
 });
 
 /**
- * AnnotationType
- */
-export const zAnnotationType = z.enum(['tag', 'score']);
-
-/**
- * AnalysisCategoryCreate
- */
-export const zAnalysisCategoryCreate = z.object({
-    project_id: z.string(),
-    name: z.string(),
-    description: z.string().nullish(),
-    type: zAnnotationType,
-    color: z.string(),
-    min_value: z.int().nullish(),
-    max_value: z.int().nullish()
-});
-
-/**
- * AnalysisCategoryPublic
- */
-export const zAnalysisCategoryPublic = z.object({
-    project_id: z.string(),
-    name: z.string(),
-    description: z.string().nullish(),
-    type: zAnnotationType,
-    color: z.string(),
-    min_value: z.int().nullish(),
-    max_value: z.int().nullish(),
-    id: z.string(),
-    created_at: z.iso.datetime()
-});
-
-/**
- * AnnotationValueCreate
- */
-export const zAnnotationValueCreate = z.object({
-    category_id: z.string(),
-    value_int: z.int()
-});
-
-/**
- * AnnotationValuePublic
- */
-export const zAnnotationValuePublic = z.object({
-    category_id: z.string(),
-    value_int: z.int(),
-    id: z.string()
-});
-
-/**
  * AnswerLength
  */
 export const zAnswerLength = z.enum([
@@ -97,9 +47,9 @@ export const zAnswerLength = z.enum([
 /**
  * AuthorPublic
  *
- * Who wrote an annotation or a comment.
+ * Who wrote a coding or a comment.
  *
- * Annotations and comments are author specific, so every one of them is shown
+ * Codings and comments are author specific, so every one of them is shown
  * with a name attached. Carrying the author inline saves the client from
  * resolving user ids against a separate collaborator listing.
  */
@@ -177,6 +127,130 @@ export const zCheckboxItem = z.object({
     required: z.boolean().optional().default(true),
     options: z.array(z.string()),
     with_other: z.boolean().optional().default(false)
+});
+
+/**
+ * CodeKind
+ *
+ * What a code *is*, which decides what applying it to a passage produces.
+ *
+ * ``TAG`` is the ordinary case: the code either applies or it does not.
+ * ``SCORE`` asks the coder for a number in the code's own range, for codes
+ * that are degrees of something rather than presences of it. ``GROUP`` is
+ * neither -- it organises the branch under it and is never applied, which is
+ * what keeps a parent's count from pretending to include its children's.
+ */
+export const zCodeKind = z.enum([
+    'group',
+    'tag',
+    'score'
+]);
+
+/**
+ * CodeBase
+ *
+ * One code as the client sends it, id and all.
+ *
+ * The id is the client's because a code is dragged, renamed and coded with
+ * long before the codebook is saved; see ``CodeTable``.
+ */
+export const zCodeBase = z.object({
+    id: z.string(),
+    parent_id: z.string().nullish(),
+    name: z.string().optional().default(''),
+    definition: z.string().optional().default(''),
+    memo: z.string().optional().default(''),
+    color: z.string().optional().default(''),
+    kind: zCodeKind.optional().default('tag'),
+    min_value: z.int().nullish(),
+    max_value: z.int().nullish(),
+    position_x: z.number().nullish(),
+    position_y: z.number().nullish()
+});
+
+/**
+ * CodePublic
+ */
+export const zCodePublic = z.object({
+    id: z.string(),
+    parent_id: z.string().nullish(),
+    name: z.string().optional().default(''),
+    definition: z.string().optional().default(''),
+    memo: z.string().optional().default(''),
+    color: z.string().optional().default(''),
+    kind: zCodeKind.optional().default('tag'),
+    min_value: z.int().nullish(),
+    max_value: z.int().nullish(),
+    position_x: z.number().nullish(),
+    position_y: z.number().nullish(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime()
+});
+
+/**
+ * CodebookPublic
+ *
+ * The stored codebook, in the order the tree reads.
+ */
+export const zCodebookPublic = z.object({
+    codes: z.array(zCodePublic),
+    palette: z.array(z.string())
+});
+
+/**
+ * CodebookPut
+ *
+ * A whole codebook, replacing the stored one.
+ *
+ * The codebook is edited as one document -- a drag re-parents a branch and
+ * reorders two sets of siblings at once, and the editor holds an undo stack
+ * over the whole thing -- so it is saved as one, and ``codes`` is authoritative:
+ * a code the client leaves out is deleted, along with every coding made with
+ * it. List order is sibling order.
+ */
+export const zCodebookPut = z.object({
+    codes: z.array(zCodeBase),
+    palette: z.array(z.string())
+});
+
+/**
+ * CodingCreate
+ */
+export const zCodingCreate = z.object({
+    code_id: z.string(),
+    start_offset: z.int().nullish(),
+    end_offset: z.int().nullish(),
+    value_int: z.int().nullish()
+});
+
+/**
+ * CodingPublic
+ */
+export const zCodingPublic = z.object({
+    code_id: z.string(),
+    start_offset: z.int().nullish(),
+    end_offset: z.int().nullish(),
+    value_int: z.int().nullish(),
+    id: z.string(),
+    message_id: z.string(),
+    user_id: z.string(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    author: zAuthorPublic
+});
+
+/**
+ * CodingsForMessages
+ *
+ * Which messages to read the codings of.
+ *
+ * A POST for a read, like the filtered-message endpoints beside it: the
+ * explore page draws a page of results as a mosaic of turns from many
+ * interviews, so the ask is a few hundred message ids -- more than belongs in
+ * a query string, and a request per turn would be a request per turn.
+ */
+export const zCodingsForMessages = z.object({
+    message_ids: z.array(z.string()).max(500)
 });
 
 /**
@@ -566,7 +640,7 @@ export const zFeedback = z.enum(['positive', 'negative']);
  * FilteredMessagesRequest
  */
 export const zFilteredMessagesRequest = z.object({
-    category_ids: z.array(z.string()).nullish(),
+    code_ids: z.array(z.string()).nullish(),
     search_text: z.string().nullish(),
     exact_match: z.boolean().optional().default(false),
     case_sensitive: z.boolean().optional().default(false),
@@ -1019,28 +1093,6 @@ export const zLoginData = z.object({
 export const zMediaUploadResponse = z.object({
     message: z.string(),
     filename: z.string()
-});
-
-/**
- * MessageAnnotationCreate
- */
-export const zMessageAnnotationCreate = z.object({
-    message_id: z.string(),
-    user_id: z.string(),
-    values: z.array(zAnnotationValueCreate)
-});
-
-/**
- * MessageAnnotationPublic
- */
-export const zMessageAnnotationPublic = z.object({
-    message_id: z.string(),
-    user_id: z.string(),
-    id: z.string(),
-    created_at: z.iso.datetime(),
-    updated_at: z.iso.datetime(),
-    values: z.array(zAnnotationValuePublic),
-    author: zAuthorPublic
 });
 
 /**
@@ -1900,7 +1952,7 @@ export const zMessagePublic = z.object({
     ]).nullish(),
     skipped_by_condition: z.boolean().optional().default(false),
     id: z.string(),
-    annotations: z.array(zMessageAnnotationPublic).optional().default([]),
+    codings: z.array(zCodingPublic).optional().default([]),
     comments: z.array(zMessageCommentPublic).optional().default([]),
     interview_type: zInterviewType
 });
@@ -2008,6 +2060,7 @@ export const zTurnRole = z.enum(['interviewer', 'respondent']);
  * and a result reads the way the conversation did.
  */
 export const zEmbeddingTurn = z.object({
+    id: z.uuid(),
     role: zTurnRole,
     text: z.string(),
     survey_label: z.string().nullish(),
@@ -2139,10 +2192,10 @@ export const zEmbeddingSimilarResponse = z.object({
  *
  * One turn of a whole interview, for reading a hit in its context.
  *
- * An `EmbeddingTurn` with everything a chunk has no room for: the message
- * row's own id, the survey item in full, the image, and whether the guide
- * skipped past it. The coordinates it is scrolled to are the base model's
- * now, since a card numbers its messages from them too.
+ * An `EmbeddingTurn` with everything a chunk has no room for: the survey item
+ * in full, the image, and whether the guide skipped past it. The message id
+ * and the coordinates it is scrolled to are the base model's, since a card
+ * identifies and numbers its turns from them too.
  *
  * Inherits `matches`/`excluded` rather than restating them, so a transcript
  * renders through the same component a chunk does -- the search is still
@@ -2150,6 +2203,7 @@ export const zEmbeddingSimilarResponse = z.object({
  * reading the transcript at all.
  */
 export const zTranscriptTurn = z.object({
+    id: z.uuid(),
     role: zTurnRole,
     text: z.string(),
     survey_label: z.string().nullish(),
@@ -2159,7 +2213,6 @@ export const zTranscriptTurn = z.object({
     section: z.int().nullish(),
     main_question: z.int().nullish(),
     sub_question: z.int().nullish(),
-    id: z.uuid(),
     survey_item: z.union([
         zRadioItem,
         zCheckboxItem,
@@ -2681,112 +2734,122 @@ export const zInvitationPublicWritable = z.object({
     email: z.string().nullable()
 });
 
-export const zGetAnalysisCategoriesPath = z.object({
+export const zGetCodebookPath = z.object({
     project_id: z.string().nullable()
 });
 
-export const zGetAnalysisCategoriesQuery = z.object({
+export const zGetCodebookQuery = z.object({
     folder_id: z.string().nullish()
 });
 
 /**
- * Response Get Analysis Categories
+ * Successful Response
+ */
+export const zGetCodebookResponse = zCodebookPublic;
+
+export const zSaveCodebookBody = zCodebookPut;
+
+export const zSaveCodebookPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zSaveCodebookQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zSaveCodebookResponse = zCodebookPublic;
+
+export const zGetCodeCountsPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zGetCodeCountsQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Response Get Code Counts
  *
  * Successful Response
  */
-export const zGetAnalysisCategoriesResponse = z.array(zAnalysisCategoryPublic);
+export const zGetCodeCountsResponse = z.record(z.string(), z.int());
 
-export const zCreateAnalysisCategoryBody = zAnalysisCategoryCreate;
-
-export const zCreateAnalysisCategoryPath = z.object({
-    project_id: z.string().nullable()
-});
-
-export const zCreateAnalysisCategoryQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zDeleteAnalysisCategoryPath = z.object({
-    project_id: z.string().nullable(),
-    category_id: z.string()
-});
-
-export const zDeleteAnalysisCategoryQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-export const zUpdateAnalysisCategoryBody = zAnalysisCategoryCreate;
-
-export const zUpdateAnalysisCategoryPath = z.object({
-    project_id: z.string().nullable(),
-    category_id: z.string()
-});
-
-export const zUpdateAnalysisCategoryQuery = z.object({
-    folder_id: z.string().nullish()
-});
-
-/**
- * Successful Response
- */
-export const zUpdateAnalysisCategoryResponse = zAnalysisCategoryPublic;
-
-export const zGetMessageAnnotationsPath = z.object({
+export const zGetMessageCodingsPath = z.object({
     project_id: z.string().nullable(),
     message_id: z.string()
 });
 
-export const zGetMessageAnnotationsQuery = z.object({
+export const zGetMessageCodingsQuery = z.object({
     folder_id: z.string().nullish()
 });
 
 /**
- * Response Get Message Annotations
+ * Response Get Message Codings
  *
  * Successful Response
  */
-export const zGetMessageAnnotationsResponse = z.array(zMessageAnnotationPublic);
+export const zGetMessageCodingsResponse = z.array(zCodingPublic);
 
-export const zAddMessageAnnotationBody = zMessageAnnotationCreate;
+export const zAddMessageCodingBody = zCodingCreate;
 
-export const zAddMessageAnnotationPath = z.object({
+export const zAddMessageCodingPath = z.object({
     project_id: z.string().nullable(),
     message_id: z.string()
 });
 
-export const zAddMessageAnnotationQuery = z.object({
+export const zAddMessageCodingQuery = z.object({
     folder_id: z.string().nullish()
 });
 
 /**
  * Successful Response
  */
-export const zAddMessageAnnotationResponse = zMessageAnnotationPublic;
+export const zAddMessageCodingResponse = zCodingPublic;
 
-export const zDeleteMessageAnnotationPath = z.object({
-    project_id: z.string().nullable(),
-    annotation_id: z.string()
+export const zGetCodingsForMessagesBody = zCodingsForMessages;
+
+export const zGetCodingsForMessagesPath = z.object({
+    project_id: z.string().nullable()
 });
 
-export const zDeleteMessageAnnotationQuery = z.object({
+export const zGetCodingsForMessagesQuery = z.object({
     folder_id: z.string().nullish()
 });
 
-export const zUpdateMessageAnnotationBody = zMessageAnnotationCreate;
+/**
+ * Response Get Codings For Messages
+ *
+ * Successful Response
+ */
+export const zGetCodingsForMessagesResponse = z.record(z.string(), z.array(zCodingPublic));
 
-export const zUpdateMessageAnnotationPath = z.object({
+export const zDeleteMessageCodingPath = z.object({
     project_id: z.string().nullable(),
-    annotation_id: z.string()
+    coding_id: z.string()
 });
 
-export const zUpdateMessageAnnotationQuery = z.object({
+export const zDeleteMessageCodingQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+export const zUpdateMessageCodingBody = zCodingCreate;
+
+export const zUpdateMessageCodingPath = z.object({
+    project_id: z.string().nullable(),
+    coding_id: z.string()
+});
+
+export const zUpdateMessageCodingQuery = z.object({
     folder_id: z.string().nullish()
 });
 
 /**
  * Successful Response
  */
-export const zUpdateMessageAnnotationResponse = zMessageAnnotationPublic;
+export const zUpdateMessageCodingResponse = zCodingPublic;
 
 export const zGetFilteredMessagesCountBody = zFilteredMessagesRequest;
 

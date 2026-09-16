@@ -96,6 +96,7 @@
 		answer = '',
 		matches = [],
 		excluded = [],
+		coded = [],
 		condition = null,
 		skipped = false,
 		compact = false,
@@ -139,6 +140,16 @@
 		 */
 		matches?: [number, number][];
 		excluded?: [number, number][];
+		/**
+		 * Where in `text` a coding the reader is pointing at applies.
+		 *
+		 * Transient: this is how a chip under the bubble says which words it is
+		 * about, so it arrives on hover and leaves again. Kept as offsets like
+		 * the search marks, and rendered by the same machinery, because a span
+		 * that straddles a link has to survive the sanitiser the same way a
+		 * search hit does.
+		 */
+		coded?: [number, number][];
 		/**
 		 * The guide rule this question is subject to, in one line — see
 		 * `$lib/analysis/conditions`.
@@ -197,10 +208,18 @@
 		excluded: {
 			className: 'rounded-sm bg-red-200/90 px-0.5 text-gray-900 line-through decoration-red-700/50',
 			title: 'You excluded this word — it is here, but it is not why this chunk is in the results'
+		},
+		// One fixed colour rather than the code's own: only one coding is ever
+		// pointed at, and the chip under the pointer is already wearing the
+		// code's colour. A per-code colour here would also mean a colour from
+		// the codebook reaching a `style` attribute the sanitiser emits.
+		coded: {
+			className: 'rounded-sm bg-sky-300/90 px-0.5 text-gray-900',
+			title: 'Coded'
 		}
 	} as const;
 
-	type Mark = 'match' | 'excluded' | null;
+	type Mark = 'match' | 'excluded' | 'coded' | null;
 
 	type Piece =
 		| { kind: 'token'; config: (typeof TOKEN_CONFIG)[CustomToken] }
@@ -211,14 +230,31 @@
 	 * The spans, merged and in order, as one list.
 	 *
 	 * The server guarantees matches and exclusions do not overlap each other, so
-	 * sorting is all the merging this needs.
+	 * sorting is all the merging those two need. A coded span is a different
+	 * matter: it comes from a coder rather than from the query and may well
+	 * cover a word the search also hit, and `marked` cuts a run at each span in
+	 * turn — two overlapping spans would slice the same characters twice and
+	 * print them twice.
+	 *
+	 * So a coded span wins outright and the search marks under it step aside.
+	 * The reader asked where this code applies; that is the question the screen
+	 * should answer while they are asking it, and the yellow comes back the
+	 * moment they stop pointing.
 	 */
-	let spans = $derived(
-		[
-			...matches.map(([start, end]) => ({ start, end, mark: 'match' as const })),
-			...excluded.map(([start, end]) => ({ start, end, mark: 'excluded' as const }))
-		].sort((a, b) => a.start - b.start)
-	);
+	let spans = $derived.by(() => {
+		const coding = coded.map(([start, end]) => ({ start, end, mark: 'coded' as const }));
+		const under = (span: { start: number; end: number }) =>
+			coding.some((mark) => mark.start < span.end && mark.end > span.start);
+		return [
+			...coding,
+			...matches
+				.map(([start, end]) => ({ start, end, mark: 'match' as const }))
+				.filter((span) => !under(span)),
+			...excluded
+				.map(([start, end]) => ({ start, end, mark: 'excluded' as const }))
+				.filter((span) => !under(span))
+		].sort((a, b) => a.start - b.start);
+	});
 
 	/**
 	 * A run of plain text, cut where the query matched inside it.

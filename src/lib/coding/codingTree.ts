@@ -112,23 +112,26 @@ export const DEFAULT_PALETTE = [
 /** The colour a code falls back to when its own is missing or unreadable. */
 export const DEFAULT_CODE_COLOR = DEFAULT_PALETTE[0];
 
-const ID_PREFIX = 'code';
-
-let idCounter = 0;
-
 /**
  * Ids are generated here rather than by the backend because a code has to be
- * selectable and drawable the instant it is created; waiting for a round trip
- * would mean a node with no identity on screen. Server-assigned ids can replace
- * these on save without anything here caring, since nothing derives meaning
- * from the shape of an id.
+ * selectable, drawable and *codeable* the instant it is created; waiting for a
+ * round trip would mean a node with no identity on screen, and a coding made
+ * against a placeholder id that has to be rewritten when the real one lands.
+ *
+ * A bare UUID, with no prefix, because the backend stores it as the code's
+ * primary key -- see `CodeTable`. Nothing here derives meaning from the shape
+ * of an id, so the constraint is entirely the database's.
  */
 export function newCodeId(): CodeId {
 	if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-		return `${ID_PREFIX}-${crypto.randomUUID()}`;
+		return crypto.randomUUID();
 	}
-	idCounter += 1;
-	return `${ID_PREFIX}-${idCounter}-${Date.now().toString(36)}`;
+	// Only reachable outside a secure context, where `randomUUID` is absent.
+	// Still a v4 by shape, because that is what the API accepts.
+	return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (char) => {
+		const digit = Number(char);
+		return (digit ^ (Math.floor(Math.random() * 256) & (15 >> (digit / 4)))).toString(16);
+	});
 }
 
 export type CodeDraft = {

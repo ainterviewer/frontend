@@ -1,305 +1,127 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Analysis } from '$lib/api';
-	import type { AnalysisCategoryPublic, AnnotationType } from '$lib/api/types.gen';
-	import CategoryModal from '$lib/components/analysis/CategoryModal.svelte';
+	import CodebookGate from '$lib/coding/CodebookGate.svelte';
+	import { displayName, outlineOf, scoreRangeLabel } from '$lib/coding/codingTree';
+	import { codebookFor } from '$lib/coding/store.svelte';
 	import { getContrastColor } from '$lib/utils/colors';
-	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
-	// State
-	let projectId = $derived(page.params.project_id);
-	let lang = $derived(page.params.lang);
-	let categories = $state<AnalysisCategoryPublic[]>([]);
-	let categoryCounts = $state<Record<string, number>>({});
-	let loading = $state(true);
+	/**
+	 * The codebook, and how much of the corpus each code has reached.
+	 *
+	 * Read-only on purpose: a codebook is edited on the Coding page, where the
+	 * tree can be dragged about. What this page adds is the one thing that page
+	 * cannot show -- the counts, which say which codes are carrying the analysis
+	 * and which are still only an intention.
+	 */
 
-	// Derived State
-	let tags = $derived(categories.filter((c) => c.type === 'tag'));
-	let scores = $derived(categories.filter((c) => c.type === 'score'));
+	let projectId = $derived(page.params.project_id ?? '');
+	let lang = $derived(page.params.lang ?? '');
 
-	// UI State
-	let activeDropdown = $state<string | null>(null);
-	let isCreateModalOpen = $state(false);
-	let editingCategory = $state<AnalysisCategoryPublic | null>(null);
-	let modalDefaultType = $state<AnnotationType>('tag');
+	const book = $derived(codebookFor(projectId));
 
-	async function loadCategories() {
-		if (!projectId) return;
-		loading = true;
-		const res = await Analysis.getAnalysisCategories({
-			path: { project_id: projectId }
-		});
-		if (res.error) {
-			console.error('Failed to load categories', res.error);
-			toast.error('Failed to load categories');
-			loading = false;
-			return;
-		}
-		categories = res.data;
-		const counts: Record<string, number> = {};
-		await Promise.all(
-			categories.map(async (c) => {
-				const { data } = await Analysis.getFilteredMessagesCount({
-					path: { project_id: projectId },
-					body: { category_ids: [c.id] }
-				});
-				if (data !== undefined) counts[c.id] = data;
-			})
-		);
-		categoryCounts = counts;
-		loading = false;
-	}
-
-	function openCreateModal(type: AnnotationType) {
-		editingCategory = null;
-		modalDefaultType = type;
-		isCreateModalOpen = true;
-	}
-
-	function openEditModal(category: AnalysisCategoryPublic) {
-		editingCategory = category;
-		isCreateModalOpen = true;
-		activeDropdown = null;
-	}
-
-	async function deleteCategory(id: string) {
-		if (!confirm('Are you sure you want to delete this category?')) return;
-		const { error } = await Analysis.deleteAnalysisCategory({
-			path: { project_id: projectId ?? '', category_id: id }
-		});
-		if (error) {
-			console.error('Failed to delete category', error);
-			toast.error('Failed to delete category');
-			return;
-		}
-		await loadCategories();
-	}
-
-	function toggleDropdown(e: MouseEvent, id: string) {
-		e.stopPropagation();
-		activeDropdown = activeDropdown === id ? null : id;
-	}
-
-	function navigateToCategory(id: string) {
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- one-shot URL builder for goto()
-		const params = new URLSearchParams();
-		params.append('category_id', id);
-		goto(
-			resolve(
-				`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?${params.toString()}`
-			)
-		);
-	}
-
-	onMount(() => {
-		const handleClickOutside = (e: MouseEvent) => {
-			if (activeDropdown && !(e.target as Element).closest('.dropdown-container')) {
-				activeDropdown = null;
-			}
-		};
-		window.addEventListener('click', handleClickOutside);
-		loadCategories();
-		return () => window.removeEventListener('click', handleClickOutside);
-	});
+	let counts = $state<Record<string, number>>({});
 
 	$effect(() => {
-		if (projectId) loadCategories();
+		const project = projectId;
+		if (!project) return;
+		// Read afresh on every visit rather than cached with the codebook: the
+		// counts change as people code, and a stale one reads as "nobody has
+		// used this code" -- the single claim this page exists to make.
+		void (async () => {
+			const { data } = await Analysis.getCodeCounts({ path: { project_id: project } });
+			if (data) counts = data;
+		})();
 	});
 </script>
 
-<div class="mb-6 flex items-center justify-between">
-	<h1 class="text-2xl font-semibold text-gray-800">Annotate</h1>
-	<a
-		href={resolve(`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages`)}
-		class="rounded-md bg-primary px-4 py-2 text-sm text-white transition-colors hover:bg-dark"
-	>
-		<i class="fa-solid fa-search mr-2"></i>
-		Browse & Search Messages
-	</a>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+	<h1 class="text-2xl font-semibold text-gray-800">Coding</h1>
+	<div class="flex items-center gap-2">
+		<a
+			href={resolve(`/dashboard/projects/${projectId}/${lang}/analysis/coding`)}
+			class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+		>
+			<i class="fa-solid fa-sitemap mr-2"></i>
+			Edit codebook
+		</a>
+		<a
+			href={resolve(`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages`)}
+			class="rounded-md bg-primary px-4 py-2 text-sm text-white transition-colors hover:bg-dark"
+		>
+			<i class="fa-solid fa-magnifying-glass mr-2"></i>
+			Browse &amp; code messages
+		</a>
+	</div>
 </div>
 
-<p class="mb-6 text-gray-600">
-	Manage and browse analytical categories and scores for your project.
+<p class="mb-6 max-w-2xl text-gray-600">
+	The project's codebook, and how many passages each code has been applied to. A code's count is its
+	own — a passage coded <em>Cost</em> is not thereby coded the group it sits under.
 </p>
 
-{#if loading && categories.length === 0}
-	<div class="flex justify-center py-8">
-		<i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
-	</div>
-{:else}
-	<div class="space-y-8">
-		<!-- Tags Section -->
-		<section>
-			<h3 class="mb-4 text-lg font-medium text-gray-800">Tags</h3>
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-				{#each tags as tag (tag.id)}
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
+<CodebookGate {book}>
+	{#snippet children(tree)}
+		{@const rows = outlineOf(tree.codes)}
+		{#if rows.length === 0}
+			<div class="rounded-lg border border-dashed border-gray-300 px-6 py-12 text-center">
+				<p class="mb-3 text-gray-600">This project has no codebook yet.</p>
+				<a
+					href={resolve(`/dashboard/projects/${projectId}/${lang}/analysis/coding`)}
+					class="text-sm text-primary underline underline-offset-2"
+				>
+					Build one on the Coding page
+				</a>
+			</div>
+		{:else}
+			<div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+				{#each rows as row (row.code.id)}
+					{@const code = row.code}
+					{@const used = counts[code.id] ?? 0}
 					<div
-						class="flex cursor-pointer flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg"
-						onclick={() => navigateToCategory(tag.id)}
-						role="button"
-						tabindex="0"
+						class="flex items-center gap-3 border-b border-gray-100 px-4 py-2 last:border-b-0 hover:bg-gray-50"
+						style="padding-left: {16 + row.depth * 20}px"
 					>
-						<div class="grow p-4">
-							<div class="mb-2 flex items-center gap-2">
-								<h3 class="font-semibold text-gray-900">{tag.name}</h3>
-								<span
-									class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
-								>
-									{categoryCounts[tag.id] ?? 0}
-								</span>
-							</div>
-							<p class="line-clamp-2 text-sm text-gray-500" title={tag.description || ''}>
-								{tag.description || 'No description'}
-							</p>
-						</div>
-						<div class="flex items-center justify-between border-t border-gray-200 px-4 py-2">
-							<span
-								class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-								style="background-color: {tag.color}; color: {getContrastColor(tag.color)}"
+						<span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color: {code.color}"
+						></span>
+						<span class="min-w-0 flex-1 truncate text-sm text-gray-800">
+							{displayName(code.name)}
+						</span>
+
+						{#if code.kind === 'group'}
+							<span class="shrink-0 text-[10px] tracking-wide text-gray-400 uppercase">Group</span>
+						{:else if code.kind === 'score'}
+							<span class="shrink-0 text-xs text-gray-400">{scoreRangeLabel(code)}</span>
+						{/if}
+
+						{#if code.kind === 'group'}
+							<!-- A group is never applied, so it has no count and nothing to
+							     browse. Saying "0" would read as "unused". -->
+							<span class="w-28 shrink-0 text-right text-xs text-gray-300">—</span>
+						{:else if used === 0}
+							<span class="w-28 shrink-0 text-right text-xs text-gray-400">Not yet used</span>
+						{:else}
+							<a
+								href={resolve(
+									`/dashboard/projects/${projectId}/${lang}/analysis/annotate/messages?code_id=${code.id}`
+								)}
+								class="w-28 shrink-0 text-right text-xs text-gray-600 underline-offset-2 hover:text-gray-900 hover:underline"
 							>
-								{tag.name}
-							</span>
-							<div class="dropdown-container relative">
-								<button
-									class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-									onclick={(e) => toggleDropdown(e, tag.id)}
-									aria-label="Category actions"
-								>
-									<i class="fa-solid fa-ellipsis-vertical"></i>
-								</button>
-								{#if activeDropdown === tag.id}
-									<div
-										class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg"
-										onclick={(e) => e.stopPropagation()}
-										onkeydown={(e) => e.stopPropagation()}
-										role="menu"
-										tabindex="-1"
-									>
-										<button
-											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-											onclick={() => openEditModal(tag)}
-										>
-											Edit
-										</button>
-										<button
-											class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
-											onclick={() => deleteCategory(tag.id)}
-										>
-											Delete
-										</button>
-									</div>
-								{/if}
-							</div>
-						</div>
+								{used} passage{used === 1 ? '' : 's'}
+							</a>
+						{/if}
+
+						<span
+							class="hidden shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium sm:inline-flex"
+							style="background-color: {code.color}; color: {getContrastColor(code.color)}"
+							title={code.definition || undefined}
+						>
+							{code.kind}
+						</span>
 					</div>
 				{/each}
-
-				<!-- New Tag Card -->
-				<button
-					class="flex min-h-[150px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-blue-500 hover:text-blue-500"
-					onclick={() => openCreateModal('tag')}
-				>
-					<i class="fa-solid fa-plus mb-2 text-xl"></i>
-					<span class="font-medium">New Tag</span>
-				</button>
 			</div>
-		</section>
-
-		<!-- Scores Section -->
-		<section>
-			<h3 class="mb-4 text-lg font-medium text-gray-800">Scores</h3>
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-				{#each scores as score (score.id)}
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
-					<div
-						class="flex cursor-pointer flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg"
-						onclick={() => navigateToCategory(score.id)}
-						role="button"
-						tabindex="0"
-					>
-						<div class="grow p-4">
-							<div class="mb-2 flex items-center gap-2">
-								<h3 class="font-semibold text-gray-900">{score.name}</h3>
-								<span
-									class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
-								>
-									{categoryCounts[score.id] ?? 0}
-								</span>
-							</div>
-							<p class="mb-2 line-clamp-2 text-sm text-gray-500" title={score.description || ''}>
-								{score.description || 'No description'}
-							</p>
-							{#if score.min_value != null || score.max_value != null}
-								<div class="text-xs text-gray-400">
-									Range: {score.min_value ?? '?'} - {score.max_value ?? '?'}
-								</div>
-							{/if}
-						</div>
-						<div class="flex items-center justify-between border-t border-gray-200 px-4 py-2">
-							<span
-								class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-								style="background-color: {score.color}; color: {getContrastColor(score.color)}"
-							>
-								{score.name}
-							</span>
-							<div class="dropdown-container relative">
-								<button
-									class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-									onclick={(e) => toggleDropdown(e, score.id)}
-									aria-label="Category actions"
-								>
-									<i class="fa-solid fa-ellipsis-vertical"></i>
-								</button>
-								{#if activeDropdown === score.id}
-									<div
-										class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg"
-										onclick={(e) => e.stopPropagation()}
-										onkeydown={(e) => e.stopPropagation()}
-										role="menu"
-										tabindex="-1"
-									>
-										<button
-											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-											onclick={() => openEditModal(score)}
-										>
-											Edit
-										</button>
-										<button
-											class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
-											onclick={() => deleteCategory(score.id)}
-										>
-											Delete
-										</button>
-									</div>
-								{/if}
-							</div>
-						</div>
-					</div>
-				{/each}
-
-				<!-- New Score Card -->
-				<button
-					class="flex min-h-[150px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-blue-500 hover:text-blue-500"
-					onclick={() => openCreateModal('score')}
-				>
-					<i class="fa-solid fa-plus mb-2 text-xl"></i>
-					<span class="font-medium">New Score</span>
-				</button>
-			</div>
-		</section>
-	</div>
-{/if}
-
-<CategoryModal
-	open={isCreateModalOpen}
-	projectId={projectId ?? ''}
-	category={editingCategory}
-	defaultType={modalDefaultType}
-	existingColors={categories.map((c) => c.color)}
-	onClose={() => (isCreateModalOpen = false)}
-	onSave={loadCategories}
-/>
+		{/if}
+	{/snippet}
+</CodebookGate>

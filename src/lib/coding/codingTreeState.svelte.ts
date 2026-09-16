@@ -31,7 +31,6 @@ import {
 	type CodeKind,
 	type XY
 } from './codingTree';
-import { seedCodes } from './seed';
 import { placeNewCode, resolvePositions, type LayoutDirection } from './treeLayout';
 
 /**
@@ -45,9 +44,10 @@ import { placeNewCode, resolvePositions, type LayoutDirection } from './treeLayo
  * here, which rewrites the codes and then rebuilds the projection in one step.
  * Nothing outside this class mutates `codes`.
  *
- * There is no backend yet. `codes` is the whole store, and a reload is a reset;
- * when the API lands, the mutators below are the only places that have to learn
- * to persist.
+ * Persistence is somebody else's job: every edit bumps `revision`, and
+ * `$lib/coding/store.svelte` watches that and writes the codebook back. This
+ * class deliberately knows nothing about the API, so the editor's behaviour
+ * can be reasoned about -- and tested -- without one.
  */
 
 export type CodeNodeData = {
@@ -86,8 +86,16 @@ const HISTORY_LIMIT = 50;
 type Snapshot = { codes: Code[]; palette: string[] };
 
 export class CodingTreeState {
-	#codes = $state.raw<Code[]>(seedCodes());
+	#codes = $state.raw<Code[]>([]);
 	#palette = $state.raw<string[]>([...DEFAULT_PALETTE]);
+	/**
+	 * Bumped by every change worth saving, and read by the saver.
+	 *
+	 * A counter rather than an effect on `codes`, because a hand-dragged
+	 * position is a change to save and *not* an edit to the codes -- see
+	 * `setPosition`, which rewrites the array without committing.
+	 */
+	#revision = $state(0);
 	#past: Snapshot[] = [];
 	#future: Snapshot[] = [];
 	/** What the last commit was, so consecutive keystrokes can share an entry. */
@@ -195,6 +203,32 @@ export class CodingTreeState {
 		return this.#codes;
 	}
 
+	/** How many times this codebook has changed. See `#revision`. */
+	get revision(): number {
+		return this.#revision;
+	}
+
+	/**
+	 * Replaces the whole document with a stored one, unundoably.
+	 *
+	 * The history is dropped rather than kept: an undo across a load would
+	 * offer the reader the codebook they had *before* this one arrived and,
+	 * once saved, would overwrite the one that is stored. `revision` is
+	 * deliberately not bumped either -- this is the state arriving, not
+	 * changing, and a bump would have the saver write back what it just read.
+	 */
+	load(codes: Code[], palette: string[]) {
+		this.#past = [];
+		this.#future = [];
+		this.#lastEdit = null;
+		this.#codes = codes;
+		if (palette.length > 0) this.#palette = palette;
+		this.#selectedId = null;
+		this.#nameFocusFor = null;
+		this.refits += 1;
+		this.sync();
+	}
+
 	/** The colours this codebook offers for a branch, in the order they are shown. */
 	get palette(): readonly string[] {
 		return this.#palette;
@@ -249,6 +283,7 @@ export class CodingTreeState {
 		this.#future = [];
 		this.#codes = next.codes;
 		this.#palette = next.palette;
+		this.#revision += 1;
 		this.sync();
 	}
 
@@ -477,6 +512,7 @@ export class CodingTreeState {
 		this.#future.push({ codes: this.#codes, palette: this.#palette });
 		this.#codes = previous.codes;
 		this.#palette = previous.palette;
+		this.#revision += 1;
 		if (this.selectedId && !findCode(previous.codes, this.selectedId)) this.selectedId = null;
 		this.sync();
 	}
@@ -488,6 +524,7 @@ export class CodingTreeState {
 		this.#past.push({ codes: this.#codes, palette: this.#palette });
 		this.#codes = next.codes;
 		this.#palette = next.palette;
+		this.#revision += 1;
 		this.sync();
 	}
 
@@ -512,6 +549,7 @@ export class CodingTreeState {
 				...code,
 				position: code.position ?? computed.get(code.id) ?? { x: 0, y: 0 }
 			}));
+			this.#revision += 1;
 		}
 		this.layoutMode = mode;
 		this.sync();
@@ -528,14 +566,16 @@ export class CodingTreeState {
 	resetPositions() {
 		this.#codes = this.#codes.map((code) => ({ ...code, position: null }));
 		this.layoutMode = 'auto';
+		this.#revision += 1;
 		this.refits += 1;
 		this.sync();
 	}
 
-	/** A drag in `free` mode. Not undoable -- see `#commit`. */
+	/** A drag in `free` mode. Not undoable -- see `#commit` -- but saved. */
 	setPosition(id: CodeId, position: XY) {
 		if (this.layoutMode !== 'free') return;
 		this.#codes = this.#codes.map((code) => (code.id === id ? { ...code, position } : code));
+		this.#revision += 1;
 	}
 
 	// --- dragging ------------------------------------------------------------

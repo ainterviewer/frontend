@@ -5,11 +5,17 @@
 	import { dropPosition, resolveDrop } from '$lib/coding/codeDrop';
 	import { displayName } from '$lib/coding/codingTree';
 	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
+	import SaveState from '$lib/coding/SaveState.svelte';
+	import type { Codebook } from '$lib/coding/store.svelte';
 	import { ROW_HEIGHT, toCodeRows, type CodeRow, type CodeRowLike } from './codeTable';
 	import { CodeDrag, provideCodeDrag } from './codeTableDrag.svelte';
 	import CodeTreeRow from './CodeTreeRow.svelte';
 
-	let { tree, open = $bindable(true) }: { tree: CodingTreeState; open?: boolean } = $props();
+	let {
+		tree,
+		book = null,
+		open = $bindable(true)
+	}: { tree: CodingTreeState; book?: Codebook | null; open?: boolean } = $props();
 
 	/**
 	 * The table registers no features at all.
@@ -308,8 +314,16 @@
 			{/if}
 		</div>
 
-		<p class="shrink-0 border-t border-gray-100 px-3 py-1 text-[0.625rem] text-gray-400">
-			{tree.codes.length} code{tree.codes.length === 1 ? '' : 's'} · drag to move, double-click to rename
-		</p>
+		<div
+			class="flex shrink-0 items-center justify-between gap-2 border-t border-gray-100 px-3 py-1 text-[0.625rem] text-gray-400"
+		>
+			<span>
+				{tree.codes.length} code{tree.codes.length === 1 ? '' : 's'} · drag to move, double-click to rename
+			</span>
+			<!-- The pane edits the project's real codebook, so it says where the
+			     edits went. Optional because the pane is also rendered in tests
+			     against a tree with nothing behind it. -->
+			{#if book}<SaveState {book} />{/if}
+		</div>
 	</div>
 {/if}

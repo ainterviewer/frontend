@@ -1,45 +1,52 @@
 <script lang="ts">
-	import type {
-		AnalysisCategoryPublic,
-		AnnotationValueCreate,
-		MessageAnnotationPublic
-	} from '$lib/api/types.gen';
-	import AnnotationChips from '$lib/components/analysis/AnnotationChips.svelte';
-	import MessageAnnotationPanel from '$lib/components/analysis/MessageAnnotationPanel.svelte';
+	import type { CodingPublic } from '$lib/api/types.gen';
+	import type { Code } from '$lib/coding/codingTree';
+	import CodingChips from '$lib/components/analysis/CodingChips.svelte';
+	import CodingPanel from '$lib/components/analysis/CodingPanel.svelte';
 	import MessageCommentThread from '$lib/components/analysis/MessageCommentThread.svelte';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import type { CommentSurface } from '$lib/stores/commentSurface.svelte';
 	import type { MessageComments } from '$lib/stores/messageComments.svelte';
-	import { authorName } from '$lib/utils/annotations';
+	import { authorName } from '$lib/utils/coding';
 	import type { Snippet } from 'svelte';
 
 	interface Props {
 		message: Message;
 		messageId: string;
+		/**
+		 * The message as stored, which is what a span coding's offsets count.
+		 *
+		 * Passed rather than read off `message`: the UI message is a rendering
+		 * -- markdown, a survey item, a transcribed recording -- and its text is
+		 * not the text the offsets belong to.
+		 */
+		content: string;
 		lang: string;
-		projectId: string;
-		categories: AnalysisCategoryPublic[];
-		/** The current user's coding of this message: the editable one. */
-		annotation?: MessageAnnotationPublic | null;
-		/** Everybody else's, shown read-only. */
-		otherAnnotations?: MessageAnnotationPublic[];
+		/** The project's codebook, which codings are resolved against. */
+		codes: readonly Code[];
+		/** Every coding on this message, whoever made it. */
+		codings: CodingPublic[];
 		comments: MessageComments;
 		surface: CommentSurface;
 		currentUserId: string;
 		canModerate?: boolean;
-		/** Hidden where the project has no categories to annotate with. */
-		canAnnotate?: boolean;
-		annotationOpen: boolean;
-		savingAnnotation?: boolean;
+		/** Hidden where the caller may not code — a viewer, say. */
+		canCode?: boolean;
+		codingOpen: boolean;
+		savingCoding?: boolean;
 		/** Context messages the reader pulled in are dimmed. */
 		dimmed?: boolean;
-		onToggleAnnotation: () => void;
-		onSaveAnnotation: (values: AnnotationValueCreate[], shouldClose?: boolean) => void;
-		onDeleteAnnotation?: () => void;
-		onCancelAnnotation: () => void;
-		onCategoryCreated?: () => void;
-		/** Rendered above the message — the annotate view's "show context" button. */
+		onToggleCoding: () => void;
+		onApply: (
+			codeId: string,
+			span: { start: number; end: number } | null,
+			value: number | null
+		) => void;
+		onChangeValue: (codingId: string, value: number) => void;
+		onRemoveCoding: (codingId: string) => void;
+		onCancelCoding: () => void;
+		/** Rendered above the message — the coding view's "show context" button. */
 		beforeMessage?: Snippet;
 		/** Rendered directly under the message — the transcript's audio player. */
 		underMessage?: Snippet;
@@ -50,24 +57,23 @@
 	let {
 		message,
 		messageId,
+		content,
 		lang,
-		projectId,
-		categories,
-		annotation = null,
-		otherAnnotations = [],
+		codes,
+		codings,
 		comments,
 		surface,
 		currentUserId,
 		canModerate = false,
-		canAnnotate = true,
-		annotationOpen,
-		savingAnnotation = false,
+		canCode = true,
+		codingOpen,
+		savingCoding = false,
 		dimmed = false,
-		onToggleAnnotation,
-		onSaveAnnotation,
-		onDeleteAnnotation,
-		onCancelAnnotation,
-		onCategoryCreated,
+		onToggleCoding,
+		onApply,
+		onChangeValue,
+		onRemoveCoding,
+		onCancelCoding,
 		beforeMessage,
 		underMessage,
 		afterMessage
@@ -83,17 +89,31 @@
 		commentCount > 0 ? `${commentCount} comment${commentCount === 1 ? '' : 's'}` : 'Add comment'
 	);
 	let isFromInterviewer = $derived(message.type === 'received');
+
+	// Codings are per coder, so a message can carry several readings of itself.
+	// The reader's own is editable and comes first; everybody else's follows,
+	// named and read-only.
+	let myCodings = $derived(codings.filter((coding) => coding.user_id === currentUserId));
+	let otherCodings = $derived.by(() => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- a local of this pure computation, never escapes
+		const byAuthor = new Map<string, CodingPublic[]>();
+		for (const coding of codings) {
+			if (coding.user_id === currentUserId) continue;
+			byAuthor.set(coding.user_id, [...(byAuthor.get(coding.user_id) ?? []), coding]);
+		}
+		return [...byAuthor.entries()];
+	});
 </script>
 
-{#snippet annotateBadge()}
-	{#if canAnnotate}
+{#snippet codeBadge()}
+	{#if canCode}
 		<button
 			type="button"
-			class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700 focus-visible:opacity-100"
-			onclick={onToggleAnnotation}
+			class="inline-flex cursor-pointer items-center gap-1 rounded-full border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700 focus-visible:opacity-100"
+			onclick={onToggleCoding}
 		>
-			<i class="fa-solid fa-tag text-[8px]"></i>
-			{annotation ? 'Edit annotation' : 'Annotate'}
+			<i class="fa-solid fa-tags text-[8px]"></i>
+			{myCodings.length > 0 ? 'Edit coding' : 'Code'}
 		</button>
 	{/if}
 {/snippet}
@@ -115,23 +135,27 @@
 
 			{@render underMessage?.()}
 
-			<!-- Annotation summary and the annotate affordance -->
+			<!-- What this message is coded as, and the way in -->
 			<div
 				class="mt-1 flex flex-wrap items-center gap-1.5 {isFromInterviewer
 					? 'ml-2.5 sm:ml-[50px]'
 					: 'mr-2.5 justify-end sm:mr-[50px]'}"
 			>
 				{#if !isFromInterviewer}
-					{@render annotateBadge()}
+					{@render codeBadge()}
 				{/if}
-				{#if annotation}
-					<AnnotationChips {annotation} {categories} />
-				{/if}
-				{#each otherAnnotations as other (other.id)}
-					<AnnotationChips annotation={other} {categories} showAuthor />
+				<CodingChips
+					codings={myCodings}
+					{codes}
+					{content}
+					{currentUserId}
+					onRemove={onRemoveCoding}
+				/>
+				{#each otherCodings as [userId, theirs] (userId)}
+					<CodingChips codings={theirs} {codes} {content} showAuthor />
 				{/each}
 				{#if isFromInterviewer}
-					{@render annotateBadge()}
+					{@render codeBadge()}
 				{/if}
 			</div>
 		</div>
@@ -178,18 +202,19 @@
 		</button>
 	{/if}
 
-	<!-- Annotation panel, under the message it codes -->
-	{#if annotationOpen}
-		<div class="annotation-panel-container mt-2 max-w-2xl px-4 sm:px-12">
-			<MessageAnnotationPanel
-				{projectId}
-				{categories}
-				{annotation}
-				saving={savingAnnotation}
-				onSave={onSaveAnnotation}
-				onDelete={onDeleteAnnotation}
-				onCancel={onCancelAnnotation}
-				{onCategoryCreated}
+	<!-- The coding panel, under the message it codes -->
+	{#if codingOpen}
+		<div class="coding-panel-container mt-2 max-w-2xl px-4 sm:px-12">
+			<CodingPanel
+				{codes}
+				{codings}
+				{content}
+				{currentUserId}
+				saving={savingCoding}
+				{onApply}
+				{onChangeValue}
+				onRemove={onRemoveCoding}
+				onClose={onCancelCoding}
 			/>
 		</div>
 	{/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { MessageCommentPublic } from '$lib/api/types.gen';
-	import { authorInitials, authorName, formatCommentTime } from '$lib/utils/annotations';
+	import { authorInitials, authorName, formatCommentTime } from '$lib/utils/coding';
 
 	interface Props {
 		/** Root comments, each carrying its replies. */

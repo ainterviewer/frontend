@@ -1,6 +1,6 @@
 import { Analysis } from '$lib/api';
 import type { MessageCommentPublic, MessagePublic } from '$lib/api/types.gen';
-import { countComments } from '$lib/utils/annotations';
+import { countComments } from '$lib/utils/coding';
 import { untrack } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { toast } from 'svelte-sonner';

@@ -6,21 +6,19 @@ import '/src/app.css';
 import { page } from 'vitest/browser';
 import { expect, test } from 'vitest';
 import { render } from 'vitest-browser-svelte';
-import { codingTreeFor } from '$lib/coding/store.svelte';
+import { seededTree } from '$lib/coding/seed';
 import CodePanel from './CodePanel.svelte';
 
 /**
  * The code pane on a codebook of its own.
  *
- * The store is one per project and lives for the life of the module, so two
- * tests naming one project would edit one codebook and the later ones would
- * inherit the earlier ones' edits.
+ * Its own, because these tests edit it: a shared fixture would carry one
+ * test's rename or drag into the next. Nothing is passed for `book`, so the
+ * pane draws without a save indicator and touches no network -- what is under
+ * test here is the table, not where its edits go.
  */
-let codebook = 0;
-
 function renderPanel() {
-	codebook += 1;
-	const tree = codingTreeFor(`code-pane-${codebook}`, 'en');
+	const tree = seededTree();
 	render(CodePanel, { tree });
 	return tree;
 }

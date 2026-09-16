@@ -6,13 +6,13 @@ import '/src/app.css';
 import { page } from 'vitest/browser';
 import { expect, test } from 'vitest';
 import { render } from 'vitest-browser-svelte';
-import CodingPage from './+page.svelte';
-import type { PageData } from './$types';
+import { seededTree } from '$lib/coding/seed';
+import CodingWorkspace from './CodingWorkspace.svelte';
 
 /**
  * The canvas is the one part of this feature that cannot be checked by reasoning
  * about the codebook: Svelte Flow has to measure a pane, run the layout and draw
- * nodes for any of it to be true. So this renders the real page in a real
+ * nodes for any of it to be true. So this renders the real workspace in a real
  * browser and asserts the seed codebook arrives on screen and answers a click.
  */
 
@@ -20,23 +20,18 @@ import type { PageData } from './$types';
  * leaves the canvas 90px wide. */
 const DESKTOP = { width: 1280, height: 900 };
 
-let codebook = 0;
-
 /**
- * The page on a codebook of its own.
+ * The workspace on a codebook of its own.
  *
- * The store is one per project and lives for the life of the module, so that
- * the canvas and the explore page's code pane edit the same tree. Two tests
- * naming one project would edit one codebook too, and the rename in the second
- * test below would then be waiting for the third -- so each render gets a
- * project id nothing else uses.
+ * The workspace rather than the route's page, because the page's job is
+ * loading, saving and failing -- it would put this suite behind a network
+ * call, and a canvas that draws is what these tests are about. Each render
+ * gets its own tree for the same reason each used to get its own project id:
+ * the second test renames a code, and a shared fixture would carry that into
+ * the third.
  */
 function renderPage() {
-	codebook += 1;
-	// Cast because `PageData` also carries what the dashboard layout loads -- the
-	// user, the project, permissions -- and this page reads none of it.
-	const data = { project_id: `codebook-${codebook}`, lang: 'en' } as PageData;
-	return render(CodingPage, { data });
+	return render(CodingWorkspace, { tree: seededTree() });
 }
 
 test('draws the seed codebook and opens the inspector on a code', async () => {

@@ -1,26 +1,25 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Analysis, type Image, type MessagePublic } from '$lib/api';
-	import type {
-		AnalysisCategoryPublic,
-		AnnotationValueCreate,
-		InterviewGuide,
-		MessageAnnotationPublic
-	} from '$lib/api/types.gen';
+	import { type Image, type MessagePublic } from '$lib/api';
+	import type { InterviewGuide } from '$lib/api/types.gen';
+	import type { Code } from '$lib/coding/codingTree';
 	import { guideConditions, questionKey } from '$lib/analysis/conditions';
-	import AnnotatedMessage from '$lib/components/analysis/AnnotatedMessage.svelte';
+	import CodedMessage from '$lib/components/analysis/CodedMessage.svelte';
 	import MessageCommentModal from '$lib/components/analysis/MessageCommentModal.svelte';
 	import AudioPlayer from '$lib/components/interview/AudioPlayer.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import { CommentSurface } from '$lib/stores/commentSurface.svelte';
+	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
 	import { MessageComments } from '$lib/stores/messageComments.svelte';
-	import { SvelteMap } from 'svelte/reactivity';
 
 	interface InterviewData {
 		messages: MessagePublic[];
-		categories: AnalysisCategoryPublic[];
+		/**
+		 * The project's codebook, loaded with the transcript. Read-only here:
+		 * this page applies codes, it does not edit the codebook.
+		 */
+		codes: Code[];
 		/**
 		 * The project's guide, for the conditions its questions carry. Null
 		 * where it could not be read, which costs the condition notes and
@@ -48,32 +47,24 @@
 	// which, so the buttons match what the API will actually accept.
 	let canModerate = $derived(page.data.permissions?.can_moderate ?? false);
 
-	// Annotations are per author: the current user's is the editable one, the
-	// others are shown read-only. Comments are a separate, threaded discussion.
-	const messageAnnotations = new SvelteMap<string, MessageAnnotationPublic>();
-	const otherAnnotations = new SvelteMap<string, MessageAnnotationPublic[]>();
+	// Codings are per coder: this reader's are the editable ones, everybody
+	// else's are shown named and read-only. Comments are a separate, threaded
+	// discussion.
+	const codings = new MessageCodings(() => data.project_id);
 	const comments = new MessageComments(() => data.project_id);
 
-	// Initialize annotations and comment threads from server data
+	// Initialize codings and comment threads from server data
 	$effect(() => {
-		messageAnnotations.clear();
-		otherAnnotations.clear();
+		codings.clear();
 		comments.clear();
 		if (data.messages) {
-			for (const msg of data.messages) {
-				const own = msg.annotations?.find((annotation) => annotation.user_id === userId);
-				if (own) messageAnnotations.set(msg.id, own);
-
-				const others = msg.annotations?.filter((annotation) => annotation.user_id !== userId) ?? [];
-				if (others.length > 0) otherAnnotations.set(msg.id, others);
-			}
+			codings.seed(data.messages);
 			comments.seed(data.messages);
 		}
 	});
 
 	// UI state
-	let activeAnnotationMessageId = $state<string | null>(null);
-	let savingAnnotation = $state(false);
+	let activeCodingMessageId = $state<string | null>(null);
 	const surface = new CommentSurface();
 
 	$effect(() => {
@@ -199,103 +190,39 @@
 		});
 	});
 
-	// Annotation handlers
-	async function handleSaveAnnotation(
+	/**
+	 * Applying a code is one write, and a complete one — unlike the annotation
+	 * envelope it replaces, which resent a coder's whole reading of a message
+	 * on every click.
+	 */
+	async function applyCode(
 		messageId: string,
-		values: AnnotationValueCreate[],
-		shouldClose: boolean = true
+		codeId: string,
+		span: { start: number; end: number } | null,
+		value: number | null
 	) {
-		if (!userId) {
-			console.error('No user ID available');
-			return;
-		}
-
-		savingAnnotation = true;
-		try {
-			const existingAnnotation = messageAnnotations.get(messageId);
-
-			if (existingAnnotation) {
-				// Update existing annotation
-				const { data: updatedAnnotation, error } = await Analysis.updateMessageAnnotation({
-					path: { project_id: data.project_id, annotation_id: existingAnnotation.id },
-					body: {
-						message_id: messageId,
-						user_id: userId,
-						values
-					}
-				});
-
-				if (error) {
-					console.error('Failed to update annotation:', error);
-					alert('Failed to update annotation');
-					return;
-				}
-
-				if (updatedAnnotation) {
-					messageAnnotations.set(messageId, updatedAnnotation);
-				}
-			} else {
-				// Create new annotation
-				const { data: newAnnotation, error } = await Analysis.addMessageAnnotation({
-					path: { project_id: data.project_id, message_id: messageId },
-					body: {
-						message_id: messageId,
-						user_id: userId,
-						values
-					}
-				});
-
-				if (error) {
-					console.error('Failed to add annotation:', error);
-					alert('Failed to add annotation');
-					return;
-				}
-
-				if (newAnnotation) {
-					messageAnnotations.set(messageId, newAnnotation);
-				}
-			}
-
-			if (shouldClose) {
-				activeAnnotationMessageId = null;
-			}
-		} catch (e) {
-			console.error('Error saving annotation:', e);
-			alert('Error saving annotation');
-		} finally {
-			savingAnnotation = false;
-		}
+		await codings.add(messageId, {
+			code_id: codeId,
+			start_offset: span?.start ?? null,
+			end_offset: span?.end ?? null,
+			value_int: value
+		});
 	}
 
-	async function handleDeleteAnnotation(messageId: string) {
-		const annotation = messageAnnotations.get(messageId);
-		if (!annotation) return;
-
-		if (!confirm('Are you sure you want to delete this annotation?')) return;
-
-		savingAnnotation = true;
-		try {
-			const { error } = await Analysis.deleteMessageAnnotation({
-				path: { project_id: data.project_id, annotation_id: annotation.id }
-			});
-
-			if (error) {
-				console.error('Failed to delete annotation:', error);
-				alert('Failed to delete annotation');
-				return;
-			}
-
-			messageAnnotations.delete(messageId);
-			activeAnnotationMessageId = null;
-		} catch (e) {
-			console.error('Error deleting annotation:', e);
-			alert('Error deleting annotation');
-		} finally {
-			savingAnnotation = false;
-		}
+	async function changeScore(messageId: string, codingId: string, value: number) {
+		const existing = codings.get(messageId).find((coding) => coding.id === codingId);
+		if (!existing) return;
+		await codings.update(messageId, codingId, {
+			code_id: existing.code_id,
+			start_offset: existing.start_offset ?? null,
+			end_offset: existing.end_offset ?? null,
+			value_int: value
+		});
 	}
 
-	let hasCategories = $derived(data.categories?.length > 0);
+	// Nothing to code with means nothing to offer: the badge would open a panel
+	// with an empty codebook in it.
+	let hasCodebook = $derived((data.codes?.length ?? 0) > 0);
 </script>
 
 <div
@@ -316,10 +243,10 @@
 				<span class="text-sm text-gray-500">ID: {data.interview_id}</span>
 			</div>
 		</div>
-		{#if hasCategories}
+		{#if hasCodebook}
 			<div class="text-xs text-gray-500">
 				<i class="fa-solid fa-tags mr-1"></i>
-				Hover a message to annotate or comment on it
+				Hover a message to code or comment on it
 			</div>
 		{/if}
 	</header>
@@ -356,31 +283,26 @@
 						{#if msg.type === 'system'}
 							<div class="my-2 text-center text-sm text-gray-500 select-none">{msg.text}</div>
 						{:else}
-							<AnnotatedMessage
+							<CodedMessage
 								message={msg}
 								{messageId}
+								content={msg.text ?? ''}
 								lang={data.lang}
-								projectId={data.project_id}
-								categories={data.categories}
-								annotation={messageAnnotations.get(messageId)}
-								otherAnnotations={otherAnnotations.get(messageId) ?? []}
+								codes={data.codes}
+								codings={codings.get(messageId)}
 								{comments}
 								{surface}
 								currentUserId={userId}
 								{canModerate}
-								canAnnotate={hasCategories}
-								annotationOpen={activeAnnotationMessageId === messageId}
-								{savingAnnotation}
-								onToggleAnnotation={() =>
-									(activeAnnotationMessageId =
-										activeAnnotationMessageId === messageId ? null : messageId)}
-								onSaveAnnotation={(values, shouldClose) =>
-									handleSaveAnnotation(messageId, values, shouldClose)}
-								onDeleteAnnotation={messageAnnotations.has(messageId)
-									? () => handleDeleteAnnotation(messageId)
-									: undefined}
-								onCancelAnnotation={() => (activeAnnotationMessageId = null)}
-								onCategoryCreated={() => invalidateAll()}
+								canCode={hasCodebook}
+								codingOpen={activeCodingMessageId === messageId}
+								savingCoding={codings.isPending(messageId)}
+								onToggleCoding={() =>
+									(activeCodingMessageId = activeCodingMessageId === messageId ? null : messageId)}
+								onApply={(codeId, span, value) => applyCode(messageId, codeId, span, value)}
+								onChangeValue={(codingId, value) => changeScore(messageId, codingId, value)}
+								onRemoveCoding={(codingId) => codings.remove(messageId, codingId)}
+								onCancelCoding={() => (activeCodingMessageId = null)}
 							>
 								{#snippet underMessage()}
 									<!-- Original voice recording of a transcribed message -->
@@ -396,7 +318,7 @@
 										</div>
 									{/if}
 								{/snippet}
-							</AnnotatedMessage>
+							</CodedMessage>
 						{/if}
 					{/each}
 				</div>

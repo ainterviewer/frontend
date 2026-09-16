@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import { findCode, subtreeOf } from './codingTree';
-import { CodingTreeState } from './codingTreeState.svelte';
+import type { CodingTreeState } from './codingTreeState.svelte';
+import { seededTree } from './seed';
 
 /**
  * The state class is where moving and colouring meet, so it is tested here
@@ -18,7 +19,7 @@ const PLACE = 'seed-constraints-place';
 const colorOf = (tree: CodingTreeState, id: string) => findCode(tree.codes, id)?.color;
 
 test('a code moved into another branch takes that branch’s colour', () => {
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 	const before = colorOf(tree, TIME);
 
 	expect(tree.moveUnder(TIME, RESPONSIBILITY)).toBe(true);
@@ -28,7 +29,7 @@ test('a code moved into another branch takes that branch’s colour', () => {
 });
 
 test('the whole moved subtree is repainted, not just the code itself', () => {
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 
 	// `Where you live` carries a sub-code of its own.
 	expect(subtreeOf(tree.codes, PLACE).length).toBeGreaterThan(1);
@@ -41,7 +42,7 @@ test('the whole moved subtree is repainted, not just the code itself', () => {
 });
 
 test('a code promoted to the top level starts a branch of its own', () => {
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 	const parentColor = colorOf(tree, CONSTRAINTS);
 
 	expect(tree.moveUnder(TIME, null)).toBe(true);
@@ -55,7 +56,7 @@ test('a code promoted to the top level starts a branch of its own', () => {
 });
 
 test('one undo takes back both the move and the repaint', () => {
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 	const before = colorOf(tree, TIME);
 
 	tree.moveUnder(TIME, RESPONSIBILITY);
@@ -66,7 +67,7 @@ test('one undo takes back both the move and the repaint', () => {
 });
 
 test('a refused move changes nothing, colour included', () => {
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 	const before = colorOf(tree, CONSTRAINTS);
 
 	// Into its own subtree: the one move the tree has to refuse.
@@ -82,7 +83,7 @@ test('rings the code it selects, however it was selected', () => {
 	// rebuild it is only half made: the inspector opens on the new code while the
 	// canvas goes on ringing the old one. Clicking a node hid this, because there
 	// Svelte Flow sets its own selection and the projection only has to agree.
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 	const [first, second] = tree.codes;
 
 	tree.selectedId = first.id;
@@ -99,7 +100,7 @@ test('rings a code created by dragging off a handle', () => {
 	// The gesture that exposed it: the new code is selected, but `addChild`
 	// commits before it changes the selection, so the rebuild the commit does
 	// still describes the code the reader dragged *from*.
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 	const parent = tree.codes[0];
 	tree.selectedId = parent.id;
 
@@ -110,7 +111,7 @@ test('rings a code created by dragging off a handle', () => {
 });
 
 test('editing a palette colour moves every branch painted from it', () => {
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 	const before = tree.palette[0];
 	const wearing = tree.codes.filter((code) => code.color === before).map((code) => code.id);
 	expect(wearing.length).toBeGreaterThan(0);
@@ -124,7 +125,7 @@ test('editing a palette colour moves every branch painted from it', () => {
 });
 
 test('removing a palette colour repaints its branches, and one undo takes back both', () => {
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 	const removed = tree.palette[1];
 	const wearing = tree.codes.filter((code) => code.color === removed).map((code) => code.id);
 	expect(wearing.length).toBeGreaterThan(0);
@@ -142,7 +143,7 @@ test('removing a palette colour repaints its branches, and one undo takes back b
 });
 
 test('adding a colour offers one the palette does not already hold', () => {
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 	const added = tree.addColor();
 
 	expect(added).not.toBeNull();
@@ -152,7 +153,7 @@ test('adding a colour offers one the palette does not already hold', () => {
 });
 
 test('a run of picker movements is one undo', () => {
-	const tree = new CodingTreeState();
+	const tree = seededTree();
 	const before = tree.palette[0];
 
 	tree.setColor(0, '#111111');

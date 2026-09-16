@@ -97,113 +97,6 @@ export type AgentConfigs = {
 };
 
 /**
- * AnalysisCategoryCreate
- */
-export type AnalysisCategoryCreate = {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-    type: AnnotationType;
-    /**
-     * Color
-     */
-    color: string;
-    /**
-     * Min Value
-     */
-    min_value?: number | null;
-    /**
-     * Max Value
-     */
-    max_value?: number | null;
-};
-
-/**
- * AnalysisCategoryPublic
- */
-export type AnalysisCategoryPublic = {
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-    type: AnnotationType;
-    /**
-     * Color
-     */
-    color: string;
-    /**
-     * Min Value
-     */
-    min_value?: number | null;
-    /**
-     * Max Value
-     */
-    max_value?: number | null;
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Created At
-     */
-    created_at: string;
-};
-
-/**
- * AnnotationType
- */
-export type AnnotationType = 'tag' | 'score';
-
-/**
- * AnnotationValueCreate
- */
-export type AnnotationValueCreate = {
-    /**
-     * Category Id
-     */
-    category_id: string;
-    /**
-     * Value Int
-     */
-    value_int: number;
-};
-
-/**
- * AnnotationValuePublic
- */
-export type AnnotationValuePublic = {
-    /**
-     * Category Id
-     */
-    category_id: string;
-    /**
-     * Value Int
-     */
-    value_int: number;
-    /**
-     * Id
-     */
-    id: string;
-};
-
-/**
  * AnswerLength
  */
 export type AnswerLength = 'short' | 'medium' | 'long';
@@ -239,9 +132,9 @@ export type AssistanceChatRequest = {
 /**
  * AuthorPublic
  *
- * Who wrote an annotation or a comment.
+ * Who wrote a coding or a comment.
  *
- * Annotations and comments are author specific, so every one of them is shown
+ * Codings and comments are author specific, so every one of them is shown
  * with a name attached. Carrying the author inline saves the client from
  * resolving user ids against a separate collaborator listing.
  */
@@ -483,6 +376,246 @@ export type CheckboxItem = {
      * With Other
      */
     with_other?: boolean;
+};
+
+/**
+ * CodeBase
+ *
+ * One code as the client sends it, id and all.
+ *
+ * The id is the client's because a code is dragged, renamed and coded with
+ * long before the codebook is saved; see ``CodeTable``.
+ */
+export type CodeBase = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Parent Id
+     */
+    parent_id?: string | null;
+    /**
+     * Name
+     */
+    name?: string;
+    /**
+     * Definition
+     */
+    definition?: string;
+    /**
+     * Memo
+     */
+    memo?: string;
+    /**
+     * Color
+     */
+    color?: string;
+    kind?: CodeKind;
+    /**
+     * Min Value
+     */
+    min_value?: number | null;
+    /**
+     * Max Value
+     */
+    max_value?: number | null;
+    /**
+     * Position X
+     */
+    position_x?: number | null;
+    /**
+     * Position Y
+     */
+    position_y?: number | null;
+};
+
+/**
+ * CodeKind
+ *
+ * What a code *is*, which decides what applying it to a passage produces.
+ *
+ * ``TAG`` is the ordinary case: the code either applies or it does not.
+ * ``SCORE`` asks the coder for a number in the code's own range, for codes
+ * that are degrees of something rather than presences of it. ``GROUP`` is
+ * neither -- it organises the branch under it and is never applied, which is
+ * what keeps a parent's count from pretending to include its children's.
+ */
+export type CodeKind = 'group' | 'tag' | 'score';
+
+/**
+ * CodePublic
+ */
+export type CodePublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Parent Id
+     */
+    parent_id?: string | null;
+    /**
+     * Name
+     */
+    name?: string;
+    /**
+     * Definition
+     */
+    definition?: string;
+    /**
+     * Memo
+     */
+    memo?: string;
+    /**
+     * Color
+     */
+    color?: string;
+    kind?: CodeKind;
+    /**
+     * Min Value
+     */
+    min_value?: number | null;
+    /**
+     * Max Value
+     */
+    max_value?: number | null;
+    /**
+     * Position X
+     */
+    position_x?: number | null;
+    /**
+     * Position Y
+     */
+    position_y?: number | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * CodebookPublic
+ *
+ * The stored codebook, in the order the tree reads.
+ */
+export type CodebookPublic = {
+    /**
+     * Codes
+     */
+    codes: Array<CodePublic>;
+    /**
+     * Palette
+     */
+    palette: Array<string>;
+};
+
+/**
+ * CodebookPut
+ *
+ * A whole codebook, replacing the stored one.
+ *
+ * The codebook is edited as one document -- a drag re-parents a branch and
+ * reorders two sets of siblings at once, and the editor holds an undo stack
+ * over the whole thing -- so it is saved as one, and ``codes`` is authoritative:
+ * a code the client leaves out is deleted, along with every coding made with
+ * it. List order is sibling order.
+ */
+export type CodebookPut = {
+    /**
+     * Codes
+     */
+    codes: Array<CodeBase>;
+    /**
+     * Palette
+     */
+    palette: Array<string>;
+};
+
+/**
+ * CodingCreate
+ */
+export type CodingCreate = {
+    /**
+     * Code Id
+     */
+    code_id: string;
+    /**
+     * Start Offset
+     */
+    start_offset?: number | null;
+    /**
+     * End Offset
+     */
+    end_offset?: number | null;
+    /**
+     * Value Int
+     */
+    value_int?: number | null;
+};
+
+/**
+ * CodingPublic
+ */
+export type CodingPublic = {
+    /**
+     * Code Id
+     */
+    code_id: string;
+    /**
+     * Start Offset
+     */
+    start_offset?: number | null;
+    /**
+     * End Offset
+     */
+    end_offset?: number | null;
+    /**
+     * Value Int
+     */
+    value_int?: number | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Message Id
+     */
+    message_id: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    author: AuthorPublic;
+};
+
+/**
+ * CodingsForMessages
+ *
+ * Which messages to read the codings of.
+ *
+ * A POST for a read, like the filtered-message endpoints beside it: the
+ * explore page draws a page of results as a mosaic of turns from many
+ * interviews, so the ask is a few hundred message ids -- more than belongs in
+ * a query string, and a request per turn would be a request per turn.
+ */
+export type CodingsForMessages = {
+    /**
+     * Message Ids
+     */
+    message_ids: Array<string>;
 };
 
 /**
@@ -1355,6 +1488,10 @@ export type EmbeddingStatus = {
  * and a result reads the way the conversation did.
  */
 export type EmbeddingTurn = {
+    /**
+     * Id
+     */
+    id: string;
     role: TurnRole;
     /**
      * Text
@@ -1587,9 +1724,9 @@ export type Feedback = 'positive' | 'negative';
  */
 export type FilteredMessagesRequest = {
     /**
-     * Category Ids
+     * Code Ids
      */
-    category_ids?: Array<string> | null;
+    code_ids?: Array<string> | null;
     /**
      * Search Text
      */
@@ -2452,55 +2589,6 @@ export type MediaUploadResponse = {
 };
 
 /**
- * MessageAnnotationCreate
- */
-export type MessageAnnotationCreate = {
-    /**
-     * Message Id
-     */
-    message_id: string;
-    /**
-     * User Id
-     */
-    user_id: string;
-    /**
-     * Values
-     */
-    values: Array<AnnotationValueCreate>;
-};
-
-/**
- * MessageAnnotationPublic
- */
-export type MessageAnnotationPublic = {
-    /**
-     * Message Id
-     */
-    message_id: string;
-    /**
-     * User Id
-     */
-    user_id: string;
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Updated At
-     */
-    updated_at: string;
-    /**
-     * Values
-     */
-    values: Array<AnnotationValuePublic>;
-    author: AuthorPublic;
-};
-
-/**
  * MessageCommentCreate
  *
  * A new comment. The author is taken from the caller's token, never from
@@ -2710,9 +2798,9 @@ export type MessagePublic = {
      */
     id: string;
     /**
-     * Annotations
+     * Codings
      */
-    annotations?: Array<MessageAnnotationPublic>;
+    codings?: Array<CodingPublic>;
     /**
      * Comments
      */
@@ -4053,10 +4141,10 @@ export type TimedMessage = {
  *
  * One turn of a whole interview, for reading a hit in its context.
  *
- * An `EmbeddingTurn` with everything a chunk has no room for: the message
- * row's own id, the survey item in full, the image, and whether the guide
- * skipped past it. The coordinates it is scrolled to are the base model's
- * now, since a card numbers its messages from them too.
+ * An `EmbeddingTurn` with everything a chunk has no room for: the survey item
+ * in full, the image, and whether the guide skipped past it. The message id
+ * and the coordinates it is scrolled to are the base model's, since a card
+ * identifies and numbers its turns from them too.
  *
  * Inherits `matches`/`excluded` rather than restating them, so a transcript
  * renders through the same component a chunk does -- the search is still
@@ -4064,6 +4152,10 @@ export type TimedMessage = {
  * reading the transcript at all.
  */
 export type TranscriptTurn = {
+    /**
+     * Id
+     */
+    id: string;
     role: TurnRole;
     /**
      * Text
@@ -4103,10 +4195,6 @@ export type TranscriptTurn = {
      * Sub Question
      */
     sub_question?: number | null;
-    /**
-     * Id
-     */
-    id: string;
     /**
      * Survey Item
      */
@@ -4742,7 +4830,7 @@ export type InvitationPublicWritable = {
     email: string | null;
 };
 
-export type GetAnalysisCategoriesData = {
+export type GetCodebookData = {
     body?: never;
     path: {
         /**
@@ -4756,10 +4844,10 @@ export type GetAnalysisCategoriesData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/projects/{project_id}/analysis/categories';
+    url: '/api/projects/{project_id}/analysis/codebook';
 };
 
-export type GetAnalysisCategoriesErrors = {
+export type GetCodebookErrors = {
     /**
      * Invalid request
      */
@@ -4770,141 +4858,100 @@ export type GetAnalysisCategoriesErrors = {
     422: HttpValidationError;
 };
 
-export type GetAnalysisCategoriesError = GetAnalysisCategoriesErrors[keyof GetAnalysisCategoriesErrors];
+export type GetCodebookError = GetCodebookErrors[keyof GetCodebookErrors];
 
-export type GetAnalysisCategoriesResponses = {
+export type GetCodebookResponses = {
     /**
-     * Response Get Analysis Categories
+     * Successful Response
+     */
+    200: CodebookPublic;
+};
+
+export type GetCodebookResponse = GetCodebookResponses[keyof GetCodebookResponses];
+
+export type SaveCodebookData = {
+    body: CodebookPut;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/codebook';
+};
+
+export type SaveCodebookErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SaveCodebookError = SaveCodebookErrors[keyof SaveCodebookErrors];
+
+export type SaveCodebookResponses = {
+    /**
+     * Successful Response
+     */
+    200: CodebookPublic;
+};
+
+export type SaveCodebookResponse = SaveCodebookResponses[keyof SaveCodebookResponses];
+
+export type GetCodeCountsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/codebook/counts';
+};
+
+export type GetCodeCountsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCodeCountsError = GetCodeCountsErrors[keyof GetCodeCountsErrors];
+
+export type GetCodeCountsResponses = {
+    /**
+     * Response Get Code Counts
      *
      * Successful Response
      */
-    200: Array<AnalysisCategoryPublic>;
-};
-
-export type GetAnalysisCategoriesResponse = GetAnalysisCategoriesResponses[keyof GetAnalysisCategoriesResponses];
-
-export type CreateAnalysisCategoryData = {
-    body: AnalysisCategoryCreate;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string | null;
+    200: {
+        [key: string]: number;
     };
-    query?: {
-        /**
-         * Folder Id
-         */
-        folder_id?: string | null;
-    };
-    url: '/api/projects/{project_id}/analysis/categories';
 };
 
-export type CreateAnalysisCategoryErrors = {
-    /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
+export type GetCodeCountsResponse = GetCodeCountsResponses[keyof GetCodeCountsResponses];
 
-export type CreateAnalysisCategoryError = CreateAnalysisCategoryErrors[keyof CreateAnalysisCategoryErrors];
-
-export type CreateAnalysisCategoryResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type DeleteAnalysisCategoryData = {
-    body?: never;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string | null;
-        /**
-         * Category Id
-         */
-        category_id: string;
-    };
-    query?: {
-        /**
-         * Folder Id
-         */
-        folder_id?: string | null;
-    };
-    url: '/api/projects/{project_id}/analysis/categories/{category_id}';
-};
-
-export type DeleteAnalysisCategoryErrors = {
-    /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type DeleteAnalysisCategoryError = DeleteAnalysisCategoryErrors[keyof DeleteAnalysisCategoryErrors];
-
-export type DeleteAnalysisCategoryResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type UpdateAnalysisCategoryData = {
-    body: AnalysisCategoryCreate;
-    path: {
-        /**
-         * Project Id
-         */
-        project_id: string | null;
-        /**
-         * Category Id
-         */
-        category_id: string;
-    };
-    query?: {
-        /**
-         * Folder Id
-         */
-        folder_id?: string | null;
-    };
-    url: '/api/projects/{project_id}/analysis/categories/{category_id}';
-};
-
-export type UpdateAnalysisCategoryErrors = {
-    /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type UpdateAnalysisCategoryError = UpdateAnalysisCategoryErrors[keyof UpdateAnalysisCategoryErrors];
-
-export type UpdateAnalysisCategoryResponses = {
-    /**
-     * Successful Response
-     */
-    200: AnalysisCategoryPublic;
-};
-
-export type UpdateAnalysisCategoryResponse = UpdateAnalysisCategoryResponses[keyof UpdateAnalysisCategoryResponses];
-
-export type GetMessageAnnotationsData = {
+export type GetMessageCodingsData = {
     body?: never;
     path: {
         /**
@@ -4922,10 +4969,10 @@ export type GetMessageAnnotationsData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/projects/{project_id}/messages/{message_id}/annotations';
+    url: '/api/projects/{project_id}/messages/{message_id}/codings';
 };
 
-export type GetMessageAnnotationsErrors = {
+export type GetMessageCodingsErrors = {
     /**
      * Invalid request
      */
@@ -4936,21 +4983,21 @@ export type GetMessageAnnotationsErrors = {
     422: HttpValidationError;
 };
 
-export type GetMessageAnnotationsError = GetMessageAnnotationsErrors[keyof GetMessageAnnotationsErrors];
+export type GetMessageCodingsError = GetMessageCodingsErrors[keyof GetMessageCodingsErrors];
 
-export type GetMessageAnnotationsResponses = {
+export type GetMessageCodingsResponses = {
     /**
-     * Response Get Message Annotations
+     * Response Get Message Codings
      *
      * Successful Response
      */
-    200: Array<MessageAnnotationPublic>;
+    200: Array<CodingPublic>;
 };
 
-export type GetMessageAnnotationsResponse = GetMessageAnnotationsResponses[keyof GetMessageAnnotationsResponses];
+export type GetMessageCodingsResponse = GetMessageCodingsResponses[keyof GetMessageCodingsResponses];
 
-export type AddMessageAnnotationData = {
-    body: MessageAnnotationCreate;
+export type AddMessageCodingData = {
+    body: CodingCreate;
     path: {
         /**
          * Project Id
@@ -4967,10 +5014,10 @@ export type AddMessageAnnotationData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/projects/{project_id}/messages/{message_id}/annotations';
+    url: '/api/projects/{project_id}/messages/{message_id}/codings';
 };
 
-export type AddMessageAnnotationErrors = {
+export type AddMessageCodingErrors = {
     /**
      * Invalid request
      */
@@ -4981,18 +5028,61 @@ export type AddMessageAnnotationErrors = {
     422: HttpValidationError;
 };
 
-export type AddMessageAnnotationError = AddMessageAnnotationErrors[keyof AddMessageAnnotationErrors];
+export type AddMessageCodingError = AddMessageCodingErrors[keyof AddMessageCodingErrors];
 
-export type AddMessageAnnotationResponses = {
+export type AddMessageCodingResponses = {
     /**
      * Successful Response
      */
-    200: MessageAnnotationPublic;
+    200: CodingPublic;
 };
 
-export type AddMessageAnnotationResponse = AddMessageAnnotationResponses[keyof AddMessageAnnotationResponses];
+export type AddMessageCodingResponse = AddMessageCodingResponses[keyof AddMessageCodingResponses];
 
-export type DeleteMessageAnnotationData = {
+export type GetCodingsForMessagesData = {
+    body: CodingsForMessages;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/codings/by-message';
+};
+
+export type GetCodingsForMessagesErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCodingsForMessagesError = GetCodingsForMessagesErrors[keyof GetCodingsForMessagesErrors];
+
+export type GetCodingsForMessagesResponses = {
+    /**
+     * Response Get Codings For Messages
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: Array<CodingPublic>;
+    };
+};
+
+export type GetCodingsForMessagesResponse = GetCodingsForMessagesResponses[keyof GetCodingsForMessagesResponses];
+
+export type DeleteMessageCodingData = {
     body?: never;
     path: {
         /**
@@ -5000,9 +5090,9 @@ export type DeleteMessageAnnotationData = {
          */
         project_id: string | null;
         /**
-         * Annotation Id
+         * Coding Id
          */
-        annotation_id: string;
+        coding_id: string;
     };
     query?: {
         /**
@@ -5010,10 +5100,10 @@ export type DeleteMessageAnnotationData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/projects/{project_id}/analysis/annotations/{annotation_id}';
+    url: '/api/projects/{project_id}/analysis/codings/{coding_id}';
 };
 
-export type DeleteMessageAnnotationErrors = {
+export type DeleteMessageCodingErrors = {
     /**
      * Invalid request
      */
@@ -5024,26 +5114,26 @@ export type DeleteMessageAnnotationErrors = {
     422: HttpValidationError;
 };
 
-export type DeleteMessageAnnotationError = DeleteMessageAnnotationErrors[keyof DeleteMessageAnnotationErrors];
+export type DeleteMessageCodingError = DeleteMessageCodingErrors[keyof DeleteMessageCodingErrors];
 
-export type DeleteMessageAnnotationResponses = {
+export type DeleteMessageCodingResponses = {
     /**
      * Successful Response
      */
     200: unknown;
 };
 
-export type UpdateMessageAnnotationData = {
-    body: MessageAnnotationCreate;
+export type UpdateMessageCodingData = {
+    body: CodingCreate;
     path: {
         /**
          * Project Id
          */
         project_id: string | null;
         /**
-         * Annotation Id
+         * Coding Id
          */
-        annotation_id: string;
+        coding_id: string;
     };
     query?: {
         /**
@@ -5051,10 +5141,10 @@ export type UpdateMessageAnnotationData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/projects/{project_id}/analysis/annotations/{annotation_id}';
+    url: '/api/projects/{project_id}/analysis/codings/{coding_id}';
 };
 
-export type UpdateMessageAnnotationErrors = {
+export type UpdateMessageCodingErrors = {
     /**
      * Invalid request
      */
@@ -5065,16 +5155,16 @@ export type UpdateMessageAnnotationErrors = {
     422: HttpValidationError;
 };
 
-export type UpdateMessageAnnotationError = UpdateMessageAnnotationErrors[keyof UpdateMessageAnnotationErrors];
+export type UpdateMessageCodingError = UpdateMessageCodingErrors[keyof UpdateMessageCodingErrors];
 
-export type UpdateMessageAnnotationResponses = {
+export type UpdateMessageCodingResponses = {
     /**
      * Successful Response
      */
-    200: MessageAnnotationPublic;
+    200: CodingPublic;
 };
 
-export type UpdateMessageAnnotationResponse = UpdateMessageAnnotationResponses[keyof UpdateMessageAnnotationResponses];
+export type UpdateMessageCodingResponse = UpdateMessageCodingResponses[keyof UpdateMessageCodingResponses];
 
 export type GetFilteredMessagesCountData = {
     body: FilteredMessagesRequest;

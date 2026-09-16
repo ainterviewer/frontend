@@ -1,3 +1,4 @@
+import { CodingTreeState } from './codingTreeState.svelte';
 import {
 	DEFAULT_PALETTE,
 	DEFAULT_SCORE_MAX,
@@ -7,13 +8,15 @@ import {
 } from './codingTree';
 
 /**
- * A worked codebook to open the canvas on.
+ * A worked codebook, as a fixture.
  *
- * The page has no backend yet, and an empty canvas is a poor way to find out
- * what this screen is for: a coding tree only makes its case once there is a
- * tree, with definitions and memos on it, to move around. It is also the
- * fixture the interactions are developed against -- deep enough to have a third
- * level, wide enough that re-parenting changes the layout visibly.
+ * It is not what a new project starts with: a real codebook is saved against a
+ * real project, and opening one on somebody else's codes about the green
+ * transition would be handing them a document to delete. What it is for is
+ * testing -- deep enough to have a third level, wide enough that re-parenting
+ * changes the layout visibly -- and the ids say so: `seed-responsibility`
+ * rather than a UUID, which is what the API requires and therefore what a
+ * saveable codebook carries.
  *
  * It is written as a real codebook rather than as filler, because the shape of
  * the example teaches the format: definitions are inclusion rules a second
@@ -251,4 +254,18 @@ export function seedCodes(): Code[] {
 	};
 	walk(outline, null, DEFAULT_PALETTE[0]);
 	return codes;
+}
+
+/**
+ * A tree state opened on the seed, for tests.
+ *
+ * Lives here rather than in the state class because `CodingTreeState` starts
+ * empty for a reason -- see `seedCodes` -- and a test that reached for the
+ * fixture through a constructor default would be testing a state the
+ * application never has.
+ */
+export function seededTree(): CodingTreeState {
+	const tree = new CodingTreeState();
+	tree.load(seedCodes(), [...DEFAULT_PALETTE]);
+	return tree;
 }

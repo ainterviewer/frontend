@@ -1,8 +1,12 @@
 <script lang="ts">
 	import type { EmbeddingTurn, TranscriptTurn } from '$lib/api/types.gen';
+	import CodingChips from '$lib/components/analysis/CodingChips.svelte';
 	import MessageBubble from '$lib/components/interview/MessageBubble.svelte';
 	import type { SurveyItemUnion } from '$lib/components/interview/types';
 	import { questionKey, type ConditionSummary } from '$lib/analysis/conditions';
+	import { isSpan } from '$lib/utils/coding';
+	import { selectionWithin } from '$lib/utils/textSelection';
+	import { turnIds, useCodingSurface } from './codingSurface.svelte';
 
 	let {
 		turns,
@@ -38,11 +42,68 @@
 		compact?: boolean;
 	} = $props();
 
-	// Keyed on `id` rather than on a coordinate: both kinds of turn carry the
-	// guide coordinates now, and only a transcript turn carries the message row
-	// it came from.
+	/**
+	 * Coding, when the page offers it — see `codingSurface.svelte`.
+	 *
+	 * `null` on a page that does not, and then this draws the plain reading
+	 * surface it has always been: no chips, no right-click menu.
+	 */
+	const coding = useCodingSurface();
+
+	/**
+	 * The chip the reader is pointing at, so its words can light up in the turn.
+	 *
+	 * A span coding names a stretch of the message, and a chip on its own
+	 * cannot say which -- the tooltip quotes the words, but finding them in the
+	 * paragraph is then the reader's job. Held for the whole card rather than
+	 * per turn because only one chip is ever under the pointer.
+	 *
+	 * The id rather than the coding, and resolved against the live codings
+	 * below. Deleting a chip unmounts it, so its `mouseleave` never arrives and
+	 * a held coding would go on lighting a stretch of text that nothing on
+	 * screen is about any more.
+	 */
+	let pointedAt = $state<string | null>(null);
+
+	/** The stretch to mark in this turn, in the offsets its bubble counts. */
+	function litSpan(turn: EmbeddingTurn | TranscriptTurn): [number, number][] {
+		if (pointedAt === null) return [];
+		const at = coding?.codingsFor(turn.id).find((candidate) => candidate.id === pointedAt);
+		if (!at || !isSpan(at)) return [];
+		return [[at.start_offset!, at.end_offset!]];
+	}
+
+	// Which turns are on screen, so the page can read their codings in one
+	// request rather than one per turn. Effect rather than a call in the body:
+	// a card is rebuilt whenever its chunk changes, and the ask must follow.
+	$effect(() => {
+		coding?.track(turnIds(turns));
+	});
+
+	// Both kinds carry the guide coordinates *and* the message id now — the id
+	// moved onto the base turn so a card's turns can be coded too — so what
+	// tells them apart is the transcript's own extras.
 	function isTranscript(turn: EmbeddingTurn | TranscriptTurn): turn is TranscriptTurn {
-		return 'id' in turn;
+		return 'skipped' in turn;
+	}
+
+	/**
+	 * A right-click on a turn, with the words it landed on worked out.
+	 *
+	 * A selection only counts where the bubble renders the turn's text exactly
+	 * — see `selectionWithin`. Everywhere else the whole turn is coded, which
+	 * is the claim the reader can always be held to.
+	 */
+	function openMenu(event: MouseEvent, turn: EmbeddingTurn | TranscriptTurn) {
+		if (!coding) return;
+		event.preventDefault();
+		const span = selectionWithin(event.currentTarget as HTMLElement, turn.text);
+		coding.openMenu({
+			messageId: turn.id,
+			at: { x: event.clientX, y: event.clientY },
+			span,
+			quote: span ? turn.text.slice(span.start, span.end) : null
+		});
 	}
 
 	/**
@@ -133,19 +194,41 @@
 
 <div class="flex flex-col {compact ? 'gap-1.5' : ''}">
 	{#each turns as turn, index (index)}
-		<MessageBubble
-			interviewer={turn.role !== 'respondent'}
-			text={body(turn)}
-			label={label(turn)}
-			surveyItem={survey(turn)}
-			surveyLabel={turn.survey_label ?? null}
-			image={picture(turn)}
-			answer={turn.text}
-			matches={turn.matches ?? []}
-			excluded={turn.excluded ?? []}
-			condition={notes[index]}
-			skipped={isTranscript(turn) ? (turn.skipped ?? false) : false}
-			{compact}
-		/>
+		{@const marks = coding?.codingsFor(turn.id) ?? []}
+		<div role="group" oncontextmenu={(event) => openMenu(event, turn)}>
+			<MessageBubble
+				interviewer={turn.role !== 'respondent'}
+				text={body(turn)}
+				label={label(turn)}
+				surveyItem={survey(turn)}
+				surveyLabel={turn.survey_label ?? null}
+				image={picture(turn)}
+				answer={turn.text}
+				matches={turn.matches ?? []}
+				excluded={turn.excluded ?? []}
+				coded={litSpan(turn)}
+				condition={notes[index]}
+				skipped={isTranscript(turn) ? (turn.skipped ?? false) : false}
+				{compact}
+			/>
+			{#if marks.length > 0}
+				<!-- Under the bubble and on the bubble's own side, so a turn's codes
+				     read as belonging to it rather than to the one below. -->
+				<div
+					class="mt-1 flex flex-wrap items-center gap-1 {turn.role === 'respondent'
+						? 'justify-end'
+						: ''}"
+				>
+					<CodingChips
+						codings={marks}
+						codes={coding?.codes ?? []}
+						content={turn.text}
+						currentUserId={coding?.userId ?? ''}
+						onRemove={(codingId) => coding?.uncode(turn.id, codingId)}
+						onHover={(hovered) => (pointedAt = hovered?.id ?? null)}
+					/>
+				</div>
+			{/if}
+		</div>
 	{/each}
 </div>

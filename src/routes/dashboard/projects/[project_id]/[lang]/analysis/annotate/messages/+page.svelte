@@ -4,27 +4,24 @@
 	import { page } from '$app/state';
 	import { plainMarkup } from '$lib/utils/sanitize';
 	import { Analysis, Projects, type Image, type MessagePublic } from '$lib/api';
-	import type {
-		AnalysisCategoryPublic,
-		AnnotationValueCreate,
-		InterviewGuide,
-		MessageAnnotationPublic
-	} from '$lib/api/types.gen';
-	import AnnotatedMessage from '$lib/components/analysis/AnnotatedMessage.svelte';
+	import type { InterviewGuide } from '$lib/api/types.gen';
+	import { displayName, isApplicable, outlineOf } from '$lib/coding/codingTree';
+	import { codebookFor } from '$lib/coding/store.svelte';
+	import CodedMessage from '$lib/components/analysis/CodedMessage.svelte';
 	import MessageCommentModal from '$lib/components/analysis/MessageCommentModal.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import { CommentSurface } from '$lib/stores/commentSurface.svelte';
+	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
 	import { MessageComments } from '$lib/stores/messageComments.svelte';
 	import { getContrastColor } from '$lib/utils/colors';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-	import { toast } from 'svelte-sonner';
 
 	// State
 	let projectId = $derived(page.params.project_id ?? '');
 	let lang = $derived(page.params.lang ?? '');
 
 	// Query params
-	let categoryIdsParam = $derived(page.url.searchParams.getAll('category_id'));
+	let codeIdsParam = $derived(page.url.searchParams.getAll('code_id'));
 	let searchTextParam = $derived(page.url.searchParams.get('search_text'));
 	let exactMatchParam = $derived(page.url.searchParams.get('exact_match') === 'true');
 	let caseSensitiveParam = $derived(page.url.searchParams.get('case_sensitive') === 'true');
@@ -41,7 +38,18 @@
 			.filter((q): q is [number, number] => q !== null)
 	);
 
-	let categories = $state<AnalysisCategoryPublic[]>([]);
+	// The project's codebook, shared with the Coding page rather than fetched
+	// again here. Codes are read-only on this page: this is where a codebook is
+	// *applied*, and editing it mid-coding is the other page's job.
+	const book = $derived(codebookFor(projectId));
+	let codes = $derived(book.status === 'ready' ? book.tree.codes : []);
+	/** The codes a passage can actually carry — a group organises, never applies. */
+	let applicableCodes = $derived(
+		outlineOf(codes)
+			.map((row) => row.code)
+			.filter(isApplicable)
+	);
+
 	let guide = $state<InterviewGuide | null>(null);
 	let rawMessages = $state<MessagePublic[]>([]);
 	let loading = $state(true);
@@ -53,12 +61,11 @@
 	let loadingMore = $state(false);
 
 	// UI State
-	let activeAnnotationMessageId = $state<string | null>(null);
-	let savingAnnotation = $state(false);
+	let activeCodingMessageId = $state<string | null>(null);
 	let showQuestionDropdown = $state(false);
 	const surface = new CommentSurface();
 
-	// The signed-in user: annotations and comments are author specific, so this
+	// The signed-in user: codings and comments are author specific, so this
 	// decides what may be edited here.
 	let userId = $derived(page.data.user?.id ?? '');
 	// Moderation (editing or deleting someone else's comment) is the project's
@@ -75,7 +82,7 @@
 	let exactMatch = $state(false);
 	let caseSensitive = $state(false);
 	let showSearchOptions = $state(false);
-	let selectedCategoryIds = $state<string[]>([]);
+	let selectedCodeIds = $state<string[]>([]);
 	let selectedQuestions = $state<[number, number][]>([]);
 
 	// Per-message context state (consolidated)
@@ -144,12 +151,12 @@
 		searchText = searchTextParam || '';
 		exactMatch = exactMatchParam;
 		caseSensitive = caseSensitiveParam;
-		selectedCategoryIds = categoryIdsParam;
+		selectedCodeIds = codeIdsParam;
 		selectedQuestions = questionsParam;
 	});
 
 	// Derived State
-	let selectedCategories = $derived(categories.filter((c) => selectedCategoryIds.includes(c.id)));
+	let selectedCodes = $derived(codes.filter((code) => selectedCodeIds.includes(code.id)));
 
 	// Map raw messages to UI messages and group by interview
 	let groupedMessages = $derived.by(() => {
@@ -347,22 +354,14 @@
 		return groups;
 	});
 
-	// Annotations are per author: only the current user's is editable here, the
-	// rest are shown read-only so disagreement between coders stays visible.
-	const messageAnnotations = new SvelteMap<string, MessageAnnotationPublic>();
-	const otherAnnotations = new SvelteMap<string, MessageAnnotationPublic[]>();
+	// Codings are per coder: only this reader's are editable here, and everyone
+	// else's are shown named and read-only, so disagreement between coders stays
+	// visible rather than being resolved by whoever coded last.
+	const codings = new MessageCodings(() => projectId);
 	const comments = new MessageComments(() => projectId);
 
 	$effect(() => {
-		messageAnnotations.clear();
-		otherAnnotations.clear();
-		for (const msg of rawMessages) {
-			const own = msg.annotations?.find((annotation) => annotation.user_id === userId);
-			if (own) messageAnnotations.set(msg.id, own);
-
-			const others = msg.annotations?.filter((annotation) => annotation.user_id !== userId) ?? [];
-			if (others.length > 0) otherAnnotations.set(msg.id, others);
-		}
+		codings.seed(rawMessages);
 		comments.seed(rawMessages);
 	});
 
@@ -371,13 +370,12 @@
 		loading = true;
 		error = null;
 
-		const [catsRes, guideRes, msgsRes] = await Promise.all([
-			Analysis.getAnalysisCategories({ path: { project_id: projectId } }),
+		const [guideRes, msgsRes] = await Promise.all([
 			Projects.getGuide({ path: { project_id: projectId, lang: lang } }),
 			Analysis.getFilteredMessages({
 				path: { project_id: projectId },
 				body: {
-					category_ids: categoryIdsParam.length > 0 ? categoryIdsParam : null,
+					code_ids: codeIdsParam.length > 0 ? codeIdsParam : null,
 					search_text: searchTextParam || null,
 					exact_match: exactMatchParam || undefined,
 					case_sensitive: caseSensitiveParam || undefined,
@@ -390,12 +388,6 @@
 			})
 		]);
 
-		if (catsRes.error) {
-			console.error('Failed to load categories', catsRes.error);
-			error = 'Failed to load data';
-			loading = false;
-			return;
-		}
 		if (msgsRes.error) {
 			console.error('Failed to load messages', msgsRes.error);
 			error = 'Failed to load data';
@@ -403,7 +395,6 @@
 			return;
 		}
 
-		if (catsRes.data) categories = catsRes.data;
 		// Guide is non-critical — don't fail if it errors
 		if (guideRes.error) {
 			console.warn('Failed to load guide:', guideRes.error);
@@ -411,6 +402,7 @@
 			guide = guideRes.data;
 		}
 		if (msgsRes.data) {
+			codings.clear();
 			comments.clear();
 			rawMessages = msgsRes.data;
 			hasMore = msgsRes.data.length === limit;
@@ -432,7 +424,7 @@
 		const { data, error: err } = await Analysis.getFilteredMessages({
 			path: { project_id: projectId },
 			body: {
-				category_ids: categoryIdsParam.length > 0 ? categoryIdsParam : null,
+				code_ids: codeIdsParam.length > 0 ? codeIdsParam : null,
 				search_text: searchTextParam || null,
 				exact_match: exactMatchParam || undefined,
 				case_sensitive: caseSensitiveParam || undefined,
@@ -466,7 +458,7 @@
 	function updateSearchParams() {
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- one-shot URL builder for goto()
 		const params = new URLSearchParams();
-		selectedCategoryIds.forEach((id) => params.append('category_id', id));
+		selectedCodeIds.forEach((id) => params.append('code_id', id));
 		selectedQuestions.forEach(([section, question]) =>
 			params.append('question', `${section},${question}`)
 		);
@@ -492,7 +484,7 @@
 		caseSensitive = false;
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- one-shot URL builder for goto()
 		const params = new URLSearchParams();
-		selectedCategoryIds.forEach((id) => params.append('category_id', id));
+		selectedCodeIds.forEach((id) => params.append('code_id', id));
 		selectedQuestions.forEach(([section, question]) =>
 			params.append('question', `${section},${question}`)
 		);
@@ -506,18 +498,17 @@
 		);
 	}
 
-	function toggleCategoryFilter(categoryId: string) {
-		if (selectedCategoryIds.includes(categoryId)) {
-			selectedCategoryIds = selectedCategoryIds.filter((id) => id !== categoryId);
+	function toggleCodeFilter(codeId: string) {
+		if (selectedCodeIds.includes(codeId)) {
+			selectedCodeIds = selectedCodeIds.filter((id) => id !== codeId);
 		} else {
-			selectedCategoryIds = [...selectedCategoryIds, categoryId];
+			selectedCodeIds = [...selectedCodeIds, codeId];
 		}
 		updateSearchParams();
 	}
 
-	function clearCategoryFiltersByType(type: 'tag' | 'score') {
-		const typeIds = new Set(categories.filter((c) => c.type === type).map((c) => c.id));
-		selectedCategoryIds = selectedCategoryIds.filter((id) => !typeIds.has(id));
+	function clearCodeFilters() {
+		selectedCodeIds = [];
 		updateSearchParams();
 	}
 
@@ -595,77 +586,37 @@
 		updateSearchParams();
 	}
 
-	async function handleSaveAnnotation(
+	/**
+	 * Applying a code is one write, and a complete one.
+	 *
+	 * The annotation envelope this replaces held a coder's whole reading of a
+	 * message in one row, so every click had to resend the set and there was a
+	 * moment where half of it was stored. A coding is a single claim about a
+	 * single passage, so a click either lands or does not.
+	 */
+	async function applyCode(
 		messageId: string,
-		values: AnnotationValueCreate[],
-		shouldClose: boolean = true
+		codeId: string,
+		span: { start: number; end: number } | null,
+		value: number | null
 	) {
-		if (!userId) {
-			alert('User not found. Please reload.');
-			return;
-		}
-
-		savingAnnotation = true;
-		try {
-			const existingAnnotation = messageAnnotations.get(messageId);
-
-			if (existingAnnotation) {
-				const { data: updatedAnnotation, error } = await Analysis.updateMessageAnnotation({
-					path: { project_id: projectId, annotation_id: existingAnnotation.id },
-					body: {
-						message_id: messageId,
-						user_id: userId,
-						values
-					}
-				});
-				if (error) throw error;
-				if (updatedAnnotation) {
-					messageAnnotations.set(messageId, updatedAnnotation);
-				}
-			} else {
-				const { data: newAnnotation, error } = await Analysis.addMessageAnnotation({
-					path: { project_id: projectId, message_id: messageId },
-					body: {
-						message_id: messageId,
-						user_id: userId,
-						values
-					}
-				});
-				if (error) throw error;
-				if (newAnnotation) {
-					messageAnnotations.set(messageId, newAnnotation);
-				}
-			}
-
-			if (shouldClose) activeAnnotationMessageId = null;
-		} catch (e) {
-			console.error('Error saving annotation:', e);
-			toast.error('Error saving annotation');
-		} finally {
-			savingAnnotation = false;
-		}
+		await codings.add(messageId, {
+			code_id: codeId,
+			start_offset: span?.start ?? null,
+			end_offset: span?.end ?? null,
+			value_int: value
+		});
 	}
 
-	async function handleDeleteAnnotation(messageId: string) {
-		const annotation = messageAnnotations.get(messageId);
-		if (!annotation) return;
-		if (!confirm('Are you sure you want to delete this annotation?')) return;
-
-		savingAnnotation = true;
-		try {
-			const { error } = await Analysis.deleteMessageAnnotation({
-				path: { project_id: projectId, annotation_id: annotation.id }
-			});
-			if (error) throw error;
-			messageAnnotations.delete(messageId);
-			activeAnnotationMessageId = null;
-			loadData();
-		} catch (e) {
-			console.error('Error deleting annotation:', e);
-			toast.error('Error deleting annotation');
-		} finally {
-			savingAnnotation = false;
-		}
+	async function changeScore(messageId: string, codingId: string, value: number) {
+		const existing = codings.get(messageId).find((coding) => coding.id === codingId);
+		if (!existing) return;
+		await codings.update(messageId, codingId, {
+			code_id: existing.code_id,
+			start_offset: existing.start_offset ?? null,
+			end_offset: existing.end_offset ?? null,
+			value_int: value
+		});
 	}
 
 	async function fetchContextBefore(messageId: string, interviewId: string) {
@@ -721,17 +672,17 @@
 				<a
 					href={resolve(`/dashboard/projects/${projectId}/${lang}/analysis/annotate`)}
 					class="text-gray-500 transition-colors hover:text-gray-700"
-					aria-label="Back to categories"
+					aria-label="Back to the codebook"
 				>
 					<i class="fa-solid fa-arrow-left text-lg"></i>
 				</a>
 				<div class="flex flex-col">
 					<h1 class="text-xl font-semibold text-gray-800">
-						{#if selectedCategories.length > 0 || selectedQuestions.length > 0}
+						{#if selectedCodes.length > 0 || selectedQuestions.length > 0}
 							Filtered Messages
-							{#if selectedCategories.length > 0}
-								({selectedCategories.length}
-								{selectedCategories.length === 1 ? 'category' : 'categories'}
+							{#if selectedCodes.length > 0}
+								({selectedCodes.length}
+								{selectedCodes.length === 1 ? 'code' : 'codes'}
 								{#if selectedQuestions.length > 0},
 								{/if})
 							{/if}
@@ -905,94 +856,48 @@
 					</div>
 				{/if}
 
-				<!-- Category Badges -->
-				{#if categories.length > 0}
-					<div class="flex flex-col gap-2">
-						{#if categories.some((c) => c.type === 'tag')}
-							<div class="flex items-start gap-2">
-								<span class="w-24 shrink-0 pt-1 text-xs text-gray-500">Tags:</span>
-								<div class="flex flex-wrap items-center gap-2">
-									{#each categories.filter((c) => c.type === 'tag') as category (category.id)}
-										{@const isSelected = selectedCategoryIds.includes(category.id)}
-										<button
-											type="button"
-											onclick={(e) => {
-												stopEvent(e);
-												toggleCategoryFilter(category.id);
-											}}
-											class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all {isSelected
-												? 'ring-2 ring-offset-1'
-												: 'opacity-60 hover:opacity-100'}"
-											style="background-color: {category.color}; color: {getContrastColor(
-												category.color
-											)}; {isSelected ? `ring-color: ${category.color}` : ''}"
-										>
-											{#if isSelected}
-												<i class="fa-solid fa-check text-[10px]"></i>
-											{/if}
-											{category.name}
-										</button>
-									{/each}
-									{#if categories
-										.filter((c) => c.type === 'tag')
-										.some((c) => selectedCategoryIds.includes(c.id))}
-										<button
-											type="button"
-											onclick={(e) => {
-												stopEvent(e);
-												clearCategoryFiltersByType('tag');
-											}}
-											class="text-xs text-gray-500 hover:text-gray-700 hover:underline"
-										>
-											Clear
-										</button>
+				<!-- The codebook, as a filter. One flat row rather than the old
+				     split between tags and scores: a codebook is a tree, and the
+				     kinds in it are not two lists a reader chooses between. Groups
+				     are left out -- nothing is ever coded with one, so filtering
+				     on one would always return nothing. -->
+				{#if applicableCodes.length > 0}
+					<div class="flex items-start gap-2">
+						<span class="w-24 shrink-0 pt-1 text-xs text-gray-500">Codes:</span>
+						<div class="flex flex-wrap items-center gap-2">
+							{#each applicableCodes as code (code.id)}
+								{@const isSelected = selectedCodeIds.includes(code.id)}
+								<button
+									type="button"
+									onclick={(e) => {
+										stopEvent(e);
+										toggleCodeFilter(code.id);
+									}}
+									class="inline-flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all {isSelected
+										? 'ring-2 ring-offset-1'
+										: 'opacity-60 hover:opacity-100'}"
+									style="background-color: {code.color}; color: {getContrastColor(code.color)};"
+									title={code.definition || undefined}
+								>
+									{#if isSelected}
+										<i class="fa-solid fa-check text-[10px]"></i>
 									{/if}
-								</div>
-							</div>
-						{/if}
-
-						{#if categories.some((c) => c.type === 'score')}
-							<div class="flex items-start gap-2">
-								<span class="w-24 shrink-0 pt-1 text-xs text-gray-500">Categories:</span>
-								<div class="flex flex-wrap items-center gap-2">
-									{#each categories.filter((c) => c.type === 'score') as category (category.id)}
-										{@const isSelected = selectedCategoryIds.includes(category.id)}
-										<button
-											type="button"
-											onclick={(e) => {
-												stopEvent(e);
-												toggleCategoryFilter(category.id);
-											}}
-											class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all {isSelected
-												? 'ring-2 ring-offset-1'
-												: 'opacity-60 hover:opacity-100'}"
-											style="background-color: {category.color}; color: {getContrastColor(
-												category.color
-											)}; {isSelected ? `ring-color: ${category.color}` : ''}"
-										>
-											{#if isSelected}
-												<i class="fa-solid fa-check text-[10px]"></i>
-											{/if}
-											{category.name}
-										</button>
-									{/each}
-									{#if categories
-										.filter((c) => c.type === 'score')
-										.some((c) => selectedCategoryIds.includes(c.id))}
-										<button
-											type="button"
-											onclick={(e) => {
-												stopEvent(e);
-												clearCategoryFiltersByType('score');
-											}}
-											class="text-xs text-gray-500 hover:text-gray-700 hover:underline"
-										>
-											Clear
-										</button>
-									{/if}
-								</div>
-							</div>
-						{/if}
+									{displayName(code.name)}
+								</button>
+							{/each}
+							{#if selectedCodeIds.length > 0}
+								<button
+									type="button"
+									onclick={(e) => {
+										stopEvent(e);
+										clearCodeFilters();
+									}}
+									class="cursor-pointer text-xs text-gray-500 hover:text-gray-700 hover:underline"
+								>
+									Clear
+								</button>
+							{/if}
+						</div>
 					</div>
 				{/if}
 
@@ -1071,7 +976,7 @@
 					<div class="rounded-lg bg-white p-8 text-center shadow-sm">
 						<i class="fa-regular fa-comments mb-3 text-3xl text-gray-400"></i>
 						<p class="text-gray-500">
-							{#if searchTextParam || selectedCategories.length > 0}
+							{#if searchTextParam || selectedCodes.length > 0}
 								No messages found matching your filters.
 							{:else}
 								No messages found.
@@ -1116,31 +1021,27 @@
 											{@const isLoadingBefore = messageContext.loadingBefore.has(messageId)}
 											{@const isLoadingAfter = messageContext.loadingAfter.has(messageId)}
 
-											<AnnotatedMessage
+											<CodedMessage
 												message={msg}
 												{messageId}
+												content={msg.raw.content}
 												lang={lang || 'en'}
-												{projectId}
-												{categories}
-												annotation={messageAnnotations.get(messageId)}
-												otherAnnotations={otherAnnotations.get(messageId) ?? []}
+												{codes}
+												codings={codings.get(messageId)}
 												{comments}
 												{surface}
 												currentUserId={userId}
 												{canModerate}
 												dimmed={msg.isContext}
-												annotationOpen={activeAnnotationMessageId === messageId}
-												{savingAnnotation}
-												onToggleAnnotation={() =>
-													(activeAnnotationMessageId =
-														activeAnnotationMessageId === messageId ? null : messageId)}
-												onSaveAnnotation={(values, shouldClose) =>
-													handleSaveAnnotation(messageId, values, shouldClose)}
-												onDeleteAnnotation={messageAnnotations.has(messageId)
-													? () => handleDeleteAnnotation(messageId)
-													: undefined}
-												onCancelAnnotation={() => (activeAnnotationMessageId = null)}
-												onCategoryCreated={() => loadData()}
+												codingOpen={activeCodingMessageId === messageId}
+												savingCoding={codings.isPending(messageId)}
+												onToggleCoding={() =>
+													(activeCodingMessageId =
+														activeCodingMessageId === messageId ? null : messageId)}
+												onApply={(codeId, span, value) => applyCode(messageId, codeId, span, value)}
+												onChangeValue={(codingId, value) => changeScore(messageId, codingId, value)}
+												onRemoveCoding={(codingId) => codings.remove(messageId, codingId)}
+												onCancelCoding={() => (activeCodingMessageId = null)}
 											>
 												{#snippet beforeMessage()}
 													<!-- Context before (only if not loaded and there is a gap) -->
@@ -1185,7 +1086,7 @@
 														</div>
 													{/if}
 												{/snippet}
-											</AnnotatedMessage>
+											</CodedMessage>
 										{/if}
 									{:else if item.type === 'context-control'}
 										<div class="my-2 flex justify-center">

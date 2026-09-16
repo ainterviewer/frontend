@@ -31,7 +31,15 @@
 	import ScatterPlot from './ScatterPlot.svelte';
 	import SweepBar from './SweepBar.svelte';
 	import StatusStrip from './StatusStrip.svelte';
-	import { codingTreeFor } from '$lib/coding/store.svelte';
+	import CodebookGate from '$lib/coding/CodebookGate.svelte';
+	import { codebookFor } from '$lib/coding/store.svelte';
+	import CodeMenu from '$lib/components/analysis/CodeMenu.svelte';
+	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
+	import {
+		appliedCodeIds,
+		provideCodingSurface,
+		type CodeMenuRequest
+	} from './codingSurface.svelte';
 	import {
 		DEFAULT_TASK,
 		GROUP_MODES,
@@ -62,10 +70,71 @@
 	const formatPercent = format('.0%');
 
 	// The project's codebook, shared with the coding canvas rather than a second
-	// copy of it -- see `codingTreeFor`. Derived, not captured: SvelteKit reuses
-	// this component across a change of language, and a captured store would go
-	// on showing the codebook of the language the reader has left.
-	const tree = $derived(codingTreeFor(data.project_id, data.lang));
+	// copy of it -- see `codebookFor`. Derived, not captured: SvelteKit reuses
+	// this component across a change of project, and a captured codebook would
+	// go on showing the one the reader has left.
+	const book = $derived(codebookFor(data.project_id));
+
+	/**
+	 * Coding, from the reading surface.
+	 *
+	 * Explore is where a codebook is *used*: the reader is already looking at
+	 * the turns a code is about, and sending them to another page to apply it
+	 * costs them the search that found it. Right-click a turn, pick a code.
+	 *
+	 * The turns are four components deep, so what they need reaches them
+	 * through context rather than through every layer in between -- see
+	 * `codingSurface.svelte`.
+	 */
+	let userId = $derived(page.data.user?.id ?? '');
+	const codings = new MessageCodings(() => data.project_id);
+	let codeMenu = $state<CodeMenuRequest | null>(null);
+
+	/**
+	 * The turns on screen, gathered as they are drawn and read in one request.
+	 *
+	 * Batched through a microtask rather than asked for per card: a page of
+	 * results mounts thirty cards at once, and thirty requests for a handful of
+	 * ids each is the thing the lookup endpoint exists to avoid.
+	 */
+	let tracked: string[] = [];
+	let trackScheduled = false;
+	function track(messageIds: string[]) {
+		tracked.push(...messageIds);
+		if (trackScheduled) return;
+		trackScheduled = true;
+		queueMicrotask(() => {
+			const wanted = tracked;
+			tracked = [];
+			trackScheduled = false;
+			void codings.loadFor(wanted);
+		});
+	}
+
+	provideCodingSurface({
+		get codes() {
+			return book.status === 'ready' ? book.tree.codes : [];
+		},
+		get userId() {
+			return userId;
+		},
+		codingsFor: (messageId) => codings.get(messageId),
+		openMenu: (request) => (codeMenu = request),
+		uncode: (messageId, codingId) => void codings.remove(messageId, codingId),
+		track
+	});
+
+	async function applyFromMenu(codeId: string, value: number | null) {
+		const request = codeMenu;
+		if (!request) return;
+		codeMenu = null;
+		await codings.add(request.messageId, {
+			code_id: codeId,
+			start_offset: request.span?.start ?? null,
+			end_offset: request.span?.end ?? null,
+			value_int: value
+		});
+	}
 
 	/**
 	 * Which reading the right column is showing.
@@ -1454,9 +1523,15 @@
 				     has none to show. The codebook is the same one either view edits,
 				     so switching between them does not leave it behind. -->
 				<div class="flex min-h-[26rem] shrink-0 {codesOpen ? 'lg:w-[22rem]' : ''}">
+					<!-- Block, not flex: the pane sizes itself to its content, so a flex
+					     parent lets it shrink and leaves the column's width beside it. -->
 					<div class="min-h-0 w-full">
-						{#key tree}
-							<CodePanel {tree} bind:open={codesOpen} />
+						{#key book}
+							<CodebookGate {book}>
+								{#snippet children(tree)}
+									<CodePanel {tree} {book} bind:open={codesOpen} />
+								{/snippet}
+							</CodebookGate>
 						{/key}
 					</div>
 				</div>
@@ -1705,8 +1780,12 @@
 							<!-- Keyed: the pane holds expansion state keyed by code id, and
 							     a different codebook arriving in the same component would
 							     carry the old one's open branches with it. -->
-							{#key tree}
-								<CodePanel {tree} bind:open={codesOpen} />
+							{#key book}
+								<CodebookGate {book}>
+									{#snippet children(tree)}
+										<CodePanel {tree} {book} bind:open={codesOpen} />
+									{/snippet}
+								</CodebookGate>
 							{/key}
 						{:else}
 							<DetailPanel
@@ -1741,6 +1820,19 @@
      it has not navigated anywhere — the list, the filters and the scroll
      position are all still behind it, which is the whole reason it is a dialog
      and not the transcript page. -->
+{#if codeMenu}
+	<!-- One menu for the page: a mosaic of cards would otherwise hold one per
+	     turn, and only one can ever be open. -->
+	<CodeMenu
+		codes={book.status === 'ready' ? book.tree.codes : []}
+		at={codeMenu.at}
+		quote={codeMenu.quote}
+		applied={appliedCodeIds(codings, codeMenu.messageId, userId, codeMenu.span)}
+		onpick={(code, value) => applyFromMenu(code.id, value)}
+		onclose={() => (codeMenu = null)}
+	/>
+{/if}
+
 <TranscriptModal
 	hit={transcriptOf}
 	keyword={explore.searchableKeyword}
