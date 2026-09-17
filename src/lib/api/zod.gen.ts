@@ -2549,6 +2549,16 @@ export const zUserCreateRequest = z.object({
 });
 
 /**
+ * UserNotifications
+ *
+ * Counts for the badges in the account menu.
+ */
+export const zUserNotifications = z.object({
+    unread_reports: z.int().optional().default(0),
+    track: z.enum(['owner', 'admin']).optional().default('owner')
+});
+
+/**
  * UserPublic
  */
 export const zUserPublic = z.object({
@@ -4940,6 +4950,11 @@ export const zGetLanguagesResponse = z.array(zLanguageDict);
 export const zNewsletterUnsubscribeBody = zNewsletterRequest;
 
 export const zNewsletterSubscribeBody = zNewsletterRequest;
+
+/**
+ * Successful Response
+ */
+export const zGetNotificationsResponse = zUserNotifications;
 
 /**
  * Response Version

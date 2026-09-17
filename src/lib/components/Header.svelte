@@ -3,7 +3,12 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Auth } from '$lib/api';
-	import type { PlatformRelease, ProjectPublic, UserPublic } from '$lib/api/types.gen';
+	import type {
+		PlatformRelease,
+		ProjectPublic,
+		UserNotifications,
+		UserPublic
+	} from '$lib/api/types.gen';
 	import Wave from '$lib/components/Wave.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls.js';
 	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
@@ -16,6 +21,8 @@
 			user: UserPublic;
 			project?: ProjectPublic | null;
 			releases?: PlatformRelease[];
+			/** Badge counts from the dashboard layout; null if they failed to load. */
+			notifications?: UserNotifications | null;
 		};
 	}
 
@@ -41,6 +48,19 @@
 
 	let latestRelease = $derived(newsworthyVersion(data.releases));
 	let hasUnseenRelease = $derived(whatsNew.isUnseen(latestRelease));
+
+	// Reported questions waiting on this user, counted server-side — unlike the
+	// release dot, which is per-browser localStorage and so has to wait for
+	// hydration before it dares render. This one is already true on the
+	// server's first paint.
+	let unreadReports = $derived(data.notifications?.unread_reports ?? 0);
+	let reportTrack = $derived(data.notifications?.track ?? 'owner');
+
+	/** Both dots are the same amber; the count is what distinguishes them. */
+	let hasBadge = $derived(hasUnseenRelease || unreadReports > 0);
+
+	const reportRowClass =
+		'flex w-full items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary';
 
 	export async function signOut() {
 		const { error } = await Auth.logout();
@@ -126,18 +146,24 @@
 									menuOpen = !menuOpen;
 								}}
 								class="font-inherit pointer-events-auto relative block cursor-pointer border-none bg-transparent text-center text-base font-normal text-black"
-								aria-label={hasUnseenRelease
-									? 'Account menu — new release available'
-									: 'Account menu'}
+								aria-label={unreadReports > 0
+									? `Account menu — ${unreadReports} unread reported question${
+											unreadReports === 1 ? '' : 's'
+										}`
+									: hasUnseenRelease
+										? 'Account menu — new release available'
+										: 'Account menu'}
 							>
 								<div
 									class="relative inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-secondary hover:bg-secondary hover:brightness-85"
 								>
 									<span class="text-body font-medium">{data.user?.first_name?.[0] ?? ''}</span>
 								</div>
-								{#if hasUnseenRelease}
+								{#if hasBadge}
 									<!-- Sits on the avatar, not the menu item: the menu item is only
-									     visible once the menu has already been opened. -->
+									     visible once the menu has already been opened. One dot for
+									     both, since it means the same thing — there is something in
+									     the menu to look at. -->
 									<span
 										class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-light bg-orange-500"
 										aria-hidden="true"
@@ -146,7 +172,7 @@
 							</button>
 							<div
 								data-tour="header-menu-dropdown"
-								class="ring-opacity-5 pointer-events-auto mt-3 min-w-48 rounded-md bg-white shadow-lg ring-1 ring-black transition-all duration-200 {menuOpen
+								class="ring-opacity-5 pointer-events-auto mt-3 min-w-56 rounded-md bg-white shadow-lg ring-1 ring-black transition-all duration-200 {menuOpen
 									? 'visible opacity-100'
 									: 'invisible opacity-0'}"
 							>
@@ -167,6 +193,38 @@
 										class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
 										role="menuitem">Your profile</a
 									>
+									{#if unreadReports > 0}
+										{#if reportTrack === 'admin'}
+											<a
+												href={resolve('/dashboard/admin/reports')}
+												class={reportRowClass}
+												role="menuitem"
+											>
+												{@render reportRow()}
+											</a>
+										{:else if projectId}
+											<!-- A member's reports are read on the project's interview
+											     list, filtered to the interviews that carry them. -->
+											<a
+												href="{resolve('/dashboard/projects/[project_id]/[lang]/interviews', {
+													project_id: projectId,
+													lang: languageCode ?? 'en'
+												})}?reported=true"
+												class={reportRowClass}
+												role="menuitem"
+											>
+												{@render reportRow()}
+											</a>
+										{:else}
+											<!-- Nowhere to send a member who is not in a project: there
+											     is no cross-project queue for them. Still worth saying. -->
+											<div
+												class="flex w-full items-center justify-between px-4 py-2 text-sm text-gray-700"
+											>
+												{@render reportRow()}
+											</div>
+										{/if}
+									{/if}
 									<button
 										type="button"
 										onclick={(e) => {
@@ -199,3 +257,24 @@
 		</nav>
 	</div>
 </header>
+
+<!--
+	The reported-questions row's contents, shared by the two links and the
+	unlinked case: which of them is rendered depends on the track and on whether
+	the user is inside a project, and `resolve()` has to appear in the `href`
+	itself for the route to be checked.
+
+	Deliberately undecorated: every other row in this menu is plain text, so an
+	icon here made it the one ornamented entry.
+
+	The count is a bare orange numeral rather than a filled badge. It sits
+	directly above the release dot, and a 17px pill beside an 8px dot read as
+	two different kinds of signal when they mean the same thing — "there is
+	something here". Matching the dot's weight rather than its shape keeps the
+	number, which is worth more than the symmetry, and leaves nothing to
+	outgrow at three digits.
+-->
+{#snippet reportRow()}
+	<span class="whitespace-nowrap">Reported questions</span>
+	<span class="ml-3 text-sm font-semibold text-orange-500">{unreadReports}</span>
+{/snippet}

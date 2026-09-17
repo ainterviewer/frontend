@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { invalidate } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
 	import { WhatsNewModal } from '$lib/components/modals';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { whatsNew } from '$lib/whatsNew.svelte';
-	import type { Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
 	let { children, data }: { children: Snippet; data: LayoutData } = $props();
@@ -12,6 +13,37 @@
 	// so the server and the first client render agree.
 	$effect(() => {
 		whatsNew.hydrate();
+	});
+
+	/**
+	 * How often an open dashboard re-checks its badge counts.
+	 *
+	 * Reports arrive over hours, so this is deliberately slow: it exists so a
+	 * tab left open all afternoon notices one, not so the count is live. Every
+	 * navigation re-runs the layout load anyway, and acting on a report
+	 * invalidates it immediately.
+	 */
+	const NOTIFICATION_POLL_MS = 5 * 60 * 1000;
+
+	onMount(() => {
+		// Only `app:notifications` is invalidated, not the whole load: this must
+		// not refetch the project, its permissions and the release list every
+		// five minutes, and it must not disturb a route's own data.
+		const refresh = () => {
+			// A hidden tab is not being read, and a laptop that was asleep would
+			// otherwise fire every missed interval at once on waking.
+			if (document.visibilityState !== 'visible') return;
+			invalidate('app:notifications');
+		};
+
+		const timer = setInterval(refresh, NOTIFICATION_POLL_MS);
+		// Coming back to the tab is exactly when the count is most likely stale.
+		document.addEventListener('visibilitychange', refresh);
+
+		return () => {
+			clearInterval(timer);
+			document.removeEventListener('visibilitychange', refresh);
+		};
 	});
 </script>
 

@@ -1,11 +1,16 @@
-import { Auth, Default, Projects } from '$lib/api';
+import { Auth, Default, Notifications, Projects } from '$lib/api';
 import { clearAuthCookies } from '../../hooks.server';
 import { parseProjectRoute } from '$lib/utils/urls';
 import { error, redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
+export const load: LayoutServerLoad = async ({ cookies, depends, locals, url }) => {
 	const { cookieHeader } = locals;
+
+	// Declared so the account-menu badge can be refreshed on its own, without
+	// a navigation: the dashboard layout re-runs this load on
+	// `invalidate('app:notifications')`. See the poll in +layout.svelte.
+	depends('app:notifications');
 
 	// Releases ride along with the version call so the "What's new" dot can be
 	// rendered without a second round trip — and so it keys off the newest
@@ -13,27 +18,35 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 	// which may not have been written up yet, or may have nothing to write up.
 	const { projectId } = parseProjectRoute(url.pathname);
 
-	const [response, platformVer, releases, projectResponse, permissionsResponse] = await Promise.all(
-		[
-			Auth.me({ headers: { cookie: cookieHeader } }),
-			Default.version({}),
-			Default.releases({ query: { limit: 10 } }),
-			projectId
-				? Projects.getProject({
-						headers: { cookie: cookieHeader },
-						path: { project_id: projectId }
-					})
-				: null,
-			// What this user may do in the project, so the UI can leave out actions
-			// the API would refuse — moderating other people's comments, above all.
-			projectId
-				? Projects.getProjectPermissions({
-						headers: { cookie: cookieHeader },
-						path: { project_id: projectId }
-					})
-				: null
-		]
-	);
+	const [
+		response,
+		platformVer,
+		releases,
+		notificationsResponse,
+		projectResponse,
+		permissionsResponse
+	] = await Promise.all([
+		Auth.me({ headers: { cookie: cookieHeader } }),
+		Default.version({}),
+		Default.releases({ query: { limit: 10 } }),
+		// Badge counts for the account menu. In this fan-out rather than a
+		// client fetch so the dot is right on the first paint.
+		Notifications.getNotifications({ headers: { cookie: cookieHeader } }),
+		projectId
+			? Projects.getProject({
+					headers: { cookie: cookieHeader },
+					path: { project_id: projectId }
+				})
+			: null,
+		// What this user may do in the project, so the UI can leave out actions
+		// the API would refuse — moderating other people's comments, above all.
+		projectId
+			? Projects.getProjectPermissions({
+					headers: { cookie: cookieHeader },
+					path: { project_id: projectId }
+				})
+			: null
+	]);
 
 	if (response.error) {
 		if (!response.response) {
@@ -67,11 +80,18 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 		permissions = permissionsResponse.data;
 	}
 
+	// A failed count is no badge, never a stale or invented one: the menu row
+	// simply does not appear, which is the same as having nothing waiting.
+	if (notificationsResponse.error) {
+		console.error('Failed to load notifications:', notificationsResponse.error);
+	}
+
 	return {
 		user: me,
 		project,
 		permissions,
 		platformVersion: platformVer.data,
-		releases: releases.data ?? []
+		releases: releases.data ?? [],
+		notifications: notificationsResponse.data ?? null
 	};
 };
