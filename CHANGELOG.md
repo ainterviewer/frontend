@@ -4,6 +4,18 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.5.4] - 2026-09-17
+
+### Features
+
+- (explore) Better code exploration integration
+- (explore) Add code similarity searches and code definition and memo updates to the explore view code panel.
+- (codebook) Minor improvements to layout
+
+### Bug Fixes
+
+- (explore) Display code menu on top of transcript modal
+
 ## [0.5.3] - 2026-09-16
 
 ### Features
