@@ -130,6 +130,17 @@ export const zCheckboxItem = z.object({
 });
 
 /**
+ * CodeFacet
+ *
+ * One code, with how much of the current view carries it.
+ */
+export const zCodeFacet = z.object({
+    code_id: z.string(),
+    count: z.int().optional().default(0),
+    subtree: z.int().optional().default(0)
+});
+
+/**
  * CodeKind
  *
  * What a code *is*, which decides what applying it to a passage produces.
@@ -536,6 +547,17 @@ export const zEmbeddingKind = z.enum([
     'section',
     'interview'
 ]);
+
+/**
+ * CodeFacets
+ *
+ * What each code in the codebook is worth over the chunks now in view.
+ */
+export const zCodeFacets = z.object({
+    kind: zEmbeddingKind,
+    total: z.int().optional().default(0),
+    items: z.array(zCodeFacet).optional().default([])
+});
 
 /**
  * ErrorResponse
@@ -2156,6 +2178,27 @@ export const zEmbeddingClusterResponse = z.object({
 });
 
 /**
+ * EmbeddingCodeSimilarResponse
+ *
+ * One page of the corpus ranked against what a code has been applied to.
+ *
+ * "More like this" with a code for the this. Where the single-chunk version
+ * ranks against one stored vector, this ranks against the average of every
+ * chunk the code sits on -- so what it is near is the code as it has been
+ * *used*, which is a different claim from the code as it was *defined*, and
+ * the two actions in the panel are deliberately both there.
+ */
+export const zEmbeddingCodeSimilarResponse = z.object({
+    code_id: z.string(),
+    seeds: z.int().optional().default(0),
+    candidates: z.int().optional().default(0),
+    total: z.int().optional().default(0),
+    interviews: z.int().optional().default(0),
+    offset: z.int().optional().default(0),
+    items: z.array(zEmbeddingSearchHit).optional().default([])
+});
+
+/**
  * EmbeddingSearchResponse
  *
  * One page of results for one query.
@@ -3007,9 +3050,9 @@ export const zSearchEmbeddingsQuery = z.object({
     ]).optional().default('answer'),
     survey: z.array(z.string()).nullish(),
     survey_range: z.array(z.string()).nullish(),
-    coded: z.enum(['any', 'none']).nullish(),
     coded_mine: z.enum(['any', 'none']).nullish(),
     coded_others: z.enum(['any', 'none']).nullish(),
+    coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
@@ -3051,9 +3094,9 @@ export const zBrowseEmbeddingsQuery = z.object({
     ]).optional().default('answer'),
     survey: z.array(z.string()).nullish(),
     survey_range: z.array(z.string()).nullish(),
-    coded: z.enum(['any', 'none']).nullish(),
     coded_mine: z.enum(['any', 'none']).nullish(),
     coded_others: z.enum(['any', 'none']).nullish(),
+    coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
@@ -3086,9 +3129,9 @@ export const zReadSurveyFacetsQuery = z.object({
     ]).optional().default('answer'),
     survey: z.array(z.string()).nullish(),
     survey_range: z.array(z.string()).nullish(),
-    coded: z.enum(['any', 'none']).nullish(),
     coded_mine: z.enum(['any', 'none']).nullish(),
     coded_others: z.enum(['any', 'none']).nullish(),
+    coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish()
 });
 
@@ -3096,6 +3139,40 @@ export const zReadSurveyFacetsQuery = z.object({
  * Successful Response
  */
 export const zReadSurveyFacetsResponse = zSurveyFacets;
+
+export const zReadCodeFacetsPath = z.object({
+    project_id: z.string()
+});
+
+export const zReadCodeFacetsQuery = z.object({
+    kind: zEmbeddingKind.optional().default('qa_pair'),
+    folder_id: z.string().nullish(),
+    language: z.array(zLanguageCode).nullish(),
+    status: zInterviewStatus.nullish(),
+    participant_id: z.string().nullish(),
+    created_after: z.iso.datetime().nullish(),
+    created_before: z.iso.datetime().nullish(),
+    interview_id: z.array(z.string()).nullish(),
+    include_synthetic: z.boolean().optional().default(false),
+    question: z.array(z.string()).nullish(),
+    keyword: z.string().max(2000).nullish(),
+    keyword_scope: z.enum([
+        'answer',
+        'question',
+        'both'
+    ]).optional().default('answer'),
+    survey: z.array(z.string()).nullish(),
+    survey_range: z.array(z.string()).nullish(),
+    coded_mine: z.enum(['any', 'none']).nullish(),
+    coded_others: z.enum(['any', 'none']).nullish(),
+    coder_join: z.enum(['and', 'or']).optional().default('and'),
+    coder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zReadCodeFacetsResponse = zCodeFacets;
 
 export const zReadInterviewTranscriptPath = z.object({
     project_id: z.string().nullable(),
@@ -3116,6 +3193,45 @@ export const zReadInterviewTranscriptQuery = z.object({
  * Successful Response
  */
 export const zReadInterviewTranscriptResponse = zInterviewTranscript;
+
+export const zFindEmbeddingsLikeCodePath = z.object({
+    project_id: z.string(),
+    code_id: z.string()
+});
+
+export const zFindEmbeddingsLikeCodeQuery = z.object({
+    kind: zEmbeddingKind.optional().default('qa_pair'),
+    subtree: z.boolean().optional().default(false),
+    whole_interviews: z.boolean().optional().default(false),
+    folder_id: z.string().nullish(),
+    language: z.array(zLanguageCode).nullish(),
+    status: zInterviewStatus.nullish(),
+    participant_id: z.string().nullish(),
+    created_after: z.iso.datetime().nullish(),
+    created_before: z.iso.datetime().nullish(),
+    interview_id: z.array(z.string()).nullish(),
+    include_synthetic: z.boolean().optional().default(false),
+    question: z.array(z.string()).nullish(),
+    keyword: z.string().max(2000).nullish(),
+    keyword_scope: z.enum([
+        'answer',
+        'question',
+        'both'
+    ]).optional().default('answer'),
+    survey: z.array(z.string()).nullish(),
+    survey_range: z.array(z.string()).nullish(),
+    coded_mine: z.enum(['any', 'none']).nullish(),
+    coded_others: z.enum(['any', 'none']).nullish(),
+    coder_join: z.enum(['and', 'or']).optional().default('and'),
+    coder_id: z.string().nullish(),
+    limit: z.int().gte(1).lte(100).optional().default(10),
+    offset: z.int().gte(0).optional().default(0)
+});
+
+/**
+ * Successful Response
+ */
+export const zFindEmbeddingsLikeCodeResponse = zEmbeddingCodeSimilarResponse;
 
 export const zFindSimilarEmbeddingsPath = z.object({
     project_id: z.string(),
@@ -3141,9 +3257,9 @@ export const zFindSimilarEmbeddingsQuery = z.object({
     ]).optional().default('answer'),
     survey: z.array(z.string()).nullish(),
     survey_range: z.array(z.string()).nullish(),
-    coded: z.enum(['any', 'none']).nullish(),
     coded_mine: z.enum(['any', 'none']).nullish(),
     coded_others: z.enum(['any', 'none']).nullish(),
+    coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
@@ -3185,9 +3301,9 @@ export const zClusterEmbeddingsQuery = z.object({
     ]).optional().default('answer'),
     survey: z.array(z.string()).nullish(),
     survey_range: z.array(z.string()).nullish(),
-    coded: z.enum(['any', 'none']).nullish(),
     coded_mine: z.enum(['any', 'none']).nullish(),
     coded_others: z.enum(['any', 'none']).nullish(),
+    coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish()
 });
 

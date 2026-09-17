@@ -25,6 +25,7 @@
 		groupable,
 		keyword,
 		anchor,
+		codeAnchor = null,
 		anchorLoading,
 		onanchor,
 		ontranscript,
@@ -93,6 +94,16 @@
 		 * inside them — it is what is being asked about, not one of the answers.
 		 */
 		anchor: EmbeddingSearchHit | null;
+		/**
+		 * The code these are being read outward from, or null.
+		 *
+		 * A name and a seed count rather than a chunk, because there is no one
+		 * chunk to show above the results: what the list is near is the average
+		 * of everything the code sits on, and how many that was is what says
+		 * whether the ranking is worth reading. Two seeds is a coincidence; two
+		 * hundred is a claim about the code.
+		 */
+		codeAnchor?: { name: string; subtree: boolean; seeds: number } | null;
 		/** An anchor asked for but not yet arrived, so the header can hold still. */
 		anchorLoading: boolean;
 		/** Walk to a chunk's neighbours. */
@@ -118,6 +129,8 @@
 
 	/** Whether a walk is under way, including the beat before the anchor lands. */
 	let walking = $derived(anchor !== null || anchorLoading);
+	/** Whether the list is being read outward from a code. */
+	let tracing = $derived(codeAnchor !== null);
 
 	/**
 	 * Whether an order is the reader's to choose.
@@ -192,12 +205,14 @@
 		     the reader that the top of this list means something; the browse has
 		     the picker at the other end of the same row, and saying it twice made
 		     one of them look like it might be the other. -->
-		{#if walking}
+		{#if tracing}
+			<span>nearest what this code has been applied to</span>
+		{:else if walking}
 			<span>nearest this chunk</span>
 		{:else if ranked}
 			<span>ranked by similarity to the query</span>
 		{/if}
-		{#if walking}
+		{#if walking || tracing}
 			<!-- The way back, beside the label that says where you are. A walk
 			     replaces the list under it rather than navigating away, so this
 			     restores whatever was showing — a query's results, or the corpus. -->
@@ -257,6 +272,31 @@
 	</div>
 
 	<div class="min-h-0 flex-1 overflow-y-auto p-3">
+		{#if codeAnchor}
+			<!-- What is being read from, where a walk puts its chunk. A line
+			     rather than a card because there is no passage to show: the query
+			     is an average, and the honest thing to put here is what it was
+			     averaged from. -->
+			<div
+				class="mb-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-gray-600"
+			>
+				<span class="font-medium text-gray-800">
+					Like “{codeAnchor.name}”{codeAnchor.subtree ? ' and everything under it' : ''}
+				</span>
+				<span class="text-gray-500">
+					— averaged over {codeAnchor.seeds}
+					{codeAnchor.seeds === 1 ? 'passage' : 'passages'} carrying it{codeAnchor.seeds === 1
+						? ', so this is one passage’s neighbours wearing a code’s name'
+						: ''}. Those passages are in the list too, near the top: whether they sit together is
+					what this says about the code itself. Add
+					<code class="rounded bg-white px-1 py-0.5 text-[0.6875rem] text-gray-700">
+						-code:"{codeAnchor.name}"
+					</code>
+					to the keyword box to look away from where it has already been applied.
+				</span>
+			</div>
+		{/if}
+
 		{#if anchor}
 			<!-- Full width and outside the mosaic: the columns are a list of
 			     answers, and this is the question they are answers to. Walking on

@@ -129,6 +129,16 @@ export const DEFAULT_LIST_ORDER: ListOrder = 'random';
  * what makes a refresh deal a new one, deliberately. Kept to the characters the
  * endpoint accepts.
  */
+/**
+ * How long the corpus lags the keyword box.
+ *
+ * Long enough to cover the gap between keystrokes at an ordinary typing speed,
+ * short enough that a reader who has stopped does not notice waiting. The same
+ * order as the toolbar's own debounce, and for the same reason: a control that
+ * is *used* continuously should not be *read* continuously.
+ */
+export const KEYWORD_DEBOUNCE_MS = 300;
+
 function shuffleSeed(): string {
 	return Math.random().toString(36).slice(2, 12);
 }
@@ -221,7 +231,43 @@ export class ExploreState {
 	 * a way a plain string could not. `keywordProblem` is what the input shows
 	 * and `searchableKeyword` is what the requests are allowed to use.
 	 */
-	keyword = $state(defaultFilters().keyword);
+	#typed = $state(defaultFilters().keyword);
+	#settled = $state(defaultFilters().keyword);
+	#settling: ReturnType<typeof setTimeout> | undefined;
+
+	get keyword(): string {
+		return this.#typed;
+	}
+
+	set keyword(next: string) {
+		this.#typed = next;
+		clearTimeout(this.#settling);
+		this.#settling = setTimeout(() => (this.#settled = next), KEYWORD_DEBOUNCE_MS);
+	}
+
+	/**
+	 * The keyword as of the last pause in typing.
+	 *
+	 * What the requests are built from, where the box is what the reader sees.
+	 * Every view here refetches on the filters changing, so without this a
+	 * fifteen-character query is fifteen scans of the corpus, fourteen of which
+	 * the reader had already moved past before they landed -- and each one
+	 * carries a browse, a facet count and, on the map, a projection.
+	 *
+	 * Deliberately not the same value as `keyword`. The box, the problem
+	 * message and the code rows' filter state all read what was *typed*, so
+	 * they answer immediately; only the corpus waits.
+	 */
+	get settledKeyword(): string {
+		return this.#settled;
+	}
+
+	/** Both halves at once, for a keyword that did not come from typing. */
+	#commitKeyword(next: string) {
+		clearTimeout(this.#settling);
+		this.#typed = next;
+		this.#settled = next;
+	}
 
 	/**
 	 * Which survey answers the interviews behind the chunks must hold, keyed by
@@ -257,6 +303,16 @@ export class ExploreState {
 	keywordProblem = $derived(findKeywordProblem(this.keyword));
 
 	/**
+	 * The same question asked of the settled value.
+	 *
+	 * Asked separately rather than reusing `keywordProblem`, which is about the
+	 * box: mid-bracket the box is in a problem state while the requests are
+	 * still carrying the last thing that parsed, and reading one from the other
+	 * would clear a filter the reader has not finished replacing yet.
+	 */
+	#settledProblem = $derived(findKeywordProblem(this.settledKeyword));
+
+	/**
 	 * The keyword the requests may carry: what was typed, or nothing while it
 	 * does not parse.
 	 *
@@ -265,7 +321,7 @@ export class ExploreState {
 	 * disagreeing with its own controls. Half-typed brackets simply do not
 	 * narrow anything yet.
 	 */
-	searchableKeyword = $derived(this.keywordProblem === null ? this.keyword : '');
+	searchableKeyword = $derived(this.#settledProblem === null ? this.settledKeyword : '');
 
 	// -- the map's own --------------------------------------------------------
 
@@ -289,9 +345,9 @@ export class ExploreState {
 		languages: this.filterLanguages,
 		include_synthetic: this.includeSynthetic,
 		questions: this.filterQuestions,
-		coded: this.coverage.any,
 		coded_mine: this.coverage.mine,
 		coded_others: this.coverage.others,
+		coder_join: this.coverage.join,
 		coder_id: this.userId || null,
 		keyword: this.searchableKeyword,
 		keyword_scope: this.keywordScope,
@@ -340,7 +396,9 @@ export class ExploreState {
 		this.includeSynthetic = initial.filters.include_synthetic;
 		this.filterQuestions = initial.filters.questions;
 		this.coverage = initial.coverage;
-		this.keyword = initial.filters.keyword;
+		// Straight to both halves: a link arrives complete, and letting it settle
+		// would spend the first request of the page on the unfiltered corpus.
+		this.#commitKeyword(initial.filters.keyword);
 		this.keywordScope = initial.filters.keyword_scope;
 		this.surveyValues = initial.filters.survey;
 		this.surveyRanges = initial.filters.survey_ranges;

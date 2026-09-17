@@ -45,9 +45,14 @@ export interface CodeRowLike {
  * its scale is the code's own content rather than a label for its sort.
  */
 export function kindMark(code: Code): { icon: string; label: string; title: string } {
+	// One icon per kind and nothing beside it, so the column is the same width
+	// on every row. A score's range used to print next to its icon, which made
+	// that one row wider than its siblings and pushed everything left of it out
+	// of line -- and a range is a property of the code rather than something a
+	// reader scans a codebook for. It is still a hover away, where the kind's
+	// own name already is.
 	if (code.kind === 'score') {
-		const range = scoreRangeLabel(code);
-		return { icon: 'fa-sliders', label: range, title: `Score, ${range}` };
+		return { icon: 'fa-sliders', label: '', title: `Score, ${scoreRangeLabel(code)}` };
 	}
 	if (code.kind === 'group') {
 		return { icon: 'fa-layer-group', label: '', title: 'Group — organises, never applied' };

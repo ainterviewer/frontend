@@ -431,6 +431,43 @@ export type CodeBase = {
 };
 
 /**
+ * CodeFacet
+ *
+ * One code, with how much of the current view carries it.
+ */
+export type CodeFacet = {
+    /**
+     * Code Id
+     */
+    code_id: string;
+    /**
+     * Count
+     */
+    count?: number;
+    /**
+     * Subtree
+     */
+    subtree?: number;
+};
+
+/**
+ * CodeFacets
+ *
+ * What each code in the codebook is worth over the chunks now in view.
+ */
+export type CodeFacets = {
+    kind: EmbeddingKind;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Items
+     */
+    items?: Array<CodeFacet>;
+};
+
+/**
  * CodeKind
  *
  * What a code *is*, which decides what applying it to a passage produces.
@@ -1235,6 +1272,48 @@ export type EmbeddingClusterResponse = {
      * Points
      */
     points?: Array<EmbeddingClusterPoint>;
+};
+
+/**
+ * EmbeddingCodeSimilarResponse
+ *
+ * One page of the corpus ranked against what a code has been applied to.
+ *
+ * "More like this" with a code for the this. Where the single-chunk version
+ * ranks against one stored vector, this ranks against the average of every
+ * chunk the code sits on -- so what it is near is the code as it has been
+ * *used*, which is a different claim from the code as it was *defined*, and
+ * the two actions in the panel are deliberately both there.
+ */
+export type EmbeddingCodeSimilarResponse = {
+    /**
+     * Code Id
+     */
+    code_id: string;
+    /**
+     * Seeds
+     */
+    seeds?: number;
+    /**
+     * Candidates
+     */
+    candidates?: number;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Interviews
+     */
+    interviews?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
+    /**
+     * Items
+     */
+    items?: Array<EmbeddingSearchHit>;
 };
 
 /**
@@ -5601,10 +5680,6 @@ export type SearchEmbeddingsData = {
          */
         survey_range?: Array<string> | null;
         /**
-         * Coded
-         */
-        coded?: 'any' | 'none' | null;
-        /**
          * Coded Mine
          */
         coded_mine?: 'any' | 'none' | null;
@@ -5612,6 +5687,10 @@ export type SearchEmbeddingsData = {
          * Coded Others
          */
         coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Join
+         */
+        coder_join?: 'and' | 'or';
         /**
          * Coder Id
          */
@@ -5729,10 +5808,6 @@ export type BrowseEmbeddingsData = {
          */
         survey_range?: Array<string> | null;
         /**
-         * Coded
-         */
-        coded?: 'any' | 'none' | null;
-        /**
          * Coded Mine
          */
         coded_mine?: 'any' | 'none' | null;
@@ -5740,6 +5815,10 @@ export type BrowseEmbeddingsData = {
          * Coded Others
          */
         coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Join
+         */
+        coder_join?: 'and' | 'or';
         /**
          * Coder Id
          */
@@ -5840,10 +5919,6 @@ export type ReadSurveyFacetsData = {
          */
         survey_range?: Array<string> | null;
         /**
-         * Coded
-         */
-        coded?: 'any' | 'none' | null;
-        /**
          * Coded Mine
          */
         coded_mine?: 'any' | 'none' | null;
@@ -5851,6 +5926,10 @@ export type ReadSurveyFacetsData = {
          * Coded Others
          */
         coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Join
+         */
+        coder_join?: 'and' | 'or';
         /**
          * Coder Id
          */
@@ -5880,6 +5959,110 @@ export type ReadSurveyFacetsResponses = {
 };
 
 export type ReadSurveyFacetsResponse = ReadSurveyFacetsResponses[keyof ReadSurveyFacetsResponses];
+
+export type ReadCodeFacetsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        kind?: EmbeddingKind;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+        /**
+         * Language
+         */
+        language?: Array<LanguageCode> | null;
+        /**
+         * Status
+         */
+        status?: InterviewStatus | null;
+        /**
+         * Participant Id
+         */
+        participant_id?: string | null;
+        /**
+         * Created After
+         */
+        created_after?: string | null;
+        /**
+         * Created Before
+         */
+        created_before?: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id?: Array<string> | null;
+        /**
+         * Include Synthetic
+         */
+        include_synthetic?: boolean;
+        /**
+         * Question
+         */
+        question?: Array<string> | null;
+        /**
+         * Keyword
+         */
+        keyword?: string | null;
+        /**
+         * Keyword Scope
+         */
+        keyword_scope?: 'answer' | 'question' | 'both';
+        /**
+         * Survey
+         */
+        survey?: Array<string> | null;
+        /**
+         * Survey Range
+         */
+        survey_range?: Array<string> | null;
+        /**
+         * Coded Mine
+         */
+        coded_mine?: 'any' | 'none' | null;
+        /**
+         * Coded Others
+         */
+        coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Join
+         */
+        coder_join?: 'and' | 'or';
+        /**
+         * Coder Id
+         */
+        coder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/analysis/embeddings/code-facets';
+};
+
+export type ReadCodeFacetsErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadCodeFacetsError = ReadCodeFacetsErrors[keyof ReadCodeFacetsErrors];
+
+export type ReadCodeFacetsResponses = {
+    /**
+     * Successful Response
+     */
+    200: CodeFacets;
+};
+
+export type ReadCodeFacetsResponse = ReadCodeFacetsResponses[keyof ReadCodeFacetsResponses];
 
 export type ReadInterviewTranscriptData = {
     body?: never;
@@ -5931,6 +6114,130 @@ export type ReadInterviewTranscriptResponses = {
 };
 
 export type ReadInterviewTranscriptResponse = ReadInterviewTranscriptResponses[keyof ReadInterviewTranscriptResponses];
+
+export type FindEmbeddingsLikeCodeData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Code Id
+         */
+        code_id: string;
+    };
+    query?: {
+        kind?: EmbeddingKind;
+        /**
+         * Subtree
+         */
+        subtree?: boolean;
+        /**
+         * Whole Interviews
+         */
+        whole_interviews?: boolean;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+        /**
+         * Language
+         */
+        language?: Array<LanguageCode> | null;
+        /**
+         * Status
+         */
+        status?: InterviewStatus | null;
+        /**
+         * Participant Id
+         */
+        participant_id?: string | null;
+        /**
+         * Created After
+         */
+        created_after?: string | null;
+        /**
+         * Created Before
+         */
+        created_before?: string | null;
+        /**
+         * Interview Id
+         */
+        interview_id?: Array<string> | null;
+        /**
+         * Include Synthetic
+         */
+        include_synthetic?: boolean;
+        /**
+         * Question
+         */
+        question?: Array<string> | null;
+        /**
+         * Keyword
+         */
+        keyword?: string | null;
+        /**
+         * Keyword Scope
+         */
+        keyword_scope?: 'answer' | 'question' | 'both';
+        /**
+         * Survey
+         */
+        survey?: Array<string> | null;
+        /**
+         * Survey Range
+         */
+        survey_range?: Array<string> | null;
+        /**
+         * Coded Mine
+         */
+        coded_mine?: 'any' | 'none' | null;
+        /**
+         * Coded Others
+         */
+        coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Join
+         */
+        coder_join?: 'and' | 'or';
+        /**
+         * Coder Id
+         */
+        coder_id?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/projects/{project_id}/analysis/embeddings/codes/{code_id}/similar';
+};
+
+export type FindEmbeddingsLikeCodeErrors = {
+    /**
+     * Invalid request
+     */
+    400: ErrorResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type FindEmbeddingsLikeCodeError = FindEmbeddingsLikeCodeErrors[keyof FindEmbeddingsLikeCodeErrors];
+
+export type FindEmbeddingsLikeCodeResponses = {
+    /**
+     * Successful Response
+     */
+    200: EmbeddingCodeSimilarResponse;
+};
+
+export type FindEmbeddingsLikeCodeResponse = FindEmbeddingsLikeCodeResponses[keyof FindEmbeddingsLikeCodeResponses];
 
 export type FindSimilarEmbeddingsData = {
     body?: never;
@@ -6002,10 +6309,6 @@ export type FindSimilarEmbeddingsData = {
          */
         survey_range?: Array<string> | null;
         /**
-         * Coded
-         */
-        coded?: 'any' | 'none' | null;
-        /**
          * Coded Mine
          */
         coded_mine?: 'any' | 'none' | null;
@@ -6013,6 +6316,10 @@ export type FindSimilarEmbeddingsData = {
          * Coded Others
          */
         coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Join
+         */
+        coder_join?: 'and' | 'or';
         /**
          * Coder Id
          */
@@ -6143,10 +6450,6 @@ export type ClusterEmbeddingsData = {
          */
         survey_range?: Array<string> | null;
         /**
-         * Coded
-         */
-        coded?: 'any' | 'none' | null;
-        /**
          * Coded Mine
          */
         coded_mine?: 'any' | 'none' | null;
@@ -6154,6 +6457,10 @@ export type ClusterEmbeddingsData = {
          * Coded Others
          */
         coded_others?: 'any' | 'none' | null;
+        /**
+         * Coder Join
+         */
+        coder_join?: 'and' | 'or';
         /**
          * Coder Id
          */

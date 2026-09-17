@@ -150,7 +150,7 @@ describe('a hand-edited or stale link', () => {
 });
 
 describe('the coverage axes', () => {
-	const review = { any: null, mine: 'none', others: 'any' } as const;
+	const review = { mine: 'none', others: 'any', join: 'and' } as const;
 
 	it('round-trips a combination', () => {
 		const written = exploreUrlSearch({ ...defaultExploreUrl(), coverage: review });
@@ -162,7 +162,7 @@ describe('the coverage axes', () => {
 
 	it('leaves an axis that asks nothing off the link', () => {
 		expect(exploreUrlSearch(defaultExploreUrl())).not.toContain('mine');
-		expect(exploreUrlSearch({ ...defaultExploreUrl(), coverage: review })).not.toContain('coded=');
+		expect(exploreUrlSearch({ ...defaultExploreUrl(), coverage: review })).not.toContain('join');
 	});
 
 	it('reads the axes into the filters a request is built from', () => {
@@ -170,7 +170,29 @@ describe('the coverage axes', () => {
 
 		expect(opened.filters.coded_mine).toBe('none');
 		expect(opened.filters.coded_others).toBe('any');
-		expect(opened.filters.coded).toBeNull();
+		expect(opened.filters.coder_join).toBe('and');
+	});
+
+	it('round-trips the operator', () => {
+		const anyone = { mine: 'any', others: 'any', join: 'or' } as const;
+		const written = exploreUrlSearch({ ...defaultExploreUrl(), coverage: anyone });
+
+		expect(written).toContain('join=or');
+		expect(readExploreUrl(new URLSearchParams(written)).coverage).toEqual(anyone);
+	});
+
+	it('leaves the operator off where it joins nothing', () => {
+		// `or` over one axis is that axis, so a link carrying it would differ
+		// from one that does not while showing the same thing.
+		const one = { mine: 'any', others: null, join: 'or' } as const;
+
+		expect(exploreUrlSearch({ ...defaultExploreUrl(), coverage: one })).not.toContain('join');
+	});
+
+	it('reads an unknown operator as and', () => {
+		expect(readExploreUrl(new URLSearchParams('mine=any&others=any&join=xor')).coverage.join).toBe(
+			'and'
+		);
 	});
 
 	it('carries the axes, never the coder they are about', () => {

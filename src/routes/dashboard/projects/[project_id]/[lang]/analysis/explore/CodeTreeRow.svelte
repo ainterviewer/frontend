@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { displayName } from '$lib/coding/codingTree';
+	import { DropdownMenu } from 'bits-ui';
+	import { fly } from 'svelte/transition';
 	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
 	import { kindMark, ROW_HEIGHT, type CodeRowLike } from './codeTable';
 	import { useCodeDrag } from './codeTableDrag.svelte';
@@ -11,10 +13,13 @@
 		renamingId,
 		isExpanded,
 		isFiltering,
+		countOf = () => null,
 		ontoggle,
 		onstartdrag,
 		onrename,
-		onfilter
+		onfilter,
+		ondefine,
+		onlike
 	}: {
 		row: CodeRowLike;
 		tree: CodingTreeState;
@@ -29,6 +34,8 @@
 		 * agreeing with something the reader can edit by hand.
 		 */
 		isFiltering: (id: string) => boolean;
+		/** How much of what is on screen this code accounts for -- see `CodePanel`. */
+		countOf?: (id: string) => { count: number; subtree: number } | null;
 		/** Opens a closed branch, or closes an open one. */
 		ontoggle: (id: string) => void;
 		/** Handed the pointer event that began a drag on this row's handle. */
@@ -37,6 +44,19 @@
 		onrename: (id: string | null) => void;
 		/** Puts this code's reference into the keyword box, or takes it out. */
 		onfilter: (id: string) => void;
+		/**
+		 * Searches the corpus for what the code *says* it is -- its name and
+		 * definition, as a query. Works on a code nothing has been applied to,
+		 * which is the half of searching from a code that exists from the start.
+		 */
+		ondefine?: (id: string) => void;
+		/**
+		 * Ranks the corpus against what the code has *become* -- the average of
+		 * the passages somebody applied it to. Needs coded data to mean
+		 * anything, so a code at zero is offered it disabled with the count
+		 * saying why.
+		 */
+		onlike?: (id: string, subtree: boolean) => void;
 	} = $props();
 
 	const drag = useCodeDrag();
@@ -77,6 +97,45 @@
 	const filtering = $derived(isFiltering(code.id));
 	// A branch filters as a branch: the reference the pane writes for a code
 	// with children carries `/*`, so the label should say what the click does.
+	/**
+	 * The number beside the row, and what it is a number of.
+	 *
+	 * Two numbers only where they differ, because most rows are leaves and a
+	 * pane this narrow cannot spend the width on saying `3 · 3`. A GROUP shows
+	 * the branch alone: it is never applied, so its own count is always zero
+	 * and `0 · 47` would be noise that means nothing.
+	 *
+	 * Null where nothing in view carries it -- drawn as nothing rather than as
+	 * a zero, so the rows that have something to say are the ones with ink on
+	 * them.
+	 */
+	const counted = $derived(countOf(code.id));
+	/**
+	 * How many chunks a centroid would be averaged from -- the branch where
+	 * this row filters as a branch, so the number matches what the action
+	 * actually does.
+	 *
+	 * It is the badge's count and so is counted over the *filtered* corpus,
+	 * not the project. That is the honest number here: the search ranks what
+	 * the filters leave, so a code with fifty passages elsewhere and none in
+	 * view has nothing in view to be like.
+	 */
+	const seeded = $derived(expandable ? (counted?.subtree ?? 0) : (counted?.count ?? 0));
+	const badge = $derived.by(() => {
+		if (!counted) return null;
+		const unit = `chunk${counted.subtree === 1 ? '' : 's'} in view`;
+		if (code.kind === 'group') {
+			return { text: `${counted.subtree}`, title: `${counted.subtree} ${unit} under this branch` };
+		}
+		if (counted.count === counted.subtree) {
+			return { text: `${counted.count}`, title: `${counted.count} ${unit} coded with this` };
+		}
+		return {
+			text: `${counted.count} · ${counted.subtree}`,
+			title: `${counted.count} coded with this, ${counted.subtree} counting everything under it`
+		};
+	});
+
 	const filterLabel = $derived(
 		filtering
 			? `Stop filtering by ${displayName(code.name)}`
@@ -191,6 +250,7 @@
 				<input
 					type="text"
 					value={code.name}
+					aria-label="Rename {displayName(code.name)}"
 					class="min-w-0 flex-1 rounded-sm border border-primary bg-white px-1 py-0 text-[0.8125rem] text-gray-900 focus:ring-0"
 					oninput={(event) =>
 						tree.patch(code.id, { name: event.currentTarget.value }, `name:${code.id}`)}
@@ -230,32 +290,115 @@
 		</div>
 
 		<div class="flex shrink-0 items-center gap-1.5">
-			<!-- Hidden until the row is hovered, like the drag handle, *unless* it
-			     is on: a filter that is narrowing what the reader is looking at has
-			     to be visible without hunting for it, and this row is where they
-			     would look to turn it off. -->
-			<button
-				type="button"
-				class="flex h-4 w-4 cursor-pointer items-center justify-center rounded-sm transition-opacity {filtering
-					? 'text-primary opacity-100'
-					: 'text-gray-300 opacity-0 group-hover/row:opacity-100 hover:text-gray-700 focus-visible:opacity-100'}"
-				aria-pressed={filtering}
-				title={filterLabel}
-				aria-label={filterLabel}
-				onclick={(event) => {
-					event.stopPropagation();
-					onfilter(code.id);
-				}}
-			>
-				<i class="fa-solid fa-filter text-[0.625rem]"></i>
-			</button>
+			<!-- One slot, two uses: what the code is worth at rest, what can be
+			     done with it on hover. Stacked in a single grid cell rather than
+			     laid out side by side, so the cell is as wide as the wider of the
+			     two and never as wide as both -- the buttons used to appear out of
+			     nothing and shove the count leftwards on every pass of the mouse.
 
-			<span
-				class="flex shrink-0 items-center gap-1 text-[0.6875rem] text-gray-400"
-				title={mark.title}
-			>
+			     A row that is *filtering* keeps its buttons at rest: a filter
+			     narrowing everything on screen has to be visible without hunting
+			     for it, and this row is where a reader would look to turn it
+			     off. -->
+			<span class="grid shrink-0 place-items-end">
+				{#if badge}
+					<span
+						class="col-start-1 row-start-1 text-[0.6875rem] text-gray-400 tabular-nums {filtering
+							? 'invisible'
+							: 'group-hover/row:invisible'}"
+						title={badge.title}
+					>
+						{badge.text}
+					</span>
+				{/if}
+
+				<span
+					class="col-start-1 row-start-1 flex items-center gap-1 transition-opacity {filtering
+						? ''
+						: 'pointer-events-none opacity-0 group-hover/row:pointer-events-auto group-hover/row:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100'}"
+				>
+					<button
+						type="button"
+						class="flex h-4 w-4 cursor-pointer items-center justify-center rounded-sm {filtering
+							? 'text-primary'
+							: 'text-gray-300 hover:text-gray-700'}"
+						aria-pressed={filtering}
+						title={filterLabel}
+						aria-label={filterLabel}
+						onclick={(event) => {
+							event.stopPropagation();
+							onfilter(code.id);
+						}}
+					>
+						<i class="fa-solid fa-filter text-[0.625rem]"></i>
+					</button>
+
+					<!-- The two ways of searching *from* a code, behind one opener.
+					     Not buttons of their own: a filter is a state this row is in
+					     and earns its place, where these two leave and go somewhere,
+					     and three icons on a row of a pane this narrow is a row
+					     nobody can read. -->
+					{#if ondefine && onlike}
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger
+								title="Search from {displayName(code.name)}"
+								aria-label="Search from {displayName(code.name)}"
+								onclick={(event: MouseEvent) => event.stopPropagation()}
+								class="flex h-4 w-4 cursor-pointer items-center justify-center rounded-sm text-gray-300 hover:text-gray-700"
+							>
+								<i class="fa-solid fa-ellipsis text-[0.625rem]"></i>
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Portal>
+								<DropdownMenu.Content
+									class="z-2000 min-w-[13rem] rounded-md border border-gray-200 bg-white p-1 shadow-lg outline-none"
+									sideOffset={4}
+									align="end"
+									preventScroll={false}
+									forceMount
+								>
+									{#snippet child({ wrapperProps, props, open })}
+										{#if open}
+											<div {...wrapperProps}>
+												<div {...props} transition:fly={{ duration: 150, y: -5 }}>
+													<DropdownMenu.Item
+														onSelect={() => ondefine(code.id)}
+														class="flex cursor-pointer flex-col gap-0.5 rounded px-2 py-1.5 text-left text-xs text-gray-700 outline-none data-highlighted:bg-gray-100"
+													>
+														<span class="font-medium">Search by definition</span>
+														<span class="text-[0.625rem] text-gray-500">
+															What this code says it is
+														</span>
+													</DropdownMenu.Item>
+													<DropdownMenu.Item
+														disabled={seeded === 0}
+														onSelect={() => onlike(code.id, expandable)}
+														class="flex cursor-pointer flex-col gap-0.5 rounded px-2 py-1.5 text-left text-xs text-gray-700 outline-none data-disabled:cursor-not-allowed data-disabled:text-gray-400 data-highlighted:bg-gray-100"
+													>
+														<span class="font-medium">Find more like these</span>
+														<span class="text-[0.625rem] text-gray-500">
+															{#if seeded === 0}
+																Nothing carries it yet, so there is nothing to be like
+															{:else}
+																What the {seeded} passage{seeded === 1 ? '' : 's'} carrying it have in
+																common
+															{/if}
+														</span>
+													</DropdownMenu.Item>
+												</div>
+											</div>
+										{/if}
+									{/snippet}
+								</DropdownMenu.Content>
+							</DropdownMenu.Portal>
+						</DropdownMenu.Root>
+					{/if}
+				</span>
+			</span>
+
+			<!-- One icon and nothing beside it, so the column is the same width on
+			     every row -- see `kindMark`. -->
+			<span class="flex shrink-0 items-center text-[0.6875rem] text-gray-400" title={mark.title}>
 				<i class="fas {mark.icon}"></i>
-				{#if mark.label}<span class="tabular-nums">{mark.label}</span>{/if}
 			</span>
 		</div>
 	</div>
@@ -269,10 +412,13 @@
 					{renamingId}
 					{isExpanded}
 					{isFiltering}
+					{countOf}
 					{ontoggle}
 					{onstartdrag}
 					{onrename}
 					{onfilter}
+					{ondefine}
+					{onlike}
 				/>
 			{/each}
 		</div>

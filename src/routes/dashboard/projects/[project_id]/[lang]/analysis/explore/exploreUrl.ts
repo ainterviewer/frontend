@@ -51,6 +51,7 @@ import {
 	defaultFilters,
 	type ClusterSettings,
 	defaultCoverage,
+	joinApplies,
 	type Coded,
 	type CoverageAxes,
 	type ExploreFilters,
@@ -255,9 +256,9 @@ export function readExploreUrl(params: URLSearchParams): ExploreUrlState {
 			languages: readLanguages(params.getAll('language')),
 			include_synthetic: flag(params.get('synthetic'), filters.include_synthetic),
 			questions: readQuestions(params.getAll('question')),
-			coded: readCoded(params.get('coded')),
 			coded_mine: readCoded(params.get('mine')),
 			coded_others: readCoded(params.get('others')),
+			coder_join: params.get('join') === 'or' ? 'or' : 'and',
 			// Never off the link: the axes are roles, and which coder they are
 			// about is settled by whoever opens it.
 			coder_id: null,
@@ -271,9 +272,9 @@ export function readExploreUrl(params: URLSearchParams): ExploreUrlState {
 			survey_ranges: readSurveyRanges(params.getAll('survey_range'))
 		},
 		coverage: {
-			any: readCoded(params.get('coded')),
 			mine: readCoded(params.get('mine')),
-			others: readCoded(params.get('others'))
+			others: readCoded(params.get('others')),
+			join: params.get('join') === 'or' ? 'or' : 'and'
 		},
 		listOrder: oneOf(
 			params.get('sort'),
@@ -334,9 +335,14 @@ export function exploreUrlParams(state: ExploreUrlState): URLSearchParams {
 	}
 	// The axes, never the coder they resolve against -- see
 	// `ExploreUrlState.coverage`.
-	if (state.coverage.any) params.set('coded', state.coverage.any);
 	if (state.coverage.mine) params.set('mine', state.coverage.mine);
 	if (state.coverage.others) params.set('others', state.coverage.others);
+	// Only where it is joining something: over one axis `or` is that axis, and
+	// a link carrying it would differ from one that does not while showing the
+	// same thing.
+	if (joinApplies(state.coverage) && state.coverage.join === 'or') {
+		params.set('join', 'or');
+	}
 	if (filters.keyword.trim()) {
 		params.set('keyword', filters.keyword.trim());
 		// The scope rides with the keyword and is left off without one: alone it

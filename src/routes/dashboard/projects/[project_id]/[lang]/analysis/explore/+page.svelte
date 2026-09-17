@@ -3,6 +3,8 @@
 	import { page } from '$app/state';
 	import { Analysis } from '$lib/api';
 	import type {
+		CodeFacet,
+		EmbeddingCodeSimilarResponse,
 		EmbeddingBrowseResponse,
 		EmbeddingClusterPoint,
 		EmbeddingClusterResponse,
@@ -21,6 +23,7 @@
 	import { OUTLIER_COLOR, mapColor } from '$lib/config/chartColors';
 	import { format } from 'd3-format';
 	import type { PageData } from './$types';
+	import { displayName, type Code } from '$lib/coding/codingTree';
 	import CodePanel from './CodePanel.svelte';
 	import DetailPanel from './DetailPanel.svelte';
 	import ControlRail from './ControlRail.svelte';
@@ -295,6 +298,26 @@
 	let detailMoreLoading = $state(false);
 	let detailMoreError = $state<string | null>(null);
 
+	/**
+	 * The code the list is being read outward from, if any.
+	 *
+	 * "Find more like these" -- the corpus ranked against the average of the
+	 * passages a code has been applied to. A fourth thing the list can be
+	 * showing, beside a walk from a chunk, a query and the corpus itself, and
+	 * it takes precedence over all three because it is the most recent thing
+	 * the reader asked for.
+	 *
+	 * The name is held beside the id so the strip can say what is being read
+	 * from without the page having to hold a codebook of its own.
+	 */
+	let codeAnchor = $state<{ id: string; name: string; subtree: boolean } | null>(null);
+	let codeLike = $state<EmbeddingCodeSimilarResponse | null>(null);
+	let codeLikeHits = $state<EmbeddingSearchHit[]>([]);
+	let codeLikeLoading = $state(false);
+	let codeLikeError = $state<string | null>(null);
+	let codeLikeMoreLoading = $state(false);
+	let codeLikeMoreError = $state<string | null>(null);
+
 	let focusedGroup = $state<string | null>(null);
 	let hoveredId = $state<string | null>(null);
 
@@ -513,6 +536,65 @@
 
 		return () => {
 			disposed = true;
+		};
+	});
+
+	/**
+	 * How much of what is on screen each code accounts for, by code id.
+	 *
+	 * A Map rather than the list the server sends, because the code pane reads
+	 * it a row at a time. Codes the server left out are absent and read as
+	 * zero, which is what they are.
+	 */
+	let codeCounts = $state(new Map<string, CodeFacet>());
+
+	/**
+	 * Re-read whenever the corpus or the unit changes.
+	 *
+	 * Both matter, and the unit most of all: one coding is one message, one
+	 * question group and one interview at once, so a badge left over from the
+	 * previous unit is a number about a list that is no longer on screen.
+	 *
+	 * The `code:` terms in the query are deliberately *not* applied to these —
+	 * the server prunes them — so filtering by one code leaves every other
+	 * badge saying what choosing it instead would cost. Without that the panel
+	 * would go to zeroes the moment it was used, which is the one moment the
+	 * numbers are worth having.
+	 */
+	$effect(() => {
+		const projectId = data.project_id;
+		const currentKind = kind;
+		const query = filterQuery(filters);
+
+		let disposed = false;
+		(async () => {
+			const { data: body } = await Analysis.readCodeFacets({
+				path: { project_id: projectId },
+				query: { kind: currentKind, ...query }
+			});
+			if (disposed) return;
+			// Cleared on failure rather than left standing, unlike the cohort
+			// picker's counts: those describe the project and stay true, where
+			// these describe a corpus that has just changed. A stale number
+			// beside a code is worse than none, because it reads as a fact.
+			codeCounts = new Map((body?.items ?? []).map((item) => [item.code_id, item]));
+		})();
+
+		return () => {
+			disposed = true;
+		};
+	});
+
+	/** What one row shows, or null where nothing in view carries the code.
+	 *
+	 * The two numbers carry defaults on the wire and so arrive optional;
+	 * filled in here rather than at every row, which would have to decide what
+	 * a missing count means four times over. */
+	const countOf = $derived.by(() => {
+		const counts = codeCounts;
+		return (id: string) => {
+			const found = counts.get(id);
+			return found ? { count: found.count ?? 0, subtree: found.subtree ?? 0 } : null;
 		};
 	});
 
@@ -984,6 +1066,115 @@
 		};
 	});
 
+	/** The same guard again, for the list read outward from a code. */
+	let codeLikeRun = 0;
+
+	$effect(() => {
+		const projectId = data.project_id;
+		const anchor = codeAnchor;
+		const currentKind = kind;
+		const currentFilters = filterQuery(filters);
+		const currentWhole = wholeInterviews;
+
+		codeLikeRun += 1;
+		codeLikeMoreLoading = false;
+		codeLikeMoreError = null;
+
+		if (!anchor) {
+			codeLike = null;
+			codeLikeHits = [];
+			codeLikeError = null;
+			codeLikeLoading = false;
+			return;
+		}
+
+		codeLikeLoading = true;
+		let disposed = false;
+		const controller = new AbortController();
+
+		(async () => {
+			// Costs no inference either: the centroid is averaged from vectors
+			// already stored, so this works with the embedding server down --
+			// unlike searching by definition, which has to encode the words.
+			const {
+				data: body,
+				error,
+				response
+			} = await Analysis.findEmbeddingsLikeCode({
+				path: { project_id: projectId, code_id: anchor.id },
+				query: {
+					kind: currentKind,
+					subtree: anchor.subtree,
+					limit: PAGE_SIZE,
+					offset: 0,
+					whole_interviews: currentWhole,
+					...currentFilters
+				},
+				signal: controller.signal
+			});
+			if (disposed) return;
+
+			codeLikeLoading = false;
+			if (error || !body) {
+				codeLike = null;
+				codeLikeHits = [];
+				codeLikeError = describeError(
+					response?.status,
+					`Could not read the corpus against “${anchor.name}”.`,
+					error
+				);
+				keywordServerProblem = keywordProblemOf(error) ?? keywordServerProblem;
+				return;
+			}
+
+			codeLike = body;
+			codeLikeHits = body.items ?? [];
+			codeLikeError = null;
+			keywordServerProblem = null;
+		})();
+
+		return () => {
+			disposed = true;
+			controller.abort();
+		};
+	});
+
+	/** The next page of what a code is near. Stored vectors, so also cheap. */
+	async function loadMoreLikeCode() {
+		const anchor = codeAnchor;
+		if (codeLikeMoreLoading || !codeLike || !anchor) return;
+
+		const run = codeLikeRun;
+		codeLikeMoreLoading = true;
+		codeLikeMoreError = null;
+
+		const {
+			data: body,
+			error,
+			response
+		} = await Analysis.findEmbeddingsLikeCode({
+			path: { project_id: data.project_id, code_id: anchor.id },
+			query: {
+				kind,
+				subtree: anchor.subtree,
+				limit: PAGE_SIZE,
+				offset: codeLikeHits.length,
+				whole_interviews: wholeInterviews,
+				...filterQuery(filters)
+			}
+		});
+		if (run !== codeLikeRun) return;
+
+		codeLikeMoreLoading = false;
+		if (error || !body) {
+			codeLikeMoreError = describeError(response?.status, 'Could not load more.');
+			return;
+		}
+
+		codeLike = body;
+		codeLikeHits = [...codeLikeHits, ...(body.items ?? [])];
+	}
+
 	/** The next page of neighbours. Stored vectors, so this one is cheap. */
 	async function loadMoreNeighbours() {
 		const id = selectedId;
@@ -1092,23 +1283,36 @@
 		paging(detailHits, detail?.total, detailMoreLoading, detailMoreError, loadMoreNeighbours)
 	);
 
+	let codeLikePaging = $derived(
+		paging(codeLikeHits, codeLike?.total, codeLikeMoreLoading, codeLikeMoreError, loadMoreLikeCode)
+	);
+
 	/**
-	 * What the list shows, from whichever of three requests answers it.
+	 * What the list shows, from whichever of four requests answers it.
 	 *
-	 * With an anchor it is that chunk's neighbours; with a query, the search
-	 * endpoint's ranking of the filtered corpus; with neither, the browse
-	 * endpoint's same corpus in guide order. One list in all three cases, so a
-	 * reader narrows, searches and walks without ever crossing into a different
-	 * screen — and the strip above it says which of the three they are reading,
-	 * because the top of a ranking and the top of a corpus mean different things.
+	 * Read from a code it is the corpus ranked against what that code has been
+	 * applied to; with a chunk anchor it is that chunk's neighbours; with a
+	 * query, the search endpoint's ranking of the filtered corpus; with none of
+	 * them, the browse endpoint's same corpus in guide order. One list in all
+	 * four cases, so a reader narrows, searches and walks without ever crossing
+	 * into a different screen — and the strip above it says which of the four
+	 * they are reading, because the top of a ranking and the top of a corpus
+	 * mean different things.
+	 *
+	 * A code wins over the rest because it is the most recent thing asked for:
+	 * choosing it clears the chunk anchor, and the query is left in the box so
+	 * that going back lands where the reader was.
 	 */
-	let walking = $derived(listing && selectedId !== null);
+	let tracing = $derived(listing && codeAnchor !== null);
+	let walking = $derived(listing && !tracing && selectedId !== null);
 
 	let listHits = $derived.by(() => {
+		if (tracing) return aboveCutoff(codeLikeHits);
 		if (walking) return aboveCutoff(detailHits);
 		return ranked ? aboveCutoff(searchHits) : browseHits;
 	});
 	let listTotal = $derived.by(() => {
+		if (tracing) return codeLike?.total ?? null;
 		if (walking) return detail?.total ?? null;
 		return ranked ? (searchResponse?.total ?? null) : (browseResponse?.total ?? null);
 	});
@@ -1122,25 +1326,48 @@
 	 * rather than saying zero.
 	 */
 	let listInterviews = $derived.by(() => {
+		if (tracing) return codeLike?.interviews ?? null;
 		if (walking) return detail?.interviews ?? null;
 		return ranked ? (searchResponse?.interviews ?? null) : (browseResponse?.interviews ?? null);
 	});
-	let listLoading = $derived(walking ? detailLoading : ranked ? searchLoading : browseLoading);
-	let listError = $derived(walking ? detailError : ranked ? searchError : browseError);
-	let listPaging = $derived(walking ? neighbourPaging : ranked ? searchPaging : browsePaging);
+	let listLoading = $derived(
+		tracing ? codeLikeLoading : walking ? detailLoading : ranked ? searchLoading : browseLoading
+	);
+	let listError = $derived(
+		tracing ? codeLikeError : walking ? detailError : ranked ? searchError : browseError
+	);
+	let listPaging = $derived(
+		tracing ? codeLikePaging : walking ? neighbourPaging : ranked ? searchPaging : browsePaging
+	);
 
 	/** The chunk being walked from, once its neighbours have landed. */
 	let listAnchor = $derived(walking ? (detail?.source ?? null) : null);
 
+	/**
+	 * The code being read outward from, once its ranking has landed.
+	 *
+	 * Carries the seed count rather than a chunk, because there is no single
+	 * chunk to show: what the list is near is an average, and how many
+	 * passages it was averaged from is the thing that says how much to trust
+	 * it.
+	 */
+	let listCodeAnchor = $derived(
+		tracing && codeLike && codeAnchor
+			? { name: codeAnchor.name, subtree: codeAnchor.subtree, seeds: codeLike.seeds ?? 0 }
+			: null
+	);
+
 	/** Neighbours carry a real similarity score, exactly as search hits do. */
-	let listRanked = $derived(walking || ranked);
+	let listRanked = $derived(tracing || walking || ranked);
 
 	/**
 	 * Whether the cut-off has a list to act on. Tied to what was asked for
 	 * rather than to what has come back, so the control does not appear a beat
 	 * after the results and shift the row it sits in.
 	 */
-	let cutoffApplies = $derived(submitted.trim() !== '' || selectedId !== null);
+	let cutoffApplies = $derived(
+		submitted.trim() !== '' || selectedId !== null || codeAnchor !== null
+	);
 
 	// -- map highlighting -----------------------------------------------------
 
@@ -1339,14 +1566,55 @@
 	function search(event: SubmitEvent) {
 		event.preventDefault();
 		submitted = queryText;
-		// A new query answers a different question than whatever chunk is open.
+		// A new query answers a different question than whatever chunk is open,
+		// or whatever code the list was being read outward from.
+		selectedId = null;
+		codeAnchor = null;
+		focusedGroup = null;
+	}
+
+	/**
+	 * Search for what a code *says* it is.
+	 *
+	 * The name and the definition, put in the query box and run — so it is an
+	 * ordinary semantic search that the reader can then edit, which is most of
+	 * why it is worth doing this way rather than as its own endpoint. It works
+	 * on a code nobody has applied yet, which is exactly when a codebook needs
+	 * help finding the first passages to apply it to.
+	 *
+	 * The definition is included where there is one because a bare name is a
+	 * word or two and embeds badly; the sentence that says what the code means
+	 * is the better query, and is already written.
+	 */
+	function searchByDefinition(code: Code) {
+		const name = displayName(code.name);
+		const definition = code.definition.trim();
+		queryText = definition ? `${name}. ${definition}` : name;
+		submitted = queryText;
+		selectedId = null;
+		codeAnchor = null;
+		focusedGroup = null;
+		explore.view = 'list';
+	}
+
+	/**
+	 * Read the corpus outward from what a code has *become*.
+	 *
+	 * The query is left in the box untouched, unlike the other two: this
+	 * replaces what the list is showing rather than answering a new question,
+	 * and clearing it would mean a reader who goes back has to type it again.
+	 */
+	function findMoreLikeCode(code: Code, subtree: boolean) {
+		codeAnchor = { id: code.id, name: displayName(code.name), subtree };
 		selectedId = null;
 		focusedGroup = null;
+		explore.view = 'list';
 	}
 
 	function clearSearch() {
 		queryText = '';
 		submitted = '';
+		codeAnchor = null;
 		// The cut-off is left where the reader put it. It used to be reset here,
 		// when it lived in a rail that could be collapsed over it and only ever
 		// applied to a search; now it is in the search row, in sight, and it is
@@ -1577,13 +1845,20 @@
 					ranked={listRanked}
 					keyword={explore.searchableKeyword}
 					anchor={listAnchor}
+					codeAnchor={listCodeAnchor}
 					anchorLoading={walking && detail === null}
 					onanchor={(hit) => (selectedId = selectedId === hit.id ? null : hit.id)}
 					ontranscript={(hit) => (transcriptOf = hit)}
 					{railOpen}
 					{offDefault}
 					onshowcontrols={() => (railOpen = true)}
-					onclearanchor={() => (selectedId = null)}
+					onclearanchor={() => {
+						// One way back for both readings, because there is one label
+						// above them saying where you are. Whichever is set is the one
+						// being read, so clearing both lands on whatever was underneath.
+						selectedId = null;
+						codeAnchor = null;
+					}}
 				/>
 
 				<!-- No toggle here: clustering is a reading of the map, and the list
@@ -1602,6 +1877,9 @@
 										bind:open={codesOpen}
 										bind:keyword={explore.keyword}
 										bind:coverage={explore.coverage}
+										{countOf}
+										ondefine={searchByDefinition}
+										onlike={findMoreLikeCode}
 									/>
 								{/snippet}
 							</CodebookGate>
@@ -1862,6 +2140,9 @@
 											bind:open={codesOpen}
 											bind:keyword={explore.keyword}
 											bind:coverage={explore.coverage}
+											{countOf}
+											ondefine={searchByDefinition}
+											onlike={findMoreLikeCode}
 										/>
 									{/snippet}
 								</CodebookGate>

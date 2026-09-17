@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+	coverageLabel,
+	defaultCoverage,
 	defaultFilters,
+	isDefaultCoverage,
+	joinApplies,
 	describeError,
 	filterQuery,
 	keywordProblemOf,
@@ -343,5 +347,54 @@ describe('describeError', () => {
 		expect(describeError(503, 'fallback')).toContain('embedding server');
 		expect(describeError(404, 'fallback')).toBe('Not found.');
 		expect(describeError(500, 'fallback')).toBe('fallback');
+	});
+});
+
+/**
+ * The two coder axes and the operator that joins them.
+ *
+ * A complete 2x2: `and` names the quadrants, `or` names their complements.
+ * The two complements worth having are the reason the operator exists, since
+ * neither is a conjunction of anything.
+ */
+describe('coverage axes', () => {
+	it('names each quadrant', () => {
+		expect(coverageLabel({ mine: 'none', others: 'any', join: 'and' })?.label).toBe('To review');
+		expect(coverageLabel({ mine: 'any', others: 'any', join: 'and' })?.label).toBe('Coded by both');
+		expect(coverageLabel({ mine: 'any', others: 'none', join: 'and' })?.label).toBe('Only me');
+		expect(coverageLabel({ mine: 'none', others: 'none', join: 'and' })?.label).toBe(
+			'Read by nobody'
+		);
+	});
+
+	it('names the two complements the operator exists for', () => {
+		// Neither is a conjunction of anything, which is why a grid alone could
+		// not ask for them.
+		expect(coverageLabel({ mine: 'any', others: 'any', join: 'or' })?.label).toBe(
+			'Coded by anyone'
+		);
+		expect(coverageLabel({ mine: 'none', others: 'none', join: 'or' })?.label).toBe(
+			'Not coded by both'
+		);
+	});
+
+	it('keeps a one-axis name whichever way the operator is set', () => {
+		// `or` over one condition is that condition, so the question has not
+		// changed and neither should what it is called.
+		for (const join of ['and', 'or'] as const) {
+			expect(coverageLabel({ mine: 'any', others: null, join })?.label).toBe('Coded by me');
+		}
+	});
+
+	it('knows when the operator is deciding something', () => {
+		expect(joinApplies({ mine: 'any', others: 'any', join: 'or' })).toBe(true);
+		expect(joinApplies({ mine: 'any', others: null, join: 'or' })).toBe(false);
+		expect(joinApplies(defaultCoverage())).toBe(false);
+	});
+
+	it('does not count the operator as a filter on its own', () => {
+		// With nothing to join it asks nothing, so a panel showing OR and two
+		// untouched rows is a panel narrowing nothing.
+		expect(isDefaultCoverage({ mine: null, others: null, join: 'or' })).toBe(true);
 	});
 });

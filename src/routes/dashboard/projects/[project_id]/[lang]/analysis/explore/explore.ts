@@ -185,21 +185,20 @@ export type ExploreFilters = {
 	 * inside one.
 	 */
 	questions: [number, number][];
-	/** Coverage over every coding, whoever made it. */
-	coded: Coded | null;
 	/** Coverage over the reader's own codings. */
 	coded_mine: Coded | null;
 	/** Coverage over everybody else's. */
 	coded_others: Coded | null;
+	/** How the two are joined — see `CoderJoin`. */
+	coder_join: CoderJoin;
 	/**
 	 * Who the reader is, for the two axes above — not "whose codings count",
 	 * which each axis says for itself.
 	 *
-	 * Three axes rather than one filter and a coder because the questions a
-	 * coder asks are conjunctions of two scopes: the review pass is
+	 * Two axes and an operator rather than one filter and a coder, because the
+	 * questions a coder asks are about two scopes at once: the review pass is
 	 * `coded_mine: 'none'` with `coded_others: 'any'`, and no single scope is a
-	 * filter on it. `coded` stays separate as the one reading that is a
-	 * disjunction — "somebody has coded this" is mine-or-theirs.
+	 * filter on it.
 	 */
 	coder_id: string | null;
 	/**
@@ -341,9 +340,9 @@ export function defaultFilters(): ExploreFilters {
 		languages: [],
 		include_synthetic: false,
 		questions: [],
-		coded: null,
 		coded_mine: null,
 		coded_others: null,
+		coder_join: 'and',
 		coder_id: null,
 		keyword: '',
 		keyword_scope: 'answer',
@@ -459,10 +458,14 @@ export function filterQuery(filters: ExploreFilters) {
 		...(filters.keyword.trim()
 			? { keyword: filters.keyword.trim(), keyword_scope: filters.keyword_scope }
 			: {}),
-		...(filters.coded ? { coded: filters.coded } : {}),
 		...(filters.coded_mine ? { coded_mine: filters.coded_mine } : {}),
 		...(filters.coded_others ? { coded_others: filters.coded_others } : {}),
-		// Only worth sending where an axis reads it.
+		// Both left off unless there is something for them to act on. The
+		// operator needs two axes to join -- over one it is that one, so
+		// sending it would be a reason to refetch that changes no answer.
+		...(filters.coder_join === 'or' && filters.coded_mine && filters.coded_others
+			? { coder_join: filters.coder_join }
+			: {}),
 		...(filters.coder_id && (filters.coded_mine || filters.coded_others)
 			? { coder_id: filters.coder_id }
 			: {}),
@@ -627,8 +630,7 @@ export function offDefaultCount(settings: ClusterSettings, multilingual: boolean
 		settings.filters.keyword.trim().length > 0,
 		// One, however the question is phrased: the badge counts controls a
 		// reader has moved, and coverage is one control to open.
-		settings.filters.coded !== fallback.filters.coded ||
-			settings.filters.coded_mine !== fallback.filters.coded_mine ||
+		settings.filters.coded_mine !== fallback.filters.coded_mine ||
 			settings.filters.coded_others !== fallback.filters.coded_others,
 		// One, however many items are chosen: the badge counts controls a
 		// reader has moved, and the survey filter is one control to open.
@@ -696,7 +698,19 @@ export function sameCohortQuery(
 export type Coded = 'any' | 'none';
 
 /**
- * The three coverage axes, as the pane holds them.
+ * How the two coder axes are joined.
+ *
+ * What makes them a complete 2x2 rather than two filters that happen to sit
+ * together. `and` names the four quadrants -- coded by both, only me, to
+ * review, read by nobody -- and `or` names their four complements, two of
+ * which are questions worth asking and neither of which a conjunction can
+ * give: `any or any` is "somebody has coded this", and `none or none` is "not
+ * coded by both", the work left in a double-coding pass.
+ */
+export type CoderJoin = 'and' | 'or';
+
+/**
+ * The coverage axes, as the pane holds them.
  *
  * One field per axis rather than a named question, because the pane offers a
  * row of toggles per axis and any combination of them is legal. The names are
@@ -704,72 +718,126 @@ export type Coded = 'any' | 'none';
  * rather than as the thing being chosen.
  */
 export type CoverageAxes = {
-	/** Over every coding, whoever made it. The one reading that is a disjunction. */
-	any: Coded | null;
 	/** Over the reader's own. */
 	mine: Coded | null;
 	/** Over everybody else's. */
 	others: Coded | null;
+	/**
+	 * How the two are joined.
+	 *
+	 * An axis left at null does not participate, whichever this is. If null
+	 * meant *true* under `or`, leaving a row alone would widen the corpus to
+	 * everything -- so the same control would mean opposite things depending
+	 * on a setting beside it. Absent is absent.
+	 */
+	join: CoderJoin;
 };
 
 export function defaultCoverage(): CoverageAxes {
-	return { any: null, mine: null, others: null };
+	return { mine: null, others: null, join: 'and' };
 }
 
-/** Whether any axis is narrowing anything. */
+/**
+ * Whether any axis is narrowing anything.
+ *
+ * The operator alone never is: with nothing for it to join it asks nothing,
+ * which is why it does not count here.
+ */
 export function isDefaultCoverage(axes: CoverageAxes): boolean {
-	return axes.any === null && axes.mine === null && axes.others === null;
+	return axes.mine === null && axes.others === null;
+}
+
+/**
+ * Whether the operator is deciding anything yet.
+ *
+ * It takes two operands to join, so with fewer than two it is inert -- `or` of
+ * one condition is that condition. The panel dims it there, which is the
+ * honest reading: the control is present because the rows might both be set,
+ * not because it is doing something now.
+ */
+export function joinApplies(axes: CoverageAxes): boolean {
+	return axes.mine !== null && axes.others !== null;
 }
 
 /**
  * The questions worth naming, and what they are as axes.
  *
  * A dictionary rather than a menu: the toggles are the control, and this turns
- * whatever they add up to back into words. Most combinations have no name and
- * do not need one -- the two rows already say what they are -- but the
- * second-coder ones are worth recognising, because "mine: uncoded, others:
- * coded" is the review pass and says so to nobody.
+ * whatever they add up to back into words. The pane could leave them unnamed
+ * -- the rows do say what they are -- but "mine: uncoded, others: coded" is
+ * the second-coder pass and says so to nobody.
+ *
+ * Every two-axis combination is here, which is the whole grid twice: four
+ * quadrants under `and`, and their four complements under `or`. The
+ * complements are named as negations on purpose. "Everything except the ones
+ * only I have read" is what `none or any` *is*, and dressing it up as a
+ * positive would hide that it is the larger half of a split rather than a
+ * selection of its own.
  */
 const NAMED: { axes: CoverageAxes; label: string; hint: string }[] = [
 	{
-		axes: { any: 'any', mine: null, others: null },
-		label: 'Coded',
-		hint: 'Chunks somebody has applied a code to'
-	},
-	{
-		axes: { any: 'none', mine: null, others: null },
-		label: 'Uncoded',
-		hint: 'Chunks nobody has coded yet — what is left to read'
-	},
-	{
-		axes: { any: null, mine: 'any', others: null },
+		axes: { mine: 'any', others: null, join: 'and' },
 		label: 'Coded by me',
 		hint: 'Chunks you have coded, whoever else has'
 	},
 	{
-		axes: { any: null, mine: 'none', others: null },
+		axes: { mine: 'none', others: null, join: 'and' },
 		label: 'Not coded by me',
 		hint: 'Chunks you have not coded — including ones somebody else has'
 	},
 	{
-		axes: { any: null, mine: 'none', others: 'any' },
+		axes: { mine: null, others: 'any', join: 'and' },
+		label: 'Coded by somebody else',
+		hint: 'Chunks another coder has marked, whether or not you have'
+	},
+	{
+		axes: { mine: null, others: 'none', join: 'and' },
+		label: 'Not coded by anybody else',
+		hint: 'Chunks nobody but you has marked'
+	},
+
+	// The four quadrants.
+	{
+		axes: { mine: 'none', others: 'any', join: 'and' },
 		label: 'To review',
 		hint: 'Coded by somebody else and not by you — the second-coder pass'
 	},
 	{
-		axes: { any: null, mine: 'any', others: 'any' },
+		axes: { mine: 'any', others: 'any', join: 'and' },
 		label: 'Coded by both',
 		hint: 'You and somebody else both coded it — where agreement can be checked'
 	},
 	{
-		axes: { any: null, mine: 'any', others: 'none' },
+		axes: { mine: 'any', others: 'none', join: 'and' },
 		label: 'Only me',
 		hint: 'You coded it and nobody else has — your readings nobody has checked'
 	},
 	{
-		axes: { any: null, mine: 'none', others: 'none' },
+		axes: { mine: 'none', others: 'none', join: 'and' },
 		label: 'Read by nobody',
-		hint: 'Neither you nor anybody else has coded it'
+		hint: 'Neither you nor anybody else has coded it — what is left to read'
+	},
+
+	// Their complements, which is what the operator is for.
+	{
+		axes: { mine: 'any', others: 'any', join: 'or' },
+		label: 'Coded by anyone',
+		hint: 'Somebody has applied a code to it — you, or somebody else, or both'
+	},
+	{
+		axes: { mine: 'none', others: 'none', join: 'or' },
+		label: 'Not coded by both',
+		hint: 'At least one of you has still to read it — the work left in a double-coding pass'
+	},
+	{
+		axes: { mine: 'any', others: 'none', join: 'or' },
+		label: 'Not waiting on you',
+		hint: 'Everything except the chunks somebody else coded and you have not'
+	},
+	{
+		axes: { mine: 'none', others: 'any', join: 'or' },
+		label: 'Not yours alone',
+		hint: 'Everything except the chunks only you have coded'
 	}
 ];
 
@@ -778,7 +846,12 @@ export function coverageLabel(axes: CoverageAxes): { label: string; hint: string
 	return (
 		NAMED.find(
 			(one) =>
-				one.axes.any === axes.any && one.axes.mine === axes.mine && one.axes.others === axes.others
+				one.axes.mine === axes.mine &&
+				one.axes.others === axes.others &&
+				// Only where it is joining something. `or` over one axis is that
+				// axis, so "coded by me" is the same question either way and
+				// should not lose its name for having the operator set.
+				(one.axes.join === axes.join || !joinApplies(axes))
 		) ?? null
 	);
 }
