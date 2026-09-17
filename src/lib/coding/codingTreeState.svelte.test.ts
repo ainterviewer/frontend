@@ -163,3 +163,32 @@ test('a run of picker movements is one undo', () => {
 
 	expect(tree.palette[0]).toBe(before);
 });
+
+test('breaking out to the free layout leaves every node where the layout had it', () => {
+	const tree = seededTree();
+	// Codes added under `auto` are placed by the layout, not by the reader, so
+	// they must not carry a position of their own -- one would be read back the
+	// moment the reader breaks out, scattering a tree that was tidy a click ago.
+	tree.addChild(CONSTRAINTS);
+	tree.addRootCode();
+	const before = new Map(tree.nodes.map((node) => [node.id, node.position]));
+
+	tree.setLayoutMode('free');
+
+	for (const node of tree.nodes) {
+		expect(node.position).toEqual(before.get(node.id));
+	}
+});
+
+test('a code added under the free layout is placed along the direction the tree runs', () => {
+	const tree = seededTree();
+	tree.setLayoutMode('free');
+	const parent = tree.nodes.find((node) => node.id === CONSTRAINTS)?.position;
+
+	const id = tree.addChild(CONSTRAINTS);
+
+	// Left-to-right is the default, so a sub-code goes to the right of its
+	// parent rather than underneath it.
+	const added = tree.nodes.find((node) => node.id === id)?.position;
+	expect(added?.x).toBeGreaterThan(parent!.x);
+});

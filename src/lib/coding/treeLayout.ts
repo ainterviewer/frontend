@@ -85,21 +85,37 @@ export function resolvePositions(
 
 /**
  * A freshly created code's position, for the `free` mode where nothing will
- * lay it out: just below its parent, nudged past any siblings already there, so
- * it appears somewhere the reader is looking rather than at the origin.
+ * lay it out: one rank on from its parent, nudged past any siblings already
+ * there, so it appears somewhere the reader is looking rather than at the
+ * origin.
+ *
+ * Direction-aware, because "one rank on" is downwards under `TB` and rightwards
+ * under `LR`; placing a code below its parent on a tree that runs across the
+ * page drops it into the middle of the branch beneath.
  */
 export function placeNewCode(
 	codes: readonly Code[],
 	parentId: CodeId | null,
-	positions: Map<CodeId, XY>
+	positions: Map<CodeId, XY>,
+	direction: LayoutDirection
 ): XY {
 	const siblings = childrenOf(codes, parentId);
 	const anchor = parentId === null ? null : positions.get(parentId);
 	const base = anchor ?? { x: 0, y: 0 };
-	const roots = parentId === null ? siblings.length : 0;
+	// A root has no parent to sit under, so it goes beside the roots already
+	// there -- along the axis siblings are spread on, whichever that is.
+	const alongSiblings =
+		siblings.length * (direction === 'LR' ? NODE_HEIGHT + NODE_GAP : NODE_WIDTH + NODE_GAP);
+	const rank = direction === 'LR' ? NODE_WIDTH + RANK_GAP : NODE_HEIGHT + RANK_GAP;
+	if (direction === 'LR') {
+		return {
+			x: base.x + (parentId === null ? 0 : rank),
+			y: base.y + alongSiblings
+		};
+	}
 	return {
-		x: base.x + roots * (NODE_WIDTH + NODE_GAP) + (parentId === null ? 0 : siblings.length * 40),
-		y: base.y + (parentId === null ? 0 : NODE_HEIGHT + RANK_GAP)
+		x: base.x + (parentId === null ? alongSiblings : siblings.length * 40),
+		y: base.y + (parentId === null ? 0 : rank)
 	};
 }
 

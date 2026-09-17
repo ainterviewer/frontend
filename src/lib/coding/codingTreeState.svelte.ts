@@ -305,8 +305,12 @@ export class CodingTreeState {
 	/**
 	 * `at` is where the reader put it -- a connection dropped on empty canvas
 	 * names a position the way a toolbar click cannot. Without one the code is
-	 * placed below its parent. Either way the position is only read under `free`;
-	 * the layout owns the arrangement otherwise.
+	 * placed beside its parent, but only under `free`: a position is a record of
+	 * where the reader put something, and a code created while the layout owns
+	 * the arrangement was never put anywhere. Storing a guess there instead is
+	 * what made breaking out to `free` scatter the tree -- every code carried a
+	 * placeholder from the moment it was made, and `free` read those in
+	 * preference to the arrangement on screen.
 	 */
 	addChild(parentId: CodeId | null, at?: XY): CodeId {
 		const parent = findCode(this.#codes, parentId);
@@ -314,7 +318,11 @@ export class CodingTreeState {
 			parentId,
 			name: parent ? 'New sub-code' : 'New code',
 			color: parent ? parent.color : nextRootColor(this.#codes, this.#palette),
-			position: at ?? placeNewCode(this.#codes, parentId, this.#positions()),
+			position:
+				at ??
+				(this.layoutMode === 'free'
+					? placeNewCode(this.#codes, parentId, this.#positions(), this.direction)
+					: null),
 			...childDraftKind(parent)
 		});
 		this.#commit(addCode(this.#codes, code));

@@ -31,9 +31,14 @@ export type Code = {
 	/** Hex. Inherited from the parent at creation, so a branch reads as one. */
 	color: string;
 	/**
-	 * Where the reader dragged it. Only read in the `free` layout -- under
-	 * `auto` the position is recomputed and this is what it falls back to when
-	 * the reader breaks out again, so it survives a round trip through `auto`.
+	 * Where the reader dragged it, and `null` until they have. Only read in the
+	 * `free` layout -- under `auto` the position is recomputed, and this is what
+	 * the canvas falls back to when the reader breaks out again, so a hand-made
+	 * arrangement survives a round trip through `auto`.
+	 *
+	 * Written only by a drag, or by the freeze that entering `free` performs.
+	 * Nothing guesses a value here: a guessed position is indistinguishable from
+	 * a placed one afterwards, and would be honoured over the layout.
 	 */
 	position: XY | null;
 	/** What applying this code to a passage would mean. See `CodeKind`. */

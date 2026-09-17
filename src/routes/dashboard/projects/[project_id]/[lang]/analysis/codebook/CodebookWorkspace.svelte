@@ -3,11 +3,13 @@
 
 	import { SvelteFlowProvider } from '@xyflow/svelte';
 	import { toast } from 'svelte-sonner';
+	import SaveState from '$lib/coding/SaveState.svelte';
 	import CodeInspector from './CodeInspector.svelte';
 	import CodebookCanvas from './CodebookCanvas.svelte';
 	import CodebookToolbar from './CodebookToolbar.svelte';
 	import { displayName } from '$lib/coding/codingTree';
 	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
+	import type { Codebook } from '$lib/coding/store.svelte';
 
 	/**
 	 * The canvas, its toolbar and its inspector, over a codebook it is handed.
@@ -17,7 +19,7 @@
 	 * the page is responsible for. Everything here is about editing a codebook
 	 * that is already in hand.
 	 */
-	let { tree }: { tree: CodingTreeState } = $props();
+	let { tree, book }: { tree: CodingTreeState; book?: Codebook } = $props();
 
 	function deleteCode(id: string) {
 		const removed = tree.remove(id);
@@ -84,8 +86,20 @@
 		<div class="flex min-w-0 flex-1 flex-col">
 			<CodebookToolbar {tree} />
 
-			<div class="min-h-0 flex-1">
+			<!-- The save state floats in the canvas's top right rather than sitting
+			     in a row of its own: it belongs to the thing being edited, and any
+			     row it shares leaves it stranded at one end by whatever else is
+			     there. `pointer-events-none` so it never eats a drag that lands
+			     under it; the retry link is the exception, and takes them back. -->
+			<div class="relative min-h-0 flex-1">
 				<CodebookCanvas {tree} />
+				{#if book}
+					<div
+						class="pointer-events-none absolute top-2 right-3 z-10 [&_button]:pointer-events-auto"
+					>
+						<SaveState {book} />
+					</div>
+				{/if}
 			</div>
 		</div>
 
