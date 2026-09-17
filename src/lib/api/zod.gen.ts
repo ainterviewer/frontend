@@ -27,6 +27,20 @@ export const zAdminNoteUpdate = z.object({
 });
 
 /**
+ * AdminReportReadRequest
+ */
+export const zAdminReportReadRequest = z.object({
+    ids: z.array(z.string())
+});
+
+/**
+ * AdminReportReviewResponse
+ */
+export const zAdminReportReviewResponse = z.object({
+    updated: z.int()
+});
+
+/**
  * AgentConfig
  */
 export const zAgentConfig = z.object({
@@ -811,7 +825,8 @@ export const zInterviewDurationStats = z.object({
 export const zInterviewFacets = z.object({
     status: z.array(zFacetCount).optional().default([]),
     language: z.array(zFacetCount).optional().default([]),
-    type: z.array(zFacetCount).optional().default([])
+    type: z.array(zFacetCount).optional().default([]),
+    reported: z.array(zFacetCount).optional().default([])
 });
 
 /**
@@ -1056,6 +1071,7 @@ export const zInterviewSummaryPublic = z.object({
     last_updated: z.iso.datetime().nullish(),
     total_time_spent: z.int().optional().default(0),
     n_messages: z.int(),
+    n_reports: z.int().optional().default(0),
     test_name: z.string().nullish(),
     pid: z.string().nullish()
 });
@@ -1071,7 +1087,8 @@ export const zInterviewListResponse = z.object({
     facets: zInterviewFacets.optional().default({
         status: [],
         language: [],
-        type: []
+        type: [],
+        reported: []
     })
 });
 
@@ -1652,6 +1669,159 @@ export const zPlatformManifest = z.object({
 });
 
 /**
+ * ReportReadRequest
+ */
+export const zReportReadRequest = z.object({
+    ids: z.array(z.string())
+});
+
+/**
+ * ReportReason
+ *
+ * Why a respondent reported an interviewer's question.
+ *
+ * A closed list rather than free text because the reason is what the review
+ * queues are filtered and counted by, and because a respondent who is being
+ * asked something offensive should be able to say so in one tap. ``OTHER``
+ * is what makes the list honest: it exists so that the four options never
+ * have to be stretched to cover something they do not, and a report carrying
+ * it is expected to carry a comment as well.
+ */
+export const zReportReason = z.enum([
+    'inappropriate',
+    'offensive',
+    'irrelevant',
+    'other'
+]);
+
+/**
+ * MessageReportCreate
+ *
+ * A respondent reporting one question of their own interview.
+ *
+ * Carries no interview or project id: both come from the `interview_token`
+ * cookie, so a respondent cannot report into somebody else's transcript by
+ * naming it. Mirrors `MessageFeedbackRequest`.
+ */
+export const zMessageReportCreate = z.object({
+    message_id: z.int(),
+    reason: zReportReason,
+    comment: z.string().max(2000).nullish()
+});
+
+/**
+ * ReportReviewResponse
+ *
+ * How many rows the call actually changed.
+ *
+ * Not an error when it is fewer than were asked for: an id belonging to
+ * another project is dropped rather than refused, so a stale client cannot
+ * learn from the response whether a report it should not see exists.
+ */
+export const zReportReviewResponse = z.object({
+    updated: z.int()
+});
+
+/**
+ * ReportStatus
+ *
+ * Where a report has got to in one review queue.
+ *
+ * A report carries two of these, one per reviewer -- see
+ * ``MessageReportTable``. ``DISMISSED`` is distinct from ``RESOLVED``
+ * because "I have looked at this and there is nothing to do" and "I have
+ * looked at this and fixed it" are different answers, and collapsing them
+ * would make the resolved count meaningless.
+ */
+export const zReportStatus = z.enum([
+    'open',
+    'resolved',
+    'dismissed'
+]);
+
+/**
+ * AdminReportReviewRequest
+ */
+export const zAdminReportReviewRequest = z.object({
+    ids: z.array(z.string()),
+    status: zReportStatus
+});
+
+/**
+ * MessageReportPublic
+ *
+ * A report as a reviewer sees it.
+ *
+ * Both review tracks are exposed, as is the respondent's comment. The
+ * reporter is not named because there is nothing to name: a respondent holds
+ * no account, and the interview the report hangs off already says whose it
+ * was.
+ */
+export const zMessageReportPublic = z.object({
+    id: z.string(),
+    message_id: z.string(),
+    interview_id: z.string(),
+    project_id: z.string(),
+    reason: zReportReason,
+    comment: z.string().nullish(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    status: zReportStatus,
+    resolved_by_id: z.string().nullish(),
+    resolved_at: z.iso.datetime().nullish(),
+    admin_status: zReportStatus,
+    admin_resolved_by_id: z.string().nullish(),
+    admin_resolved_at: z.iso.datetime().nullish()
+});
+
+/**
+ * MessageReportRowPublic
+ *
+ * A report with the context a reviewer needs to judge it.
+ *
+ * The question's wording, the project it belongs to and the respondent's pid
+ * are joined in rather than left to the client: a queue of report ids is not
+ * something anyone can review, and a reviewer holding one page cannot resolve
+ * a message id against a transcript they have not opened.
+ *
+ * `read_by_me` is the calling reviewer's own read state, not a property of
+ * the report -- a project member and a platform admin looking at the same
+ * report each see their own.
+ */
+export const zMessageReportRowPublic = z.object({
+    id: z.string(),
+    message_id: z.string(),
+    interview_id: z.string(),
+    project_id: z.string(),
+    reason: zReportReason,
+    comment: z.string().nullish(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    status: zReportStatus,
+    resolved_by_id: z.string().nullish(),
+    resolved_at: z.iso.datetime().nullish(),
+    admin_status: zReportStatus,
+    admin_resolved_by_id: z.string().nullish(),
+    admin_resolved_at: z.iso.datetime().nullish(),
+    question_number: z.int(),
+    question: z.string(),
+    project_title: z.string(),
+    language: zLanguageCode.optional().default('EN'),
+    pid: z.string().nullish(),
+    read_by_me: z.boolean().optional().default(false)
+});
+
+/**
+ * ReportReviewRequest
+ *
+ * Set one track's status on a batch of reports.
+ */
+export const zReportReviewRequest = z.object({
+    ids: z.array(z.string()),
+    status: zReportStatus
+});
+
+/**
  * ResendVerificationRequest
  */
 export const zResendVerificationRequest = z.object({
@@ -1979,6 +2149,7 @@ export const zMessagePublic = z.object({
     id: z.string(),
     codings: z.array(zCodingPublic).optional().default([]),
     comments: z.array(zMessageCommentPublic).optional().default([]),
+    reports: z.array(zMessageReportPublic).optional().default([]),
     interview_type: zInterviewType
 });
 
@@ -4240,6 +4411,7 @@ export const zGetInterviewsQuery = z.object({
     completed: z.boolean().nullish(),
     search: z.string().max(200).nullish(),
     pid: z.string().max(200).nullish(),
+    reported: z.boolean().nullish(),
     folder_id: z.string().nullish(),
     offset: z.int().lte(100).optional().default(0),
     limit: z.int().lte(100).optional().default(20),
@@ -4362,6 +4534,53 @@ export const zCheckProjectOwnerPath = z.object({
  * Successful Response
  */
 export const zCheckProjectOwnerResponse = z.boolean();
+
+export const zGetProjectReportsPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zGetProjectReportsQuery = z.object({
+    statuses: z.array(zReportStatus).nullish(),
+    unread_only: z.boolean().optional().default(false),
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Response Get Project Reports
+ *
+ * Successful Response
+ */
+export const zGetProjectReportsResponse = z.array(zMessageReportRowPublic);
+
+export const zResolveProjectReportsBody = zReportReviewRequest;
+
+export const zResolveProjectReportsPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zResolveProjectReportsQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zResolveProjectReportsResponse = zReportReviewResponse;
+
+export const zMarkProjectReportsReadBody = zReportReadRequest;
+
+export const zMarkProjectReportsReadPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zMarkProjectReportsReadQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zMarkProjectReportsReadResponse = zReportReviewResponse;
 
 export const zGetBackgroundInfoPath = z.object({
     project_id: z.string().nullable(),
@@ -4543,6 +4762,13 @@ export const zPutFeedbackBody = zMessageFeedbackRequest;
  */
 export const zPutFeedbackResponse = zMessageFeedbackResponse;
 
+export const zReportMessageBody = zMessageReportCreate;
+
+/**
+ * Successful Response
+ */
+export const zReportMessageResponse = zMessageReportPublic;
+
 export const zUploadInterviewImageBody = zBodyUploadInterviewImage;
 
 /**
@@ -4624,6 +4850,32 @@ export const zUpdateInvitationPath = z.object({
 export const zUpdateInvitationResponse = zInvitationPublic;
 
 export const zDeleteInvitationsBody = zInvitationsDeleteRequest;
+
+export const zGetReportsQuery = z.object({
+    statuses: z.array(zReportStatus).nullish(),
+    unread_only: z.boolean().optional().default(false)
+});
+
+/**
+ * Response Get Reports
+ *
+ * Successful Response
+ */
+export const zGetReportsResponse = z.array(zMessageReportRowPublic);
+
+export const zResolveReportsBody = zAdminReportReviewRequest;
+
+/**
+ * Successful Response
+ */
+export const zResolveReportsResponse = zAdminReportReviewResponse;
+
+export const zMarkReportsReadBody = zAdminReportReadRequest;
+
+/**
+ * Successful Response
+ */
+export const zMarkReportsReadResponse = zAdminReportReviewResponse;
 
 export const zProxyToEc2ManagerDeletePath = z.object({
     full_path: z.string()

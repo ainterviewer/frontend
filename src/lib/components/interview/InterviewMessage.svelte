@@ -2,6 +2,8 @@
 	import AudioMessage from './AudioMessage.svelte';
 	import FeedbackToggle from './FeedbackToggle.svelte';
 	import MessageBubble from './MessageBubble.svelte';
+	import ReportButton from './ReportButton.svelte';
+	import ReportIndicator from './ReportIndicator.svelte';
 	import SkipButton from './SkipButton.svelte';
 
 	/**
@@ -20,6 +22,8 @@
 		readonly = false,
 		onFeedback,
 		onSkip,
+		onReport = () => {},
+		reportLabel = 'Report this question',
 		onSurveyAnswer
 	} = $props();
 
@@ -28,6 +32,12 @@
 	let showControls = $derived(isReceived && message.message_id && Number(message.message_id) > 1);
 
 	let showFeedbackIndicator = $derived(readonly && message.feedback);
+
+	// What the respondent reported about this question, shown on the transcript
+	// only: during the interview the report is the dialog's business and is not
+	// drawn into the conversation the respondent is reading.
+	let reports = $derived(message.reports ?? []);
+	let showReportIndicator = $derived(readonly && reports.length > 0);
 
 	/**
 	 * Whether there is anything here to skip.
@@ -65,9 +75,9 @@
 	{/snippet}
 
 	{#snippet controls()}
-		{#if (showControls && !readonly) || showFeedbackIndicator}
+		{#if (showControls && !readonly) || showFeedbackIndicator || showReportIndicator}
 			<div
-				class="ml-2 items-center gap-2 self-center {showFeedbackIndicator
+				class="ml-2 items-center gap-2 self-center {showFeedbackIndicator || showReportIndicator
 					? 'flex'
 					: 'hidden group-hover:flex'}"
 			>
@@ -87,11 +97,15 @@
 							<i class="fa-solid fa-thumbs-down"></i>
 						</div>
 					{/if}
+					{#if showReportIndicator}
+						<ReportIndicator {reports} />
+					{/if}
 				{:else}
 					<FeedbackToggle
 						feedback={message.feedback}
 						onFeedback={(f: 'positive' | 'negative' | null) => onFeedback(f, message.message_id)}
 					/>
+					<ReportButton label={reportLabel} onReport={() => onReport(message.message_id)} />
 					{#if isLast && answerable}
 						<SkipButton {onSkip} />
 					{/if}

@@ -46,6 +46,13 @@
 		onChangeValue: (codingId: string, value: number) => void;
 		onRemoveCoding: (codingId: string) => void;
 		onCancelCoding: () => void;
+		/**
+		 * Draw attention to this message: it is the one a link pointed at.
+		 *
+		 * Set by whoever read the target out of the URL, not decided here, so
+		 * exactly one message in a transcript can carry it.
+		 */
+		highlighted?: boolean;
 		/** Rendered above the message — the coding view's "show context" button. */
 		beforeMessage?: Snippet;
 		/** Rendered directly under the message — the transcript's audio player. */
@@ -69,6 +76,7 @@
 		codingOpen,
 		savingCoding = false,
 		dimmed = false,
+		highlighted = false,
 		onToggleCoding,
 		onApply,
 		onChangeValue,
@@ -118,7 +126,18 @@
 	{/if}
 {/snippet}
 
-<div class="group relative {dimmed ? 'opacity-60' : ''}">
+<!--
+	`id` so a link can point at one message of a transcript — the admin review
+	queue links straight to the question that was reported. The uuid rather
+	than the interview-scoped number: it is what identifies a message
+	everywhere else, and the number repeats across interviews.
+-->
+<div
+	id="message-{messageId}"
+	class="group relative scroll-mt-28 {dimmed ? 'opacity-60' : ''} {highlighted
+		? 'rounded-xl ring-2 ring-amber-400 ring-offset-4 ring-offset-white'
+		: ''}"
+>
 	{@render beforeMessage?.()}
 
 	<div class="flex items-start gap-2">

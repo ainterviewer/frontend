@@ -1,4 +1,4 @@
-import type { MessagePublic } from '$lib/api';
+import type { MessagePublic, MessageReportPublic } from '$lib/api';
 
 /** Websocket close code the backend uses when the `interview_token` cookie is
  *  missing or no longer decodes. The handshake is accepted first precisely so
@@ -22,6 +22,12 @@ export interface Message {
 	 */
 	condition?: string | null;
 	feedback?: 'positive' | 'negative' | null;
+	/**
+	 * The respondent's reports of this question, oldest first. Only ever
+	 * populated on the transcript: during the interview a report is the
+	 * dialog's business and is not drawn into the conversation.
+	 */
+	reports?: MessageReportPublic[];
 	survey_item?: SurveyItemUnion | null;
 	image?: { data: string; alt?: string; primer?: string };
 	audio?: { blob: Blob; duration: number };

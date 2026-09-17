@@ -7,7 +7,8 @@ import {
 	type OutgoingData,
 	type OutgoingHistoryMessage,
 	type OutgoingMessage,
-	type ReceivedData
+	type ReceivedData,
+	type ReportReason
 } from '$lib/api';
 import { WS_UNAUTHORIZED, type Message } from '$lib/components/interview/types';
 
@@ -558,6 +559,45 @@ export class ChatClient {
 		if (error) {
 			console.error('Error sending feedback', error);
 		}
+	}
+
+	/**
+	 * Report an interviewer question as inappropriate, offensive or irrelevant.
+	 *
+	 * Returns whether the report was stored, so the dialog can keep the
+	 * respondent on the form with what they wrote when it was not. Nothing is
+	 * mutated locally on success: a report is not part of the transcript the
+	 * respondent is reading, and the acknowledgement is the dialog's own.
+	 *
+	 * No ids in the body beyond the interview-scoped message id: the endpoint
+	 * takes the interview and project from the interview_token cookie, exactly
+	 * as `sendFeedback` does, so a report can only land on this respondent's
+	 * own transcript.
+	 */
+	async sendReport(
+		messageId: string | number,
+		reason: ReportReason,
+		comment: string | null
+	): Promise<boolean> {
+		if (!this.project_id || !this.interview_id) {
+			console.error('Missing session info');
+			return false;
+		}
+
+		const { error } = await Interviews.reportMessage({
+			body: {
+				message_id: Number(messageId),
+				reason,
+				comment
+			}
+		});
+
+		if (error) {
+			console.error('Error reporting question', error);
+			return false;
+		}
+
+		return true;
 	}
 
 	async sendImage(file: File) {

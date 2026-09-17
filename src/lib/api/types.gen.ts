@@ -65,6 +65,37 @@ export type AdminNoteUpdate = {
 };
 
 /**
+ * AdminReportReadRequest
+ */
+export type AdminReportReadRequest = {
+    /**
+     * Ids
+     */
+    ids: Array<string>;
+};
+
+/**
+ * AdminReportReviewRequest
+ */
+export type AdminReportReviewRequest = {
+    /**
+     * Ids
+     */
+    ids: Array<string>;
+    status: ReportStatus;
+};
+
+/**
+ * AdminReportReviewResponse
+ */
+export type AdminReportReviewResponse = {
+    /**
+     * Updated
+     */
+    updated: number;
+};
+
+/**
  * AgentConfig
  */
 export type AgentConfig = {
@@ -2070,6 +2101,10 @@ export type InterviewFacets = {
      * Type
      */
     type?: Array<FacetCount>;
+    /**
+     * Reported
+     */
+    reported?: Array<FacetCount>;
 };
 
 /**
@@ -2319,6 +2354,10 @@ export type InterviewSummaryPublic = {
      * N Messages
      */
     n_messages: number;
+    /**
+     * N Reports
+     */
+    n_reports?: number;
     /**
      * Test Name
      */
@@ -2887,7 +2926,177 @@ export type MessagePublic = {
      * Comments
      */
     comments?: Array<MessageCommentPublic>;
+    /**
+     * Reports
+     */
+    reports?: Array<MessageReportPublic>;
     interview_type: InterviewType;
+};
+
+/**
+ * MessageReportCreate
+ *
+ * A respondent reporting one question of their own interview.
+ *
+ * Carries no interview or project id: both come from the `interview_token`
+ * cookie, so a respondent cannot report into somebody else's transcript by
+ * naming it. Mirrors `MessageFeedbackRequest`.
+ */
+export type MessageReportCreate = {
+    /**
+     * Message Id
+     */
+    message_id: number;
+    reason: ReportReason;
+    /**
+     * Comment
+     */
+    comment?: string | null;
+};
+
+/**
+ * MessageReportPublic
+ *
+ * A report as a reviewer sees it.
+ *
+ * Both review tracks are exposed, as is the respondent's comment. The
+ * reporter is not named because there is nothing to name: a respondent holds
+ * no account, and the interview the report hangs off already says whose it
+ * was.
+ */
+export type MessageReportPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Message Id
+     */
+    message_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    reason: ReportReason;
+    /**
+     * Comment
+     */
+    comment?: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    status: ReportStatus;
+    /**
+     * Resolved By Id
+     */
+    resolved_by_id?: string | null;
+    /**
+     * Resolved At
+     */
+    resolved_at?: string | null;
+    admin_status: ReportStatus;
+    /**
+     * Admin Resolved By Id
+     */
+    admin_resolved_by_id?: string | null;
+    /**
+     * Admin Resolved At
+     */
+    admin_resolved_at?: string | null;
+};
+
+/**
+ * MessageReportRowPublic
+ *
+ * A report with the context a reviewer needs to judge it.
+ *
+ * The question's wording, the project it belongs to and the respondent's pid
+ * are joined in rather than left to the client: a queue of report ids is not
+ * something anyone can review, and a reviewer holding one page cannot resolve
+ * a message id against a transcript they have not opened.
+ *
+ * `read_by_me` is the calling reviewer's own read state, not a property of
+ * the report -- a project member and a platform admin looking at the same
+ * report each see their own.
+ */
+export type MessageReportRowPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Message Id
+     */
+    message_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    reason: ReportReason;
+    /**
+     * Comment
+     */
+    comment?: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    status: ReportStatus;
+    /**
+     * Resolved By Id
+     */
+    resolved_by_id?: string | null;
+    /**
+     * Resolved At
+     */
+    resolved_at?: string | null;
+    admin_status: ReportStatus;
+    /**
+     * Admin Resolved By Id
+     */
+    admin_resolved_by_id?: string | null;
+    /**
+     * Admin Resolved At
+     */
+    admin_resolved_at?: string | null;
+    /**
+     * Question Number
+     */
+    question_number: number;
+    /**
+     * Question
+     */
+    question: string;
+    /**
+     * Project Title
+     */
+    project_title: string;
+    language?: LanguageCode;
+    /**
+     * Pid
+     */
+    pid?: string | null;
+    /**
+     * Read By Me
+     */
+    read_by_me?: boolean;
 };
 
 /**
@@ -3826,6 +4035,72 @@ export type ReleaseNotes = {
      */
     frontend?: Array<ComponentChange>;
 };
+
+/**
+ * ReportReadRequest
+ */
+export type ReportReadRequest = {
+    /**
+     * Ids
+     */
+    ids: Array<string>;
+};
+
+/**
+ * ReportReason
+ *
+ * Why a respondent reported an interviewer's question.
+ *
+ * A closed list rather than free text because the reason is what the review
+ * queues are filtered and counted by, and because a respondent who is being
+ * asked something offensive should be able to say so in one tap. ``OTHER``
+ * is what makes the list honest: it exists so that the four options never
+ * have to be stretched to cover something they do not, and a report carrying
+ * it is expected to carry a comment as well.
+ */
+export type ReportReason = 'inappropriate' | 'offensive' | 'irrelevant' | 'other';
+
+/**
+ * ReportReviewRequest
+ *
+ * Set one track's status on a batch of reports.
+ */
+export type ReportReviewRequest = {
+    /**
+     * Ids
+     */
+    ids: Array<string>;
+    status: ReportStatus;
+};
+
+/**
+ * ReportReviewResponse
+ *
+ * How many rows the call actually changed.
+ *
+ * Not an error when it is fewer than were asked for: an id belonging to
+ * another project is dropped rather than refused, so a stale client cannot
+ * learn from the response whether a report it should not see exists.
+ */
+export type ReportReviewResponse = {
+    /**
+     * Updated
+     */
+    updated: number;
+};
+
+/**
+ * ReportStatus
+ *
+ * Where a report has got to in one review queue.
+ *
+ * A report carries two of these, one per reviewer -- see
+ * ``MessageReportTable``. ``DISMISSED`` is distinct from ``RESOLVED``
+ * because "I have looked at this and there is nothing to do" and "I have
+ * looked at this and fixed it" are different answers, and collapsing them
+ * would make the resolved count meaningless.
+ */
+export type ReportStatus = 'open' | 'resolved' | 'dismissed';
 
 /**
  * ResendVerificationRequest
@@ -9152,6 +9427,10 @@ export type GetInterviewsData = {
          */
         pid?: string | null;
         /**
+         * Reported
+         */
+        reported?: boolean | null;
+        /**
          * Folder Id
          */
         folder_id?: string | null;
@@ -9534,6 +9813,121 @@ export type CheckProjectOwnerResponses = {
 };
 
 export type CheckProjectOwnerResponse = CheckProjectOwnerResponses[keyof CheckProjectOwnerResponses];
+
+export type GetProjectReportsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Statuses
+         */
+        statuses?: Array<ReportStatus> | null;
+        /**
+         * Unread Only
+         */
+        unread_only?: boolean;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/reports';
+};
+
+export type GetProjectReportsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetProjectReportsError = GetProjectReportsErrors[keyof GetProjectReportsErrors];
+
+export type GetProjectReportsResponses = {
+    /**
+     * Response Get Project Reports
+     *
+     * Successful Response
+     */
+    200: Array<MessageReportRowPublic>;
+};
+
+export type GetProjectReportsResponse = GetProjectReportsResponses[keyof GetProjectReportsResponses];
+
+export type ResolveProjectReportsData = {
+    body: ReportReviewRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/reports/resolve';
+};
+
+export type ResolveProjectReportsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ResolveProjectReportsError = ResolveProjectReportsErrors[keyof ResolveProjectReportsErrors];
+
+export type ResolveProjectReportsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReportReviewResponse;
+};
+
+export type ResolveProjectReportsResponse = ResolveProjectReportsResponses[keyof ResolveProjectReportsResponses];
+
+export type MarkProjectReportsReadData = {
+    body: ReportReadRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/reports/read';
+};
+
+export type MarkProjectReportsReadErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MarkProjectReportsReadError = MarkProjectReportsReadErrors[keyof MarkProjectReportsReadErrors];
+
+export type MarkProjectReportsReadResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReportReviewResponse;
+};
+
+export type MarkProjectReportsReadResponse = MarkProjectReportsReadResponses[keyof MarkProjectReportsReadResponses];
 
 export type GetBackgroundInfoData = {
     body?: never;
@@ -10105,6 +10499,31 @@ export type PutFeedbackResponses = {
 
 export type PutFeedbackResponse = PutFeedbackResponses[keyof PutFeedbackResponses];
 
+export type ReportMessageData = {
+    body: MessageReportCreate;
+    path?: never;
+    query?: never;
+    url: '/api/report-question';
+};
+
+export type ReportMessageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReportMessageError = ReportMessageErrors[keyof ReportMessageErrors];
+
+export type ReportMessageResponses = {
+    /**
+     * Successful Response
+     */
+    201: MessageReportPublic;
+};
+
+export type ReportMessageResponse = ReportMessageResponses[keyof ReportMessageResponses];
+
 export type UploadInterviewImageData = {
     body: BodyUploadInterviewImage;
     path?: never;
@@ -10639,6 +11058,92 @@ export type DeleteInvitationsResponses = {
      */
     200: unknown;
 };
+
+export type GetReportsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Statuses
+         */
+        statuses?: Array<ReportStatus> | null;
+        /**
+         * Unread Only
+         */
+        unread_only?: boolean;
+    };
+    url: '/api/admin/reports';
+};
+
+export type GetReportsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetReportsError = GetReportsErrors[keyof GetReportsErrors];
+
+export type GetReportsResponses = {
+    /**
+     * Response Get Reports
+     *
+     * Successful Response
+     */
+    200: Array<MessageReportRowPublic>;
+};
+
+export type GetReportsResponse = GetReportsResponses[keyof GetReportsResponses];
+
+export type ResolveReportsData = {
+    body: AdminReportReviewRequest;
+    path?: never;
+    query?: never;
+    url: '/api/admin/reports/resolve';
+};
+
+export type ResolveReportsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ResolveReportsError = ResolveReportsErrors[keyof ResolveReportsErrors];
+
+export type ResolveReportsResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminReportReviewResponse;
+};
+
+export type ResolveReportsResponse = ResolveReportsResponses[keyof ResolveReportsResponses];
+
+export type MarkReportsReadData = {
+    body: AdminReportReadRequest;
+    path?: never;
+    query?: never;
+    url: '/api/admin/reports/read';
+};
+
+export type MarkReportsReadErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MarkReportsReadError = MarkReportsReadErrors[keyof MarkReportsReadErrors];
+
+export type MarkReportsReadResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminReportReviewResponse;
+};
+
+export type MarkReportsReadResponse = MarkReportsReadResponses[keyof MarkReportsReadResponses];
 
 export type ProxyToEc2ManagerDeleteData = {
     body?: never;

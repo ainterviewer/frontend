@@ -82,6 +82,17 @@
 		return columnFilters.find((filter) => filter.id === columnId)?.value as T[] | undefined;
 	}
 
+	/**
+	 * The `reported` facet's selection as the boolean query param it maps to,
+	 * or undefined when it says nothing.
+	 */
+	function reportedFilter(): boolean | undefined {
+		// Keyed by the column the control is attached to, not by the facet's
+		// name: `FacetedFilter` stores its selection under `column.id`.
+		const selected = selection('n_reports');
+		return selected?.length === 1 ? selected[0] === 'true' : undefined;
+	}
+
 	const helper = createColumnHelper<DataTableFeatures, InterviewSummaryPublic>();
 
 	const columns = helper.columns([
@@ -108,6 +119,10 @@
 		helper.accessor('n_messages', {
 			header: 'Messages',
 			meta: { align: 'right', class: 'tabular-nums text-gray-600' }
+		}),
+		helper.accessor('n_reports', {
+			header: 'Reports',
+			meta: { align: 'right', class: 'tabular-nums' }
 		}),
 		helper.accessor('language', { header: 'Language', meta: { class: 'text-gray-600' } }),
 		helper.accessor('status', { header: 'Status' }),
@@ -190,6 +205,13 @@
 		inactive: 'Inactive'
 	};
 
+	// The `reported` facet answers a yes/no question, so its two values are
+	// "true"/"false" rather than a set of things to pick from.
+	const REPORTED_LABELS: Record<string, string> = {
+		true: 'Has reported questions',
+		false: 'None reported'
+	};
+
 	/**
 	 * One fetch per burst of state changes. `Clear filters` sets the global
 	 * filter and resets the column filters back to back, and each of those
@@ -212,6 +234,7 @@
 		created_at: 'Created',
 		last_updated: 'Updated',
 		n_messages: 'Messages',
+		n_reports: 'Reports',
 		language: 'Language',
 		status: 'Status'
 	};
@@ -246,6 +269,10 @@
 					pid: pidFilter || undefined,
 					statuses: selection<InterviewStatus>('status'),
 					languages: selection('language'),
+					// Both values selected is the same query as neither: the
+					// filter is a boolean, and asking for reported *and*
+					// unreported interviews is asking for all of them.
+					reported: reportedFilter(),
 					...dateRangeQuery(
 						columnFilters.find((filter) => filter.id === 'created_at')?.value as
 							DateRange | undefined
@@ -467,6 +494,12 @@
 			options={facetOptions(facets.language)}
 			counts={facetCounts(facets.language)}
 		/>
+		<FacetedFilter
+			title="Reported"
+			column={table.getColumn('n_reports')!}
+			options={facetOptions(facets.reported, REPORTED_LABELS)}
+			counts={facetCounts(facets.reported)}
+		/>
 		<DateRangeFilter title="Created" column={table.getColumn('created_at')!} />
 	{/snippet}
 
@@ -501,6 +534,18 @@
 			>
 		{:else if columnId === 'n_messages'}
 			{interview.n_messages}
+		{:else if columnId === 'n_reports'}
+			{#if interview.n_reports}
+				<span
+					class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
+					title="{interview.n_reports} reported question{interview.n_reports === 1 ? '' : 's'}"
+				>
+					<i class="fa-solid fa-flag text-[10px]"></i>
+					{interview.n_reports}
+				</span>
+			{:else}
+				<span class="text-gray-300">&ndash;</span>
+			{/if}
 		{:else if columnId === 'language'}
 			{interview.language}
 		{:else if columnId === 'status'}

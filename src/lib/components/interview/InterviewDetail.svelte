@@ -9,6 +9,7 @@
 	import MessageCommentModal from '$lib/components/analysis/MessageCommentModal.svelte';
 	import AudioPlayer from '$lib/components/interview/AudioPlayer.svelte';
 	import type { Message } from '$lib/components/interview/types';
+	import { onMount } from 'svelte';
 	import { CommentSurface } from '$lib/stores/commentSurface.svelte';
 	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
 	import { MessageComments } from '$lib/stores/messageComments.svelte';
@@ -39,6 +40,26 @@
 		data: InterviewData;
 		backLink: string;
 	} = $props();
+
+	/**
+	 * The message a link pointed at, as `?message=<uuid>`.
+	 *
+	 * Read from the URL rather than held in state, so the highlight is on the
+	 * very first render — including the server's. The scroll cannot be: there
+	 * is no document to scroll until the client has one, which is what
+	 * `onMount` below is for.
+	 */
+	const focusMessageId = $derived(page.url.searchParams.get('message'));
+
+	onMount(() => {
+		if (!focusMessageId) return;
+		// After paint, or the element is not laid out where it will end up.
+		requestAnimationFrame(() => {
+			document
+				.getElementById(`message-${focusMessageId}`)
+				?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+		});
+	});
 
 	// Get user ID from the layout data
 	let userId = $derived(page.data.user?.id || '');
@@ -151,6 +172,7 @@
 				message_id: msg.message_id,
 				skipped_by_condition: msg.skipped_by_condition,
 				feedback: msg.feedback,
+				reports: msg.reports,
 				survey_item: msg.survey_item,
 				image: image,
 				can_answer: msg.can_answer,
@@ -286,6 +308,7 @@
 							<CodedMessage
 								message={msg}
 								{messageId}
+								highlighted={messageId === focusMessageId}
 								content={msg.text ?? ''}
 								lang={data.lang}
 								codes={data.codes}
