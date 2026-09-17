@@ -5566,6 +5566,22 @@ export type UserCreateRequest = {
 };
 
 /**
+ * UserNotifications
+ *
+ * Counts for the badges in the account menu.
+ */
+export type UserNotifications = {
+    /**
+     * Unread Reports
+     */
+    unread_reports?: number;
+    /**
+     * Track
+     */
+    track?: 'owner' | 'admin';
+};
+
+/**
  * UserPublic
  */
 export type UserPublic = {
@@ -12936,6 +12952,22 @@ export type NewsletterSubscribeResponses = {
      */
     200: unknown;
 };
+
+export type GetNotificationsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/me/notifications';
+};
+
+export type GetNotificationsResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserNotifications;
+};
+
+export type GetNotificationsResponse = GetNotificationsResponses[keyof GetNotificationsResponses];
 
 export type HealthData = {
     body?: never;
