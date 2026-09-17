@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 
-	import { Auth, type InterviewConfig, type InterviewType } from '$lib/api';
+	import { Auth, type InterviewConfig, type InterviewType, type ReportReason } from '$lib/api';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 
 	import { type ChatClient, clearInterviewSession } from '../../../routes/interview/chat.svelte';
+	import { getReportText } from '../../../routes/interview/reportText';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
+	import ReportDialog from './ReportDialog.svelte';
 	import SecurityInterventionModal from './SecurityInterventionModal.svelte';
 	import SpeechInput from './SpeechInput.svelte';
 	import { TtsPlayer } from './tts';
@@ -45,6 +47,28 @@
 	let showHelp = $state(false);
 	let showExit = $state(false);
 	let isRecording = $state(false);
+
+	// The question the report dialog is open for, or null. One dialog for the
+	// whole transcript rather than one per bubble: it is a full-screen modal,
+	// and mounting one per message would put dozens of them on the page.
+	let reportingMessageId = $state<string | number | null>(null);
+	const reportText = $derived(getReportText(lang));
+
+	/**
+	 * Whether skipping is on the table for the question just reported.
+	 *
+	 * The skip control message applies to whatever question the interview is
+	 * waiting on, so it may only be offered for the last message — and only
+	 * when that message is something the respondent was actually asked. The
+	 * same two tests `InterviewMessage` uses to show the Skip button, or the
+	 * dialog would offer to skip a question and skip a different one.
+	 */
+	let reportedQuestionIsCurrent = $derived.by(() => {
+		if (reportingMessageId === null) return false;
+		const last = chat.messages[chat.messages.length - 1];
+		if (!last || last.message_id !== reportingMessageId) return false;
+		return last.type === 'received' && last.can_answer !== false;
+	});
 
 	let imageUpload = $state(false);
 
@@ -328,6 +352,8 @@
 						onFeedback={(f: 'positive' | 'negative' | null, id: string | number) =>
 							chat.sendFeedback(f, id)}
 						onSkip={() => chat.sendSkip()}
+						onReport={(id: string | number) => (reportingMessageId = id)}
+						reportLabel={reportText.trigger_label}
 						onSurveyAnswer={(ans: unknown, id: string | number) => chat.sendSurveyResponse(ans, id)}
 					/>
 				{/if}
@@ -576,6 +602,18 @@
 		<GradientProgressBar progress={chat.progress} />
 	</div>
 </div>
+
+<ReportDialog
+	show={reportingMessageId !== null}
+	text={reportText}
+	canSkip={reportedQuestionIsCurrent}
+	onSubmit={(reason: ReportReason, comment: string | null) =>
+		reportingMessageId === null
+			? Promise.resolve(false)
+			: chat.sendReport(reportingMessageId, reason, comment)}
+	onSkip={() => chat.sendSkip()}
+	onClose={() => (reportingMessageId = null)}
+/>
 
 <Modal show={showHelp} title={helpTitle} onClose={() => (showHelp = false)}>
 	<div class="modal-prose prose prose-sm max-w-none text-gray-800">

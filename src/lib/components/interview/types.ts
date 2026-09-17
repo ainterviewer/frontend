@@ -1,4 +1,4 @@
-import type { MessagePublic } from '$lib/api';
+import type { MessagePublic, MessageReportPublic } from '$lib/api';
 
 import type { SecurityEvent } from './security';
 
@@ -27,6 +27,12 @@ export interface Message {
 	 */
 	condition?: string | null;
 	feedback?: 'positive' | 'negative' | null;
+	/**
+	 * The respondent's reports of this question, oldest first. Only ever
+	 * populated on the transcript: during the interview a report is the
+	 * dialog's business and is not drawn into the conversation.
+	 */
+	reports?: MessageReportPublic[];
 	survey_item?: SurveyItemUnion | null;
 	/** A survey message whose answer has been submitted. Set live by the chat
 	 *  client; the transcript builds already-answered messages without it. */
