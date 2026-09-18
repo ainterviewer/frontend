@@ -2934,6 +2934,85 @@ export type MessagePublic = {
 };
 
 /**
+ * MessageReportAdminRowPublic
+ *
+ * A queue row for the platform's own review.
+ *
+ * The admin track is added back here, and only here: the project queue is
+ * served `MessageReportRowPublic`, which has no field for it.
+ */
+export type MessageReportAdminRowPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Message Id
+     */
+    message_id: string;
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    reason: ReportReason;
+    /**
+     * Comment
+     */
+    comment?: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    status: ReportStatus;
+    /**
+     * Resolved By Id
+     */
+    resolved_by_id?: string | null;
+    /**
+     * Resolved At
+     */
+    resolved_at?: string | null;
+    /**
+     * Question Number
+     */
+    question_number: number;
+    /**
+     * Question
+     */
+    question: string;
+    /**
+     * Project Title
+     */
+    project_title: string;
+    language?: LanguageCode;
+    /**
+     * Pid
+     */
+    pid?: string | null;
+    /**
+     * Read By Me
+     */
+    read_by_me?: boolean;
+    admin_status: ReportStatus;
+    /**
+     * Admin Resolved By Id
+     */
+    admin_resolved_by_id?: string | null;
+    /**
+     * Admin Resolved At
+     */
+    admin_resolved_at?: string | null;
+};
+
+/**
  * MessageReportCreate
  *
  * A respondent reporting one question of their own interview.
@@ -2957,12 +3036,19 @@ export type MessageReportCreate = {
 /**
  * MessageReportPublic
  *
- * A report as a reviewer sees it.
+ * A report as the project sees it.
  *
- * Both review tracks are exposed, as is the respondent's comment. The
- * reporter is not named because there is nothing to name: a respondent holds
- * no account, and the interview the report hangs off already says whose it
- * was.
+ * Carries the project's own review track and **not** the platform's. The
+ * admin track is the platform's internal moderation record: whether a
+ * reviewer there judged a question offensive or waved it through is not a
+ * project member's business, and it is left off this model rather than
+ * merely hidden in the UI -- a column can be hidden while the value still
+ * sits in the JSON.
+ *
+ * `MessageReportAdminPublic` is the wider view, served only to the platform
+ * queue. The respondent is not named because there is nothing to name: they
+ * hold no account, and the interview the report hangs off already says whose
+ * it was.
  */
 export type MessageReportPublic = {
     /**
@@ -3003,15 +3089,6 @@ export type MessageReportPublic = {
      * Resolved At
      */
     resolved_at?: string | null;
-    admin_status: ReportStatus;
-    /**
-     * Admin Resolved By Id
-     */
-    admin_resolved_by_id?: string | null;
-    /**
-     * Admin Resolved At
-     */
-    admin_resolved_at?: string | null;
 };
 
 /**
@@ -3067,15 +3144,6 @@ export type MessageReportRowPublic = {
      * Resolved At
      */
     resolved_at?: string | null;
-    admin_status: ReportStatus;
-    /**
-     * Admin Resolved By Id
-     */
-    admin_resolved_by_id?: string | null;
-    /**
-     * Admin Resolved At
-     */
-    admin_resolved_at?: string | null;
     /**
      * Question Number
      */
@@ -4785,6 +4853,12 @@ export type UserCreateRequest = {
  * UserNotifications
  *
  * Counts for the badges in the account menu.
+ *
+ * One field per queue rather than one number and a label. A platform admin
+ * who also collaborates on projects has work waiting in *both*, and the two
+ * are different jobs -- rewording a question in your own guide is not
+ * reviewing somebody else's for safety. Counting only one of them hid the
+ * other completely.
  */
 export type UserNotifications = {
     /**
@@ -4792,9 +4866,9 @@ export type UserNotifications = {
      */
     unread_reports?: number;
     /**
-     * Track
+     * Unread Platform Reports
      */
-    track?: 'owner' | 'admin';
+    unread_platform_reports?: number;
 };
 
 /**
@@ -11106,7 +11180,7 @@ export type GetReportsResponses = {
      *
      * Successful Response
      */
-    200: Array<MessageReportRowPublic>;
+    200: Array<MessageReportAdminRowPublic>;
 };
 
 export type GetReportsResponse = GetReportsResponses[keyof GetReportsResponses];
@@ -11500,6 +11574,42 @@ export type GetNotificationsResponses = {
 };
 
 export type GetNotificationsResponse = GetNotificationsResponses[keyof GetNotificationsResponses];
+
+export type GetMyReportsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Statuses
+         */
+        statuses?: Array<ReportStatus> | null;
+        /**
+         * Unread Only
+         */
+        unread_only?: boolean;
+    };
+    url: '/api/me/reports';
+};
+
+export type GetMyReportsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMyReportsError = GetMyReportsErrors[keyof GetMyReportsErrors];
+
+export type GetMyReportsResponses = {
+    /**
+     * Response Get My Reports
+     *
+     * Successful Response
+     */
+    200: Array<MessageReportRowPublic>;
+};
+
+export type GetMyReportsResponse = GetMyReportsResponses[keyof GetMyReportsResponses];
 
 export type HealthData = {
     body?: never;

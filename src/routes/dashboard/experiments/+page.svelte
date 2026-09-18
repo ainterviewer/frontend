@@ -3,19 +3,19 @@
 	import { page } from '$app/state';
 	import { Experiments } from '$lib/api/sdk.gen';
 	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
+	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
+	import Sidebar from '$lib/components/Sidebar.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
 		dataTableFeatures,
-		NO_PAGINATION,
 		matchesSelection,
+		NO_PAGINATION,
 		sortableText,
 		type DataTableFeatures
 	} from '$lib/components/table/features';
-	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
-	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
-	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
 	import { toast } from 'svelte-sonner';
 	import { fade } from 'svelte/transition';
 	import type { PageData } from './$types';

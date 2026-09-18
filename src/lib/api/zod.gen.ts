@@ -1748,14 +1748,52 @@ export const zAdminReportReviewRequest = z.object({
 });
 
 /**
+ * MessageReportAdminRowPublic
+ *
+ * A queue row for the platform's own review.
+ *
+ * The admin track is added back here, and only here: the project queue is
+ * served `MessageReportRowPublic`, which has no field for it.
+ */
+export const zMessageReportAdminRowPublic = z.object({
+    id: z.string(),
+    message_id: z.string(),
+    interview_id: z.string(),
+    project_id: z.string(),
+    reason: zReportReason,
+    comment: z.string().nullish(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    status: zReportStatus,
+    resolved_by_id: z.string().nullish(),
+    resolved_at: z.iso.datetime().nullish(),
+    question_number: z.int(),
+    question: z.string(),
+    project_title: z.string(),
+    language: zLanguageCode.optional().default('EN'),
+    pid: z.string().nullish(),
+    read_by_me: z.boolean().optional().default(false),
+    admin_status: zReportStatus,
+    admin_resolved_by_id: z.string().nullish(),
+    admin_resolved_at: z.iso.datetime().nullish()
+});
+
+/**
  * MessageReportPublic
  *
- * A report as a reviewer sees it.
+ * A report as the project sees it.
  *
- * Both review tracks are exposed, as is the respondent's comment. The
- * reporter is not named because there is nothing to name: a respondent holds
- * no account, and the interview the report hangs off already says whose it
- * was.
+ * Carries the project's own review track and **not** the platform's. The
+ * admin track is the platform's internal moderation record: whether a
+ * reviewer there judged a question offensive or waved it through is not a
+ * project member's business, and it is left off this model rather than
+ * merely hidden in the UI -- a column can be hidden while the value still
+ * sits in the JSON.
+ *
+ * `MessageReportAdminPublic` is the wider view, served only to the platform
+ * queue. The respondent is not named because there is nothing to name: they
+ * hold no account, and the interview the report hangs off already says whose
+ * it was.
  */
 export const zMessageReportPublic = z.object({
     id: z.string(),
@@ -1768,10 +1806,7 @@ export const zMessageReportPublic = z.object({
     updated_at: z.iso.datetime(),
     status: zReportStatus,
     resolved_by_id: z.string().nullish(),
-    resolved_at: z.iso.datetime().nullish(),
-    admin_status: zReportStatus,
-    admin_resolved_by_id: z.string().nullish(),
-    admin_resolved_at: z.iso.datetime().nullish()
+    resolved_at: z.iso.datetime().nullish()
 });
 
 /**
@@ -1800,9 +1835,6 @@ export const zMessageReportRowPublic = z.object({
     status: zReportStatus,
     resolved_by_id: z.string().nullish(),
     resolved_at: z.iso.datetime().nullish(),
-    admin_status: zReportStatus,
-    admin_resolved_by_id: z.string().nullish(),
-    admin_resolved_at: z.iso.datetime().nullish(),
     question_number: z.int(),
     question: z.string(),
     project_title: z.string(),
@@ -2552,10 +2584,16 @@ export const zUserCreateRequest = z.object({
  * UserNotifications
  *
  * Counts for the badges in the account menu.
+ *
+ * One field per queue rather than one number and a label. A platform admin
+ * who also collaborates on projects has work waiting in *both*, and the two
+ * are different jobs -- rewording a question in your own guide is not
+ * reviewing somebody else's for safety. Counting only one of them hid the
+ * other completely.
  */
 export const zUserNotifications = z.object({
     unread_reports: z.int().optional().default(0),
-    track: z.enum(['owner', 'admin']).optional().default('owner')
+    unread_platform_reports: z.int().optional().default(0)
 });
 
 /**
@@ -4871,7 +4909,7 @@ export const zGetReportsQuery = z.object({
  *
  * Successful Response
  */
-export const zGetReportsResponse = z.array(zMessageReportRowPublic);
+export const zGetReportsResponse = z.array(zMessageReportAdminRowPublic);
 
 export const zResolveReportsBody = zAdminReportReviewRequest;
 
@@ -4955,6 +4993,18 @@ export const zNewsletterSubscribeBody = zNewsletterRequest;
  * Successful Response
  */
 export const zGetNotificationsResponse = zUserNotifications;
+
+export const zGetMyReportsQuery = z.object({
+    statuses: z.array(zReportStatus).nullish(),
+    unread_only: z.boolean().optional().default(false)
+});
+
+/**
+ * Response Get My Reports
+ *
+ * Successful Response
+ */
+export const zGetMyReportsResponse = z.array(zMessageReportRowPublic);
 
 /**
  * Response Version

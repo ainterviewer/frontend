@@ -24,6 +24,14 @@ export const mainSidebarItems: SidebarItem[] = [
 		icon: 'fa-solid fa-vials',
 		dataTour: 'sidebar-experiments'
 	},
+	{
+		// Questions respondents reported, across every project the user
+		// collaborates on. The admin entry below is the platform's review of
+		// the same reports, on its own track.
+		label: 'Reports',
+		href: '/dashboard/reports',
+		icon: 'fas fa-flag'
+	},
 	{ type: 'separator', requiresAdmin: true },
 	{
 		label: 'Admin',

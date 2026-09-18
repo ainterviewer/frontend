@@ -1,4 +1,4 @@
-import { Auth, Default, Notifications, Projects } from '$lib/api';
+import { Auth, Default, Me, Projects } from '$lib/api';
 import { clearAuthCookies } from '../../hooks.server';
 import { parseProjectRoute } from '$lib/utils/urls';
 import { error, redirect } from '@sveltejs/kit';
@@ -31,7 +31,7 @@ export const load: LayoutServerLoad = async ({ cookies, depends, locals, url }) 
 		Default.releases({ query: { limit: 10 } }),
 		// Badge counts for the account menu. In this fan-out rather than a
 		// client fetch so the dot is right on the first paint.
-		Notifications.getNotifications({ headers: { cookie: cookieHeader } }),
+		Me.getNotifications({ headers: { cookie: cookieHeader } }),
 		projectId
 			? Projects.getProject({
 					headers: { cookie: cookieHeader },

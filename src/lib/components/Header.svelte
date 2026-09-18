@@ -51,13 +51,20 @@
 
 	// Reported questions waiting on this user, counted server-side — unlike the
 	// release dot, which is per-browser localStorage and so has to wait for
-	// hydration before it dares render. This one is already true on the
-	// server's first paint.
+	// hydration before it dares render. These are already true on the server's
+	// first paint.
+	//
+	// Two counts, not one: an admin who also collaborates on projects has work
+	// in both queues, and they are different jobs — rewording your own question
+	// is not reviewing somebody else's for safety. A single count could only
+	// point at one of them, which left the other invisible.
 	let unreadReports = $derived(data.notifications?.unread_reports ?? 0);
-	let reportTrack = $derived(data.notifications?.track ?? 'owner');
+	let unreadPlatformReports = $derived(data.notifications?.unread_platform_reports ?? 0);
+	/** Only admins are counted on the platform track, so only they see its row. */
+	let isPlatformReviewer = $derived(data.user?.scope === 'admin');
 
-	/** Both dots are the same amber; the count is what distinguishes them. */
-	let hasBadge = $derived(hasUnseenRelease || unreadReports > 0);
+	/** One dot for everything in the menu worth opening. */
+	let hasBadge = $derived(hasUnseenRelease || unreadReports > 0 || unreadPlatformReports > 0);
 
 	const reportRowClass =
 		'flex w-full items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary';
@@ -146,9 +153,9 @@
 									menuOpen = !menuOpen;
 								}}
 								class="font-inherit pointer-events-auto relative block cursor-pointer border-none bg-transparent text-center text-base font-normal text-black"
-								aria-label={unreadReports > 0
-									? `Account menu — ${unreadReports} unread reported question${
-											unreadReports === 1 ? '' : 's'
+								aria-label={unreadReports + unreadPlatformReports > 0
+									? `Account menu — ${unreadReports + unreadPlatformReports} unread reported question${
+											unreadReports + unreadPlatformReports === 1 ? '' : 's'
 										}`
 									: hasUnseenRelease
 										? 'Account menu — new release available'
@@ -193,37 +200,26 @@
 										class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
 										role="menuitem">Your profile</a
 									>
-									{#if unreadReports > 0}
-										{#if reportTrack === 'admin'}
-											<a
-												href={resolve('/dashboard/admin/reports')}
-												class={reportRowClass}
-												role="menuitem"
-											>
-												{@render reportRow()}
-											</a>
-										{:else if projectId}
-											<!-- A member's reports are read on the project's interview
-											     list, filtered to the interviews that carry them. -->
-											<a
-												href="{resolve('/dashboard/projects/[project_id]/[lang]/interviews', {
-													project_id: projectId,
-													lang: languageCode ?? 'en'
-												})}?reported=true"
-												class={reportRowClass}
-												role="menuitem"
-											>
-												{@render reportRow()}
-											</a>
-										{:else}
-											<!-- Nowhere to send a member who is not in a project: there
-											     is no cross-project queue for them. Still worth saying. -->
-											<div
-												class="flex w-full items-center justify-between px-4 py-2 text-sm text-gray-700"
-											>
-												{@render reportRow()}
-											</div>
-										{/if}
+									<!--
+										Always present, with or without a count — a menu whose entries
+										come and go cannot be navigated from memory, and "What's new"
+										below is the same shape: permanently there, with an indicator
+										only when there is something.
+									-->
+									<a href={resolve('/dashboard/reports')} class={reportRowClass} role="menuitem">
+										{@render reportRow('Reported questions', unreadReports)}
+									</a>
+									{#if isPlatformReviewer}
+										<!-- The platform's own queue over the same reports, on its own
+										     track. A separate row because it is separate work: clearing
+										     one does not clear the other. -->
+										<a
+											href={resolve('/dashboard/admin/reports')}
+											class={reportRowClass}
+											role="menuitem"
+										>
+											{@render reportRow('Platform reports', unreadPlatformReports)}
+										</a>
 									{/if}
 									<button
 										type="button"
@@ -259,10 +255,10 @@
 </header>
 
 <!--
-	The reported-questions row's contents, shared by the two links and the
-	unlinked case: which of them is rendered depends on the track and on whether
-	the user is inside a project, and `resolve()` has to appear in the `href`
-	itself for the route to be checked.
+	One queue row: its label and its count. Shared by the project queue and, for
+	a platform reviewer, the admin one — `resolve()` has to appear in each
+	`href` itself for the route to be checked, so the rows are written out and
+	only their contents come from here.
 
 	Deliberately undecorated: every other row in this menu is plain text, so an
 	icon here made it the one ornamented entry.
@@ -274,7 +270,9 @@
 	number, which is worth more than the symmetry, and leaves nothing to
 	outgrow at three digits.
 -->
-{#snippet reportRow()}
-	<span class="whitespace-nowrap">Reported questions</span>
-	<span class="ml-3 text-sm font-semibold text-orange-500">{unreadReports}</span>
+{#snippet reportRow(label: string, count: number)}
+	<span class="whitespace-nowrap">{label}</span>
+	{#if count > 0}
+		<span class="ml-3 text-sm font-semibold text-orange-500">{count}</span>
+	{/if}
 {/snippet}
