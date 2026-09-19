@@ -4,17 +4,50 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
+  # Pull requests run the test job only: the docker and github-release jobs
+  # below require a version tag ref, which a PR event never has.
+  pull_request:
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Lint, Types & Unit Tests
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.2'
+
+      # `prepare` runs svelte-kit sync, which generates the types the next two
+      # steps type-check against.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Check types
+        run: bun run check
+
+      # Unit tests only. The Playwright e2e suite needs browser downloads and a
+      # running server, which is minutes rather than seconds -- it does not
+      # belong on every pull request.
+      - name: Unit tests
+        run: bun run test:unit --run
+
   docker:
     # Tag pushes publish a release; a manual run from a branch publishes a
     # staging preview of that branch. The tag list below decides which sticky
     # tags each case is allowed to move.
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    needs: [test]
     name: Docker Build & Publish
 
     permissions:
