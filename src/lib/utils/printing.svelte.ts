@@ -1,4 +1,5 @@
 import { flushSync } from 'svelte';
+
 import { mountAllLazy } from '$lib/components/LazyMount.svelte';
 
 /**

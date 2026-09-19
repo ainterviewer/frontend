@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_TERMS, isValidKeyword, keywordProblem } from './keywordQuery';
+
+import { isValidKeyword, keywordProblem, MAX_TERMS } from './keywordQuery';
 
 /**
  * The client's half of the keyword grammar.

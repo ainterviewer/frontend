@@ -1,7 +1,9 @@
-import { Auth, Default, Projects } from '$lib/api';
-import { clearAuthCookies } from '../../hooks.server';
-import { parseProjectRoute } from '$lib/utils/urls';
 import { error, redirect } from '@sveltejs/kit';
+
+import { Auth, Default, Projects } from '$lib/api';
+import { parseProjectRoute } from '$lib/utils/urls';
+
+import { clearAuthCookies } from '../../hooks.server';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {

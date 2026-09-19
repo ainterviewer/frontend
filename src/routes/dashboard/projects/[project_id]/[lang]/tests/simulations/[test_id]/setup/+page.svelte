@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+
 	import type { PageData } from './$types';
+	import FixedAI from './FixedAI.svelte';
 	import FixedAnswers from './FixedAnswers.svelte';
 	import ShuffledAI from './ShuffledAI.svelte';
-	import FixedAI from './FixedAI.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let test = $derived(data.test);

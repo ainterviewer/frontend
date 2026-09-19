@@ -1,7 +1,8 @@
+import type { Cookies } from '@sveltejs/kit';
+import { error, type Handle, redirect } from '@sveltejs/kit';
+
 import { env } from '$env/dynamic/private';
 import { client } from '$lib/api/client.gen';
-import { error, redirect, type Handle } from '@sveltejs/kit';
-import type { Cookies } from '@sveltejs/kit';
 
 const API_BASE = () => env.API_URL || 'http://localhost:8666';
 

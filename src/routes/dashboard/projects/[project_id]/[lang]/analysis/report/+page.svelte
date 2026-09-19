@@ -1,24 +1,26 @@
 <script lang="ts">
-	import { Report } from '$lib/api';
-	import { ANSWER_STATE_COLORS, languageColor } from '$lib/config/chartColors';
-	import type { ItemDistribution, ItemDistributions } from '$lib/api/types.gen';
-	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { Switch } from 'bits-ui';
 	import { format } from 'd3-format';
-	import type { PageData } from './$types';
-	import AnswerRateBar from './AnswerRateBar.svelte';
-	import ChartSkeleton from './ChartSkeleton.svelte';
-	import ClampedText from './ClampedText.svelte';
-	import { DISTRIBUTED_ONLY, isDefaultQuery, WITH_TESTS } from './filters';
-	import { watchPrinting } from '$lib/utils/printing.svelte';
-	import { reveal } from '$lib/utils/reveal';
-	import { sanitizeMarkup } from '$lib/utils/sanitize';
+
 	import {
 		buildGateMap,
 		questionKey,
 		questionNumber,
 		summarizeConditions
 	} from '$lib/analysis/conditions';
+	import { Report } from '$lib/api';
+	import type { ItemDistribution, ItemDistributions } from '$lib/api/types.gen';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { ANSWER_STATE_COLORS, languageColor } from '$lib/config/chartColors';
+	import { watchPrinting } from '$lib/utils/printing.svelte';
+	import { reveal } from '$lib/utils/reveal';
+	import { sanitizeMarkup } from '$lib/utils/sanitize';
+
+	import type { PageData } from './$types';
+	import AnswerRateBar from './AnswerRateBar.svelte';
+	import ChartSkeleton from './ChartSkeleton.svelte';
+	import ClampedText from './ClampedText.svelte';
+	import { DISTRIBUTED_ONLY, isDefaultQuery, WITH_TESTS } from './filters';
 	import ItemCard from './ItemCard.svelte';
 
 	let { data }: { data: PageData } = $props();

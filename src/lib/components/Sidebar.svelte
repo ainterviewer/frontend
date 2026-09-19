@@ -4,6 +4,7 @@
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
 	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
+
 	import HoverInfo from './HoverInfo.svelte';
 
 	//  TODO: Align text after icons

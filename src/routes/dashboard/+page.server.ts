@@ -1,5 +1,7 @@
-import { Default, Folders } from '$lib/api';
 import { error } from '@sveltejs/kit';
+
+import { Default, Folders } from '$lib/api';
+
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {

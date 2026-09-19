@@ -3,13 +3,15 @@
 
 	import { SvelteFlowProvider } from '@xyflow/svelte';
 	import { toast } from 'svelte-sonner';
-	import SaveState from '$lib/coding/SaveState.svelte';
-	import CodeInspector from './CodeInspector.svelte';
-	import CodebookCanvas from './CodebookCanvas.svelte';
-	import CodebookToolbar from './CodebookToolbar.svelte';
+
 	import { displayName } from '$lib/coding/codingTree';
 	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
+	import SaveState from '$lib/coding/SaveState.svelte';
 	import type { Codebook } from '$lib/coding/store.svelte';
+
+	import CodebookCanvas from './CodebookCanvas.svelte';
+	import CodebookToolbar from './CodebookToolbar.svelte';
+	import CodeInspector from './CodeInspector.svelte';
 
 	/**
 	 * The canvas, its toolbar and its inspector, over a codebook it is handed.

@@ -1,4 +1,15 @@
 <script lang="ts">
+	import {
+		type ColumnFiltersState,
+		createColumnHelper,
+		createTable,
+		type PaginationState,
+		type SortingState,
+		type Updater
+	} from '@tanstack/svelte-table';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
+
 	import { replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -13,25 +24,16 @@
 	import DateRangeFilter from '$lib/components/table/DateRangeFilter.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
+		type DataTableFeatures,
 		dataTableFeatures,
+		type DateRange,
 		dateRangeQuery,
 		facetCounts,
 		facetOptions,
 		formatDate,
-		formatDateFull,
-		type DataTableFeatures,
-		type DateRange
+		formatDateFull
 	} from '$lib/components/table/features';
-	import {
-		createColumnHelper,
-		createTable,
-		type ColumnFiltersState,
-		type PaginationState,
-		type SortingState,
-		type Updater
-	} from '@tanstack/svelte-table';
-	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
+
 	import ResumeLinkModal from './ResumeLinkModal.svelte';
 
 	let isDemo = $derived(page.data.user?.scope === 'demo');

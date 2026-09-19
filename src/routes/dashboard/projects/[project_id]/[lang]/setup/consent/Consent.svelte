@@ -1,15 +1,17 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
+
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { ProjectLanguage, Welcome } from '$lib/api/types.gen';
 	import { ConsentModal } from '$lib/components/modals';
-	import { toast } from 'svelte-sonner';
-	import ExportPdfModal from '../ExportPdfModal.svelte';
-	import SetupActionBar from '../SetupActionBar.svelte';
+
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
+	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import { mapToLocal } from '../guide/utils';
+	import SetupActionBar from '../SetupActionBar.svelte';
 
 	interface Props {
 		initialData?: { title: string; text: string } | null;

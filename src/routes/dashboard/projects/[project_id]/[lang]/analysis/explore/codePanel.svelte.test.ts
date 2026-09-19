@@ -3,12 +3,14 @@
 // worth checking on screen is not on screen.
 import '/src/app.css';
 
-import { page } from 'vitest/browser';
 import { expect, test } from 'vitest';
+import { page } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
+
 import { seededTree } from '$lib/coding/seed';
+
 import CodePanel from './CodePanel.svelte';
-import { defaultCoverage, type CoverageAxes } from './explore';
+import { type CoverageAxes, defaultCoverage } from './explore';
 
 /**
  * The code pane on a codebook of its own.

@@ -1,4 +1,5 @@
 import { Report } from '$lib/api';
+
 import type { PageLoad } from './$types';
 import { defaultQuery } from './filters';
 

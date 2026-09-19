@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { format } from 'd3-format';
+	import { toast } from 'svelte-sonner';
+
 	import { Analysis } from '$lib/api';
 	import type { EmbeddingStatus } from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { format } from 'd3-format';
-	import { toast } from 'svelte-sonner';
+
 	import { KINDS } from './explore';
 
 	let {

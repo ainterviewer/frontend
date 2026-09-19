@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { BarChart, type ChartState, Text, Tooltip } from 'layerchart';
+
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { sanitizeMarkup } from '$lib/utils/sanitize';
-	import { BarChart, Text, Tooltip, type ChartState } from 'layerchart';
 
 	type DropoutBar = {
 		key: string;

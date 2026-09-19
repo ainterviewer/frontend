@@ -1,8 +1,9 @@
 import type { Edge, Node } from '@xyflow/svelte';
 import { getContext, setContext } from 'svelte';
+
 import { generateColor } from '$lib/utils/colors';
+
 import {
-	DEFAULT_PALETTE,
 	addCode,
 	addPaletteColor,
 	ancestorsOf,
@@ -10,8 +11,12 @@ import {
 	canReparent,
 	childDraftKind,
 	childrenOf,
+	type Code,
+	type CodeId,
+	type CodeKind,
 	countCodesUsing,
 	createCode,
+	DEFAULT_PALETTE,
 	descendantIds,
 	findCode,
 	moveCode,
@@ -19,19 +24,16 @@ import {
 	recolorSubtree,
 	removePaletteColor,
 	removeSubtree,
-	reparent,
 	repaintCodes,
+	reparent,
 	setKind,
 	setPaletteColor,
 	setScoreBound,
 	subtreeOf,
 	updateCode,
-	type Code,
-	type CodeId,
-	type CodeKind,
 	type XY
 } from './codingTree';
-import { placeNewCode, resolvePositions, type LayoutDirection } from './treeLayout';
+import { type LayoutDirection, placeNewCode, resolvePositions } from './treeLayout';
 
 /**
  * The editor's state: the codebook, what is selected, and the canvas the two

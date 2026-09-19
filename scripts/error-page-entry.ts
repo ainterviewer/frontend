@@ -1,4 +1,5 @@
 import { render } from 'svelte/server';
+
 import ErrorPage, { type ErrorPageProps } from '../src/lib/components/ErrorPage.svelte';
 
 type RenderProps = Required<Pick<ErrorPageProps, 'status' | 'heading' | 'description'>>;

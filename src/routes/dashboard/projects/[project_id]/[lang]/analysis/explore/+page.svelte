@@ -1,13 +1,16 @@
 <script lang="ts">
+	import { format } from 'd3-format';
+
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
+	import { guideConditions } from '$lib/analysis/conditions';
 	import { Analysis } from '$lib/api';
 	import type {
 		CodeFacet,
-		EmbeddingCodeSimilarResponse,
 		EmbeddingBrowseResponse,
 		EmbeddingClusterPoint,
 		EmbeddingClusterResponse,
+		EmbeddingCodeSimilarResponse,
 		EmbeddingKind,
 		EmbeddingSearchHit,
 		EmbeddingSearchResponse,
@@ -19,48 +22,47 @@
 		ProjectLanguage,
 		SurveyFacet
 	} from '$lib/api/types.gen';
-	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { OUTLIER_COLOR, mapColor } from '$lib/config/chartColors';
-	import { format } from 'd3-format';
-	import type { PageData } from './$types';
-	import { displayName, type Code } from '$lib/coding/codingTree';
-	import CodePanel from './CodePanel.svelte';
-	import DetailPanel from './DetailPanel.svelte';
-	import ControlRail from './ControlRail.svelte';
-	import KeywordInput from './KeywordInput.svelte';
-	import type { KeywordProblem } from './keywordQuery';
-	import ListView from './ListView.svelte';
-	import TranscriptModal from './TranscriptModal.svelte';
-	import { ExploreState, type ExploreView } from './exploreState.svelte';
-	import ScatterPlot from './ScatterPlot.svelte';
-	import SweepBar from './SweepBar.svelte';
-	import StatusStrip from './StatusStrip.svelte';
 	import CodebookGate from '$lib/coding/CodebookGate.svelte';
+	import { type Code, displayName } from '$lib/coding/codingTree';
 	import { codebookFor } from '$lib/coding/store.svelte';
 	import CodeMenu from '$lib/components/analysis/CodeMenu.svelte';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { mapColor, OUTLIER_COLOR } from '$lib/config/chartColors';
 	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
-	import { appliedCodes, provideCodingSurface, type CodeMenuRequest } from './codingSurface.svelte';
+
+	import type { PageData } from './$types';
+	import CodePanel from './CodePanel.svelte';
+	import { appliedCodes, type CodeMenuRequest, provideCodingSurface } from './codingSurface.svelte';
+	import ControlRail from './ControlRail.svelte';
+	import DetailPanel from './DetailPanel.svelte';
 	import {
-		DEFAULT_TASK,
-		GROUP_MODES,
-		MIN_CLUSTER_SIZE_RANGE,
-		PAGE_SIZE,
 		clusterQuery,
+		type ClusterSettings,
 		cohortQuery,
+		DEFAULT_TASK,
 		describeError,
-		keywordProblemOf,
 		filterQuery,
+		GROUP_MODES,
 		groupKeyOf,
 		groupOrder,
 		isToolbarChange,
+		keywordProblemOf,
+		type ListPaging,
+		MIN_CLUSTER_SIZE_RANGE,
 		offDefaultCount,
+		PAGE_SIZE,
 		sameClusterSettings,
-		sameCohortQuery,
-		type ClusterSettings,
-		type ListPaging
+		sameCohortQuery
 	} from './explore';
+	import { ExploreState, type ExploreView } from './exploreState.svelte';
 	import { exploreUrlSearch, readExploreUrl } from './exploreUrl';
-	import { guideConditions } from '$lib/analysis/conditions';
+	import KeywordInput from './KeywordInput.svelte';
+	import type { KeywordProblem } from './keywordQuery';
+	import ListView from './ListView.svelte';
+	import ScatterPlot from './ScatterPlot.svelte';
+	import StatusStrip from './StatusStrip.svelte';
+	import SweepBar from './SweepBar.svelte';
+	import TranscriptModal from './TranscriptModal.svelte';
 
 	let { data }: { data: PageData } = $props();
 

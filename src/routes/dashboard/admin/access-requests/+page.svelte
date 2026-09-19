@@ -1,21 +1,23 @@
 <script lang="ts">
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
+	import { toast } from 'svelte-sonner';
+
 	import { invalidateAll } from '$app/navigation';
 	import { Admin, type Scope } from '$lib/api';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
+		type DataTableFeatures,
 		dataTableFeatures,
-		NO_PAGINATION,
 		formatDate,
 		formatDateFull,
 		matchesSelection,
+		NO_PAGINATION,
 		sortableText,
-		sortableTime,
-		type DataTableFeatures
+		sortableTime
 	} from '$lib/components/table/features';
 	import { errorMessage } from '$lib/utils/errors';
-	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
-	import { toast } from 'svelte-sonner';
+
 	import type { PageData } from './$types';
 
 	interface AccessRequest {

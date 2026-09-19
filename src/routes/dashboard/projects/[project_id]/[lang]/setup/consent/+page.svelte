@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+
 	import type { PageData } from './$types';
 	import Consent from './Consent.svelte';
 

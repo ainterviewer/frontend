@@ -1,17 +1,19 @@
 <script lang="ts">
+	import { format } from 'd3-format';
+
 	import type {
 		EmbeddingCluster,
 		EmbeddingGroup,
 		EmbeddingSearchHit,
-		EmbeddingSimilarResponse,
 		EmbeddingSearchResponse,
+		EmbeddingSimilarResponse,
 		GroupKind
 	} from '$lib/api/types.gen';
-	import { mapColor } from '$lib/config/chartColors';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { format } from 'd3-format';
+	import { mapColor } from '$lib/config/chartColors';
+
+	import { GROUP_MODES, guideGroups, type ListPaging, PAGE_SIZE } from './explore';
 	import HitCard from './HitCard.svelte';
-	import { GROUP_MODES, PAGE_SIZE, guideGroups, type ListPaging } from './explore';
 
 	let {
 		clusters,

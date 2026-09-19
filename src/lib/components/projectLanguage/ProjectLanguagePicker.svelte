@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
+
 	import { goto, invalidateAll } from '$app/navigation';
 	import { Projects } from '$lib/api';
 	import type { ProjectLanguage } from '$lib/api/types.gen';
-	import { toast } from 'svelte-sonner';
+
 	import AddLanguageModal from './AddLanguageModal.svelte';
 	import ProjectLanguageMenu from './ProjectLanguageMenu.svelte';
 

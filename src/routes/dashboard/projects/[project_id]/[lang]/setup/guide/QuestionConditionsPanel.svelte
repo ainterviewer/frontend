@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
+
 	import AccordionPanel from './AccordionPanel.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 	import { isConditionTargetValid, resolveConditionTarget, surveyItemOptions } from './utils';

@@ -1,18 +1,19 @@
 import { describe, expect, it } from 'vitest';
+
 import {
 	coverageLabel,
+	defaultClusterSettings,
 	defaultCoverage,
 	defaultFilters,
-	isDefaultCoverage,
-	joinApplies,
 	describeError,
 	filterQuery,
-	keywordProblemOf,
 	hasQuestion,
 	isDefaultClusterSettings,
+	isDefaultCoverage,
+	joinApplies,
+	keywordProblemOf,
 	offDefaultCount,
 	sameQuestions,
-	defaultClusterSettings,
 	setSurveyRange,
 	surveyValueToken,
 	toggleQuestion,

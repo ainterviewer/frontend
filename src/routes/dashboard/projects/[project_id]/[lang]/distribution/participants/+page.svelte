@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
+
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Participants } from '$lib/api';
@@ -6,17 +10,14 @@
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
+		type DataTableFeatures,
 		dataTableFeatures,
 		formatDate,
 		formatDateFull,
 		matchesSelection,
 		sortableText,
-		sortableTime,
-		type DataTableFeatures
+		sortableTime
 	} from '$lib/components/table/features';
-	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
-	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	const project_id = $derived(page.params.project_id as string);
 	const lang = $derived(page.params.lang ?? 'en');

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	import type { CodingPublic } from '$lib/api/types.gen';
 	import type { Code } from '$lib/coding/codingTree';
 	import CodingChips from '$lib/components/analysis/CodingChips.svelte';
@@ -9,7 +11,6 @@
 	import type { CommentSurface } from '$lib/stores/commentSurface.svelte';
 	import type { MessageComments } from '$lib/stores/messageComments.svelte';
 	import { authorName } from '$lib/utils/coding';
-	import type { Snippet } from 'svelte';
 
 	interface Props {
 		message: Message;

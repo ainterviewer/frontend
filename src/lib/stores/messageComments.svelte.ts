@@ -1,9 +1,10 @@
-import { Analysis } from '$lib/api';
-import type { MessageCommentPublic, MessagePublic } from '$lib/api/types.gen';
-import { countComments } from '$lib/utils/coding';
 import { untrack } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { toast } from 'svelte-sonner';
+
+import { Analysis } from '$lib/api';
+import type { MessageCommentPublic, MessagePublic } from '$lib/api/types.gen';
+import { countComments } from '$lib/utils/coding';
 
 /**
  * The discussion threads of the messages currently on screen.

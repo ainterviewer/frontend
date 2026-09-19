@@ -13,7 +13,8 @@
  */
 
 import { childrenOf, type Code } from '$lib/coding/codingTree';
-import { codeTermsIn, keywordProblem, type CodeTermSpan } from './keywordQuery';
+
+import { codeTermsIn, type CodeTermSpan, keywordProblem } from './keywordQuery';
 
 /** Compared the way the server compares a name, near enough to decide whether
  * one needs qualifying. Over-qualifying always resolves; under-qualifying is

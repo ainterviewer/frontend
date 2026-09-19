@@ -1,7 +1,8 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	import { page } from '$app/state';
 	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
-	import type { Snippet } from 'svelte';
 
 	let { children }: { children: Snippet } = $props();
 

@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { Synthesize, type Question, type TestSetupPublic } from '$lib/api';
 	import { untrack } from 'svelte';
-	import { sanitizeMarkup } from '$lib/utils/sanitize';
 	import { toast } from 'svelte-sonner';
+
+	import { type Question, Synthesize, type TestSetupPublic } from '$lib/api';
+	import { sanitizeMarkup } from '$lib/utils/sanitize';
+
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 
 	type SetupQuestion = Pick<Question, 'main_question' | 'can_answer'>;

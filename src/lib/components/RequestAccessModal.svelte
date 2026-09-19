@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { Auth } from '$lib/api';
 	import { fade, fly } from 'svelte/transition';
+
+	import { Auth } from '$lib/api';
 
 	let { isOpen = false, close } = $props();
 

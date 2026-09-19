@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { onMount, tick } from 'svelte';
+
 	import { Auth, type InterviewConfig, type InterviewType } from '$lib/api';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
-	import { onMount, tick } from 'svelte';
-	import { clearInterviewSession, type ChatClient } from '../../../routes/interview/chat.svelte';
+
+	import { type ChatClient, clearInterviewSession } from '../../../routes/interview/chat.svelte';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
 	import SpeechInput from './SpeechInput.svelte';

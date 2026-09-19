@@ -1,7 +1,9 @@
 <script lang="ts">
-	import type { EmbeddingClusterPoint } from '$lib/api/types.gen';
 	import { extent } from 'd3-array';
 	import { scaleLinear } from 'd3-scale';
+
+	import type { EmbeddingClusterPoint } from '$lib/api/types.gen';
+
 	import SweepBar from './SweepBar.svelte';
 
 	let {

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { fly } from 'svelte/transition';
+
 	import type { TemplatePlaceholder } from '$lib/api/types.gen';
 	import {
 		PLACEHOLDER_LABELS,
@@ -6,7 +8,6 @@
 		URL_PLACEHOLDER_HINTS,
 		URL_PLACEHOLDER_KEYS
 	} from '$lib/tiptap/placeholders';
-	import { fly } from 'svelte/transition';
 
 	interface Props {
 		show: boolean;

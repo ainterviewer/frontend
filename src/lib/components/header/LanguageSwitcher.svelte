@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { Popover } from 'bits-ui';
+	import { fly } from 'svelte/transition';
+
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { ProjectLanguage } from '$lib/api/types.gen';
-	import { Popover } from 'bits-ui';
-	import { fly } from 'svelte/transition';
 
 	let {
 		projectId,

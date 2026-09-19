@@ -1,15 +1,17 @@
 <script lang="ts">
-	import type { EmbeddingSearchHit } from '$lib/api/types.gen';
 	import { format } from 'd3-format';
-	import HitCard from './HitCard.svelte';
-	import { PAGE_SIZE, type ListPaging } from './explore';
+
+	import type { ConditionSummary } from '$lib/analysis/conditions';
+	import type { EmbeddingSearchHit } from '$lib/api/types.gen';
+
+	import { type ListPaging, PAGE_SIZE } from './explore';
 	import {
 		LIST_GROUPINGS,
 		LIST_ORDERS,
 		type ListGrouping,
 		type ListOrder
 	} from './exploreState.svelte';
-	import type { ConditionSummary } from '$lib/analysis/conditions';
+	import HitCard from './HitCard.svelte';
 
 	let {
 		hits,

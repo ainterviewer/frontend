@@ -1,10 +1,11 @@
 <script lang="ts" generics="TData">
 	import type { Snippet } from 'svelte';
+
 	import ColumnHeader from './ColumnHeader.svelte';
 	import ColumnVisibility from './ColumnVisibility.svelte';
+	import type { ColumnMeta } from './features';
 	import SearchInput from './SearchInput.svelte';
 	import TablePagination from './TablePagination.svelte';
-	import type { ColumnMeta } from './features';
 
 	/**
 	 * Structural views of the TanStack API this component touches. Declaring them

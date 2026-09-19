@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import type { Code } from '$lib/coding/codingTree';
+
 import { codeTermFor, findCodeTerm, isFiltering, toggleCodeTerm } from './codeFilter';
 import { keywordProblem } from './keywordQuery';
 

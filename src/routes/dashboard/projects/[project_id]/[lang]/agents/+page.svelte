@@ -1,10 +1,11 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+	import { toast } from 'svelte-sonner';
+
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { AgentConfigs, ProbingAgentConfig, ProbingPromptSlots } from '$lib/api/types.gen';
-	import { untrack } from 'svelte';
 
-	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

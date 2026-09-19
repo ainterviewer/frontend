@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import { dropPosition, resolveDrop } from './codeDrop';
-import { childrenOf, createCode, moveCode, outlineOf, type Code } from './codingTree';
+import { childrenOf, type Code, createCode, moveCode, outlineOf } from './codingTree';
 
 /** A small codebook: two branches, one of them two levels deep. */
 function fixture() {

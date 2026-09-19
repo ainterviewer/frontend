@@ -1,11 +1,11 @@
-import { CodingTreeState } from './codingTreeState.svelte';
 import {
+	type Code,
+	type CodeKind,
 	DEFAULT_PALETTE,
 	DEFAULT_SCORE_MAX,
-	DEFAULT_SCORE_MIN,
-	type Code,
-	type CodeKind
+	DEFAULT_SCORE_MIN
 } from './codingTree';
+import { CodingTreeState } from './codingTreeState.svelte';
 
 /**
  * A worked codebook, as a fixture.

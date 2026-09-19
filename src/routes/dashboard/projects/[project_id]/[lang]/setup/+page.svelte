@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
+
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { ExternalParam, InterviewConfig, ProbingStrategy } from '$lib/api/types.gen';
-	import { toast } from 'svelte-sonner';
+
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

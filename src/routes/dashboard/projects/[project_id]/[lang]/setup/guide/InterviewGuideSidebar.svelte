@@ -1,12 +1,14 @@
 <script lang="ts">
-	import { sidebar } from '$lib/sidebar.svelte';
-	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import {
+		type DragDropEvents,
 		DragDropProvider,
 		KeyboardSensor,
-		PointerSensor,
-		type DragDropEvents
+		PointerSensor
 	} from '@dnd-kit-svelte/svelte';
+
+	import { sidebar } from '$lib/sidebar.svelte';
+	import { getGuideStore } from '$lib/stores/guideStore.svelte';
+
 	import SidebarSortableSection from './SidebarSortableSection.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 

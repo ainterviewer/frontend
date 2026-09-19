@@ -1,9 +1,11 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	import Header from '$lib/components/Header.svelte';
 	import { WhatsNewModal } from '$lib/components/modals';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { whatsNew } from '$lib/whatsNew.svelte';
-	import type { Snippet } from 'svelte';
+
 	import type { LayoutData } from './$types';
 
 	let { children, data }: { children: Snippet; data: LayoutData } = $props();

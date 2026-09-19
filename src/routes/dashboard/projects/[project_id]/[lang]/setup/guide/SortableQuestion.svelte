@@ -2,6 +2,7 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
 	import { slide } from 'svelte/transition';
+
 	import { dragState } from './dragState.svelte';
 	import QuestionConditionsPanel from './QuestionConditionsPanel.svelte';
 	import QuestionImagePanel from './QuestionImagePanel.svelte';

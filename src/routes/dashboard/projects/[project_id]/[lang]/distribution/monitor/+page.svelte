@@ -1,6 +1,13 @@
 <script lang="ts">
+	import { Switch } from 'bits-ui';
+	import { max, min, sum } from 'd3-array';
+	import { format } from 'd3-format';
+	import { scaleOrdinal } from 'd3-scale';
+	import { timeFormat } from 'd3-time-format';
+	import { BarChart, PieChart, Text } from 'layerchart';
+	import { Tween } from 'svelte/motion';
+
 	import { Monitoring } from '$lib/api';
-	import { LANGUAGE_COLORS, OTHER_LANGUAGE_COLOR } from '$lib/config/chartColors';
 	import type {
 		DropoutStage,
 		HistogramBucket,
@@ -9,13 +16,8 @@
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import LazyMount from '$lib/components/LazyMount.svelte';
-	import { Switch } from 'bits-ui';
-	import { max, min, sum } from 'd3-array';
-	import { format } from 'd3-format';
-	import { scaleOrdinal } from 'd3-scale';
-	import { timeFormat } from 'd3-time-format';
-	import { BarChart, PieChart, Text } from 'layerchart';
-	import { Tween } from 'svelte/motion';
+	import { LANGUAGE_COLORS, OTHER_LANGUAGE_COLOR } from '$lib/config/chartColors';
+
 	import type { PageData } from './$types';
 	import ChartSkeleton from './ChartSkeleton.svelte';
 	import DropoutChart from './DropoutChart.svelte';

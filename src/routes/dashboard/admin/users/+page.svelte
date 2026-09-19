@@ -1,20 +1,22 @@
 <script lang="ts">
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
+	import { SvelteSet } from 'svelte/reactivity';
+	import { toast } from 'svelte-sonner';
+
 	import { invalidateAll } from '$app/navigation';
 	import { Admin, type Scope, type UserAdmin } from '$lib/api';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
+		type DataTableFeatures,
 		dataTableFeatures,
 		formatDate,
 		formatDateFull,
 		matchesSelection,
 		sortableText,
-		sortableTime,
-		type DataTableFeatures
+		sortableTime
 	} from '$lib/components/table/features';
-	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
-	import { SvelteSet } from 'svelte/reactivity';
-	import { toast } from 'svelte-sonner';
+
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

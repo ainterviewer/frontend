@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { Interviews } from '$lib/api';
 	import Wave from '$lib/components/Wave.svelte';
+
 	import { saveInterviewSession } from '../../chat.svelte';
 
 	// Nothing happens on arrival, deliberately. The link is single-use, and

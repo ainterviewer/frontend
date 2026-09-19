@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
-	import type { GuideQuestion } from './types';
+
 	import { plainMarkup, sanitizeMarkup } from '$lib/utils/sanitize';
+
+	import type { GuideQuestion } from './types';
 
 	interface Props {
 		question: GuideQuestion;

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { displayName, scoreRangeLabel, type Code } from '$lib/coding/codingTree';
+	import { type Code, displayName, scoreRangeLabel } from '$lib/coding/codingTree';
+
 	import Self from './CodeMenuItems.svelte';
 
 	interface Props {

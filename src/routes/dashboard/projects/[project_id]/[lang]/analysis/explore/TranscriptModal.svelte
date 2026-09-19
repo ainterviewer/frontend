@@ -1,14 +1,16 @@
 <script lang="ts">
+	import { Dialog } from 'bits-ui';
+	import { timeFormat } from 'd3-time-format';
+	import type { Snippet } from 'svelte';
+
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import type { ConditionSummary } from '$lib/analysis/conditions';
 	import { Analysis } from '$lib/api';
 	import type { EmbeddingSearchHit, TranscriptTurn } from '$lib/api/types.gen';
+
 	import ChunkTranscript from './ChunkTranscript.svelte';
-	import type { ConditionSummary } from '$lib/analysis/conditions';
 	import type { KeywordScope } from './explore';
-	import { Dialog } from 'bits-ui';
-	import type { Snippet } from 'svelte';
-	import { timeFormat } from 'd3-time-format';
 
 	let {
 		hit,

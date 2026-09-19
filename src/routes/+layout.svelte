@@ -1,9 +1,11 @@
 <script lang="ts">
 	import '$lib/api-extra/refresh-interceptor';
 	import '$lib/api-extra/toast-interceptor';
-	import favicon from '$lib/assets/favicon.svg';
-	import { Toaster } from 'svelte-sonner';
 	import '../app.css';
+
+	import { Toaster } from 'svelte-sonner';
+
+	import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
 </script>

@@ -1,12 +1,14 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
+
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Auth } from '$lib/api';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { enableOnboarding, isOnboardingDisabled } from '$lib/onboarding';
-	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
+
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

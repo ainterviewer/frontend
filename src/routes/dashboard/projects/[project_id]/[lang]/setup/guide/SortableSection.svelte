@@ -1,12 +1,14 @@
 <script lang="ts">
-	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { CollisionPriority } from '@dnd-kit/abstract';
+	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
-	import SortableQuestion from './SortableQuestion.svelte';
-	import { dragState } from './dragState.svelte';
-	import type { GuideQuestion, GuideSection } from './types';
+
 	import { zQuestion } from '$lib/api/zod.gen';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
+
+	import { dragState } from './dragState.svelte';
+	import SortableQuestion from './SortableQuestion.svelte';
+	import type { GuideQuestion, GuideSection } from './types';
 
 	interface Props {
 		section: GuideSection;

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { Codebook } from './store.svelte';
+
 	import type { CodingTreeState } from './codingTreeState.svelte';
+	import type { Codebook } from './store.svelte';
 
 	/**
 	 * Holds a view back until the project's codebook has been read, and keeps

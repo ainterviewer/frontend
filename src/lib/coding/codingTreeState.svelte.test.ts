@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+
 import { findCode, subtreeOf } from './codingTree';
 import type { CodingTreeState } from './codingTreeState.svelte';
 import { seededTree } from './seed';

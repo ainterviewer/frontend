@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { ExploreState, KEYWORD_DEBOUNCE_MS } from './exploreState.svelte';
 
 /**

@@ -7,6 +7,7 @@
 	import Wave from '$lib/components/Wave.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls.js';
 	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
+
 	import LanguageSwitcher from './header/LanguageSwitcher.svelte';
 	import ProjectSwitcher from './header/ProjectSwitcher.svelte';
 	import HoverInfo from './HoverInfo.svelte';

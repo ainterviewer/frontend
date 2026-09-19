@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Info from '$lib/components/Info.svelte';
+
 	import type { KeywordScope } from './explore';
 	import type { KeywordProblem } from './keywordQuery';
 

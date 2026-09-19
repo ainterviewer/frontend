@@ -1,10 +1,12 @@
 <script lang="ts">
-	import type { CustomToken } from '$lib/api';
-	import { sanitizeMarkup, type MarkRange } from '$lib/utils/sanitize';
-	import SurveyItem from './SurveyItem.svelte';
-	import { badgeForType } from '$lib/survey/itemTypes';
-	import type { SurveyItemUnion } from './types';
 	import type { Snippet } from 'svelte';
+
+	import type { CustomToken } from '$lib/api';
+	import { badgeForType } from '$lib/survey/itemTypes';
+	import { type MarkRange, sanitizeMarkup } from '$lib/utils/sanitize';
+
+	import SurveyItem from './SurveyItem.svelte';
+	import type { SurveyItemUnion } from './types';
 
 	/**
 	 * One message, as a bubble, wherever a conversation is shown.

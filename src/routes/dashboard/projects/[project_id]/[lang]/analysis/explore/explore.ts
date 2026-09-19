@@ -1,4 +1,3 @@
-import type { KeywordProblem } from './keywordQuery';
 import type {
 	EmbeddingClusterPoint,
 	EmbeddingGroup,
@@ -9,6 +8,8 @@ import type {
 	Projection,
 	QueryTask
 } from '$lib/api/types.gen';
+
+import type { KeywordProblem } from './keywordQuery';
 
 /**
  * The unit of text the page works in.

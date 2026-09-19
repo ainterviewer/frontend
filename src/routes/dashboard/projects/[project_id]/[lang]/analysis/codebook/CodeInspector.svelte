@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CODE_KINDS, displayName, type Code, type CodeKind } from '$lib/coding/codingTree';
+	import { type Code, CODE_KINDS, type CodeKind, displayName } from '$lib/coding/codingTree';
 	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
 
 	let {

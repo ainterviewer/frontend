@@ -1,20 +1,22 @@
 <script lang="ts">
-	import type { ItemDistribution } from '$lib/api/types.gen';
 	import { format } from 'd3-format';
-	import AnswerRateBar from './AnswerRateBar.svelte';
-	import { reveal } from '$lib/utils/reveal';
-	import ConditionNote from './ConditionNote.svelte';
+
 	import {
 		describeGates,
+		type Gate,
 		questionNumber,
-		summarizeConditions,
-		type Gate
+		summarizeConditions
 	} from '$lib/analysis/conditions';
+	import type { ItemDistribution } from '$lib/api/types.gen';
+	import { reveal } from '$lib/utils/reveal';
+	import { sanitizeMarkup } from '$lib/utils/sanitize';
+
+	import AnswerRateBar from './AnswerRateBar.svelte';
+	import ConditionNote from './ConditionNote.svelte';
 	import DistributionChart, { type Bar } from './DistributionChart.svelte';
 	import { badgeFor } from './itemTypes';
 	import OptionBars from './OptionBars.svelte';
 	import SampleDots from './SampleDots.svelte';
-	import { sanitizeMarkup } from '$lib/utils/sanitize';
 
 	let {
 		item,

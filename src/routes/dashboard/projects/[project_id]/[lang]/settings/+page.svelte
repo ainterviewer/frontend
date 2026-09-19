@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
+
 	import { invalidateAll } from '$app/navigation';
 	import { Projects } from '$lib/api';
-	import { toast } from 'svelte-sonner';
+
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

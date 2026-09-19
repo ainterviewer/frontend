@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
+
 	import type { LanguageDict } from '$lib/api';
 	import { Default } from '$lib/api';
 	import { portal } from '$lib/utils/portal';
-	import { toast } from 'svelte-sonner';
 
 	let {
 		open = $bindable(),

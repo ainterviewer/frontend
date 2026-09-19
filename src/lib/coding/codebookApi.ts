@@ -1,5 +1,6 @@
 import type { CodeBase, CodePublic } from '$lib/api/types.gen';
-import { DEFAULT_CODE_COLOR, DEFAULT_SCORE_MAX, DEFAULT_SCORE_MIN, type Code } from './codingTree';
+
+import { type Code, DEFAULT_CODE_COLOR, DEFAULT_SCORE_MAX, DEFAULT_SCORE_MIN } from './codingTree';
 
 /**
  * The codebook as the API states it, and as the editor states it.

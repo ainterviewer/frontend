@@ -1,25 +1,27 @@
 <script lang="ts">
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
+	import { untrack } from 'svelte';
+	import { toast } from 'svelte-sonner';
+
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Synthesize } from '$lib/api';
-	import { untrack } from 'svelte';
-	import { toast } from 'svelte-sonner';
 	import type { SynthesizeRequest } from '$lib/api/types.gen';
-	import type { PageData } from './$types';
-	import SimulationActionBar from '../SimulationActionBar.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
+		type DataTableFeatures,
 		dataTableFeatures,
-		NO_PAGINATION,
 		formatDate,
 		formatDateFull,
 		matchesSelection,
+		NO_PAGINATION,
 		sortableText,
-		sortableTime,
-		type DataTableFeatures
+		sortableTime
 	} from '$lib/components/table/features';
-	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
+
+	import SimulationActionBar from '../SimulationActionBar.svelte';
+	import type { PageData } from './$types';
 
 	let isAdmin = $derived(page.data.user?.scope === 'admin');
 

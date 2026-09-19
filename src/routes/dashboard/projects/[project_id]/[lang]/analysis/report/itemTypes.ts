@@ -1,5 +1,5 @@
 import type { ItemDistribution } from '$lib/api/types.gen';
-import { badgeForType, FREE_TEXT, STATEMENT, type ItemTypeBadge } from '$lib/survey/itemTypes';
+import { badgeForType, FREE_TEXT, type ItemTypeBadge, STATEMENT } from '$lib/survey/itemTypes';
 
 /**
  * How a question's answer type is presented on its card.

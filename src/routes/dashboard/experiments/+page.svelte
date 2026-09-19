@@ -1,23 +1,25 @@
 <script lang="ts">
+	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
+	import { fade } from 'svelte/transition';
+	import { toast } from 'svelte-sonner';
+
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Experiments } from '$lib/api/sdk.gen';
 	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
+	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
+	import Sidebar from '$lib/components/Sidebar.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
+		type DataTableFeatures,
 		dataTableFeatures,
-		NO_PAGINATION,
 		matchesSelection,
-		sortableText,
-		type DataTableFeatures
+		NO_PAGINATION,
+		sortableText
 	} from '$lib/components/table/features';
-	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
-	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
-	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
-	import { toast } from 'svelte-sonner';
-	import { fade } from 'svelte/transition';
+
 	import type { PageData } from './$types';
 
 	interface Experiment {

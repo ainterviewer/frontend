@@ -1,9 +1,11 @@
 <script lang="ts">
-	import type { EmbeddingSearchHit } from '$lib/api/types.gen';
 	import { format } from 'd3-format';
 	import { timeFormat } from 'd3-time-format';
-	import ChunkTranscript from './ChunkTranscript.svelte';
+
 	import type { ConditionSummary } from '$lib/analysis/conditions';
+	import type { EmbeddingSearchHit } from '$lib/api/types.gen';
+
+	import ChunkTranscript from './ChunkTranscript.svelte';
 
 	let {
 		hit,

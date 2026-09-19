@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
 import { defaultFilters } from './explore';
 import {
 	defaultExploreUrl,
 	exploreUrlSearch,
-	readExploreUrl,
-	type ExploreUrlState
+	type ExploreUrlState,
+	readExploreUrl
 } from './exploreUrl';
 
 /** The state one query string describes. */

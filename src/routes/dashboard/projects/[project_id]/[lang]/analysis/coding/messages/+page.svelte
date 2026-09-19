@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { plainMarkup } from '$lib/utils/sanitize';
-	import { Analysis, Projects, type Image, type MessagePublic } from '$lib/api';
+	import { Analysis, type Image, type MessagePublic, Projects } from '$lib/api';
 	import type { InterviewGuide } from '$lib/api/types.gen';
 	import { displayName, isApplicable, outlineOf } from '$lib/coding/codingTree';
 	import { codebookFor } from '$lib/coding/store.svelte';
@@ -14,7 +15,7 @@
 	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
 	import { MessageComments } from '$lib/stores/messageComments.svelte';
 	import { getContrastColor } from '$lib/utils/colors';
-	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+	import { plainMarkup } from '$lib/utils/sanitize';
 
 	// State
 	let projectId = $derived(page.params.project_id ?? '');

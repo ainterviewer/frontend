@@ -33,7 +33,11 @@ import type {
 	LanguageCode,
 	Projection
 } from '$lib/api/types.gen';
+
 import {
+	type ClusterSettings,
+	type Coded,
+	type CoverageAxes,
 	DEFAULT_CENTER_BY_LANGUAGE,
 	DEFAULT_CENTER_BY_QUESTION,
 	DEFAULT_GROUP_MODE,
@@ -42,20 +46,17 @@ import {
 	DEFAULT_MIN_DIST,
 	DEFAULT_N_NEIGHBORS,
 	DEFAULT_PROJECTION,
+	defaultCoverage,
+	defaultFilters,
+	type ExploreFilters,
 	GROUP_MODES,
+	joinApplies,
+	type KeywordScope,
 	KINDS,
 	MIN_CLUSTER_SIZE_RANGE,
 	MIN_DIST_RANGE,
 	N_NEIGHBORS_RANGE,
 	PROJECTIONS,
-	defaultFilters,
-	type ClusterSettings,
-	defaultCoverage,
-	joinApplies,
-	type Coded,
-	type CoverageAxes,
-	type ExploreFilters,
-	type KeywordScope,
 	type SurveyRanges,
 	type SurveySelection
 } from './explore';
@@ -63,9 +64,9 @@ import {
 	DEFAULT_LIST_GROUPING,
 	DEFAULT_LIST_ORDER,
 	DEFAULT_VIEW,
+	type ExploreView,
 	LIST_GROUPINGS,
 	LIST_ORDERS,
-	type ExploreView,
 	type ListGrouping,
 	type ListOrder
 } from './exploreState.svelte';

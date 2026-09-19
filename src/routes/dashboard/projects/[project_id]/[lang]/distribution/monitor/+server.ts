@@ -1,5 +1,7 @@
-import { Monitoring } from '$lib/api';
 import { json } from '@sveltejs/kit';
+
+import { Monitoring } from '$lib/api';
+
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals, params }) => {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Wave from '$lib/components/Wave.svelte';
-	import { createPcmCapture, TranscriptionClient, type PcmCapture } from './transcription';
+
+	import { createPcmCapture, type PcmCapture, TranscriptionClient } from './transcription';
 
 	let { show = $bindable(false), onSend }: { show: boolean; onSend: (transcript: string) => void } =
 		$props();

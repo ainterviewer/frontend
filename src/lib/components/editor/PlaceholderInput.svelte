@@ -17,14 +17,15 @@
 </script>
 
 <script lang="ts">
-	import type { TemplatePlaceholder } from '$lib/api/types.gen';
-	import { placeholdersToNodes } from '$lib/tiptap/placeholders';
-	import { TemplatePlaceholderNode } from '$lib/tiptap/templatePlaceholder';
 	import { Editor } from '@tiptap/core';
 	import Document from '@tiptap/extension-document';
 	import Paragraph from '@tiptap/extension-paragraph';
 	import Text from '@tiptap/extension-text';
 	import { untrack } from 'svelte';
+
+	import type { TemplatePlaceholder } from '$lib/api/types.gen';
+	import { placeholdersToNodes } from '$lib/tiptap/placeholders';
+	import { TemplatePlaceholderNode } from '$lib/tiptap/templatePlaceholder';
 
 	interface Props {
 		/** Plain text, with placeholders in their literal `{{ key }}` form. */

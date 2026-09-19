@@ -8,9 +8,11 @@
 		useSvelteFlow
 	} from '@xyflow/svelte';
 	import { tick } from 'svelte';
-	import { provideRename, type CodingTreeState } from '$lib/coding/codingTreeState.svelte';
-	import CodeNode from './CodeNode.svelte';
+
+	import { type CodingTreeState, provideRename } from '$lib/coding/codingTreeState.svelte';
 	import { dropTargetId, NODE_HEIGHT, NODE_WIDTH } from '$lib/coding/treeLayout';
+
+	import CodeNode from './CodeNode.svelte';
 
 	let { tree }: { tree: CodingTreeState } = $props();
 

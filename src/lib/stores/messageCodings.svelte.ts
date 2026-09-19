@@ -1,8 +1,9 @@
-import { Analysis } from '$lib/api';
-import type { CodingCreate, CodingPublic, MessagePublic } from '$lib/api/types.gen';
 import { untrack } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { toast } from 'svelte-sonner';
+
+import { Analysis } from '$lib/api';
+import type { CodingCreate, CodingPublic, MessagePublic } from '$lib/api/types.gen';
 
 /**
  * The codings of the messages currently on screen.

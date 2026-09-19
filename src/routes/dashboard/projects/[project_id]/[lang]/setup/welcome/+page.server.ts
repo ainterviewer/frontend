@@ -1,5 +1,7 @@
-import { Projects } from '$lib/api';
 import { error } from '@sveltejs/kit';
+
+import { Projects } from '$lib/api';
+
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals }) => {

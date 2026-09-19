@@ -1,5 +1,7 @@
-import type { InterviewGuide } from '$lib/api/types.gen';
 import { createContext } from 'svelte';
+
+import type { InterviewGuide } from '$lib/api/types.gen';
+
 // Single source of truth for the editor's local models lives with the guide
 // route; re-export so existing `$lib/stores/guideStore.svelte` importers keep
 // working while both refer to the same types.

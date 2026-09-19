@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { CollisionPriority } from '@dnd-kit/abstract';
+	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
+
 	import SidebarSortableQuestion from './SidebarSortableQuestion.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 

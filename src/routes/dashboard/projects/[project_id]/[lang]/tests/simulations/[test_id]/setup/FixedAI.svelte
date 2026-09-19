@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { Synthesize, type TestSetupPublic } from '$lib/api';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
+
+	import { Synthesize, type TestSetupPublic } from '$lib/api';
+
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 
 	let { test }: { test: TestSetupPublic } = $props();

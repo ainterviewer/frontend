@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { CodingPublic } from '$lib/api/types.gen';
 	import {
+		ancestorsOf,
+		type Code,
 		DEFAULT_SCORE_MAX,
 		DEFAULT_SCORE_MIN,
-		ancestorsOf,
 		displayName,
-		outlineOf,
-		type Code
+		outlineOf
 	} from '$lib/coding/codingTree';
 	import CodedText from '$lib/components/analysis/CodedText.svelte';
 	import Info from '$lib/components/Info.svelte';

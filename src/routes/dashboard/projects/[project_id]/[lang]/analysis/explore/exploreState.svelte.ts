@@ -5,7 +5,10 @@ import type {
 	LanguageCode,
 	Projection
 } from '$lib/api/types.gen';
+
 import {
+	type ClusterSettings,
+	type CoverageAxes,
 	DEFAULT_CENTER_BY_LANGUAGE,
 	DEFAULT_CENTER_BY_QUESTION,
 	DEFAULT_KIND,
@@ -13,18 +16,16 @@ import {
 	DEFAULT_MIN_DIST,
 	DEFAULT_N_NEIGHBORS,
 	DEFAULT_PROJECTION,
-	type ClusterSettings,
 	defaultCoverage,
-	type CoverageAxes,
+	defaultFilters,
 	type ExploreFilters,
 	type SurveyRanges,
-	type SurveySelection,
-	defaultFilters
+	type SurveySelection
 } from './explore';
-import { keywordProblem as findKeywordProblem } from './keywordQuery';
 // Type-only on purpose: `exploreUrl` reads this module's defaults, so a value
 // import here would make the two a cycle at run time for no gain.
 import type { ExploreUrlState } from './exploreUrl';
+import { keywordProblem as findKeywordProblem } from './keywordQuery';
 
 /**
  * Which of the two readings of the corpus is on screen.

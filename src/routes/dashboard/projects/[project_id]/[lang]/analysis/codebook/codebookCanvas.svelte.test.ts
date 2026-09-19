@@ -3,10 +3,12 @@
 // toolbar, which is a fact about the test, not about the page.
 import '/src/app.css';
 
-import { page } from 'vitest/browser';
 import { expect, test } from 'vitest';
+import { page } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
+
 import { seededTree } from '$lib/coding/seed';
+
 import CodebookWorkspace from './CodebookWorkspace.svelte';
 
 /**

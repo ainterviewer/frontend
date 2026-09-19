@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { format } from 'd3-format';
+
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { ANSWER_STATE_COLORS } from '$lib/config/chartColors';
-	import { format } from 'd3-format';
 
 	let {
 		asked,

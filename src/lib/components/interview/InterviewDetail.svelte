@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { guideConditions, questionKey } from '$lib/analysis/conditions';
 	import { type Image, type MessagePublic } from '$lib/api';
 	import type { InterviewGuide } from '$lib/api/types.gen';
 	import type { Code } from '$lib/coding/codingTree';
-	import { guideConditions, questionKey } from '$lib/analysis/conditions';
 	import CodedMessage from '$lib/components/analysis/CodedMessage.svelte';
 	import MessageCommentModal from '$lib/components/analysis/MessageCommentModal.svelte';
 	import AudioPlayer from '$lib/components/interview/AudioPlayer.svelte';

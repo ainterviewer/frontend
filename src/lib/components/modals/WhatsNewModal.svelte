@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { fade, fly } from 'svelte/transition';
+
 	import type { PlatformRelease } from '$lib/api';
 	import { whatsNew } from '$lib/whatsNew.svelte';
-	import { fade, fly } from 'svelte/transition';
 
 	let { releases = [] }: { releases?: PlatformRelease[] } = $props();
 

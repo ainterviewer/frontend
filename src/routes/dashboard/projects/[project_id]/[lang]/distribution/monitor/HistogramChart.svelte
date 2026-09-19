@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { BarChart, Bars, Tooltip, type ChartState } from 'layerchart';
+	import { BarChart, Bars, type ChartState, Tooltip } from 'layerchart';
 
 	let {
 		data,

@@ -21,11 +21,12 @@
 </script>
 
 <script lang="ts">
+	import { Popover } from 'bits-ui';
+	import { fly } from 'svelte/transition';
+
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { ProjectPublic } from '$lib/api/types.gen';
-	import { Popover } from 'bits-ui';
-	import { fly } from 'svelte/transition';
 
 	let { projectId, title }: { projectId: string; title: string } = $props();
 

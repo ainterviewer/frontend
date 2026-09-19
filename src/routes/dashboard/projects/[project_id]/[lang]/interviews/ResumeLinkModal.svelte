@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
+
 	import { Projects as Api } from '$lib/api';
 	import type { InterviewResumeLinkPublic } from '$lib/api/types.gen';
 	import { formatDate } from '$lib/components/table/features';
-	import { toast } from 'svelte-sonner';
 
 	interface Props {
 		open: boolean;

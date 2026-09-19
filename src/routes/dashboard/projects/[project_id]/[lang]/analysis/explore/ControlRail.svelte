@@ -1,4 +1,9 @@
 <script lang="ts">
+	import { Switch } from 'bits-ui';
+	import { format } from 'd3-format';
+	import type { Snippet } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
+
 	import type {
 		EmbeddingKind,
 		GroupKind,
@@ -10,10 +15,8 @@
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { plainMarkup, sanitizeMarkup } from '$lib/utils/sanitize';
-	import { Switch } from 'bits-ui';
-	import { SvelteSet } from 'svelte/reactivity';
-	import { format } from 'd3-format';
-	import type { Snippet } from 'svelte';
+
+	import type { KeywordScope, SurveyRanges, SurveySelection } from './explore';
 	import {
 		DEFAULT_CENTER_BY_LANGUAGE,
 		DEFAULT_CENTER_BY_QUESTION,
@@ -21,22 +24,21 @@
 		DEFAULT_MIN_DIST,
 		DEFAULT_N_NEIGHBORS,
 		DEFAULT_PROJECTION,
+		defaultFilters,
+		hasQuestion,
+		hasSurveyValue,
 		KINDS,
 		MIN_CLUSTER_SIZE_RANGE,
 		MIN_DIST_RANGE,
 		N_NEIGHBORS_RANGE,
 		PROJECTIONS,
-		defaultFilters,
-		hasQuestion,
-		hasSurveyValue,
 		setSurveyRange,
 		surveyValueToken,
-		toggleSurveyValue,
 		toggleLanguage,
 		toggleQuestion,
-		toggleSection
+		toggleSection,
+		toggleSurveyValue
 	} from './explore';
-	import type { KeywordScope, SurveyRanges, SurveySelection } from './explore';
 
 	let {
 		open = $bindable(),

@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+
 	import type { InterviewConfig, InterviewType, ProjectLanguage, Welcome } from '$lib/api';
-	import { Projects, type Consent } from '$lib/api';
+	import { type Consent, Projects } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
-	import { onMount } from 'svelte';
+
 	import {
 		ChatClient,
 		createInterview,

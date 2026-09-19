@@ -1,5 +1,7 @@
-import { Projects, Synthesize, type BackgroundInfoOptions, type Question } from '$lib/api';
 import { error } from '@sveltejs/kit';
+
+import { type BackgroundInfoOptions, Projects, type Question, Synthesize } from '$lib/api';
+
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals, fetch }) => {

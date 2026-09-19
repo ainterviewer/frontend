@@ -1,5 +1,7 @@
-import { Experiments, Folders } from '$lib/api/sdk.gen';
 import { error } from '@sveltejs/kit';
+
+import { Experiments, Folders } from '$lib/api/sdk.gen';
+
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {

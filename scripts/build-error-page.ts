@@ -1,8 +1,9 @@
-import { build } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { build } from 'vite';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(here, '..');

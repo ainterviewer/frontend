@@ -1,8 +1,9 @@
 <script lang="ts">
 	import CodebookGate from '$lib/coding/CodebookGate.svelte';
 	import { codebookFor } from '$lib/coding/store.svelte';
-	import CodebookWorkspace from './CodebookWorkspace.svelte';
+
 	import type { PageData } from './$types';
+	import CodebookWorkspace from './CodebookWorkspace.svelte';
 
 	let { data }: { data: PageData } = $props();
 

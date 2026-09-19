@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
+
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
@@ -13,11 +15,11 @@
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
-	import { toast } from 'svelte-sonner';
-	import ExportPdfModal from '../ExportPdfModal.svelte';
-	import SetupActionBar from '../SetupActionBar.svelte';
+
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
+	import ExportPdfModal from '../ExportPdfModal.svelte';
+	import SetupActionBar from '../SetupActionBar.svelte';
 	import BulkSettingsModal from './BulkSettingsModal.svelte';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';

@@ -1,17 +1,22 @@
 import { describe, expect, it } from 'vitest';
+
 import {
-	DEFAULT_PALETTE,
 	addCode,
 	addPaletteColor,
 	ancestorsOf,
 	canReparent,
 	childDraftKind,
 	childrenOf,
+	type Code,
 	countCodesUsing,
 	createCode,
+	DEFAULT_PALETTE,
+	DEFAULT_SCORE_MAX,
+	DEFAULT_SCORE_MIN,
 	depthOf,
 	descendantIds,
 	displayName,
+	isApplicable,
 	nextRootColor,
 	normalizeHex,
 	outlineOf,
@@ -20,16 +25,12 @@ import {
 	removeSubtree,
 	repaintCodes,
 	reparent,
-	setPaletteColor,
 	scoreRangeLabel,
 	setKind,
+	setPaletteColor,
 	setScoreBound,
 	subtreeOf,
-	updateCode,
-	DEFAULT_SCORE_MAX,
-	DEFAULT_SCORE_MIN,
-	isApplicable,
-	type Code
+	updateCode
 } from './codingTree';
 
 /** Reading a code back after an edit; failing loudly beats a silent undefined. */

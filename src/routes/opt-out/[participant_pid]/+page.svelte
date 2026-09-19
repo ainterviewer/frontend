@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Participants } from '$lib/api';
 	import { page } from '$app/state';
+	import { Participants } from '$lib/api';
 	import Wave from '$lib/components/Wave.svelte';
 
 	let reason = $state('');

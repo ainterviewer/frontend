@@ -1,4 +1,9 @@
 <script lang="ts">
+	import { Editor } from '@tiptap/core';
+	import Image from '@tiptap/extension-image';
+	import StarterKit from '@tiptap/starter-kit';
+	import { toast } from 'svelte-sonner';
+
 	import { page } from '$app/state';
 	import { Participants } from '$lib/api';
 	import type {
@@ -17,10 +22,6 @@
 		placeholdersToNodes
 	} from '$lib/tiptap/placeholders';
 	import { TemplatePlaceholderNode } from '$lib/tiptap/templatePlaceholder';
-	import { Editor } from '@tiptap/core';
-	import Image from '@tiptap/extension-image';
-	import StarterKit from '@tiptap/starter-kit';
-	import { toast } from 'svelte-sonner';
 
 	let { data }: { data: { available_languages: ProjectLanguage[] } } = $props();
 

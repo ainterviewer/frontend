@@ -1,5 +1,6 @@
-import { env } from '$env/dynamic/private';
 import { json } from '@sveltejs/kit';
+
+import { env } from '$env/dynamic/private';
 
 export const GET = async () => {
 	if (!env.API_URL) {

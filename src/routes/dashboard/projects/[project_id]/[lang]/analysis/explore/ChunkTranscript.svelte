@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { type ConditionSummary, questionKey } from '$lib/analysis/conditions';
 	import type { EmbeddingTurn, TranscriptTurn } from '$lib/api/types.gen';
 	import CodingChips from '$lib/components/analysis/CodingChips.svelte';
 	import MessageBubble from '$lib/components/interview/MessageBubble.svelte';
 	import type { SurveyItemUnion } from '$lib/components/interview/types';
-	import { questionKey, type ConditionSummary } from '$lib/analysis/conditions';
 	import { isSpan } from '$lib/utils/coding';
 	import { selectionWithin } from '$lib/utils/textSelection';
+
 	import { turnIds, useCodingSurface } from './codingSurface.svelte';
 
 	let {

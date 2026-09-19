@@ -1,4 +1,4 @@
-import { childrenOf, scoreRangeLabel, type Code, type CodeId } from '$lib/coding/codingTree';
+import { childrenOf, type Code, type CodeId, scoreRangeLabel } from '$lib/coding/codingTree';
 
 /**
  * The codebook as TanStack wants it: nested, where the document is flat.

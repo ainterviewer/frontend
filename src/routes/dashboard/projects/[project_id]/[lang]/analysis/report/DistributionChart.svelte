@@ -4,11 +4,13 @@
 </script>
 
 <script lang="ts">
-	import { pooledColor } from '$lib/config/chartColors';
 	import { format } from 'd3-format';
-	import LazyMount from '$lib/components/LazyMount.svelte';
-	import { BarChart, Tooltip, type ChartState } from 'layerchart';
+	import { BarChart, type ChartState, Tooltip } from 'layerchart';
 	import { Text } from 'layerchart/svg';
+
+	import LazyMount from '$lib/components/LazyMount.svelte';
+	import { pooledColor } from '$lib/config/chartColors';
+
 	import ChartSkeleton from './ChartSkeleton.svelte';
 
 	let {

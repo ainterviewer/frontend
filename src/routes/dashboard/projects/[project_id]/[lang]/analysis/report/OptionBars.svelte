@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { format } from 'd3-format';
+
 	import type { CategoryCount } from '$lib/api/types.gen';
 	import { pooledColor, WRITE_IN_COLOR } from '$lib/config/chartColors';
 	import { printing } from '$lib/utils/printing.svelte';
-	import { format } from 'd3-format';
 
 	let {
 		counts,

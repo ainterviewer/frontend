@@ -1,15 +1,17 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+
 	import {
 		ancestorsOf,
 		childrenOf,
+		type Code,
+		type CodeId,
 		displayName,
 		isApplicable,
-		scoreRangeLabel,
-		type Code,
-		type CodeId
+		scoreRangeLabel
 	} from '$lib/coding/codingTree';
+
 	import CodeMenuItems from './CodeMenuItems.svelte';
-	import { untrack } from 'svelte';
 
 	interface Props {
 		codes: readonly Code[];

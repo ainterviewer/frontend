@@ -1,26 +1,28 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import { dropPosition, resolveDrop } from '$lib/coding/codeDrop';
-	import { displayName, type Code } from '$lib/coding/codingTree';
-	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
-	import SaveState from '$lib/coding/SaveState.svelte';
-	import type { Codebook } from '$lib/coding/store.svelte';
 	import { createColumnHelper, createTable, tableFeatures } from '@tanstack/svelte-table';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { ROW_HEIGHT, toCodeRows, type CodeRow, type CodeRowLike } from './codeTable';
-	import { CodeDrag, provideCodeDrag } from './codeTableDrag.svelte';
+
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { dropPosition, resolveDrop } from '$lib/coding/codeDrop';
+	import { type Code, displayName } from '$lib/coding/codingTree';
+	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
+	import SaveState from '$lib/coding/SaveState.svelte';
+	import type { Codebook } from '$lib/coding/store.svelte';
+
 	import { codeTermFor, isFiltering as termIsFiltering, toggleCodeTerm } from './codeFilter';
+	import CodeNotes from './CodeNotes.svelte';
+	import { type CodeRow, type CodeRowLike, ROW_HEIGHT, toCodeRows } from './codeTable';
+	import { CodeDrag, provideCodeDrag } from './codeTableDrag.svelte';
+	import CodeTreeRow from './CodeTreeRow.svelte';
 	import {
+		type Coded,
+		type CoverageAxes,
 		coverageLabel,
 		defaultCoverage,
-		joinApplies,
-		type Coded,
-		type CoverageAxes
+		joinApplies
 	} from './explore';
-	import CodeNotes from './CodeNotes.svelte';
-	import CodeTreeRow from './CodeTreeRow.svelte';
 
 	let {
 		tree,

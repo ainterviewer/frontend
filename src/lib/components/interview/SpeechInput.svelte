@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createPcmCapture, TranscriptionClient, type PcmCapture } from './transcription';
+	import { createPcmCapture, type PcmCapture, TranscriptionClient } from './transcription';
 
 	let {
 		onTranscript,

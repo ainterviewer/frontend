@@ -1,23 +1,26 @@
 <script lang="ts">
+	import 'driver.js/dist/driver.css';
+
+	import { move } from '@dnd-kit/helpers';
+	import {
+		type DragDropEvents,
+		DragDropProvider,
+		DragOverlay,
+		KeyboardSensor,
+		PointerSensor
+	} from '@dnd-kit-svelte/svelte';
+	import { driver } from 'driver.js';
+	import { onMount, tick } from 'svelte';
+
 	import AssistanceChat from '$lib/components/AssistanceChat.svelte';
 	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
 	import {
 		createGuideStore,
-		setGuideStore,
 		type GuideQuestion,
-		type GuideSection
+		type GuideSection,
+		setGuideStore
 	} from '$lib/stores/guideStore.svelte';
-	import {
-		DragDropProvider,
-		DragOverlay,
-		KeyboardSensor,
-		PointerSensor,
-		type DragDropEvents
-	} from '@dnd-kit-svelte/svelte';
-	import { move } from '@dnd-kit/helpers';
-	import { driver } from 'driver.js';
-	import 'driver.js/dist/driver.css';
-	import { onMount, tick } from 'svelte';
+
 	import { dragState } from './dragState.svelte';
 	import InterviewGuide from './InterviewGuide.svelte';
 	import SortableQuestion from './SortableQuestion.svelte';

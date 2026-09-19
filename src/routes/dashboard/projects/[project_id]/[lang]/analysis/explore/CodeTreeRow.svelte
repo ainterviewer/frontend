@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { displayName } from '$lib/coding/codingTree';
 	import { DropdownMenu } from 'bits-ui';
 	import { fly } from 'svelte/transition';
+
+	import { displayName } from '$lib/coding/codingTree';
 	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
-	import { kindMark, ROW_HEIGHT, type CodeRowLike } from './codeTable';
+
+	import { type CodeRowLike, kindMark, ROW_HEIGHT } from './codeTable';
 	import { useCodeDrag } from './codeTableDrag.svelte';
 	import Self from './CodeTreeRow.svelte';
 

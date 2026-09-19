@@ -1,5 +1,7 @@
-import { Auth, Interviews, Projects, type InterviewType } from '$lib/api';
 import { error, redirect } from '@sveltejs/kit';
+
+import { Auth, Interviews, type InterviewType, Projects } from '$lib/api';
+
 import type { PageServerLoad } from './$types';
 
 /**

@@ -1,11 +1,13 @@
 import { mergeAttributes, Node, nodeInputRule, type Range } from '@tiptap/core';
+
+import type { TemplatePlaceholder } from '$lib/api/types.gen';
+
 import {
 	isUrlPlaceholder,
 	PLACEHOLDER_KEYS,
 	PLACEHOLDER_LABELS,
 	placeholderText
 } from './placeholders';
-import type { TemplatePlaceholder } from '$lib/api/types.gen';
 
 declare module '@tiptap/core' {
 	interface Commands<ReturnType> {

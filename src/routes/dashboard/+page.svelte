@@ -1,4 +1,10 @@
 <script lang="ts">
+	import 'driver.js/dist/driver.css';
+
+	import { driver } from 'driver.js';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
+
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type {
@@ -13,10 +19,7 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
-	import { driver } from 'driver.js';
-	import 'driver.js/dist/driver.css';
-	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
+
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

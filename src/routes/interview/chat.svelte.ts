@@ -9,7 +9,7 @@ import {
 	type OutgoingMessage,
 	type ReceivedData
 } from '$lib/api';
-import { WS_UNAUTHORIZED, type Message } from '$lib/components/interview/types';
+import { type Message, WS_UNAUTHORIZED } from '$lib/components/interview/types';
 
 // Messages arriving over the interview WebSocket. `OutgoingData` is extended
 // with the session identifiers the server includes on `data` frames.

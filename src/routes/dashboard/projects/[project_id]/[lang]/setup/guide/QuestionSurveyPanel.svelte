@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+
 	import AccordionPanel from './AccordionPanel.svelte';
 	import { createListReorder } from './listReorder.svelte';
 	import type { GuideQuestion } from './types';
