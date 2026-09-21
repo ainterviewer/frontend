@@ -28,7 +28,11 @@
 	import { resolve } from '$app/paths';
 	import type { ProjectPublic } from '$lib/api/types.gen';
 
-	let { projectId, title }: { projectId: string; title: string } = $props();
+	let {
+		projectId,
+		title,
+		subRoute = ''
+	}: { projectId: string; title: string; subRoute?: string } = $props();
 
 	let open = $state(false);
 	let query = $state('');
@@ -74,10 +78,13 @@
 		const languages = project.available_languages ?? [];
 		const lang = (languages.find((l) => l.is_default) ?? languages[0])?.code;
 		// Without a localization we hand the project id to the server, which
-		// redirects to whatever language it considers the default.
-		return lang
-			? resolve(`/dashboard/projects/${project.id}/${lang}`)
-			: resolve(`/dashboard/projects/${project.id}`);
+		// redirects to whatever language it considers the default — and picks the
+		// landing page too, so there is nothing to append.
+		if (!lang) return resolve(`/dashboard/projects/${project.id}`);
+		// Stay on the page you are on. `subRoute` has already been trimmed of any
+		// dynamic segment, so what is left exists for every project.
+		const base = resolve(`/dashboard/projects/${project.id}/${lang}`);
+		return subRoute ? `${base}/${subRoute}` : base;
 	}
 
 	function select(project: ProjectPublic) {

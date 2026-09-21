@@ -9,8 +9,14 @@
 	let {
 		projectId,
 		languageCode,
-		languages
-	}: { projectId: string; languageCode: string; languages: ProjectLanguage[] } = $props();
+		languages,
+		subRoute = ''
+	}: {
+		projectId: string;
+		languageCode: string;
+		languages: ProjectLanguage[];
+		subRoute?: string;
+	} = $props();
 
 	let open = $state(false);
 
@@ -18,9 +24,10 @@
 
 	function select(language: ProjectLanguage) {
 		open = false;
-		// Switching drops back to the project root: the current sub-page may not
-		// exist for the language being switched to.
-		goto(resolve(`/dashboard/projects/${projectId}/${language.code}`));
+		// Stay on the page you are on. `subRoute` has already been trimmed of any
+		// dynamic segment, so what is left exists for every language.
+		const base = resolve(`/dashboard/projects/${projectId}/${language.code}`);
+		goto(subRoute ? `${base}/${subRoute}` : base);
 	}
 </script>
 

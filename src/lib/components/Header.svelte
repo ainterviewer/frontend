@@ -5,7 +5,7 @@
 	import { Auth } from '$lib/api';
 	import type { PlatformRelease, ProjectPublic, UserPublic } from '$lib/api/types.gen';
 	import Wave from '$lib/components/Wave.svelte';
-	import { parseProjectRoute } from '$lib/utils/urls.js';
+	import { parseProjectRoute, portableSubRoute } from '$lib/utils/urls.js';
 	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
 
 	import LanguageSwitcher from './header/LanguageSwitcher.svelte';
@@ -22,6 +22,8 @@
 
 	let { data }: HeaderProps = $props();
 	let { projectId, languageCode } = $derived(parseProjectRoute(page.url.pathname));
+	// Carried into both switchers so switching keeps you on the page you are on.
+	let subRoute = $derived(portableSubRoute(page.url.pathname, page.route.id));
 
 	let languages = $derived(data.project?.available_languages ?? []);
 
@@ -75,10 +77,10 @@
 			<div id="project-id-picker" class="flex items-center gap-1">
 				{#if projectId}
 					<span class="ml-3 text-light/50" aria-hidden="true">/</span>
-					<ProjectSwitcher {projectId} title={data.project?.title ?? projectId} />
+					<ProjectSwitcher {projectId} title={data.project?.title ?? projectId} {subRoute} />
 					{#if languageCode && languages.length > 0}
 						<span class="text-light/50" aria-hidden="true">/</span>
-						<LanguageSwitcher {projectId} {languageCode} {languages} />
+						<LanguageSwitcher {projectId} {languageCode} {languages} {subRoute} />
 					{/if}
 				{/if}
 			</div>
