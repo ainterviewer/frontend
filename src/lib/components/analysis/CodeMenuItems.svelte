@@ -47,7 +47,9 @@
 	 * the bottom of the window.
 	 */
 	let fold = $state<HTMLElement | null>(null);
-	let pos = $state<{ left: number; top: number; maxHeight: number } | null>(null);
+	let pos = $state<{ left: number; top: number; maxHeight: number; leftwards: boolean } | null>(
+		null
+	);
 
 	/**
 	 * A fold-out belongs to the row it opened from, so the measurements taken
@@ -78,11 +80,32 @@
 		const anchor = row.getBoundingClientRect();
 		const box = node.getBoundingClientRect();
 		const margin = 8;
+		/**
+		 * Which side to hang off is decided here, not inherited.
+		 *
+		 * `flip` is only where this level starts from -- the room left beside a
+		 * row runs out one column at a time, so the third level often has to turn
+		 * back although the second had space. Sliding it along the edge instead
+		 * would lay it over the list it belongs to, which is the same as not
+		 * showing it: a cascade is read by the column its parent row sits in.
+		 * With room on neither side the side it started on wins and the clamp
+		 * below keeps it on screen, which is the one case where overlap is the
+		 * lesser evil.
+		 */
+		const roomRight = window.innerWidth - anchor.right - margin;
+		const roomLeft = anchor.left - margin;
+		const leftwards = flip
+			? box.width <= roomLeft || box.width > roomRight
+			: box.width > roomRight && box.width <= roomLeft;
+		const wantLeft = Math.max(
+			margin,
+			Math.min(
+				leftwards ? anchor.left - box.width : anchor.right,
+				window.innerWidth - box.width - margin
+			)
+		);
 		// `- 4` lines the fold-out's first row up with the row it hangs off, past
 		// the list's own padding.
-		const wantLeft = flip
-			? Math.max(margin, anchor.left - box.width)
-			: Math.min(anchor.right, window.innerWidth - box.width - margin);
 		const wantTop = Math.max(
 			margin,
 			Math.min(anchor.top - 4, window.innerHeight - box.height - margin)
@@ -92,9 +115,20 @@
 		const dy = wantTop - box.top;
 		// Sub-pixel differences are the browser's rounding, and chasing them
 		// would be a loop.
-		if (placed && Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && placed.maxHeight === maxHeight)
+		if (
+			placed &&
+			Math.abs(dx) < 0.5 &&
+			Math.abs(dy) < 0.5 &&
+			placed.maxHeight === maxHeight &&
+			placed.leftwards === leftwards
+		)
 			return;
-		pos = { left: (placed?.left ?? 0) + dx, top: (placed?.top ?? 0) + dy, maxHeight };
+		pos = {
+			left: (placed?.left ?? 0) + dx,
+			top: (placed?.top ?? 0) + dy,
+			maxHeight,
+			leftwards
+		};
 	});
 
 	/**
@@ -234,7 +268,10 @@
 						<!-- A score can have sub-codes too, and its scale must not be the
 						     reason they become unreachable. -->
 						{#if scored}<div class="border-t border-gray-100"></div>{/if}
-						<Self items={item.children} {applied} {flip} {onpick} />
+						<!-- The next column starts on the side this one ended up on: it is
+					     the side with room, and a cascade that changes direction for no
+					     visible reason is hard to follow back. -->
+						<Self items={item.children} {applied} flip={pos?.leftwards ?? flip} {onpick} />
 					{/if}
 				</div>
 			{/if}
