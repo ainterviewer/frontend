@@ -83,8 +83,14 @@
 		if (!lang) return resolve(`/dashboard/projects/${project.id}`);
 		// Stay on the page you are on. `subRoute` has already been trimmed of any
 		// dynamic segment, so what is left exists for every project.
-		const base = resolve(`/dashboard/projects/${project.id}/${lang}`);
-		return subRoute ? `${base}/${subRoute}` : base;
+		//
+		// Resolved whole, in both branches, rather than appended to a resolved
+		// base: appending widens the result back to a plain string, losing the
+		// `ResolvedPathname` that says this path has been through `resolve` --
+		// which is what both `goto` and the `href`s below are handed.
+		return subRoute
+			? resolve(`/dashboard/projects/${project.id}/${lang}/${subRoute}`)
+			: resolve(`/dashboard/projects/${project.id}/${lang}`);
 	}
 
 	function select(project: ProjectPublic) {

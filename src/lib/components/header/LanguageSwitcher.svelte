@@ -26,8 +26,15 @@
 		open = false;
 		// Stay on the page you are on. `subRoute` has already been trimmed of any
 		// dynamic segment, so what is left exists for every language.
-		const base = resolve(`/dashboard/projects/${projectId}/${language.code}`);
-		goto(subRoute ? `${base}/${subRoute}` : base);
+		//
+		// Resolved whole, in both branches, rather than appended to a resolved
+		// base: appending widens the result back to a plain string, losing the
+		// `ResolvedPathname` that says this path has been through `resolve`.
+		goto(
+			subRoute
+				? resolve(`/dashboard/projects/${projectId}/${language.code}/${subRoute}`)
+				: resolve(`/dashboard/projects/${projectId}/${language.code}`)
+		);
 	}
 </script>
 
