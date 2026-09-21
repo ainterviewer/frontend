@@ -23,6 +23,13 @@ export interface Message {
 	condition?: string | null;
 	feedback?: 'positive' | 'negative' | null;
 	survey_item?: SurveyItemUnion | null;
+	/** A survey message whose answer has been submitted. Set live by the chat
+	 *  client; the transcript builds already-answered messages without it. */
+	answered?: boolean;
+	/** A question whose answer is the survey item pushed a beat after it. The
+	 *  two are one turn, and in that beat the list ends on what looks like an
+	 *  ordinary typed-answer question — see `surveyActive` in `InterviewChat`. */
+	survey_prompt?: boolean;
 	image?: { data: string; alt?: string; primer?: string };
 	audio?: { blob: Blob; duration: number };
 	/** Server-side recording a transcribed voice message came from. */

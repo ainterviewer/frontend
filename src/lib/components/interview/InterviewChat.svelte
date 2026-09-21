@@ -36,6 +36,7 @@
 	}: Props = $props();
 
 	let messageInput = $state('');
+	let scroller: HTMLDivElement | undefined = $state();
 	let messagesContainer: HTMLDivElement | undefined = $state();
 	let textarea: HTMLTextAreaElement | undefined = $state();
 	let fileInput: HTMLInputElement | undefined = $state();
@@ -52,45 +53,131 @@
 		isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
 	});
 
+	/*
+	 * Two different questions get asked about surveys here, and they are not the
+	 * same question.
+	 *
+	 * `surveyActive` sizes the message box: survey items are answered by
+	 * clicking, so the box collapses out of the way for as long as the interview
+	 * is in a run of them. It is scanned backwards rather than read off the last
+	 * message because a run has to read as one continuous state -- expanding and
+	 * re-collapsing the box in the beat between one item being answered and the
+	 * next arriving both flickers and, since the box grows upward into the
+	 * transcript, shoves the typing indicator out of view.
+	 */
 	let surveyActive = $derived.by(() => {
 		for (let i = chat.messages.length - 1; i >= 0; i--) {
 			const m = chat.messages[i];
-			if (m.survey_item) return true;
-			if (m.type === 'received' && m.can_answer === true) return false;
+			if (m.survey_item || m.survey_prompt) return true;
+			// The same test the socket uses to decide whether to enable the
+			// input, so the box's size and whether it can be typed in agree.
+			if (m.type === 'received' && m.can_answer !== false) return false;
 		}
 		return false;
 	});
 
-	// Auto-scroll logic
-	$effect(() => {
-		const _ = [chat.messages.length, chat.showTypingIndicator];
-		scrollToBottom();
+	/*
+	 * `surveyUnanswered` anchors the view. Only a survey still waiting on an
+	 * answer holds the scroll on the question above it; once answered it is
+	 * history like any other message, and the view follows the bottom again so
+	 * the reply it triggers is not left below the fold.
+	 */
+	let surveyUnanswered = $derived.by(() => {
+		const last = chat.messages[chat.messages.length - 1];
+		return !!last?.survey_item && !last.answered;
 	});
 
-	async function scrollToBottom() {
+	/*
+	 * Auto-scroll.
+	 *
+	 * Scrolling once, when the message list changes, is not enough: the message
+	 * keeps growing after that first frame -- an image decodes, a survey's
+	 * options lay out, a webfont swaps, the textarea resizes -- and a smooth
+	 * scroll aimed at the old height lands short, leaving the new message half
+	 * off-screen. So a state change sets an intent (follow the bottom, or hold a
+	 * survey's question at the top), and a ResizeObserver re-applies it on every
+	 * relayout until the respondent scrolls somewhere themselves.
+	 */
+
+	/** Element to keep at the top of the view; null means follow the bottom. */
+	let followTarget: Element | null = null;
+	let following = false;
+
+	$effect(() => {
+		const _ = [chat.messages.length, chat.showTypingIndicator, surveyUnanswered];
+		startFollowing();
+	});
+
+	async function startFollowing() {
 		await tick();
-		if (!messagesContainer) return;
-		if (surveyActive) {
-			let surveyIdx = -1;
-			for (let i = chat.messages.length - 1; i >= 0; i--) {
-				if (chat.messages[i].survey_item) {
-					surveyIdx = i;
-					break;
-				}
-			}
-			let questionIdx = -1;
-			for (let i = surveyIdx - 1; i >= 0; i--) {
-				if (chat.messages[i].type === 'received') {
-					questionIdx = i;
-					break;
-				}
-			}
-			const target = messagesContainer.children[questionIdx] ?? messagesContainer.lastElementChild;
-			target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-			return;
-		}
-		messagesContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+		if (!scroller || !messagesContainer) return;
+		followTarget = surveyUnanswered ? surveyQuestionElement() : null;
+		following = true;
+		applyScroll('smooth');
 	}
+
+	/**
+	 * The question a survey belongs to, so question and options are on screen
+	 * together -- the options alone say nothing about what is being asked.
+	 */
+	function surveyQuestionElement(): Element | null {
+		if (!messagesContainer) return null;
+		let surveyIdx = -1;
+		for (let i = chat.messages.length - 1; i >= 0; i--) {
+			if (chat.messages[i].survey_item) {
+				surveyIdx = i;
+				break;
+			}
+		}
+		for (let i = surveyIdx - 1; i >= 0; i--) {
+			if (chat.messages[i].type === 'received') return messagesContainer.children[i] ?? null;
+		}
+		return null;
+	}
+
+	function applyScroll(behavior: ScrollBehavior) {
+		if (!scroller) return;
+		// The browser clamps past the end, so a short survey still ends up fully
+		// visible rather than scrolled to a position that does not exist.
+		const top = followTarget
+			? scroller.scrollTop +
+				(followTarget.getBoundingClientRect().top - scroller.getBoundingClientRect().top)
+			: scroller.scrollHeight;
+		scroller.scrollTo({ top, behavior });
+	}
+
+	$effect(() => {
+		if (!scroller || !messagesContainer) return;
+		// Re-aiming a smooth scroll retargets the animation already running
+		// rather than starting a competing one, so following a growing message
+		// stays one continuous movement.
+		const observer = new ResizeObserver(() => {
+			if (following) applyScroll('smooth');
+		});
+		// Both boxes: the transcript grows as a message finishes rendering, and
+		// the viewport itself shrinks when the message box below it expands.
+		// Either one leaves what we scrolled to half off-screen.
+		observer.observe(messagesContainer);
+		observer.observe(scroller);
+
+		// Only a deliberate scroll stops the follow -- programmatic smooth
+		// scrolling emits `scroll` events of its own, so that event cannot tell
+		// us apart from the respondent. Bound here rather than in the markup so
+		// they can be passive, and so the scroll container stays a plain
+		// non-interactive element.
+		const release = () => {
+			following = false;
+		};
+		const el = scroller;
+		el.addEventListener('wheel', release, { passive: true });
+		el.addEventListener('touchmove', release, { passive: true });
+
+		return () => {
+			observer.disconnect();
+			el.removeEventListener('wheel', release);
+			el.removeEventListener('touchmove', release);
+		};
+	});
 
 	function handleInput(e: Event) {
 		const target = e.target as HTMLTextAreaElement;
@@ -212,11 +299,19 @@
 </script>
 
 <!-- Chat Area -->
-<div class="mb-1 flex flex-1 grow flex-col items-center overflow-y-auto lg:mb-4">
+<!--
+	One scroll container, not two: with `overflow-y-auto` on both this element
+	and the message list inside it, a scroll had to be split across two nested
+	scrollers, and neither ended up where it was aimed.
+-->
+<div
+	bind:this={scroller}
+	class="mb-1 flex flex-1 grow flex-col items-center overflow-y-auto lg:mb-4"
+>
 	<div
 		id="messages"
 		bind:this={messagesContainer}
-		class="w-full flex-1 overflow-y-auto px-2.5 sm:w-[90%] sm:max-w-175 sm:min-w-125 sm:px-0"
+		class="w-full flex-1 px-2.5 sm:w-[90%] sm:max-w-175 sm:min-w-125 sm:px-0"
 	>
 		{#each chat.messages as msg, i (i)}
 			<div

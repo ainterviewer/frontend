@@ -682,6 +682,17 @@ export class ChatClient {
 		// completed turns register as progress.
 		this.markHealthy();
 
+		// The survey stays in the list with its answer shown, but it is no
+		// longer what the view should be anchored on — see `surveyActive` in
+		// `InterviewChat`.
+		for (let i = this.messages.length - 1; i >= 0; i--) {
+			const msg = this.messages[i];
+			if (msg.survey_item && String(msg.message_id) === String(originalMessageId)) {
+				msg.answered = true;
+				break;
+			}
+		}
+
 		this.inputEnabled = false;
 		// No new message is pushed here, but a server reply is pending — force
 		// the indicator on until the server speaks.
@@ -743,7 +754,8 @@ export class ChatClient {
 						await this.addMessage({
 							type: 'received',
 							text: data.content,
-							message_id: data.message_id
+							message_id: data.message_id,
+							survey_prompt: true
 						});
 					}
 					await this.sleep(200);
