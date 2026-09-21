@@ -35,7 +35,85 @@
 		const max = code.maxValue ?? 5;
 		return Array.from({ length: Math.max(0, max - min + 1) }, (_, i) => min + i);
 	}
+
+	/**
+	 * The fold-out is placed by hand, in viewport coordinates.
+	 *
+	 * It has to be `fixed`: the list it hangs off scrolls, and an absolutely
+	 * positioned fold-out would be clipped by that scroll box -- a cascade you
+	 * cannot see past the first column is not a cascade. Being out of flow, it
+	 * also has nothing to keep it on screen, so the position below both keeps it
+	 * beside its row and pulls it up and caps its height when the row sits near
+	 * the bottom of the window.
+	 */
+	let fold = $state<HTMLElement | null>(null);
+	let pos = $state<{ left: number; top: number; maxHeight: number } | null>(null);
+
+	/**
+	 * A fold-out belongs to the row it opened from, so the measurements taken
+	 * for the last row are dropped as the next one takes over -- otherwise the
+	 * new fold-out is drawn for one frame at the old row's place.
+	 */
+	function show(id: string | null) {
+		if (id === openId) return;
+		openId = id;
+		pos = null;
+	}
+
+	$effect(() => {
+		const node = fold;
+		if (!node) return;
+		// Read so the pass repeats after each correction until it settles: the
+		// first pass measures the fold-out where CSS happened to put it, the next
+		// one confirms it landed where we asked.
+		const placed = pos;
+		// `fixed` counts from the viewport only while no ancestor establishes a
+		// containing block for it; a `transform` or `filter` on any host above
+		// makes it count from *that* box instead. Rather than measuring the
+		// offset, we place, measure where it actually landed, and correct -- the
+		// correction is zero in the ordinary case. See the same dance in
+		// `CodeMenu`.
+		const row = node.parentElement;
+		if (!row) return;
+		const anchor = row.getBoundingClientRect();
+		const box = node.getBoundingClientRect();
+		const margin = 8;
+		// `- 4` lines the fold-out's first row up with the row it hangs off, past
+		// the list's own padding.
+		const wantLeft = flip
+			? Math.max(margin, anchor.left - box.width)
+			: Math.min(anchor.right, window.innerWidth - box.width - margin);
+		const wantTop = Math.max(
+			margin,
+			Math.min(anchor.top - 4, window.innerHeight - box.height - margin)
+		);
+		const maxHeight = window.innerHeight - wantTop - margin;
+		const dx = wantLeft - box.left;
+		const dy = wantTop - box.top;
+		// Sub-pixel differences are the browser's rounding, and chasing them
+		// would be a loop.
+		if (placed && Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && placed.maxHeight === maxHeight)
+			return;
+		pos = { left: (placed?.left ?? 0) + dx, top: (placed?.top ?? 0) + dy, maxHeight };
+	});
+
+	/**
+	 * Scrolling the list a fold-out hangs off closes it.
+	 *
+	 * The fold-out is placed once, against where its row was; scrolling that row
+	 * out from under it would leave it pointing at nothing. Captured on the
+	 * window because `scroll` does not bubble, and ignored when the scroll is
+	 * the fold-out's own -- reading a long branch must not dismiss it.
+	 */
+	function onscrollcapture(event: Event) {
+		if (!fold || openId === null) return;
+		const target = event.target as Node;
+		if (fold === target || fold.contains(target)) return;
+		show(null);
+	}
 </script>
+
+<svelte:window {onscrollcapture} />
 
 <ul class="min-w-52 py-1" role="menu">
 	{#each items as item (item.code.id)}
@@ -45,8 +123,8 @@
 		{@const folds = branch || scored}
 		<li
 			class="relative"
-			onmouseenter={() => (openId = folds ? code.id : null)}
-			onmouseleave={() => (openId = null)}
+			onmouseenter={() => show(folds ? code.id : null)}
+			onmouseleave={() => show(null)}
 		>
 			<!-- A group's row opens its branch and codes nothing, so it keeps the
 			     plain arrow: a pointer promises an action that picking it does not
@@ -64,10 +142,10 @@
 					// opens on hover, which keeps a parent code reachable — the usual
 					// failure of a cascading menu is that a code with sub-codes can no
 					// longer be chosen itself.
-					if (code.kind === 'group' || scored) openId = openId === code.id ? null : code.id;
+					if (code.kind === 'group' || scored) show(openId === code.id ? null : code.id);
 					else onpick(code, null);
 				}}
-				onfocus={() => (openId = folds ? code.id : null)}
+				onfocus={() => show(folds ? code.id : null)}
 				aria-haspopup={folds ? 'menu' : undefined}
 				aria-expanded={folds ? openId === code.id : undefined}
 				title={code.definition || undefined}
@@ -105,14 +183,20 @@
 			</button>
 
 			{#if folds && openId === code.id}
-				<!-- `-top-1` lines the fold-out's first row up with the row it hangs
-				     off, past the list's own padding. No margin between the two: a gap
-				     is a strip belonging to neither, and crossing it fires the
-				     `mouseleave` that closes the thing the pointer is heading for. -->
+				<!-- Flush against the row it hangs off: a gap is a strip belonging to
+				     neither, and crossing it fires the `mouseleave` that closes the
+				     thing the pointer is heading for. Still a DOM child of the row
+				     despite being `fixed`, which is what keeps that hover pairing
+				     working. Hidden until it has been measured and placed, so it is
+				     never seen in the corner it is first laid out in. -->
 				<div
-					class="absolute -top-1 z-10 rounded-md border border-gray-200 bg-white shadow-lg {flip
-						? 'right-full'
-						: 'left-full'}"
+					bind:this={fold}
+					class="fixed z-50 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg {pos
+						? ''
+						: 'invisible'}"
+					style={pos
+						? `left: ${pos.left}px; top: ${pos.top}px; max-height: ${pos.maxHeight}px`
+						: 'left: 0; top: 0'}
 				>
 					{#if scored}
 						<!-- A score is picked *and* valued in one gesture: its fold-out is

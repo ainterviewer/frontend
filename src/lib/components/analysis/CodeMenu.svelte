@@ -72,20 +72,26 @@
 	 * otherwise run off it, and a context menu has no scroll of its own to get
 	 * the reader back to.
 	 *
-	 * The cascade deliberately does not scroll -- a scrolling container clips
-	 * the fold-outs that hang outside it, which is the one thing this menu is
-	 * for. Only the flat filtered list scrolls, and it has nothing hanging off
-	 * it to clip.
+	 * A codebook is taller than the viewport long before it is interesting, so
+	 * every list here scrolls and is capped at the room left below it. That
+	 * would ordinarily clip the fold-outs hanging outside the list -- the one
+	 * thing this menu is for -- which is why `CodeMenuItems` positions them
+	 * `fixed` rather than inside the scrolling box.
 	 */
 	let placement = $derived.by(() => {
 		const width = 240;
-		const height = 320;
+		// Not the menu's height: it scrolls, so this is only how much of it has
+		// to stay on screen before the top stops following the cursor down.
+		const minHeight = 220;
 		const margin = 8;
-		if (typeof window === 'undefined') return { left: at.x, top: at.y, flip: false };
+		if (typeof window === 'undefined')
+			return { left: at.x, top: at.y, maxHeight: minHeight, flip: false };
 		const overflowsRight = at.x + width + margin > window.innerWidth;
+		const top = Math.max(margin, Math.min(at.y, window.innerHeight - minHeight - margin));
 		return {
 			left: overflowsRight ? Math.max(margin, at.x - width) : at.x,
-			top: Math.max(margin, Math.min(at.y, window.innerHeight - height - margin)),
+			top,
+			maxHeight: window.innerHeight - top - margin,
 			// Fold-outs open leftwards once the menu itself has been pulled left:
 			// there was no room on that side for the menu, so there is none for a
 			// second column beyond it.
@@ -178,10 +184,9 @@
 	role="menu"
 	tabindex="-1"
 	{onkeydown}
-	class="fixed z-50 w-60 rounded-md border border-gray-200 bg-white py-1 shadow-xl {filter.trim()
-		? 'max-h-80 overflow-y-auto'
-		: 'overflow-visible'}"
-	style="left: {placement.left + shift.x}px; top: {placement.top + shift.y}px"
+	class="fixed z-50 w-60 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-xl"
+	style="left: {placement.left + shift.x}px; top: {placement.top +
+		shift.y}px; max-height: {placement.maxHeight}px"
 >
 	{#if quote}
 		<p class="truncate border-b border-gray-100 px-3 pb-1.5 text-[11px] text-gray-400">
