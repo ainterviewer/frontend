@@ -35,9 +35,17 @@ jobs:
       - name: Check types
         run: bun run check
 
-      # Unit tests only. The Playwright e2e suite needs browser downloads and a
-      # running server, which is minutes rather than seconds -- it does not
-      # belong on every pull request.
+      # The vitest `client` project runs the *.svelte.test.ts files in a real
+      # chromium via @vitest/browser-playwright, so the browser has to be there
+      # or those files are skipped while the run still reports success. Use the
+      # pinned binary from node_modules, not bunx, so the browser build matches
+      # the installed playwright.
+      - name: Install chromium for browser unit tests
+        run: ./node_modules/.bin/playwright install --with-deps chromium
+
+      # Unit tests only. The Playwright e2e suite also needs a running server
+      # and takes minutes rather than seconds -- it does not belong on every
+      # pull request.
       - name: Unit tests
         run: bun run test:unit --run
 
