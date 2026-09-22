@@ -209,6 +209,29 @@
 	let statusError = $state<string | null>(null);
 
 	/**
+	 * Whether this deployment runs an embedding server at all.
+	 *
+	 * Off is a deployment's choice rather than a fault, and it takes away
+	 * exactly the things that read vectors: the map, semantic search, nearest
+	 * neighbours, "find more like this code". Everything else on this page
+	 * reads message rows -- browsing, keyword search, the cohort and question
+	 * filters, the transcripts, coding -- and the browse endpoint is written
+	 * for precisely that case, so it all works on a corpus that was never
+	 * embedded and never will be.
+	 *
+	 * So this narrows the page the way `unindexed` does rather than replacing
+	 * it. The difference between the two is what a reader can do about it: an
+	 * unindexed project is one backfill away from a map, and a deployment
+	 * without an embedding server is not, which is why the map is not offered
+	 * here at all instead of offered empty.
+	 *
+	 * Unknown counts as enabled. The status lands a beat after the page, and
+	 * treating that beat as "disabled" would snatch the map away from every
+	 * deployment that has one.
+	 */
+	let embeddingEnabled = $derived(status === null || status.enabled);
+
+	/**
 	 * Every knob both views read, and the view toggle itself.
 	 *
 	 * Shared deliberately: the map and the list are two renderings of one query,
@@ -243,7 +266,12 @@
 	let kind = $derived(explore.kind);
 	let filters = $derived(explore.filters);
 	let settings = $derived(explore.settings);
-	let listing = $derived(explore.view === 'list');
+	// The list is the only view without an embedding server: a map of stored
+	// vectors where none are stored and none can be is not a view to switch to.
+	// Derived rather than written back onto `explore.view`, so a link that asks
+	// for the map keeps asking for it -- the same link opened against a
+	// deployment that has one still opens the map.
+	let listing = $derived(explore.view === 'list' || !embeddingEnabled);
 
 	let clusters = $state<EmbeddingClusterResponse | null>(null);
 	let clusterLoading = $state(true);
@@ -368,6 +396,18 @@
 	// compared against an empty corpus, which is a blank result with no reason
 	// attached rather than an answer.
 	let searchAvailable = $derived((status?.healthy ?? false) && !unindexed);
+
+	/**
+	 * Whether there are vectors to walk from.
+	 *
+	 * What "nearest neighbours" and "find more like this code" need, and all
+	 * they need: both compare stored vectors and neither touches the inference
+	 * server, so an unreachable server leaves them working where an unembedded
+	 * corpus does not. Unknown counts as available, like `embeddingEnabled`:
+	 * the alternative is a codebook menu that loses two items for the beat
+	 * before the status lands.
+	 */
+	let vectorsStored = $derived(embeddingEnabled && !unindexed);
 
 	/**
 	 * The languages the two language controls offer.
@@ -1652,224 +1692,498 @@
 		</p>
 	</header>
 
-	<!-- Only the two states the status *answers* gate the page. A status that has
-	     not landed, or that failed, does not: it says whether text search is
-	     available, and nothing else here depends on the inference server -- the
-	     map and nearest-neighbours read stored vectors. Waiting on it put the
-	     whole page behind a spinner whenever the embedding host was unreachable,
-	     which is exactly when the parts that still work matter most. -->
-	{#if status && !status.enabled}
-		<!-- A normal state, not an error: embedding is configured per deployment
-		     and off by default, and with it off the interviews run exactly as
-		     they always did. Nothing here is broken and nothing is waiting. -->
-		<div class="rounded-lg border border-gray-200 bg-white px-5 py-8 text-center">
-			<p class="text-sm font-medium text-gray-700">Semantic search is not enabled here</p>
-			<p class="mx-auto mt-1 max-w-md text-sm text-gray-500">
-				This deployment does not run an embedding server, so transcripts are not indexed for
-				meaning. Everything else about the project is unaffected.
-			</p>
-		</div>
+	<!-- Nothing here gates the page. The status says what is *available* -- the
+	     inference server for text search, stored vectors for the map and for
+	     nearest neighbours -- and every one of those is a part rather than the
+	     whole: browsing, keyword search, the filters and coding read message
+	     rows, so they work on a corpus that was never embedded, and on a
+	     deployment that runs no embedding server at all. A status that has not
+	     landed or that failed gates nothing either, for the same reason: it put
+	     the whole page behind a spinner whenever the embedding host was
+	     unreachable, which is exactly when the parts that still work matter
+	     most. -->
+	{#if status}
+		<StatusStrip
+			{status}
+			projectId={data.project_id}
+			{canBackfill}
+			onstatus={(next) => (status = next)}
+		/>
+	{:else if statusError}
+		<p class="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs text-gray-500">
+			{statusError} Text search stays unavailable until it answers; the map and “nearest neighbours” read
+			stored vectors and still work.
+		</p>
 	{:else}
-		{#if status}
-			<StatusStrip
-				{status}
-				projectId={data.project_id}
-				{canBackfill}
-				onstatus={(next) => (status = next)}
-			/>
-		{:else if statusError}
-			<p class="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs text-gray-500">
-				{statusError} Text search stays unavailable until it answers; the map and “nearest neighbours”
-				read stored vectors and still work.
-			</p>
-		{:else}
-			<div class="h-[2.375rem] animate-pulse rounded-lg bg-gray-100"></div>
-		{/if}
+		<div class="h-[2.375rem] animate-pulse rounded-lg bg-gray-100"></div>
+	{/if}
 
-		{#if status && !status.healthy}
-			<p class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
-				The embedding server is not reachable, so text search is unavailable. The map and “nearest
-				neighbours” read stored vectors and still work.
-			</p>
-		{/if}
+	{#if status && !status.enabled}
+		<!-- Grey and not amber: nothing is broken and nothing is waiting.
+		     Embedding is configured per deployment and off by default, and with
+		     it off the interviews run exactly as they always did. Said once,
+		     here, rather than repeated on every control it takes away -- those
+		     carry a title each and no more. -->
+		<p class="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs text-gray-500">
+			This deployment does not run an embedding server, so searching by meaning, the map and
+			“nearest neighbours” are unavailable. Keyword search, the filters and coding read the
+			transcripts themselves and work as normal.
+		</p>
+	{:else if status && !status.healthy}
+		<p class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
+			The embedding server is not reachable, so text search is unavailable. The map and “nearest
+			neighbours” read stored vectors and still work.
+		</p>
+	{/if}
 
-		<!-- Search stands alone above the map. It is what most readers come for,
-		     and everything that shapes the map is in the rail beside it. -->
+	<!-- Search stands alone above the map. It is what most readers come for,
+	     and everything that shapes the map is in the rail beside it. -->
+	<div
+		class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-gray-200 bg-white px-4 py-3"
+	>
+		<!-- The two readings of one query, and a toggle rather than two routes:
+		     everything that decides which chunks are in play is shared, so
+		     switching must not quietly change the corpus being looked at. -->
 		<div
-			class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-gray-200 bg-white px-4 py-3"
+			role="group"
+			aria-label="View"
+			class="flex overflow-hidden rounded-md border border-gray-200"
 		>
-			<!-- The two readings of one query, and a toggle rather than two routes:
-			     everything that decides which chunks are in play is shared, so
-			     switching must not quietly change the corpus being looked at. -->
-			<div
-				role="group"
-				aria-label="View"
-				class="flex overflow-hidden rounded-md border border-gray-200"
-			>
-				{#each [{ value: 'list', label: 'List', icon: 'fa-list' }, { value: 'map', label: 'Map', icon: 'fa-diagram-project' }] as option (option.value)}
-					<button
-						type="button"
-						onclick={() => (explore.view = option.value as ExploreView)}
-						aria-pressed={explore.view === option.value}
-						class="flex cursor-pointer items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium transition-colors {explore.view ===
-						option.value
-							? 'bg-primary text-on-primary'
-							: 'bg-white text-gray-500 hover:text-gray-900'}"
-					>
-						<i class="fas {option.icon} text-[0.6875rem]"></i>
-						{option.label}
-					</button>
-				{/each}
-			</div>
+			{#each [{ value: 'list', label: 'List', icon: 'fa-list' }, { value: 'map', label: 'Map', icon: 'fa-diagram-project' }] as option (option.value)}
+				<!-- Pressed is read off `listing` rather than off `explore.view`: the two
+				     part company on a deployment with no embedding server, where a link
+				     asking for the map is honoured as far as it can be -- shown as the
+				     list, and left asking. -->
+				{@const current = (listing ? 'list' : 'map') === option.value}
+				{@const off = option.value === 'map' && !embeddingEnabled}
+				<button
+					type="button"
+					onclick={() => (explore.view = option.value as ExploreView)}
+					aria-pressed={current}
+					disabled={off}
+					title={off
+						? 'The map plots stored vectors, which this deployment does not produce.'
+						: null}
+					class="flex cursor-pointer items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:bg-white disabled:text-gray-300 {current
+						? 'bg-primary text-on-primary'
+						: 'bg-white text-gray-500 hover:text-gray-900'}"
+				>
+					<i class="fas {option.icon} text-[0.6875rem]"></i>
+					{option.label}
+				</button>
+			{/each}
+		</div>
 
-			<form onsubmit={search} class="flex min-w-[18rem] flex-1 items-center gap-2">
-				<div class="relative flex-1">
-					<i
-						class="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs {searchAvailable
-							? 'text-gray-300'
-							: 'text-gray-400'}"
-					></i>
-					<input
-						type="search"
-						bind:value={queryText}
-						disabled={!searchAvailable}
-						placeholder={searchAvailable
-							? 'How do people describe trust?'
+		<form onsubmit={search} class="flex min-w-[18rem] flex-1 items-center gap-2">
+			<div class="relative flex-1">
+				<i
+					class="fas fa-magnifying-glass pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs {searchAvailable
+						? 'text-gray-300'
+						: 'text-gray-400'}"
+				></i>
+				<input
+					type="search"
+					bind:value={queryText}
+					disabled={!searchAvailable}
+					placeholder={searchAvailable
+						? 'How do people describe trust?'
+						: !embeddingEnabled
+							? 'Not enabled here — use the keyword box below'
 							: unindexed
 								? 'Needs indexing — see the map'
 								: 'Needs the embedding server'}
-						aria-label="Search the transcripts by meaning"
-						class="w-full rounded-md border border-gray-200 py-1.5 pr-3 pl-8 text-sm placeholder:text-gray-300 focus:border-primary focus:ring-0 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 disabled:placeholder:text-gray-400"
-					/>
-				</div>
-				<button
-					type="submit"
-					disabled={!searchAvailable || !queryText.trim()}
-					class="cursor-pointer rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-on-primary disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					Search
-				</button>
-				{#if submitted}
-					<button
-						type="button"
-						onclick={clearSearch}
-						class="cursor-pointer text-sm text-gray-500 hover:text-gray-900"
-					>
-						Clear
-					</button>
-				{/if}
-			</form>
-
-			<!-- The cut-off sits with the query rather than in the rail, because it
-			     is a property of the list of hits and not of the map: it filters
-			     what came back, and the rail can be collapsed over it. It applies to
-			     whichever ranked list the panel is showing — results, or a chunk's
-			     neighbours — which is why it is out here rather than in either.
-
-			     Between the two boxes because it belongs to the one above it: only
-			     a semantic query or a walk produces a score to cut, and the keyword
-			     box below is a filter with no score at all. Sitting past the keyword
-			     box made it look like a third, unrelated control rather than the
-			     dial on the search it qualifies. -->
-			{#if cutoffApplies}
-				<div class="flex items-center gap-2">
-					<label for="score-cutoff" class="text-xs whitespace-nowrap text-gray-500">Min score</label
-					>
-					<input
-						id="score-cutoff"
-						type="range"
-						min="0"
-						max="0.95"
-						step="0.01"
-						bind:value={scoreCutoff}
-						class="w-24 accent-primary"
-					/>
-					<span class="w-8 font-mono text-xs text-gray-600 tabular-nums">
-						{scoreCutoff.toFixed(2)}
-					</span>
-					<HoverInfo
-						text="A real cosine similarity, so the cut-off means something. Applied to the hits already fetched — moving it does not re-run anything — and to the neighbours of an anchored chunk as well as to search results. Past it, there is no more to load: a ranked list only goes down."
-					/>
-				</div>
-			{/if}
-
-			<KeywordInput
-				bind:value={explore.keyword}
-				bind:scope={explore.keywordScope}
-				problem={explore.keywordProblem ?? keywordServerProblem}
-			/>
-		</div>
-
-		<div class="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
-			<ControlRail
-				bind:open={railOpen}
-				{groupMode}
-				{modes}
-				{kind}
-				bind:projection={explore.projection}
-				bind:nNeighbors={explore.nNeighbors}
-				bind:minDist={explore.minDist}
-				bind:minClusterSize={explore.minClusterSize}
-				{maxClusterSize}
-				bind:centerByQuestion={explore.centerByQuestion}
-				bind:centerByLanguage={explore.centerByLanguage}
-				bind:interviewStatus={explore.interviewStatus}
-				bind:filterLanguages={explore.filterLanguages}
-				bind:includeSynthetic={explore.includeSynthetic}
-				bind:filterQuestions={explore.filterQuestions}
-				bind:keyword={explore.keyword}
-				bind:keywordScope={explore.keywordScope}
-				bind:surveyValues={explore.surveyValues}
-				bind:surveyRanges={explore.surveyRanges}
-				{guide}
-				{surveyFacets}
-				bind:visibleLanguages={explore.visibleLanguages}
-				{listing}
-				{languages}
-				{multilingual}
-				{offDefault}
-				ongroupmode={changeGroupMode}
-				onkind={changeKind}
-			/>
-
-			{#if listing}
-				<ListView
-					hits={listHits}
-					total={listTotal}
-					interviews={listInterviews}
-					{conditions}
-					bind:order={explore.listOrder}
-					bind:grouping={explore.listGrouping}
-					groupable={kind !== 'interview'}
-					loading={listLoading}
-					error={listError}
-					paging={listPaging}
-					ranked={listRanked}
-					keyword={explore.searchableKeyword}
-					anchor={listAnchor}
-					codeAnchor={listCodeAnchor}
-					anchorLoading={walking && detail === null}
-					onanchor={(hit) => (selectedId = selectedId === hit.id ? null : hit.id)}
-					ontranscript={(hit) => (transcriptOf = hit)}
-					{railOpen}
-					{offDefault}
-					onshowcontrols={() => (railOpen = true)}
-					onclearanchor={() => {
-						// One way back for both readings, because there is one label
-						// above them saying where you are. Whichever is set is the one
-						// being read, so clearing both lands on whatever was underneath.
-						selectedId = null;
-						codeAnchor = null;
-					}}
+					aria-label="Search the transcripts by meaning"
+					class="w-full rounded-md border border-gray-200 py-1.5 pr-3 pl-8 text-sm placeholder:text-gray-300 focus:border-primary focus:ring-0 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 disabled:placeholder:text-gray-400"
 				/>
+			</div>
+			<button
+				type="submit"
+				disabled={!searchAvailable || !queryText.trim()}
+				class="cursor-pointer rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-on-primary disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				Search
+			</button>
+			{#if submitted}
+				<button
+					type="button"
+					onclick={clearSearch}
+					class="cursor-pointer text-sm text-gray-500 hover:text-gray-900"
+				>
+					Clear
+				</button>
+			{/if}
+		</form>
 
-				<!-- No toggle here: clustering is a reading of the map, and the list
-				     has none to show. The codebook is the same one either view edits,
-				     so switching between them does not leave it behind. -->
-				<div class="flex min-h-[26rem] shrink-0 {codesOpen ? 'lg:w-[22rem]' : ''}">
-					<!-- Block, not flex: the pane sizes itself to its content, so a flex
-					     parent lets it shrink and leaves the column's width beside it. -->
-					<div class="min-h-0 w-full">
+		<!-- The cut-off sits with the query rather than in the rail, because it
+		     is a property of the list of hits and not of the map: it filters
+		     what came back, and the rail can be collapsed over it. It applies to
+		     whichever ranked list the panel is showing — results, or a chunk's
+		     neighbours — which is why it is out here rather than in either.
+
+		     Between the two boxes because it belongs to the one above it: only
+		     a semantic query or a walk produces a score to cut, and the keyword
+		     box below is a filter with no score at all. Sitting past the keyword
+		     box made it look like a third, unrelated control rather than the
+		     dial on the search it qualifies. -->
+		{#if cutoffApplies}
+			<div class="flex items-center gap-2">
+				<label for="score-cutoff" class="text-xs whitespace-nowrap text-gray-500">Min score</label>
+				<input
+					id="score-cutoff"
+					type="range"
+					min="0"
+					max="0.95"
+					step="0.01"
+					bind:value={scoreCutoff}
+					class="w-24 accent-primary"
+				/>
+				<span class="w-8 font-mono text-xs text-gray-600 tabular-nums">
+					{scoreCutoff.toFixed(2)}
+				</span>
+				<HoverInfo
+					text="A real cosine similarity, so the cut-off means something. Applied to the hits already fetched — moving it does not re-run anything — and to the neighbours of an anchored chunk as well as to search results. Past it, there is no more to load: a ranked list only goes down."
+				/>
+			</div>
+		{/if}
+
+		<KeywordInput
+			bind:value={explore.keyword}
+			bind:scope={explore.keywordScope}
+			problem={explore.keywordProblem ?? keywordServerProblem}
+		/>
+	</div>
+
+	<div class="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
+		<ControlRail
+			bind:open={railOpen}
+			{groupMode}
+			{modes}
+			{kind}
+			bind:projection={explore.projection}
+			bind:nNeighbors={explore.nNeighbors}
+			bind:minDist={explore.minDist}
+			bind:minClusterSize={explore.minClusterSize}
+			{maxClusterSize}
+			bind:centerByQuestion={explore.centerByQuestion}
+			bind:centerByLanguage={explore.centerByLanguage}
+			bind:interviewStatus={explore.interviewStatus}
+			bind:filterLanguages={explore.filterLanguages}
+			bind:includeSynthetic={explore.includeSynthetic}
+			bind:filterQuestions={explore.filterQuestions}
+			bind:keyword={explore.keyword}
+			bind:keywordScope={explore.keywordScope}
+			bind:surveyValues={explore.surveyValues}
+			bind:surveyRanges={explore.surveyRanges}
+			{guide}
+			{surveyFacets}
+			bind:visibleLanguages={explore.visibleLanguages}
+			{listing}
+			{languages}
+			{multilingual}
+			{offDefault}
+			ongroupmode={changeGroupMode}
+			onkind={changeKind}
+		/>
+
+		{#if listing}
+			<ListView
+				hits={listHits}
+				total={listTotal}
+				interviews={listInterviews}
+				{conditions}
+				bind:order={explore.listOrder}
+				bind:grouping={explore.listGrouping}
+				groupable={kind !== 'interview'}
+				loading={listLoading}
+				error={listError}
+				paging={listPaging}
+				ranked={listRanked}
+				keyword={explore.searchableKeyword}
+				anchor={listAnchor}
+				codeAnchor={listCodeAnchor}
+				anchorLoading={walking && detail === null}
+				onanchor={(hit) => (selectedId = selectedId === hit.id ? null : hit.id)}
+				ontranscript={(hit) => (transcriptOf = hit)}
+				{railOpen}
+				{offDefault}
+				onshowcontrols={() => (railOpen = true)}
+				onclearanchor={() => {
+					// One way back for both readings, because there is one label
+					// above them saying where you are. Whichever is set is the one
+					// being read, so clearing both lands on whatever was underneath.
+					selectedId = null;
+					codeAnchor = null;
+				}}
+			/>
+
+			<!-- No toggle here: clustering is a reading of the map, and the list
+			     has none to show. The codebook is the same one either view edits,
+			     so switching between them does not leave it behind. -->
+			<div class="flex min-h-[26rem] shrink-0 {codesOpen ? 'lg:w-[22rem]' : ''}">
+				<!-- Block, not flex: the pane sizes itself to its content, so a flex
+				     parent lets it shrink and leaves the column's width beside it. -->
+				<div class="min-h-0 w-full">
+					{#key book}
+						<CodebookGate {book}>
+							{#snippet children(tree)}
+								<CodePanel
+									{tree}
+									{book}
+									bind:open={codesOpen}
+									bind:keyword={explore.keyword}
+									bind:coverage={explore.coverage}
+									{countOf}
+									ondefine={searchAvailable ? searchByDefinition : undefined}
+									onlike={vectorsStored ? findMoreLikeCode : undefined}
+								/>
+							{/snippet}
+						</CodebookGate>
+					{/key}
+				</div>
+			</div>
+		{:else}
+			<!-- `min-w-0` is load-bearing: the scatter renders an <svg> with an
+			     explicit pixel width, which becomes this item's intrinsic minimum
+			     under the default `min-width: auto`. Without it the card keeps the
+			     width it had while the rail was collapsed, and re-opening the rail
+			     pushes the row wider than the page. -->
+			<div
+				class="flex min-h-[26rem] min-w-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white"
+			>
+				<div class="relative min-h-0 flex-1">
+					{#if !railOpen}
+						<!-- The rail's way back. Over the map rather than beside it, so
+						     a collapsed rail gives the map the whole width instead of
+						     trading one strip of chrome for another. The list has no
+						     empty corner to float over and carries its own, in the
+						     strip above its results. -->
+						<button
+							type="button"
+							onclick={() => (railOpen = true)}
+							aria-label="Show controls"
+							title={offDefault > 0 ? `Controls — ${offDefault} away from default` : 'Controls'}
+							class="absolute top-2 left-2 z-30 flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 bg-white/90 px-2 py-1 text-xs font-medium text-gray-600 shadow-sm hover:text-gray-900"
+						>
+							<i class="fa-solid fa-sliders text-[0.6875rem] text-gray-400"></i>
+							{#if offDefault > 0}
+								<span
+									class="rounded-full bg-primary px-1.5 text-[0.625rem] font-semibold text-on-primary"
+								>
+									{offDefault}
+								</span>
+							{/if}
+						</button>
+					{/if}
+					{#if unindexed}
+						<!-- Before any cluster error, because "nothing is embedded" is
+						     the cause of whatever the clustering endpoint said and the
+						     reader can act on it. The list needs none of this, which is
+						     why the page is not gated on it -- browsing and keyword
+						     search read message rows, not vectors. -->
+						<div
+							class="flex h-full w-full flex-col items-center justify-center gap-3 p-8 text-center"
+						>
+							<i class="fa-solid fa-diagram-project text-lg text-gray-300"></i>
+							<div>
+								<p class="text-sm font-medium text-gray-700">Nothing is embedded yet</p>
+								<p class="mx-auto mt-1 max-w-md text-sm text-gray-500">
+									The map plots stored vectors, so there is nothing to draw until this project's
+									transcripts are indexed.
+									{canBackfill
+										? 'Run “Re-embed project” above — it takes a few minutes and only has to be done once.'
+										: 'An editor can start that from this page.'}
+								</p>
+								<p class="mx-auto mt-2 max-w-md text-xs text-gray-500">
+									The list view works either way: browsing and keyword search read the transcripts
+									themselves.
+								</p>
+							</div>
+						</div>
+					{:else if clusterError && !clusters}
+						<p class="p-5 text-sm text-gray-500">{clusterError}</p>
+					{:else if !clusters}
+						<!-- The first run has nothing to keep on screen, so this is all
+						     there is to look at. A grey box says only that something is
+						     missing; naming the work and roughly how long it takes is the
+						     difference between waiting and wondering whether it is broken. -->
+						<SweepBar />
+						<div
+							class="flex h-full w-full flex-col items-center justify-center gap-3 p-8 text-center"
+						>
+							<i class="fa-solid fa-spinner fa-spin text-lg text-gray-300"></i>
+							<div>
+								<p class="text-sm font-medium text-gray-700">
+									{explore.projection === 'umap' ? 'Projecting and clustering' : 'Clustering'}
+								</p>
+								<p class="mx-auto mt-1 max-w-sm text-xs text-gray-500">
+									{#if explore.projection === 'umap'}
+										UMAP is fitting {embeddedCount === null
+											? 'the corpus'
+											: `${formatNumber(embeddedCount)} chunks`} down to two dimensions and running HDBSCAN
+										in them. A few seconds — longer on the first run after the server starts, which compiles
+										the projection.
+									{:else}
+										Reducing {embeddedCount === null
+											? 'the corpus'
+											: `${formatNumber(embeddedCount)} chunks`} to 50 principal components and running
+										HDBSCAN over them.
+									{/if}
+								</p>
+							</div>
+						</div>
+					{:else if points.length === 0}
+						<p class="p-5 text-sm text-gray-500">
+							No chunks of this kind match the filters, so there is nothing to plot.
+						</p>
+					{:else}
+						<ScatterPlot
+							{points}
+							{selectedId}
+							bind:hoveredId
+							{matchedIds}
+							{colorOf}
+							{grouped}
+							{strengthOf}
+							{visible}
+							{describe}
+							resetKey={`${kind}:${explore.projection}`}
+							stale={clusterLoading}
+							onselect={(id) => {
+								selectedId = id;
+								if (id) focusedGroup = null;
+							}}
+						/>
+					{/if}
+				</div>
+
+				{#if clusters}
+					<div
+						class="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 px-4 py-2 text-xs text-gray-500"
+					>
+						{#if groupMode === 'cluster'}
+							<span>
+								<span class="font-medium text-gray-700">{formatNumber(clusters.n_clusters)}</span>
+								clusters
+							</span>
+						{:else}
+							<span>
+								<span class="font-medium text-gray-700">{formatNumber(groupCount)}</span>
+								{modeLabel.toLowerCase()}
+							</span>
+							{#if ungrouped > 0}
+								<span class="flex items-center gap-1.5">
+									<span class="inline-block h-2 w-2 rounded-full" style="background:{OUTLIER_COLOR}"
+									></span>
+									{formatNumber(ungrouped)} without coordinates
+								</span>
+							{/if}
+						{/if}
+						<span>{formatNumber(clusters.n_points)} chunks</span>
+						{#if groupMode === 'cluster'}
+							<span class="flex items-center gap-1.5">
+								<span class="inline-block h-2 w-2 rounded-full" style="background:{OUTLIER_COLOR}"
+								></span>
+								{formatNumber(clusters.n_outliers)} unplaced
+							</span>
+						{/if}
+						<!-- What the two axes are worth, stated rather than left to be
+						     assumed. PCA can put a number on it; UMAP cannot, and the
+						     honest thing there is to say what the picture is instead of
+						     borrowing a figure it did not produce. -->
+						{#if clusters.explained_variance_2d !== null && clusters.explained_variance_2d !== undefined}
+							<span class="flex items-center gap-1">
+								{formatPercent(clusters.explained_variance_2d)} of the spread shown
+								<!-- Around a third is normal for text embeddings: points far
+								     apart really are far apart, but points close together need
+								     not be. -->
+								<HoverInfo
+									text="The map is a flat shadow of a {clusters.components}-dimensional space, and shows about {formatPercent(
+										clusters.explained_variance_2d
+									)} of the variation in it. Read distance as a navigation aid, not as evidence — things far apart on screen are genuinely far apart, but things close together may not be."
+								/>
+							</span>
+						{:else}
+							<span class="flex items-center gap-1">
+								Neighbourhood layout — distances are not to scale
+								<HoverInfo
+									text="UMAP is fitted to keep neighbours together, not to preserve distance, so there is no share-of-variance to report. Read which points sit with which; do not read how far apart two blobs are, or how big one is. A theme split across two blobs is a real possibility here — check each one's representatives before treating them as separate findings."
+								/>
+							</span>
+						{/if}
+						{#if !clusters.centered_by_question}
+							<span class="text-amber-700">Uncentred by question</span>
+						{/if}
+						{#if multilingual && !clusters.centered_by_language}
+							<span class="text-amber-700">Uncentred by language</span>
+						{/if}
+						<!-- Said here because every number in this strip is computed over
+						     the whole run, hidden points included: the reader is looking
+						     at a subset of a map that is still counted in full, and the
+						     alternative — recounting on a view toggle — would make two
+						     controls that look alike report different totals. -->
+						{#if visibleLanguages.length > 0}
+							<span class="flex items-center gap-1">
+								Showing {visibleLanguages.map((code) => code.toUpperCase()).join(', ')}
+								<HoverInfo
+									text="A view filter: the map is unchanged and the other languages are faded, not removed. The counts here still describe every plotted chunk. To leave a language out of the projection and the clustering, use Languages under Corpus in the controls."
+								/>
+							</span>
+						{/if}
+
+						{#if clusterLoading}
+							<!-- Named here rather than over the map: this strip is already
+							     where the run describes itself, and a pill floating on the
+							     scatter covered the corner the reader drags from. The bar
+							     along the top edge is what catches the eye; this says which
+							     of the numbers beside it are about to change. -->
+							<span class="ml-auto flex items-center gap-1.5 text-gray-400">
+								<i class="fa-solid fa-spinner fa-spin text-[0.625rem]"></i>
+								Reclustering…
+							</span>
+						{/if}
+					</div>
+				{/if}
+			</div>
+
+			<div
+				class="flex min-h-[26rem] shrink-0 flex-col gap-2 {codesMinimised ? '' : 'lg:w-[22rem]'}"
+			>
+				<!-- Two readings of what is in the corpus: the clusters the run
+				     found, and the codebook the analyst is building over it. A
+				     toggle rather than two columns — a reader is looking at one or
+				     the other, and two columns would cost the map a third of its
+				     width to say so. -->
+				<!-- Hidden while the code pane is minimised: it would hold open the
+				     width the reader just asked for back, and restoring the pane --
+				     the obvious next gesture -- brings it straight back. -->
+				{#if !codesMinimised}
+					<div
+						role="group"
+						aria-label="Right pane"
+						class="flex shrink-0 overflow-hidden rounded-md border border-gray-200"
+					>
+						{#each [{ value: 'clusters', label: 'Clusters', icon: 'fa-shapes' }, { value: 'codes', label: 'Codes', icon: 'fa-tags' }] as option (option.value)}
+							<button
+								type="button"
+								onclick={() => (panel = option.value as 'clusters' | 'codes')}
+								aria-pressed={panel === option.value}
+								class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-2.5 py-1.5 text-sm font-medium transition-colors {panel ===
+								option.value
+									? 'bg-primary text-on-primary'
+									: 'bg-white text-gray-500 hover:text-gray-900'}"
+							>
+								<i class="fas {option.icon} text-[0.6875rem]"></i>
+								{option.label}
+							</button>
+						{/each}
+					</div>
+				{/if}
+
+				<div class="min-h-0 w-full flex-1">
+					{#if panel === 'codes'}
+						<!-- Keyed: the pane holds expansion state keyed by code id, and
+						     a different codebook arriving in the same component would
+						     carry the old one's open branches with it. -->
 						{#key book}
 							<CodebookGate {book}>
 								{#snippet children(tree)}
@@ -1880,302 +2194,38 @@
 										bind:keyword={explore.keyword}
 										bind:coverage={explore.coverage}
 										{countOf}
-										ondefine={searchByDefinition}
-										onlike={findMoreLikeCode}
+										ondefine={searchAvailable ? searchByDefinition : undefined}
+										onlike={vectorsStored ? findMoreLikeCode : undefined}
 									/>
 								{/snippet}
 							</CodebookGate>
 						{/key}
-					</div>
-				</div>
-			{:else}
-				<!-- `min-w-0` is load-bearing: the scatter renders an <svg> with an
-				     explicit pixel width, which becomes this item's intrinsic minimum
-				     under the default `min-width: auto`. Without it the card keeps the
-				     width it had while the rail was collapsed, and re-opening the rail
-				     pushes the row wider than the page. -->
-				<div
-					class="flex min-h-[26rem] min-w-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white"
-				>
-					<div class="relative min-h-0 flex-1">
-						{#if !railOpen}
-							<!-- The rail's way back. Over the map rather than beside it, so
-							     a collapsed rail gives the map the whole width instead of
-							     trading one strip of chrome for another. The list has no
-							     empty corner to float over and carries its own, in the
-							     strip above its results. -->
-							<button
-								type="button"
-								onclick={() => (railOpen = true)}
-								aria-label="Show controls"
-								title={offDefault > 0 ? `Controls — ${offDefault} away from default` : 'Controls'}
-								class="absolute top-2 left-2 z-30 flex cursor-pointer items-center gap-1 rounded-md border border-gray-200 bg-white/90 px-2 py-1 text-xs font-medium text-gray-600 shadow-sm hover:text-gray-900"
-							>
-								<i class="fa-solid fa-sliders text-[0.6875rem] text-gray-400"></i>
-								{#if offDefault > 0}
-									<span
-										class="rounded-full bg-primary px-1.5 text-[0.625rem] font-semibold text-on-primary"
-									>
-										{offDefault}
-									</span>
-								{/if}
-							</button>
-						{/if}
-						{#if unindexed}
-							<!-- Before any cluster error, because "nothing is embedded" is
-							     the cause of whatever the clustering endpoint said and the
-							     reader can act on it. The list needs none of this, which is
-							     why the page is not gated on it -- browsing and keyword
-							     search read message rows, not vectors. -->
-							<div
-								class="flex h-full w-full flex-col items-center justify-center gap-3 p-8 text-center"
-							>
-								<i class="fa-solid fa-diagram-project text-lg text-gray-300"></i>
-								<div>
-									<p class="text-sm font-medium text-gray-700">Nothing is embedded yet</p>
-									<p class="mx-auto mt-1 max-w-md text-sm text-gray-500">
-										The map plots stored vectors, so there is nothing to draw until this project's
-										transcripts are indexed.
-										{canBackfill
-											? 'Run “Re-embed project” above — it takes a few minutes and only has to be done once.'
-											: 'An editor can start that from this page.'}
-									</p>
-									<p class="mx-auto mt-2 max-w-md text-xs text-gray-500">
-										The list view works either way: browsing and keyword search read the transcripts
-										themselves.
-									</p>
-								</div>
-							</div>
-						{:else if clusterError && !clusters}
-							<p class="p-5 text-sm text-gray-500">{clusterError}</p>
-						{:else if !clusters}
-							<!-- The first run has nothing to keep on screen, so this is all
-							     there is to look at. A grey box says only that something is
-							     missing; naming the work and roughly how long it takes is the
-							     difference between waiting and wondering whether it is broken. -->
-							<SweepBar />
-							<div
-								class="flex h-full w-full flex-col items-center justify-center gap-3 p-8 text-center"
-							>
-								<i class="fa-solid fa-spinner fa-spin text-lg text-gray-300"></i>
-								<div>
-									<p class="text-sm font-medium text-gray-700">
-										{explore.projection === 'umap' ? 'Projecting and clustering' : 'Clustering'}
-									</p>
-									<p class="mx-auto mt-1 max-w-sm text-xs text-gray-500">
-										{#if explore.projection === 'umap'}
-											UMAP is fitting {embeddedCount === null
-												? 'the corpus'
-												: `${formatNumber(embeddedCount)} chunks`} down to two dimensions and running
-											HDBSCAN in them. A few seconds — longer on the first run after the server starts,
-											which compiles the projection.
-										{:else}
-											Reducing {embeddedCount === null
-												? 'the corpus'
-												: `${formatNumber(embeddedCount)} chunks`} to 50 principal components and running
-											HDBSCAN over them.
-										{/if}
-									</p>
-								</div>
-							</div>
-						{:else if points.length === 0}
-							<p class="p-5 text-sm text-gray-500">
-								No chunks of this kind match the filters, so there is nothing to plot.
-							</p>
-						{:else}
-							<ScatterPlot
-								{points}
-								{selectedId}
-								bind:hoveredId
-								{matchedIds}
-								{colorOf}
-								{grouped}
-								{strengthOf}
-								{visible}
-								{describe}
-								resetKey={`${kind}:${explore.projection}`}
-								stale={clusterLoading}
-								onselect={(id) => {
-									selectedId = id;
-									if (id) focusedGroup = null;
-								}}
-							/>
-						{/if}
-					</div>
-
-					{#if clusters}
-						<div
-							class="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-100 px-4 py-2 text-xs text-gray-500"
-						>
-							{#if groupMode === 'cluster'}
-								<span>
-									<span class="font-medium text-gray-700">{formatNumber(clusters.n_clusters)}</span>
-									clusters
-								</span>
-							{:else}
-								<span>
-									<span class="font-medium text-gray-700">{formatNumber(groupCount)}</span>
-									{modeLabel.toLowerCase()}
-								</span>
-								{#if ungrouped > 0}
-									<span class="flex items-center gap-1.5">
-										<span
-											class="inline-block h-2 w-2 rounded-full"
-											style="background:{OUTLIER_COLOR}"
-										></span>
-										{formatNumber(ungrouped)} without coordinates
-									</span>
-								{/if}
-							{/if}
-							<span>{formatNumber(clusters.n_points)} chunks</span>
-							{#if groupMode === 'cluster'}
-								<span class="flex items-center gap-1.5">
-									<span class="inline-block h-2 w-2 rounded-full" style="background:{OUTLIER_COLOR}"
-									></span>
-									{formatNumber(clusters.n_outliers)} unplaced
-								</span>
-							{/if}
-							<!-- What the two axes are worth, stated rather than left to be
-							     assumed. PCA can put a number on it; UMAP cannot, and the
-							     honest thing there is to say what the picture is instead of
-							     borrowing a figure it did not produce. -->
-							{#if clusters.explained_variance_2d !== null && clusters.explained_variance_2d !== undefined}
-								<span class="flex items-center gap-1">
-									{formatPercent(clusters.explained_variance_2d)} of the spread shown
-									<!-- Around a third is normal for text embeddings: points far
-									     apart really are far apart, but points close together need
-									     not be. -->
-									<HoverInfo
-										text="The map is a flat shadow of a {clusters.components}-dimensional space, and shows about {formatPercent(
-											clusters.explained_variance_2d
-										)} of the variation in it. Read distance as a navigation aid, not as evidence — things far apart on screen are genuinely far apart, but things close together may not be."
-									/>
-								</span>
-							{:else}
-								<span class="flex items-center gap-1">
-									Neighbourhood layout — distances are not to scale
-									<HoverInfo
-										text="UMAP is fitted to keep neighbours together, not to preserve distance, so there is no share-of-variance to report. Read which points sit with which; do not read how far apart two blobs are, or how big one is. A theme split across two blobs is a real possibility here — check each one's representatives before treating them as separate findings."
-									/>
-								</span>
-							{/if}
-							{#if !clusters.centered_by_question}
-								<span class="text-amber-700">Uncentred by question</span>
-							{/if}
-							{#if multilingual && !clusters.centered_by_language}
-								<span class="text-amber-700">Uncentred by language</span>
-							{/if}
-							<!-- Said here because every number in this strip is computed over
-							     the whole run, hidden points included: the reader is looking
-							     at a subset of a map that is still counted in full, and the
-							     alternative — recounting on a view toggle — would make two
-							     controls that look alike report different totals. -->
-							{#if visibleLanguages.length > 0}
-								<span class="flex items-center gap-1">
-									Showing {visibleLanguages.map((code) => code.toUpperCase()).join(', ')}
-									<HoverInfo
-										text="A view filter: the map is unchanged and the other languages are faded, not removed. The counts here still describe every plotted chunk. To leave a language out of the projection and the clustering, use Languages under Corpus in the controls."
-									/>
-								</span>
-							{/if}
-
-							{#if clusterLoading}
-								<!-- Named here rather than over the map: this strip is already
-								     where the run describes itself, and a pill floating on the
-								     scatter covered the corner the reader drags from. The bar
-								     along the top edge is what catches the eye; this says which
-								     of the numbers beside it are about to change. -->
-								<span class="ml-auto flex items-center gap-1.5 text-gray-400">
-									<i class="fa-solid fa-spinner fa-spin text-[0.625rem]"></i>
-									Reclustering…
-								</span>
-							{/if}
-						</div>
+					{:else}
+						<DetailPanel
+							clusters={clusters?.clusters ?? null}
+							{groups}
+							{groupMode}
+							{multilingual}
+							clustersLoading={clusterLoading && clusters === null}
+							search={visibleSearch}
+							{searchLoading}
+							{searchError}
+							{searchPaging}
+							detail={visibleDetail}
+							{detailLoading}
+							{detailError}
+							{neighbourPaging}
+							{selectedId}
+							{focusedGroup}
+							onselect={(id) => (selectedId = id)}
+							onfocusgroup={(key) => (focusedGroup = key)}
+							ontranscript={(hit) => (transcriptOf = hit)}
+						/>
 					{/if}
 				</div>
-
-				<div
-					class="flex min-h-[26rem] shrink-0 flex-col gap-2 {codesMinimised ? '' : 'lg:w-[22rem]'}"
-				>
-					<!-- Two readings of what is in the corpus: the clusters the run
-					     found, and the codebook the analyst is building over it. A
-					     toggle rather than two columns — a reader is looking at one or
-					     the other, and two columns would cost the map a third of its
-					     width to say so. -->
-					<!-- Hidden while the code pane is minimised: it would hold open the
-					     width the reader just asked for back, and restoring the pane --
-					     the obvious next gesture -- brings it straight back. -->
-					{#if !codesMinimised}
-						<div
-							role="group"
-							aria-label="Right pane"
-							class="flex shrink-0 overflow-hidden rounded-md border border-gray-200"
-						>
-							{#each [{ value: 'clusters', label: 'Clusters', icon: 'fa-shapes' }, { value: 'codes', label: 'Codes', icon: 'fa-tags' }] as option (option.value)}
-								<button
-									type="button"
-									onclick={() => (panel = option.value as 'clusters' | 'codes')}
-									aria-pressed={panel === option.value}
-									class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-2.5 py-1.5 text-sm font-medium transition-colors {panel ===
-									option.value
-										? 'bg-primary text-on-primary'
-										: 'bg-white text-gray-500 hover:text-gray-900'}"
-								>
-									<i class="fas {option.icon} text-[0.6875rem]"></i>
-									{option.label}
-								</button>
-							{/each}
-						</div>
-					{/if}
-
-					<div class="min-h-0 w-full flex-1">
-						{#if panel === 'codes'}
-							<!-- Keyed: the pane holds expansion state keyed by code id, and
-							     a different codebook arriving in the same component would
-							     carry the old one's open branches with it. -->
-							{#key book}
-								<CodebookGate {book}>
-									{#snippet children(tree)}
-										<CodePanel
-											{tree}
-											{book}
-											bind:open={codesOpen}
-											bind:keyword={explore.keyword}
-											bind:coverage={explore.coverage}
-											{countOf}
-											ondefine={searchByDefinition}
-											onlike={findMoreLikeCode}
-										/>
-									{/snippet}
-								</CodebookGate>
-							{/key}
-						{:else}
-							<DetailPanel
-								clusters={clusters?.clusters ?? null}
-								{groups}
-								{groupMode}
-								{multilingual}
-								clustersLoading={clusterLoading && clusters === null}
-								search={visibleSearch}
-								{searchLoading}
-								{searchError}
-								{searchPaging}
-								detail={visibleDetail}
-								{detailLoading}
-								{detailError}
-								{neighbourPaging}
-								{selectedId}
-								{focusedGroup}
-								onselect={(id) => (selectedId = id)}
-								onfocusgroup={(key) => (focusedGroup = key)}
-								ontranscript={(hit) => (transcriptOf = hit)}
-							/>
-						{/if}
-					</div>
-				</div>
-			{/if}
-		</div>
-	{/if}
+			</div>
+		{/if}
+	</div>
 </div>
 
 <!-- Outside the layout entirely: it portals to the body, and the reader opening

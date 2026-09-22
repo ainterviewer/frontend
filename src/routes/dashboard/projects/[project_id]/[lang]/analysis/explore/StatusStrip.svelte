@@ -99,13 +99,25 @@
 <div
 	class="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs text-gray-500"
 >
+	<!-- Three states and not two. "Unreachable" is a fault and reads as one;
+	     a deployment that runs no embedding server is not missing anything it
+	     was meant to have, so it gets a grey dot and a plain statement rather
+	     than an amber one and a word that invites somebody to go looking for
+	     the box. -->
 	<span class="flex items-center gap-2 font-medium text-gray-700">
 		<span
 			class="inline-block h-2 w-2 rounded-full"
 			class:bg-green-500={status.healthy}
-			class:bg-amber-500={!status.healthy}
+			class:bg-amber-500={status.enabled && !status.healthy}
+			class:bg-gray-300={!status.enabled}
 		></span>
-		{status.healthy ? 'Embedding server up' : 'Embedding server unreachable'}
+		{#if !status.enabled}
+			No embedding server on this deployment
+		{:else if status.healthy}
+			Embedding server up
+		{:else}
+			Embedding server unreachable
+		{/if}
 	</span>
 
 	<!-- Chunks with a stored vector, per unit — not a description of the
@@ -148,12 +160,17 @@
 	{/if}
 
 	<span class="ml-auto flex items-center gap-3">
-		<span class="font-mono text-[0.6875rem] text-gray-400">{status.model}</span>
+		<!-- The model is what would be used, which is worth nothing to read when
+		     nothing will be. -->
+		{#if status.enabled}
+			<span class="font-mono text-[0.6875rem] text-gray-400">{status.model}</span>
+		{/if}
 		{#if canBackfill}
 			<button
 				type="button"
 				onclick={backfill}
-				disabled={running}
+				disabled={running || !status.enabled}
+				title={status.enabled ? null : 'There is no embedding server to send the transcripts to.'}
 				class="rounded-md border border-gray-200 px-2.5 py-1 font-medium text-gray-700 hover:border-gray-300 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50"
 			>
 				{running ? 'Embedding…' : 'Re-embed project'}
