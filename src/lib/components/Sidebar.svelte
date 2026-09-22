@@ -7,7 +7,6 @@
 
 	import HoverInfo from './HoverInfo.svelte';
 
-	//  TODO: Align text after icons
 	let { items }: { items: SidebarItem[] } = $props();
 	let collapsed = $derived(sidebar.collapsed);
 	let expanded = $derived(!collapsed);
@@ -191,15 +190,17 @@
 		<a
 			{...item.href && { href: getResolvedHref(item.href) }}
 			class={[
-				'peer relative block w-full whitespace-nowrap text-light no-underline select-none',
+				'peer relative flex min-h-[2em] w-full items-center whitespace-nowrap text-light no-underline select-none',
 				item.href && 'hover:bg-light hover:text-dark',
 				active && 'active'
 			].join(' ')}
 		>
 			{#if item.icon}
+				<!-- Indent rail: carries the tree guide line, stretched to the full row height so
+				     the line runs unbroken between siblings. -->
 				<span
 					class={[
-						'icon inline-block min-w-6 text-center transition-all duration-500',
+						'icon flex flex-none items-center self-stretch transition-all duration-500',
 						level === 0
 							? 'ml-6'
 							: collapsed
@@ -213,14 +214,19 @@
 										: '')
 					].join(' ')}
 				>
-					<i class={[item.icon, collapsed && level > 0 && 'text-xs'].filter(Boolean).join(' ')}></i>
+					<!-- Fixed-width glyph cell: wide icons centre inside it instead of pushing the
+					     label right, so every label in a level starts at the same x. -->
+					<span class={['flex-none text-center', collapsed && level > 0 ? 'w-4' : 'w-6'].join(' ')}>
+						<i class={[item.icon, collapsed && level > 0 && 'text-xs'].filter(Boolean).join(' ')}
+						></i>
+					</span>
 				</span>
 			{/if}
 			{#if item.label}
 				<span
 					class={[
 						'item pl-1',
-						expanded ? 'inline' : 'hidden',
+						expanded ? 'block' : 'hidden',
 						active && "font-bold after:ml-2 after:content-['<']"
 					].join(' ')}>{item.label}</span
 				>
