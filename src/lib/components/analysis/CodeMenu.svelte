@@ -17,6 +17,8 @@
 		codes: readonly Code[];
 		/** Where the reader right-clicked, in viewport coordinates. */
 		at: { x: number; y: number };
+		/** The passage the click landed on, which the menu then travels with. */
+		anchor: HTMLElement;
 		/**
 		 * What this coder has already put on the target: code id to value. Ticks
 		 * and marked scale numbers come out of it, and picking one takes the
@@ -29,7 +31,7 @@
 		onclose: () => void;
 	}
 
-	let { codes, at, applied, quote = null, onpick, onclose }: Props = $props();
+	let { codes, at, anchor, applied, quote = null, onpick, onclose }: Props = $props();
 
 	let filter = $state('');
 	let menu = $state<HTMLElement | null>(null);
@@ -67,31 +69,44 @@
 			}));
 	});
 
+	/** `w-60`, in a number, for the two places that place the menu by hand. */
+	const width = 240;
+
 	/**
-	 * Kept on screen: a menu opened near the bottom or the right edge would
-	 * otherwise run off it, and a context menu has no scroll of its own to get
-	 * the reader back to.
+	 * Kept inside the list: a menu opened near the bottom or the right edge of
+	 * it would otherwise run past, and past the list is now cut off -- see the
+	 * clip below.
 	 *
-	 * A codebook is taller than the viewport long before it is interesting, so
-	 * every list here scrolls and is capped at the room left below it. That
-	 * would ordinarily clip the fold-outs hanging outside the list -- the one
-	 * thing this menu is for -- which is why `CodeMenuItems` positions them
-	 * `fixed` rather than inside the scrolling box.
+	 * The menu is pulled up by however much it overhangs rather than shortened
+	 * to the room below the cursor, so a right-click low in the list opens the
+	 * same full menu as one high in it. Only a codebook taller than the list
+	 * itself gets a scroll, and then the menu is as tall as the list.
+	 *
+	 * That cap would ordinarily clip the fold-outs hanging outside the list --
+	 * the one thing this menu is for -- which is why `CodeMenuItems` positions
+	 * them `fixed` rather than inside the scrolling box.
 	 */
 	let placement = $derived.by(() => {
-		const width = 240;
-		// Not the menu's height: it scrolls, so this is only how much of it has
-		// to stay on screen before the top stops following the cursor down.
-		const minHeight = 220;
 		const margin = 8;
 		if (typeof window === 'undefined')
-			return { left: at.x, top: at.y, maxHeight: minHeight, flip: false };
-		const overflowsRight = at.x + width + margin > window.innerWidth;
-		const top = Math.max(margin, Math.min(at.y, window.innerHeight - minHeight - margin));
+			return { left: at.x, top: at.y, maxHeight: 220, flip: false };
+		const box = bounds ?? {
+			top: 0,
+			left: 0,
+			right: window.innerWidth,
+			bottom: window.innerHeight
+		};
+		// Before the menu has been measured, the room it has is the best guess at
+		// how much of it there is -- which places it against the bottom, where
+		// the correction below then moves it once the real height is known.
+		const room = Math.max(120, box.bottom - box.top - margin * 2);
+		const maxHeight = Math.min(natural ?? room, room);
+		const overflowsRight = at.x + width + margin > box.right;
+		const top = Math.max(box.top + margin, Math.min(at.y, box.bottom - maxHeight - margin));
 		return {
-			left: overflowsRight ? Math.max(margin, at.x - width) : at.x,
+			left: Math.max(box.left + margin, overflowsRight ? at.x - width : at.x),
 			top,
-			maxHeight: window.innerHeight - top - margin,
+			maxHeight,
 			// Fold-outs open leftwards once the menu itself has been pulled left:
 			// there was no room on that side for the menu, so there is none for a
 			// second column beyond it.
@@ -116,14 +131,136 @@
 		const node = menu;
 		if (!node) return;
 		const want = placement;
+		// Wherever the scroll has carried the menu to by now: the correction is
+		// about an offset ancestor, and must not undo the travel below.
+		const carried = drift;
 		const box = node.getBoundingClientRect();
-		const dx = want.left - box.left;
-		const dy = want.top - box.top;
+		const dx = want.left + carried.x - box.left;
+		const dy = want.top + carried.y - box.top;
 		// Sub-pixel differences are the browser's rounding, not an offset
 		// ancestor, and chasing them would be a loop.
 		if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
 		const applied = untrack(() => shift);
 		shift = { x: applied.x + dx, y: applied.y + dy };
+	});
+
+	/**
+	 * Scrolling moves the menu with the passage, not with the window.
+	 *
+	 * `at` is a viewport coordinate and the menu is `fixed`, so left alone it
+	 * would hold its place on the screen while the list carried the turn it is
+	 * about away underneath -- a menu of codes hanging over some other reader's
+	 * words. So the anchor is measured as the menu opens and again on every
+	 * scroll, and the menu is offset by however far it has travelled: it keeps
+	 * the place it opened in on the *page*, and scrolling far enough takes it
+	 * off screen with the passage, which is the honest answer to a reader who
+	 * has scrolled away from what they were coding.
+	 *
+	 * Measuring the anchor rather than the scroller means an unrelated pane --
+	 * the rail, the code panel -- moves the menu by exactly zero, without
+	 * anything here having to work out which box the turn lives in.
+	 */
+	let origin = $state<{ x: number; y: number } | null>(null);
+	let drift = $state({ x: 0, y: 0 });
+
+	/**
+	 * The box the passage scrolls inside, which is the box the menu is kept in.
+	 *
+	 * Travelling with the passage means travelling out of the list with it, and
+	 * a `fixed` menu has no parent to be cut off by -- so it sailed on over the
+	 * toolbar and the page heading, which belong to neither the list nor the
+	 * menu. The scroll box is found once from the anchor and the menu is
+	 * clipped to it below, so it slides under the list's edges the way it would
+	 * if it were drawn inside them.
+	 *
+	 * Only `auto` and `scroll` count. `hidden` clips too, but it is what rounds
+	 * the corners off half the cards on this page, and clipping a menu to the
+	 * bubble it was opened on would leave nothing of it.
+	 */
+	function scrollBoxOf(node: HTMLElement): HTMLElement | null {
+		for (let el = node.parentElement; el; el = el.parentElement) {
+			const style = getComputedStyle(el);
+			if (/auto|scroll/.test(style.overflowY) || /auto|scroll/.test(style.overflowX)) return el;
+		}
+		return null;
+	}
+
+	type Box = { top: number; right: number; bottom: number; left: number };
+
+	/**
+	 * Re-measured on every scroll, but only *replaced* where it has moved.
+	 *
+	 * `getBoundingClientRect` hands back a fresh object each time, and taking it
+	 * as new state each time made `placement` -- and so the correction above --
+	 * run on every scroll event, which put the menu back where it opened on the
+	 * screen and undid the travel entirely.
+	 */
+	function boxOf(el: HTMLElement | null): Box | null {
+		if (!el) return null;
+		const { top, right, bottom, left } = el.getBoundingClientRect();
+		return { top, right, bottom, left };
+	}
+
+	function same(a: Box | null, b: Box | null): boolean {
+		if (!a || !b) return a === b;
+		return a.top === b.top && a.right === b.right && a.bottom === b.bottom && a.left === b.left;
+	}
+
+	let bounds = $state<Box | null>(null);
+	let height = $state(0);
+
+	/**
+	 * The height the menu would like to be, which is what lets it be placed
+	 * rather than merely capped.
+	 *
+	 * `scrollHeight` reports the content whatever the cap currently is, so this
+	 * is the whole codebook's height even on the first pass, when the cap is
+	 * still the fallback guess. Taken as the menu opens and not again: the
+	 * filter shortens the list with every keystroke, and a menu that re-placed
+	 * itself on each one would walk out from under the pointer. `+ 2` is the
+	 * border, which `scrollHeight` leaves out.
+	 */
+	let natural = $state<number | null>(null);
+
+	$effect(() => {
+		const box = anchor.getBoundingClientRect();
+		origin = { x: box.left, y: box.top };
+		drift = { x: 0, y: 0 };
+		bounds = boxOf(scrollBoxOf(anchor));
+		natural = menu ? menu.scrollHeight + 2 : null;
+	});
+
+	function onscrollcapture() {
+		// A turn dropped from the list on its way past takes its coordinates with
+		// it: `getBoundingClientRect` on a detached node is all zeroes, which
+		// would fling the menu into the corner. Better to leave it where it is.
+		if (!origin || !anchor.isConnected) return;
+		const box = anchor.getBoundingClientRect();
+		drift = { x: box.left - origin.x, y: box.top - origin.y };
+		// Re-measured because the scroll that moved the passage may have been an
+		// outer one that moved the list itself.
+		const next = boxOf(scrollBoxOf(anchor));
+		if (!same(bounds, next)) bounds = next;
+	}
+
+	/**
+	 * How much of the menu the scroll box cuts off, as a `clip-path` inset.
+	 *
+	 * Worked out from where the menu is asked to be rather than from measuring
+	 * it, so it is in step with the same scroll that moved it -- and `clip-path`
+	 * takes the pointer with it, so a row scrolled under the list's top edge
+	 * cannot be hovered or clicked either.
+	 */
+	let clip = $derived.by(() => {
+		if (!bounds) return null;
+		const top = placement.top + shift.y + drift.y;
+		const left = placement.left + shift.x + drift.x;
+		const above = Math.max(0, bounds.top - top);
+		const below = Math.max(0, top + height - bounds.bottom);
+		const before = Math.max(0, bounds.left - left);
+		const beyond = Math.max(0, left + width - bounds.right);
+		if (!above && !below && !before && !beyond) return null;
+		return `inset(${above}px ${beyond}px ${below}px ${before}px)`;
 	});
 
 	/**
@@ -177,16 +314,18 @@
 	}
 </script>
 
-<svelte:window {onpointerdown} onkeydowncapture={onescape} />
+<svelte:window {onpointerdown} {onscrollcapture} onkeydowncapture={onescape} />
 
 <div
 	bind:this={menu}
+	bind:clientHeight={height}
 	role="menu"
 	tabindex="-1"
 	{onkeydown}
 	class="fixed z-50 w-60 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-xl"
-	style="left: {placement.left + shift.x}px; top: {placement.top +
-		shift.y}px; max-height: {placement.maxHeight}px"
+	style="left: {placement.left + shift.x + drift.x}px; top: {placement.top +
+		shift.y +
+		drift.y}px; max-height: {placement.maxHeight}px{clip ? `; clip-path: ${clip}` : ''}"
 >
 	{#if quote}
 		<p class="truncate border-b border-gray-100 px-3 pb-1.5 text-[11px] text-gray-400">

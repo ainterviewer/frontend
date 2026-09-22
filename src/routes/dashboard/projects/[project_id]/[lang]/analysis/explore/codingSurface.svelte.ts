@@ -21,6 +21,16 @@ import type { TextSpan } from '$lib/utils/textSelection';
 export type CodeMenuRequest = {
 	messageId: string;
 	at: { x: number; y: number };
+	/**
+	 * The turn the click landed on, so the menu can stay with it.
+	 *
+	 * `at` is where the pointer was, in viewport coordinates, and the menu is
+	 * `fixed` -- which on its own leaves it hanging in the middle of the window
+	 * while the list scrolls the passage it is about out from under it. Holding
+	 * the element lets the menu re-measure it and move by the same amount, so
+	 * it keeps the place it opened in *on the page* rather than on the screen.
+	 */
+	anchor: HTMLElement;
 	/** The stretch of the turn the reader had selected, or `null` for all of it. */
 	span: TextSpan | null;
 	quote: string | null;

@@ -2193,6 +2193,7 @@
 		<CodeMenu
 			codes={book.status === 'ready' ? book.tree.codes : []}
 			at={codeMenu.at}
+			anchor={codeMenu.anchor}
 			quote={codeMenu.quote}
 			applied={appliedCodes(codings, codeMenu.messageId, userId, codeMenu.span)}
 			onpick={(code, value) => applyFromMenu(code.id, value)}

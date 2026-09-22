@@ -108,10 +108,12 @@
 	function openMenu(event: MouseEvent, turn: EmbeddingTurn | TranscriptTurn) {
 		if (!coding) return;
 		event.preventDefault();
-		const span = selectionWithin(event.currentTarget as HTMLElement, turn.text);
+		const bubble = event.currentTarget as HTMLElement;
+		const span = selectionWithin(bubble, turn.text);
 		coding.openMenu({
 			messageId: turn.id,
 			at: { x: event.clientX, y: event.clientY },
+			anchor: bubble,
 			span,
 			quote: span ? turn.text.slice(span.start, span.end) : null
 		});
