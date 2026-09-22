@@ -4,6 +4,29 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.5.5] - 2026-09-22
+
+### Features
+
+- Navigating projects and languages in the header now stays on the same subroute instead of defaulting to setup
+- Improved CodeMenu scrolling and submenu positioning
+- Improve message scrolling after new questions
+- Anchor code menu and more improvements to code menu height and folding
+
+### Bug Fixes
+
+- Use resolve for all paths in header switchers
+- Code menu submenus no longer stack on top of each other when there is no more right space available
+
+### Internal
+
+- Publish a staging tag on every release
+- Set cancel-in-progress to true for release wf
+- Add test job
+- Add eslint import-sort
+- Sort imports
+- Better release version detection in wf
+
 ## [0.5.4] - 2026-09-17
 
 ### Features
