@@ -52,8 +52,12 @@
 	{/if}
 	{#each resolved as entry (entry.coding.id)}
 		{@const removable = onRemove && entry.coding.user_id === currentUserId}
+		<!-- `rounded-xl` rather than `rounded-full`: half a one-line chip's
+		     height, so a chip that fits on one line is still a capsule, while a
+		     label that wraps becomes a rounded rectangle instead of a tall oval
+		     whose ends curve in over its own words. -->
 		<span
-			class="group/chip inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+			class="group/chip inline-flex items-center gap-1 rounded-xl px-2 py-1 text-xs font-medium"
 			class:opacity-70={showAuthor}
 			onmouseenter={() => onHover?.(entry.coding)}
 			onmouseleave={() => onHover?.(null)}
