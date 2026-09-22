@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.5.7] - 2026-09-22
+
+### Features
+
+- Improve coding pill padding and wrapping
+- Fix UI for environments with settings.services.embeddings.enabled = false
+
+### Bug Fixes
+
+- Improved text and icon alignment in sidebar
+
 ## [0.5.6] - 2026-09-22
 
 ### Internal
