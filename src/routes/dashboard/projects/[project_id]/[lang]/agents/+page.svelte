@@ -10,6 +10,8 @@
 	import { contentRevision } from '$lib/content/revision.svelte';
 
 	import type { PageData } from './$types';
+	import { policyErrors } from './securityPolicy';
+	import SecuritySettings from './SecuritySettings.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -155,14 +157,21 @@
 	// Saved as it is edited; there is no Save.
 	const saver = new Autosaver({
 		read: buildConfig,
-		save: (body, overwrite) =>
-			saveContent(
+		save: async (body, overwrite) => {
+			if (body.security?.policy) {
+				const errors = policyErrors(body.security.policy);
+				if (errors.policy.length > 0 || errors.decisions.size > 0) {
+					return { ok: false, invalid: 'Not saved: fix the safety check decisions' };
+				}
+			}
+			return saveContent(
 				projectId,
 				'agents',
 				(headers) =>
 					Projects.createInterviewAgents({ path: { project_id: projectId }, body, headers }),
 				overwrite
-			)
+			);
+		}
 	});
 	saver.watch();
 
@@ -611,6 +620,15 @@
 			<div class="space-y-8">{@render slotInputs()}</div>
 		{/if}
 	</section>
+
+	{#if agents.security}
+		<SecuritySettings
+			bind:security={agents.security}
+			{models}
+			{mode}
+			defaultPolicy={data.securityPolicyDefaults}
+		/>
+	{/if}
 
 	<div
 		data-action-bar

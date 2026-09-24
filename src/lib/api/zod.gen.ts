@@ -1524,7 +1524,8 @@ export const zMessageType = z.enum([
     'image',
     'audio',
     'custom_token',
-    'survey_item'
+    'survey_item',
+    'security_override'
 ]);
 
 /**
@@ -2041,6 +2042,42 @@ export const zAccessRequestsProcessRequest = z.object({
     action: z.enum(['approve', 'deny'])
 });
 
+export const zSecurityAction = z.enum([
+    'skip_probes',
+    'skip_section',
+    'end_interview'
+]);
+
+/**
+ * SecurityDecision
+ */
+export const zSecurityDecision = z.object({
+    name: z.string(),
+    description: z.string(),
+    threshold: z.number().gte(0).lte(1),
+    action: zSecurityAction,
+    action_text: z.string().optional().default('Our automated safety system has triggered an intervention.'),
+    respondent_override: z.boolean().optional().default(false)
+});
+
+/**
+ * SecurityIntervention
+ *
+ * Marks a message as sent by the security check, to be shown in a modal
+ * rather than in the chat.
+ */
+export const zSecurityIntervention = z.object({
+    action: zSecurityAction,
+    respondent_override: z.boolean()
+});
+
+/**
+ * SecurityPolicy
+ */
+export const zSecurityPolicy = z.object({
+    decisions: z.array(zSecurityDecision).min(1)
+});
+
 /**
  * SecurityConfig
  */
@@ -2048,7 +2085,7 @@ export const zSecurityConfig = z.object({
     model: z.string().optional().default('openrouter:openai/gpt-oss-120b'),
     temperature: z.number().gte(0).lte(2).optional().default(0.7),
     include: z.boolean().optional().default(false),
-    sensitive_subjects: z.array(z.unknown()).nullish()
+    policy: zSecurityPolicy.optional()
 });
 
 /**
@@ -2412,6 +2449,7 @@ export const zMessagePublic = z.object({
         zTimeItem
     ]).nullish(),
     skipped_by_condition: z.boolean().optional().default(false),
+    security_intervention: zSecurityIntervention.nullish(),
     id: z.string(),
     codings: z.array(zCodingPublic).optional().default([]),
     comments: z.array(zMessageCommentPublic).optional().default([]),
@@ -3182,7 +3220,8 @@ export const zOutgoingHistoryMessage = z.object({
         zDateItem,
         zDatetimeItem,
         zTimeItem
-    ]).nullish().default(null)
+    ]).nullish().default(null),
+    security_intervention: zSecurityIntervention.nullish().default(null)
 });
 
 /**
@@ -3208,6 +3247,7 @@ export const zOutgoingMessage = z.object({
         zDatetimeItem,
         zTimeItem
     ]).nullish().default(null),
+    security_intervention: zSecurityIntervention.nullish().default(null),
     can_answer: z.boolean().optional().default(true),
     user_image: z.boolean().optional().default(false),
     progress: z.number().gte(0).lte(100).nullish().default(null),
@@ -3228,6 +3268,11 @@ export const zReceivedData = z.object({
     content: z.string(),
     filename: z.string().nullish().default(null)
 });
+
+/**
+ * SecurityOverride
+ */
+export const zSecurityOverride = z.enum(['accept', 'override']);
 
 /**
  * TemplatePlaceholder
@@ -4769,6 +4814,11 @@ export const zUpdateExternalParamsQuery = z.object({
  * Successful Response
  */
 export const zGetPromptDefaultsResponse = zProbingPromptSlots;
+
+/**
+ * Successful Response
+ */
+export const zGetSecurityPolicyDefaultsResponse = zSecurityPolicy;
 
 export const zGetConsentPath = z.object({
     project_id: z.string(),

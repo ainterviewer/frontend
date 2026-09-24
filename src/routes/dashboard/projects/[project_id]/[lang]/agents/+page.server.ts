@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 	const { cookieHeader } = locals;
 	const { project_id } = params;
 
-	const [modelsRes, agentsRes, defaultsRes] = await Promise.all([
+	const [modelsRes, agentsRes, defaultsRes, securityDefaultsRes] = await Promise.all([
 		Default.getModels({
 			headers: { cookie: cookieHeader },
 			fetch
@@ -20,6 +20,10 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 			fetch
 		}),
 		Projects.getPromptDefaults({
+			headers: { cookie: cookieHeader },
+			fetch
+		}),
+		Projects.getSecurityPolicyDefaults({
 			headers: { cookie: cookieHeader },
 			fetch
 		})
@@ -38,6 +42,11 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 		throw error(500, 'Failed to load prompt defaults');
 	}
 
+	if (securityDefaultsRes.error || !securityDefaultsRes.data) {
+		console.error('Failed to load security policy defaults', securityDefaultsRes.error);
+		throw error(500, 'Failed to load security policy defaults');
+	}
+
 	const models = (modelsRes.data as unknown as string[]) || [];
 	const agents = agentsRes.data || {};
 	const promptDefaults = defaultsRes.data || {};
@@ -46,6 +55,7 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 		models,
 		agents,
 		promptDefaults,
-		revision: etagOf(agentsRes.response)
+		revision: etagOf(agentsRes.response),
+		securityPolicyDefaults: securityDefaultsRes.data
 	};
 };

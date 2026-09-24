@@ -3607,6 +3607,7 @@ export type MessagePublic = {
      * Skipped By Condition
      */
     skipped_by_condition?: boolean;
+    security_intervention?: SecurityIntervention | null;
     /**
      * Id
      */
@@ -3630,7 +3631,7 @@ export type MessageRole = 'system' | 'assistant' | 'user';
 /**
  * MessageType
  */
-export type MessageType = 'text' | 'image' | 'audio' | 'custom_token' | 'survey_item';
+export type MessageType = 'text' | 'image' | 'audio' | 'custom_token' | 'survey_item' | 'security_override';
 
 /**
  * MonitoringStats
@@ -4618,6 +4619,8 @@ export type SaveVersionRequest = {
  */
 export type Scope = 'admin' | 'user' | 'demo';
 
+export type SecurityAction = 'skip_probes' | 'skip_section' | 'end_interview';
+
 /**
  * SecurityConfig
  */
@@ -4634,10 +4637,64 @@ export type SecurityConfig = {
      * Include
      */
     include?: boolean;
+    policy?: SecurityPolicy;
+};
+
+/**
+ * SecurityDecision
+ */
+export type SecurityDecision = {
     /**
-     * Sensitive Subjects
+     * Name
      */
-    sensitive_subjects?: Array<unknown> | null;
+    name: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Threshold
+     *
+     * The threshold which triggers the action
+     */
+    threshold: number;
+    action: SecurityAction;
+    /**
+     * Action Text
+     *
+     * Text displayed to the user when the condition has triggered
+     */
+    action_text?: string;
+    /**
+     * Respondent Override
+     *
+     * Should the user be able to override the action decision?
+     */
+    respondent_override?: boolean;
+};
+
+/**
+ * SecurityIntervention
+ *
+ * Marks a message as sent by the security check, to be shown in a modal
+ * rather than in the chat.
+ */
+export type SecurityIntervention = {
+    action: SecurityAction;
+    /**
+     * Respondent Override
+     */
+    respondent_override: boolean;
+};
+
+/**
+ * SecurityPolicy
+ */
+export type SecurityPolicy = {
+    /**
+     * Decisions
+     */
+    decisions: Array<SecurityDecision>;
 };
 
 /**
@@ -5589,6 +5646,7 @@ export type OutgoingHistoryMessage = {
      * Survey Item
      */
     survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    security_intervention?: SecurityIntervention | null;
 };
 
 /**
@@ -5617,6 +5675,7 @@ export type OutgoingMessage = {
      * Survey Item
      */
     survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    security_intervention?: SecurityIntervention | null;
     /**
      * Can Answer
      */
@@ -5659,6 +5718,11 @@ export type ReceivedData = {
      */
     filename?: string | null;
 };
+
+/**
+ * SecurityOverride
+ */
+export type SecurityOverride = 'accept' | 'override';
 
 /**
  * TemplatePlaceholder
@@ -9941,6 +10005,22 @@ export type GetPromptDefaultsResponses = {
 };
 
 export type GetPromptDefaultsResponse = GetPromptDefaultsResponses[keyof GetPromptDefaultsResponses];
+
+export type GetSecurityPolicyDefaultsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/security-policy-defaults';
+};
+
+export type GetSecurityPolicyDefaultsResponses = {
+    /**
+     * Successful Response
+     */
+    200: SecurityPolicy;
+};
+
+export type GetSecurityPolicyDefaultsResponse = GetSecurityPolicyDefaultsResponses[keyof GetSecurityPolicyDefaultsResponses];
 
 export type GetConsentData = {
     body?: never;
