@@ -7,6 +7,7 @@
 	import { type ChatClient, clearInterviewSession } from '../../../routes/interview/chat.svelte';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
+	import SecurityInterventionModal from './SecurityInterventionModal.svelte';
 	import SpeechInput from './SpeechInput.svelte';
 	import { TtsPlayer } from './tts';
 	import TypingIndicator from './TypingIndicator.svelte';
@@ -441,6 +442,16 @@
 			</div>
 		</div>
 	</div>
+{/if}
+
+<!-- Security Intervention -->
+{#if chat.securityIntervention}
+	<SecurityInterventionModal
+		intervention={chat.securityIntervention}
+		{lang}
+		onRespond={(choice) => chat.respondToIntervention(choice)}
+		onDismiss={() => chat.dismissIntervention()}
+	/>
 {/if}
 
 <!-- Input Area -->

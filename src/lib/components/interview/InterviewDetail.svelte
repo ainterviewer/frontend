@@ -8,6 +8,8 @@
 	import CodedMessage from '$lib/components/analysis/CodedMessage.svelte';
 	import MessageCommentModal from '$lib/components/analysis/MessageCommentModal.svelte';
 	import AudioPlayer from '$lib/components/interview/AudioPlayer.svelte';
+	import { securityFields } from '$lib/components/interview/security';
+	import SecurityEvent from '$lib/components/interview/SecurityEvent.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import { CommentSurface } from '$lib/stores/commentSurface.svelte';
 	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
@@ -164,7 +166,8 @@
 				condition: conditionFor(msg),
 				section: msg.section,
 				options: undefined,
-				required: false
+				required: false,
+				...securityFields(msg)
 			} as Message & { id: string };
 		});
 
@@ -280,7 +283,9 @@
 							</div>
 						{/if}
 
-						{#if msg.type === 'system'}
+						{#if msg.security}
+							<SecurityEvent event={msg.security} text={msg.text} />
+						{:else if msg.type === 'system'}
 							<div class="my-2 text-center text-sm text-gray-500 select-none">{msg.text}</div>
 						{:else}
 							<CodedMessage

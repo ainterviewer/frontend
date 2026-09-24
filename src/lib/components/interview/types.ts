@@ -1,5 +1,7 @@
 import type { MessagePublic } from '$lib/api';
 
+import type { SecurityEvent } from './security';
+
 /** Websocket close code the backend uses when the `interview_token` cookie is
  *  missing or no longer decodes. The handshake is accepted first precisely so
  *  this code can reach us: a rejected handshake arrives as an opaque error with
@@ -15,6 +17,9 @@ export interface Message {
 	type: MessageType;
 	message_id?: number | string;
 	skipped_by_condition?: boolean;
+	/** A message from the security check, drawn as an event rather than a
+	 *  bubble; see `./security`. Always on a `system` message. */
+	security?: SecurityEvent;
 	/**
 	 * The guide rule this question is subject to, as one line of prose — see
 	 * `$lib/analysis/conditions`. Resolved by whoever builds the message, since

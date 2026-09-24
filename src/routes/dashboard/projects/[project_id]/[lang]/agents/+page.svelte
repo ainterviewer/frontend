@@ -7,6 +7,8 @@
 	import type { AgentConfigs, ProbingAgentConfig, ProbingPromptSlots } from '$lib/api/types.gen';
 
 	import type { PageData } from './$types';
+	import { policyErrors } from './securityPolicy';
+	import SecuritySettings from './SecuritySettings.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -121,6 +123,14 @@
 	}
 
 	async function saveConfig() {
+		if (agents.security?.policy) {
+			const errors = policyErrors(agents.security.policy);
+			if (errors.policy.length > 0 || errors.decisions.size > 0) {
+				toast.error('Fix the safety check decisions before saving');
+				return;
+			}
+		}
+
 		saving = true;
 
 		const persona = personaText.trim();
@@ -595,6 +605,15 @@
 			<div class="space-y-8">{@render slotInputs()}</div>
 		{/if}
 	</section>
+
+	{#if agents.security}
+		<SecuritySettings
+			bind:security={agents.security}
+			{models}
+			{mode}
+			defaultPolicy={data.securityPolicyDefaults}
+		/>
+	{/if}
 
 	<div
 		data-action-bar

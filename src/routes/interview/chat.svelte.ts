@@ -7,7 +7,9 @@ import {
 	type OutgoingData,
 	type OutgoingHistoryMessage,
 	type OutgoingMessage,
-	type ReceivedData
+	type ReceivedData,
+	type SecurityIntervention,
+	type SecurityOverride
 } from '$lib/api';
 import { type Message, WS_UNAUTHORIZED } from '$lib/components/interview/types';
 
@@ -135,6 +137,10 @@ export function clearInterviewSession(projectId: string): void {
 	}
 }
 
+/** A message from the interview's security check, shown in a modal rather
+ *  than in the chat. */
+export type PendingIntervention = SecurityIntervention & { text: string };
+
 export type CreateInterviewResult =
 	{ ok: true; token: string } | { ok: false; paramsInvalid?: boolean };
 
@@ -201,6 +207,9 @@ export class ChatClient {
 	 *  `reconnectFailed`, which means we never got through at all -- here
 	 *  retrying is known to be pointless, so we do not offer it. */
 	serviceUnavailable = $state(false);
+	/** A security intervention the respondent has not closed yet. While it is
+	 *  set, the chat sits behind its modal. */
+	securityIntervention = $state<PendingIntervention | null>(null);
 
 	// Show the typing indicator whenever we're waiting on the server. The chat
 	// is turn-based: the last message being a user `sent` means a reply is
@@ -664,6 +673,34 @@ export class ChatClient {
 		}
 	}
 
+	/** Answer an intervention the respondent may override. The interview waits
+	 *  on this before it goes on. */
+	respondToIntervention(choice: SecurityOverride) {
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.securityIntervention) return;
+
+		const msg: ReceivedData = { type: 'message', content: choice };
+		this.ws.send(JSON.stringify(msg));
+
+		this.markHealthy();
+		this.closeIntervention();
+		// Whichever way it was answered, the server speaks next.
+		this.forceTypingIndicator = true;
+	}
+
+	/** Close an intervention the respondent cannot override. The server has
+	 *  already moved on without waiting for it. */
+	dismissIntervention() {
+		this.closeIntervention();
+	}
+
+	/** The modal goes, but a note of it stays in the chat, so what follows --
+	 *  a question left early, the interview ending -- is not unexplained. */
+	private closeIntervention() {
+		if (!this.securityIntervention) return;
+		this.messages.push({ type: 'system', text: this.securityIntervention.text });
+		this.securityIntervention = null;
+	}
+
 	sendSurveyResponse(response: unknown, originalMessageId: string | number) {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
 			console.error('Cannot send survey response');
@@ -727,6 +764,15 @@ export class ChatClient {
 
 		switch (data.type) {
 			case 'message':
+				if (data.security_intervention) {
+					this.securityIntervention = { ...data.security_intervention, text: data.content };
+					this.inputEnabled = false;
+					// Unless the respondent has to answer first, the server goes on
+					// straight away -- the next question, or the end of the interview.
+					this.forceTypingIndicator = !data.security_intervention.respondent_override;
+					break;
+				}
+
 				if (data.progress) this.progress = data.progress;
 				if (data.image) {
 					const image = toMessageImage(data.image);
@@ -788,7 +834,11 @@ export class ChatClient {
 
 			case 'history':
 				// History processing usually doesn't need delays
-				if (data.role === 'user') {
+				if (data.security_intervention) {
+					// Already answered or closed; one still waiting on the
+					// respondent is replayed as a live message instead.
+					this.messages.push({ type: 'system', text: data.content });
+				} else if (data.role === 'user') {
 					this.messages.push({
 						type: 'sent',
 						text: data.content,

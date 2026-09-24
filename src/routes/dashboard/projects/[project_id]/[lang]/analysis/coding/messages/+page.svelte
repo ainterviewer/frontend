@@ -10,6 +10,8 @@
 	import { codebookFor } from '$lib/coding/store.svelte';
 	import CodedMessage from '$lib/components/analysis/CodedMessage.svelte';
 	import MessageCommentModal from '$lib/components/analysis/MessageCommentModal.svelte';
+	import { securityFields } from '$lib/components/interview/security';
+	import SecurityEvent from '$lib/components/interview/SecurityEvent.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import { CommentSurface } from '$lib/stores/commentSurface.svelte';
 	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
@@ -143,7 +145,8 @@
 			section: msg.section,
 			options: undefined,
 			required: false,
-			raw: msg
+			raw: msg,
+			...securityFields(msg)
 		};
 	}
 
@@ -1012,7 +1015,9 @@
 										{@const msg = item.data}
 										{@const messageId = msg.id}
 
-										{#if msg.type === 'system'}
+										{#if msg.security}
+											<SecurityEvent event={msg.security} text={msg.text} />
+										{:else if msg.type === 'system'}
 											<div class="my-2 text-center text-sm text-gray-500">{msg.text}</div>
 										{:else}
 											{@const isMainQuestion =
