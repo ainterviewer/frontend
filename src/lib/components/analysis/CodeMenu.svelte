@@ -347,7 +347,7 @@
 	tabindex="-1"
 	{onkeydown}
 	onscroll={measureMore}
-	class="fixed z-50 w-60 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+	class="fixed z-50 w-60 [scrollbar-width:none] overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-xl [&::-webkit-scrollbar]:hidden"
 	style="left: {placement.left + shift.x + drift.x}px; top: {placement.top +
 		shift.y +
 		drift.y}px; max-height: {placement.maxHeight}px{clip ? `; clip-path: ${clip}` : ''}"

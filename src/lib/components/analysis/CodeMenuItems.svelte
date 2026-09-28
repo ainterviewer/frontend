@@ -240,7 +240,7 @@
 				<div
 					bind:this={fold}
 					onscroll={measureMore}
-					class="fixed z-50 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden {pos
+					class="fixed z-50 [scrollbar-width:none] overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg [&::-webkit-scrollbar]:hidden {pos
 						? ''
 						: 'invisible'}"
 					style={pos
