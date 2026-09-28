@@ -82,6 +82,11 @@
 	 * same full menu as one high in it. Only a codebook taller than the list
 	 * itself gets a scroll, and then the menu is as tall as the list.
 	 *
+	 * The measured height only decides where the menu goes; the cap is always
+	 * the whole room. Capping at the measurement itself left a menu that fitted
+	 * with nothing between it and a scrollbar but a rounding error -- which
+	 * macOS Chrome duly made, on a menu of three codes.
+	 *
 	 * That cap would ordinarily clip the fold-outs hanging outside the list --
 	 * the one thing this menu is for -- which is why `CodeMenuItems` positions
 	 * them `fixed` rather than inside the scrolling box.
@@ -100,13 +105,13 @@
 		// how much of it there is -- which places it against the bottom, where
 		// the correction below then moves it once the real height is known.
 		const room = Math.max(120, box.bottom - box.top - margin * 2);
-		const maxHeight = Math.min(natural ?? room, room);
+		const tall = Math.min(natural ?? room, room);
 		const overflowsRight = at.x + width + margin > box.right;
-		const top = Math.max(box.top + margin, Math.min(at.y, box.bottom - maxHeight - margin));
+		const top = Math.max(box.top + margin, Math.min(at.y, box.bottom - tall - margin));
 		return {
 			left: Math.max(box.left + margin, overflowsRight ? at.x - width : at.x),
 			top,
-			maxHeight,
+			maxHeight: room,
 			// Fold-outs open leftwards once the menu itself has been pulled left:
 			// there was no room on that side for the menu, so there is none for a
 			// second column beyond it.
@@ -312,6 +317,25 @@
 	function onpointerdown(event: PointerEvent) {
 		if (menu && !menu.contains(event.target as Node)) onclose();
 	}
+
+	/**
+	 * Whether there is more of the menu below the fold.
+	 *
+	 * The menu scrolls without a scrollbar: a classic one -- macOS with a mouse
+	 * plugged in, or "always show scroll bars" -- is a strip between every row
+	 * and its fold-out that belongs to neither, and crossing it closed the
+	 * fold-out the pointer was heading for. A fade at the bottom says there is
+	 * more instead.
+	 */
+	let more = $state(false);
+	function measureMore() {
+		if (menu) more = menu.scrollTop + menu.clientHeight < menu.scrollHeight - 1;
+	}
+	$effect(() => {
+		// Re-read whenever the cap or the contents change, not only on scroll.
+		void [height, hits, codes];
+		measureMore();
+	});
 </script>
 
 <svelte:window {onpointerdown} {onscrollcapture} onkeydowncapture={onescape} />
@@ -322,7 +346,8 @@
 	role="menu"
 	tabindex="-1"
 	{onkeydown}
-	class="fixed z-50 w-60 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-xl"
+	onscroll={measureMore}
+	class="fixed z-50 w-60 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
 	style="left: {placement.left + shift.x + drift.x}px; top: {placement.top +
 		shift.y +
 		drift.y}px; max-height: {placement.maxHeight}px{clip ? `; clip-path: ${clip}` : ''}"
@@ -427,5 +452,15 @@
 		{/if}
 	{:else}
 		<CodeMenuItems items={tree} {applied} flip={placement.flip} {onpick} />
+	{/if}
+
+	{#if more}
+		<!-- Pinned to the bottom of the scrollport and pulled up by its own height,
+		     so it adds nothing to what is being measured; the pointer passes
+		     through it to the rows underneath. -->
+		<div
+			aria-hidden="true"
+			class="pointer-events-none sticky bottom-0 -mt-6 h-6 bg-linear-to-t from-white"
+		></div>
 	{/if}
 </div>

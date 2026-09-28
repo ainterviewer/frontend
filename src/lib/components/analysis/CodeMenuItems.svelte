@@ -139,6 +139,20 @@
 	 * window because `scroll` does not bubble, and ignored when the scroll is
 	 * the fold-out's own -- reading a long branch must not dismiss it.
 	 */
+	/**
+	 * Whether a long fold-out has more below. It scrolls without a scrollbar for
+	 * the same reason the menu does -- the strip would sit between its rows and
+	 * the next column -- see `CodeMenu`.
+	 */
+	let more = $state(false);
+	function measureMore() {
+		if (fold) more = fold.scrollTop + fold.clientHeight < fold.scrollHeight - 1;
+	}
+	$effect(() => {
+		void pos;
+		measureMore();
+	});
+
 	function onscrollcapture(event: Event) {
 		if (!fold || openId === null) return;
 		const target = event.target as Node;
@@ -225,7 +239,8 @@
 				     never seen in the corner it is first laid out in. -->
 				<div
 					bind:this={fold}
-					class="fixed z-50 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg {pos
+					onscroll={measureMore}
+					class="fixed z-50 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden {pos
 						? ''
 						: 'invisible'}"
 					style={pos
@@ -272,6 +287,12 @@
 					     the side with room, and a cascade that changes direction for no
 					     visible reason is hard to follow back. -->
 						<Self items={item.children} {applied} flip={pos?.leftwards ?? flip} {onpick} />
+					{/if}
+					{#if more}
+						<div
+							aria-hidden="true"
+							class="pointer-events-none sticky bottom-0 -mt-6 h-6 bg-linear-to-t from-white"
+						></div>
 					{/if}
 				</div>
 			{/if}
