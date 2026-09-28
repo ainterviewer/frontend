@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM oven/bun:1.2 AS builder
+FROM oven/bun:1.4 AS builder
 
 LABEL org.opencontainers.image.source="https://github.com/ainterviewer/frontend"
 
@@ -20,7 +20,7 @@ COPY . .
 RUN bun run build
 
 # Stage 2: Run
-FROM oven/bun:1.3-slim AS runner
+FROM oven/bun:1.4-slim AS runner
 
 WORKDIR /app
 
