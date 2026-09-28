@@ -1,11 +1,40 @@
-# Run `prek install` once per clone to activate these hooks.
-# Formatting and linting stay in package.json scripts / the editor — this file
-# exists to enforce the Conventional Commits convention that feeds CHANGELOG.md
-# and the platform release notes.
+# Run `prek install` once per clone to activate these hooks (and again after
+# the hook types below change).
+#
+# Formatting and linting run on commit, against the staged files, so the
+# release workflow's `bun run lint` never fails on something the hook could
+# have fixed. The type check covers the whole project, which is too slow for
+# every commit, so it runs on push. Unit tests need chromium and stay in CI.
+#
+# Conventional Commits are enforced on the message, since they feed
+# CHANGELOG.md and the platform release notes.
 
-default_install_hook_types: [pre-commit, commit-msg]
+default_install_hook_types: [pre-commit, pre-push, commit-msg]
 
 repos:
+  - repo: local
+    hooks:
+      # Pinned binaries from node_modules, not bunx, so the hook matches CI.
+      - id: prettier
+        name: prettier
+        entry: ./node_modules/.bin/prettier --write --ignore-unknown
+        language: system
+        types: [text]
+        stages: [pre-commit]
+      - id: eslint
+        name: eslint
+        entry: ./node_modules/.bin/eslint --fix
+        language: system
+        files: \.(js|ts|svelte)$
+        stages: [pre-commit]
+      - id: svelte-check
+        name: svelte-check
+        entry: bun run check
+        language: system
+        pass_filenames: false
+        files: \.(ts|svelte)$
+        stages: [pre-push]
+
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
     hooks:
