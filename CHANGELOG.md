@@ -4,6 +4,13 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.5.9] - 2026-09-28
+
+### Internal
+
+- Format CodeMenu classes
+- Run prettier, eslint and svelte-check in git hooks
+
 ## [0.5.8] - 2026-09-28
 
 ### Bug Fixes
