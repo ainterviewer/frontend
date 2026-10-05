@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.2.91] - 2026-10-05
+
+### Features
+
+- (simulations) Show demo limits on the runs page
+- (auth) Wire forgot-password and add reset-password page
+
+### Internal
+
+- (release) Don't move latest from release/0.2.x
+
 ## [0.2.90] - 2026-08-27
 
 ### Features
