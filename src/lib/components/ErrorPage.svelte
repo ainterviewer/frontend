@@ -31,7 +31,7 @@
 			background: #ffffff;
 			text-align: center;
 			font-family:
-				'Inter',
+				'Inter Variable',
 				system-ui,
 				-apple-system,
 				'Segoe UI',

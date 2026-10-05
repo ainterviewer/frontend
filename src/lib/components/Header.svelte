@@ -68,7 +68,7 @@
 				>
 					<Wave className="h-5 w-5 transition-transform group-hover:scale-120" animate={logoAnimate}
 					></Wave>
-					<span class="font-[noto_sans] font-semibold">AInterviewer</span>
+					<span class="font-['Noto_Sans_Variable'] font-semibold">AInterviewer</span>
 				</a>
 			</div>
 			<!-- gap-1 plus the switchers' own px-2 leaves an even 12px between every

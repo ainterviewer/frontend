@@ -550,7 +550,7 @@
 <Sidebar items={mainSidebarItems} />
 <h1 class="page-title mb-8 text-5xl">
 	Welcome to <span
-		class="bg-linear-to-r from-dark to-primary bg-clip-text font-[noto_sans] font-semibold text-transparent"
+		class="bg-linear-to-r from-dark to-primary bg-clip-text font-['Noto_Sans_Variable'] font-semibold text-transparent"
 		>AInterviewer</span
 	>
 </h1>

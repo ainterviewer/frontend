@@ -1,5 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+/* Self-hosted so no visitor request ever reaches a third-party font CDN. */
+@import '@fontsource-variable/inter';
 @import '@fontsource-variable/noto-sans';
+@import '@fortawesome/fontawesome-free/css/all.min.css';
 
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
@@ -25,7 +27,7 @@
 
 @layer base {
 	html {
-		font-family: 'Inter', system-ui, sans-serif;
+		font-family: 'Inter Variable', system-ui, sans-serif;
 	}
 	button:not(:disabled),
 	[role='button']:not(:disabled) {
@@ -346,7 +348,7 @@
  */
 
 .driver-popover * {
-	font-family: 'Inter', system-ui, sans-serif !important;
+	font-family: 'Inter Variable', system-ui, sans-serif !important;
 }
 
 .driver-popover.driver-popover {
