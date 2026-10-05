@@ -1,12 +1,12 @@
 <script lang="ts">
 	import AssistanceChat from '$lib/components/AssistanceChat.svelte';
-	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
 	import {
 		createGuideStore,
 		setGuideStore,
 		type GuideQuestion,
 		type GuideSection
 	} from '$lib/stores/guideStore.svelte';
+	import { startTourOnce } from '$lib/tour';
 	import {
 		DragDropProvider,
 		DragOverlay,
@@ -15,8 +15,6 @@
 		type DragDropEvents
 	} from '@dnd-kit-svelte/svelte';
 	import { move } from '@dnd-kit/helpers';
-	import { driver } from 'driver.js';
-	import 'driver.js/dist/driver.css';
 	import { onMount, tick } from 'svelte';
 	import { dragState } from './dragState.svelte';
 	import InterviewGuide from './InterviewGuide.svelte';
@@ -24,9 +22,7 @@
 	import SortableSection from './SortableSection.svelte';
 
 	function startOnboarding() {
-		const tour = driver({
-			showProgress: true,
-			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
+		return startTourOnce('guide', {
 			steps: [
 				{
 					popover: {
@@ -97,7 +93,7 @@
 						title: 'Question Settings',
 						description:
 							"Open a question's settings to add follow-up probes, attach media or survey items, set probing limits, and tweak its behavior.",
-						onNextClick: () => {
+						onNextClick: (_element, _step, { driver }) => {
 							// The settings menu element only renders once the settings panel is
 							// open, so open it before advancing to the next step.
 							if (!document.querySelector('[data-tour="question-settings-menu"]')) {
@@ -107,7 +103,7 @@
 							}
 							// Wait for the slide transition (200ms) to settle so driver.js can
 							// measure the element correctly.
-							setTimeout(() => tour.moveNext(), 300);
+							setTimeout(() => driver.moveNext(), 300);
 						}
 					}
 				},
@@ -149,7 +145,7 @@
 						title: 'Behavior Flags',
 						description:
 							'Toggle how a question behaves — exclude it from history, create a transition from the previous question, check whether it was already answered, and more.',
-						onNextClick: () => {
+						onNextClick: (_element, _step, { driver }) => {
 							// The settings menu element only renders once the settings panel is
 							// open, so open it before advancing to the next step.
 							if (document.querySelector('[data-tour="question-settings-menu"]')) {
@@ -159,7 +155,7 @@
 							}
 							// Wait for the slide transition (200ms) to settle so driver.js can
 							// measure the element correctly.
-							setTimeout(() => tour.moveNext(), 300);
+							setTimeout(() => driver.moveNext(), 300);
 						}
 					}
 				},
@@ -251,16 +247,10 @@
 				}
 			]
 		});
-		tour.drive();
 	}
 
-	onMount(() => {
-		// Show the onboarding tour once per user, unless they opted out of all tours.
-		if (!isOnboardingDisabled() && !localStorage.getItem('guide-onboarded')) {
-			startOnboarding();
-			localStorage.setItem('guide-onboarded', 'true');
-		}
-	});
+	// Returning the cleanup closes the tour when leaving the page.
+	onMount(startOnboarding);
 
 	let { data } = $props();
 

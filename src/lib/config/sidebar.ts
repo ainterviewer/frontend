@@ -103,6 +103,7 @@ export const projectSidebarItems: SidebarItem[] = [
 			},
 			{
 				label: 'Test Results',
+				dataTour: 'test-results',
 				href: '/dashboard/projects/{projectId}/{languageCode}/tests/results',
 				icon: 'fas fa-comment'
 			}

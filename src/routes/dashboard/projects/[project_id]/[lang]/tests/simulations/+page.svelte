@@ -4,6 +4,8 @@
 	import { page } from '$app/state';
 	import { Synthesize, type TestType } from '$lib/api';
 	import Info from '$lib/components/Info.svelte';
+	import { SIDEBAR_STAGE, startTourOnce } from '$lib/tour';
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
@@ -37,27 +39,37 @@
 	// Dropdown state
 	let activeDropdown: string | null = $state(null);
 
-	const testTypes: { type: TestType; label: string; icon: string; description: string }[] = [
+	const testTypes: {
+		type: TestType;
+		label: string;
+		icon: string;
+		description: string;
+		tourHint: string;
+	}[] = [
 		{
 			type: 'fixed_answers',
 			label: 'Fixed Answers',
 			icon: 'fa-file-pen',
 			description:
-				'Write predefined answers to every main question, the system then automatically generates follow up questions where relevant'
+				'Write predefined answers to every main question, the system then automatically generates follow up questions where relevant.',
+			tourHint:
+				'Useful for checking that the flow and follow-up questions behave as expected for answers you know.'
 		},
 		{
 			type: 'fixed_ai',
 			label: 'Fixed AI Respondents',
 			icon: 'fa-user-pen',
 			description:
-				'Define different personas based on our template, which will then be used to generate the answers.'
+				'Define different personas based on our template, which will then be used to generate the answers.',
+			tourHint: 'Useful for seeing how the interview plays out with specific respondents in mind.'
 		},
 		{
 			type: 'shuffled_ai',
 			label: 'Shuffled AI Respondents',
 			icon: 'fa-robot',
 			description:
-				'Specify different background characteristics, which our system then shuffles automatically to generate.'
+				'Specify different background characteristics, which our system then shuffles automatically to generate.',
+			tourHint: 'Useful for trying the guide against a wide variety of respondents.'
 		}
 	];
 
@@ -119,6 +131,60 @@
 		window.addEventListener('click', closeDropdowns);
 		return () => window.removeEventListener('click', closeDropdowns);
 	});
+
+	function startOnboarding() {
+		return startTourOnce('simulations', {
+			steps: [
+				{
+					popover: {
+						title: 'Simulations',
+						description:
+							'Simulations let you try out your interview guide on AI respondents before any real interviewees see it. Each test is a reusable setup that you can run as many times as you like.'
+					}
+				},
+				...testTypes.map((typeInfo) => ({
+					element: `[data-tour="test-type-${typeInfo.type}"]`,
+					popover: {
+						title: typeInfo.label,
+						description: `${typeInfo.description} ${typeInfo.tourHint}`
+					}
+				})),
+				{
+					element: '[data-tour="new-test"]',
+					popover: {
+						title: 'Create a Test',
+						description:
+							'Click <u>New Test</u> under a test type and give it a title. You then fill in its setup.'
+					}
+				},
+				// The first test's links stand in for every test card.
+				...(data.tests.length > 0
+					? [
+							{
+								element: '[data-tour="test-links"]',
+								popover: {
+									title: 'Setup and Runs',
+									description:
+										'<u>Setup</u> is where you define the answers, personas or characteristics of a test. <u>Runs</u> is where you start synthetic interviews and follow their progress.'
+								}
+							}
+						]
+					: []),
+				{
+					element: '[data-tour="test-results"]',
+					data: SIDEBAR_STAGE,
+					popover: {
+						title: 'Read the Results',
+						description:
+							'Finished synthetic interviews show up under <u>Test Results</u>, where you can read them through.'
+					}
+				}
+			]
+		});
+	}
+
+	// Returning the cleanup closes the tour when leaving the page.
+	onMount(startOnboarding);
 </script>
 
 <h1 class="page-title">Simulations</h1>
@@ -128,91 +194,98 @@
 </p>
 
 {#each testTypes as typeInfo (typeInfo.type)}
-	<div class="relative mt-4 mb-4 flex items-center gap-2 border-t-2 border-primary pt-6">
-		<i class="fas {typeInfo.icon} text-4xl text-dark"></i>
-		<h2 class="text-lg">{typeInfo.label}</h2>
-		<Info text={typeInfo.description} />
-	</div>
+	<!-- Wraps the heading and its cards so the tour highlights them together. -->
+	<div data-tour="test-type-{typeInfo.type}">
+		<div class="relative mt-4 mb-4 flex items-center gap-2 border-t-2 border-primary pt-6">
+			<i class="fas {typeInfo.icon} text-4xl text-dark"></i>
+			<h2 class="text-lg">{typeInfo.label}</h2>
+			<Info text={typeInfo.description} />
+		</div>
 
-	<div class="mb-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-		{#each tests.filter((t) => t.type === typeInfo.type) as test (test.id)}
-			<div class="flex flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg">
-				<div class="grow p-4">
-					<div class="flex">
-						<h3 class="mb-1 w-full text-lg font-semibold">{test.name}</h3>
-						<div class="dropdown-container relative">
-							<button
-								class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-								onclick={(e) => toggleDropdown(e, test.id)}
-								aria-label="Test actions"
-							>
-								<i class="fa-solid fa-ellipsis-vertical"></i>
-							</button>
-							{#if activeDropdown === test.id}
-								<div class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg">
-									<button
-										class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
-										onclick={() => deleteTest(test.id)}
-									>
-										Delete
-									</button>
-								</div>
-							{/if}
+		<div class="mb-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+			{#each tests.filter((t) => t.type === typeInfo.type) as test (test.id)}
+				<div class="flex flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-lg">
+					<div class="grow p-4">
+						<div class="flex">
+							<h3 class="mb-1 w-full text-lg font-semibold">{test.name}</h3>
+							<div class="dropdown-container relative">
+								<button
+									class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+									onclick={(e) => toggleDropdown(e, test.id)}
+									aria-label="Test actions"
+								>
+									<i class="fa-solid fa-ellipsis-vertical"></i>
+								</button>
+								{#if activeDropdown === test.id}
+									<div class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg">
+										<button
+											class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
+											onclick={() => deleteTest(test.id)}
+										>
+											Delete
+										</button>
+									</div>
+								{/if}
+							</div>
+						</div>
+
+						<div class="flex flex-col gap-1 text-sm text-gray-500">
+							<p>
+								Created: {new Date(test.created_at).toLocaleDateString('en-GB')}
+							</p>
+							<p>
+								Updated: {test.last_updated
+									? new Date(test.last_updated).toLocaleDateString('en-GB', {
+											hour: '2-digit',
+											minute: '2-digit'
+										})
+									: 'N/A'}
+							</p>
 						</div>
 					</div>
-
-					<div class="flex flex-col gap-1 text-sm text-gray-500">
-						<p>
-							Created: {new Date(test.created_at).toLocaleDateString('en-GB')}
-						</p>
-						<p>
-							Updated: {test.last_updated
-								? new Date(test.last_updated).toLocaleDateString('en-GB', {
-										hour: '2-digit',
-										minute: '2-digit'
-									})
-								: 'N/A'}
-						</p>
+					<div
+						data-tour="test-links"
+						class="flex items-center justify-between border-t border-gray-200"
+					>
+						<a
+							href={resolve(
+								`/dashboard/projects/${projectId}/${lang}/tests/simulations/${test.id}/setup`
+							)}
+							class="flex-1 border-r border-gray-200 py-2 text-center font-medium text-primary hover:bg-gray-50"
+						>
+							Setup
+						</a>
+						<a
+							href={resolve(
+								`/dashboard/projects/${projectId}/${lang}/tests/simulations/${test.id}/runs`
+							)}
+							class="flex-1 py-2 text-center font-medium text-primary hover:bg-gray-50"
+						>
+							Runs
+						</a>
 					</div>
 				</div>
-				<div class="flex items-center justify-between border-t border-gray-200">
-					<a
-						href={resolve(
-							`/dashboard/projects/${projectId}/${lang}/tests/simulations/${test.id}/setup`
-						)}
-						class="flex-1 border-r border-gray-200 py-2 text-center font-medium text-primary hover:bg-gray-50"
-					>
-						Setup
-					</a>
-					<a
-						href={resolve(
-							`/dashboard/projects/${projectId}/${lang}/tests/simulations/${test.id}/runs`
-						)}
-						class="flex-1 py-2 text-center font-medium text-primary hover:bg-gray-50"
-					>
-						Runs
-					</a>
-				</div>
-			</div>
-		{/each}
+			{/each}
 
-		<div
-			class="flex min-h-[150px] cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-primary hover:text-primary"
-			role="button"
-			tabindex="0"
-			onclick={() => {
-				newTestType = typeInfo.type;
-				isModalOpen = true;
-			}}
-			onkeydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
+			<div
+				data-tour="new-test"
+				class="flex min-h-[150px] cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-primary hover:text-primary"
+				role="button"
+				tabindex="0"
+				onclick={() => {
 					newTestType = typeInfo.type;
 					isModalOpen = true;
-				}
-			}}
-		>
-			<i class="fa-solid fa-plus mr-2 text-xl"></i>
-			New Test
+				}}
+				onkeydown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						newTestType = typeInfo.type;
+						isModalOpen = true;
+					}
+				}}
+			>
+				<i class="fa-solid fa-plus mr-2 text-xl"></i>
+				New Test
+			</div>
 		</div>
 	</div>
 {/each}

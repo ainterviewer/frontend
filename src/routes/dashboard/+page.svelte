@@ -12,9 +12,7 @@
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
-	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
-	import { driver } from 'driver.js';
-	import 'driver.js/dist/driver.css';
+	import { startTourOnce } from '$lib/tour';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
@@ -105,9 +103,7 @@
 	}
 
 	function startOnboarding() {
-		const tour = driver({
-			showProgress: true,
-			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
+		return startTourOnce('dashboard', {
 			steps: [
 				{
 					popover: {
@@ -183,15 +179,10 @@
 				}
 			]
 		});
-		tour.drive();
 	}
 
 	onMount(() => {
-		// Show the onboarding tour once per user, unless they opted out of all tours.
-		if (!isOnboardingDisabled() && !localStorage.getItem('dashboard-onboarded')) {
-			startOnboarding();
-			localStorage.setItem('dashboard-onboarded', 'true');
-		}
+		const stopOnboarding = startOnboarding();
 
 		// Close dropdowns when clicking outside
 		const handleClickOutside = (e: MouseEvent) => {
@@ -200,7 +191,10 @@
 			}
 		};
 		window.addEventListener('click', handleClickOutside);
-		return () => window.removeEventListener('click', handleClickOutside);
+		return () => {
+			stopOnboarding();
+			window.removeEventListener('click', handleClickOutside);
+		};
 	});
 
 	function addCollaborator() {

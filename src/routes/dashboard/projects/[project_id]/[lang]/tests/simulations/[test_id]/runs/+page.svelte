@@ -2,13 +2,14 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Synthesize } from '$lib/api';
-	import { untrack } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import type { SynthesizeRequest } from '$lib/api/types.gen';
 	import type { PageData } from './$types';
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
+	import { SIDEBAR_STAGE, startTourOnce } from '$lib/tour';
 	import {
 		dataTableFeatures,
 		NO_PAGINATION,
@@ -238,6 +239,86 @@
 		answering_model: 'Answering model',
 		status: 'Status'
 	};
+
+	function startOnboarding() {
+		return startTourOnce('simulation-runs', {
+			steps: [
+				{
+					popover: {
+						title: 'Run a Simulation',
+						description:
+							'This is where you run synthetic interviews based on the setup of this test, and follow how they are doing.'
+					}
+				},
+				{
+					element: '[data-tour="n-interviews"]',
+					popover: {
+						title: 'Number of Interviews',
+						description: isDemo
+							? 'Choose how many synthetic interviews to run at once. Demo accounts have limits on how many can run at a time, per day and in total, counted across all of your tests.'
+							: 'Choose how many synthetic interviews to run at once.'
+					}
+				},
+				// The model picker only renders when the backend offers models.
+				...(data.models && data.models.length > 0
+					? [
+							{
+								element: '[data-tour="answering-model"]',
+								popover: {
+									title: 'Language Model',
+									description:
+										'Pick the language model that plays the respondents and writes their answers.'
+								}
+							}
+						]
+					: []),
+				{
+					element: '[data-tour="interview-language"]',
+					popover: {
+						title: 'Interview Language',
+						description: 'Choose which of your project languages the interviews are run in.'
+					}
+				},
+				{
+					element: '[data-tour="run-test"]',
+					popover: {
+						title: 'Run Test',
+						description:
+							'Start the synthetic interviews. They run in the background, so you can leave the page while they finish.'
+					}
+				},
+				{
+					element: '[data-tour="test-runs"]',
+					popover: {
+						title: 'Test Runs',
+						description:
+							'Every run is listed here with its status, which refreshes by itself while a run is in progress.'
+					}
+				},
+				{
+					element: '[data-tour="test-results"]',
+					data: SIDEBAR_STAGE,
+					popover: {
+						title: 'Read the Results',
+						description:
+							'Finished synthetic interviews show up under <u>Test Results</u>, where you can read them through.'
+					}
+				},
+				{
+					element: '[data-tour="simulation-action-bar"]',
+					popover: {
+						title: 'Back to Setup',
+						description:
+							'Tweak the setup of this test at any time, then come back here to run it again.',
+						side: 'top'
+					}
+				}
+			]
+		});
+	}
+
+	// Returning the cleanup closes the tour when leaving the page.
+	onMount(startOnboarding);
 </script>
 
 <div class="flex min-h-full flex-col pb-32">
@@ -261,7 +342,7 @@
 			<!-- Field and limits side by side; the limits drop below on narrow screens.
 			     The field column has a fixed width so a long error wraps under the
 			     input instead of pushing the limits away. -->
-			<div class="flex flex-wrap items-start gap-y-3">
+			<div data-tour="n-interviews" class="flex flex-wrap items-start gap-y-3">
 				<div class="w-64">
 					<label for="n-interviews" class="mb-1 block text-sm font-medium text-gray-700"
 						>Number of synthetic interviews</label
@@ -345,7 +426,7 @@
 				</div>
 			{/if}
 			{#if data.models && data.models.length > 0}
-				<div>
+				<div data-tour="answering-model">
 					<label for="answering-model" class="mb-1 block text-sm font-medium text-gray-700"
 						>Language model</label
 					>
@@ -361,7 +442,7 @@
 				</div>
 			{/if}
 
-			<div>
+			<div data-tour="interview-language">
 				<label for="interview-language" class="mb-1 block text-sm font-medium text-gray-700"
 					>Interview language</label
 				>
@@ -377,6 +458,7 @@
 			</div>
 
 			<button
+				data-tour="run-test"
 				onclick={runTest}
 				disabled={running || !!nInterviewsError}
 				class="mt-4 rounded bg-primary px-4 py-2 font-medium text-white shadow-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
@@ -389,49 +471,53 @@
 			</button>
 		</div>
 
-		<h2 class="mt-8 mb-4 text-lg font-medium text-gray-800">Test Runs</h2>
+		<div data-tour="test-runs">
+			<h2 class="mt-8 mb-4 text-lg font-medium text-gray-800">Test Runs</h2>
 
-		<DataTable
-			{table}
-			{columnLabels}
-			{loading}
-			{hasLoaded}
-			selectable={false}
-			rowLabel="test run"
-			emptyTitle="No test runs yet"
-			emptyDescription="Run the test above to create one."
-		>
-			{#snippet filters()}
-				{#if table.getColumn('status')}
-					<FacetedFilter title="Status" column={table.getColumn('status')!} />
-				{/if}
-			{/snippet}
+			<DataTable
+				{table}
+				{columnLabels}
+				{loading}
+				{hasLoaded}
+				selectable={false}
+				rowLabel="test run"
+				emptyTitle="No test runs yet"
+				emptyDescription="Run the test above to create one."
+			>
+				{#snippet filters()}
+					{#if table.getColumn('status')}
+						<FacetedFilter title="Status" column={table.getColumn('status')!} />
+					{/if}
+				{/snippet}
 
-			{#snippet cell(columnId, row)}
-				{@const testRun = row.original}
-				{#if columnId === 'created_at'}
-					<span title={formatDateFull(testRun.created_at)}>
-						{formatDate(testRun.created_at)}
-					</span>
-				{:else if columnId === 'language'}
-					{testRun.language}
-				{:else if columnId === 'n_interviews'}
-					{testRun.n_interviews}
-				{:else if columnId === 'question_model'}
-					<span class="text-gray-300">&ndash;</span>
-				{:else if columnId === 'answering_model'}
-					{#if testRun.answering_model}{testRun.answering_model}{:else}<span class="text-gray-300"
-							>&ndash;</span
-						>{/if}
-				{:else if columnId === 'status'}
-					<span
-						class="rounded-full px-2 py-0.5 text-xs font-semibold {getStatusClass(testRun.status)}"
-					>
-						{testRun.status}
-					</span>
-				{/if}
-			{/snippet}
-		</DataTable>
+				{#snippet cell(columnId, row)}
+					{@const testRun = row.original}
+					{#if columnId === 'created_at'}
+						<span title={formatDateFull(testRun.created_at)}>
+							{formatDate(testRun.created_at)}
+						</span>
+					{:else if columnId === 'language'}
+						{testRun.language}
+					{:else if columnId === 'n_interviews'}
+						{testRun.n_interviews}
+					{:else if columnId === 'question_model'}
+						<span class="text-gray-300">&ndash;</span>
+					{:else if columnId === 'answering_model'}
+						{#if testRun.answering_model}{testRun.answering_model}{:else}<span class="text-gray-300"
+								>&ndash;</span
+							>{/if}
+					{:else if columnId === 'status'}
+						<span
+							class="rounded-full px-2 py-0.5 text-xs font-semibold {getStatusClass(
+								testRun.status
+							)}"
+						>
+							{testRun.status}
+						</span>
+					{/if}
+				{/snippet}
+			</DataTable>
+		</div>
 	</div>
 	<SimulationActionBar current="runs" />
 </div>

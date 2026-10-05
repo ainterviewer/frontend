@@ -1,29 +1,15 @@
 <script lang="ts">
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { projectSidebarItems } from '$lib/config/sidebar';
-	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
-	import { driver } from 'driver.js';
-	import 'driver.js/dist/driver.css';
+	import { SIDEBAR_STAGE, startTourOnce } from '$lib/tour';
 	import { onMount } from 'svelte';
 
 	let { children } = $props();
 
 	function startOnboarding() {
-		const tour = driver({
-			showProgress: true,
-			stagePadding: 0,
-			stageRadius: 0,
-			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
-			// stagePadding/stageRadius are global, so give only the last step (the
-			// small documentation icon) some breathing room around its highlight.
-			onHighlightStarted: (_element, _step, { driver }) => {
-				const last = driver.isLastStep();
-				driver.setConfig({
-					...driver.getConfig(),
-					stagePadding: last ? 8 : 0,
-					stageRadius: last ? 5 : 0
-				});
-			},
+		return startTourOnce('project', {
+			// Every step but the last is a sidebar item.
+			...SIDEBAR_STAGE,
 			steps: [
 				{
 					element: '[data-tour="setup"]',
@@ -81,6 +67,8 @@
 				},
 				{
 					element: '[data-tour="documentation"]',
+					// Give the small documentation icon some breathing room.
+					data: { stagePadding: 8, stageRadius: 5 },
 					popover: {
 						title: "That's it for the Project Sidebar!",
 						description:
@@ -90,16 +78,10 @@
 				}
 			]
 		});
-		tour.drive();
 	}
 
-	onMount(() => {
-		// Show the onboarding tour once per user, unless they opted out of all tours.
-		if (!isOnboardingDisabled() && !localStorage.getItem('project-onboarded')) {
-			startOnboarding();
-			localStorage.setItem('project-onboarded', 'true');
-		}
-	});
+	// Returning the cleanup closes the tour when leaving the project.
+	onMount(startOnboarding);
 </script>
 
 <Sidebar items={projectSidebarItems} />

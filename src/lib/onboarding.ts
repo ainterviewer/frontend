@@ -7,6 +7,11 @@ const DISABLED_KEY = 'onboarding-disabled';
 // matches, so new tours are covered without maintaining a hardcoded list.
 const ONBOARDED_KEY_SUFFIX = '-onboarded';
 
+/** The localStorage "already seen" guard for the tour called `name`. */
+export function onboardedKey(name: string): string {
+	return `${name}${ONBOARDED_KEY_SUFFIX}`;
+}
+
 /** Whether the user has opted out of all onboarding tours. */
 export function isOnboardingDisabled(): boolean {
 	if (typeof localStorage === 'undefined') return false;
