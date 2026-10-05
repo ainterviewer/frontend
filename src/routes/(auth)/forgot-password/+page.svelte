@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { Auth } from '$lib/api';
 
 	let email = $state('');
 	let isLoading = $state(false);
@@ -11,10 +12,19 @@
 		errorMessage = '';
 		isLoading = true;
 
-		// Mock API call since endpoint is missing
 		try {
-			await new Promise((res) => setTimeout(res, 1000));
-			isSuccess = true;
+			const { error, response } = await Auth.forgotPassword({ body: { email } });
+
+			if (response?.status === 502) {
+				errorMessage = "We couldn't send the reset email. Please try again.";
+			} else if (response?.status === 422) {
+				errorMessage = 'Please enter a valid email address.';
+			} else if (error) {
+				errorMessage = 'An unexpected error occurred';
+			} else {
+				// The backend answers the same whether or not the account exists.
+				isSuccess = true;
+			}
 		} catch {
 			errorMessage = 'An unexpected error occurred';
 		} finally {
