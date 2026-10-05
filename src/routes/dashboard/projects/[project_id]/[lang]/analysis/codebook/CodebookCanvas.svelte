@@ -141,6 +141,7 @@
 	elevateNodesOnSelect
 	connectionRadius={CONNECTION_RADIUS}
 	deleteKey={null}
+	proOptions={{ hideAttribution: true }}
 	onnodeclick={({ node }) => (tree.selectedId = node.id)}
 	onpaneclick={() => (tree.selectedId = null)}
 	onnodedrag={({ nodes }) => {
