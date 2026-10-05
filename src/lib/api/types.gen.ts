@@ -1832,6 +1832,16 @@ export type FilteredMessagesRequest = {
 };
 
 /**
+ * ForgotPasswordRequest
+ */
+export type ForgotPasswordRequest = {
+    /**
+     * Email
+     */
+    email: string;
+};
+
+/**
  * GeneratedQuestions
  */
 export type GeneratedQuestions = {
@@ -3838,6 +3848,20 @@ export type ResendVerificationRequest = {
 };
 
 /**
+ * ResetPasswordRequest
+ */
+export type ResetPasswordRequest = {
+    /**
+     * New Password
+     */
+    new_password: string;
+    /**
+     * Token
+     */
+    token: string;
+};
+
+/**
  * Scope
  */
 export type Scope = 'admin' | 'user' | 'demo';
@@ -4345,13 +4369,13 @@ export type UpdateFixedPersonasRequest = {
  */
 export type UpdatePasswordRequest = {
     /**
-     * Current Password
-     */
-    current_password: string;
-    /**
      * New Password
      */
     new_password: string;
+    /**
+     * Current Password
+     */
+    current_password: string;
 };
 
 /**
@@ -10401,6 +10425,52 @@ export type ResendVerificationErrors = {
 export type ResendVerificationError = ResendVerificationErrors[keyof ResendVerificationErrors];
 
 export type ResendVerificationResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ForgotPasswordData = {
+    body: ForgotPasswordRequest;
+    path?: never;
+    query?: never;
+    url: '/api/forgot-password';
+};
+
+export type ForgotPasswordErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ForgotPasswordError = ForgotPasswordErrors[keyof ForgotPasswordErrors];
+
+export type ForgotPasswordResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ResetPasswordData = {
+    body: ResetPasswordRequest;
+    path?: never;
+    query?: never;
+    url: '/api/reset-password';
+};
+
+export type ResetPasswordErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ResetPasswordError = ResetPasswordErrors[keyof ResetPasswordErrors];
+
+export type ResetPasswordResponses = {
     /**
      * Successful Response
      */

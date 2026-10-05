@@ -671,6 +671,13 @@ export const zFilteredMessagesRequest = z.object({
 });
 
 /**
+ * ForgotPasswordRequest
+ */
+export const zForgotPasswordRequest = z.object({
+    email: z.email()
+});
+
+/**
  * GeneratedQuestions
  */
 export const zGeneratedQuestions = z.object({
@@ -1659,6 +1666,14 @@ export const zResendVerificationRequest = z.object({
 });
 
 /**
+ * ResetPasswordRequest
+ */
+export const zResetPasswordRequest = z.object({
+    new_password: z.string().min(8),
+    token: z.string()
+});
+
+/**
  * Scope
  */
 export const zScope = z.enum([
@@ -2322,8 +2337,8 @@ export const zUpdateFixedPersonasRequest = z.object({
  * UpdatePasswordRequest
  */
 export const zUpdatePasswordRequest = z.object({
-    current_password: z.string(),
-    new_password: z.string().min(8)
+    new_password: z.string().min(8),
+    current_password: z.string()
 });
 
 /**
@@ -4596,6 +4611,10 @@ export const zRegisterBody = zUserCreateRequest;
 export const zVerifyEmailBody = zVerifyEmailRequest;
 
 export const zResendVerificationBody = zResendVerificationRequest;
+
+export const zForgotPasswordBody = zForgotPasswordRequest;
+
+export const zResetPasswordBody = zResetPasswordRequest;
 
 export const zRequestAccessBody = zAccessRequestCreate;
 
