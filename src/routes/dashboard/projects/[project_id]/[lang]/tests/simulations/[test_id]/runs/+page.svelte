@@ -22,6 +22,19 @@
 	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
 
 	let isAdmin = $derived(page.data.user?.scope === 'admin');
+	let isDemo = $derived(page.data.user?.scope === 'demo');
+
+	// Mirrors the defaults of the backend's `demo_limits` settings, which is what
+	// enforces them, counted per user across all of their tests. They are only
+	// shown here: how much of each budget is used is known to the backend, and
+	// its 429 says which one a run would cross.
+	const DEMO_LIMITS = {
+		concurrent: 10, // max_concurrent_synthetic_interviews
+		daily: 50, // daily_synthetic_interviews, a rolling 24 hours
+		lifetime: 100 // lifetime_synthetic_interviews
+	};
+	// The concurrent budget is the smallest, so it also caps a single run.
+	let maxInterviews = $derived(isDemo ? DEMO_LIMITS.concurrent : 50);
 
 	let { data }: { data: PageData } = $props();
 
@@ -48,6 +61,20 @@
 	let delayBeforeAnswersRandom = $state(initialTest.delay_before_answers?.[1] ?? 0);
 	let answeringModel = $state(initialTest.answering_model ?? '');
 	let language = $state(initialTest.language ?? page.params.lang);
+
+	// `max` on a number input only limits the spinner, so typed values are
+	// checked here. An empty field binds to null, which is not an integer either.
+	let nInterviewsError = $derived.by(() => {
+		if (!Number.isInteger(nInterviews) || nInterviews < 1) {
+			return 'Enter a whole number of at least 1.';
+		}
+		if (nInterviews > maxInterviews) {
+			return isDemo
+				? `Demo accounts can run at most ${DEMO_LIMITS.concurrent} synthetic interviews at a time.`
+				: `A test can run at most ${maxInterviews} synthetic interviews.`;
+		}
+		return null;
+	});
 
 	let refreshInterval: ReturnType<typeof setInterval>;
 
@@ -76,6 +103,12 @@
 			return;
 		}
 
+		// The button is disabled while this is set; this guards other callers.
+		if (nInterviewsError) {
+			toast.error(nInterviewsError);
+			return;
+		}
+
 		running = true;
 		const body: SynthesizeRequest = {
 			n_interviews: nInterviews,
@@ -86,13 +119,17 @@
 				: null
 		};
 
-		const { error: runError } = await Synthesize.runSyntheticTest({
+		const { error: runError, response } = await Synthesize.runSyntheticTest({
 			path: { project_id: projectId, test_id: testId },
 			body
 		});
 		if (runError) {
 			console.error('Failed to run test', runError);
-			toast.error('Failed to run test');
+			// 429 is the demo limit; its detail says how many are already running.
+			const detail = (runError as { detail?: unknown }).detail;
+			toast.error(
+				response?.status === 429 && typeof detail === 'string' ? detail : 'Failed to run test'
+			);
 			running = false;
 			return;
 		}
@@ -221,18 +258,57 @@
 		<h2 class="mb-4 text-lg font-medium text-gray-800">Settings</h2>
 
 		<div class="mb-6 space-y-6">
-			<div>
-				<label for="n-interviews" class="mb-1 block text-sm font-medium text-gray-700"
-					>Number of synthetic interviews</label
-				>
-				<input
-					id="n-interviews"
-					type="number"
-					bind:value={nInterviews}
-					min="1"
-					max="50"
-					class="w-20 rounded border-gray-300 focus:border-primary focus:ring-primary"
-				/>
+			<!-- Field and limits side by side; the limits drop below on narrow screens.
+			     The field column has a fixed width so a long error wraps under the
+			     input instead of pushing the limits away. -->
+			<div class="flex flex-wrap items-start gap-y-3">
+				<div class="w-64">
+					<label for="n-interviews" class="mb-1 block text-sm font-medium text-gray-700"
+						>Number of synthetic interviews</label
+					>
+					<input
+						id="n-interviews"
+						type="number"
+						bind:value={nInterviews}
+						min="1"
+						max={maxInterviews}
+						step="1"
+						aria-invalid={nInterviewsError ? 'true' : undefined}
+						aria-describedby={nInterviewsError ? 'n-interviews-error' : undefined}
+						class="w-20 rounded focus:ring-primary {nInterviewsError
+							? 'border-red-500 focus:border-red-500'
+							: 'border-gray-300 focus:border-primary'}"
+					/>
+					{#if nInterviewsError}
+						<p id="n-interviews-error" class="mt-1 flex items-center gap-1.5 text-sm text-red-600">
+							<i class="fa-solid fa-circle-exclamation"></i>
+							{nInterviewsError}
+						</p>
+					{/if}
+				</div>
+
+				{#if isDemo}
+					{@const limits = [
+						{ value: DEMO_LIMITS.concurrent, label: 'running at a time' },
+						{ value: DEMO_LIMITS.daily, label: 'started per 24 hours' },
+						{ value: DEMO_LIMITS.lifetime, label: 'in total' }
+					]}
+					<div class="w-fit rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+						<p class="flex items-center gap-2 text-sm font-medium text-gray-700">
+							<i class="fa-solid fa-circle-info text-gray-400"></i>
+							Demo account limits
+							<span class="font-normal text-gray-500">&middot; across all of your tests</span>
+						</p>
+						<dl class="mt-2 flex flex-wrap gap-x-8 gap-y-2">
+							{#each limits as limit (limit.label)}
+								<div class="flex flex-col-reverse">
+									<dt class="text-xs text-gray-500">{limit.label}</dt>
+									<dd class="text-lg font-semibold text-gray-800 tabular-nums">{limit.value}</dd>
+								</div>
+							{/each}
+						</dl>
+					</div>
+				{/if}
 			</div>
 
 			{#if isAdmin}
@@ -302,7 +378,7 @@
 
 			<button
 				onclick={runTest}
-				disabled={running}
+				disabled={running || !!nInterviewsError}
 				class="mt-4 rounded bg-primary px-4 py-2 font-medium text-white shadow-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
 			>
 				{#if running}
