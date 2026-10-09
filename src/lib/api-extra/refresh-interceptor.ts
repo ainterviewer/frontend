@@ -17,18 +17,23 @@ client.interceptors.request.use((request) => {
 	return request;
 });
 
-client.interceptors.response.use(async (response, request, _options) => {
-	if (typeof window === 'undefined' || response.status !== 401) {
-		return response;
-	}
+// The backend's 403 detail when the access token says preview features are off.
+// The claim is only re-read from the database on refresh, so after an admin
+// enables the flag the token is stale for up to one access-token lifetime --
+// while /me, which the UI gates on, already says yes. A refresh fixes it.
+const PREVIEW_FEATURES_REQUIRED = 'preview_features_required';
 
-	// Don't retry refresh/login endpoints to avoid loops
-	const url = new URL(request.url);
-	if (url.pathname === '/api/refresh' || url.pathname === '/api/login') {
-		await goto(resolve('/login'));
-		return response;
+async function isStalePreviewFeatures(response: Response): Promise<boolean> {
+	if (response.status !== 403) return false;
+	try {
+		const body = await response.clone().json();
+		return body?.detail === PREVIEW_FEATURES_REQUIRED;
+	} catch {
+		return false;
 	}
+}
 
+function refreshOnce(): Promise<boolean> {
 	// Serialize concurrent refresh calls — if one is in-flight, wait for it.
 	// Two simultaneous refresh calls would trigger the backend's reuse detection
 	// and revoke the entire token family.
@@ -43,8 +48,35 @@ client.interceptors.response.use(async (response, request, _options) => {
 				refreshPromise = null;
 			});
 	}
+	return refreshPromise;
+}
 
-	const ok = await refreshPromise;
+client.interceptors.response.use(async (response, request, _options) => {
+	if (typeof window === 'undefined') {
+		return response;
+	}
+
+	if (response.status !== 401) {
+		// Refresh and replay once. The replay goes through plain fetch, so a
+		// second refusal -- the flag really is off -- is returned as is rather
+		// than looping.
+		if (!(await isStalePreviewFeatures(response))) {
+			return response;
+		}
+		const ok = await refreshOnce();
+		const clone = pendingClones.get(request);
+		pendingClones.delete(request);
+		return ok && clone ? fetch(clone) : response;
+	}
+
+	// Don't retry refresh/login endpoints to avoid loops
+	const url = new URL(request.url);
+	if (url.pathname === '/api/refresh' || url.pathname === '/api/login') {
+		await goto(resolve('/login'));
+		return response;
+	}
+
+	const ok = await refreshOnce();
 	if (!ok) {
 		await goto(resolve('/login'));
 		return response;
