@@ -6,7 +6,7 @@ export type SidebarItem = {
 	type?: 'link' | 'separator';
 	requiresAdmin?: boolean;
 	project_id?: string;
-	demoFeature?: boolean;
+	previewFeature?: boolean;
 	dataTour?: string;
 };
 
@@ -118,13 +118,13 @@ export const projectSidebarItems: SidebarItem[] = [
 				label: 'Participants',
 				href: '/dashboard/projects/{projectId}/{languageCode}/distribution/participants',
 				icon: 'fa-solid fa-person-circle-question',
-				demoFeature: true
+				previewFeature: true
 			},
 			{
 				label: 'Email',
 				href: '/dashboard/projects/{projectId}/{languageCode}/distribution/email',
 				icon: 'fa-solid fa-envelope-open-text',
-				demoFeature: true
+				previewFeature: true
 			},
 			{
 				label: 'Monitor',
@@ -143,7 +143,7 @@ export const projectSidebarItems: SidebarItem[] = [
 		label: 'Analysis',
 		href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
 		icon: 'fas fa-chart-pie',
-		demoFeature: true,
+		previewFeature: true,
 		dataTour: 'analysis',
 		children: [
 			{

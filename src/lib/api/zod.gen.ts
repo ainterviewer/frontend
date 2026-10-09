@@ -2363,7 +2363,7 @@ export const zUserAdmin = z.object({
     id: z.string(),
     invitation_title: z.string().nullish(),
     expires_at: z.iso.datetime().nullish(),
-    with_demo_features: z.boolean(),
+    with_preview_features: z.boolean(),
     organization: z.string().nullish(),
     access_request_message: z.string().nullish(),
     admin_note: z.string().nullish(),
@@ -2406,7 +2406,7 @@ export const zUserPublic = z.object({
     id: z.string(),
     invitation_title: z.string().nullish(),
     expires_at: z.iso.datetime().nullish(),
-    with_demo_features: z.boolean(),
+    with_preview_features: z.boolean(),
     organization: z.string().nullish()
 });
 
@@ -2598,7 +2598,7 @@ export const zUserAdminUpdate = z.object({
         zScope,
         zUnset
     ]).optional().default('UNSET'),
-    with_demo_features: z.union([
+    with_preview_features: z.union([
         z.boolean(),
         zUnset
     ]).optional().default('UNSET'),
@@ -2641,7 +2641,8 @@ export const zUserSelfUpdate = z.object({
  */
 export const zAuthToken = z.object({
     user_id: z.string(),
-    scope: zScope
+    scope: zScope,
+    preview_features: z.boolean().optional().default(false)
 });
 
 /**
@@ -3637,20 +3638,6 @@ export const zExportEmailBundleQuery = z.object({
 export const zExportEmailBundleResponse = z.string();
 
 /**
- * Reason
- */
-export const zOptOutBody = z.string().nullable();
-
-export const zOptOutPath = z.object({
-    opt_out_token: z.string()
-});
-
-/**
- * Successful Response
- */
-export const zOptOutResponse = zParticipantPublic;
-
-/**
  * Participants
  */
 export const zAddParticipantsBody = z.array(zParticipantCreate);
@@ -3876,6 +3863,20 @@ export const zSendParticipantReminderEmailsQuery = z.object({
  * Successful Response
  */
 export const zSendParticipantReminderEmailsResponse = zSendParticipantEmailResponse;
+
+/**
+ * Reason
+ */
+export const zOptOutBody = z.string().nullable();
+
+export const zOptOutPath = z.object({
+    opt_out_token: z.string()
+});
+
+/**
+ * Successful Response
+ */
+export const zOptOutResponse = zParticipantPublic;
 
 export const zDeleteProjectPath = z.object({
     project_id: z.string().nullable()

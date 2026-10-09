@@ -13,11 +13,11 @@
 
 	let user = $derived(page.data.user);
 	let isAdmin = $derived(user?.scope === 'admin');
-	let hasDemoFeatures = $derived(!!user?.with_demo_features);
+	let hasPreviewFeatures = $derived(!!user?.with_preview_features);
 
 	function canShow(item: SidebarItem) {
 		if (item.requiresAdmin && !isAdmin) return false;
-		if (item.demoFeature && !hasDemoFeatures) return false;
+		if (item.previewFeature && !hasPreviewFeatures) return false;
 		return true;
 	}
 

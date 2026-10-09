@@ -4434,9 +4434,9 @@ export type UserAdmin = {
      */
     expires_at?: string | null;
     /**
-     * With Demo Features
+     * With Preview Features
      */
-    with_demo_features: boolean;
+    with_preview_features: boolean;
     /**
      * Organization
      */
@@ -4468,9 +4468,9 @@ export type UserAdminUpdate = {
      */
     scope?: Scope | Unset;
     /**
-     * With Demo Features
+     * With Preview Features
      */
-    with_demo_features?: boolean | Unset;
+    with_preview_features?: boolean | Unset;
     /**
      * Organization
      */
@@ -4572,9 +4572,9 @@ export type UserPublic = {
      */
     expires_at?: string | null;
     /**
-     * With Demo Features
+     * With Preview Features
      */
-    with_demo_features: boolean;
+    with_preview_features: boolean;
     /**
      * Organization
      */
@@ -4729,6 +4729,10 @@ export type AuthToken = {
      */
     user_id: string;
     scope: Scope;
+    /**
+     * Preview Features
+     */
+    preview_features?: boolean;
 };
 
 /**
@@ -7498,39 +7502,6 @@ export type ExportEmailBundleResponses = {
 
 export type ExportEmailBundleResponse = ExportEmailBundleResponses[keyof ExportEmailBundleResponses];
 
-export type OptOutData = {
-    /**
-     * Reason
-     */
-    body?: string | null;
-    path: {
-        /**
-         * Opt Out Token
-         */
-        opt_out_token: string;
-    };
-    query?: never;
-    url: '/api/participants/opt-out/{opt_out_token}';
-};
-
-export type OptOutErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type OptOutError = OptOutErrors[keyof OptOutErrors];
-
-export type OptOutResponses = {
-    /**
-     * Successful Response
-     */
-    200: ParticipantPublic;
-};
-
-export type OptOutResponse = OptOutResponses[keyof OptOutResponses];
-
 export type AddParticipantsData = {
     /**
      * Participants
@@ -8085,6 +8056,39 @@ export type SendParticipantReminderEmailsResponses = {
 };
 
 export type SendParticipantReminderEmailsResponse = SendParticipantReminderEmailsResponses[keyof SendParticipantReminderEmailsResponses];
+
+export type OptOutData = {
+    /**
+     * Reason
+     */
+    body?: string | null;
+    path: {
+        /**
+         * Opt Out Token
+         */
+        opt_out_token: string;
+    };
+    query?: never;
+    url: '/api/participants/opt-out/{opt_out_token}';
+};
+
+export type OptOutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type OptOutError = OptOutErrors[keyof OptOutErrors];
+
+export type OptOutResponses = {
+    /**
+     * Successful Response
+     */
+    200: ParticipantPublic;
+};
+
+export type OptOutResponse = OptOutResponses[keyof OptOutResponses];
 
 export type DeleteProjectData = {
     body?: never;

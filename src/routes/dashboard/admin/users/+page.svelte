@@ -30,7 +30,7 @@
 
 	type UserEdit = {
 		scope: Scope;
-		with_demo_features: boolean;
+		with_preview_features: boolean;
 		organization: string;
 		expires_at: string;
 		two_factor_enabled: boolean;
@@ -58,7 +58,7 @@
 		if (!edits[user.id]) {
 			edits[user.id] = {
 				scope: (user.scope as Scope) ?? 'user',
-				with_demo_features: user.with_demo_features ?? false,
+				with_preview_features: user.with_preview_features ?? false,
 				organization: user.organization ?? '',
 				expires_at: isoToLocalInput(user.expires_at),
 				two_factor_enabled: user.two_factor_enabled ?? false
@@ -72,7 +72,7 @@
 		if (!e) return false;
 		return (
 			e.scope !== ((user.scope as Scope) ?? 'user') ||
-			e.with_demo_features !== (user.with_demo_features ?? false) ||
+			e.with_preview_features !== (user.with_preview_features ?? false) ||
 			e.organization !== (user.organization ?? '') ||
 			e.expires_at !== isoToLocalInput(user.expires_at) ||
 			e.two_factor_enabled !== (user.two_factor_enabled ?? false)
@@ -104,7 +104,7 @@
 			const response = await Admin.updateUser({
 				body: {
 					scope: e.scope,
-					with_demo_features: e.with_demo_features,
+					with_preview_features: e.with_preview_features,
 					organization: e.organization.trim() || null,
 					expires_at: localInputToIso(e.expires_at),
 					two_factor_enabled: e.two_factor_enabled
@@ -519,10 +519,10 @@
 					<input
 						type="checkbox"
 						class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-						bind:checked={edit.with_demo_features}
+						bind:checked={edit.with_preview_features}
 						onclick={(e) => e.stopPropagation()}
 					/>
-					<span class="text-xs font-medium text-gray-600">Demo features enabled</span>
+					<span class="text-xs font-medium text-gray-600">Preview features enabled</span>
 				</label>
 				<label class="flex items-center gap-2 text-sm">
 					<input

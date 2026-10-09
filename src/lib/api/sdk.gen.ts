@@ -1165,20 +1165,6 @@ export class Participants {
     }
     
     /**
-     * Opt Out
-     */
-    public static optOut<ThrowOnError extends boolean = false>(options: Options<OptOutData, ThrowOnError>): RequestResult<OptOutResponses, OptOutErrors, ThrowOnError> {
-        return (options.client ?? client).post<OptOutResponses, OptOutErrors, ThrowOnError>({
-            url: '/api/participants/opt-out/{opt_out_token}',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * Add Participants
      */
     public static addParticipants<ThrowOnError extends boolean = false>(options: Options<AddParticipantsData, ThrowOnError>): RequestResult<AddParticipantsResponses, AddParticipantsErrors, ThrowOnError> {
@@ -1415,6 +1401,20 @@ export class Participants {
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/participants/send-reminder-email',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Opt Out
+     */
+    public static optOut<ThrowOnError extends boolean = false>(options: Options<OptOutData, ThrowOnError>): RequestResult<OptOutResponses, OptOutErrors, ThrowOnError> {
+        return (options.client ?? client).post<OptOutResponses, OptOutErrors, ThrowOnError>({
+            url: '/api/participants/opt-out/{opt_out_token}',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

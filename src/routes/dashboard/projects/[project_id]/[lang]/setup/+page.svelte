@@ -13,7 +13,7 @@
 
 	let projectId = $derived(page.params.project_id as string);
 	let lang = $derived(page.params.lang);
-	let hasDemoFeatures = $derived(!!page.data.user?.with_demo_features);
+	let hasPreviewFeatures = $derived(!!page.data.user?.with_preview_features);
 
 	// Advanced settings state
 	let advancedOpen = $state(false);
@@ -34,7 +34,7 @@
 		key: 'with_consent' | 'with_welcome' | 'with_audio';
 		label: string;
 		description: string;
-		is_demo_feature?: boolean;
+		is_preview_feature?: boolean;
 	}[] = [
 		{
 			key: 'with_consent',
@@ -51,7 +51,7 @@
 			label: 'Allow audio answers',
 			description:
 				'Let respondents record answers as audio messages, which are transcribed before being sent to the AInterviewer.',
-			is_demo_feature: true
+			is_preview_feature: true
 		}
 	];
 
@@ -280,7 +280,7 @@
 
 				<div class="space-y-3">
 					{#each configToggles as toggle (toggle.key)}
-						{#if toggle.is_demo_feature && !hasDemoFeatures}{:else}
+						{#if toggle.is_preview_feature && !hasPreviewFeatures}{:else}
 							<label class="flex items-start gap-3">
 								<input
 									type="checkbox"
@@ -296,7 +296,7 @@
 					{/each}
 				</div>
 
-				{#if hasDemoFeatures}
+				{#if hasPreviewFeatures}
 					<div class="mt-5">
 						<span class="block text-sm font-medium text-gray-700">Probing strategy</span>
 						<p class="mb-2 text-xs text-gray-500">
