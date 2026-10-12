@@ -583,3 +583,89 @@ export function moveCode(
 
 	return [...remaining.slice(0, insertAt), ...branch, ...remaining.slice(insertAt)];
 }
+
+/**
+ * Which codes have been merged away, and into what: merged code to survivor.
+ *
+ * Merging is the one removal that must not take its codings with it, and the
+ * codebook is saved whole -- a code left out is deleted, codings and all. So
+ * the merge is recorded beside the codes and travels with them to the server,
+ * which moves the codings before it deletes the code. See `CodebookPut`.
+ */
+export type Merges = Readonly<Record<CodeId, CodeId>>;
+
+/**
+ * Whether `sourceId` may be merged into `targetId`.
+ *
+ * Same kind, and for a score the same scale, because every coding made with
+ * the source is about to become a coding made with the target and has to
+ * still mean something there: a tag's coding carries no number a score could
+ * read, and a 7 on a 1–10 scale is not a claim about a 1–5 one. The server
+ * checks the codings themselves; this is the stricter rule the editor can
+ * apply without them.
+ *
+ * Groups are never applied, so there is nothing to merge out of one. And the
+ * target cannot sit under the source, because the source's children move to
+ * the target -- which would make the target its own parent.
+ */
+export function canMerge(codes: readonly Code[], sourceId: CodeId, targetId: CodeId): boolean {
+	const source = findCode(codes, sourceId);
+	const target = findCode(codes, targetId);
+	if (!source || !target || source.id === target.id) return false;
+	if (!isApplicable(source) || source.kind !== target.kind) return false;
+	if (source.kind === 'score' && scoreRangeLabel(source) !== scoreRangeLabel(target)) return false;
+	return !descendantIds(codes, sourceId).has(targetId);
+}
+
+/**
+ * Folds one code into another.
+ *
+ * The source's sub-codes move under the target, repainted into its branch as
+ * any moved code is, and its memo is appended to the target's under its name,
+ * since the thinking that went into it is not something the reader chose to
+ * discard. The definition is not kept: the target's is the rule that now
+ * applies, and two rules in one field would be no rule at all.
+ *
+ * Returns the list unchanged when the merge is not allowed.
+ */
+export function mergeCode(codes: readonly Code[], sourceId: CodeId, targetId: CodeId): Code[] {
+	if (!canMerge(codes, sourceId, targetId)) return codes as Code[];
+	const source = findCode(codes, sourceId) as Code;
+	const target = findCode(codes, targetId) as Code;
+
+	let next = codes as Code[];
+	for (const child of childrenOf(codes, sourceId)) {
+		next = recolorSubtree(reparent(next, child.id, targetId), child.id, target.color);
+	}
+	if (source.memo.trim() !== '') {
+		const carried = `From “${displayName(source.name)}”:\n${source.memo.trim()}`;
+		const memo = target.memo.trim() === '' ? carried : `${target.memo.trimEnd()}\n\n${carried}`;
+		next = updateCode(next, targetId, { memo });
+	}
+	return next.filter((code) => code.id !== sourceId);
+}
+
+/**
+ * The merges worth sending: those whose code is gone, each pointed at the
+ * code that holds its codings now.
+ *
+ * A code merged into one that is later merged on in turn would otherwise name
+ * a survivor that is itself gone, so chains are followed to their end. One
+ * whose end has since been deleted is dropped -- its codings go with that
+ * deletion, which is what deleting the survivor means.
+ */
+export function pendingMerges(codes: readonly Code[], merges: Merges): Record<CodeId, CodeId> {
+	const present = new Set(codes.map((code) => code.id));
+	const pending: Record<CodeId, CodeId> = {};
+	for (const source of Object.keys(merges)) {
+		if (present.has(source)) continue;
+		const seen = new Set<CodeId>([source]);
+		let target: CodeId | undefined = merges[source];
+		while (target !== undefined && !present.has(target) && !seen.has(target)) {
+			seen.add(target);
+			target = merges[target];
+		}
+		if (target !== undefined && present.has(target)) pending[source] = target;
+	}
+	return pending;
+}

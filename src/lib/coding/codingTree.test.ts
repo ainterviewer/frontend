@@ -4,6 +4,7 @@ import {
 	addCode,
 	addPaletteColor,
 	ancestorsOf,
+	canMerge,
 	canReparent,
 	childDraftKind,
 	childrenOf,
@@ -17,9 +18,11 @@ import {
 	descendantIds,
 	displayName,
 	isApplicable,
+	mergeCode,
 	nextRootColor,
 	normalizeHex,
 	outlineOf,
+	pendingMerges,
 	recolorSubtree,
 	removePaletteColor,
 	removeSubtree,
@@ -344,5 +347,92 @@ describe('palette', () => {
 		const repainted = repaintCodes(codes, barriers.color, '#123456');
 		expect(countCodesUsing(repainted, '#123456')).toBe(before);
 		expect(countCodesUsing(repainted, barriers.color)).toBe(0);
+	});
+});
+
+describe('merging', () => {
+	function book() {
+		const worry = createCode({ name: 'Worry', memo: 'Came up in every pilot.', color: '#111111' });
+		const nerves = createCode({ name: 'Nerves', parentId: worry.id, color: '#111111' });
+		const shaky = createCode({ name: 'Shaky', parentId: nerves.id, color: '#111111' });
+		const stress = createCode({ name: 'Stress', memo: 'The umbrella.', color: '#222222' });
+		const load = createCode({ name: 'Load', parentId: stress.id, color: '#222222' });
+		const rating = createCode({ name: 'Rating', kind: 'score' });
+		const heading = createCode({ name: 'Feelings', kind: 'group' });
+		return {
+			codes: [worry, nerves, shaky, stress, load, rating, heading],
+			worry,
+			nerves,
+			shaky,
+			stress,
+			load,
+			rating,
+			heading
+		};
+	}
+
+	it('only merges codes whose codings would mean the same thing on the target', () => {
+		const { codes, worry, stress, rating, heading, nerves } = book();
+		expect(canMerge(codes, worry.id, stress.id)).toBe(true);
+		expect(canMerge(codes, worry.id, worry.id)).toBe(false);
+		expect(canMerge(codes, worry.id, rating.id)).toBe(false);
+		expect(canMerge(codes, worry.id, heading.id)).toBe(false);
+		expect(canMerge(codes, heading.id, worry.id)).toBe(false);
+		// The source's sub-codes move to the target, which cannot be one of them.
+		expect(canMerge(codes, worry.id, nerves.id)).toBe(false);
+		// Into an ancestor is fine: the sub-codes simply move up.
+		expect(canMerge(codes, nerves.id, worry.id)).toBe(true);
+	});
+
+	it('only merges scores on the same scale', () => {
+		const one = createCode({ kind: 'score', minValue: 1, maxValue: 5 });
+		const same = createCode({ kind: 'score', minValue: 1, maxValue: 5 });
+		const wider = createCode({ kind: 'score', minValue: 1, maxValue: 10 });
+		const codes = [one, same, wider];
+		expect(canMerge(codes, one.id, same.id)).toBe(true);
+		expect(canMerge(codes, one.id, wider.id)).toBe(false);
+	});
+
+	it('moves the sub-codes under the target, after its own, in its colour', () => {
+		const { codes, worry, nerves, shaky, stress, load } = book();
+		const merged = mergeCode(codes, worry.id, stress.id);
+
+		expect(merged.some((code) => code.id === worry.id)).toBe(false);
+		expect(childrenOf(merged, stress.id).map((code) => code.id)).toEqual([load.id, nerves.id]);
+		expect(findOrThrow(merged, shaky.id).parentId).toBe(nerves.id);
+		expect(findOrThrow(merged, nerves.id).color).toBe('#222222');
+		expect(findOrThrow(merged, shaky.id).color).toBe('#222222');
+		// Still depth-first, so the list reads as the outline.
+		expect(outlineOf(merged).map((row) => row.code.id)).toEqual(merged.map((code) => code.id));
+	});
+
+	it('appends the memo under the merged code’s name and drops its definition', () => {
+		const { codes, worry, stress } = book();
+		const target = findOrThrow(mergeCode(codes, worry.id, stress.id), stress.id);
+
+		expect(target.memo).toBe('The umbrella.\n\nFrom “Worry”:\nCame up in every pilot.');
+		expect(target.definition).toBe(stress.definition);
+	});
+
+	it('leaves the codebook alone when the merge is not allowed', () => {
+		const { codes, worry, rating } = book();
+		expect(mergeCode(codes, worry.id, rating.id)).toBe(codes);
+	});
+
+	it('sends a merge only once its code is gone, at the code holding its codings now', () => {
+		const { codes, worry, nerves, stress, load } = book();
+		const without = (...ids: string[]) => codes.filter((code) => !ids.includes(code.id));
+
+		// Undone: the code is back, so there is nothing to carry out.
+		expect(pendingMerges(codes, { [worry.id]: stress.id })).toEqual({});
+		// Merged on in turn: follow the chain to the survivor.
+		expect(
+			pendingMerges(without(worry.id, stress.id), { [worry.id]: stress.id, [stress.id]: load.id })
+		).toEqual({
+			[worry.id]: load.id,
+			[stress.id]: load.id
+		});
+		// The survivor was deleted since: its codings go with it.
+		expect(pendingMerges(without(nerves.id, stress.id), { [nerves.id]: stress.id })).toEqual({});
 	});
 });

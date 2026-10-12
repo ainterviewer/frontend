@@ -193,3 +193,49 @@ test('a code added under the free layout is placed along the direction the tree 
 	const added = tree.nodes.find((node) => node.id === id)?.position;
 	expect(added?.x).toBeGreaterThan(parent!.x);
 });
+
+test('a merge is one undo, and takes its claim on the codings back with it', () => {
+	const tree = seededTree();
+	const before = tree.codes;
+
+	expect(tree.merge(TIME, 'seed-constraints-money')).toEqual({
+		source: findCode(before, TIME)?.name,
+		target: findCode(before, 'seed-constraints-money')?.name
+	});
+	expect(findCode(tree.codes, TIME)).toBeUndefined();
+	expect(tree.merges).toEqual({ [TIME]: 'seed-constraints-money' });
+	expect(tree.selectedId).toBe('seed-constraints-money');
+
+	tree.undo();
+	expect(tree.codes).toBe(before);
+	expect(tree.merges).toEqual({});
+
+	tree.redo();
+	expect(tree.merges).toEqual({ [TIME]: 'seed-constraints-money' });
+});
+
+test('a merge the editor cannot vouch for is refused', () => {
+	const tree = seededTree();
+	const revision = tree.revision;
+
+	// A group heading is never applied, so it has no codings to move.
+	expect(tree.merge('seed-quality', RESPONSIBILITY)).toBeNull();
+	expect(tree.mergeTargets('seed-quality')).toEqual([]);
+	// A tag's codings carry no number, so a score is no home for them.
+	expect(tree.merge(TIME, 'seed-quality-rapport')).toBeNull();
+	// The scores share a scale, so they may be merged among themselves.
+	expect(tree.mergeTargets('seed-quality-rapport').map((code) => code.id)).toEqual([
+		'seed-quality-elaboration',
+		'seed-quality-steering'
+	]);
+	expect(tree.revision).toBe(revision);
+});
+
+test('loading a stored codebook forgets the merges it already contains', () => {
+	const tree = seededTree();
+	tree.merge(TIME, 'seed-constraints-money');
+
+	tree.load([...tree.codes], [...tree.palette]);
+
+	expect(tree.merges).toEqual({});
+});

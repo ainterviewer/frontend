@@ -2,15 +2,20 @@
 	import { type Code, CODE_KINDS, type CodeKind, displayName } from '$lib/coding/codingTree';
 	import type { CodingTreeState } from '$lib/coding/codingTreeState.svelte';
 
+	import MergeCodePicker from './MergeCodePicker.svelte';
+
 	let {
 		tree,
 		code,
-		onDelete
+		onDelete,
+		onMerge
 	}: {
 		tree: CodingTreeState;
 		code: Code;
 		/** The page owns deletion, because it is the one that can offer the undo. */
 		onDelete: (id: string) => void;
+		/** As `onDelete`. */
+		onMerge: (sourceId: string, targetId: string) => void;
 	} = $props();
 
 	const KIND_COPY: Record<CodeKind, { label: string; icon: string; help: string }> = {
@@ -318,6 +323,7 @@
 				<i class="fas fa-arrow-turn-up mr-1"></i> Make top-level
 			</button>
 		{/if}
+		<MergeCodePicker {tree} {code} {onMerge} />
 		<button
 			class="w-full rounded px-3 py-2 text-sm text-red-600 hover:bg-red-50"
 			onclick={() => onDelete(code.id)}

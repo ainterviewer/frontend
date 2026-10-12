@@ -7,6 +7,7 @@ import {
 	addCode,
 	addPaletteColor,
 	ancestorsOf,
+	canMerge,
 	canMove,
 	canReparent,
 	childDraftKind,
@@ -19,8 +20,12 @@ import {
 	DEFAULT_PALETTE,
 	descendantIds,
 	findCode,
+	mergeCode,
+	type Merges,
 	moveCode,
 	nextRootColor,
+	outlineOf,
+	pendingMerges,
 	recolorSubtree,
 	removePaletteColor,
 	removeSubtree,
@@ -84,12 +89,17 @@ const HISTORY_LIMIT = 50;
  * repaints codes: dropping a colour from the palette recolours every branch
  * that wore it, and an undo that took back only half of that would leave the
  * reader a codebook painted in a hue they can no longer pick.
+ *
+ * The merges travel with them for the same reason: a merge removes a code, and
+ * an undo that brought the code back while leaving its merge on record would
+ * have the next save move its codings away from a code the reader can see.
  */
-type Snapshot = { codes: Code[]; palette: string[] };
+type Snapshot = { codes: Code[]; palette: string[]; merges: Merges };
 
 export class CodingTreeState {
 	#codes = $state.raw<Code[]>([]);
 	#palette = $state.raw<string[]>([...DEFAULT_PALETTE]);
+	#merges: Merges = {};
 	/**
 	 * Bumped by every change worth saving, and read by the saver.
 	 *
@@ -231,11 +241,24 @@ export class CodingTreeState {
 		this.#future = [];
 		this.#lastEdit = null;
 		this.#codes = codes;
+		this.#merges = {};
 		if (palette.length > 0) this.#palette = palette;
 		this.#selectedId = null;
 		this.#nameFocusFor = null;
 		this.refits += 1;
 		this.sync();
+	}
+
+	/**
+	 * The merges the next save has to carry out, so the merged codes' codings
+	 * are moved rather than deleted with them. See `pendingMerges`.
+	 *
+	 * Kept until the next `load` rather than cleared once saved: which merges
+	 * are stored is the saver's knowledge, not the document's, and the server
+	 * ignores a merge it has already made.
+	 */
+	get merges(): Record<CodeId, CodeId> {
+		return pendingMerges(this.#codes, this.#merges);
 	}
 
 	/** The colours this codebook offers for a branch, in the order they are shown. */
@@ -278,20 +301,34 @@ export class CodingTreeState {
 	 * name is one undo rather than one per keystroke.
 	 */
 	#commit(next: Code[], edit: string | null = null) {
-		this.#commitAll({ codes: next, palette: this.#palette }, edit);
+		this.#commitAll({ ...this.#snapshot(), codes: next }, edit);
 	}
 
-	/** As `#commit`, for the edits that change the palette and the codes at once. */
+	#snapshot(): Snapshot {
+		return { codes: this.#codes, palette: this.#palette, merges: this.#merges };
+	}
+
+	#restore(snapshot: Snapshot) {
+		this.#codes = snapshot.codes;
+		this.#palette = snapshot.palette;
+		this.#merges = snapshot.merges;
+	}
+
+	/** As `#commit`, for the edits that change more than the codes. */
 	#commitAll(next: Snapshot, edit: string | null = null) {
-		if (next.codes === this.#codes && next.palette === this.#palette) return;
+		if (
+			next.codes === this.#codes &&
+			next.palette === this.#palette &&
+			next.merges === this.#merges
+		)
+			return;
 		if (edit === null || edit !== this.#lastEdit) {
-			this.#past.push({ codes: this.#codes, palette: this.#palette });
+			this.#past.push(this.#snapshot());
 			if (this.#past.length > HISTORY_LIMIT) this.#past.shift();
 		}
 		this.#lastEdit = edit;
 		this.#future = [];
-		this.#codes = next.codes;
-		this.#palette = next.palette;
+		this.#restore(next);
 		this.#revision += 1;
 		this.sync();
 	}
@@ -414,7 +451,7 @@ export class CodingTreeState {
 	addColor(color?: string): string | null {
 		const next = addPaletteColor(this.#palette, color ?? generateColor([...this.#palette]));
 		if (next === this.#palette) return null;
-		this.#commitAll({ codes: this.#codes, palette: next });
+		this.#commitAll({ ...this.#snapshot(), palette: next });
 		return next[next.length - 1];
 	}
 
@@ -428,7 +465,7 @@ export class CodingTreeState {
 		const palette = setPaletteColor(this.#palette, index, color);
 		if (palette === this.#palette) return;
 		const codes = repaintCodes(this.#codes, this.#palette[index], palette[index]);
-		this.#commitAll({ codes, palette }, `palette:${index}`);
+		this.#commitAll({ ...this.#snapshot(), codes, palette }, `palette:${index}`);
 	}
 
 	/**
@@ -445,7 +482,7 @@ export class CodingTreeState {
 		const palette = removePaletteColor(this.#palette, index);
 		if (palette === this.#palette) return;
 		const codes = repaintCodes(this.#codes, this.#palette[index], palette[0]);
-		this.#commitAll({ codes, palette });
+		this.#commitAll({ ...this.#snapshot(), codes, palette });
 	}
 
 	/** How many codes wear a colour -- what a delete would repaint. */
@@ -462,6 +499,36 @@ export class CodingTreeState {
 		this.#commit(removeSubtree(this.#codes, id));
 		this.selectedId = parentId;
 		return { name: code.name, removed };
+	}
+
+	/**
+	 * The codes `id` could be merged into, in outline order -- what the
+	 * inspector's picker offers. See `canMerge` for what is left out and why.
+	 */
+	mergeTargets(id: CodeId): Code[] {
+		return outlineOf(this.#codes)
+			.map((row) => row.code)
+			.filter((code) => canMerge(this.#codes, id, code.id));
+	}
+
+	/**
+	 * Folds `sourceId` into `targetId` -- its sub-codes, its memo, and on the
+	 * next save its codings. Returns the two names, for the undo toast.
+	 *
+	 * One commit for the codes and the record of the merge, so a single undo
+	 * takes back both: the code returns, and so does its claim on its codings.
+	 */
+	merge(sourceId: CodeId, targetId: CodeId): { source: string; target: string } | null {
+		const source = findCode(this.#codes, sourceId);
+		const target = findCode(this.#codes, targetId);
+		if (!source || !target || !canMerge(this.#codes, sourceId, targetId)) return null;
+		this.#commitAll({
+			...this.#snapshot(),
+			codes: mergeCode(this.#codes, sourceId, targetId),
+			merges: { ...this.#merges, [sourceId]: targetId }
+		});
+		this.selectedId = targetId;
+		return { source: source.name, target: target.name };
 	}
 
 	canMoveUnder(id: CodeId, parentId: CodeId | null): boolean {
@@ -526,9 +593,8 @@ export class CodingTreeState {
 		this.#lastEdit = null;
 		const previous = this.#past.pop();
 		if (!previous) return;
-		this.#future.push({ codes: this.#codes, palette: this.#palette });
-		this.#codes = previous.codes;
-		this.#palette = previous.palette;
+		this.#future.push(this.#snapshot());
+		this.#restore(previous);
 		this.#revision += 1;
 		if (this.selectedId && !findCode(previous.codes, this.selectedId)) this.selectedId = null;
 		this.sync();
@@ -538,9 +604,8 @@ export class CodingTreeState {
 		this.#lastEdit = null;
 		const next = this.#future.pop();
 		if (!next) return;
-		this.#past.push({ codes: this.#codes, palette: this.#palette });
-		this.#codes = next.codes;
-		this.#palette = next.palette;
+		this.#past.push(this.#snapshot());
+		this.#restore(next);
 		this.#revision += 1;
 		this.sync();
 	}

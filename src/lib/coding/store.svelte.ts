@@ -113,12 +113,23 @@ export class Codebook {
 		this.saving = true;
 		const { data, error } = await Analysis.saveCodebook({
 			path: { project_id: this.projectId },
-			body: { codes: codesToApi(this.tree.codes), palette: [...this.tree.palette] }
+			body: {
+				codes: codesToApi(this.tree.codes),
+				palette: [...this.tree.palette],
+				merges: this.tree.merges
+			}
 		});
 		this.saving = false;
 
 		if (error || !data) {
-			this.error = 'Could not save the codebook. Your last change is not stored.';
+			// A refusal says why -- a merge whose codings would not fit the code
+			// they were moving to, say -- and the reader cannot act on a bare
+			// "could not save" when the fix is to undo that one edit.
+			const detail =
+				error && typeof error === 'object' && 'detail' in error && typeof error.detail === 'string'
+					? ` ${error.detail}.`
+					: '';
+			this.error = `Could not save the codebook.${detail} Your last change is not stored.`;
 			return;
 		}
 		this.error = null;

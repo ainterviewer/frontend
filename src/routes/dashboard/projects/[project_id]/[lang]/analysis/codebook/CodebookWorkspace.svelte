@@ -38,6 +38,14 @@
 		);
 	}
 
+	function mergeCode(sourceId: string, targetId: string) {
+		const merged = tree.merge(sourceId, targetId);
+		if (!merged) return;
+		toast.success(`Merged “${displayName(merged.source)}” into “${displayName(merged.target)}”`, {
+			action: { label: 'Undo', onClick: () => tree.undo() }
+		});
+	}
+
 	function onKeydown(event: KeyboardEvent) {
 		const target = event.target as HTMLElement | null;
 		// The inspector is full of text fields; none of these shortcuts should
@@ -106,7 +114,7 @@
 		</div>
 
 		{#if tree.selected}
-			<CodeInspector {tree} code={tree.selected} onDelete={deleteCode} />
+			<CodeInspector {tree} code={tree.selected} onDelete={deleteCode} onMerge={mergeCode} />
 		{:else}
 			<aside
 				class="flex h-full w-80 shrink-0 flex-col justify-center gap-3 border-l border-gray-200 bg-white px-6 text-center"
