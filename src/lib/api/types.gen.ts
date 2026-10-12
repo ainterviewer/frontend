@@ -701,7 +701,7 @@ export type CollaboratorRole = 'viewer' | 'annotator' | 'editor' | 'admin';
 /**
  * CommunicationTrait
  */
-export type CommunicationTrait = {
+export type CommunicationTraitInput = {
     length: AnswerLength;
     /**
      * Style
@@ -711,6 +711,25 @@ export type CommunicationTrait = {
      * Tone
      */
     tone: string;
+};
+
+/**
+ * CommunicationTrait
+ */
+export type CommunicationTraitOutput = {
+    length: AnswerLength;
+    /**
+     * Style
+     */
+    style: string;
+    /**
+     * Tone
+     */
+    tone: string;
+    /**
+     * Length Description
+     */
+    readonly length_description: string;
 };
 
 /**
@@ -2255,7 +2274,7 @@ export type InterviewStatusCount = {
  *
  * Dataclass representing the interview subject
  */
-export type InterviewSubject = {
+export type InterviewSubjectInput = {
     /**
      * Name
      */
@@ -2284,7 +2303,54 @@ export type InterviewSubject = {
      * Personality
      */
     personality: string;
-    communication_trait: CommunicationTrait;
+    communication_trait: CommunicationTraitInput;
+    /**
+     * Extra Traits
+     */
+    extra_traits?: {
+        [key: string]: string;
+    } | string | null;
+    /**
+     * Refusal Rate
+     */
+    refusal_rate?: number;
+};
+
+/**
+ * InterviewSubject
+ *
+ * Dataclass representing the interview subject
+ */
+export type InterviewSubjectOutput = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Age
+     */
+    age: number;
+    /**
+     * Gender
+     */
+    gender: string;
+    /**
+     * Education
+     */
+    education: string;
+    /**
+     * Occupation
+     */
+    occupation: string;
+    /**
+     * Location
+     */
+    location: string;
+    /**
+     * Personality
+     */
+    personality: string;
+    communication_trait: CommunicationTraitOutput;
     /**
      * Extra Traits
      */
@@ -2391,7 +2457,25 @@ export type IntervieweeCreate = {
     /**
      * Interview Subject
      */
-    interview_subject: InterviewSubject | string;
+    interview_subject: InterviewSubjectInput | string;
+};
+
+/**
+ * IntervieweePublic
+ */
+export type IntervieweePublic = {
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * Interview Subject
+     */
+    interview_subject: InterviewSubjectOutput | string;
+    /**
+     * Id
+     */
+    id: string;
 };
 
 /**
@@ -4904,6 +4988,86 @@ export type ReceivedData = {
  * TemplatePlaceholder
  */
 export type TemplatePlaceholder = 'name' | 'email' | 'pid' | 'interview_url' | 'project_title' | 'opt_out_url';
+
+/**
+ * CommunicationTrait
+ */
+export type CommunicationTraitOutputWritable = {
+    length: AnswerLength;
+    /**
+     * Style
+     */
+    style: string;
+    /**
+     * Tone
+     */
+    tone: string;
+};
+
+/**
+ * InterviewSubject
+ *
+ * Dataclass representing the interview subject
+ */
+export type InterviewSubjectOutputWritable = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Age
+     */
+    age: number;
+    /**
+     * Gender
+     */
+    gender: string;
+    /**
+     * Education
+     */
+    education: string;
+    /**
+     * Occupation
+     */
+    occupation: string;
+    /**
+     * Location
+     */
+    location: string;
+    /**
+     * Personality
+     */
+    personality: string;
+    communication_trait: CommunicationTraitOutputWritable;
+    /**
+     * Extra Traits
+     */
+    extra_traits?: {
+        [key: string]: string;
+    } | string | null;
+    /**
+     * Refusal Rate
+     */
+    refusal_rate?: number;
+};
+
+/**
+ * IntervieweePublic
+ */
+export type IntervieweePublicWritable = {
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    /**
+     * Interview Subject
+     */
+    interview_subject: InterviewSubjectOutputWritable | string;
+    /**
+     * Id
+     */
+    id: string;
+};
 
 /**
  * InvitationPublic
@@ -9906,13 +10070,17 @@ export type GetIntervieweeData = {
         /**
          * Project Id
          */
-        project_id: string;
+        project_id: string | null;
     };
     query: {
         /**
          * Interview Id
          */
         interview_id: string;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
     };
     url: '/api/projects/{project_id}/interviewee';
 };
@@ -9927,6 +10095,41 @@ export type GetIntervieweeErrors = {
 export type GetIntervieweeError = GetIntervieweeErrors[keyof GetIntervieweeErrors];
 
 export type GetIntervieweeResponses = {
+    /**
+     * Successful Response
+     */
+    200: IntervieweePublic;
+};
+
+export type GetIntervieweeResponse = GetIntervieweeResponses[keyof GetIntervieweeResponses];
+
+export type AddIntervieweeData = {
+    body: IntervieweeCreate;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/interviewee';
+};
+
+export type AddIntervieweeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddIntervieweeError = AddIntervieweeErrors[keyof AddIntervieweeErrors];
+
+export type AddIntervieweeResponses = {
     /**
      * Successful Response
      */

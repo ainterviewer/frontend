@@ -293,10 +293,20 @@ export const zCollaboratorCreate = z.object({
 /**
  * CommunicationTrait
  */
-export const zCommunicationTrait = z.object({
+export const zCommunicationTraitInput = z.object({
     length: zAnswerLength,
     style: z.string(),
     tone: z.string()
+});
+
+/**
+ * CommunicationTrait
+ */
+export const zCommunicationTraitOutput = z.object({
+    length: zAnswerLength,
+    style: z.string(),
+    tone: z.string(),
+    length_description: z.string().readonly()
 });
 
 /**
@@ -899,7 +909,7 @@ export const zInterviewStatusCount = z.object({
  *
  * Dataclass representing the interview subject
  */
-export const zInterviewSubject = z.object({
+export const zInterviewSubjectInput = z.object({
     name: z.string(),
     age: z.int(),
     gender: z.string(),
@@ -907,7 +917,28 @@ export const zInterviewSubject = z.object({
     occupation: z.string(),
     location: z.string(),
     personality: z.string(),
-    communication_trait: zCommunicationTrait,
+    communication_trait: zCommunicationTraitInput,
+    extra_traits: z.union([
+        z.record(z.string(), z.string()),
+        z.string()
+    ]).nullish(),
+    refusal_rate: z.number().gte(0).lte(1).optional().default(0)
+});
+
+/**
+ * InterviewSubject
+ *
+ * Dataclass representing the interview subject
+ */
+export const zInterviewSubjectOutput = z.object({
+    name: z.string(),
+    age: z.int(),
+    gender: z.string(),
+    education: z.string(),
+    occupation: z.string(),
+    location: z.string(),
+    personality: z.string(),
+    communication_trait: zCommunicationTraitOutput,
     extra_traits: z.union([
         z.record(z.string(), z.string()),
         z.string()
@@ -938,9 +969,21 @@ export const zInterviewType = z.enum([
 export const zIntervieweeCreate = z.object({
     interview_id: z.string(),
     interview_subject: z.union([
-        zInterviewSubject,
+        zInterviewSubjectInput,
         z.string()
     ])
+});
+
+/**
+ * IntervieweePublic
+ */
+export const zIntervieweePublic = z.object({
+    interview_id: z.string(),
+    interview_subject: z.union([
+        zInterviewSubjectOutput,
+        z.string()
+    ]),
+    id: z.string()
 });
 
 /**
@@ -2780,6 +2823,48 @@ export const zTemplatePlaceholder = z.enum([
 ]);
 
 /**
+ * CommunicationTrait
+ */
+export const zCommunicationTraitOutputWritable = z.object({
+    length: zAnswerLength,
+    style: z.string(),
+    tone: z.string()
+});
+
+/**
+ * InterviewSubject
+ *
+ * Dataclass representing the interview subject
+ */
+export const zInterviewSubjectOutputWritable = z.object({
+    name: z.string(),
+    age: z.int(),
+    gender: z.string(),
+    education: z.string(),
+    occupation: z.string(),
+    location: z.string(),
+    personality: z.string(),
+    communication_trait: zCommunicationTraitOutputWritable,
+    extra_traits: z.union([
+        z.record(z.string(), z.string()),
+        z.string()
+    ]).nullish(),
+    refusal_rate: z.number().gte(0).lte(1).optional().default(0)
+});
+
+/**
+ * IntervieweePublic
+ */
+export const zIntervieweePublicWritable = z.object({
+    interview_id: z.string(),
+    interview_subject: z.union([
+        zInterviewSubjectOutputWritable,
+        z.string()
+    ]),
+    id: z.string()
+});
+
+/**
  * InvitationPublic
  */
 export const zInvitationPublicWritable = z.object({
@@ -4491,11 +4576,27 @@ export const zDeleteTestSetupQuery = z.object({
 });
 
 export const zGetIntervieweePath = z.object({
-    project_id: z.string()
+    project_id: z.string().nullable()
 });
 
 export const zGetIntervieweeQuery = z.object({
-    interview_id: z.string()
+    interview_id: z.string(),
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetIntervieweeResponse = zIntervieweePublic;
+
+export const zAddIntervieweeBody = zIntervieweeCreate;
+
+export const zAddIntervieweePath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zAddIntervieweeQuery = z.object({
+    folder_id: z.string().nullish()
 });
 
 export const zGetTestStatusPath = z.object({
