@@ -991,11 +991,21 @@ export const zDeleteInterviewRequest = z.object({
 
 /**
  * ExportMessagesRequest
+ *
+ * `csv` and `xlsx` export the message table, `docx` and `pdf` readable
+ * transcripts. `archive` makes it a ZIP with one file per interview.
  */
 export const zExportMessagesRequest = z.object({
     interview_ids: z.array(z.string()).nullish(),
     filters: zInterviewFilters.nullish(),
-    format: z.enum(['csv', 'xlsx']).optional().default('csv')
+    format: z.enum([
+        'csv',
+        'xlsx',
+        'docx',
+        'pdf'
+    ]).optional().default('csv'),
+    archive: z.boolean().optional().default(false),
+    timezone: z.string().nullish()
 });
 
 /**

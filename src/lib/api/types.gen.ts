@@ -1744,6 +1744,9 @@ export type ExperimentPublic = {
 
 /**
  * ExportMessagesRequest
+ *
+ * `csv` and `xlsx` export the message table, `docx` and `pdf` readable
+ * transcripts. `archive` makes it a ZIP with one file per interview.
  */
 export type ExportMessagesRequest = {
     /**
@@ -1754,7 +1757,15 @@ export type ExportMessagesRequest = {
     /**
      * Format
      */
-    format?: 'csv' | 'xlsx';
+    format?: 'csv' | 'xlsx' | 'docx' | 'pdf';
+    /**
+     * Archive
+     */
+    archive?: boolean;
+    /**
+     * Timezone
+     */
+    timezone?: string | null;
 };
 
 /**
