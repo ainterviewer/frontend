@@ -8,6 +8,8 @@
 	import CodedMessage from '$lib/components/analysis/CodedMessage.svelte';
 	import MessageCommentModal from '$lib/components/analysis/MessageCommentModal.svelte';
 	import AudioPlayer from '$lib/components/interview/AudioPlayer.svelte';
+	import { downloadInterviews } from '$lib/components/interview/download';
+	import DownloadDialog from '$lib/components/interview/DownloadDialog.svelte';
 	import type { Message } from '$lib/components/interview/types';
 	import { CommentSurface } from '$lib/stores/commentSurface.svelte';
 	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
@@ -64,6 +66,7 @@
 	});
 
 	// UI state
+	let downloadOpen = $state(false);
 	let activeCodingMessageId = $state<string | null>(null);
 	const surface = new CommentSurface();
 
@@ -243,12 +246,21 @@
 				<span class="text-sm text-gray-500">ID: {data.interview_id}</span>
 			</div>
 		</div>
-		{#if hasCodebook}
-			<div class="text-xs text-gray-500">
-				<i class="fa-solid fa-tags mr-1"></i>
-				Hover a message to code or comment on it
-			</div>
-		{/if}
+		<div class="flex items-center gap-4">
+			{#if hasCodebook}
+				<div class="text-xs text-gray-500">
+					<i class="fa-solid fa-tags mr-1"></i>
+					Hover a message to code or comment on it
+				</div>
+			{/if}
+			<button
+				class="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
+				onclick={() => (downloadOpen = true)}
+			>
+				<i class="fa-solid fa-download text-xs"></i>
+				Download
+			</button>
+		</div>
 	</header>
 
 	<!-- Messages Area -->
@@ -340,4 +352,12 @@
 		if (e.key !== 'Escape' || e.defaultPrevented) return;
 		surface.closeTopmost();
 	}}
+/>
+
+<DownloadDialog
+	bind:open={downloadOpen}
+	count={1}
+	allowArchive={false}
+	onDownload={(format, archive) =>
+		downloadInterviews(data.project_id, { interview_ids: [data.interview_id] }, format, archive)}
 />

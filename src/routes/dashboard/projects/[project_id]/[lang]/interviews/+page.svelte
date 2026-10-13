@@ -22,6 +22,8 @@
 		InterviewSummaryPublic
 	} from '$lib/api/types.gen';
 	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
+	import { downloadInterviews, type InterviewSelection } from '$lib/components/interview/download';
+	import DownloadDialog from '$lib/components/interview/DownloadDialog.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import DateRangeFilter from '$lib/components/table/DateRangeFilter.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
@@ -341,33 +343,22 @@
 		table.setPageIndex(0);
 	}
 
-	async function handleDownloadSelected() {
-		downloadFile(selectionBody(), 'xlsx');
+	// One dialog for every download on the page: what it covers is set by
+	// whichever button opened it.
+	let downloadOpen = $state(false);
+	let downloadTarget = $state<{
+		selection: InterviewSelection;
+		count: number;
+		allowArchive: boolean;
+	}>({ selection: { interview_ids: [] }, count: 0, allowArchive: false });
+
+	function openDownload(selection: InterviewSelection, count: number, allowArchive: boolean) {
+		downloadTarget = { selection, count, allowArchive };
+		downloadOpen = true;
 	}
 
-	async function downloadFile(selected: ReturnType<typeof selectionBody>, format: 'csv' | 'xlsx') {
-		const response = await Api.exportMessages({
-			path: { project_id },
-			body: { ...selected, format },
-			parseAs: 'blob'
-		});
-
-		if (response.error) {
-			console.error('Error downloading file:', response.error);
-			toast.error('Failed to download file');
-			return;
-		}
-
-		if (response.data) {
-			const url = window.URL.createObjectURL(response.data as Blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = `interview_${project_id}.${format}`;
-			document.body.appendChild(a);
-			a.click();
-			window.URL.revokeObjectURL(url);
-			document.body.removeChild(a);
-		}
+	function handleDownloadSelected() {
+		openDownload(selectionBody(), selectedCount, true);
 	}
 
 	function handleSingleAction(action: 'view' | 'download' | 'delete' | 'resume-link', id: string) {
@@ -378,7 +369,7 @@
 			const lang = page.params.lang || 'en';
 			window.open(`/dashboard/projects/${project_id}/${lang}/interviews/${id}`, '_self')?.focus();
 		} else if (action === 'download') {
-			downloadFile({ interview_ids: [id] }, 'csv');
+			openDownload({ interview_ids: [id] }, 1, false);
 		} else if (action === 'delete') {
 			if (confirm('Are you sure you want to delete this interview?')) {
 				Api.deleteInterviews({
@@ -616,4 +607,13 @@
 	interviewId={resumeLinkFor?.id ?? null}
 	pid={resumeLinkFor?.pid}
 	onClose={() => (resumeLinkFor = null)}
+/>
+
+<DownloadDialog
+	bind:open={downloadOpen}
+	count={downloadTarget.count}
+	noun="interview"
+	allowArchive={downloadTarget.allowArchive}
+	onDownload={(format, archive) =>
+		downloadInterviews(project_id, downloadTarget.selection, format, archive)}
 />
