@@ -1979,6 +1979,10 @@ export type Highlight = {
      * Body
      */
     body?: string | null;
+    /**
+     * Audience
+     */
+    audience?: 'all' | 'preview';
 };
 
 /**

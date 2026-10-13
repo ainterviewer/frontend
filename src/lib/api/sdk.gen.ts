@@ -3132,8 +3132,20 @@ export class Default {
      * Only the curated, user-facing view: per-component `notes` and git hashes
      * stay out of it. A release that has not been curated yet (`highlights` is
      * None) is omitted rather than shown empty.
+     *
+     * Highlights about preview features are served only to callers whose token
+     * carries `preview_features`. A release announcing nothing else then reaches
+     * everyone else as curated-but-empty, the same as a maintenance release.
      */
     public static releases<ThrowOnError extends boolean = false>(options?: Options<ReleasesData, ThrowOnError>): RequestResult<ReleasesResponses, ReleasesErrors, ThrowOnError> {
-        return (options?.client ?? client).get<ReleasesResponses, ReleasesErrors, ThrowOnError>({ url: '/api/releases', ...options });
+        return (options?.client ?? client).get<ReleasesResponses, ReleasesErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/releases',
+            ...options
+        });
     }
 }

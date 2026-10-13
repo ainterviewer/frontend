@@ -779,7 +779,8 @@ export const zHighlight = z.object({
         'fixed'
     ]),
     title: z.string(),
-    body: z.string().nullish()
+    body: z.string().nullish(),
+    audience: z.enum(['all', 'preview']).optional().default('all')
 });
 
 /**

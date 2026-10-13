@@ -13,13 +13,15 @@ export const load: LayoutServerLoad = async ({ cookies, locals, url }) => {
 	// rendered without a second round trip — and so it keys off the newest
 	// release that has something to announce rather than the deployed version,
 	// which may not have been written up yet, or may have nothing to write up.
+	// The cookie matters: highlights about preview features are only served to
+	// users who have them.
 	const { projectId } = parseProjectRoute(url.pathname);
 
 	const [response, platformVer, releases, projectResponse, permissionsResponse] = await Promise.all(
 		[
 			Auth.me({ headers: { cookie: cookieHeader } }),
 			Default.version({}),
-			Default.releases({ query: { limit: 10 } }),
+			Default.releases({ headers: { cookie: cookieHeader }, query: { limit: 10 } }),
 			projectId
 				? Projects.getProject({
 						headers: { cookie: cookieHeader },
