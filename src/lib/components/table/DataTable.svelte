@@ -80,6 +80,8 @@
 		rowLabel = 'row',
 		filters,
 		selectionActions,
+		allMatchingSelected = false,
+		onSelectAllMatching,
 		toolbar,
 		onRowClick,
 		isExpanded,
@@ -110,6 +112,18 @@
 		filters?: Snippet;
 		/** Actions shown beside the selected-row count. */
 		selectionActions?: Snippet;
+		/**
+		 * Whether the selection is "every row matching the filters" rather than
+		 * the ids TanStack holds -- with server-side paging, most of those rows
+		 * have never been loaded. Owned by the page, which builds the request and
+		 * must drop the flag on any change to the selection or the filters.
+		 */
+		allMatchingSelected?: boolean;
+		/**
+		 * Offers "Select all N" once the whole page is ticked. Leave unset where a
+		 * bulk action can only take ids.
+		 */
+		onSelectAllMatching?: () => void;
 		/** Extra controls at the right of the control row, before Columns. */
 		toolbar?: Snippet;
 		/**
@@ -150,7 +164,7 @@
 		// checked target, and passing the event raw would hand the range
 		// `undefined` -- which clears it instead of extending the selection.
 		row.getToggleSelectedHandler()({
-			target: { checked: !row.getIsSelected() },
+			target: { checked: !isRowSelected(row) },
 			shiftKey: (event as MouseEvent | KeyboardEvent).shiftKey
 		});
 	}
@@ -161,6 +175,20 @@
 	const total = $derived(rowCount ?? filteredCount);
 	const visibleColumnCount = $derived(table.getVisibleLeafColumns().length);
 	const selectedIds = $derived(selectable ? table.getSelectedRowIds() : []);
+	const selectedCount = $derived(allMatchingSelected ? total : selectedIds.length);
+	const allPageRowsSelected = $derived(allMatchingSelected || table.getIsAllPageRowsSelected());
+	/** Only once the page is full: rows beyond it are what "all" adds. */
+	const canSelectAllMatching = $derived(
+		!!onSelectAllMatching &&
+			!allMatchingSelected &&
+			table.getIsAllPageRowsSelected() &&
+			total > selectedIds.length
+	);
+
+	/** In "all matching" mode a row on an unvisited page is selected too. */
+	function isRowSelected(row: RowLike) {
+		return allMatchingSelected || row.getIsSelected();
+	}
 	const globalFilter = $derived((table.atoms.globalFilter.get() as string | undefined) ?? '');
 	const columnFilters = $derived(table.atoms.columnFilters.get());
 	const page = $derived(table.atoms.pagination.get());
@@ -253,15 +281,23 @@
 				</button>
 			{/if}
 			<div class="ml-auto flex items-center gap-2">
-				{#if selectable && selectedIds.length > 0}
+				{#if selectable && selectedCount > 0}
 					<!-- Kept in this row rather than a strip of its own, so toggling a
 					     selection never shifts the table vertically. -->
 					<div
 						class="flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 py-1 pr-1 pl-2.5 text-sm"
 					>
 						<span class="font-medium whitespace-nowrap text-dark">
-							{selectedIds.length} selected
+							{allMatchingSelected ? `All ${selectedCount}` : selectedCount} selected
 						</span>
+						{#if canSelectAllMatching}
+							<button
+								class="rounded px-1.5 py-0.5 whitespace-nowrap text-primary underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
+								onclick={onSelectAllMatching}
+							>
+								Select all {total}
+							</button>
+						{/if}
 						{@render selectionActions?.()}
 						<button
 							class="flex h-6 w-6 items-center justify-center rounded text-gray-500 hover:bg-dark/5 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
@@ -305,9 +341,8 @@
 										<input
 											type="checkbox"
 											class="form-checkbox h-4 w-4 cursor-pointer rounded border-gray-400 text-primary focus:ring-primary"
-											checked={table.getIsAllPageRowsSelected()}
-											indeterminate={table.getIsSomePageRowsSelected() &&
-												!table.getIsAllPageRowsSelected()}
+											checked={allPageRowsSelected}
+											indeterminate={table.getIsSomePageRowsSelected() && !allPageRowsSelected}
 											onclick={table.getToggleAllPageRowsSelectedHandler()}
 											aria-label="Select all"
 										/>
@@ -385,7 +420,7 @@
 					</tr>
 				{:else}
 					{#each rows as row (row.id)}
-						{@const selected = row.getIsSelected()}
+						{@const selected = isRowSelected(row)}
 						<tr
 							class="border-b border-gray-100 text-sm last:border-0 {selected
 								? 'bg-primary/5'
@@ -456,9 +491,9 @@
 			<div class="shrink-0 border-t border-gray-200 px-4 py-3 text-sm text-gray-600">
 				{total}
 				{total === 1 ? rowLabel : `${rowLabel}s`}
-				{#if selectable && selectedIds.length > 0}
+				{#if selectable && selectedCount > 0}
 					<span class="text-gray-400">·</span>
-					<span class="font-medium text-primary">{selectedIds.length} selected</span>
+					<span class="font-medium text-primary">{selectedCount} selected</span>
 				{/if}
 			</div>
 		{:else}
@@ -466,7 +501,7 @@
 				rowCount={total}
 				pageIndex={page.pageIndex}
 				pageSize={page.pageSize}
-				selectedCount={selectedIds.length}
+				{selectedCount}
 				onPageChange={(index) => table.setPageIndex(index)}
 				onPageSizeChange={(size) => table.setPageSize(size)}
 			/>

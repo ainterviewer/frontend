@@ -4,6 +4,7 @@
 		createColumnHelper,
 		createTable,
 		type PaginationState,
+		type RowSelectionState,
 		type SortingState,
 		type Updater
 	} from '@tanstack/svelte-table';
@@ -13,6 +14,7 @@
 	import { page } from '$app/state';
 	import type {
 		InterviewFacets,
+		InterviewFilters,
 		InterviewStatus,
 		InterviewSummaryPublic,
 		InterviewType
@@ -72,6 +74,13 @@
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
 	let columnFilters = $state<ColumnFiltersState>([]);
 	let globalFilter = $state('');
+	let rowSelection = $state<RowSelectionState>({});
+
+	// "Select all 123": the selection is every result matching the filters,
+	// not the ids in `rowSelection`, most of which were never loaded. Any
+	// change to the selection or the filters drops back to plain ids -- the
+	// filters because "all" was agreed to for the list as it was then.
+	let allMatching = $state(false);
 
 	/** A column's selected facet values, as `FacetedFilter` stores them. */
 	function selection<T extends string = string>(columnId: string) {
@@ -143,7 +152,19 @@
 			},
 			get globalFilter() {
 				return globalFilter;
+			},
+			get rowSelection() {
+				return rowSelection;
 			}
+		},
+		onRowSelectionChange: (updater: Updater<RowSelectionState>) => {
+			// Leaving "all" mode by unticking a row starts from what was on screen:
+			// every row of this page ticked, not just the ones visited before.
+			const base: RowSelectionState = allMatching
+				? { ...rowSelection, ...Object.fromEntries(interviews.map((i) => [i.id, true as const])) }
+				: rowSelection;
+			rowSelection = typeof updater === 'function' ? updater(base) : updater;
+			allMatching = false;
 		},
 		onSortingChange: (updater: Updater<SortingState>) => {
 			sorting = typeof updater === 'function' ? updater(sorting) : updater;
@@ -158,11 +179,13 @@
 		// automatically for tables it paginates itself.
 		onColumnFiltersChange: (updater: Updater<ColumnFiltersState>) => {
 			columnFilters = typeof updater === 'function' ? updater(columnFilters) : updater;
+			allMatching = false;
 			pagination = { ...pagination, pageIndex: 0 };
 			scheduleLoad();
 		},
 		onGlobalFilterChange: (updater: Updater<string>) => {
 			globalFilter = typeof updater === 'function' ? updater(globalFilter) : updater;
+			allMatching = false;
 			pagination = { ...pagination, pageIndex: 0 };
 			scheduleLoad();
 		}
@@ -195,6 +218,28 @@
 	};
 
 	const selectedIds = $derived(table.getSelectedRowIds());
+	const selectedCount = $derived(allMatching ? totalItems : selectedIds.length);
+
+	/** The list's filters, as both the list and the bulk actions send them. */
+	function currentFilters() {
+		return {
+			// The scope of this page. `types` is what the Type filter narrows
+			// it to, and unlike the scope it is left out of the type facet.
+			interview_types: TEST_TYPES,
+			types: selection<InterviewType>('type'),
+			search: globalFilter || undefined,
+			statuses: selection<InterviewStatus>('status'),
+			languages: selection('language'),
+			...dateRangeQuery(
+				columnFilters.find((filter) => filter.id === 'created_at')?.value as DateRange | undefined
+			)
+		} satisfies InterviewFilters;
+	}
+
+	/** What a bulk action targets: the ticked ids, or everything matching. */
+	function selectionBody() {
+		return allMatching ? { filters: currentFilters() } : { interview_ids: selectedIds };
+	}
 
 	// Sorting and paging both refetch, so two requests can easily be in flight at
 	// once. Only the newest may write: an earlier response landing later would
@@ -213,17 +258,7 @@
 					limit: pagination.pageSize,
 					column: sorting[0]?.id ?? 'created_at',
 					order: sorting[0]?.desc ? 'desc' : 'asc',
-					// The scope of this page. `types` is what the Type filter narrows
-					// it to, and unlike the scope it is left out of the type facet.
-					interview_types: TEST_TYPES,
-					types: selection<InterviewType>('type'),
-					search: globalFilter || undefined,
-					statuses: selection<InterviewStatus>('status'),
-					languages: selection('language'),
-					...dateRangeQuery(
-						columnFilters.find((filter) => filter.id === 'created_at')?.value as
-							DateRange | undefined
-					)
+					...currentFilters()
 				}
 			});
 			if (id !== requestId) return;
@@ -258,14 +293,16 @@
 	async function handleDeleteSelected() {
 		if (
 			!confirm(
-				`Are you sure you want to delete the selected ${selectedIds.length} result(s)? This action cannot be undone.`
+				allMatching
+					? `Are you sure you want to delete all ${selectedCount} result(s) matching the current filters? This action cannot be undone.`
+					: `Are you sure you want to delete the selected ${selectedCount} result(s)? This action cannot be undone.`
 			)
 		)
 			return;
 
 		const { error: deleteError } = await Api.deleteInterviews({
 			path: { project_id },
-			body: { interview_ids: selectedIds }
+			body: selectionBody()
 		});
 		if (deleteError) {
 			console.error('Error deleting test results:', deleteError);
@@ -279,19 +316,15 @@
 	}
 
 	async function handleDownloadSelected() {
-		const ids = selectedIds;
-		downloadFile(ids, 'xlsx');
+		downloadFile(selectionBody(), 'xlsx');
 	}
 
-	async function downloadFile(ids: string[], format: 'csv' | 'xlsx') {
+	async function downloadFile(selected: ReturnType<typeof selectionBody>, format: 'csv' | 'xlsx') {
 		const { data: fileData, error: downloadError } = await Api.exportMessages({
 			path: {
 				project_id
 			},
-			body: {
-				interview_ids: ids,
-				format: format
-			},
+			body: { ...selected, format },
 			parseAs: 'blob'
 		});
 
@@ -321,7 +354,7 @@
 				.open(`/dashboard/projects/${project_id}/${lang}/tests/results/${id}`, '_self')
 				?.focus();
 		} else if (action === 'download') {
-			downloadFile([id], 'csv');
+			downloadFile({ interview_ids: [id] }, 'csv');
 		} else if (action === 'delete') {
 			if (confirm('Are you sure you want to delete this result?')) {
 				Api.deleteInterviews({
@@ -415,6 +448,8 @@
 	searchPlaceholder="Search by ID or test name..."
 	rowCount={totalItems}
 	rowLabel="test result"
+	allMatchingSelected={allMatching}
+	onSelectAllMatching={() => (allMatching = true)}
 	emptyTitle="No test results yet"
 	emptyDescription="Run a manual or synthetic test to see results here."
 >
