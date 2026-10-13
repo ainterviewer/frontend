@@ -1,4 +1,5 @@
 import type { Consent, Image, InterviewGuide, TimedMessage, Welcome } from '$lib/api/types.gen';
+import { formatDay } from '$lib/utils/datetime';
 
 import type { GuideQuestion, GuideSection, LocalCondition, LocalConditionSet } from './guide/types';
 import { resolveConditionTarget } from './guide/utils';
@@ -434,7 +435,7 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 		margin: [0, 0, 0, 4]
 	});
 	content.push({
-		text: new Date().toLocaleDateString(),
+		text: formatDay(new Date(), 'long'),
 		fontSize: 10,
 		color: '#999',
 		margin: [0, 0, 0, 16]

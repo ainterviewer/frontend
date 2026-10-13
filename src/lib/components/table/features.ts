@@ -80,25 +80,6 @@ export function matchesSelection(
 	return selected.includes(value === null || value === undefined ? '' : String(value));
 }
 
-/** Compact enough to keep date columns narrow; seconds live in the title. */
-export function formatDate(s: string | null | undefined) {
-	if (!s) return '';
-	return new Date(s)
-		.toLocaleString('en-GB', {
-			day: '2-digit',
-			month: '2-digit',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-			hour12: false
-		})
-		.replace(',', '');
-}
-
-export function formatDateFull(s: string | null | undefined) {
-	return s ? new Date(s).toLocaleString('en-GB', { hour12: false }) : '';
-}
-
 /** One value a server-side facet offers, as the API returns it. */
 export type Facet = { value: string; count: number };
 

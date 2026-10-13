@@ -33,10 +33,9 @@
 		type DateRange,
 		dateRangeQuery,
 		facetCounts,
-		facetOptions,
-		formatDate,
-		formatDateFull
+		facetOptions
 	} from '$lib/components/table/features';
+	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 
 	import ResumeLinkModal from './ResumeLinkModal.svelte';
 

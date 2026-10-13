@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { MessageCommentPublic } from '$lib/api/types.gen';
-	import { authorInitials, authorName, formatCommentTime } from '$lib/utils/coding';
+	import { authorInitials, authorName } from '$lib/utils/coding';
+	import { formatRelative } from '$lib/utils/datetime';
 
 	interface Props {
 		/** Root comments, each carrying its replies. */
@@ -124,7 +125,7 @@
 					{authorName(entry.author)}{isOwn ? ' (you)' : ''}
 				</span>
 				<span class="text-[10px] text-gray-400">
-					{formatCommentTime(entry.created_at)}{wasEdited(entry) ? ' · edited' : ''}
+					{formatRelative(entry.created_at)}{wasEdited(entry) ? ' · edited' : ''}
 				</span>
 			</div>
 

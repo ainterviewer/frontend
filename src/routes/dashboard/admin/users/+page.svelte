@@ -10,12 +10,11 @@
 	import {
 		type DataTableFeatures,
 		dataTableFeatures,
-		formatDate,
-		formatDateFull,
 		matchesSelection,
 		sortableText,
 		sortableTime
 	} from '$lib/components/table/features';
+	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 
 	import type { PageData } from './$types';
 

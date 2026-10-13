@@ -2,6 +2,7 @@
 	import { fade, fly } from 'svelte/transition';
 
 	import type { PlatformRelease } from '$lib/api';
+	import { formatDay } from '$lib/utils/datetime';
 	import { whatsNew } from '$lib/whatsNew.svelte';
 
 	let { releases = [] }: { releases?: PlatformRelease[] } = $props();
@@ -19,16 +20,6 @@
 		improved: 'bg-primary/10 text-primary',
 		fixed: 'bg-dark/10 text-dark/70'
 	} as const;
-
-	function formatDate(iso: string) {
-		const parsed = new Date(iso);
-		if (Number.isNaN(parsed.getTime())) return iso;
-		return parsed.toLocaleDateString('en-GB', {
-			day: 'numeric',
-			month: 'long',
-			year: 'numeric'
-		});
-	}
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') whatsNew.close();
@@ -75,7 +66,7 @@
 					<section class="mb-6 last:mb-0">
 						<h3 class="mb-3 flex items-baseline justify-between gap-3">
 							<span class="text-xs font-semibold tracking-wide text-dark/50 uppercase">
-								{formatDate(release.released_at)}
+								{formatDay(release.released_at, 'long')}
 							</span>
 							<span class="text-[0.625rem] font-medium tracking-wide text-dark/35">
 								v{release.platform_version}

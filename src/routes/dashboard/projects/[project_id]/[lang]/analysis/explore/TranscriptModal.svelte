@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
-	import { timeFormat } from 'd3-time-format';
 	import type { Snippet } from 'svelte';
 
 	import { resolve } from '$app/paths';
@@ -8,6 +7,7 @@
 	import type { ConditionSummary } from '$lib/analysis/conditions';
 	import { Analysis } from '$lib/api';
 	import type { EmbeddingSearchHit, TranscriptTurn } from '$lib/api/types.gen';
+	import { formatDay } from '$lib/utils/datetime';
 
 	import ChunkTranscript from './ChunkTranscript.svelte';
 	import type { KeywordScope } from './explore';
@@ -61,8 +61,6 @@
 		menu?: Snippet;
 		onclose: () => void;
 	} = $props();
-
-	const formatDate = timeFormat('%d %b %Y');
 
 	let turns = $state<TranscriptTurn[]>([]);
 	let loading = $state(false);
@@ -205,7 +203,7 @@
 	);
 
 	let date = $derived(
-		hit?.interview_created_at ? formatDate(new Date(hit.interview_created_at)) : null
+		hit?.interview_created_at ? formatDay(hit.interview_created_at, 'medium') : null
 	);
 </script>
 

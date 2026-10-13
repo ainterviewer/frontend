@@ -12,6 +12,7 @@
 	import type { ItemDistribution, ItemDistributions } from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { ANSWER_STATE_COLORS, languageColor } from '$lib/config/chartColors';
+	import { formatDay } from '$lib/utils/datetime';
 	import { watchPrinting } from '$lib/utils/printing.svelte';
 	import { reveal } from '$lib/utils/reveal';
 	import { sanitizeMarkup } from '$lib/utils/sanitize';
@@ -296,8 +297,6 @@
 	// clamped descriptions all have to be opened before the snapshot is taken.
 	$effect(() => watchPrinting());
 
-	const formatDate = new Intl.DateTimeFormat(undefined, { dateStyle: 'long' });
-
 	// The cohort the numbers describe, spelled out for the printed header. On
 	// screen the toggles say this themselves; on paper they are gone, and a
 	// distribution without its filters is not a finding anyone can cite.
@@ -327,7 +326,7 @@
 	<div class="hidden print:mb-6 print:block">
 		<h1 class="text-xl font-bold">{data.project?.title || 'Untitled project'}</h1>
 		<p class="mt-0.5 text-sm text-gray-600">
-			Answer distributions · {formatDate.format(new Date())}
+			Answer distributions · {formatDay(new Date(), 'long')}
 		</p>
 		<dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-600">
 			<!-- The filters hold whether or not the counts have landed; the counts

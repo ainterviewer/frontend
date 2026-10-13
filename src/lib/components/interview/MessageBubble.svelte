@@ -3,6 +3,7 @@
 
 	import type { CustomToken } from '$lib/api';
 	import { badgeForType } from '$lib/survey/itemTypes';
+	import { formatDateFull, formatTime } from '$lib/utils/datetime';
 	import { type MarkRange, sanitizeMarkup } from '$lib/utils/sanitize';
 
 	import SurveyItem from './SurveyItem.svelte';
@@ -376,16 +377,7 @@
 	 */
 	let badge = $derived(badgeForType(surveyLabel));
 
-	/** Formatted like the interview tables: en-GB, 24-hour, the browser's zone. */
-	let sentAt = $derived.by(() => {
-		if (!time) return null;
-		const date = new Date(time);
-		if (Number.isNaN(date.getTime())) return null;
-		return {
-			short: date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-			full: date.toLocaleString('en-GB', { hour12: false })
-		};
-	});
+	let sentAt = $derived(formatTime(time));
 
 	let gutter = $derived(compact ? '' : 'mb-[15px] px-[10px] sm:px-[50px]');
 </script>
@@ -463,7 +455,7 @@
 							<time
 								class="text-[0.625rem] tabular-nums opacity-60"
 								datetime={time}
-								title={sentAt.full}>{sentAt.short}</time
+								title={formatDateFull(time)}>{sentAt}</time
 							>
 						{/if}
 					</span>

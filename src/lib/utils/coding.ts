@@ -76,24 +76,6 @@ export function countComments(comments: MessageCommentPublic[] | undefined): num
 	return comments.reduce((total, comment) => total + 1 + (comment.replies?.length ?? 0), 0);
 }
 
-/** Absolute timestamp, and a relative one for anything written recently. */
-export function formatCommentTime(timestamp: string): string {
-	const date = new Date(timestamp);
-	if (Number.isNaN(date.getTime())) return '';
-
-	const secondsAgo = (Date.now() - date.getTime()) / 1000;
-	if (secondsAgo < 60) return 'just now';
-	if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)} min ago`;
-	if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)} h ago`;
-
-	return date.toLocaleString('en-GB', {
-		day: 'numeric',
-		month: 'short',
-		hour: '2-digit',
-		minute: '2-digit'
-	});
-}
-
 /** A stretch of a message, and every span coding that covers it. */
 export type CodedSegment = { text: string; start: number; codings: ResolvedCoding[] };
 

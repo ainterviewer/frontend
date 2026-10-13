@@ -3,7 +3,7 @@
 
 	import { Projects as Api } from '$lib/api';
 	import type { InterviewResumeLinkPublic } from '$lib/api/types.gen';
-	import { formatDate } from '$lib/components/table/features';
+	import { formatDate } from '$lib/utils/datetime';
 
 	interface Props {
 		open: boolean;

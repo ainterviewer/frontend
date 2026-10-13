@@ -19,6 +19,7 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
+	import { formatDate, formatDay } from '$lib/utils/datetime';
 
 	import type { PageData } from './$types';
 
@@ -644,15 +645,10 @@
 
 						<div class="flex flex-col gap-1 text-sm text-gray-500">
 							<p>
-								Created: {new Date(project.created_at).toLocaleDateString('en-GB')}
+								Created: {formatDay(project.created_at)}
 							</p>
 							<p>
-								Updated: {project.last_updated
-									? new Date(project.last_updated).toLocaleDateString('en-GB', {
-											hour: '2-digit',
-											minute: '2-digit'
-										})
-									: 'N/A'}
+								Updated: {project.last_updated ? formatDate(project.last_updated) : 'N/A'}
 							</p>
 							<p>
 								Respondents: {project.n_interviews}

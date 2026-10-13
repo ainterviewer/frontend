@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { format } from 'd3-format';
-	import { timeFormat } from 'd3-time-format';
 
 	import type { ConditionSummary } from '$lib/analysis/conditions';
 	import type { EmbeddingSearchHit } from '$lib/api/types.gen';
+	import { formatDay } from '$lib/utils/datetime';
 
 	import ChunkTranscript from './ChunkTranscript.svelte';
 
@@ -40,7 +40,6 @@
 	} = $props();
 
 	const formatScore = format('.2f');
-	const formatDate = timeFormat('%d %b %Y');
 
 	// A chunk the interview's own messages could be found for reads as the
 	// conversation it was; one whose messages no longer line up with its
@@ -60,7 +59,7 @@
 	let withheld = $derived(Math.max(0, (hit.n_turns ?? turns.length) - turns.length));
 
 	let date = $derived(
-		hit.interview_created_at ? formatDate(new Date(hit.interview_created_at)) : null
+		hit.interview_created_at ? formatDay(hit.interview_created_at, 'medium') : null
 	);
 </script>
 

@@ -12,12 +12,11 @@
 	import {
 		type DataTableFeatures,
 		dataTableFeatures,
-		formatDate,
-		formatDateFull,
 		matchesSelection,
 		sortableText,
 		sortableTime
 	} from '$lib/components/table/features';
+	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 
 	const project_id = $derived(page.params.project_id as string);
 	const lang = $derived(page.params.lang ?? 'en');

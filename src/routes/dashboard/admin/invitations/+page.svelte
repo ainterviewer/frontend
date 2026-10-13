@@ -16,13 +16,12 @@
 	import {
 		type DataTableFeatures,
 		dataTableFeatures,
-		formatDate,
-		formatDateFull,
 		matchesSelection,
 		NO_PAGINATION,
 		sortableText,
 		sortableTime
 	} from '$lib/components/table/features';
+	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 	import { errorMessage } from '$lib/utils/errors';
 
 	import type { PageData } from './$types';

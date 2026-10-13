@@ -6,6 +6,7 @@
 	import { page } from '$app/state';
 	import { Synthesize, type TestType } from '$lib/api';
 	import Info from '$lib/components/Info.svelte';
+	import { formatDate, formatDay } from '$lib/utils/datetime';
 
 	let { data } = $props();
 
@@ -164,15 +165,10 @@
 
 					<div class="flex flex-col gap-1 text-sm text-gray-500">
 						<p>
-							Created: {new Date(test.created_at).toLocaleDateString('en-GB')}
+							Created: {formatDay(test.created_at)}
 						</p>
 						<p>
-							Updated: {test.last_updated
-								? new Date(test.last_updated).toLocaleDateString('en-GB', {
-										hour: '2-digit',
-										minute: '2-digit'
-									})
-								: 'N/A'}
+							Updated: {test.last_updated ? formatDate(test.last_updated) : 'N/A'}
 						</p>
 					</div>
 				</div>

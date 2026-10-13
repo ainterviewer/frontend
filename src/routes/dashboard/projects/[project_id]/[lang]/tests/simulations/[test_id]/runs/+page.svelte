@@ -12,13 +12,12 @@
 	import {
 		type DataTableFeatures,
 		dataTableFeatures,
-		formatDate,
-		formatDateFull,
 		matchesSelection,
 		NO_PAGINATION,
 		sortableText,
 		sortableTime
 	} from '$lib/components/table/features';
+	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 	import type { PageData } from './$types';
