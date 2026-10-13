@@ -1552,6 +1552,10 @@ export type EmbeddingStatus = {
      */
     enabled: boolean;
     /**
+     * Live
+     */
+    live?: boolean;
+    /**
      * Healthy
      */
     healthy: boolean;

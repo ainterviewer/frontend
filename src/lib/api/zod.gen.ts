@@ -1089,6 +1089,7 @@ export const zEmbeddingClusterPoint = z.object({
  */
 export const zEmbeddingStatus = z.object({
     enabled: z.boolean(),
+    live: z.boolean().optional().default(false),
     healthy: z.boolean(),
     model: z.string(),
     dimension: z.int(),
