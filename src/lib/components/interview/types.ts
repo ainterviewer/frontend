@@ -38,6 +38,8 @@ export interface Message {
 	user_image?: boolean;
 	question_label?: string;
 	section?: number | null;
+	/** When the message was sent. Only a stored transcript has it. */
+	created_at?: string | null;
 	// For survey responses or other internal use
 	options?: unknown;
 	required?: boolean;

@@ -53,6 +53,7 @@
 	surveyItem={message.survey_item ?? null}
 	answer={message.answer ?? ''}
 	condition={message.condition ?? null}
+	time={message.created_at ?? null}
 	skipped={message.skipped_by_condition ?? false}
 	{readonly}
 	{lang}

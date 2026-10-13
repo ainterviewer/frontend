@@ -166,6 +166,7 @@
 				// looks like any other, which is the more misleading of the two.
 				condition: conditionFor(msg),
 				section: msg.section,
+				created_at: msg.created_at,
 				options: undefined,
 				required: false
 			} as Message & { id: string };

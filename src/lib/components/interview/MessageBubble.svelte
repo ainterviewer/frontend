@@ -100,6 +100,7 @@
 		excluded = [],
 		coded = [],
 		condition = null,
+		time = null,
 		skipped = false,
 		compact = false,
 		readonly = true,
@@ -164,6 +165,9 @@
 		 * was skipped, this says why.
 		 */
 		condition?: string | null;
+		/** When it was sent, an ISO timestamp, shown as the time of day in the
+		 *  reader's zone, with the full date on hover. */
+		time?: string | null;
 		skipped?: boolean;
 		/**
 		 * Sized for a results card rather than for a full-width chat column: no
@@ -372,6 +376,17 @@
 	 */
 	let badge = $derived(badgeForType(surveyLabel));
 
+	/** Formatted like the interview tables: en-GB, 24-hour, the browser's zone. */
+	let sentAt = $derived.by(() => {
+		if (!time) return null;
+		const date = new Date(time);
+		if (Number.isNaN(date.getTime())) return null;
+		return {
+			short: date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+			full: date.toLocaleString('en-GB', { hour12: false })
+		};
+	});
+
 	let gutter = $derived(compact ? '' : 'mb-[15px] px-[10px] sm:px-[50px]');
 </script>
 
@@ -400,7 +415,7 @@
 					: `rounded-br-sm bg-primary text-on-primary ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`}"
 			{lang}
 		>
-			{#if label || (badge && !surveyItem)}
+			{#if label || (badge && !surveyItem) || sentAt}
 				<!-- One header line for everything that says what this message *is*,
 				     rather than what it says: the guide number, and whether the
 				     answer under it was a click. Both are labels on the same thing,
@@ -420,24 +435,38 @@
 				     order, and a badge butted against it shifts with the digits —
 				     `3.1` and `3.2.1` are different widths. `ml-auto` rather than
 				     `justify-between` on the row, so it stays right on a bubble
-				     with no number to sit opposite. -->
+				     with no number to sit opposite.
+
+				     The time is on this line too: it says when, not what, and a
+				     line of its own under the text cost every bubble a row. -->
 				<div class="mb-1 flex flex-wrap items-center gap-1.5">
 					{#if label}
 						<span class="text-xs font-bold opacity-60">{label}</span>
 					{/if}
-					{#if badge && !surveyItem}
-						<!-- Sentence case, not the shout it used to be. "RADIO" was the
-						     wire's word set in caps and letter-spaced, which made the
-						     one thing on the line that is not English the widest thing
-						     on it. "Single choice" is longer as a string and narrower on
-						     the card, and it is what the badge was always trying to say. -->
-						<span
-							class="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.625rem] font-medium ring-1 {badgeTone}"
-						>
-							<i class="{badge.icon} text-[0.6875rem]"></i>
-							{badge.label}
-						</span>
-					{/if}
+					<!-- The badge and the time share the far edge: `ml-auto` on the
+					     group, so either one alone still sits right. -->
+					<span class="ml-auto flex items-center gap-1.5">
+						{#if badge && !surveyItem}
+							<!-- Sentence case, not the shout it used to be. "RADIO" was the
+							     wire's word set in caps and letter-spaced, which made the
+							     one thing on the line that is not English the widest thing
+							     on it. "Single choice" is longer as a string and narrower on
+							     the card, and it is what the badge was always trying to say. -->
+							<span
+								class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.625rem] font-medium ring-1 {badgeTone}"
+							>
+								<i class="{badge.icon} text-[0.6875rem]"></i>
+								{badge.label}
+							</span>
+						{/if}
+						{#if sentAt}
+							<time
+								class="text-[0.625rem] tabular-nums opacity-60"
+								datetime={time}
+								title={sentAt.full}>{sentAt.short}</time
+							>
+						{/if}
+					</span>
 				</div>
 			{/if}
 			{#if image}
