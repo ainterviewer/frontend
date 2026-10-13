@@ -4,6 +4,252 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.5.11] - 2026-10-13
+
+### Features
+
+- (simulations) Show demo limits on the runs page
+- (auth) Wire forgot-password and add reset-password page
+- (auth) Refresh and retry on a stale preview-features claim
+- (codebook) Merge one code into another
+
+### Bug Fixes
+
+- (privacy) Self-host Inter and Font Awesome
+
+### Internal
+
+- (release) Let only the final-release rule set latest
+- (codebook) Hide the Svelte Flow attribution link
+- (users) Rename with_demo_features to with_preview_features
+- Keep main linear with rebase and fast-forward merges
+- (sdk) Regenerate for the interviewee route fix
+- (sdk) Regenerate for codebook merges
+## [0.5.10] - 2026-09-28
+
+### Internal
+
+- Update bun versions in Dockerfile
+## [0.5.9] - 2026-09-28
+
+### Internal
+
+- Format CodeMenu classes
+- Run prettier, eslint and svelte-check in git hooks
+## [0.5.8] - 2026-09-28
+
+### Bug Fixes
+
+- Change DemoRestrictionOverlay z-index from 10 -> 20 to avoid table header overlap
+- Hide scrollbars in CodeMenu
+## [0.5.7] - 2026-09-22
+
+### Features
+
+- Improve coding pill padding and wrapping
+- Fix UI for environments with settings.services.embeddings.enabled = false
+
+### Bug Fixes
+
+- Improved text and icon alignment in sidebar
+## [0.5.6] - 2026-09-22
+
+### Internal
+
+- Add playwright as a release workflow step
+## [0.5.5] - 2026-09-22
+
+### Features
+
+- Navigating projects and languages in the header now stays on the same subroute instead of defaulting to setup
+- Improved CodeMenu scrolling and submenu positioning
+- Improve message scrolling after new questions
+- Anchor code menu and more improvements to code menu height and folding
+
+### Bug Fixes
+
+- Use resolve for all paths in header switchers
+- Code menu submenus no longer stack on top of each other when there is no more right space available
+
+### Internal
+
+- Publish a staging tag on every release
+- Set cancel-in-progress to true for release wf
+- Add test job
+- Add eslint import-sort
+- Sort imports
+- Better release version detection in wf
+## [0.5.4] - 2026-09-17
+
+### Features
+
+- (explore) Better code exploration integration
+- (explore) Add code similarity searches and code definition and memo updates to the explore view code panel.
+- (codebook) Minor improvements to layout
+
+### Bug Fixes
+
+- (explore) Display code menu on top of transcript modal
+## [0.5.3] - 2026-09-16
+
+### Features
+
+- (explore) Add a link to the codebook in the code sidebar if it's empty
+- (explore) Add hints on how to apply the codes to turns in the code sidebar
+
+### Internal
+
+- Rename coding -> codebook and annotate -> coding
+## [0.5.2] - 2026-09-16
+
+### Features
+
+- (monitor) Minor improvements to kpi cards
+## [0.5.1] - 2026-09-16
+
+### Features
+
+- Improve text coding menu and highlighting
+- Improve codebook default zoom
+- Change codebook tree default direction from top -> down to left -> right
+- Improve code menu ux
+- Improve duration monitoring by using answer gaps rather than total time, and highlight average duration in kpi card
+
+### Internal
+
+- Remove stale warning
+## [0.5.0] - 2026-09-16
+
+### Features
+
+- Add coding tree support
+- Recolor a node when it is moved from one subtree to another
+- Update seed text for coding route
+- Create node on edge drag
+- Better refitting on code creation
+- Add kinds (group, tag, score) to codes
+- Double click code node to rename it, single click to focus
+- Focus a new code node when creating through edge
+- Let the user edit palette colors used for coding
+- Add codes to explore
+- Switch from old annotations to new codebook analytical framework
+
+### Bug Fixes
+
+- Also highlight section chunks when moving from chunks view to full transcripts
+- Title field no longer hugs focus when editing other fields in the sidebar
+- Improve wording of score help
+## [0.4.8] - 2026-09-15
+
+### Features
+
+- Improve PDF printing of report
+## [0.4.7] - 2026-09-14
+
+### Features
+
+- Add participant deduplication toggle to report
+## [0.4.6] - 2026-09-14
+
+### Features
+
+- Render markup from interview guide questions across the dashboard
+## [0.4.5] - 2026-09-14
+
+### Features
+
+- Improve self-referential conditions in report
+## [0.4.4] - 2026-09-14
+
+### Features
+
+- Add busy state to admin aws dashboard
+- Improve action bar placement and page content bottom margin
+- Streamline labels across explore and report
+- Switch label from Anchor to -> Show similar
+- Remove radio and checkbox labels from survey item panel
+- Minor improvements to report; including histogram y grids and labels, and conditions.
+## [0.4.3] - 2026-09-11
+
+### Features
+
+- (explore) Store filters in the url params/query
+## [0.4.2] - 2026-09-11
+
+### Features
+
+- (explore) Add groupby control (interview/guide) and questions filter to all units
+## [0.4.1] - 2026-09-10
+
+### Features
+
+- (admin) Implement new generalized AWS proxy server health and settings
+- (explore) Make interviews the default unit and fix their rendering
+## [0.4.0] - 2026-09-10
+
+### Features
+
+- Add analysis explore view
+- Implement better service unavailability detection and user facing warnings
+- Change color-on-primary to white
+- Add questions, sections and turn information to embedding entries
+- Improved anchored question display in embedding view
+- Reset view when changing embedding unit
+- Add language and more clustering controls to embedding exploration
+- Move exploration controls to a collapsible sidebar
+- Improve embeddings view loading state and move reconnecting pill to view footer strip
+- Improve language filtering in exploration
+- Improve exploration control pane grouping
+- Implement pagination for similarity queries in exploration
+- Escape user input messages before displaying them in messages
+- Add question/section filtering to exploration
+- Add browsing interviews by list with semantic search, keywords and corpus filtering shared with embeddings view
+- Improve match highlighting for keyword searches
+- (explore) Remove show more / less from chunks; page loading no longer changes the order of existing chunks; transcripts now show in a modal
+- Refactor and consolidate interview message display across sites
+- (explore) Make list the default exploration view
+- (explore) Add survey corpus filtering
+- (explore) Minor improvements to list view and controls
+- (explore) Add sections as unit/kind and display survey item types and conditions in chunks
+
+### Bug Fixes
+
+- (build) Commit only release files in publish recipe
+- Better availability gate for explore page when embeddings services is down
+- Sanitize and render interview guide messages
+- Harden API authorization for annotations
+
+### Internal
+
+- Remove redundant comment in justfile
+- Update SDK
+- Add `just dev` command
+- Fix linting
+## [0.3.0] - 2026-09-02
+
+### Features
+
+- (demo) Add initial implementation of analysis visualization / report subpage
+- Implement lazy mounting of charts, increases load time for chart heavy pages
+- Fetch project information in same Promise as the rest in dashboard layout loads. Should result in slightly fewer round trips
+- Improve page load performance and data loading, mounting and visualizations
+- Improved comments, including authoring and replies
+- Consilidate view for interview transcription and analysis display.
+- Minor improvements to style and consistency across report and monitoring pages
+
+### Bug Fixes
+
+- Improve filtering requests
+- Allow users to close the dropdown in the header by pressing escape
+
+### Internal
+
+- Add CITATION.cff to .prettierignore
+- Rename visualizations --> report
+- Rename analysis route h1 from visualizations --> analysis
+- Redundant SvelteDate changed to Date
+- (ui) Change icon used for report in sidebar
+
 ## [0.5.10] - 2026-09-28
 
 ### Internal
