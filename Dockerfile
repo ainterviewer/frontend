@@ -38,6 +38,10 @@ RUN bun install --production --frozen-lockfile
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
+# Dates rendered on the server use this zone. The API sends times with their
+# offset, so a container left on UTC would render 05:01 for what the browser
+# then shows as 07:01. The app's zone, which most readers share.
+ENV TZ=Europe/Copenhagen
 # The URL of the backend API (used for server-side requests)
 ENV API_URL=http://localhost:8666
 
