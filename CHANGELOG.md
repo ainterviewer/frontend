@@ -4,6 +4,12 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.5.12] - 2026-10-13
+
+### Internal
+
+- Update sdk
+
 ## [0.5.11] - 2026-10-13
 
 ### Features
