@@ -458,13 +458,6 @@ export const zDeleteAccountRequest = z.object({
 });
 
 /**
- * DeleteInterviewRequest
- */
-export const zDeleteInterviewRequest = z.object({
-    interview_ids: z.array(z.string())
-});
-
-/**
  * DeleteParticipantsRequest
  */
 export const zDeleteParticipantsRequest = z.object({
@@ -614,14 +607,6 @@ export const zExperimentProjectPublic = z.object({
     project_id: z.string(),
     weight: z.number().nullish(),
     added_at: z.iso.datetime()
-});
-
-/**
- * ExportMessagesRequest
- */
-export const zExportMessagesRequest = z.object({
-    interview_ids: z.array(z.string()),
-    format: z.enum(['csv', 'xlsx']).optional().default('csv')
 });
 
 /**
@@ -973,6 +958,45 @@ export const zInterviewType = z.enum([
     'synthetic_test',
     'distributed'
 ]);
+
+/**
+ * InterviewFilters
+ *
+ * The interview list's filters, as the list endpoint takes them.
+ *
+ * Lets a bulk action target "everything matching" rather than ids the client
+ * has seen: with server-side paging it only ever holds one page of them.
+ * Same names and same defaults as the query parameters of `get_interviews`,
+ * so "all 123 selected" means exactly the 123 the list counted.
+ */
+export const zInterviewFilters = z.object({
+    interview_types: z.array(zInterviewType).nullish(),
+    types: z.array(zInterviewType).nullish(),
+    statuses: z.array(zInterviewStatus).nullish(),
+    languages: z.array(z.string()).nullish(),
+    created_from: z.iso.datetime().nullish(),
+    created_to: z.iso.datetime().nullish(),
+    completed: z.boolean().nullish(),
+    search: z.string().max(200).nullish(),
+    pid: z.string().max(200).nullish()
+});
+
+/**
+ * DeleteInterviewRequest
+ */
+export const zDeleteInterviewRequest = z.object({
+    interview_ids: z.array(z.string()).nullish(),
+    filters: zInterviewFilters.nullish()
+});
+
+/**
+ * ExportMessagesRequest
+ */
+export const zExportMessagesRequest = z.object({
+    interview_ids: z.array(z.string()).nullish(),
+    filters: zInterviewFilters.nullish(),
+    format: z.enum(['csv', 'xlsx']).optional().default('csv')
+});
 
 /**
  * IntervieweeCreate

@@ -1019,7 +1019,8 @@ export type DeleteInterviewRequest = {
     /**
      * Interview Ids
      */
-    interview_ids: Array<string>;
+    interview_ids?: Array<string> | null;
+    filters?: InterviewFilters | null;
 };
 
 /**
@@ -1748,7 +1749,8 @@ export type ExportMessagesRequest = {
     /**
      * Interview Ids
      */
-    interview_ids: Array<string>;
+    interview_ids?: Array<string> | null;
+    filters?: InterviewFilters | null;
     /**
      * Format
      */
@@ -2122,6 +2124,55 @@ export type InterviewFacets = {
      * Type
      */
     type?: Array<FacetCount>;
+};
+
+/**
+ * InterviewFilters
+ *
+ * The interview list's filters, as the list endpoint takes them.
+ *
+ * Lets a bulk action target "everything matching" rather than ids the client
+ * has seen: with server-side paging it only ever holds one page of them.
+ * Same names and same defaults as the query parameters of `get_interviews`,
+ * so "all 123 selected" means exactly the 123 the list counted.
+ */
+export type InterviewFilters = {
+    /**
+     * Interview Types
+     */
+    interview_types?: Array<InterviewType> | null;
+    /**
+     * Types
+     */
+    types?: Array<InterviewType> | null;
+    /**
+     * Statuses
+     */
+    statuses?: Array<InterviewStatus> | null;
+    /**
+     * Languages
+     */
+    languages?: Array<string> | null;
+    /**
+     * Created From
+     */
+    created_from?: string | null;
+    /**
+     * Created To
+     */
+    created_to?: string | null;
+    /**
+     * Completed
+     */
+    completed?: boolean | null;
+    /**
+     * Search
+     */
+    search?: string | null;
+    /**
+     * Pid
+     */
+    pid?: string | null;
 };
 
 /**
