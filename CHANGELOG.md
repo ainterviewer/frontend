@@ -4,6 +4,32 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.7.0] - 2026-10-14
+
+### Breaking Changes
+
+- (guide) Needs the backend's project-level guide, consent,
+welcome and agents endpoints (backend feat!: one multilingual content
+row per project).
+- Needs the backend's content versions API; content saves
+without If-Match are refused.
+
+### Features
+
+- (guide) One multilingual editor with text per language [**breaking**]
+- Publish, version history and revision checks in the editor [**breaking**]
+
+### Bug Fixes
+
+- (guide) Don't probe a survey item by default
+- (agents) Show a saved model the model list no longer has
+
+### Internal
+
+- (sdk) Regenerate for project-level content
+- (guide) Split the editor's guide helpers by concern
+- (sdk) Regenerate for content versions
+
 ## [0.6.0] - 2026-10-14
 
 ### Breaking Changes
