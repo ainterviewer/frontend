@@ -54,7 +54,9 @@ function normalizeSurveyItem(item: LocalizedQuestion['survey_item']): GuideQuest
 }
 
 // A question from the server (or freshly made) in the editor's shape.
-// Conditions are resolved separately, once every question is in place.
+// Conditions are resolved separately, once every question is in place. The
+// defaults are the library's `Question`'s, including that a survey item turns
+// probing off.
 function normalizeQuestion(q: LocalizedQuestion): GuideQuestion {
 	return {
 		...q,
@@ -66,7 +68,7 @@ function normalizeQuestion(q: LocalizedQuestion): GuideQuestion {
 		image: normalizeImage(q.image),
 		survey_item: normalizeSurveyItem(q.survey_item),
 		conditions: null,
-		max_probes_n: q.max_probes_n === undefined ? 3 : q.max_probes_n,
+		max_probes_n: q.max_probes_n === undefined ? (q.survey_item ? 0 : 3) : q.max_probes_n,
 		max_probes_time: q.max_probes_time ?? null,
 		can_answer: q.can_answer ?? true,
 		can_skip: q.can_skip ?? true,

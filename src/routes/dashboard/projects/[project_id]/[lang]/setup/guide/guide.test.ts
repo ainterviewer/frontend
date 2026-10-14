@@ -220,4 +220,12 @@ describe('newQuestion / normalize defaults', () => {
 	it('probes three times by default', () => {
 		expect(newQuestion().max_probes_n).toBe(3);
 	});
+
+	it('does not probe a survey item, as the library does', () => {
+		const q = localizeRenderedQuestion(
+			{ main_question: 'Pick', survey_item: { type: 'radio', options: ['A'] } },
+			'EN'
+		);
+		expect(q.max_probes_n).toBe(0);
+	});
 });
