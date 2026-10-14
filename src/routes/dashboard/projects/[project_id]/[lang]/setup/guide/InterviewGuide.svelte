@@ -22,19 +22,13 @@
 	import BulkSettingsModal from './BulkSettingsModal.svelte';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
-	import { pick } from './localized';
+	import { countUntranslated, pick } from './localized';
+	import { addLocalSections, localQuestion, mapToLocal, newSection } from './normalize';
+	import { renderLocal } from './render';
+	import { saveGuide } from './save';
 	import SortableSection from './SortableSection.svelte';
 	import TextField from './TextField.svelte';
 	import type { GuideQuestion } from './types';
-	import {
-		addLocalSections,
-		countUntranslated,
-		localQuestion,
-		mapToLocal,
-		newSection,
-		renderLocal,
-		saveGuide
-	} from './utils';
 
 	let {
 		guide: initialGuide,
@@ -194,12 +188,15 @@
 			);
 			return false;
 		}
-		if (result.status === 'success') {
-			guideStore.invalidConditionQuestionIds = [];
-			savedSnapshot = getSnapshot();
-			return true;
+		if (result.status === 'error') {
+			console.error('Failed to save guide', result.error);
+			toast.error('Failed to save guide');
+			return false;
 		}
-		return false;
+		guideStore.invalidConditionQuestionIds = [];
+		savedSnapshot = getSnapshot();
+		toast.success('Guide saved');
+		return true;
 	}
 
 	// Machine-translates what this language lacks, from the default language.

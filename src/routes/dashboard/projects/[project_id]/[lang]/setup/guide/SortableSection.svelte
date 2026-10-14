@@ -8,10 +8,10 @@
 
 	import { dragState } from './dragState.svelte';
 	import { pick } from './localized';
+	import { newQuestion } from './normalize';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import TextField from './TextField.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
-	import { newQuestion } from './utils';
 
 	interface Props {
 		section: GuideSection;

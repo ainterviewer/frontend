@@ -2,14 +2,13 @@
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
 	import AccordionPanel from './AccordionPanel.svelte';
-	import { pick } from './localized';
-	import type { GuideQuestion, GuideSection, LocalCondition } from './types';
 	import {
 		isConditionOptionValid,
 		isConditionTargetValid,
-		resolveConditionTarget,
-		surveyItemOptions
-	} from './utils';
+		resolveConditionTarget
+	} from './conditions';
+	import { pick, surveyItemOptions } from './localized';
+	import type { GuideQuestion, GuideSection, LocalCondition } from './types';
 
 	interface Props {
 		question: GuideQuestion;

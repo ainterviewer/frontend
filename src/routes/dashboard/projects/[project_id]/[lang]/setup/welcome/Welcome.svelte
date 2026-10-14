@@ -12,7 +12,7 @@
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
 	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import { isUntranslated, pick } from '../guide/localized';
-	import { renderSaved } from '../guide/utils';
+	import { renderSaved } from '../guide/render';
 	import SetupActionBar from '../SetupActionBar.svelte';
 	import TranslationBanner from '../TranslationBanner.svelte';
 

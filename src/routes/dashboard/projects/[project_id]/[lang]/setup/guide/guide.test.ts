@@ -1,16 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import type { LocalizedInterviewGuide } from '$lib/api/types.gen';
+import { zLocalizedQuestion } from '$lib/api/zod.gen';
 
-import { isUntranslated, pick } from './localized';
-import {
-	countUntranslated,
-	localGuide,
-	localizeRenderedQuestion,
-	mapToLocal,
-	renderLocal,
-	validateGuideConditions
-} from './utils';
+import { validateGuideConditions } from './conditions';
+import { countUntranslated, isUntranslated, pick, QUESTION_TEXT_FIELDS } from './localized';
+import { localGuide, localizeRenderedQuestion, mapToLocal, newQuestion } from './normalize';
+import { renderLocal } from './render';
 
 // The editor holds the guide with its text per language; these pin that it
 // sends back what it was given, renders one language the way the server does,
@@ -188,5 +184,40 @@ describe('localizeRenderedQuestion', () => {
 		expect(options.map((o) => o.text)).toEqual([{ DA: 'Ofte' }, { DA: 'Aldrig' }]);
 		expect(new Set(options.map((o) => o.id)).size).toBe(2);
 		expect(q.conditions).toBeNull();
+	});
+});
+
+describe('the editor knows every question field', () => {
+	// Everything on a question that is not text, and so is shared by every
+	// language. A field the library adds to `LocalizedQuestion` fails this until
+	// it is placed in one list or the other -- and, if it holds text, handled by
+	// questionTexts, normalize and render.
+	const SHARED_FIELDS = [
+		'id',
+		'max_probes_n',
+		'max_probes_time',
+		'can_answer',
+		'check_if_answered',
+		'check_if_exhausted',
+		'can_skip',
+		'shuffle',
+		'create_segue',
+		'exclude_from_history',
+		'references',
+		'user_image',
+		'conditions',
+		'probing_context'
+	];
+
+	it('is text or shared', () => {
+		expect([...QUESTION_TEXT_FIELDS, ...SHARED_FIELDS].sort()).toEqual(
+			Object.keys(zLocalizedQuestion.shape).sort()
+		);
+	});
+});
+
+describe('newQuestion / normalize defaults', () => {
+	it('probes three times by default', () => {
+		expect(newQuestion().max_probes_n).toBe(3);
 	});
 });

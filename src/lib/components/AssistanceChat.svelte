@@ -10,7 +10,7 @@
 	import {
 		localizeRenderedQuestion,
 		normalizeGeneratedQuestions
-	} from '../../routes/dashboard/projects/[project_id]/[lang]/setup/guide/utils';
+	} from '../../routes/dashboard/projects/[project_id]/[lang]/setup/guide/normalize';
 
 	interface Props {
 		project_id: string;

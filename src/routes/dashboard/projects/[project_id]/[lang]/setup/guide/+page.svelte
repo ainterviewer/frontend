@@ -23,9 +23,9 @@
 
 	import { dragState } from './dragState.svelte';
 	import InterviewGuide from './InterviewGuide.svelte';
+	import { renderLocal } from './render';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import SortableSection from './SortableSection.svelte';
-	import { renderLocal } from './utils';
 
 	function startOnboarding() {
 		const tour = driver({

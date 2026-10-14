@@ -3,9 +3,9 @@
 
 	import AccordionPanel from './AccordionPanel.svelte';
 	import { createListReorder } from './listReorder.svelte';
+	import { surveyItemOptions } from './localized';
 	import TextField from './TextField.svelte';
 	import type { GuideQuestion } from './types';
-	import { generateId, surveyItemOptions } from './utils';
 
 	interface Props {
 		question: GuideQuestion;
@@ -17,7 +17,7 @@
 	// A fresh option. Options keep their id across languages and reordering;
 	// conditions name them by it.
 	function option() {
-		return { id: generateId(), text: {} };
+		return { id: crypto.randomUUID(), text: {} };
 	}
 
 	const optionReorder = createListReorder(

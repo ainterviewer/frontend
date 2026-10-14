@@ -10,7 +10,6 @@
 	import QuestionSurveyPanel from './QuestionSurveyPanel.svelte';
 	import TextField from './TextField.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
-	import { generateId } from './utils';
 
 	interface Props {
 		question: GuideQuestion;
@@ -93,7 +92,7 @@
 	}
 
 	function addSurvey() {
-		question.survey_item = { type: 'radio', options: [{ id: generateId(), text: {} }] };
+		question.survey_item = { type: 'radio', options: [{ id: crypto.randomUUID(), text: {} }] };
 		expandedSurvey = true;
 	}
 
