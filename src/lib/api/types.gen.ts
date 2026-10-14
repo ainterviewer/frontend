@@ -221,6 +221,16 @@ export type BodyAddProjectLanguage = {
 };
 
 /**
+ * Body_set_language_in_progress
+ */
+export type BodySetLanguageInProgress = {
+    /**
+     * In Progress
+     */
+    in_progress: boolean;
+};
+
+/**
  * Body_upload_audio
  */
 export type BodyUploadAudio = {
@@ -900,6 +910,10 @@ export type ContentStatus = {
      */
     next_semver: string;
     /**
+     * Languages In Progress
+     */
+    languages_in_progress: Array<LanguageCode>;
+    /**
      * Missing
      */
     missing: {
@@ -964,6 +978,10 @@ export type ContentVersionPublic = {
      */
     languages: Array<LanguageCode>;
     default_language: LanguageCode;
+    /**
+     * Languages In Progress
+     */
+    languages_in_progress: Array<LanguageCode>;
     guide: LocalizedInterviewGuide;
     consent: LocalizedConsent | null;
     welcome: LocalizedWelcome | null;
@@ -1021,6 +1039,10 @@ export type ContentVersionSummary = {
      */
     languages: Array<LanguageCode>;
     default_language: LanguageCode;
+    /**
+     * Languages In Progress
+     */
+    languages_in_progress: Array<LanguageCode>;
 };
 
 /**
@@ -4117,7 +4139,7 @@ export type ProjectFolderWithProjects = {
  * A language a project offers.
  *
  * Same shape as the library's `LanguageDict` plus whether it is the
- * project's default. `LanguageDict` itself stays free of the flag: it comes
+ * project's default and whether it is still in progress. `LanguageDict` itself stays free of the flag: it comes
  * straight out of the shared `LANGUAGES` constant and knows nothing about
  * projects.
  */
@@ -4131,6 +4153,10 @@ export type ProjectLanguage = {
      * Is Default
      */
     is_default: boolean;
+    /**
+     * In Progress
+     */
+    in_progress: boolean;
 };
 
 /**
@@ -9103,6 +9129,47 @@ export type AddProjectLanguageResponses = {
 };
 
 export type AddProjectLanguageResponse = AddProjectLanguageResponses[keyof AddProjectLanguageResponses];
+
+export type SetLanguageInProgressData = {
+    body: BodySetLanguageInProgress;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/available_languages/{language}/in_progress';
+};
+
+export type SetLanguageInProgressErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetLanguageInProgressError = SetLanguageInProgressErrors[keyof SetLanguageInProgressErrors];
+
+export type SetLanguageInProgressResponses = {
+    /**
+     * Response Set Language In Progress
+     *
+     * Successful Response
+     */
+    200: Array<ProjectLanguage>;
+};
+
+export type SetLanguageInProgressResponse = SetLanguageInProgressResponses[keyof SetLanguageInProgressResponses];
 
 export type SetDefaultLanguageData = {
     body: LanguageCode;

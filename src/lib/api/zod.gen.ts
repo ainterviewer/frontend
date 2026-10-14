@@ -61,6 +61,13 @@ export const zAuthorPublic = z.object({
 });
 
 /**
+ * Body_set_language_in_progress
+ */
+export const zBodySetLanguageInProgress = z.object({
+    in_progress: z.boolean()
+});
+
+/**
  * Body_upload_audio
  */
 export const zBodyUploadAudio = z.object({
@@ -1111,7 +1118,8 @@ export const zContentVersionSummary = z.object({
     created_by_name: z.string().nullable(),
     is_published: z.boolean(),
     languages: z.array(zLanguageCode),
-    default_language: zLanguageCode
+    default_language: zLanguageCode,
+    languages_in_progress: z.array(zLanguageCode)
 });
 
 /**
@@ -1130,6 +1138,7 @@ export const zContentStatus = z.object({
         'major'
     ]),
     next_semver: z.string(),
+    languages_in_progress: z.array(zLanguageCode),
     missing: z.record(z.string(), z.array(z.string()))
 });
 
@@ -1747,14 +1756,15 @@ export const zProjectFolderEdit = z.object({
  * A language a project offers.
  *
  * Same shape as the library's `LanguageDict` plus whether it is the
- * project's default. `LanguageDict` itself stays free of the flag: it comes
+ * project's default and whether it is still in progress. `LanguageDict` itself stays free of the flag: it comes
  * straight out of the shared `LANGUAGES` constant and knows nothing about
  * projects.
  */
 export const zProjectLanguage = z.object({
     name: z.string(),
     code: zLanguageCode,
-    is_default: z.boolean()
+    is_default: z.boolean(),
+    in_progress: z.boolean()
 });
 
 /**
@@ -2944,6 +2954,7 @@ export const zContentVersionPublic = z.object({
     is_published: z.boolean(),
     languages: z.array(zLanguageCode),
     default_language: zLanguageCode,
+    languages_in_progress: z.array(zLanguageCode),
     guide: zLocalizedInterviewGuide,
     consent: zLocalizedConsent.nullable(),
     welcome: zLocalizedWelcome.nullable(),
@@ -4443,6 +4454,24 @@ export const zAddProjectLanguageQuery = z.object({
  * Successful Response
  */
 export const zAddProjectLanguageResponse = z.array(zProjectLanguage);
+
+export const zSetLanguageInProgressBody = zBodySetLanguageInProgress;
+
+export const zSetLanguageInProgressPath = z.object({
+    project_id: z.string().nullable(),
+    language: z.string().length(2)
+});
+
+export const zSetLanguageInProgressQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Response Set Language In Progress
+ *
+ * Successful Response
+ */
+export const zSetLanguageInProgressResponse = z.array(zProjectLanguage);
 
 export const zSetDefaultLanguageBody = zLanguageCode;
 
