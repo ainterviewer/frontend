@@ -221,28 +221,6 @@ export type BodyAddProjectLanguage = {
 };
 
 /**
- * Body_create_welcome
- */
-export type BodyCreateWelcome = {
-    /**
-     * Title
-     */
-    title: string;
-    /**
-     * Text
-     */
-    text: string;
-    /**
-     * Email
-     */
-    email: string;
-    /**
-     * Video
-     */
-    video?: Blob | File | null;
-};
-
-/**
  * Body_upload_audio
  */
 export type BodyUploadAudio = {
@@ -328,6 +306,16 @@ export type BodyUploadParticipants = {
      * File
      */
     file: Blob | File;
+};
+
+/**
+ * Body_upload_welcome_video
+ */
+export type BodyUploadWelcomeVideo = {
+    /**
+     * Video
+     */
+    video: Blob | File;
 };
 
 /**
@@ -2818,6 +2806,386 @@ export type LikertItem = {
 };
 
 /**
+ * LocalizedCheckboxItem
+ */
+export type LocalizedCheckboxItem = {
+    /**
+     * Type
+     */
+    type?: 'checkbox';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Options
+     */
+    options: Array<LocalizedOption>;
+    /**
+     * With Other
+     */
+    with_other?: boolean;
+};
+
+/**
+ * LocalizedCondition
+ */
+export type LocalizedCondition = {
+    question_context: QuestionContext;
+    /**
+     * Evaluation
+     */
+    evaluation: Array<LocalizedConditionEvaluation>;
+    /**
+     * Negated
+     */
+    negated?: boolean;
+    trigger_type?: ConditionTrigger;
+    /**
+     * Combine Next
+     */
+    combine_next?: 'AND' | 'OR' | null;
+};
+
+/**
+ * LocalizedConditionEvaluation
+ *
+ * `ConditionEvaluation` with the trigger named by option where it is one.
+ *
+ * Exactly one of `option_id` and `trigger_value` is set. A classification
+ * instruction, a pattern or a number to compare against is a `trigger_value`
+ * shared by every language: the classifier reads answers in any language,
+ * and a number is a number.
+ */
+export type LocalizedConditionEvaluation = {
+    /**
+     * Option Id
+     *
+     * The option of the read question's choice item that this evaluation matches. Rendered into `trigger_value` as the option's text.
+     */
+    option_id?: string | null;
+    /**
+     * Trigger Value
+     *
+     * The pattern to match, value to compare against or classification instruction, when the evaluation does not name an option.
+     */
+    trigger_value?: string | number | number | null;
+    /**
+     * Comparison Operator
+     */
+    comparison_operator?: '==' | '<' | '<=' | '>' | '>=';
+    /**
+     * Combine Next
+     */
+    combine_next?: 'AND' | 'OR' | null;
+};
+
+/**
+ * LocalizedConditions
+ */
+export type LocalizedConditions = {
+    /**
+     * Conditions
+     */
+    conditions: Array<LocalizedCondition>;
+    action: ConditionAction;
+};
+
+/**
+ * LocalizedConsent
+ */
+export type LocalizedConsent = {
+    title?: LocalizedText;
+    text?: LocalizedText;
+};
+
+/**
+ * LocalizedImage
+ *
+ * An image to show the interviewee. The file is shared; what is said
+ * about it is per language.
+ */
+export type LocalizedImage = {
+    /**
+     * Type
+     */
+    type?: 'audio' | 'image' | 'video';
+    /**
+     * Name
+     *
+     * The filename
+     */
+    name: string;
+    /**
+     * Data
+     */
+    data?: string | null;
+    primer?: LocalizedText | null;
+    description?: LocalizedText;
+    alt?: LocalizedText;
+};
+
+/**
+ * LocalizedInterviewGuide
+ *
+ * `InterviewGuide`'s single source across a project's languages.
+ *
+ * Validating it renders every language it has text in, so a source that
+ * loads is one every language can be interviewed from. A leaf missing in one
+ * language falls back to the others for that check; at interview time the
+ * caller chooses the fallback (the project's default language).
+ */
+export type LocalizedInterviewGuide = {
+    framing?: LocalizedText;
+    introduction?: LocalizedText;
+    /**
+     * Question Sections
+     */
+    question_sections?: Array<LocalizedQuestionSection>;
+    outro?: LocalizedText | null;
+    alt_outro?: LocalizedText | null;
+    /**
+     * Extra Variables
+     */
+    extra_variables?: Array<string>;
+    /**
+     * Timed Messages
+     */
+    timed_messages?: Array<LocalizedTimedMessage> | null;
+    /**
+     * Ai Generated Sections
+     */
+    ai_generated_sections?: number;
+};
+
+/**
+ * LocalizedLikertItem
+ */
+export type LocalizedLikertItem = {
+    /**
+     * Type
+     */
+    type?: 'likert';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Options
+     */
+    options: Array<LocalizedOption>;
+    /**
+     * Ui
+     */
+    ui?: 'radio' | 'slider';
+};
+
+/**
+ * LocalizedOption
+ *
+ * One answer option of a choice item.
+ */
+export type LocalizedOption = {
+    /**
+     * Id
+     *
+     * Stable identity of the option, shared by every translation of it; conditions name it.
+     */
+    id?: string;
+    text?: LocalizedText;
+};
+
+/**
+ * LocalizedQuestion
+ *
+ * `Question` with its text per language. See `Question` for the fields.
+ */
+export type LocalizedQuestion = {
+    /**
+     * Id
+     */
+    id?: string;
+    main_question?: LocalizedText;
+    description?: LocalizedText | null;
+    /**
+     * Probes
+     */
+    probes?: Array<LocalizedText> | null;
+    /**
+     * Alternative Main Questions
+     */
+    alternative_main_questions?: Array<LocalizedText> | null;
+    /**
+     * Max Probes N
+     */
+    max_probes_n?: number | null;
+    /**
+     * Max Probes Time
+     */
+    max_probes_time?: number | null;
+    /**
+     * Survey Item
+     */
+    survey_item?: LocalizedRadioItem | LocalizedCheckboxItem | LocalizedLikertItem | LocalizedSliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    /**
+     * Can Answer
+     */
+    can_answer?: boolean;
+    /**
+     * Check If Answered
+     */
+    check_if_answered?: boolean;
+    /**
+     * Check If Exhausted
+     */
+    check_if_exhausted?: boolean;
+    /**
+     * Can Skip
+     */
+    can_skip?: boolean;
+    /**
+     * Shuffle
+     */
+    shuffle?: boolean;
+    /**
+     * Create Segue
+     */
+    create_segue?: boolean;
+    /**
+     * Exclude From History
+     */
+    exclude_from_history?: boolean;
+    /**
+     * References
+     */
+    references?: Array<Reference> | null;
+    image?: LocalizedImage | null;
+    /**
+     * User Image
+     */
+    user_image?: boolean;
+    conditions?: LocalizedConditions | null;
+    probing_context?: ProbingContext | null;
+};
+
+/**
+ * LocalizedQuestionSection
+ *
+ * `QuestionSection` with its text per language.
+ */
+export type LocalizedQuestionSection = {
+    /**
+     * Id
+     */
+    id?: string;
+    description?: LocalizedText;
+    /**
+     * Questions
+     */
+    questions?: Array<LocalizedQuestion>;
+    /**
+     * Shuffle
+     */
+    shuffle?: boolean;
+    ai_generated_questions?: GeneratedQuestions;
+};
+
+/**
+ * LocalizedRadioItem
+ */
+export type LocalizedRadioItem = {
+    /**
+     * Type
+     */
+    type?: 'radio';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Options
+     */
+    options: Array<LocalizedOption>;
+    /**
+     * With Other
+     */
+    with_other?: boolean;
+};
+
+/**
+ * LocalizedSliderItem
+ */
+export type LocalizedSliderItem = {
+    /**
+     * Type
+     */
+    type?: 'slider';
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Min
+     */
+    min: number | number;
+    /**
+     * Max
+     */
+    max: number | number;
+    min_label?: LocalizedText | null;
+    max_label?: LocalizedText | null;
+    /**
+     * Step
+     */
+    step?: number | number | null;
+};
+
+export type LocalizedText = {
+    [key in LanguageCode]?: string;
+};
+
+/**
+ * LocalizedTimedMessage
+ *
+ * `TimedMessage` with its text per language.
+ */
+export type LocalizedTimedMessage = {
+    message?: LocalizedText;
+    /**
+     * Time
+     */
+    time: number;
+    /**
+     * Include In History
+     */
+    include_in_history?: boolean;
+    /**
+     * As Modal
+     */
+    as_modal?: boolean;
+};
+
+/**
+ * LocalizedWelcome
+ */
+export type LocalizedWelcome = {
+    title?: LocalizedText;
+    text?: LocalizedText;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Video File Name
+     */
+    video_file_name?: string | null;
+    /**
+     * With Id
+     */
+    with_id?: boolean;
+};
+
+/**
  * LoginData
  */
 export type LoginData = {
@@ -3488,6 +3856,17 @@ export type ProbingPromptSlots = {
 export type ProbingStrategy = 'standard' | 'dice_master_to_one_probe' | 'dice_ensemble_to_master_probe' | 'dice_master_to_ensemble_to_one_probe';
 
 /**
+ * ProjectContentPublic
+ *
+ * A project's guide, consent and welcome with their text per language.
+ */
+export type ProjectContentPublic = {
+    guide: LocalizedInterviewGuide;
+    consent: LocalizedConsent | null;
+    welcome: LocalizedWelcome | null;
+};
+
+/**
  * ProjectFolderCreate
  */
 export type ProjectFolderCreate = {
@@ -3554,7 +3933,7 @@ export type ProjectFolderWithProjects = {
 /**
  * ProjectLanguage
  *
- * A language a project has a localization for.
+ * A language a project offers.
  *
  * Same shape as the library's `LanguageDict` plus whether it is the
  * project's default. `LanguageDict` itself stays free of the flag: it comes
@@ -3803,44 +4182,6 @@ export type Question = {
 };
 
 /**
- * QuestionBase
- *
- * A question that can be asked to the interviewee
- */
-export type QuestionBase = {
-    /**
-     * Description
-     *
-     * A description of the question, may be used to reformulate the question and improve the relevance of the probes.
-     */
-    description?: string | null;
-    /**
-     * Main Question
-     *
-     * The question to ask the interviewee.
-     */
-    main_question: string;
-    /**
-     * Probes
-     *
-     * A list of possible follow-up questions to ask after the main question. If provided set max_probes_n or max_probes_time to greater than 0.
-     */
-    probes?: Array<string> | null;
-    /**
-     * Max Probes N
-     *
-     * Max number of probes.
-     */
-    max_probes_n?: number | null;
-    /**
-     * Max Probes Time
-     *
-     * Max time to spend on probing, in seconds.
-     */
-    max_probes_time?: number | null;
-};
-
-/**
  * QuestionContext
  *
  * The question a condition reads its answer from.
@@ -3877,9 +4218,9 @@ export type QuestionGenerationRequest = {
      */
     prompt: string;
     /**
-     * Section Idx
+     * Section Id
      */
-    section_idx: number;
+    section_id: string;
     /**
      * Max Probes N
      */
@@ -3894,37 +4235,6 @@ export type QuestionIndex = [
     number,
     number
 ];
-
-/**
- * QuestionSection
- *
- * A section of questions that all revolve around the same topic
- */
-export type QuestionSection = {
-    /**
-     * Description
-     *
-     * A description of the section, used as context for the prober to limit its scope.
-     */
-    description: string;
-    /**
-     * Questions
-     */
-    questions: Array<QuestionBase>;
-    /**
-     * Id
-     *
-     * Stable identity of the section. Survives reordering and is shared by every translation of it.
-     */
-    id?: string;
-    /**
-     * Shuffle
-     *
-     * Should the section be included in shuffling?
-     */
-    shuffle?: boolean;
-    ai_generated_questions?: GeneratedQuestions;
-};
 
 /**
  * QuestionSectionGenerationRequest
@@ -5213,6 +5523,10 @@ export type InvitationPublicWritable = {
      * Email
      */
     email: string | null;
+};
+
+export type LocalizedTextWritable = {
+    [key in LanguageCode]?: string;
 };
 
 export type GetCodebookData = {
@@ -8745,6 +9059,76 @@ export type GetProjectPermissionsResponses = {
 
 export type GetProjectPermissionsResponse = GetProjectPermissionsResponses[keyof GetProjectPermissionsResponses];
 
+export type GetLocalizedGuideData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/guide';
+};
+
+export type GetLocalizedGuideErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetLocalizedGuideError = GetLocalizedGuideErrors[keyof GetLocalizedGuideErrors];
+
+export type GetLocalizedGuideResponses = {
+    /**
+     * Successful Response
+     */
+    200: LocalizedInterviewGuide;
+};
+
+export type GetLocalizedGuideResponse = GetLocalizedGuideResponses[keyof GetLocalizedGuideResponses];
+
+export type UpdateGuideData = {
+    body: LocalizedInterviewGuide;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/guide';
+};
+
+export type UpdateGuideErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateGuideError = UpdateGuideErrors[keyof UpdateGuideErrors];
+
+export type UpdateGuideResponses = {
+    /**
+     * Successful Response
+     */
+    200: LocalizedInterviewGuide;
+};
+
+export type UpdateGuideResponse = UpdateGuideResponses[keyof UpdateGuideResponses];
+
 export type GetGuideData = {
     body?: never;
     path: {
@@ -8784,8 +9168,8 @@ export type GetGuideResponses = {
 
 export type GetGuideResponse = GetGuideResponses[keyof GetGuideResponses];
 
-export type CreateGuideData = {
-    body: InterviewGuide;
+export type TranslateMissingData = {
+    body?: never;
     path: {
         /**
          * Project Id
@@ -8802,24 +9186,26 @@ export type CreateGuideData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/projects/{project_id}/{lang}/guide';
+    url: '/api/projects/{project_id}/{lang}/translate';
 };
 
-export type CreateGuideErrors = {
+export type TranslateMissingErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type CreateGuideError = CreateGuideErrors[keyof CreateGuideErrors];
+export type TranslateMissingError = TranslateMissingErrors[keyof TranslateMissingErrors];
 
-export type CreateGuideResponses = {
+export type TranslateMissingResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ProjectContentPublic;
 };
+
+export type TranslateMissingResponse = TranslateMissingResponses[keyof TranslateMissingResponses];
 
 export type GenerateGuideData = {
     body: InterviewGuideGenerationRequest;
@@ -8855,7 +9241,7 @@ export type GenerateGuideResponses = {
     /**
      * Successful Response
      */
-    200: InterviewGuide;
+    200: LocalizedInterviewGuide;
 };
 
 export type GenerateGuideResponse = GenerateGuideResponses[keyof GenerateGuideResponses];
@@ -8894,7 +9280,7 @@ export type GenerateGuideSectionResponses = {
     /**
      * Successful Response
      */
-    200: QuestionSection;
+    200: LocalizedQuestionSection;
 };
 
 export type GenerateGuideSectionResponse = GenerateGuideSectionResponses[keyof GenerateGuideSectionResponses];
@@ -8933,7 +9319,7 @@ export type GenerateSectionQuestionResponses = {
     /**
      * Successful Response
      */
-    200: Question;
+    200: LocalizedQuestion;
 };
 
 export type GenerateSectionQuestionResponse = GenerateSectionQuestionResponses[keyof GenerateSectionQuestionResponses];
@@ -8978,10 +9364,6 @@ export type GetInterviewAgentsData = {
          * Project Id
          */
         project_id: string | null;
-        /**
-         * Lang
-         */
-        lang: string;
     };
     query?: {
         /**
@@ -8989,7 +9371,7 @@ export type GetInterviewAgentsData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/projects/{project_id}/{lang}/agents';
+    url: '/api/projects/{project_id}/agents';
 };
 
 export type GetInterviewAgentsErrors = {
@@ -9017,10 +9399,6 @@ export type CreateInterviewAgentsData = {
          * Project Id
          */
         project_id: string | null;
-        /**
-         * Lang
-         */
-        lang: string;
     };
     query?: {
         /**
@@ -9028,7 +9406,7 @@ export type CreateInterviewAgentsData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/projects/{project_id}/{lang}/agents';
+    url: '/api/projects/{project_id}/agents';
 };
 
 export type CreateInterviewAgentsErrors = {
@@ -9266,17 +9644,13 @@ export type GetConsentResponses = {
 
 export type GetConsentResponse = GetConsentResponses[keyof GetConsentResponses];
 
-export type CreateConsentData = {
-    body: Consent;
+export type GetLocalizedConsentData = {
+    body?: never;
     path: {
         /**
          * Project Id
          */
         project_id: string | null;
-        /**
-         * Language
-         */
-        language: string;
     };
     query?: {
         /**
@@ -9284,24 +9658,63 @@ export type CreateConsentData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/projects/{project_id}/guide/consent/{language}';
+    url: '/api/projects/{project_id}/consent';
 };
 
-export type CreateConsentErrors = {
+export type GetLocalizedConsentErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type CreateConsentError = CreateConsentErrors[keyof CreateConsentErrors];
+export type GetLocalizedConsentError = GetLocalizedConsentErrors[keyof GetLocalizedConsentErrors];
 
-export type CreateConsentResponses = {
+export type GetLocalizedConsentResponses = {
+    /**
+     * Response Get Localized Consent
+     *
+     * Successful Response
+     */
+    200: LocalizedConsent | null;
+};
+
+export type GetLocalizedConsentResponse = GetLocalizedConsentResponses[keyof GetLocalizedConsentResponses];
+
+export type UpdateConsentData = {
+    body: LocalizedConsent;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/consent';
+};
+
+export type UpdateConsentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateConsentError = UpdateConsentErrors[keyof UpdateConsentErrors];
+
+export type UpdateConsentResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: LocalizedConsent;
 };
+
+export type UpdateConsentResponse = UpdateConsentResponses[keyof UpdateConsentResponses];
 
 export type GetWelcomeData = {
     body?: never;
@@ -9339,17 +9752,13 @@ export type GetWelcomeResponses = {
 
 export type GetWelcomeResponse = GetWelcomeResponses[keyof GetWelcomeResponses];
 
-export type CreateWelcomeData = {
-    body: BodyCreateWelcome;
+export type GetLocalizedWelcomeData = {
+    body?: never;
     path: {
         /**
          * Project Id
          */
         project_id: string | null;
-        /**
-         * Language
-         */
-        language: string;
     };
     query?: {
         /**
@@ -9357,24 +9766,100 @@ export type CreateWelcomeData = {
          */
         folder_id?: string | null;
     };
-    url: '/api/projects/{project_id}/guide/welcome/{language}';
+    url: '/api/projects/{project_id}/welcome';
 };
 
-export type CreateWelcomeErrors = {
+export type GetLocalizedWelcomeErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type CreateWelcomeError = CreateWelcomeErrors[keyof CreateWelcomeErrors];
+export type GetLocalizedWelcomeError = GetLocalizedWelcomeErrors[keyof GetLocalizedWelcomeErrors];
 
-export type CreateWelcomeResponses = {
+export type GetLocalizedWelcomeResponses = {
+    /**
+     * Response Get Localized Welcome
+     *
+     * Successful Response
+     */
+    200: LocalizedWelcome | null;
+};
+
+export type GetLocalizedWelcomeResponse = GetLocalizedWelcomeResponses[keyof GetLocalizedWelcomeResponses];
+
+export type UpdateWelcomeData = {
+    body: LocalizedWelcome;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/welcome';
+};
+
+export type UpdateWelcomeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateWelcomeError = UpdateWelcomeErrors[keyof UpdateWelcomeErrors];
+
+export type UpdateWelcomeResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: LocalizedWelcome;
 };
+
+export type UpdateWelcomeResponse = UpdateWelcomeResponses[keyof UpdateWelcomeResponses];
+
+export type UploadWelcomeVideoData = {
+    body: BodyUploadWelcomeVideo;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/welcome/video';
+};
+
+export type UploadWelcomeVideoErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UploadWelcomeVideoError = UploadWelcomeVideoErrors[keyof UploadWelcomeVideoErrors];
+
+export type UploadWelcomeVideoResponses = {
+    /**
+     * Response Upload Welcome Video
+     *
+     * Successful Response
+     */
+    200: string;
+};
+
+export type UploadWelcomeVideoResponse = UploadWelcomeVideoResponses[keyof UploadWelcomeVideoResponses];
 
 export type DeleteInterviewsData = {
     body: DeleteInterviewRequest;

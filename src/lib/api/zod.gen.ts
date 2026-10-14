@@ -61,16 +61,6 @@ export const zAuthorPublic = z.object({
 });
 
 /**
- * Body_create_welcome
- */
-export const zBodyCreateWelcome = z.object({
-    title: z.string(),
-    text: z.string(),
-    email: z.email(),
-    video: z.string().nullish()
-});
-
-/**
  * Body_upload_audio
  */
 export const zBodyUploadAudio = z.object({
@@ -117,6 +107,13 @@ export const zBodyUploadParticipantReminderEmailAttachments = z.object({
  */
 export const zBodyUploadParticipants = z.object({
     file: z.string()
+});
+
+/**
+ * Body_upload_welcome_video
+ */
+export const zBodyUploadWelcomeVideo = z.object({
+    video: z.string()
 });
 
 /**
@@ -1200,6 +1197,147 @@ export const zLikertItem = z.object({
 });
 
 /**
+ * LocalizedConditionEvaluation
+ *
+ * `ConditionEvaluation` with the trigger named by option where it is one.
+ *
+ * Exactly one of `option_id` and `trigger_value` is set. A classification
+ * instruction, a pattern or a number to compare against is a `trigger_value`
+ * shared by every language: the classifier reads answers in any language,
+ * and a number is a number.
+ */
+export const zLocalizedConditionEvaluation = z.object({
+    option_id: z.uuid().nullish(),
+    trigger_value: z.union([
+        z.string(),
+        z.int(),
+        z.number()
+    ]).nullish(),
+    comparison_operator: z.enum([
+        '==',
+        '<',
+        '<=',
+        '>',
+        '>='
+    ]).optional().default('=='),
+    combine_next: z.enum(['AND', 'OR']).nullish()
+});
+
+export const zLocalizedText = z.record(z.string(), z.string());
+
+/**
+ * LocalizedConsent
+ */
+export const zLocalizedConsent = z.object({
+    title: zLocalizedText.optional(),
+    text: zLocalizedText.optional()
+});
+
+/**
+ * LocalizedImage
+ *
+ * An image to show the interviewee. The file is shared; what is said
+ * about it is per language.
+ */
+export const zLocalizedImage = z.object({
+    type: z.enum([
+        'audio',
+        'image',
+        'video'
+    ]).optional().default('image'),
+    name: z.string(),
+    data: z.string().nullish(),
+    primer: zLocalizedText.nullish(),
+    description: zLocalizedText.optional(),
+    alt: zLocalizedText.optional()
+});
+
+/**
+ * LocalizedOption
+ *
+ * One answer option of a choice item.
+ */
+export const zLocalizedOption = z.object({
+    id: z.uuid().optional(),
+    text: zLocalizedText.optional()
+});
+
+/**
+ * LocalizedCheckboxItem
+ */
+export const zLocalizedCheckboxItem = z.object({
+    type: z.literal('checkbox').optional().default('checkbox'),
+    required: z.boolean().optional().default(true),
+    options: z.array(zLocalizedOption),
+    with_other: z.boolean().optional().default(false)
+});
+
+/**
+ * LocalizedLikertItem
+ */
+export const zLocalizedLikertItem = z.object({
+    type: z.literal('likert').optional().default('likert'),
+    required: z.boolean().optional().default(true),
+    options: z.array(zLocalizedOption),
+    ui: z.enum(['radio', 'slider']).optional().default('radio')
+});
+
+/**
+ * LocalizedRadioItem
+ */
+export const zLocalizedRadioItem = z.object({
+    type: z.literal('radio').optional().default('radio'),
+    required: z.boolean().optional().default(true),
+    options: z.array(zLocalizedOption),
+    with_other: z.boolean().optional().default(false)
+});
+
+/**
+ * LocalizedSliderItem
+ */
+export const zLocalizedSliderItem = z.object({
+    type: z.literal('slider').optional().default('slider'),
+    required: z.boolean().optional().default(true),
+    min: z.union([
+        z.int(),
+        z.number()
+    ]),
+    max: z.union([
+        z.int(),
+        z.number()
+    ]),
+    min_label: zLocalizedText.nullish(),
+    max_label: zLocalizedText.nullish(),
+    step: z.union([
+        z.int(),
+        z.number()
+    ]).nullish().default(1)
+});
+
+/**
+ * LocalizedTimedMessage
+ *
+ * `TimedMessage` with its text per language.
+ */
+export const zLocalizedTimedMessage = z.object({
+    message: zLocalizedText.optional(),
+    time: z.int(),
+    include_in_history: z.boolean().optional().default(false),
+    as_modal: z.boolean().optional().default(false)
+});
+
+/**
+ * LocalizedWelcome
+ */
+export const zLocalizedWelcome = z.object({
+    title: zLocalizedText.optional(),
+    text: zLocalizedText.optional(),
+    email: z.email(),
+    video_file_name: z.string().nullish(),
+    with_id: z.boolean().optional().default(true)
+});
+
+/**
  * LoginData
  */
 export const zLoginData = z.object({
@@ -1521,7 +1659,7 @@ export const zProjectFolderEdit = z.object({
 /**
  * ProjectLanguage
  *
- * A language a project has a localization for.
+ * A language a project offers.
  *
  * Same shape as the library's `LanguageDict` plus whether it is the
  * project's default. `LanguageDict` itself stays free of the flag: it comes
@@ -1614,24 +1752,11 @@ export const zQueryTask = z.enum([
 ]);
 
 /**
- * QuestionBase
- *
- * A question that can be asked to the interviewee
- */
-export const zQuestionBase = z.object({
-    description: z.string().nullish(),
-    main_question: z.string(),
-    probes: z.array(z.string()).nullish(),
-    max_probes_n: z.int().gte(0).nullish().default(3),
-    max_probes_time: z.number().gt(0).nullish()
-});
-
-/**
  * QuestionGenerationRequest
  */
 export const zQuestionGenerationRequest = z.object({
     prompt: z.string(),
-    section_idx: z.int(),
+    section_id: z.string(),
     max_probes_n: z.int().nullish(),
     max_probes_time: z.int().nullish()
 });
@@ -1679,16 +1804,22 @@ export const zConditions = z.object({
 });
 
 /**
- * QuestionSection
- *
- * A section of questions that all revolve around the same topic
+ * LocalizedCondition
  */
-export const zQuestionSection = z.object({
-    description: z.string(),
-    questions: z.array(zQuestionBase),
-    id: z.uuid().optional(),
-    shuffle: z.boolean().optional().default(false),
-    ai_generated_questions: zGeneratedQuestions.optional().default({ n: 0 })
+export const zLocalizedCondition = z.object({
+    question_context: zQuestionContext,
+    evaluation: z.array(zLocalizedConditionEvaluation),
+    negated: z.boolean().optional().default(false),
+    trigger_type: zConditionTrigger.optional().default('match'),
+    combine_next: z.enum(['AND', 'OR']).nullish()
+});
+
+/**
+ * LocalizedConditions
+ */
+export const zLocalizedConditions = z.object({
+    conditions: z.array(zLocalizedCondition),
+    action: zConditionAction
 });
 
 /**
@@ -2047,6 +2178,77 @@ export const zItemDistributions = z.object({
 });
 
 /**
+ * LocalizedQuestion
+ *
+ * `Question` with its text per language. See `Question` for the fields.
+ */
+export const zLocalizedQuestion = z.object({
+    id: z.uuid().optional(),
+    main_question: zLocalizedText.optional(),
+    description: zLocalizedText.nullish(),
+    probes: z.array(zLocalizedText).nullish(),
+    alternative_main_questions: z.array(zLocalizedText).nullish(),
+    max_probes_n: z.int().gte(0).nullish().default(3),
+    max_probes_time: z.number().gt(0).nullish(),
+    survey_item: z.union([
+        zLocalizedRadioItem,
+        zLocalizedCheckboxItem,
+        zLocalizedLikertItem,
+        zLocalizedSliderItem,
+        zNumberItem,
+        zDateItem,
+        zDatetimeItem,
+        zTimeItem
+    ]).nullish(),
+    can_answer: z.boolean().optional().default(true),
+    check_if_answered: z.boolean().optional().default(false),
+    check_if_exhausted: z.boolean().optional().default(false),
+    can_skip: z.boolean().optional().default(true),
+    shuffle: z.boolean().optional().default(false),
+    create_segue: z.boolean().optional().default(false),
+    exclude_from_history: z.boolean().optional().default(false),
+    references: z.array(zReference).nullish(),
+    image: zLocalizedImage.nullish(),
+    user_image: z.boolean().optional().default(false),
+    conditions: zLocalizedConditions.nullish(),
+    probing_context: zProbingContext.nullish()
+});
+
+/**
+ * LocalizedQuestionSection
+ *
+ * `QuestionSection` with its text per language.
+ */
+export const zLocalizedQuestionSection = z.object({
+    id: z.uuid().optional(),
+    description: zLocalizedText.optional(),
+    questions: z.array(zLocalizedQuestion).optional(),
+    shuffle: z.boolean().optional().default(false),
+    ai_generated_questions: zGeneratedQuestions.optional().default({ n: 0 })
+});
+
+/**
+ * LocalizedInterviewGuide
+ *
+ * `InterviewGuide`'s single source across a project's languages.
+ *
+ * Validating it renders every language it has text in, so a source that
+ * loads is one every language can be interviewed from. A leaf missing in one
+ * language falls back to the others for that check; at interview time the
+ * caller chooses the fallback (the project's default language).
+ */
+export const zLocalizedInterviewGuide = z.object({
+    framing: zLocalizedText.optional(),
+    introduction: zLocalizedText.optional(),
+    question_sections: z.array(zLocalizedQuestionSection).optional(),
+    outro: zLocalizedText.nullish(),
+    alt_outro: zLocalizedText.nullish(),
+    extra_variables: z.array(z.string()).optional(),
+    timed_messages: z.array(zLocalizedTimedMessage).nullish(),
+    ai_generated_sections: z.int().optional().default(0)
+});
+
+/**
  * MessagePublic
  */
 export const zMessagePublic = z.object({
@@ -2087,6 +2289,17 @@ export const zMessagePublic = z.object({
     codings: z.array(zCodingPublic).optional().default([]),
     comments: z.array(zMessageCommentPublic).optional().default([]),
     interview_type: zInterviewType
+});
+
+/**
+ * ProjectContentPublic
+ *
+ * A project's guide, consent and welcome with their text per language.
+ */
+export const zProjectContentPublic = z.object({
+    guide: zLocalizedInterviewGuide,
+    consent: zLocalizedConsent.nullable(),
+    welcome: zLocalizedWelcome.nullable()
 });
 
 /**
@@ -2931,6 +3144,8 @@ export const zInvitationPublicWritable = z.object({
     id: z.string(),
     email: z.string().nullable()
 });
+
+export const zLocalizedTextWritable = z.record(z.string(), z.string());
 
 export const zGetCodebookPath = z.object({
     project_id: z.string().nullable()
@@ -4153,6 +4368,34 @@ export const zGetProjectPermissionsQuery = z.object({
  */
 export const zGetProjectPermissionsResponse = zProjectPermissionsPublic;
 
+export const zGetLocalizedGuidePath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zGetLocalizedGuideQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetLocalizedGuideResponse = zLocalizedInterviewGuide;
+
+export const zUpdateGuideBody = zLocalizedInterviewGuide;
+
+export const zUpdateGuidePath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zUpdateGuideQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateGuideResponse = zLocalizedInterviewGuide;
+
 export const zGetGuidePath = z.object({
     project_id: z.string().nullable(),
     lang: z.string().length(2)
@@ -4167,16 +4410,19 @@ export const zGetGuideQuery = z.object({
  */
 export const zGetGuideResponse = zInterviewGuide;
 
-export const zCreateGuideBody = zInterviewGuide;
-
-export const zCreateGuidePath = z.object({
+export const zTranslateMissingPath = z.object({
     project_id: z.string().nullable(),
     lang: z.string().length(2)
 });
 
-export const zCreateGuideQuery = z.object({
+export const zTranslateMissingQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+/**
+ * Successful Response
+ */
+export const zTranslateMissingResponse = zProjectContentPublic;
 
 export const zGenerateGuideBody = zInterviewGuideGenerationRequest;
 
@@ -4192,7 +4438,7 @@ export const zGenerateGuideQuery = z.object({
 /**
  * Successful Response
  */
-export const zGenerateGuideResponse = zInterviewGuide;
+export const zGenerateGuideResponse = zLocalizedInterviewGuide;
 
 export const zGenerateGuideSectionBody = zQuestionSectionGenerationRequest;
 
@@ -4208,7 +4454,7 @@ export const zGenerateGuideSectionQuery = z.object({
 /**
  * Successful Response
  */
-export const zGenerateGuideSectionResponse = zQuestionSection;
+export const zGenerateGuideSectionResponse = zLocalizedQuestionSection;
 
 export const zGenerateSectionQuestionBody = zQuestionGenerationRequest;
 
@@ -4224,7 +4470,7 @@ export const zGenerateSectionQuestionQuery = z.object({
 /**
  * Successful Response
  */
-export const zGenerateSectionQuestionResponse = zQuestion;
+export const zGenerateSectionQuestionResponse = zLocalizedQuestion;
 
 export const zUploadImageBody = zBodyUploadImage;
 
@@ -4237,8 +4483,7 @@ export const zUploadImageQuery = z.object({
 });
 
 export const zGetInterviewAgentsPath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
+    project_id: z.string().nullable()
 });
 
 export const zGetInterviewAgentsQuery = z.object({
@@ -4253,8 +4498,7 @@ export const zGetInterviewAgentsResponse = zAgentConfigs;
 export const zCreateInterviewAgentsBody = zAgentConfigs;
 
 export const zCreateInterviewAgentsPath = z.object({
-    project_id: z.string().nullable(),
-    lang: z.string().length(2)
+    project_id: z.string().nullable()
 });
 
 export const zCreateInterviewAgentsQuery = z.object({
@@ -4334,16 +4578,35 @@ export const zGetConsentPath = z.object({
  */
 export const zGetConsentResponse = zConsent.nullable();
 
-export const zCreateConsentBody = zConsent;
-
-export const zCreateConsentPath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
+export const zGetLocalizedConsentPath = z.object({
+    project_id: z.string().nullable()
 });
 
-export const zCreateConsentQuery = z.object({
+export const zGetLocalizedConsentQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+/**
+ * Response Get Localized Consent
+ *
+ * Successful Response
+ */
+export const zGetLocalizedConsentResponse = zLocalizedConsent.nullable();
+
+export const zUpdateConsentBody = zLocalizedConsent;
+
+export const zUpdateConsentPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zUpdateConsentQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateConsentResponse = zLocalizedConsent;
 
 export const zGetWelcomePath = z.object({
     project_id: z.string(),
@@ -4357,16 +4620,52 @@ export const zGetWelcomePath = z.object({
  */
 export const zGetWelcomeResponse = zWelcome.nullable();
 
-export const zCreateWelcomeBody = zBodyCreateWelcome;
-
-export const zCreateWelcomePath = z.object({
-    project_id: z.string().nullable(),
-    language: z.string().length(2)
+export const zGetLocalizedWelcomePath = z.object({
+    project_id: z.string().nullable()
 });
 
-export const zCreateWelcomeQuery = z.object({
+export const zGetLocalizedWelcomeQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+/**
+ * Response Get Localized Welcome
+ *
+ * Successful Response
+ */
+export const zGetLocalizedWelcomeResponse = zLocalizedWelcome.nullable();
+
+export const zUpdateWelcomeBody = zLocalizedWelcome;
+
+export const zUpdateWelcomePath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zUpdateWelcomeQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateWelcomeResponse = zLocalizedWelcome;
+
+export const zUploadWelcomeVideoBody = zBodyUploadWelcomeVideo;
+
+export const zUploadWelcomeVideoPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zUploadWelcomeVideoQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Response Upload Welcome Video
+ *
+ * Successful Response
+ */
+export const zUploadWelcomeVideoResponse = z.string();
 
 export const zDeleteInterviewsBody = zDeleteInterviewRequest;
 
