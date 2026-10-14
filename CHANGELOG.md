@@ -4,6 +4,16 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.7.1] - 2026-10-14
+
+### Features
+
+- (languages) Mark a language in progress
+
+### Internal
+
+- (sdk) Regenerate for languages in progress
+
 ## [0.7.0] - 2026-10-14
 
 ### Breaking Changes
