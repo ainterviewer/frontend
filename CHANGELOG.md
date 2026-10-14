@@ -4,6 +4,31 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.6.0] - 2026-10-14
+
+### Breaking Changes
+
+- (guide) Needs the backend with migration 8bc0617dbbd2 and the
+ainterviewer release carrying stable guide ids.
+
+### Features
+
+- (interviews) Select all matching interviews for bulk actions
+- (interviews) Choose the download format
+- (transcripts) Show when each message was sent
+
+### Bug Fixes
+
+- (docker) Render server-side dates in the app time zone
+
+### Internal
+
+- (sdk) Regenerate for filter-based interview selection
+- (sdk) Regenerate for export formats
+- (dates) Format every date through one module
+- (sdk) Regenerate for stable guide ids
+- (guide) Keep server ids; conditions by question_id [**breaking**]
+
 ## [0.5.13] - 2026-10-13
 
 ### Features
