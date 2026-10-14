@@ -7,8 +7,8 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 	const { cookieHeader } = locals;
 
 	const [response, projectRes] = await Promise.all([
-		Projects.getGuide({
-			path: { project_id, lang },
+		Projects.getLocalizedGuide({
+			path: { project_id },
 			headers: { cookie: cookieHeader },
 			fetch
 		}),

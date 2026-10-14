@@ -8,7 +8,9 @@
 	import QuestionImagePanel from './QuestionImagePanel.svelte';
 	import QuestionSettingsPanel from './QuestionSettingsPanel.svelte';
 	import QuestionSurveyPanel from './QuestionSurveyPanel.svelte';
+	import TextField from './TextField.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
+	import { generateId } from './utils';
 
 	interface Props {
 		question: GuideQuestion;
@@ -86,12 +88,12 @@
 	);
 
 	function addImage() {
-		question.image = { description: '', alt: '', name: '', data: null };
+		question.image = { description: {}, alt: {}, primer: {}, name: '', data: null };
 		expandedImage = true;
 	}
 
 	function addSurvey() {
-		question.survey_item = { type: 'radio', options: ['Option 1'] };
+		question.survey_item = { type: 'radio', options: [{ id: generateId(), text: {} }] };
 		expandedSurvey = true;
 	}
 
@@ -111,6 +113,7 @@
 					negated: false,
 					evaluation: [
 						{
+							option_id: null,
 							trigger_value: '',
 							comparison_operator: '=='
 						}
@@ -187,24 +190,24 @@
 		<div>
 			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase">
 				Description
-				<textarea
-					autocomplete="off"
+				<TextField
+					multiline
 					class="mt-1 h-22 w-full resize-y rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium tracking-normal normal-case transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 					placeholder="Add some context or description..."
-					bind:value={question.description}
-				></textarea>
+					text={question.description}
+				/>
 			</label>
 		</div>
 
 		<div>
 			<label class="mb-1 block text-xs font-bold tracking-wider text-gray-700 uppercase">
 				Main Question
-				<textarea
-					autocomplete="off"
+				<TextField
+					multiline
 					class="mt-1 h-18 w-full resize-y rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium tracking-normal normal-case transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 					placeholder="What would you like to ask?"
-					bind:value={question.main_question}
-				></textarea>
+					text={question.main_question}
+				/>
 			</label>
 		</div>
 

@@ -1,16 +1,14 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { beforeNavigate, invalidateAll } from '$app/navigation';
+	import { beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type {
 		Consent,
 		ExternalParam,
-		InterviewGuide,
+		LocalizedInterviewGuide,
 		ProjectLanguage,
-		Question,
-		QuestionSectionQuestion,
 		Welcome
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
@@ -20,17 +18,21 @@
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
 	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import SetupActionBar from '../SetupActionBar.svelte';
+	import TranslationBanner from '../TranslationBanner.svelte';
 	import BulkSettingsModal from './BulkSettingsModal.svelte';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
+	import { pick } from './localized';
 	import SortableSection from './SortableSection.svelte';
-	import type { GuideQuestion, GuideSection } from './types';
+	import TextField from './TextField.svelte';
+	import type { GuideQuestion } from './types';
 	import {
-		generateId,
-		localizeConditions,
-		mapFromLocal,
+		addLocalSections,
+		countUntranslated,
+		localQuestion,
 		mapToLocal,
-		normalizeGeneratedQuestions,
+		newSection,
+		renderLocal,
 		saveGuide
 	} from './utils';
 
@@ -41,7 +43,7 @@
 		availableLanguages = [],
 		externalParams = []
 	} = $props<{
-		guide: InterviewGuide | null;
+		guide: LocalizedInterviewGuide | null;
 		lang: string;
 		projectName?: string;
 		availableLanguages?: ProjectLanguage[];
@@ -53,66 +55,28 @@
 	// State
 	let saving = $state(false);
 	let exporting = $state(false);
-	let guide = $state<InterviewGuide>({
-		framing: '',
-		introduction: '',
-		question_sections: [],
-		outro: '',
-		timed_messages: []
-	});
+	let translating = $state(false);
 
-	function applyGuide(next: InterviewGuide | null) {
-		guide = next ?? {
-			framing: '',
-			introduction: '',
-			question_sections: [],
-			outro: '',
-			timed_messages: []
-		};
-
-		// Ensure timed_messages is initialized
-		if (!guide.timed_messages) {
-			guide.timed_messages = [];
-		}
-
-		if (guide.ai_generated_sections === undefined) {
-			guide.ai_generated_sections = 0;
-		}
-
-		const mapped = mapToLocal(guide);
+	function applyGuide(next: LocalizedInterviewGuide | null) {
+		const mapped = mapToLocal(next ?? {});
 		if (mapped.sections.length === 0) {
-			const newId = generateId();
-			mapped.sections.push({
-				id: newId,
-				description: '',
-				questions: [],
-				shuffle: false,
-				ai_generated_questions: { n: 0, max_probes_n: null, max_probes_time: null }
-			});
-			mapped.questions[newId] = [];
+			const section = newSection();
+			mapped.sections.push(section);
+			mapped.questions[section.id] = [];
 		}
 
 		// Initialize the shared store
 		guideStore.localSections = mapped.sections;
 		guideStore.localQuestions = mapped.questions;
-		guideStore.guide = guide;
-
-		// Normalize question_sections synchronously so the initial snapshot
-		// matches what the $effect will produce (mapToLocal → mapFromLocal
-		// round-trip adds defaults / strips ids, changing the JSON).
-		guide.question_sections = mapFromLocal(guideStore.localSections, guideStore.localQuestions);
+		guideStore.top = mapped.top;
 	}
 
 	// svelte-ignore state_referenced_locally
 	applyGuide(initialGuide);
 
-	$effect(() => {
-		guide.question_sections = mapFromLocal(guideStore.localSections, guideStore.localQuestions);
-	});
-
 	function getSnapshot() {
 		return JSON.stringify({
-			guide,
+			top: guideStore.top,
 			sections: guideStore.localSections,
 			questions: guideStore.localQuestions
 		});
@@ -128,6 +92,17 @@
 		}
 	});
 
+	let languageName = $derived(
+		availableLanguages.find((l: ProjectLanguage) => l.code === lang)?.name ?? lang
+	);
+	let defaultLanguageName = $derived(
+		availableLanguages.find((l: ProjectLanguage) => l.code === guideStore.defaultLang)?.name ??
+			guideStore.defaultLang
+	);
+	let untranslated = $derived(
+		countUntranslated(guideStore.top, guideStore.localSections, guideStore.localQuestions, lang)
+	);
+
 	let projectId = $state(page.params.project_id ?? '');
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
@@ -137,24 +112,22 @@
 	let showGenerateSectionModal = $state(false);
 	let showGenerateQuestionModal = $state(false);
 	let generatingQuestionSectionId = $state<string | null>(null);
-	let generatingQuestionSectionIdx = $state<number | null>(null);
 
 	let activeId = $state('');
 
 	async function handleGenerateGuide(prompt: string) {
-		const { error } = await Projects.generateGuide({
+		const { data, error } = await Projects.generateGuide({
 			path: { project_id: projectId, lang: lang },
 			body: { prompt }
 		});
-		if (error) {
+		if (error || !data) {
 			console.error('Failed to generate guide', error);
 			toast.error('Failed to generate guide');
 			return;
 		}
-		// Reload page data and replace the local editing state with the
-		// freshly generated guide (it is already persisted server-side).
-		await invalidateAll();
-		applyGuide(page.data.guide ?? null);
+		// The generated guide is already persisted server-side and replaces the
+		// guide in every language; the others show as untranslated.
+		applyGuide(data);
 		savedSnapshot = getSnapshot();
 	}
 
@@ -164,106 +137,93 @@
 			body: { prompt }
 		});
 
-		if (error) {
+		if (error || !data) {
 			console.error('Failed to generate section', error);
 			toast.error('Failed to generate section');
 			return;
 		}
 
-		if (data) {
-			const section = data as QuestionSectionQuestion;
-			const newId = generateId();
-			const newSection: GuideSection = {
-				id: newId,
-				description: section.description,
-				questions: [],
-				shuffle: section.shuffle ?? false,
-				ai_generated_questions: normalizeGeneratedQuestions(section.ai_generated_questions)
-			};
-
-			guideStore.localSections.push(newSection);
-			guideStore.localQuestions[newId] = (section.questions || []).map((q) => ({
-				...q,
-				id: generateId(),
-				alternative_main_questions: q.alternative_main_questions || [],
-				image: q.image || null,
-				survey_item: q.survey_item || null,
-				conditions: localizeConditions(
-					q.conditions,
-					guideStore.localSections,
-					guideStore.localQuestions
-				),
-				can_skip: q.can_skip ?? true,
-				check_if_answered: q.check_if_answered ?? false,
-				check_if_exhausted: q.check_if_exhausted ?? false,
-				create_segue: q.create_segue ?? false,
-				exclude_from_history: q.exclude_from_history ?? false,
-				user_image: q.user_image ?? false,
-				shuffle: q.shuffle ?? false,
-				probes: q.probes || [],
-				max_probes_n: q.max_probes_n ?? 3,
-				max_probes_time: q.max_probes_time ?? null,
-				can_answer: q.can_answer ?? true
-			}));
-		}
+		addLocalSections([data], guideStore.localSections, guideStore.localQuestions);
 	}
 
 	async function handleGenerateQuestion(prompt: string) {
-		if (generatingQuestionSectionIdx === null || !generatingQuestionSectionId) return;
+		const sectionId = generatingQuestionSectionId;
+		if (!sectionId) return;
 
-		const { data, error } = await Projects.generateSectionQuestion({
+		const { data, error, response } = await Projects.generateSectionQuestion({
 			path: { project_id: projectId, lang: lang },
-			body: {
-				prompt,
-				section_idx: generatingQuestionSectionIdx
-			}
+			body: { prompt, section_id: sectionId }
 		});
 
-		if (error) {
+		if (error || !data) {
 			console.error('Failed to generate question', error);
-			toast.error('Failed to generate question');
+			// The server generates against the saved guide, which a section added
+			// since the last save is not in yet.
+			toast.error(
+				response?.status === 404
+					? 'Save the guide before generating questions for a new section'
+					: 'Failed to generate question'
+			);
 			return;
 		}
 
-		if (data) {
-			const q = data as Question;
-			const newQuestion: GuideQuestion = {
-				...q,
-				id: generateId(),
-				alternative_main_questions: q.alternative_main_questions || [],
-				image: q.image || null,
-				survey_item: q.survey_item || null,
-				conditions: localizeConditions(
-					q.conditions,
-					guideStore.localSections,
-					guideStore.localQuestions
-				),
-				can_skip: q.can_skip ?? true,
-				check_if_answered: q.check_if_answered ?? false,
-				check_if_exhausted: q.check_if_exhausted ?? false,
-				create_segue: q.create_segue ?? false,
-				exclude_from_history: q.exclude_from_history ?? false,
-				user_image: q.user_image ?? false,
-				shuffle: q.shuffle ?? false,
-				probes: q.probes || [],
-				max_probes_n: q.max_probes_n ?? 3,
-				max_probes_time: q.max_probes_time ?? null,
-				can_answer: q.can_answer ?? true
-			};
-
-			if (!guideStore.localQuestions[generatingQuestionSectionId]) {
-				guideStore.localQuestions[generatingQuestionSectionId] = [];
-			}
-			guideStore.localQuestions[generatingQuestionSectionId].push(newQuestion);
+		if (!guideStore.localQuestions[sectionId]) {
+			guideStore.localQuestions[sectionId] = [];
 		}
+		guideStore.localQuestions[sectionId].push(
+			localQuestion(data, guideStore.localSections, guideStore.localQuestions)
+		);
 
 		generatingQuestionSectionId = null;
-		generatingQuestionSectionIdx = null;
+	}
+
+	async function save(): Promise<boolean> {
+		saving = true;
+		const result = await saveGuide(
+			projectId,
+			guideStore.top,
+			guideStore.localSections,
+			guideStore.localQuestions,
+			externalParams
+		);
+		saving = false;
+		if (result.status === 'invalid') {
+			guideStore.invalidConditionQuestionIds = result.invalidQuestionIds;
+			toast.error(
+				'Some conditions reference a later question or section, or an option that is gone. Please fix the highlighted conditions.'
+			);
+			return false;
+		}
+		if (result.status === 'success') {
+			guideStore.invalidConditionQuestionIds = [];
+			savedSnapshot = getSnapshot();
+			return true;
+		}
+		return false;
+	}
+
+	// Machine-translates what this language lacks, from the default language.
+	// The server translates the saved guide, so unsaved edits are saved first.
+	async function translateMissing() {
+		if (getSnapshot() !== savedSnapshot && !(await save())) return;
+		translating = true;
+		const { data, error } = await Projects.translateMissing({
+			path: { project_id: projectId, lang }
+		});
+		translating = false;
+		if (error || !data) {
+			console.error('Failed to translate', error);
+			toast.error('Failed to translate the missing text');
+			return;
+		}
+		applyGuide(data.guide);
+		savedSnapshot = getSnapshot();
+		toast.success(`Translated the missing ${languageName} text`);
 	}
 
 	function addTimedMessage() {
-		guide.timed_messages!.push({
-			message: '',
+		guideStore.top.timed_messages.push({
+			message: {},
 			time: 0,
 			include_in_history: false,
 			as_modal: false
@@ -271,26 +231,20 @@
 	}
 
 	function removeTimedMessage(index: number) {
-		guide.timed_messages!.splice(index, 1);
+		guideStore.top.timed_messages.splice(index, 1);
 	}
 
 	function addSection() {
-		const newId = generateId();
-		guideStore.localSections.push({
-			id: newId,
-			description: '',
-			questions: [],
-			shuffle: false,
-			ai_generated_questions: { n: 0, max_probes_n: null, max_probes_time: null }
-		});
-		guideStore.localQuestions[newId] = [];
+		const section = newSection();
+		guideStore.localSections.push(section);
+		guideStore.localQuestions[section.id] = [];
 	}
 
 	function removeSection(index: number) {
 		const section = guideStore.localSections[index];
 		if (!section) return;
 
-		const description = (section.description ?? '').trim().split('\n')[0];
+		const description = pick(section.description, guideStore.languages).trim().split('\n')[0];
 		const label =
 			description.length > 60
 				? `Section ${index + 1}: "${description.slice(0, 60)}\u2026"`
@@ -302,7 +256,11 @@
 			? ` and its ${questionCount} question${questionCount === 1 ? '' : 's'}`
 			: '';
 
-		if (confirm(`Are you sure you want to delete ${label}${questionNote}?`)) {
+		if (
+			confirm(
+				`Are you sure you want to delete ${label}${questionNote}? It is removed in every language.`
+			)
+		) {
 			const [removed] = guideStore.localSections.splice(index, 1);
 			delete guideStore.localQuestions[removed.id];
 		}
@@ -339,6 +297,15 @@
 		return data ?? null;
 	}
 
+	function rendered() {
+		return renderLocal(
+			guideStore.top,
+			guideStore.localSections,
+			guideStore.localQuestions,
+			guideStore.languages
+		);
+	}
+
 	async function handleExportPdf(toggles: PdfToggles) {
 		exporting = true;
 		try {
@@ -346,10 +313,11 @@
 				toggles.consent ? fetchConsent() : Promise.resolve(null),
 				toggles.welcome ? fetchWelcome() : Promise.resolve(null)
 			]);
+			const { guide, sections, questions } = rendered();
 			await downloadGuidePdf({
 				guide,
-				sections: guideStore.localSections,
-				questions: guideStore.localQuestions,
+				sections,
+				questions,
 				projectName: projectName || 'Interview Guide',
 				platformVersion,
 				toggles,
@@ -371,10 +339,7 @@
 			downloadUnifiedSetupJson({
 				consent: consentRes.status === 'fulfilled' ? consentRes.value : null,
 				welcome: welcomeRes.status === 'fulfilled' ? welcomeRes.value : null,
-				interview_guide: {
-					...guide,
-					question_sections: mapFromLocal(guideStore.localSections, guideStore.localQuestions)
-				},
+				interview_guide: rendered().guide,
 				platform_version: platformVersion
 			});
 		} catch (e) {
@@ -469,6 +434,16 @@
 		model. The interview guide consists of different components with different settings.
 	</p>
 
+	<TranslationBanner
+		{languageName}
+		{defaultLanguageName}
+		isDefault={lang === guideStore.defaultLang}
+		{untranslated}
+		{translating}
+		disabled={saving}
+		onTranslate={translateMissing}
+	/>
+
 	<div class="relative flex items-start gap-8">
 		<!-- Navigation Sidebar -->
 		<InterviewGuideSidebar
@@ -489,11 +464,11 @@
 					Present the framing of your interview and relevant background information. This is only
 					used by the model to help it ask more relevant questions.
 				</p>
-				<textarea
-					autocomplete="off"
+				<TextField
+					multiline
 					class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
-					bind:value={guide.framing}
-				></textarea>
+					text={guideStore.top.framing}
+				/>
 			</div>
 
 			<!-- Introduction -->
@@ -507,11 +482,11 @@
 					Write an introduction to your interview. This is the first message the interviewee will
 					see in the chat and cannot be answered.
 				</p>
-				<textarea
-					autocomplete="off"
+				<TextField
+					multiline
 					class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
-					bind:value={guide.introduction}
-				></textarea>
+					text={guideStore.top.introduction}
+				/>
 			</div>
 
 			<!-- Sections -->
@@ -533,7 +508,6 @@
 							onRemove={() => removeSection(sIdx)}
 							onGenerateQuestion={() => {
 								generatingQuestionSectionId = section.id;
-								generatingQuestionSectionIdx = sIdx;
 								showGenerateQuestionModal = true;
 							}}
 						/>
@@ -570,7 +544,7 @@
 						type="number"
 						min="0"
 						class="w-20 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
-						bind:value={guide.ai_generated_sections}
+						bind:value={guideStore.top.ai_generated_sections}
 					/>
 					<HoverInfo
 						text="Specifies the number of sections that will be automatically generated once the predefined ones are finished."
@@ -586,11 +560,11 @@
 			>
 				<h3 class="mb-2 text-lg font-medium">Outro</h3>
 				<p class="mb-4 text-sm text-gray-500">Last message in the interview.</p>
-				<textarea
-					autocomplete="off"
+				<TextField
+					multiline
 					class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
-					bind:value={guide.outro}
-				></textarea>
+					text={guideStore.top.outro}
+				/>
 			</div>
 
 			<!-- Timed Messages -->
@@ -606,7 +580,7 @@
 				</p>
 
 				<div class="space-y-4">
-					{#each guide.timed_messages! as tm, i (i)}
+					{#each guideStore.top.timed_messages as tm, i (i)}
 						<div class="rounded-md border border-gray-200 bg-gray-50 p-4">
 							<div class="mb-3 flex items-center justify-between">
 								<span class="text-sm font-medium text-gray-700">Timed Message {i + 1}</span>
@@ -624,12 +598,12 @@
 									<label class="mb-1 block text-sm font-medium text-gray-600" for="tm-message-{i}">
 										Message
 									</label>
-									<textarea
-										autocomplete="off"
+									<TextField
+										multiline
 										id="tm-message-{i}"
 										class="h-20 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
-										bind:value={tm.message}
-									></textarea>
+										text={tm.message}
+									/>
 								</div>
 
 								<div>
@@ -697,25 +671,7 @@
 				{saving}
 				{exporting}
 				onSave={async () => {
-					saving = true;
-					const result = await saveGuide(
-						projectId,
-						lang,
-						guide,
-						guideStore.localSections,
-						guideStore.localQuestions,
-						externalParams
-					);
-					if (result.status === 'invalid') {
-						guideStore.invalidConditionQuestionIds = result.invalidQuestionIds;
-						toast.error(
-							'Some conditions reference a later question or section. Please fix the highlighted conditions.'
-						);
-					} else if (result.status === 'success') {
-						guideStore.invalidConditionQuestionIds = [];
-						savedSnapshot = getSnapshot();
-					}
-					saving = false;
+					await save();
 				}}
 				onExportPdf={() => {
 					showExportPdfModal = true;

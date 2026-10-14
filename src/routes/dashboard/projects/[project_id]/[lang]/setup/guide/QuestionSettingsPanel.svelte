@@ -2,6 +2,7 @@
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 
 	import { createListReorder } from './listReorder.svelte';
+	import TextField from './TextField.svelte';
 	import type { GuideQuestion } from './types';
 
 	interface Props {
@@ -56,12 +57,11 @@
 	>
 	{#if question.alternative_main_questions}
 		<div class="mb-2 space-y-2">
-			{#each question.alternative_main_questions as _, aqIdx (aqIdx)}
+			{#each question.alternative_main_questions as alternative, aqIdx (aqIdx)}
 				<div class="flex gap-2">
-					<input
-						autocomplete="off"
+					<TextField
 						class="flex-1 rounded border-gray-200 p-2 text-sm shadow-sm focus:border-primary focus:ring-primary/20"
-						bind:value={question.alternative_main_questions[aqIdx]}
+						text={alternative}
 						placeholder="Another way to ask this..."
 					/>
 					<button
@@ -77,7 +77,7 @@
 		class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/5 hover:text-primary/80"
 		onclick={() => {
 			if (!question.alternative_main_questions) question.alternative_main_questions = [];
-			question.alternative_main_questions.push('');
+			question.alternative_main_questions.push({});
 		}}
 	>
 		<i class="fa-solid fa-plus"></i> Add Alternative
@@ -91,7 +91,7 @@
 	>
 	{#if question.probes}
 		<div class="mb-2 space-y-2">
-			{#each question.probes as _, pIdx (pIdx)}
+			{#each question.probes as probe, pIdx (pIdx)}
 				<div
 					data-probe-row
 					class="flex items-center gap-2 transition-opacity"
@@ -111,10 +111,9 @@
 					>
 						<i class="fa-solid fa-grip-vertical"></i>
 					</div>
-					<input
-						autocomplete="off"
+					<TextField
 						class="flex-1 rounded border-gray-200 p-2 text-sm shadow-sm focus:border-primary focus:ring-primary/20"
-						bind:value={question.probes[pIdx]}
+						text={probe}
 						placeholder="Follow-up question if needed..."
 					/>
 					<button
@@ -129,8 +128,7 @@
 	<button
 		class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/5 hover:text-primary/80"
 		onclick={() => {
-			if (!question.probes) question.probes = [];
-			question.probes.push('');
+			question.probes.push({});
 		}}
 	>
 		<i class="fa-solid fa-plus"></i> Add Probe

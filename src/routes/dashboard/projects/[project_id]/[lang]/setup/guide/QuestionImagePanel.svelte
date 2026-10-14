@@ -1,5 +1,9 @@
 <script lang="ts">
+	import { getGuideStore } from '$lib/stores/guideStore.svelte';
+
 	import AccordionPanel from './AccordionPanel.svelte';
+	import { pick } from './localized';
+	import TextField from './TextField.svelte';
 	import type { GuideQuestion } from './types';
 
 	interface Props {
@@ -9,6 +13,8 @@
 
 	let { question, expanded = $bindable(false) }: Props = $props();
 
+	const guideStore = getGuideStore();
+
 	function handleImageUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
 		if (input.files && input.files[0]) {
@@ -16,7 +22,7 @@
 			const reader = new FileReader();
 			reader.onload = (ev) => {
 				question.image = {
-					...(question.image ?? { description: '', alt: '' }),
+					...(question.image ?? { description: {}, alt: {}, primer: {} }),
 					data: ev.target?.result as string,
 					name: file.name
 				};
@@ -52,7 +58,7 @@
 					{image.name || 'Image'}
 				</div>
 				<div class="truncate text-xs text-gray-500">
-					{image.description || 'No description'}
+					{pick(image.description, guideStore.languages) || 'No description'}
 				</div>
 			</div>
 		{/snippet}
@@ -75,29 +81,26 @@
 					/>
 					<label class="flex flex-col">
 						<span class="pb-1 text-sm font-semibold text-gray-500">Description</span>
-						<input
-							autocomplete="off"
+						<TextField
 							class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 							placeholder="Description for AI..."
-							bind:value={image.description}
+							text={image.description}
 						/>
 					</label>
 					<label class="flex flex-col">
 						<span class="pb-1 font-semibold text-gray-500">Primer</span>
-						<input
-							autocomplete="off"
+						<TextField
 							class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 							placeholder="Primer text..."
-							bind:value={image.primer}
+							text={image.primer}
 						/>
 					</label>
 					<label class="flex flex-col">
 						<span class="pb-1 font-semibold text-gray-500">Alternative text (accessibility)</span>
-						<input
-							autocomplete="off"
+						<TextField
 							class="w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 							placeholder="Alt text"
-							bind:value={image.alt}
+							text={image.alt}
 						/>
 					</label>
 				</div>

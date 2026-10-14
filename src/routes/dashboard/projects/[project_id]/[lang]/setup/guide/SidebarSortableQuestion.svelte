@@ -2,8 +2,10 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
 
+	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { plainMarkup, sanitizeMarkup } from '$lib/utils/sanitize';
 
+	import { pick } from './localized';
 	import type { GuideQuestion } from './types';
 
 	interface Props {
@@ -25,6 +27,9 @@
 			data: { type: 'sidebar-question', sectionId }
 		}))
 	);
+
+	const guideStore = getGuideStore();
+	let mainQuestion = $derived(pick(question.main_question, guideStore.languages));
 </script>
 
 <div
@@ -45,9 +50,9 @@
 		draggable="false"
 		class="block min-w-0 flex-1 truncate py-1 pr-2 text-xs text-gray-500 transition-colors
 			{activeId === question.id ? 'text-primary' : ''}"
-		title={plainMarkup(question.main_question) || `Question ${questionIndex + 1}`}
+		title={plainMarkup(mainQuestion) || `Question ${questionIndex + 1}`}
 	>
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-		{@html sanitizeMarkup(question.main_question) || `Question ${questionIndex + 1}`}
+		{@html sanitizeMarkup(mainQuestion) || `Question ${questionIndex + 1}`}
 	</a>
 </div>

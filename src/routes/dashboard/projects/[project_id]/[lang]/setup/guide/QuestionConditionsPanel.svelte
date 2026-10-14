@@ -2,8 +2,14 @@
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
 	import AccordionPanel from './AccordionPanel.svelte';
-	import type { GuideQuestion, GuideSection } from './types';
-	import { isConditionTargetValid, resolveConditionTarget, surveyItemOptions } from './utils';
+	import { pick } from './localized';
+	import type { GuideQuestion, GuideSection, LocalCondition } from './types';
+	import {
+		isConditionOptionValid,
+		isConditionTargetValid,
+		resolveConditionTarget,
+		surveyItemOptions
+	} from './utils';
 
 	interface Props {
 		question: GuideQuestion;
@@ -57,8 +63,17 @@
 		return isConditionTargetValid(sectionIndex, index, ctx, allSections, allQuestions);
 	}
 
+	// ...or when it matches a choice but names no option of it: none picked yet,
+	// or the option was deleted.
+	function hasMissingOption(condition: LocalCondition): boolean {
+		const target = resolveTarget(condition.question_context).question;
+		return condition.evaluation.some((e) => !isConditionOptionValid(e, target));
+	}
+
 	let hasInvalidTarget = $derived(
-		(question.conditions?.conditions ?? []).some((c) => !isBlockValid(c.question_context))
+		(question.conditions?.conditions ?? []).some(
+			(c) => !isBlockValid(c.question_context) || hasMissingOption(c)
+		)
 	);
 
 	// The last save attempt flagged this question's conditions. Draw attention by
@@ -110,7 +125,8 @@
 					<div class="flex items-start gap-1.5 text-xs text-red-600">
 						<i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
 						<span>
-							References a later or missing question. Pick a question that comes before this one.
+							References a later or missing question, or no option of it. Pick a question that comes
+							before this one, and one of its options.
 						</span>
 					</div>
 				{:else}
@@ -158,7 +174,8 @@
 						referencedQuestion?.survey_item?.type === 'time' ||
 						referencedQuestion?.survey_item?.type === 'slider'}
 					{@const hasSurveyOptions = surveyItemOptions(referencedQuestion?.survey_item)?.length}
-					{@const targetValid = isBlockValid(condition.question_context)}
+					{@const targetValid =
+						isBlockValid(condition.question_context) && !hasMissingOption(condition)}
 
 					<div
 						class="rounded-md border p-3 {targetValid
@@ -202,7 +219,9 @@
 												{#if sIdx < sectionIndex || qIdx <= index}
 													<option value={`${sec.id}|${q.id}`}>
 														Section {sIdx + 1} > Question {qIdx + 1}
-														{q.main_question ? `: ${q.main_question.slice(0, 30)}...` : ''}
+														{pick(q.main_question, guideStore.languages)
+															? `: ${pick(q.main_question, guideStore.languages).slice(0, 30)}...`
+															: ''}
 													</option>
 												{/if}
 											{/each}
@@ -276,18 +295,21 @@
 															bind:value={evaluation.trigger_value}
 														/>
 													{:else if hasSurveyOptions}
-														{@const selectedValues = condition.evaluation
+														<!-- An option is named by id, so the condition holds in every
+														     language and survives the option being reworded. -->
+														{@const selectedIds = condition.evaluation
 															.filter((_, i) => i !== evalIdx)
-															.map((e) => e.trigger_value)
+															.map((e) => e.option_id)
 															.filter(Boolean)}
 														<select
 															class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-															bind:value={evaluation.trigger_value}
+															bind:value={evaluation.option_id}
 														>
-															<option value="">Select an option...</option>
-															{#each surveyItemOptions(referencedQuestion?.survey_item) || [] as option (option)}
-																<option value={option} disabled={selectedValues.includes(option)}
-																	>{option}</option
+															<option value={null}>Select an option...</option>
+															{#each surveyItemOptions(referencedQuestion?.survey_item) || [] as option, oIdx (option.id)}
+																<option value={option.id} disabled={selectedIds.includes(option.id)}
+																	>{pick(option.text, guideStore.languages) ||
+																		`Option ${oIdx + 1}`}</option
 																>
 															{/each}
 														</select>
@@ -341,6 +363,7 @@
 													onclick={() => {
 														evaluation.combine_next = 'AND';
 														condition.evaluation.push({
+															option_id: null,
 															trigger_value: '',
 															comparison_operator: '=='
 														});
@@ -354,6 +377,7 @@
 													onclick={() => {
 														evaluation.combine_next = 'OR';
 														condition.evaluation.push({
+															option_id: null,
 															trigger_value: '',
 															comparison_operator: '=='
 														});
@@ -389,6 +413,7 @@
 										negated: false,
 										evaluation: [
 											{
+												option_id: null,
 												trigger_value: '',
 												comparison_operator: '=='
 											}
@@ -408,6 +433,7 @@
 										negated: false,
 										evaluation: [
 											{
+												option_id: null,
 												trigger_value: '',
 												comparison_operator: '=='
 											}

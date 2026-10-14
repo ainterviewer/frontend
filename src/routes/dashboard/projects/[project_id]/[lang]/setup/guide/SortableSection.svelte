@@ -3,12 +3,15 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
 
-	import { zQuestion } from '$lib/api/zod.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
 	import { dragState } from './dragState.svelte';
+	import { pick } from './localized';
 	import SortableQuestion from './SortableQuestion.svelte';
+	import TextField from './TextField.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
+	import { newQuestion } from './utils';
 
 	interface Props {
 		section: GuideSection;
@@ -52,24 +55,21 @@
 		}))
 	);
 
+	const guideStore = getGuideStore();
+
 	let chatDropTarget = $derived(
 		dragState.chatDropTarget?.id === section.id ? dragState.chatDropTarget : null
 	);
 
 	function addQuestion() {
-		const newQuestion: GuideQuestion = {
-			...zQuestion.parse({ main_question: '' }),
-			id: crypto.randomUUID(),
-			conditions: null
-		};
-		questions.push(newQuestion);
+		questions.push(newQuestion());
 	}
 
 	function removeQuestion(idx: number) {
 		const question = questions[idx];
 		if (!question) return;
 
-		const text = (question.main_question ?? '').trim().split('\n')[0];
+		const text = pick(question.main_question, guideStore.languages).trim().split('\n')[0];
 		const label =
 			text.length > 60
 				? `question ${idx + 1}: "${text.slice(0, 60)}\u2026"`
@@ -77,7 +77,11 @@
 					? `question ${idx + 1}: "${text}"`
 					: `question ${idx + 1}`;
 
-		if (confirm(`Are you sure you want to delete ${label} in section ${sectionIndex + 1}?`)) {
+		if (
+			confirm(
+				`Are you sure you want to delete ${label} in section ${sectionIndex + 1}? It is removed in every language.`
+			)
+		) {
 			questions.splice(idx, 1);
 		}
 	}
@@ -128,11 +132,11 @@
 	<div class="mb-4">
 		<label class="mb-1 block text-sm font-bold text-gray-700">
 			Description
-			<textarea
-				autocomplete="off"
+			<TextField
+				multiline
 				class="h-22 w-full resize-y rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
-				bind:value={section.description}
-			></textarea>
+				text={section.description}
+			/>
 		</label>
 	</div>
 

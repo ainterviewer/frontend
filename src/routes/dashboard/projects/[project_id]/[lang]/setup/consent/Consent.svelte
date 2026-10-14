@@ -4,17 +4,19 @@
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { ProjectLanguage, Welcome } from '$lib/api/types.gen';
+	import type { LocalizedConsent, ProjectLanguage, Welcome } from '$lib/api/types.gen';
 	import { ConsentModal } from '$lib/components/modals';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
 	import ExportPdfModal from '../ExportPdfModal.svelte';
-	import { mapToLocal } from '../guide/utils';
+	import { isUntranslated, pick } from '../guide/localized';
+	import { renderSaved } from '../guide/utils';
 	import SetupActionBar from '../SetupActionBar.svelte';
+	import TranslationBanner from '../TranslationBanner.svelte';
 
 	interface Props {
-		initialData?: { title: string; text: string } | null;
+		initialData?: LocalizedConsent | null;
 		availableLanguages?: ProjectLanguage[];
 		projectName?: string;
 	}
@@ -28,17 +30,25 @@
 	let projectId = $derived(page.params.project_id ?? '');
 	let language = $derived(page.params.lang ?? '');
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
+	// The consent in every language; this page edits `language`'s text.
 	// svelte-ignore state_referenced_locally
-	let title = $state(initialData?.title || '');
-	// svelte-ignore state_referenced_locally
-	let text = $state(initialData?.text || '');
+	let consent = $state({
+		title: { ...(initialData?.title ?? {}) },
+		text: { ...(initialData?.text ?? {}) }
+	});
 	let showFullscreenModal = $state(false);
 	let saving = $state(false);
 	let exporting = $state(false);
 	const availableLanguages = $derived<ProjectLanguage[]>(initialAvailableLanguages);
+	let defaultLang = $derived(availableLanguages.find((l) => l.is_default)?.code ?? language);
+	let languages = $derived([language, defaultLang]);
+
+	// What respondents in `language` see: untranslated text is the default's.
+	let title = $derived(pick(consent.title, languages));
+	let text = $derived(pick(consent.text, languages));
 
 	function getSnapshot() {
-		return JSON.stringify({ title, text });
+		return JSON.stringify(consent);
 	}
 
 	let savedSnapshot = $state(getSnapshot());
@@ -53,9 +63,9 @@
 
 	async function saveConsent() {
 		saving = true;
-		const { error } = await Projects.createConsent({
-			path: { project_id: projectId, language: language },
-			body: { title, text }
+		const { error } = await Projects.updateConsent({
+			path: { project_id: projectId },
+			body: consent
 		});
 
 		if (!error) {
@@ -69,13 +79,13 @@
 	}
 
 	async function getGuideForExport() {
-		const { data, error } = await Projects.getGuide({
-			path: { project_id: projectId, lang: language }
+		const { data, error } = await Projects.getLocalizedGuide({
+			path: { project_id: projectId }
 		});
 		if (error || !data) {
 			throw new Error('Failed to load interview guide for export.');
 		}
-		return data;
+		return renderSaved(data, languages);
 	}
 
 	let showExportPdfModal = $state(false);
@@ -90,14 +100,13 @@
 	async function handleExportPdf(toggles: PdfToggles) {
 		exporting = true;
 		try {
-			const guide = await getGuideForExport();
-			const mapped = mapToLocal(guide);
+			const { guide, sections, questions } = await getGuideForExport();
 			const welcome = toggles.welcome ? await fetchWelcome() : null;
 			const consent = toggles.consent ? { title, text } : null;
 			await downloadGuidePdf({
 				guide,
-				sections: mapped.sections,
-				questions: mapped.questions,
+				sections,
+				questions,
 				projectName,
 				platformVersion,
 				toggles,
@@ -123,13 +132,46 @@
 			downloadUnifiedSetupJson({
 				consent: title || text ? { title, text } : null,
 				welcome: welcomeRes.status === 'fulfilled' ? welcomeRes.value : null,
-				interview_guide: guideRes.status === 'fulfilled' ? guideRes.value : null,
+				interview_guide: guideRes.status === 'fulfilled' ? guideRes.value.guide : null,
 				platform_version: platformVersion
 			});
 		} catch (e) {
 			console.error('Failed to export JSON', e);
 			toast.error('Failed to export JSON');
 		}
+	}
+
+	let languageName = $derived(
+		availableLanguages.find((l) => l.code === language)?.name ?? language
+	);
+	let defaultLanguageName = $derived(
+		availableLanguages.find((l) => l.code === defaultLang)?.name ?? defaultLang
+	);
+	let untranslated = $derived(
+		[consent.title, consent.text].filter((t) => isUntranslated(t, language)).length
+	);
+	let translating = $state(false);
+
+	// Machine-translates what this language lacks -- here and in the guide --
+	// from the default language. The server translates what is saved, so
+	// unsaved edits are saved first.
+	async function translateMissing() {
+		if (getSnapshot() !== savedSnapshot) await saveConsent();
+		if (getSnapshot() !== savedSnapshot) return;
+		translating = true;
+		const { data, error } = await Projects.translateMissing({
+			path: { project_id: projectId, lang: language }
+		});
+		translating = false;
+		if (error || !data?.consent) {
+			console.error('Failed to translate', error);
+			toast.error('Failed to translate the missing text');
+			return;
+		}
+		consent.title = { ...(data.consent.title ?? {}) };
+		consent.text = { ...(data.consent.text ?? {}) };
+		savedSnapshot = getSnapshot();
+		toast.success(`Translated the missing ${languageName} text`);
 	}
 </script>
 
@@ -150,6 +192,16 @@
 		</p>
 	</div>
 
+	<TranslationBanner
+		{languageName}
+		{defaultLanguageName}
+		isDefault={language === defaultLang}
+		{untranslated}
+		{translating}
+		disabled={saving}
+		onTranslate={translateMissing}
+	/>
+
 	<div class="flex gap-8">
 		<!-- Editor Panel -->
 		<div class="min-w-0 flex-1">
@@ -167,9 +219,14 @@
 						<input
 							autocomplete="off"
 							id="consent-title"
-							bind:value={title}
-							placeholder="e.g., Consent to Participate"
-							class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none"
+							bind:value={consent.title[language]}
+							placeholder={isUntranslated(consent.title, language)
+								? title
+								: 'e.g., Consent to Participate'}
+							class={[
+								'block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
+								isUntranslated(consent.title, language) && 'border-amber-400 bg-amber-50'
+							]}
 						/>
 					</div>
 
@@ -180,10 +237,15 @@
 						<textarea
 							autocomplete="off"
 							id="consent-text"
-							bind:value={text}
-							placeholder="Write the consent information that participants must agree to before starting the interview..."
+							bind:value={consent.text[language]}
+							placeholder={isUntranslated(consent.text, language)
+								? text
+								: 'Write the consent information that participants must agree to before starting the interview...'}
 							rows="12"
-							class="block w-full resize-y rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none"
+							class={[
+								'block w-full resize-y rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
+								isUntranslated(consent.text, language) && 'border-amber-400 bg-amber-50'
+							]}
 						></textarea>
 						<p class="mt-1.5 text-xs text-gray-500">
 							Supports plain text with line breaks preserved.

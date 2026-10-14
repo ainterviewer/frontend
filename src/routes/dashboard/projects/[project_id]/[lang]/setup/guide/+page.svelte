@@ -25,6 +25,7 @@
 	import InterviewGuide from './InterviewGuide.svelte';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import SortableSection from './SortableSection.svelte';
+	import { renderLocal } from './utils';
 
 	function startOnboarding() {
 		const tour = driver({
@@ -211,7 +212,7 @@
 					popover: {
 						title: 'Language',
 						description:
-							'Switch between the languages your project supports, or add a new one. Each language has its own interview guide.'
+							'Switch between the languages your project supports, or add a new one. Every language shares the same questions and settings; switching changes only the text you edit.'
 					}
 				},
 				{
@@ -267,7 +268,26 @@
 
 	let { data } = $props();
 
-	const guideStore = setGuideStore(createGuideStore());
+	let defaultLang = $derived(
+		data.available_languages.find((language) => language.is_default)?.code ?? data.lang
+	);
+
+	const guideStore = setGuideStore(
+		createGuideStore(
+			() => data.lang,
+			() => defaultLang
+		)
+	);
+
+	// The assistant reads the guide as the language being edited sees it.
+	let renderedGuide = $derived(
+		renderLocal(
+			guideStore.top,
+			guideStore.localSections,
+			guideStore.localQuestions,
+			guideStore.languages
+		).guide
+	);
 
 	const sensors = [KeyboardSensor, PointerSensor];
 
@@ -500,7 +520,7 @@
 		<AssistanceChat
 			project_id={data.project_id}
 			lang={data.lang}
-			guide={guideStore.guide ?? data.guide}
+			guide={renderedGuide}
 			bind:isMaximized={isChatMaximized}
 		>
 			{#snippet questionMessage(item: GuideQuestion, msgIndex: number)}

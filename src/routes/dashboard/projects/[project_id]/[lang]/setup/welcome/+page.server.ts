@@ -5,12 +5,12 @@ import { Projects } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const { project_id, lang } = params;
+	const { project_id } = params;
 	const { cookieHeader } = locals;
 
 	const [welcomeRes, projectRes] = await Promise.all([
-		Projects.getWelcome({
-			path: { project_id, language: lang },
+		Projects.getLocalizedWelcome({
+			path: { project_id },
 			headers: {
 				cookie: cookieHeader || ''
 			}

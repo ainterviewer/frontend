@@ -3,8 +3,9 @@
 
 	import AccordionPanel from './AccordionPanel.svelte';
 	import { createListReorder } from './listReorder.svelte';
+	import TextField from './TextField.svelte';
 	import type { GuideQuestion } from './types';
-	import { surveyItemOptions } from './utils';
+	import { generateId, surveyItemOptions } from './utils';
 
 	interface Props {
 		question: GuideQuestion;
@@ -12,6 +13,12 @@
 	}
 
 	let { question, expanded = $bindable(false) }: Props = $props();
+
+	// A fresh option. Options keep their id across languages and reordering;
+	// conditions name them by it.
+	function option() {
+		return { id: generateId(), text: {} };
+	}
 
 	const optionReorder = createListReorder(
 		() => surveyItemOptions(question.survey_item),
@@ -59,11 +66,11 @@
 					onchange={(e) => {
 						const type = (e.target as HTMLSelectElement).value;
 						if (type === 'radio' || type === 'checkbox') {
-							question.survey_item = { type, options: ['Option 1'] };
+							question.survey_item = { type, options: [option()] };
 						} else if (type === 'likert') {
-							question.survey_item = { type, options: ['Option 1'] };
+							question.survey_item = { type, options: [option()] };
 						} else if (type === 'slider') {
-							question.survey_item = { type, min: 0, max: 10 };
+							question.survey_item = { type, min: 0, max: 10, min_label: {}, max_label: {} };
 						} else if (type === 'number') {
 							question.survey_item = { type };
 						} else if (type === 'date') {
@@ -89,7 +96,7 @@
 				<div>
 					<span class="mb-2 block text-gray-500">Options</span>
 					<div class="space-y-1">
-						{#each surveyItem.options as _, oIdx (oIdx)}
+						{#each surveyItem.options as surveyOption, oIdx (surveyOption.id ?? oIdx)}
 							<div
 								data-option-row
 								class="flex items-center gap-1 transition-opacity"
@@ -109,9 +116,9 @@
 								>
 									<i class="fa-solid fa-grip-vertical"></i>
 								</div>
-								<input
+								<TextField
 									class="flex-1 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
-									bind:value={surveyItem.options[oIdx]}
+									text={surveyOption.text!}
 									placeholder={`Option ${oIdx + 1}`}
 								/>
 								<button
@@ -123,7 +130,7 @@
 						{/each}
 						<button
 							class="mt-1 text-sm font-medium text-primary hover:underline"
-							onclick={() => surveyItem.options.push('')}>+ Add Option</button
+							onclick={() => surveyItem.options.push(option())}>+ Add Option</button
 						>
 					</div>
 				</div>
@@ -191,20 +198,18 @@
 				<div class="grid grid-cols-2 gap-2">
 					<label class="mb-2 block text-sm text-gray-500">
 						Min Label
-						<input
-							autocomplete="off"
+						<TextField
 							class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 							placeholder="Min label..."
-							bind:value={surveyItem.min_label}
+							text={surveyItem.min_label!}
 						/>
 					</label>
 					<label class="mb-2 block text-sm text-gray-500">
 						Max Label
-						<input
-							autocomplete="off"
+						<TextField
 							class="mt-1 w-full rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 							placeholder="Max label..."
-							bind:value={surveyItem.max_label}
+							text={surveyItem.max_label!}
 						/>
 					</label>
 				</div>

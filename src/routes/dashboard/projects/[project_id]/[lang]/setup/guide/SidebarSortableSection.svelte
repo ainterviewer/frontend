@@ -3,6 +3,9 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
 
+	import { getGuideStore } from '$lib/stores/guideStore.svelte';
+
+	import { pick } from './localized';
 	import SidebarSortableQuestion from './SidebarSortableQuestion.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 
@@ -26,6 +29,9 @@
 			data: { type: 'sidebar-section', sectionId: section.id }
 		}))
 	);
+
+	const guideStore = getGuideStore();
+	let description = $derived(pick(section.description, guideStore.languages));
 </script>
 
 <div class:opacity-40={isDragging.current} {@attach ref}>
@@ -48,8 +54,8 @@
 				{activeId === section.id ? 'text-primary' : ''}"
 		>
 			Section {sectionIndex + 1}
-			{#if section.description}
-				<span class="block truncate text-xs text-gray-400">{section.description}</span>
+			{#if description}
+				<span class="block truncate text-xs text-gray-400">{description}</span>
 			{/if}
 		</a>
 	</div>

@@ -5,22 +5,19 @@
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { Consent, ProjectLanguage } from '$lib/api/types.gen';
+	import type { Consent, LocalizedWelcome, ProjectLanguage } from '$lib/api/types.gen';
 	import { WelcomeModal } from '$lib/components/modals';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
 	import ExportPdfModal from '../ExportPdfModal.svelte';
-	import { mapToLocal } from '../guide/utils';
+	import { isUntranslated, pick } from '../guide/localized';
+	import { renderSaved } from '../guide/utils';
 	import SetupActionBar from '../SetupActionBar.svelte';
+	import TranslationBanner from '../TranslationBanner.svelte';
 
 	interface Props {
-		initialData?: {
-			title: string;
-			text: string;
-			email: string;
-			video_file_name?: string | null;
-		} | null;
+		initialData?: LocalizedWelcome | null;
 		availableLanguages?: ProjectLanguage[];
 		projectName?: string;
 	}
@@ -36,12 +33,17 @@
 	let language = $derived(page.params.lang ?? '');
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
+	// Title and text in every language; this page edits `language`'s. The
+	// email, video and id setting are shared by every language.
 	// svelte-ignore state_referenced_locally
-	let title = $state(initialData?.title || '');
-	// svelte-ignore state_referenced_locally
-	let text = $state(initialData?.text || '');
+	let texts = $state({
+		title: { ...(initialData?.title ?? {}) },
+		text: { ...(initialData?.text ?? {}) }
+	});
 	// svelte-ignore state_referenced_locally
 	let email = $state(initialData?.email || '');
+	// svelte-ignore state_referenced_locally
+	let withId = $state(initialData?.with_id ?? true);
 
 	let videoFileName = $state<string | null>(untrack(() => initialVideoFileName));
 	let videoFile = $state<File | null>(null);
@@ -50,11 +52,17 @@
 	let saving = $state(false);
 	let exporting = $state(false);
 	const availableLanguages = $derived<ProjectLanguage[]>(initialAvailableLanguages);
+	let defaultLang = $derived(availableLanguages.find((l) => l.is_default)?.code ?? language);
+	let languages = $derived([language, defaultLang]);
+
+	// What respondents in `language` see: untranslated text is the default's.
+	let title = $derived(pick(texts.title, languages));
+	let text = $derived(pick(texts.text, languages));
 
 	let videoPreviewUrl = $state<string | null>(null);
 
 	function getSnapshot() {
-		return JSON.stringify({ title, text, email, videoFileName, hasPendingUpload: !!videoFile });
+		return JSON.stringify({ texts, email, videoFileName, hasPendingUpload: !!videoFile });
 	}
 
 	let savedSnapshot = $state(getSnapshot());
@@ -86,8 +94,8 @@
 
 	async function loadData() {
 		if (!projectId) return;
-		const { data, error } = await Projects.getWelcome({
-			path: { project_id: projectId, language: language }
+		const { data, error } = await Projects.getLocalizedWelcome({
+			path: { project_id: projectId }
 		});
 		if (error) {
 			console.error('Failed to load welcome data:', error);
@@ -95,25 +103,35 @@
 			return;
 		}
 		if (data) {
-			title = data.title;
-			text = data.text;
+			texts = { title: { ...(data.title ?? {}) }, text: { ...(data.text ?? {}) } };
 			email = data.email;
+			withId = data.with_id ?? true;
 			videoFileName = data.video_file_name || null;
 		}
 	}
 
 	async function saveWelcome() {
 		saving = true;
-		const body = {
-			title,
-			text,
-			email,
-			video: videoFile || null
-		};
 
-		const { error } = await Projects.createWelcome({
-			path: { project_id: projectId, language: language },
-			body: body
+		// The video is shared by every language: stored first, then named in
+		// the welcome.
+		let video_file_name = videoFileName;
+		if (videoFile) {
+			const upload = await Projects.uploadWelcomeVideo({
+				path: { project_id: projectId },
+				body: { video: videoFile }
+			});
+			if (upload.error || !upload.data) {
+				toast.error('Error when uploading the video.');
+				saving = false;
+				return;
+			}
+			video_file_name = upload.data;
+		}
+
+		const { error } = await Projects.updateWelcome({
+			path: { project_id: projectId },
+			body: { ...texts, email, video_file_name, with_id: withId }
 		});
 
 		if (!error) {
@@ -141,13 +159,13 @@
 	}
 
 	async function getGuideForExport() {
-		const { data, error } = await Projects.getGuide({
-			path: { project_id: projectId, lang: language }
+		const { data, error } = await Projects.getLocalizedGuide({
+			path: { project_id: projectId }
 		});
 		if (error || !data) {
 			throw new Error('Failed to load interview guide for export.');
 		}
-		return data;
+		return renderSaved(data, languages);
 	}
 
 	let showExportPdfModal = $state(false);
@@ -162,16 +180,15 @@
 	async function handleExportPdf(toggles: PdfToggles) {
 		exporting = true;
 		try {
-			const guide = await getGuideForExport();
-			const mapped = mapToLocal(guide);
+			const { guide, sections, questions } = await getGuideForExport();
 			const consent = toggles.consent ? await fetchConsent() : null;
 			const welcome = toggles.welcome
 				? { title, text, email, video_file_name: videoFileName ?? null }
 				: null;
 			await downloadGuidePdf({
 				guide,
-				sections: mapped.sections,
-				questions: mapped.questions,
+				sections,
+				questions,
 				projectName,
 				platformVersion,
 				toggles,
@@ -205,13 +222,46 @@
 								video_file_name: videoFileName ?? null
 							}
 						: null,
-				interview_guide: guideRes.status === 'fulfilled' ? guideRes.value : null,
+				interview_guide: guideRes.status === 'fulfilled' ? guideRes.value.guide : null,
 				platform_version: platformVersion
 			});
 		} catch (e) {
 			console.error('Failed to export JSON', e);
 			toast.error('Failed to export JSON');
 		}
+	}
+
+	let languageName = $derived(
+		availableLanguages.find((l) => l.code === language)?.name ?? language
+	);
+	let defaultLanguageName = $derived(
+		availableLanguages.find((l) => l.code === defaultLang)?.name ?? defaultLang
+	);
+	let untranslated = $derived(
+		[texts.title, texts.text].filter((t) => isUntranslated(t, language)).length
+	);
+	let translating = $state(false);
+
+	// Machine-translates what this language lacks -- here and in the guide --
+	// from the default language. The server translates what is saved, so
+	// unsaved edits are saved first.
+	async function translateMissing() {
+		if (getSnapshot() !== savedSnapshot) await saveWelcome();
+		if (getSnapshot() !== savedSnapshot) return;
+		translating = true;
+		const { data, error } = await Projects.translateMissing({
+			path: { project_id: projectId, lang: language }
+		});
+		translating = false;
+		if (error || !data?.welcome) {
+			console.error('Failed to translate', error);
+			toast.error('Failed to translate the missing text');
+			return;
+		}
+		texts.title = { ...(data.welcome.title ?? {}) };
+		texts.text = { ...(data.welcome.text ?? {}) };
+		savedSnapshot = getSnapshot();
+		toast.success(`Translated the missing ${languageName} text`);
 	}
 </script>
 
@@ -233,6 +283,16 @@
 		</p>
 	</div>
 
+	<TranslationBanner
+		{languageName}
+		{defaultLanguageName}
+		isDefault={language === defaultLang}
+		{untranslated}
+		{translating}
+		disabled={saving}
+		onTranslate={translateMissing}
+	/>
+
 	<div class="flex gap-8">
 		<!-- Editor Panel -->
 		<div class="min-w-0 flex-1">
@@ -250,9 +310,14 @@
 						<input
 							autocomplete="off"
 							id="welcome-title"
-							bind:value={title}
-							placeholder="e.g., Thank you for participating!"
-							class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none"
+							bind:value={texts.title[language]}
+							placeholder={isUntranslated(texts.title, language)
+								? title
+								: 'e.g., Thank you for participating!'}
+							class={[
+								'block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
+								isUntranslated(texts.title, language) && 'border-amber-400 bg-amber-50'
+							]}
 						/>
 					</div>
 
@@ -300,10 +365,15 @@
 						<textarea
 							autocomplete="off"
 							id="welcome-text"
-							bind:value={text}
-							placeholder="Write your welcome message here. This will be shown to participants before they start the interview..."
+							bind:value={texts.text[language]}
+							placeholder={isUntranslated(texts.text, language)
+								? text
+								: 'Write your welcome message here. This will be shown to participants before they start the interview...'}
 							rows="8"
-							class="block w-full resize-y rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none"
+							class={[
+								'block w-full resize-y rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
+								isUntranslated(texts.text, language) && 'border-amber-400 bg-amber-50'
+							]}
 						></textarea>
 					</div>
 

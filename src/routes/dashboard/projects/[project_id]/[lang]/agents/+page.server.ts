@@ -6,7 +6,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 	const { cookieHeader } = locals;
-	const { project_id, lang } = params;
+	const { project_id } = params;
 
 	const [modelsRes, agentsRes, defaultsRes] = await Promise.all([
 		Default.getModels({
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 			fetch
 		}),
 		Projects.getInterviewAgents({
-			path: { project_id, lang },
+			path: { project_id },
 			headers: { cookie: cookieHeader },
 			fetch
 		}),

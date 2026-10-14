@@ -1,7 +1,12 @@
 import type { Consent, Image, InterviewGuide, TimedMessage, Welcome } from '$lib/api/types.gen';
 import { formatDay } from '$lib/utils/datetime';
 
-import type { GuideQuestion, GuideSection, LocalCondition, LocalConditionSet } from './guide/types';
+import type {
+	RenderedCondition as LocalCondition,
+	RenderedConditionSet as LocalConditionSet,
+	RenderedQuestion as GuideQuestion,
+	RenderedSection as GuideSection
+} from './guide/types';
 import { resolveConditionTarget } from './guide/utils';
 
 // pdfmake doesn't ship type declarations — use a generic record type for doc nodes.

@@ -139,7 +139,7 @@
 		}
 
 		const res = await Projects.createInterviewAgents({
-			path: { project_id: projectId, lang: lang },
+			path: { project_id: projectId },
 			body: agents as AgentConfigs
 		});
 

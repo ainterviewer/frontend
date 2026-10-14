@@ -5,12 +5,12 @@ import { Projects } from '$lib/api';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const { project_id, lang } = params;
+	const { project_id } = params;
 	const { cookieHeader } = locals;
 
 	const [consentRes, projectRes] = await Promise.all([
-		Projects.getConsent({
-			path: { project_id, language: lang },
+		Projects.getLocalizedConsent({
+			path: { project_id },
 			headers: {
 				cookie: cookieHeader || ''
 			}

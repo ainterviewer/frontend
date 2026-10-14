@@ -6,6 +6,12 @@
 	import type { ChatMessage, InterviewGuide, Question } from '$lib/api/types.gen';
 	import type { GuideQuestion, GuideSection } from '$lib/stores/guideStore.svelte';
 
+	import { textIn } from '../../routes/dashboard/projects/[project_id]/[lang]/setup/guide/localized';
+	import {
+		localizeRenderedQuestion,
+		normalizeGeneratedQuestions
+	} from '../../routes/dashboard/projects/[project_id]/[lang]/setup/guide/utils';
+
 	interface Props {
 		project_id: string;
 		lang: string;
@@ -52,28 +58,28 @@
 			if ((msg.type === 'question' || msg.type === 'section') && parsedItems[i] === undefined) {
 				try {
 					const data = JSON.parse(msg.content);
+					// The assistant writes in the language being edited, so its text
+					// becomes that language's; the others show as untranslated.
+					// Suggested questions can't carry id-based condition targets (the
+					// chat has no local section/question ids to resolve against), so
+					// conditions are dropped until the user re-adds them in the editor.
 					if (msg.type === 'question') {
-						// Suggested questions can't carry id-based condition targets (the
-						// chat has no local section/question ids to resolve against), so
-						// conditions are dropped until the user re-adds them in the editor.
-						parsedItems[i] = {
-							...data,
-							id: data.id ?? crypto.randomUUID(),
-							conditions: null
-						} as GuideQuestion;
+						parsedItems[i] = localizeRenderedQuestion(data as Question, lang);
 					} else {
 						const { questions, ...sectionData } = data;
 						parsedItems[i] = {
 							section: {
-								...sectionData,
 								id: sectionData.id ?? crypto.randomUUID(),
+								description: textIn(lang, sectionData.description),
+								shuffle: sectionData.shuffle ?? false,
+								ai_generated_questions: normalizeGeneratedQuestions(
+									sectionData.ai_generated_questions
+								),
 								questions: []
 							} as GuideSection,
-							questions: ((questions ?? []) as (Question & { id?: string })[]).map((q) => ({
-								...q,
-								id: q.id ?? crypto.randomUUID(),
-								conditions: null
-							}))
+							questions: ((questions ?? []) as Question[]).map((q) =>
+								localizeRenderedQuestion(q, lang)
+							)
 						};
 					}
 				} catch {
