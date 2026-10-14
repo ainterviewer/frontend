@@ -887,6 +887,16 @@ export type Consent = {
 };
 
 /**
+ * ContentPart
+ *
+ * A part of a project's content that is edited, and revisioned, on its
+ * own: each has its own counter on `projectcontent` (`<part>_revision`), so
+ * a save to one never conflicts with a save to another. See
+ * `ContentColumns.PART_FIELDS` for the columns each part covers.
+ */
+export type ContentPart = 'guide' | 'consent' | 'welcome' | 'agents' | 'emails' | 'languages';
+
+/**
  * ContentStatus
  *
  * Where the draft stands against what respondents get.
@@ -4067,6 +4077,12 @@ export type ProjectContentPublic = {
     guide: LocalizedInterviewGuide;
     consent: LocalizedConsent | null;
     welcome: LocalizedWelcome | null;
+    /**
+     * Revisions
+     */
+    revisions: {
+        [key in ContentPart]?: number;
+    };
 };
 
 /**

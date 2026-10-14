@@ -1206,7 +1206,7 @@ export class Participants {
     /**
      * Get Participant Email Template
      *
-     * The draft's template; `ETag` is the content's revision.
+     * The draft's template; `ETag` is the emails' revision.
      */
     public static getParticipantEmailTemplate<ThrowOnError extends boolean = false>(options: Options<GetParticipantEmailTemplateData, ThrowOnError>): RequestResult<GetParticipantEmailTemplateResponses, GetParticipantEmailTemplateErrors, ThrowOnError> {
         return (options.client ?? client).get<GetParticipantEmailTemplateResponses, GetParticipantEmailTemplateErrors, ThrowOnError>({
@@ -1224,7 +1224,7 @@ export class Participants {
      * Set Participant Email Template
      *
      * Save the draft's template; it is sent once published. A 412 if the
-     * content changed since `If-Match`'s revision.
+     * emails changed since `If-Match`'s revision.
      */
     public static setParticipantEmailTemplate<ThrowOnError extends boolean = false>(options: Options<SetParticipantEmailTemplateData, ThrowOnError>): RequestResult<SetParticipantEmailTemplateResponses, SetParticipantEmailTemplateErrors, ThrowOnError> {
         return (options.client ?? client).put<SetParticipantEmailTemplateResponses, SetParticipantEmailTemplateErrors, ThrowOnError>({
@@ -1314,7 +1314,7 @@ export class Participants {
     /**
      * Get Participant Reminder Email Template
      *
-     * The draft's template; `ETag` is the content's revision.
+     * The draft's template; `ETag` is the emails' revision.
      */
     public static getParticipantReminderEmailTemplate<ThrowOnError extends boolean = false>(options: Options<GetParticipantReminderEmailTemplateData, ThrowOnError>): RequestResult<GetParticipantReminderEmailTemplateResponses, GetParticipantReminderEmailTemplateErrors, ThrowOnError> {
         return (options.client ?? client).get<GetParticipantReminderEmailTemplateResponses, GetParticipantReminderEmailTemplateErrors, ThrowOnError>({
@@ -1332,7 +1332,7 @@ export class Participants {
      * Set Participant Reminder Email Template
      *
      * Save the draft's template; it is sent once published. A 412 if the
-     * content changed since `If-Match`'s revision.
+     * emails changed since `If-Match`'s revision.
      */
     public static setParticipantReminderEmailTemplate<ThrowOnError extends boolean = false>(options: Options<SetParticipantReminderEmailTemplateData, ThrowOnError>): RequestResult<SetParticipantReminderEmailTemplateResponses, SetParticipantReminderEmailTemplateErrors, ThrowOnError> {
         return (options.client ?? client).put<SetParticipantReminderEmailTemplateResponses, SetParticipantReminderEmailTemplateErrors, ThrowOnError>({
@@ -1669,7 +1669,7 @@ export class Projects {
      * Get Localized Guide
      *
      * The guide with its text in every language: what the editor edits.
-     * `ETag` is the content's revision, to send back as `If-Match`.
+     * `ETag` is the guide's revision, to send back as `If-Match`.
      */
     public static getLocalizedGuide<ThrowOnError extends boolean = false>(options: Options<GetLocalizedGuideData, ThrowOnError>): RequestResult<GetLocalizedGuideResponses, GetLocalizedGuideErrors, ThrowOnError> {
         return (options.client ?? client).get<GetLocalizedGuideResponses, GetLocalizedGuideErrors, ThrowOnError>({
@@ -1686,7 +1686,7 @@ export class Projects {
     /**
      * Update Guide
      *
-     * Save the guide. A 412 if the content changed since `If-Match`'s
+     * Save the guide. A 412 if the guide changed since `If-Match`'s
      * revision; the new revision comes back as `ETag`.
      */
     public static updateGuide<ThrowOnError extends boolean = false>(options: Options<UpdateGuideData, ThrowOnError>): RequestResult<UpdateGuideResponses, UpdateGuideErrors, ThrowOnError> {
@@ -1728,7 +1728,7 @@ export class Projects {
      *
      * Machine-translate the text the guide, consent and welcome lack in
      * `lang` from the default language. Text `lang` already has is kept.
-     * The new revision comes back as `ETag`.
+     * Each part's new revision is in `revisions`: they are three editors'.
      */
     public static translateMissing<ThrowOnError extends boolean = false>(options: Options<TranslateMissingData, ThrowOnError>): RequestResult<TranslateMissingResponses, TranslateMissingErrors, ThrowOnError> {
         return (options.client ?? client).post<TranslateMissingResponses, TranslateMissingErrors, ThrowOnError>({

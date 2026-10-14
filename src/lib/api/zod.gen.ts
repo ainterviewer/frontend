@@ -424,6 +424,23 @@ export const zConsent = z.object({
 });
 
 /**
+ * ContentPart
+ *
+ * A part of a project's content that is edited, and revisioned, on its
+ * own: each has its own counter on `projectcontent` (`<part>_revision`), so
+ * a save to one never conflicts with a save to another. See
+ * `ContentColumns.PART_FIELDS` for the columns each part covers.
+ */
+export const zContentPart = z.enum([
+    'guide',
+    'consent',
+    'welcome',
+    'agents',
+    'emails',
+    'languages'
+]);
+
+/**
  * ContentVersionKind
  *
  * Why a `projectcontentversion` was written.
@@ -2408,7 +2425,8 @@ export const zMessagePublic = z.object({
 export const zProjectContentPublic = z.object({
     guide: zLocalizedInterviewGuide,
     consent: zLocalizedConsent.nullable(),
-    welcome: zLocalizedWelcome.nullable()
+    welcome: zLocalizedWelcome.nullable(),
+    revisions: z.record(z.string(), z.int())
 });
 
 /**
