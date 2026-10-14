@@ -3736,6 +3736,12 @@ export type Question = {
      */
     can_answer?: boolean;
     /**
+     * Id
+     *
+     * Stable identity of the question. Survives reordering and is shared by every translation of it; conditions and references point at it.
+     */
+    id?: string;
+    /**
      * Alternative Main Questions
      *
      * List of alternative formulations of the main question, will be chosen at random.
@@ -3837,24 +3843,23 @@ export type QuestionBase = {
 /**
  * QuestionContext
  *
- * The index of a question in a section
- * section [int]: The index of the section
- * question [int]: The index of the question
- * part
+ * The question a condition reads its answer from.
+ *
+ * `question_id` is the source of truth. `question_index` is its position,
+ * which the interview loop reads; the guide derives it from the id whenever
+ * it is validated or shuffled, so a client may send a stale one.
  */
 export type QuestionContext = {
     /**
-     * Section
-     *
-     * The index of a secition
+     * Position (section, question) of the question to read.
      */
-    section: number;
+    question_index: QuestionIndex;
     /**
-     * Question
+     * Question Id
      *
-     * The index of a question
+     * The question to read.
      */
-    question: number;
+    question_id: string;
     /**
      * Part
      *
@@ -3907,6 +3912,12 @@ export type QuestionSection = {
      */
     questions: Array<QuestionBase>;
     /**
+     * Id
+     *
+     * Stable identity of the section. Survives reordering and is shared by every translation of it.
+     */
+    id?: string;
+    /**
      * Shuffle
      *
      * Should the section be included in shuffling?
@@ -3939,6 +3950,12 @@ export type QuestionSectionQuestion = {
      * Questions
      */
     questions: Array<Question>;
+    /**
+     * Id
+     *
+     * Stable identity of the section. Survives reordering and is shared by every translation of it.
+     */
+    id?: string;
     /**
      * Shuffle
      *
@@ -3978,7 +3995,16 @@ export type RadioItem = {
  * must contains an empty `{}` as a placeholder for the referred answer.
  */
 export type Reference = {
+    /**
+     * Position (section, question) of the referred question. Derived from `question_id` whenever the guide is validated or shuffled.
+     */
     question_index: QuestionIndex;
+    /**
+     * Question Id
+     *
+     * The referred question.
+     */
+    question_id: string;
 };
 
 /**

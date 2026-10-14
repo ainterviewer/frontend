@@ -1627,16 +1627,29 @@ export const zQuestionBase = z.object({
 });
 
 /**
+ * QuestionGenerationRequest
+ */
+export const zQuestionGenerationRequest = z.object({
+    prompt: z.string(),
+    section_idx: z.int(),
+    max_probes_n: z.int().nullish(),
+    max_probes_time: z.int().nullish()
+});
+
+export const zQuestionIndex = z.tuple([z.int(), z.int()]);
+
+/**
  * QuestionContext
  *
- * The index of a question in a section
- * section [int]: The index of the section
- * question [int]: The index of the question
- * part
+ * The question a condition reads its answer from.
+ *
+ * `question_id` is the source of truth. `question_index` is its position,
+ * which the interview loop reads; the guide derives it from the id whenever
+ * it is validated or shuffled, so a client may send a stale one.
  */
 export const zQuestionContext = z.object({
-    section: z.int(),
-    question: z.int(),
+    question_index: zQuestionIndex,
+    question_id: z.uuid(),
     part: z.enum([
         'main',
         'probes',
@@ -1666,18 +1679,6 @@ export const zConditions = z.object({
 });
 
 /**
- * QuestionGenerationRequest
- */
-export const zQuestionGenerationRequest = z.object({
-    prompt: z.string(),
-    section_idx: z.int(),
-    max_probes_n: z.int().nullish(),
-    max_probes_time: z.int().nullish()
-});
-
-export const zQuestionIndex = z.tuple([z.int(), z.int()]);
-
-/**
  * QuestionSection
  *
  * A section of questions that all revolve around the same topic
@@ -1685,6 +1686,7 @@ export const zQuestionIndex = z.tuple([z.int(), z.int()]);
 export const zQuestionSection = z.object({
     description: z.string(),
     questions: z.array(zQuestionBase),
+    id: z.uuid().optional(),
     shuffle: z.boolean().optional().default(false),
     ai_generated_questions: zGeneratedQuestions.optional().default({ n: 0 })
 });
@@ -1714,7 +1716,8 @@ export const zRadioItem = z.object({
  * must contains an empty `{}` as a placeholder for the referred answer.
  */
 export const zReference = z.object({
-    question_index: zQuestionIndex
+    question_index: zQuestionIndex,
+    question_id: z.uuid()
 });
 
 /**
@@ -2108,6 +2111,7 @@ export const zQuestion = z.object({
         zTimeItem
     ]).nullish(),
     can_answer: z.boolean().optional().default(true),
+    id: z.uuid().optional(),
     alternative_main_questions: z.array(z.string()).nullish(),
     check_if_answered: z.boolean().optional().default(false),
     check_if_exhausted: z.boolean().optional().default(false),
@@ -2129,6 +2133,7 @@ export const zQuestion = z.object({
 export const zQuestionSectionQuestion = z.object({
     description: z.string(),
     questions: z.array(zQuestion),
+    id: z.uuid().optional(),
     shuffle: z.boolean().optional().default(false),
     ai_generated_questions: zGeneratedQuestions.optional().default({ n: 0 })
 });
