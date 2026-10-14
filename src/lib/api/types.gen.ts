@@ -877,6 +877,153 @@ export type Consent = {
 };
 
 /**
+ * ContentStatus
+ *
+ * Where the draft stands against what respondents get.
+ */
+export type ContentStatus = {
+    /**
+     * Revision
+     */
+    revision: number;
+    published: ContentVersionSummary | null;
+    /**
+     * Has Unpublished Changes
+     */
+    has_unpublished_changes: boolean;
+    /**
+     * Pending Bump
+     */
+    pending_bump: 'none' | 'patch' | 'minor' | 'major';
+    /**
+     * Next Semver
+     */
+    next_semver: string;
+    /**
+     * Missing
+     */
+    missing: {
+        [key in LanguageCode]?: Array<string>;
+    };
+};
+
+/**
+ * ContentVersionKind
+ *
+ * Why a `projectcontentversion` was written.
+ *
+ * `PUBLISH` and `MANUAL` are saved by someone on purpose and are never
+ * deleted. The rest are written as a side effect -- `TEST` for the draft a
+ * test interview ran on, `RESTORE` for the draft a restore replaced, `AUTO`
+ * for the autosave snapshots of Phase 4 -- and may be pruned once no
+ * interview points at them (`VersionRepository.prune`).
+ */
+export type ContentVersionKind = 'publish' | 'manual' | 'test' | 'restore' | 'auto';
+
+/**
+ * ContentVersionPublic
+ *
+ * A version with its content, for previewing it read-only.
+ */
+export type ContentVersionPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Version No
+     */
+    version_no: number;
+    kind: ContentVersionKind;
+    /**
+     * Semver
+     */
+    semver: string | null;
+    /**
+     * Label
+     */
+    label: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Created By Id
+     */
+    created_by_id: string | null;
+    /**
+     * Created By Name
+     */
+    created_by_name: string | null;
+    /**
+     * Is Published
+     */
+    is_published: boolean;
+    /**
+     * Languages
+     */
+    languages: Array<LanguageCode>;
+    default_language: LanguageCode;
+    guide: LocalizedInterviewGuide;
+    consent: LocalizedConsent | null;
+    welcome: LocalizedWelcome | null;
+    emails: ParticipantEmails;
+    agent_configs: AgentConfigs;
+    /**
+     * Prompt Overrides
+     */
+    prompt_overrides: {
+        [key: string]: string;
+    };
+};
+
+/**
+ * ContentVersionSummary
+ *
+ * One version of a project's content, as the history lists it.
+ */
+export type ContentVersionSummary = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Version No
+     */
+    version_no: number;
+    kind: ContentVersionKind;
+    /**
+     * Semver
+     */
+    semver: string | null;
+    /**
+     * Label
+     */
+    label: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Created By Id
+     */
+    created_by_id: string | null;
+    /**
+     * Created By Name
+     */
+    created_by_name: string | null;
+    /**
+     * Is Published
+     */
+    is_published: boolean;
+    /**
+     * Languages
+     */
+    languages: Array<LanguageCode>;
+    default_language: LanguageCode;
+};
+
+/**
  * CreateInterviewRequest
  */
 export type CreateInterviewRequest = {
@@ -3599,6 +3746,20 @@ export type NumericStats = {
 };
 
 /**
+ * PaginatedResponse[ContentVersionSummary]
+ */
+export type PaginatedResponseContentVersionSummary = {
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Items
+     */
+    items: Array<ContentVersionSummary>;
+};
+
+/**
  * ParticipantCreate
  */
 export type ParticipantCreate = {
@@ -3619,6 +3780,16 @@ export type ParticipantCreate = {
      */
     participating?: boolean;
     lang?: LanguageCode | null;
+};
+
+/**
+ * ParticipantEmail
+ *
+ * One email to participants, its subject and HTML body per language.
+ */
+export type ParticipantEmail = {
+    subject?: LocalizedText;
+    template?: LocalizedText;
 };
 
 /**
@@ -3651,6 +3822,16 @@ export type ParticipantEmailTemplateRequest = {
      * Template
      */
     template?: string | null;
+};
+
+/**
+ * ParticipantEmails
+ *
+ * The emails a project sends its participants.
+ */
+export type ParticipantEmails = {
+    invite?: ParticipantEmail;
+    reminder?: ParticipantEmail;
 };
 
 /**
@@ -4364,6 +4545,24 @@ export type ResetPasswordRequest = {
      * Token
      */
     token: string;
+};
+
+/**
+ * SaveVersionRequest
+ */
+export type SaveVersionRequest = {
+    /**
+     * Label
+     */
+    label?: string | null;
+    /**
+     * Publish
+     */
+    publish?: boolean;
+    /**
+     * Bump
+     */
+    bump?: 'none' | 'patch' | 'minor' | 'major' | null;
 };
 
 /**
@@ -8207,6 +8406,12 @@ export type GetParticipantEmailTemplateResponse = GetParticipantEmailTemplateRes
 
 export type SetParticipantEmailTemplateData = {
     body: ParticipantEmailTemplateRequest;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
     path: {
         /**
          * Project Id
@@ -8447,6 +8652,12 @@ export type GetParticipantReminderEmailTemplateResponse = GetParticipantReminder
 
 export type SetParticipantReminderEmailTemplateData = {
     body: ParticipantEmailTemplateRequest;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
     path: {
         /**
          * Project Id
@@ -8827,7 +9038,12 @@ export type GetProjectLanguagesData = {
          */
         project_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Draft
+         */
+        draft?: boolean;
+    };
     url: '/api/projects/{project_id}/available_languages';
 };
 
@@ -9096,6 +9312,12 @@ export type GetLocalizedGuideResponse = GetLocalizedGuideResponses[keyof GetLoca
 
 export type UpdateGuideData = {
     body: LocalizedInterviewGuide;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
     path: {
         /**
          * Project Id
@@ -9394,6 +9616,12 @@ export type GetInterviewAgentsResponse = GetInterviewAgentsResponses[keyof GetIn
 
 export type CreateInterviewAgentsData = {
     body: AgentConfigs;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
     path: {
         /**
          * Project Id
@@ -9535,7 +9763,12 @@ export type GetInterviewModelsData = {
          */
         project_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Draft
+         */
+        draft?: boolean;
+    };
     url: '/api/projects/{project_id}/models';
 };
 
@@ -9620,7 +9853,12 @@ export type GetConsentData = {
          */
         language: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Draft
+         */
+        draft?: boolean;
+    };
     url: '/api/projects/{project_id}/guide/consent/{language}';
 };
 
@@ -9683,6 +9921,12 @@ export type GetLocalizedConsentResponse = GetLocalizedConsentResponses[keyof Get
 
 export type UpdateConsentData = {
     body: LocalizedConsent;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
     path: {
         /**
          * Project Id
@@ -9728,7 +9972,12 @@ export type GetWelcomeData = {
          */
         language: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Draft
+         */
+        draft?: boolean;
+    };
     url: '/api/projects/{project_id}/guide/welcome/{language}';
 };
 
@@ -9791,6 +10040,12 @@ export type GetLocalizedWelcomeResponse = GetLocalizedWelcomeResponses[keyof Get
 
 export type UpdateWelcomeData = {
     body: LocalizedWelcome;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
     path: {
         /**
          * Project Id
@@ -10805,6 +11060,217 @@ export type RunSyntheticTestResponses = {
      */
     200: unknown;
 };
+
+export type GetContentStatusData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/versions/status';
+};
+
+export type GetContentStatusErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetContentStatusError = GetContentStatusErrors[keyof GetContentStatusErrors];
+
+export type GetContentStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: ContentStatus;
+};
+
+export type GetContentStatusResponse = GetContentStatusResponses[keyof GetContentStatusResponses];
+
+export type ListContentVersionsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Column
+         */
+        column?: string;
+        /**
+         * Order
+         */
+        order?: 'asc' | 'desc';
+    };
+    url: '/api/projects/{project_id}/versions';
+};
+
+export type ListContentVersionsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListContentVersionsError = ListContentVersionsErrors[keyof ListContentVersionsErrors];
+
+export type ListContentVersionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PaginatedResponseContentVersionSummary;
+};
+
+export type ListContentVersionsResponse = ListContentVersionsResponses[keyof ListContentVersionsResponses];
+
+export type SaveContentVersionData = {
+    body: SaveVersionRequest;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/versions';
+};
+
+export type SaveContentVersionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SaveContentVersionError = SaveContentVersionErrors[keyof SaveContentVersionErrors];
+
+export type SaveContentVersionResponses = {
+    /**
+     * Successful Response
+     */
+    200: ContentVersionSummary;
+};
+
+export type SaveContentVersionResponse = SaveContentVersionResponses[keyof SaveContentVersionResponses];
+
+export type GetContentVersionData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Version Id
+         */
+        version_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/versions/{version_id}';
+};
+
+export type GetContentVersionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetContentVersionError = GetContentVersionErrors[keyof GetContentVersionErrors];
+
+export type GetContentVersionResponses = {
+    /**
+     * Successful Response
+     */
+    200: ContentVersionPublic;
+};
+
+export type GetContentVersionResponse = GetContentVersionResponses[keyof GetContentVersionResponses];
+
+export type RestoreContentVersionData = {
+    body?: never;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Version Id
+         */
+        version_id: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/versions/{version_id}/restore';
+};
+
+export type RestoreContentVersionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RestoreContentVersionError = RestoreContentVersionErrors[keyof RestoreContentVersionErrors];
+
+export type RestoreContentVersionResponses = {
+    /**
+     * Successful Response
+     */
+    200: ContentStatus;
+};
+
+export type RestoreContentVersionResponse = RestoreContentVersionResponses[keyof RestoreContentVersionResponses];
 
 export type ValidateInterviewParamsData = {
     body: ValidateExternalParamsRequest;

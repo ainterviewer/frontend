@@ -417,6 +417,25 @@ export const zConsent = z.object({
 });
 
 /**
+ * ContentVersionKind
+ *
+ * Why a `projectcontentversion` was written.
+ *
+ * `PUBLISH` and `MANUAL` are saved by someone on purpose and are never
+ * deleted. The rest are written as a side effect -- `TEST` for the draft a
+ * test interview ran on, `RESTORE` for the draft a restore replaced, `AUTO`
+ * for the autosave snapshots of Phase 4 -- and may be pruned once no
+ * interview points at them (`VersionRepository.prune`).
+ */
+export const zContentVersionKind = z.enum([
+    'publish',
+    'manual',
+    'test',
+    'restore',
+    'auto'
+]);
+
+/**
  * DailyInterviewCount
  *
  * Count of interviews created per day.
@@ -1077,6 +1096,44 @@ export const zCategoryCount = z.object({
 });
 
 /**
+ * ContentVersionSummary
+ *
+ * One version of a project's content, as the history lists it.
+ */
+export const zContentVersionSummary = z.object({
+    id: z.string(),
+    version_no: z.int(),
+    kind: zContentVersionKind,
+    semver: z.string().nullable(),
+    label: z.string().nullable(),
+    created_at: z.iso.datetime(),
+    created_by_id: z.string().nullable(),
+    created_by_name: z.string().nullable(),
+    is_published: z.boolean(),
+    languages: z.array(zLanguageCode),
+    default_language: zLanguageCode
+});
+
+/**
+ * ContentStatus
+ *
+ * Where the draft stands against what respondents get.
+ */
+export const zContentStatus = z.object({
+    revision: z.int(),
+    published: zContentVersionSummary.nullable(),
+    has_unpublished_changes: z.boolean(),
+    pending_bump: z.enum([
+        'none',
+        'patch',
+        'minor',
+        'major'
+    ]),
+    next_semver: z.string(),
+    missing: z.record(z.string(), z.array(z.string()))
+});
+
+/**
  * CreateProjectRequest
  */
 export const zCreateProjectRequest = z.object({
@@ -1520,6 +1577,14 @@ export const zNumericStats = z.object({
 });
 
 /**
+ * PaginatedResponse[ContentVersionSummary]
+ */
+export const zPaginatedResponseContentVersionSummary = z.object({
+    total: z.int(),
+    items: z.array(zContentVersionSummary)
+});
+
+/**
  * ParticipantCreate
  */
 export const zParticipantCreate = z.object({
@@ -1528,6 +1593,16 @@ export const zParticipantCreate = z.object({
     pid: z.string().nullish(),
     participating: z.boolean().optional().default(true),
     lang: zLanguageCode.nullish()
+});
+
+/**
+ * ParticipantEmail
+ *
+ * One email to participants, its subject and HTML body per language.
+ */
+export const zParticipantEmail = z.object({
+    subject: zLocalizedText.optional(),
+    template: zLocalizedText.optional()
 });
 
 /**
@@ -1545,6 +1620,16 @@ export const zParticipantEmailAttachment = z.object({
 export const zParticipantEmailTemplateRequest = z.object({
     subject: z.string().nullish(),
     template: z.string().nullish()
+});
+
+/**
+ * ParticipantEmails
+ *
+ * The emails a project sends its participants.
+ */
+export const zParticipantEmails = z.object({
+    invite: zParticipantEmail.optional(),
+    reminder: zParticipantEmail.optional()
 });
 
 /**
@@ -1894,6 +1979,20 @@ export const zResendVerificationRequest = z.object({
 export const zResetPasswordRequest = z.object({
     new_password: z.string().min(8),
     token: z.string()
+});
+
+/**
+ * SaveVersionRequest
+ */
+export const zSaveVersionRequest = z.object({
+    label: z.string().max(200).nullish(),
+    publish: z.boolean().optional().default(false),
+    bump: z.enum([
+        'none',
+        'patch',
+        'minor',
+        'major'
+    ]).nullish()
 });
 
 /**
@@ -2826,6 +2925,31 @@ export const zAgentConfigs = z.object({
     answering: zAgentConfig.optional(),
     reformulation: zAgentConfig.optional(),
     visual: zVisualConfig.optional()
+});
+
+/**
+ * ContentVersionPublic
+ *
+ * A version with its content, for previewing it read-only.
+ */
+export const zContentVersionPublic = z.object({
+    id: z.string(),
+    version_no: z.int(),
+    kind: zContentVersionKind,
+    semver: z.string().nullable(),
+    label: z.string().nullable(),
+    created_at: z.iso.datetime(),
+    created_by_id: z.string().nullable(),
+    created_by_name: z.string().nullable(),
+    is_published: z.boolean(),
+    languages: z.array(zLanguageCode),
+    default_language: zLanguageCode,
+    guide: zLocalizedInterviewGuide,
+    consent: zLocalizedConsent.nullable(),
+    welcome: zLocalizedWelcome.nullable(),
+    emails: zParticipantEmails,
+    agent_configs: zAgentConfigs,
+    prompt_overrides: z.record(z.string(), z.string())
 });
 
 /**
@@ -4039,6 +4163,10 @@ export const zGetParticipantEmailTemplateResponse = zParticipantEmailTemplateReq
 
 export const zSetParticipantEmailTemplateBody = zParticipantEmailTemplateRequest;
 
+export const zSetParticipantEmailTemplateHeaders = z.object({
+    'if-match': z.string().nullish()
+});
+
 export const zSetParticipantEmailTemplatePath = z.object({
     project_id: z.string().nullable(),
     language: z.string().length(2)
@@ -4134,6 +4262,10 @@ export const zGetParticipantReminderEmailTemplateQuery = z.object({
 export const zGetParticipantReminderEmailTemplateResponse = zParticipantEmailTemplateRequest;
 
 export const zSetParticipantReminderEmailTemplateBody = zParticipantEmailTemplateRequest;
+
+export const zSetParticipantReminderEmailTemplateHeaders = z.object({
+    'if-match': z.string().nullish()
+});
 
 export const zSetParticipantReminderEmailTemplatePath = z.object({
     project_id: z.string().nullable(),
@@ -4284,6 +4416,10 @@ export const zGetProjectLanguagesPath = z.object({
     project_id: z.string()
 });
 
+export const zGetProjectLanguagesQuery = z.object({
+    draft: z.boolean().optional().default(false)
+});
+
 /**
  * Response Get Project Languages
  *
@@ -4382,6 +4518,10 @@ export const zGetLocalizedGuideQuery = z.object({
 export const zGetLocalizedGuideResponse = zLocalizedInterviewGuide;
 
 export const zUpdateGuideBody = zLocalizedInterviewGuide;
+
+export const zUpdateGuideHeaders = z.object({
+    'if-match': z.string().nullish()
+});
 
 export const zUpdateGuidePath = z.object({
     project_id: z.string().nullable()
@@ -4497,6 +4637,10 @@ export const zGetInterviewAgentsResponse = zAgentConfigs;
 
 export const zCreateInterviewAgentsBody = zAgentConfigs;
 
+export const zCreateInterviewAgentsHeaders = z.object({
+    'if-match': z.string().nullish()
+});
+
 export const zCreateInterviewAgentsPath = z.object({
     project_id: z.string().nullable()
 });
@@ -4544,6 +4688,10 @@ export const zGetInterviewModelsPath = z.object({
     project_id: z.string()
 });
 
+export const zGetInterviewModelsQuery = z.object({
+    draft: z.boolean().optional().default(false)
+});
+
 /**
  * Response Get Interview Models
  *
@@ -4571,6 +4719,10 @@ export const zGetConsentPath = z.object({
     language: z.string().length(2)
 });
 
+export const zGetConsentQuery = z.object({
+    draft: z.boolean().optional().default(false)
+});
+
 /**
  * Response Get Consent
  *
@@ -4595,6 +4747,10 @@ export const zGetLocalizedConsentResponse = zLocalizedConsent.nullable();
 
 export const zUpdateConsentBody = zLocalizedConsent;
 
+export const zUpdateConsentHeaders = z.object({
+    'if-match': z.string().nullish()
+});
+
 export const zUpdateConsentPath = z.object({
     project_id: z.string().nullable()
 });
@@ -4611,6 +4767,10 @@ export const zUpdateConsentResponse = zLocalizedConsent;
 export const zGetWelcomePath = z.object({
     project_id: z.string(),
     language: z.string().length(2)
+});
+
+export const zGetWelcomeQuery = z.object({
+    draft: z.boolean().optional().default(false)
 });
 
 /**
@@ -4636,6 +4796,10 @@ export const zGetLocalizedWelcomeQuery = z.object({
 export const zGetLocalizedWelcomeResponse = zLocalizedWelcome.nullable();
 
 export const zUpdateWelcomeBody = zLocalizedWelcome;
+
+export const zUpdateWelcomeHeaders = z.object({
+    'if-match': z.string().nullish()
+});
 
 export const zUpdateWelcomePath = z.object({
     project_id: z.string().nullable()
@@ -4968,6 +5132,87 @@ export const zRunSyntheticTestPath = z.object({
 export const zRunSyntheticTestQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+export const zGetContentStatusPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zGetContentStatusQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetContentStatusResponse = zContentStatus;
+
+export const zListContentVersionsPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zListContentVersionsQuery = z.object({
+    folder_id: z.string().nullish(),
+    offset: z.int().lte(100).optional().default(0),
+    limit: z.int().lte(100).optional().default(20),
+    column: z.string().optional().default('created_at'),
+    order: z.enum(['asc', 'desc']).optional().default('desc')
+});
+
+/**
+ * Successful Response
+ */
+export const zListContentVersionsResponse = zPaginatedResponseContentVersionSummary;
+
+export const zSaveContentVersionBody = zSaveVersionRequest;
+
+export const zSaveContentVersionHeaders = z.object({
+    'if-match': z.string().nullish()
+});
+
+export const zSaveContentVersionPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zSaveContentVersionQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zSaveContentVersionResponse = zContentVersionSummary;
+
+export const zGetContentVersionPath = z.object({
+    project_id: z.string().nullable(),
+    version_id: z.string()
+});
+
+export const zGetContentVersionQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetContentVersionResponse = zContentVersionPublic;
+
+export const zRestoreContentVersionHeaders = z.object({
+    'if-match': z.string().nullish()
+});
+
+export const zRestoreContentVersionPath = z.object({
+    project_id: z.string().nullable(),
+    version_id: z.string()
+});
+
+export const zRestoreContentVersionQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zRestoreContentVersionResponse = zContentStatus;
 
 export const zValidateInterviewParamsBody = zValidateExternalParamsRequest;
 

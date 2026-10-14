@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddCollaboratorData, AddCollaboratorErrors, AddCollaboratorResponses, AddIntervieweeData, AddIntervieweeErrors, AddIntervieweeResponses, AddMessageCodingData, AddMessageCodingErrors, AddMessageCodingResponses, AddMessageCommentData, AddMessageCommentErrors, AddMessageCommentResponses, AddParticipantData, AddParticipantErrors, AddParticipantResponses, AddParticipantsData, AddParticipantsErrors, AddParticipantsResponses, AddProjectLanguageData, AddProjectLanguageErrors, AddProjectLanguageResponses, BrowseEmbeddingsData, BrowseEmbeddingsErrors, BrowseEmbeddingsResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CheckProjectOwnerData, CheckProjectOwnerErrors, CheckProjectOwnerResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ClusterEmbeddingsData, ClusterEmbeddingsErrors, ClusterEmbeddingsResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateInterviewResumeLinkData, CreateInterviewResumeLinkErrors, CreateInterviewResumeLinkResponses, CreateInvitationData, CreateInvitationErrors, CreateInvitationResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, DeleteAccessRequestsData, DeleteAccessRequestsErrors, DeleteAccessRequestsResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteInvitationsData, DeleteInvitationsErrors, DeleteInvitationsResponses, DeleteMeData, DeleteMeErrors, DeleteMeResponses, DeleteMessageCodingData, DeleteMessageCodingErrors, DeleteMessageCodingResponses, DeleteMessageCommentData, DeleteMessageCommentErrors, DeleteMessageCommentResponses, DeleteParticipantData, DeleteParticipantEmailAttachmentData, DeleteParticipantEmailAttachmentErrors, DeleteParticipantEmailAttachmentResponses, DeleteParticipantErrors, DeleteParticipantReminderEmailAttachmentData, DeleteParticipantReminderEmailAttachmentErrors, DeleteParticipantReminderEmailAttachmentResponses, DeleteParticipantResponses, DeleteParticipantsData, DeleteParticipantsErrors, DeleteParticipantsResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, DeleteTestSetupData, DeleteTestSetupErrors, DeleteTestSetupResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, EditFolderData, EditFolderErrors, EditFolderResponses, ExitData, ExitResponses, ExportEmailBundleData, ExportEmailBundleErrors, ExportEmailBundleResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, ExportParticipantsData, ExportParticipantsErrors, ExportParticipantsResponses, FindEmbeddingsLikeCodeData, FindEmbeddingsLikeCodeErrors, FindEmbeddingsLikeCodeResponses, FindSimilarEmbeddingsData, FindSimilarEmbeddingsErrors, FindSimilarEmbeddingsResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateGuideSectionData, GenerateGuideSectionErrors, GenerateGuideSectionResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GenerateSectionQuestionData, GenerateSectionQuestionErrors, GenerateSectionQuestionResponses, GetAccessRequestsData, GetAccessRequestsResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetChatData, GetChatErrors, GetChatResponses, GetCodebookData, GetCodebookErrors, GetCodebookResponses, GetCodeCountsData, GetCodeCountsErrors, GetCodeCountsResponses, GetCodingsForMessagesData, GetCodingsForMessagesErrors, GetCodingsForMessagesResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetEmbeddingStatusData, GetEmbeddingStatusErrors, GetEmbeddingStatusResponses, GetExperimentsData, GetExperimentsResponses, GetFilteredMessagesCountData, GetFilteredMessagesCountErrors, GetFilteredMessagesCountResponses, GetFilteredMessagesData, GetFilteredMessagesErrors, GetFilteredMessagesResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFixedPersonasData, GetFixedPersonasErrors, GetFixedPersonasResponses, GetFoldersData, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewAudioData, GetInterviewAudioErrors, GetInterviewAudioResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetIntervieweeData, GetIntervieweeErrors, GetIntervieweeResponses, GetInterviewMessagesData, GetInterviewMessagesErrors, GetInterviewMessagesResponses, GetInterviewModelsData, GetInterviewModelsErrors, GetInterviewModelsResponses, GetInterviewResumeLinkData, GetInterviewResumeLinkErrors, GetInterviewResumeLinkResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetInvitationsData, GetInvitationsResponses, GetLanguagesData, GetLanguagesResponses, GetLocalizedConsentData, GetLocalizedConsentErrors, GetLocalizedConsentResponses, GetLocalizedGuideData, GetLocalizedGuideErrors, GetLocalizedGuideResponses, GetLocalizedWelcomeData, GetLocalizedWelcomeErrors, GetLocalizedWelcomeResponses, GetMessageCodingsData, GetMessageCodingsErrors, GetMessageCodingsResponses, GetMessageCommentsData, GetMessageCommentsErrors, GetMessageCommentsResponses, GetMessageContextAfterData, GetMessageContextAfterErrors, GetMessageContextAfterResponses, GetMessageContextBeforeData, GetMessageContextBeforeErrors, GetMessageContextBeforeResponses, GetMessageData, GetMessageErrors, GetMessageResponses, GetModelsData, GetModelsResponses, GetParticipantData, GetParticipantEmailTemplateData, GetParticipantEmailTemplateErrors, GetParticipantEmailTemplateResponses, GetParticipantErrors, GetParticipantReminderEmailTemplateData, GetParticipantReminderEmailTemplateErrors, GetParticipantReminderEmailTemplateResponses, GetParticipantResponses, GetParticipantsData, GetParticipantsErrors, GetParticipantsResponses, GetProjectData, GetProjectErrors, GetProjectItemDistributionsData, GetProjectItemDistributionsErrors, GetProjectItemDistributionsResponses, GetProjectLanguagesData, GetProjectLanguagesErrors, GetProjectLanguagesResponses, GetProjectMonitoringStatsData, GetProjectMonitoringStatsErrors, GetProjectMonitoringStatsResponses, GetProjectPermissionsData, GetProjectPermissionsErrors, GetProjectPermissionsResponses, GetProjectResponses, GetPromptDefaultsData, GetPromptDefaultsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetUsersData, GetUsersResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthResponses, ListParticipantEmailAttachmentsData, ListParticipantEmailAttachmentsErrors, ListParticipantEmailAttachmentsResponses, ListParticipantReminderEmailAttachmentsData, ListParticipantReminderEmailAttachmentsErrors, ListParticipantReminderEmailAttachmentsResponses, LoginData2, LoginErrors, LoginResponses, LogoutData, LogoutEverywhereData, LogoutEverywhereResponses, LogoutResponses, MeData, MeResponses, MoveProjectData, MoveProjectErrors, MoveProjectResponses, NewsletterSubscribeData, NewsletterSubscribeErrors, NewsletterSubscribeResponses, NewsletterUnsubscribeData, NewsletterUnsubscribeErrors, NewsletterUnsubscribeResponses, OptOutData, OptOutErrors, OptOutResponses, PlatformVersionData, PlatformVersionErrors, PlatformVersionResponses, PreviewProbingPromptsData, PreviewProbingPromptsErrors, PreviewProbingPromptsResponses, ProcessAccessRequestsData, ProcessAccessRequestsErrors, ProcessAccessRequestsResponses, ProxyToEc2ManagerDeleteData, ProxyToEc2ManagerDeleteErrors, ProxyToEc2ManagerDeleteResponses, ProxyToEc2ManagerGetData, ProxyToEc2ManagerGetErrors, ProxyToEc2ManagerGetResponses, ProxyToEc2ManagerPatchData, ProxyToEc2ManagerPatchErrors, ProxyToEc2ManagerPatchResponses, ProxyToEc2ManagerPostData, ProxyToEc2ManagerPostErrors, ProxyToEc2ManagerPostResponses, ProxyToEc2ManagerPutData, ProxyToEc2ManagerPutErrors, ProxyToEc2ManagerPutResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, ReadCodeFacetsData, ReadCodeFacetsErrors, ReadCodeFacetsResponses, ReadInterviewTranscriptData, ReadInterviewTranscriptErrors, ReadInterviewTranscriptResponses, ReadSurveyFacetsData, ReadSurveyFacetsErrors, ReadSurveyFacetsResponses, RedeemInterviewResumeLinkData, RedeemInterviewResumeLinkErrors, RedeemInterviewResumeLinkResponses, RefreshData, RefreshResponses, RegisterData, RegisterErrors, RegisterResponses, ReleasesData, ReleasesErrors, ReleasesResponses, RemoveCollaboratorData, RemoveCollaboratorErrors, RemoveCollaboratorResponses, RemoveProjectLanguageData, RemoveProjectLanguageErrors, RemoveProjectLanguageResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, ResendVerificationData, ResendVerificationErrors, ResendVerificationResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResetSessionData, ResetSessionErrors, ResetSessionResponses, RevokeInterviewResumeLinkData, RevokeInterviewResumeLinkErrors, RevokeInterviewResumeLinkResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SaveCodebookData, SaveCodebookErrors, SaveCodebookResponses, SearchEmbeddingsData, SearchEmbeddingsErrors, SearchEmbeddingsResponses, SendChatData, SendChatErrors, SendChatResponses, SendParticipantEmailsData, SendParticipantEmailsErrors, SendParticipantEmailsResponses, SendParticipantReminderEmailsData, SendParticipantReminderEmailsErrors, SendParticipantReminderEmailsResponses, SetDefaultLanguageData, SetDefaultLanguageErrors, SetDefaultLanguageResponses, SetParticipantEmailTemplateData, SetParticipantEmailTemplateErrors, SetParticipantEmailTemplateResponses, SetParticipantReminderEmailTemplateData, SetParticipantReminderEmailTemplateErrors, SetParticipantReminderEmailTemplateResponses, SynthesizeSpeechData, SynthesizeSpeechErrors, SynthesizeSpeechResponses, TranslateMissingData, TranslateMissingErrors, TranslateMissingResponses, TriggerEmbeddingBackfillData, TriggerEmbeddingBackfillErrors, TriggerEmbeddingBackfillResponses, UpdateAdminNoteData, UpdateAdminNoteErrors, UpdateAdminNoteResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateCollaboratorRoleData, UpdateCollaboratorRoleErrors, UpdateCollaboratorRoleResponses, UpdateConsentData, UpdateConsentErrors, UpdateConsentResponses, UpdateExternalParamsData, UpdateExternalParamsErrors, UpdateExternalParamsResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateFixedPersonasData, UpdateFixedPersonasErrors, UpdateFixedPersonasResponses, UpdateGuideData, UpdateGuideErrors, UpdateGuideResponses, UpdateInvitationData, UpdateInvitationErrors, UpdateInvitationResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateMessageCodingData, UpdateMessageCodingErrors, UpdateMessageCodingResponses, UpdateMessageCommentData, UpdateMessageCommentErrors, UpdateMessageCommentResponses, UpdateMyEmailData, UpdateMyEmailErrors, UpdateMyEmailResponses, UpdateMyPasswordData, UpdateMyPasswordErrors, UpdateMyPasswordResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UpdateWelcomeData, UpdateWelcomeErrors, UpdateWelcomeResponses, UploadAudioData, UploadAudioErrors, UploadAudioResponses, UploadImageData, UploadImageErrors, UploadImageResponses, UploadInterviewImageData, UploadInterviewImageErrors, UploadInterviewImageResponses, UploadParticipantEmailAttachmentsData, UploadParticipantEmailAttachmentsErrors, UploadParticipantEmailAttachmentsResponses, UploadParticipantReminderEmailAttachmentsData, UploadParticipantReminderEmailAttachmentsErrors, UploadParticipantReminderEmailAttachmentsResponses, UploadParticipantsData, UploadParticipantsErrors, UploadParticipantsResponses, UploadWelcomeVideoData, UploadWelcomeVideoErrors, UploadWelcomeVideoResponses, ValidateInterviewParamsData, ValidateInterviewParamsErrors, ValidateInterviewParamsResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses, VerifyLoginCodeData, VerifyLoginCodeErrors, VerifyLoginCodeResponses, VersionData, VersionResponses } from './types.gen';
+import type { AddCollaboratorData, AddCollaboratorErrors, AddCollaboratorResponses, AddIntervieweeData, AddIntervieweeErrors, AddIntervieweeResponses, AddMessageCodingData, AddMessageCodingErrors, AddMessageCodingResponses, AddMessageCommentData, AddMessageCommentErrors, AddMessageCommentResponses, AddParticipantData, AddParticipantErrors, AddParticipantResponses, AddParticipantsData, AddParticipantsErrors, AddParticipantsResponses, AddProjectLanguageData, AddProjectLanguageErrors, AddProjectLanguageResponses, BrowseEmbeddingsData, BrowseEmbeddingsErrors, BrowseEmbeddingsResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CheckProjectOwnerData, CheckProjectOwnerErrors, CheckProjectOwnerResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ClusterEmbeddingsData, ClusterEmbeddingsErrors, ClusterEmbeddingsResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateInterviewResumeLinkData, CreateInterviewResumeLinkErrors, CreateInterviewResumeLinkResponses, CreateInvitationData, CreateInvitationErrors, CreateInvitationResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, DeleteAccessRequestsData, DeleteAccessRequestsErrors, DeleteAccessRequestsResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteInvitationsData, DeleteInvitationsErrors, DeleteInvitationsResponses, DeleteMeData, DeleteMeErrors, DeleteMeResponses, DeleteMessageCodingData, DeleteMessageCodingErrors, DeleteMessageCodingResponses, DeleteMessageCommentData, DeleteMessageCommentErrors, DeleteMessageCommentResponses, DeleteParticipantData, DeleteParticipantEmailAttachmentData, DeleteParticipantEmailAttachmentErrors, DeleteParticipantEmailAttachmentResponses, DeleteParticipantErrors, DeleteParticipantReminderEmailAttachmentData, DeleteParticipantReminderEmailAttachmentErrors, DeleteParticipantReminderEmailAttachmentResponses, DeleteParticipantResponses, DeleteParticipantsData, DeleteParticipantsErrors, DeleteParticipantsResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, DeleteTestSetupData, DeleteTestSetupErrors, DeleteTestSetupResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, EditFolderData, EditFolderErrors, EditFolderResponses, ExitData, ExitResponses, ExportEmailBundleData, ExportEmailBundleErrors, ExportEmailBundleResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, ExportParticipantsData, ExportParticipantsErrors, ExportParticipantsResponses, FindEmbeddingsLikeCodeData, FindEmbeddingsLikeCodeErrors, FindEmbeddingsLikeCodeResponses, FindSimilarEmbeddingsData, FindSimilarEmbeddingsErrors, FindSimilarEmbeddingsResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateGuideSectionData, GenerateGuideSectionErrors, GenerateGuideSectionResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GenerateSectionQuestionData, GenerateSectionQuestionErrors, GenerateSectionQuestionResponses, GetAccessRequestsData, GetAccessRequestsResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetChatData, GetChatErrors, GetChatResponses, GetCodebookData, GetCodebookErrors, GetCodebookResponses, GetCodeCountsData, GetCodeCountsErrors, GetCodeCountsResponses, GetCodingsForMessagesData, GetCodingsForMessagesErrors, GetCodingsForMessagesResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetContentStatusData, GetContentStatusErrors, GetContentStatusResponses, GetContentVersionData, GetContentVersionErrors, GetContentVersionResponses, GetEmbeddingStatusData, GetEmbeddingStatusErrors, GetEmbeddingStatusResponses, GetExperimentsData, GetExperimentsResponses, GetFilteredMessagesCountData, GetFilteredMessagesCountErrors, GetFilteredMessagesCountResponses, GetFilteredMessagesData, GetFilteredMessagesErrors, GetFilteredMessagesResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFixedPersonasData, GetFixedPersonasErrors, GetFixedPersonasResponses, GetFoldersData, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewAudioData, GetInterviewAudioErrors, GetInterviewAudioResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetIntervieweeData, GetIntervieweeErrors, GetIntervieweeResponses, GetInterviewMessagesData, GetInterviewMessagesErrors, GetInterviewMessagesResponses, GetInterviewModelsData, GetInterviewModelsErrors, GetInterviewModelsResponses, GetInterviewResumeLinkData, GetInterviewResumeLinkErrors, GetInterviewResumeLinkResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetInvitationsData, GetInvitationsResponses, GetLanguagesData, GetLanguagesResponses, GetLocalizedConsentData, GetLocalizedConsentErrors, GetLocalizedConsentResponses, GetLocalizedGuideData, GetLocalizedGuideErrors, GetLocalizedGuideResponses, GetLocalizedWelcomeData, GetLocalizedWelcomeErrors, GetLocalizedWelcomeResponses, GetMessageCodingsData, GetMessageCodingsErrors, GetMessageCodingsResponses, GetMessageCommentsData, GetMessageCommentsErrors, GetMessageCommentsResponses, GetMessageContextAfterData, GetMessageContextAfterErrors, GetMessageContextAfterResponses, GetMessageContextBeforeData, GetMessageContextBeforeErrors, GetMessageContextBeforeResponses, GetMessageData, GetMessageErrors, GetMessageResponses, GetModelsData, GetModelsResponses, GetParticipantData, GetParticipantEmailTemplateData, GetParticipantEmailTemplateErrors, GetParticipantEmailTemplateResponses, GetParticipantErrors, GetParticipantReminderEmailTemplateData, GetParticipantReminderEmailTemplateErrors, GetParticipantReminderEmailTemplateResponses, GetParticipantResponses, GetParticipantsData, GetParticipantsErrors, GetParticipantsResponses, GetProjectData, GetProjectErrors, GetProjectItemDistributionsData, GetProjectItemDistributionsErrors, GetProjectItemDistributionsResponses, GetProjectLanguagesData, GetProjectLanguagesErrors, GetProjectLanguagesResponses, GetProjectMonitoringStatsData, GetProjectMonitoringStatsErrors, GetProjectMonitoringStatsResponses, GetProjectPermissionsData, GetProjectPermissionsErrors, GetProjectPermissionsResponses, GetProjectResponses, GetPromptDefaultsData, GetPromptDefaultsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetUsersData, GetUsersResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthResponses, ListContentVersionsData, ListContentVersionsErrors, ListContentVersionsResponses, ListParticipantEmailAttachmentsData, ListParticipantEmailAttachmentsErrors, ListParticipantEmailAttachmentsResponses, ListParticipantReminderEmailAttachmentsData, ListParticipantReminderEmailAttachmentsErrors, ListParticipantReminderEmailAttachmentsResponses, LoginData2, LoginErrors, LoginResponses, LogoutData, LogoutEverywhereData, LogoutEverywhereResponses, LogoutResponses, MeData, MeResponses, MoveProjectData, MoveProjectErrors, MoveProjectResponses, NewsletterSubscribeData, NewsletterSubscribeErrors, NewsletterSubscribeResponses, NewsletterUnsubscribeData, NewsletterUnsubscribeErrors, NewsletterUnsubscribeResponses, OptOutData, OptOutErrors, OptOutResponses, PlatformVersionData, PlatformVersionErrors, PlatformVersionResponses, PreviewProbingPromptsData, PreviewProbingPromptsErrors, PreviewProbingPromptsResponses, ProcessAccessRequestsData, ProcessAccessRequestsErrors, ProcessAccessRequestsResponses, ProxyToEc2ManagerDeleteData, ProxyToEc2ManagerDeleteErrors, ProxyToEc2ManagerDeleteResponses, ProxyToEc2ManagerGetData, ProxyToEc2ManagerGetErrors, ProxyToEc2ManagerGetResponses, ProxyToEc2ManagerPatchData, ProxyToEc2ManagerPatchErrors, ProxyToEc2ManagerPatchResponses, ProxyToEc2ManagerPostData, ProxyToEc2ManagerPostErrors, ProxyToEc2ManagerPostResponses, ProxyToEc2ManagerPutData, ProxyToEc2ManagerPutErrors, ProxyToEc2ManagerPutResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, ReadCodeFacetsData, ReadCodeFacetsErrors, ReadCodeFacetsResponses, ReadInterviewTranscriptData, ReadInterviewTranscriptErrors, ReadInterviewTranscriptResponses, ReadSurveyFacetsData, ReadSurveyFacetsErrors, ReadSurveyFacetsResponses, RedeemInterviewResumeLinkData, RedeemInterviewResumeLinkErrors, RedeemInterviewResumeLinkResponses, RefreshData, RefreshResponses, RegisterData, RegisterErrors, RegisterResponses, ReleasesData, ReleasesErrors, ReleasesResponses, RemoveCollaboratorData, RemoveCollaboratorErrors, RemoveCollaboratorResponses, RemoveProjectLanguageData, RemoveProjectLanguageErrors, RemoveProjectLanguageResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, ResendVerificationData, ResendVerificationErrors, ResendVerificationResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResetSessionData, ResetSessionErrors, ResetSessionResponses, RestoreContentVersionData, RestoreContentVersionErrors, RestoreContentVersionResponses, RevokeInterviewResumeLinkData, RevokeInterviewResumeLinkErrors, RevokeInterviewResumeLinkResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SaveCodebookData, SaveCodebookErrors, SaveCodebookResponses, SaveContentVersionData, SaveContentVersionErrors, SaveContentVersionResponses, SearchEmbeddingsData, SearchEmbeddingsErrors, SearchEmbeddingsResponses, SendChatData, SendChatErrors, SendChatResponses, SendParticipantEmailsData, SendParticipantEmailsErrors, SendParticipantEmailsResponses, SendParticipantReminderEmailsData, SendParticipantReminderEmailsErrors, SendParticipantReminderEmailsResponses, SetDefaultLanguageData, SetDefaultLanguageErrors, SetDefaultLanguageResponses, SetParticipantEmailTemplateData, SetParticipantEmailTemplateErrors, SetParticipantEmailTemplateResponses, SetParticipantReminderEmailTemplateData, SetParticipantReminderEmailTemplateErrors, SetParticipantReminderEmailTemplateResponses, SynthesizeSpeechData, SynthesizeSpeechErrors, SynthesizeSpeechResponses, TranslateMissingData, TranslateMissingErrors, TranslateMissingResponses, TriggerEmbeddingBackfillData, TriggerEmbeddingBackfillErrors, TriggerEmbeddingBackfillResponses, UpdateAdminNoteData, UpdateAdminNoteErrors, UpdateAdminNoteResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateCollaboratorRoleData, UpdateCollaboratorRoleErrors, UpdateCollaboratorRoleResponses, UpdateConsentData, UpdateConsentErrors, UpdateConsentResponses, UpdateExternalParamsData, UpdateExternalParamsErrors, UpdateExternalParamsResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateFixedPersonasData, UpdateFixedPersonasErrors, UpdateFixedPersonasResponses, UpdateGuideData, UpdateGuideErrors, UpdateGuideResponses, UpdateInvitationData, UpdateInvitationErrors, UpdateInvitationResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateMessageCodingData, UpdateMessageCodingErrors, UpdateMessageCodingResponses, UpdateMessageCommentData, UpdateMessageCommentErrors, UpdateMessageCommentResponses, UpdateMyEmailData, UpdateMyEmailErrors, UpdateMyEmailResponses, UpdateMyPasswordData, UpdateMyPasswordErrors, UpdateMyPasswordResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UpdateWelcomeData, UpdateWelcomeErrors, UpdateWelcomeResponses, UploadAudioData, UploadAudioErrors, UploadAudioResponses, UploadImageData, UploadImageErrors, UploadImageResponses, UploadInterviewImageData, UploadInterviewImageErrors, UploadInterviewImageResponses, UploadParticipantEmailAttachmentsData, UploadParticipantEmailAttachmentsErrors, UploadParticipantEmailAttachmentsResponses, UploadParticipantReminderEmailAttachmentsData, UploadParticipantReminderEmailAttachmentsErrors, UploadParticipantReminderEmailAttachmentsResponses, UploadParticipantsData, UploadParticipantsErrors, UploadParticipantsResponses, UploadWelcomeVideoData, UploadWelcomeVideoErrors, UploadWelcomeVideoResponses, ValidateInterviewParamsData, ValidateInterviewParamsErrors, ValidateInterviewParamsResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses, VerifyLoginCodeData, VerifyLoginCodeErrors, VerifyLoginCodeResponses, VersionData, VersionResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -1205,6 +1205,8 @@ export class Participants {
     
     /**
      * Get Participant Email Template
+     *
+     * The draft's template; `ETag` is the content's revision.
      */
     public static getParticipantEmailTemplate<ThrowOnError extends boolean = false>(options: Options<GetParticipantEmailTemplateData, ThrowOnError>): RequestResult<GetParticipantEmailTemplateResponses, GetParticipantEmailTemplateErrors, ThrowOnError> {
         return (options.client ?? client).get<GetParticipantEmailTemplateResponses, GetParticipantEmailTemplateErrors, ThrowOnError>({
@@ -1220,6 +1222,9 @@ export class Participants {
     
     /**
      * Set Participant Email Template
+     *
+     * Save the draft's template; it is sent once published. A 412 if the
+     * content changed since `If-Match`'s revision.
      */
     public static setParticipantEmailTemplate<ThrowOnError extends boolean = false>(options: Options<SetParticipantEmailTemplateData, ThrowOnError>): RequestResult<SetParticipantEmailTemplateResponses, SetParticipantEmailTemplateErrors, ThrowOnError> {
         return (options.client ?? client).put<SetParticipantEmailTemplateResponses, SetParticipantEmailTemplateErrors, ThrowOnError>({
@@ -1308,6 +1313,8 @@ export class Participants {
     
     /**
      * Get Participant Reminder Email Template
+     *
+     * The draft's template; `ETag` is the content's revision.
      */
     public static getParticipantReminderEmailTemplate<ThrowOnError extends boolean = false>(options: Options<GetParticipantReminderEmailTemplateData, ThrowOnError>): RequestResult<GetParticipantReminderEmailTemplateResponses, GetParticipantReminderEmailTemplateErrors, ThrowOnError> {
         return (options.client ?? client).get<GetParticipantReminderEmailTemplateResponses, GetParticipantReminderEmailTemplateErrors, ThrowOnError>({
@@ -1323,6 +1330,9 @@ export class Participants {
     
     /**
      * Set Participant Reminder Email Template
+     *
+     * Save the draft's template; it is sent once published. A 412 if the
+     * content changed since `If-Match`'s revision.
      */
     public static setParticipantReminderEmailTemplate<ThrowOnError extends boolean = false>(options: Options<SetParticipantReminderEmailTemplateData, ThrowOnError>): RequestResult<SetParticipantReminderEmailTemplateResponses, SetParticipantReminderEmailTemplateErrors, ThrowOnError> {
         return (options.client ?? client).put<SetParticipantReminderEmailTemplateResponses, SetParticipantReminderEmailTemplateErrors, ThrowOnError>({
@@ -1499,7 +1509,15 @@ export class Projects {
      * List the languages the project offers
      */
     public static getProjectLanguages<ThrowOnError extends boolean = false>(options: Options<GetProjectLanguagesData, ThrowOnError>): RequestResult<GetProjectLanguagesResponses, GetProjectLanguagesErrors, ThrowOnError> {
-        return (options.client ?? client).get<GetProjectLanguagesResponses, GetProjectLanguagesErrors, ThrowOnError>({ url: '/api/projects/{project_id}/available_languages', ...options });
+        return (options.client ?? client).get<GetProjectLanguagesResponses, GetProjectLanguagesErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/available_languages',
+            ...options
+        });
     }
     
     /**
@@ -1630,6 +1648,7 @@ export class Projects {
      * Get Localized Guide
      *
      * The guide with its text in every language: what the editor edits.
+     * `ETag` is the content's revision, to send back as `If-Match`.
      */
     public static getLocalizedGuide<ThrowOnError extends boolean = false>(options: Options<GetLocalizedGuideData, ThrowOnError>): RequestResult<GetLocalizedGuideResponses, GetLocalizedGuideErrors, ThrowOnError> {
         return (options.client ?? client).get<GetLocalizedGuideResponses, GetLocalizedGuideErrors, ThrowOnError>({
@@ -1645,6 +1664,9 @@ export class Projects {
     
     /**
      * Update Guide
+     *
+     * Save the guide. A 412 if the content changed since `If-Match`'s
+     * revision; the new revision comes back as `ETag`.
      */
     public static updateGuide<ThrowOnError extends boolean = false>(options: Options<UpdateGuideData, ThrowOnError>): RequestResult<UpdateGuideResponses, UpdateGuideErrors, ThrowOnError> {
         return (options.client ?? client).put<UpdateGuideResponses, UpdateGuideErrors, ThrowOnError>({
@@ -1685,6 +1707,7 @@ export class Projects {
      *
      * Machine-translate the text the guide, consent and welcome lack in
      * `lang` from the default language. Text `lang` already has is kept.
+     * The new revision comes back as `ETag`.
      */
     public static translateMissing<ThrowOnError extends boolean = false>(options: Options<TranslateMissingData, ThrowOnError>): RequestResult<TranslateMissingResponses, TranslateMissingErrors, ThrowOnError> {
         return (options.client ?? client).post<TranslateMissingResponses, TranslateMissingErrors, ThrowOnError>({
@@ -1866,9 +1889,19 @@ export class Projects {
     
     /**
      * Get Interview Models
+     *
+     * The models respondents' interviews run on: the published version's.
      */
     public static getInterviewModels<ThrowOnError extends boolean = false>(options: Options<GetInterviewModelsData, ThrowOnError>): RequestResult<GetInterviewModelsResponses, GetInterviewModelsErrors, ThrowOnError> {
-        return (options.client ?? client).get<GetInterviewModelsResponses, GetInterviewModelsErrors, ThrowOnError>({ url: '/api/projects/{project_id}/models', ...options });
+        return (options.client ?? client).get<GetInterviewModelsResponses, GetInterviewModelsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/models',
+            ...options
+        });
     }
     
     /**
@@ -1915,10 +1948,19 @@ export class Projects {
     /**
      * Get Consent
      *
-     * The consent as respondents in `language` see it.
+     * The consent as respondents in `language` see it: the published
+     * version's, a 409 until there is one.
      */
     public static getConsent<ThrowOnError extends boolean = false>(options: Options<GetConsentData, ThrowOnError>): RequestResult<GetConsentResponses, GetConsentErrors, ThrowOnError> {
-        return (options.client ?? client).get<GetConsentResponses, GetConsentErrors, ThrowOnError>({ url: '/api/projects/{project_id}/guide/consent/{language}', ...options });
+        return (options.client ?? client).get<GetConsentResponses, GetConsentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/guide/consent/{language}',
+            ...options
+        });
     }
     
     /**
@@ -1960,10 +2002,19 @@ export class Projects {
     /**
      * Get Welcome
      *
-     * The welcome screen as respondents in `language` see it.
+     * The welcome screen as respondents in `language` see it: the published
+     * version's, a 409 until there is one.
      */
     public static getWelcome<ThrowOnError extends boolean = false>(options: Options<GetWelcomeData, ThrowOnError>): RequestResult<GetWelcomeResponses, GetWelcomeErrors, ThrowOnError> {
-        return (options.client ?? client).get<GetWelcomeResponses, GetWelcomeErrors, ThrowOnError>({ url: '/api/projects/{project_id}/guide/welcome/{language}', ...options });
+        return (options.client ?? client).get<GetWelcomeResponses, GetWelcomeErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/guide/welcome/{language}',
+            ...options
+        });
     }
     
     /**
@@ -2446,6 +2497,104 @@ export class Synthesize {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
+        });
+    }
+}
+
+export class Versions {
+    /**
+     * Get Content Status
+     *
+     * Whether the draft differs from what respondents get, what publishing
+     * it would be numbered, and what blocks publishing.
+     */
+    public static getContentStatus<ThrowOnError extends boolean = false>(options: Options<GetContentStatusData, ThrowOnError>): RequestResult<GetContentStatusResponses, GetContentStatusErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetContentStatusResponses, GetContentStatusErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/versions/status',
+            ...options
+        });
+    }
+    
+    /**
+     * List Content Versions
+     *
+     * The history, newest first.
+     */
+    public static listContentVersions<ThrowOnError extends boolean = false>(options: Options<ListContentVersionsData, ThrowOnError>): RequestResult<ListContentVersionsResponses, ListContentVersionsErrors, ThrowOnError> {
+        return (options.client ?? client).get<ListContentVersionsResponses, ListContentVersionsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/versions',
+            ...options
+        });
+    }
+    
+    /**
+     * Save Content Version
+     *
+     * Save the draft as a version, and publish it if asked.
+     *
+     * `If-Match` is the revision the caller is looking at: publishing what
+     * someone else changed since would release work nobody reviewed (412).
+     * Publishing is refused (409) while a language lacks text, or for a bump
+     * lower than the changes need.
+     */
+    public static saveContentVersion<ThrowOnError extends boolean = false>(options: Options<SaveContentVersionData, ThrowOnError>): RequestResult<SaveContentVersionResponses, SaveContentVersionErrors, ThrowOnError> {
+        return (options.client ?? client).post<SaveContentVersionResponses, SaveContentVersionErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/versions',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Get Content Version
+     *
+     * A version with its content, for previewing it.
+     */
+    public static getContentVersion<ThrowOnError extends boolean = false>(options: Options<GetContentVersionData, ThrowOnError>): RequestResult<GetContentVersionResponses, GetContentVersionErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetContentVersionResponses, GetContentVersionErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/versions/{version_id}',
+            ...options
+        });
+    }
+    
+    /**
+     * Restore Content Version
+     *
+     * Replace the draft with a version, keeping the draft it replaces in
+     * the history. Publishes nothing. The new revision comes back as `ETag`.
+     */
+    public static restoreContentVersion<ThrowOnError extends boolean = false>(options: Options<RestoreContentVersionData, ThrowOnError>): RequestResult<RestoreContentVersionResponses, RestoreContentVersionErrors, ThrowOnError> {
+        return (options.client ?? client).post<RestoreContentVersionResponses, RestoreContentVersionErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/versions/{version_id}/restore',
+            ...options
         });
     }
 }
