@@ -1,37 +1,64 @@
 import { toast } from 'svelte-sonner';
 
 import { browser } from '$app/environment';
+import type { ContentPart } from '$lib/api/types.gen';
 
-// A project's content -- guide, consent, welcome, agents, participant emails --
-// has one revision on the server (`projectcontent.revision`). Every content
-// GET returns it as `ETag`, and every content write must send it back as
-// `If-Match`: a write based on a revision someone else has since moved on from
-// is refused with a 412, rather than silently overwriting their work.
+// Each part of a project's content -- guide, consent, welcome, agents,
+// participant emails, languages -- has its own revision on the server
+// (`projectcontent.<part>_revision`), and the content as a whole one more that
+// moves with any of them. A part's GET returns its revision as `ETag`, and
+// that part's write must send it back as `If-Match`: a write based on a
+// revision someone else has since moved on from is refused with a 412, rather
+// than silently overwriting their work. Saving one part never makes another
+// look stale.
 //
-// One revision for all of it, so it is held here rather than per page: the
-// setup pages, the publish control and the email editor all write against the
-// same counter. Only ever set in the browser -- module state on the server is
-// shared between every request.
+// Publishing and restoring cover every part, so they write against the whole
+// (`'content'`): the versions status `ETag`, taken when the publish dialog or
+// the history loads it.
+//
+// Held here rather than per page, so the setup pages, the publish control and
+// the email editor share them. Only ever set in the browser -- module state on
+// the server is shared between every request.
+
+/** A part, or `'content'` for the whole. */
+export type RevisionKey = ContentPart | 'content';
 
 class ContentRevision {
 	projectId = $state<string | null>(null);
-	etag = $state<string | null>(null);
+	etags = $state<Partial<Record<RevisionKey, string>>>({});
+	/**
+	 * Counts the part revisions this tab has seen move, for what follows the
+	 * draft (the publish badge, the history). Not moved by `'content'`, which
+	 * those read themselves.
+	 */
+	changes = $state(0);
 
-	/** Record the revision a page loaded, or a response carried. */
-	set(projectId: string, etag: string | null | undefined) {
+	/** Record the revision of `key` a page loaded, or a response carried. */
+	set(projectId: string, key: RevisionKey, etag: string | null | undefined) {
 		if (!browser || !etag) return;
-		this.projectId = projectId;
-		this.etag = etag;
+		if (this.projectId !== projectId) {
+			this.projectId = projectId;
+			this.etags = {};
+		}
+		if (this.etags[key] === etag) return;
+		this.etags[key] = etag;
+		if (key !== 'content') this.changes++;
 	}
 
 	/** Record the `ETag` on `response`, if it has one. */
-	take(projectId: string, response: Response | undefined) {
-		this.set(projectId, response?.headers.get('etag'));
+	take(projectId: string, key: RevisionKey, response: Response | undefined) {
+		this.set(projectId, key, response?.headers.get('etag'));
 	}
 
-	/** The `If-Match` header for a write to `projectId`'s content. */
-	headers(projectId: string): { 'if-match'?: string } {
-		return this.projectId === projectId && this.etag ? { 'if-match': this.etag } : {};
+	/** Record a revision a response body carried, rather than its `ETag`. */
+	setNumber(projectId: string, key: RevisionKey, revision: number | undefined) {
+		if (revision !== undefined) this.set(projectId, key, `"${revision}"`);
+	}
+
+	/** The `If-Match` header for a write to `key` of `projectId`'s content. */
+	headers(projectId: string, key: RevisionKey): { 'if-match'?: string } {
+		const etag = this.projectId === projectId ? this.etags[key] : undefined;
+		return etag ? { 'if-match': etag } : {};
 	}
 }
 
@@ -51,23 +78,24 @@ function staleRevision(result: WriteResult): number | null {
 }
 
 /**
- * Run a content write with `If-Match`, and record the revision it returns.
+ * Run a write to `key` with `If-Match`, and record the revision it returns.
  *
  * When someone else saved in between (412), asks what to do instead of failing
  * quietly: *Overwrite* retries the same write against the current revision,
  * replacing what they saved; *Reload* (or dismissing) gives up, resolving with
- * the 412 so the caller keeps its unsaved edits on screen. `what` names the
- * thing saved, for the message.
+ * the 412 so the caller keeps its unsaved edits on screen. `what` names what
+ * the caller loaded, for the message.
  */
 export async function saveWithRevision<R extends WriteResult>(
 	projectId: string,
+	key: RevisionKey,
 	what: string,
 	write: (headers: { 'if-match'?: string }) => Promise<R>
 ): Promise<R> {
-	const result = await write(contentRevision.headers(projectId));
+	const result = await write(contentRevision.headers(projectId, key));
 	const current = staleRevision(result);
 	if (current === null) {
-		contentRevision.take(projectId, result.response);
+		contentRevision.take(projectId, key, result.response);
 		return result;
 	}
 
@@ -85,7 +113,7 @@ export async function saveWithRevision<R extends WriteResult>(
 				label: 'Overwrite',
 				onClick: async () => {
 					const retried = await write({ 'if-match': `"${current}"` });
-					contentRevision.take(projectId, retried.response);
+					contentRevision.take(projectId, key, retried.response);
 					settle(retried);
 				}
 			},

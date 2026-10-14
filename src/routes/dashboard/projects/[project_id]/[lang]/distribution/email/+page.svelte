@@ -156,7 +156,7 @@
 				: await Participants.getParticipantEmailTemplate({
 						path: { project_id, language }
 					});
-		contentRevision.take(project_id, res.response);
+		contentRevision.take(project_id, 'emails', res.response);
 		if (res.error) {
 			toast.error(`Failed to load ${k} email template`);
 			states[k].templateHtml = '';
@@ -181,7 +181,7 @@
 		const k = kind;
 		states[k].saving = true;
 		const body = { subject: states[k].subject || null, template: states[k].templateHtml || null };
-		const res = await saveWithRevision(project_id, `the ${k} email`, (headers) =>
+		const res = await saveWithRevision(project_id, 'emails', `the ${k} email`, (headers) =>
 			k === 'reminder'
 				? Participants.setParticipantReminderEmailTemplate({
 						path: { project_id, language },

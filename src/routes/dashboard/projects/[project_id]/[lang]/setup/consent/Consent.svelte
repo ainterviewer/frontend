@@ -39,7 +39,7 @@
 	// at. Later ones come only from this page's own saves, so reloading the
 	// page data (which the parent keys this component on) cannot make stale
 	// edits look current.
-	onMount(() => contentRevision.set(projectId, revision));
+	onMount(() => contentRevision.set(projectId, 'consent', revision));
 	let language = $derived(page.params.lang ?? '');
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 	// The consent in every language; this page edits `language`'s text.
@@ -76,7 +76,7 @@
 	async function saveConsent(): Promise<boolean> {
 		let saved = false;
 		saving = true;
-		const result = await saveWithRevision(projectId, 'the consent', (headers) =>
+		const result = await saveWithRevision(projectId, 'consent', 'the consent', (headers) =>
 			Projects.updateConsent({ path: { project_id: projectId }, body: consent, headers })
 		);
 
@@ -180,6 +180,8 @@
 		const { data, error } = await Projects.translateMissing({
 			path: { project_id: projectId, lang: language }
 		});
+		// The guide's text was translated too, but that is the guide editor's.
+		contentRevision.setNumber(projectId, 'consent', data?.revisions.consent);
 		translating = false;
 		if (error || !data?.consent) {
 			console.error('Failed to translate', error);

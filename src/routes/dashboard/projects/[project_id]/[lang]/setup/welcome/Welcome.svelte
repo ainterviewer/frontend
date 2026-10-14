@@ -40,7 +40,7 @@
 	// at. Later ones come only from this page's own saves, so reloading the
 	// page data (which the parent keys this component on) cannot make stale
 	// edits look current.
-	onMount(() => contentRevision.set(projectId, revision));
+	onMount(() => contentRevision.set(projectId, 'welcome', revision));
 	let language = $derived(page.params.lang ?? '');
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
@@ -108,7 +108,7 @@
 		const { data, error, response } = await Projects.getLocalizedWelcome({
 			path: { project_id: projectId }
 		});
-		contentRevision.take(projectId, response);
+		contentRevision.take(projectId, 'welcome', response);
 		if (error) {
 			console.error('Failed to load welcome data:', error);
 			toast.error('Failed to load welcome data.');
@@ -143,7 +143,7 @@
 		}
 
 		const body = { ...texts, email, video_file_name, with_id: withId };
-		const result = await saveWithRevision(projectId, 'the welcome screen', (headers) =>
+		const result = await saveWithRevision(projectId, 'welcome', 'the welcome screen', (headers) =>
 			Projects.updateWelcome({ path: { project_id: projectId }, body, headers })
 		);
 
@@ -271,6 +271,8 @@
 		const { data, error } = await Projects.translateMissing({
 			path: { project_id: projectId, lang: language }
 		});
+		// The guide's text was translated too, but that is the guide editor's.
+		contentRevision.setNumber(projectId, 'welcome', data?.revisions.welcome);
 		translating = false;
 		if (error || !data?.welcome) {
 			console.error('Failed to translate', error);

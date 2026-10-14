@@ -108,7 +108,7 @@
 	// at. Later ones come only from this page's own saves, so reloading the
 	// page data (which the parent keys this component on) cannot make stale
 	// edits look current.
-	onMount(() => contentRevision.set(projectId, revision));
+	onMount(() => contentRevision.set(projectId, 'guide', revision));
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
 	// Modal state
@@ -132,7 +132,7 @@
 		}
 		// The generated guide is already persisted server-side and replaces the
 		// guide in every language; the others show as untranslated.
-		contentRevision.take(projectId, response);
+		contentRevision.take(projectId, 'guide', response);
 		applyGuide(data);
 		savedSnapshot = getSnapshot();
 	}
@@ -217,10 +217,10 @@
 	async function translateMissing() {
 		if (getSnapshot() !== savedSnapshot && !(await save())) return;
 		translating = true;
-		const { data, error, response } = await Projects.translateMissing({
+		const { data, error } = await Projects.translateMissing({
 			path: { project_id: projectId, lang }
 		});
-		contentRevision.take(projectId, response);
+		contentRevision.setNumber(projectId, 'guide', data?.revisions.guide);
 		translating = false;
 		if (error || !data) {
 			console.error('Failed to translate', error);

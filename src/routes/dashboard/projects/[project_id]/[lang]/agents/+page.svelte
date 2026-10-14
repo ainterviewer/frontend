@@ -17,7 +17,7 @@
 	let agents = $state<AgentConfigs>(untrack(() => data.agents));
 	// The revision the configuration on screen was loaded at; later ones come
 	// only from this page's own saves.
-	onMount(() => contentRevision.set(page.params.project_id ?? '', data.revision));
+	onMount(() => contentRevision.set(page.params.project_id ?? '', 'agents', data.revision));
 	let models = $state<string[]>(untrack(() => data.models));
 	let promptDefaults = $state<ProbingPromptSlots>(untrack(() => data.promptDefaults));
 
@@ -148,7 +148,7 @@
 			agents.probing.few_shot_examples = examples.length > 0 ? examples : null;
 		}
 
-		const res = await saveWithRevision(projectId, 'the agents', (headers) =>
+		const res = await saveWithRevision(projectId, 'agents', 'the agents', (headers) =>
 			Projects.createInterviewAgents({
 				path: { project_id: projectId },
 				body: agents as AgentConfigs,

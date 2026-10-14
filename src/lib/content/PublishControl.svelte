@@ -43,18 +43,22 @@
 	let label = $state('');
 	let bump = $state<Bump>('patch');
 
-	// Not taken into `contentRevision`: the status reports the newest revision,
-	// and adopting it would let this page's next save overwrite edits it never
-	// loaded. Only saves and loads move the revision this page writes against.
+	// The status's `ETag` is the whole content's revision, which publishing
+	// writes against: publishing anything changed after the dialog showed it
+	// would release work nobody reviewed. The parts' revisions, which the
+	// editors write against, are theirs alone.
 	async function loadStatus() {
-		const { data } = await Versions.getContentStatus({ path: { project_id: projectId } });
+		const { data, response } = await Versions.getContentStatus({
+			path: { project_id: projectId }
+		});
 		status = data ?? null;
 		if (data) lastStatus[projectId] = data;
+		contentRevision.take(projectId, 'content', response);
 	}
 
 	// Again whenever anything here saves: the badge follows the draft.
 	$effect(() => {
-		void contentRevision.etag;
+		void contentRevision.changes;
 		void projectId;
 		loadStatus();
 	});
@@ -80,7 +84,7 @@
 
 	async function publish() {
 		publishing = true;
-		const result = await saveWithRevision(projectId, 'this page', (headers) =>
+		const result = await saveWithRevision(projectId, 'content', 'the publish dialog', (headers) =>
 			Versions.saveContentVersion({
 				path: { project_id: projectId },
 				body: { publish: true, label: label.trim() || null, bump },
@@ -110,7 +114,11 @@
 	<button
 		type="button"
 		class="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-2 text-sm font-medium whitespace-nowrap text-gray-700 hover:bg-gray-200"
-		onclick={() => (historyOpen = true)}
+		onclick={() => {
+			// Restoring writes against the content as the history shows it.
+			historyOpen = true;
+			void loadStatus();
+		}}
 		title="Version history"
 		aria-label="Version history"
 	>

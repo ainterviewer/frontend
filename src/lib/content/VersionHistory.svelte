@@ -56,7 +56,7 @@
 
 	async function saveVersion() {
 		saving = true;
-		const result = await saveWithRevision(projectId, 'this page', (headers) =>
+		const result = await saveWithRevision(projectId, 'content', 'the history', (headers) =>
 			Versions.saveContentVersion({
 				path: { project_id: projectId },
 				body: { publish: false, label: label.trim() || null },
@@ -94,7 +94,7 @@
 		) {
 			return;
 		}
-		const result = await saveWithRevision(projectId, 'this page', (headers) =>
+		const result = await saveWithRevision(projectId, 'content', 'the history', (headers) =>
 			Versions.restoreContentVersion({
 				path: { project_id: projectId, version_id: version.id },
 				headers
@@ -124,7 +124,7 @@
 	// On opening, and again when a save here moves the draft: the list may
 	// have grown.
 	$effect(() => {
-		void contentRevision.etag;
+		void contentRevision.changes;
 		if (open) load();
 	});
 </script>

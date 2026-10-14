@@ -52,7 +52,7 @@ export async function saveGuide(
 	}
 
 	const body = trimOptions(localGuide(top, sections, questions, externalParams));
-	const result = await saveWithRevision(projectId, 'the guide', (headers) =>
+	const result = await saveWithRevision(projectId, 'guide', 'the guide', (headers) =>
 		Projects.updateGuide({ path: { project_id: projectId }, body, headers })
 	);
 	if (isStale(result)) return { status: 'stale' };
