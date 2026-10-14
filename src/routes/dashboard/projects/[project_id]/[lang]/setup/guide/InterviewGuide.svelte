@@ -453,6 +453,8 @@
 		{defaultLanguageName}
 		isDefault={lang === guideStore.defaultLang}
 		{untranslated}
+		inProgress={availableLanguages.find((l: ProjectLanguage) => l.code === lang)?.in_progress ??
+			false}
 		{translating}
 		disabled={saving}
 		onTranslate={translateMissing}

@@ -42,7 +42,7 @@
 			throw new Error('Failed to add language');
 		}
 		await invalidateAll();
-		toast.success('Language added');
+		toast.success('Language added, in progress until you mark it ready');
 	}
 
 	/** The backend refuses to drop the default or the last language; show its reason. */
@@ -91,6 +91,24 @@
 		await invalidateAll();
 		toast.success('Default language updated');
 	}
+
+	async function handleSetInProgress(code: string, inProgress: boolean) {
+		const { error } = await Projects.setLanguageInProgress({
+			path: { project_id: projectId, language: code },
+			body: { in_progress: inProgress }
+		});
+		if (error) {
+			console.error('Failed to change language progress', error);
+			toast.error(removalError(error));
+			return;
+		}
+		await invalidateAll();
+		toast.success(
+			inProgress
+				? 'Marked in progress: left out of publishing'
+				: 'Marked ready: included in the next publish'
+		);
+	}
 </script>
 
 <ProjectLanguageMenu
@@ -100,6 +118,7 @@
 	onAddLanguage={() => (showAddModal = true)}
 	onRemoveLanguage={handleRemove}
 	onSetDefault={handleSetDefault}
+	onSetInProgress={handleSetInProgress}
 />
 
 <AddLanguageModal

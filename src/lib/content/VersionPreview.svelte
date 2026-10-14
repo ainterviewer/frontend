@@ -102,6 +102,10 @@
 	);
 	const overriddenTemplates = $derived(Object.keys(version.prompt_overrides ?? {}));
 
+	function inProgress(code: string) {
+		return version.languages_in_progress.includes(code);
+	}
+
 	function languageName(code: string) {
 		return availableLanguages.find((l) => l.code === code)?.name ?? code;
 	}
@@ -251,9 +255,16 @@
 									? 'bg-primary text-white'
 									: 'bg-gray-100 text-gray-600 hover:bg-gray-200'}"
 								onclick={() => (language = code)}
-								title={languageName(code)}
+								title={inProgress(code)
+									? `${languageName(code)}: in progress, not offered to respondents`
+									: languageName(code)}
 							>
 								{code}{code === version.default_language ? ' (default)' : ''}
+								{#if inProgress(code)}
+									<span
+										class="ml-0.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle"
+									></span>
+								{/if}
 							</button>
 						{/each}
 					</div>
@@ -263,6 +274,12 @@
 
 		<!-- Body -->
 		<div class="flex flex-col gap-3 overflow-y-auto px-6 py-4">
+			{#if inProgress(language)}
+				<p class="rounded bg-amber-50 px-3 py-2 text-xs text-amber-800">
+					<i class="fa-solid fa-person-digging mr-1"></i>
+					{languageName(language)} was in progress in this version: respondents were not offered it.
+				</p>
+			{/if}
 			{#if tab === 'guide'}
 				{@render block('Framing', guide.framing, 'only the AI interviewer sees this')}
 				{@render block('Introduction', guide.introduction)}

@@ -8,6 +8,8 @@
 		defaultLanguageName: string;
 		isDefault: boolean;
 		untranslated: number;
+		/** The language is still being translated: not offered to respondents. */
+		inProgress?: boolean;
 		translating?: boolean;
 		disabled?: boolean;
 		onTranslate?: () => void;
@@ -18,6 +20,7 @@
 		defaultLanguageName,
 		isDefault,
 		untranslated,
+		inProgress = false,
 		translating = false,
 		disabled = false,
 		onTranslate
@@ -35,6 +38,13 @@
 				Editing the <span class="font-semibold">{languageName}</span> text. Everything else is shared
 				by every language, so changing it changes it everywhere.
 			</p>
+			{#if inProgress}
+				<p class="mt-0.5">
+					<i class="fa-solid fa-person-digging mr-1"></i>
+					{languageName} is in progress: publishing leaves it out, so respondents are not offered it.
+					Mark it ready in the language menu when it is done.
+				</p>
+			{/if}
 			{#if untranslated}
 				<p class="mt-0.5">
 					<i class="fa-solid fa-language mr-1"></i>

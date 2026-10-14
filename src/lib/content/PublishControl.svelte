@@ -194,6 +194,17 @@
 					</div>
 				{/if}
 
+				{#if status.languages_in_progress.length && status.has_unpublished_changes}
+					<p class="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+						<i class="fa-solid fa-person-digging mr-1"></i>
+						Left out, still in progress:
+						{status.languages_in_progress.map(languageName).join(', ')}. Respondents are not offered {status
+							.languages_in_progress.length === 1
+							? 'it'
+							: 'them'} until marked ready in the language menu.
+					</p>
+				{/if}
+
 				{#if status.published && status.has_unpublished_changes}
 					<fieldset class="flex flex-col gap-2">
 						<legend class="mb-1 text-sm font-medium text-gray-700">Kind of change</legend>

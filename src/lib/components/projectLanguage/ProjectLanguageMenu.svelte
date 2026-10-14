@@ -7,7 +7,8 @@
 		onLanguageSwitch,
 		onAddLanguage,
 		onRemoveLanguage,
-		onSetDefault
+		onSetDefault,
+		onSetInProgress
 	}: {
 		currentLang: string;
 		availableLanguages: ProjectLanguage[];
@@ -15,14 +16,15 @@
 		onAddLanguage: () => void;
 		onRemoveLanguage: (code: string) => void;
 		onSetDefault: (code: string) => void;
+		/** Mark a language as still being translated (left out of publishing) or ready. */
+		onSetInProgress: (code: string, inProgress: boolean) => void;
 	} = $props();
 
 	let open = $state(false);
 	let pendingRemove = $state<string | null>(null);
 
-	let currentLanguageName = $derived(
-		availableLanguages.find((l) => l.code === currentLang)?.name ?? currentLang
-	);
+	let currentLanguage = $derived(availableLanguages.find((l) => l.code === currentLang));
+	let currentLanguageName = $derived(currentLanguage?.name ?? currentLang);
 
 	function closeMenu() {
 		open = false;
@@ -60,6 +62,11 @@
 		closeMenu();
 	}
 
+	function handleSetInProgress(code: string, inProgress: boolean) {
+		onSetInProgress(code, inProgress);
+		closeMenu();
+	}
+
 	function handleWindowClick() {
 		if (open) {
 			closeMenu();
@@ -77,6 +84,12 @@
 	>
 		<i class="fa-solid fa-globe mr-2"></i>
 		{currentLanguageName}
+		{#if currentLanguage?.in_progress}
+			<span
+				class="ml-1 h-2 w-2 rounded-full bg-amber-500 align-middle"
+				title="In progress: not offered to respondents"
+			></span>
+		{/if}
 		<i class="fa-solid fa-chevron-down ml-2 text-xs"></i>
 	</button>
 
@@ -142,15 +155,44 @@
 									Default
 								</span>
 							{:else}
-								<button
-									type="button"
-									class="rounded p-1.5 text-gray-400 hover:bg-gray-200 hover:text-gray-700"
-									title="Make {lang.name} the default"
-									aria-label="Make {lang.name} the default"
-									onclick={() => handleSetDefault(lang.code)}
-								>
-									<i class="fa-regular fa-star text-xs"></i>
-								</button>
+								<!-- Still being translated: in the draft, but publishing leaves it
+								     out. Click to mark it ready; the default can never be. -->
+								{#if lang.in_progress}
+									<!-- A status that is also its own undo: the check hints at the
+									     action, and hovering or focusing names it. -->
+									<button
+										type="button"
+										class="group flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 hover:bg-green-100 hover:text-green-800 focus-visible:bg-green-100 focus-visible:text-green-800"
+										title="Not offered to respondents, and its missing text does not block publishing. Click to mark {lang.name} ready."
+										aria-label="{lang.name} is in progress. Mark it ready"
+										onclick={() => handleSetInProgress(lang.code, false)}
+									>
+										<span class="group-hover:hidden group-focus-visible:hidden">In progress</span>
+										<span class="hidden group-hover:inline group-focus-visible:inline">
+											Mark ready
+										</span>
+										<i class="fa-solid fa-check text-[10px] opacity-60 group-hover:opacity-100"></i>
+									</button>
+								{:else}
+									<button
+										type="button"
+										class="rounded p-1.5 text-gray-400 hover:bg-gray-200 hover:text-gray-700"
+										title="Mark {lang.name} as in progress: leave it out of publishing"
+										aria-label="Mark {lang.name} as in progress"
+										onclick={() => handleSetInProgress(lang.code, true)}
+									>
+										<i class="fa-solid fa-person-digging text-xs"></i>
+									</button>
+									<button
+										type="button"
+										class="rounded p-1.5 text-gray-400 hover:bg-gray-200 hover:text-gray-700"
+										title="Make {lang.name} the default"
+										aria-label="Make {lang.name} the default"
+										onclick={() => handleSetDefault(lang.code)}
+									>
+										<i class="fa-regular fa-star text-xs"></i>
+									</button>
+								{/if}
 
 								{#if availableLanguages.length > 1}
 									<button

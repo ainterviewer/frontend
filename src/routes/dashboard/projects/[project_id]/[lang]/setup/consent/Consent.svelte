@@ -215,6 +215,7 @@
 		{defaultLanguageName}
 		isDefault={language === defaultLang}
 		{untranslated}
+		inProgress={availableLanguages.find((l) => l.code === language)?.in_progress ?? false}
 		{translating}
 		disabled={saving}
 		onTranslate={translateMissing}
