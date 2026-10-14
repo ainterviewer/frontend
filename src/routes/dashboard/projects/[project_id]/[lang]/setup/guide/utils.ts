@@ -39,10 +39,10 @@ export function normalizeGeneratedQuestions(value: unknown): GeneratedQuestions 
 	};
 }
 
-// Converts the API's index-based condition targets into the editor's id-based
-// targets, resolving each index against the given (already id-bearing) local
-// sections/questions. Unresolvable targets keep an empty id, which validation
-// then flags. Returns null for questions without conditions.
+// Converts the API's condition targets into the editor's, adding the section
+// each target question currently sits in as the lookup hint. A target missing
+// from the guide keeps its id but no section, which validation then flags.
+// Returns null for questions without conditions.
 export function localizeConditions(
 	apiConditions: Conditions | null | undefined,
 	sections: GuideSection[],
@@ -53,16 +53,17 @@ export function localizeConditions(
 		action: apiConditions.action,
 		conditions: apiConditions.conditions.map((cond) => {
 			const { question_context, ...rest } = cond;
-			const targetSection = sections[question_context.section];
-			const targetQuestion = targetSection
-				? (questionsMap[targetSection.id] || [])[question_context.question]
-				: undefined;
+			const target = resolveConditionTarget(
+				{ sectionId: '', questionId: question_context.question_id },
+				sections,
+				questionsMap
+			);
 			return {
 				...rest,
 				question_context: {
 					part: question_context.part,
-					sectionId: targetSection?.id ?? '',
-					questionId: targetQuestion?.id ?? ''
+					sectionId: target.sectionId,
+					questionId: question_context.question_id
 				}
 			};
 		})
@@ -117,9 +118,9 @@ export function resolveConditionTarget(
 	return miss;
 }
 
-// Inverse of localizeConditions: resolves the editor's id-based targets back to
-// the current section/question indices for the API. A missing target resolves
-// to -1 (blocked earlier by validateGuideConditions on save).
+// Inverse of localizeConditions: sends the target's id along with its current
+// position. The server derives the position from the id anyway; a missing
+// target is blocked earlier by validateGuideConditions on save.
 export function delocalizeConditions(
 	localConditions: LocalConditionSet | null | undefined,
 	sections: GuideSection[],
@@ -137,8 +138,8 @@ export function delocalizeConditions(
 				...rest,
 				question_context: {
 					...ctxRest,
-					section: target.sectionIndex,
-					question: target.questionIndex
+					question_id: questionId,
+					question_index: [target.sectionIndex, target.questionIndex]
 				}
 			};
 		})
@@ -153,7 +154,9 @@ export function mapToLocal(data: InterviewGuide): {
 	const questions: Record<string, GuideQuestion[]> = {};
 
 	(data.question_sections || []).forEach((section) => {
-		const sId = generateId();
+		// Ids come from the server; a guide that somehow lacks one (none should,
+		// see the backend migration 8bc0617dbbd2) gets a fresh one here.
+		const sId = section.id ?? generateId();
 		sections.push({
 			...section,
 			id: sId,
@@ -163,7 +166,7 @@ export function mapToLocal(data: InterviewGuide): {
 
 		questions[sId] = (section.questions || []).map((q) => ({
 			...q,
-			id: generateId(),
+			id: q.id ?? generateId(),
 			alternative_main_questions: q.alternative_main_questions || [],
 			image: q.image || null,
 			survey_item: q.survey_item || null,
@@ -180,8 +183,8 @@ export function mapToLocal(data: InterviewGuide): {
 		}));
 	});
 
-	// Second pass: now that ids exist for every section/question, convert each
-	// condition's index-based target into an id-based one.
+	// Second pass: now that every section/question is in place, find the
+	// section each condition's target sits in.
 	(data.question_sections || []).forEach((section, sIdx) => {
 		(section.questions || []).forEach((q, qIdx) => {
 			if (!q.conditions) return;
@@ -202,13 +205,12 @@ export function mapFromLocal(
 ): QuestionSectionOutput[] {
 	return sections.map((section) => {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { id, questions, ...rest } = section;
-		const sectionQuestions = questionsMap[id] || [];
+		const { questions, ...rest } = section;
+		const sectionQuestions = questionsMap[section.id] || [];
 		return {
 			...rest,
 			questions: sectionQuestions.map((q) => {
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const { id: qId, conditions, ...qRest } = q;
+				const { conditions, ...qRest } = q;
 				return {
 					...qRest,
 					conditions: delocalizeConditions(conditions, sections, questionsMap)

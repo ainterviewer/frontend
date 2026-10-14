@@ -7,11 +7,12 @@ import type {
 	QuestionSectionQuestion as QuestionSectionOutput
 } from '$lib/api/types.gen';
 
-// While editing, a condition points at its target section/question by their
-// stable local ids rather than by array index, so reordering keeps a condition
-// aimed at the same target. Indices are re-derived from these ids at the API
-// boundary (see localizeConditions / delocalizeConditions in utils).
-export type LocalQuestionContext = Omit<QuestionContext, 'section' | 'question'> & {
+// While editing, a condition points at its target by the question's id, with
+// the section it was last seen in as a lookup hint, rather than by position, so
+// reordering keeps a condition aimed at the same target. The position the API
+// also carries is re-derived at the boundary (see localizeConditions /
+// delocalizeConditions in utils).
+export type LocalQuestionContext = Omit<QuestionContext, 'question_index' | 'question_id'> & {
 	sectionId: string;
 	questionId: string;
 };

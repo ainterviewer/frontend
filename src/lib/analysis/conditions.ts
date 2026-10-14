@@ -171,8 +171,8 @@ function negateOperator(operator: 'AND' | 'OR' | null | undefined): 'AND' | 'OR'
 function readsSelf(condition: Condition, self: ConditionRef | undefined): boolean {
 	return (
 		self !== undefined &&
-		condition.question_context.section === self.section &&
-		condition.question_context.question === self.question
+		condition.question_context.question_index[0] === self.section &&
+		condition.question_context.question_index[1] === self.question
 	);
 }
 
@@ -186,7 +186,10 @@ function describeCondition(
 	// reads as a different question besides.
 	const target = readsSelf(condition, self)
 		? 'this answer'
-		: questionNumber(condition.question_context.section, condition.question_context.question);
+		: questionNumber(
+				condition.question_context.question_index[0],
+				condition.question_context.question_index[1]
+			);
 
 	// The condition's own polarity, read from whichever side the prefix states.
 	const negated = negate ? !condition.negated : condition.negated;
@@ -237,8 +240,8 @@ export function summarizeConditions(
 		refs: conditions.conditions
 			.filter((condition) => !readsSelf(condition, self))
 			.map((condition) => ({
-				section: condition.question_context.section,
-				question: condition.question_context.question
+				section: condition.question_context.question_index[0],
+				question: condition.question_context.question_index[1]
 			})),
 		outcome: selfOnly ? (SELF_ACTION_OUTCOME[conditions.action] ?? 'applied') : null
 	};
@@ -263,8 +266,8 @@ export function buildGateMap(items: ItemDistribution[]): Map<string, Gate[]> {
 			if (readsSelf(condition, { section: item.section, question: item.main_question })) continue;
 
 			const key = questionKey(
-				condition.question_context.section,
-				condition.question_context.question
+				condition.question_context.question_index[0],
+				condition.question_context.question_index[1]
 			);
 			const gate: Gate = {
 				section: item.section,
