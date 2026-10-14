@@ -114,9 +114,13 @@
 
 	// The shared model may not be in the fetched list (e.g. a model that was
 	// removed since it was configured); include it so the picker can show its name.
-	let basicModelOptions = $derived(
-		sharedModel && !models.includes(sharedModel) ? [sharedModel, ...models] : models
-	);
+	let basicModelOptions = $derived(modelOptions(sharedModel));
+
+	// The same for one agent's picker: without its current model among the
+	// options, a select bound to it renders blank.
+	function modelOptions(current: string | null | undefined): string[] {
+		return current && !models.includes(current) ? [current, ...models] : models;
+	}
 
 	// A list slot stores null (stays linked to the default) when it matches the
 	// default, otherwise the edited list.
@@ -281,7 +285,7 @@
 						value={sharedModel}
 					>
 						<option value="">---</option>
-						{#each models as model (model)}
+						{#each basicModelOptions as model (model)}
 							<option value={model}>{model}</option>
 						{/each}
 					</select>
@@ -300,7 +304,7 @@
 								bind:value={agents.probing!.model}
 								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							>
-								{#each models as model (model)}
+								{#each modelOptions(agents.probing!.model) as model (model)}
 									<option value={model}>{model}</option>
 								{/each}
 							</select>
@@ -335,7 +339,7 @@
 								bind:value={agents.classification!.model}
 								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							>
-								{#each models as model (model)}
+								{#each modelOptions(agents.classification!.model) as model (model)}
 									<option value={model}>{model}</option>
 								{/each}
 							</select>
@@ -371,7 +375,7 @@
 								bind:value={agents.reformulation!.model}
 								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							>
-								{#each models as model (model)}
+								{#each modelOptions(agents.reformulation!.model) as model (model)}
 									<option value={model}>{model}</option>
 								{/each}
 							</select>
@@ -407,7 +411,7 @@
 								bind:value={agents.guide!.model}
 								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
 							>
-								{#each models as model (model)}
+								{#each modelOptions(agents.guide!.model) as model (model)}
 									<option value={model}>{model}</option>
 								{/each}
 							</select>
