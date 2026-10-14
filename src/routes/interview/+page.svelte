@@ -29,6 +29,7 @@
 		externalParams?: Record<string, string> | null;
 		paramsInvalid?: boolean;
 		referer?: string | null;
+		notPublished?: boolean;
 	}
 
 	let { data }: { data: PageData } = $props();
@@ -39,6 +40,9 @@
 	const interviewConfig = $derived(data.interviewConfig);
 	const isDemoBlocked = $derived(data.isProjectOwnerDemoUser && interviewType === 'distributed');
 	const isAuthBlocked = $derived(data.authError === true);
+	const notPublished = $derived(data.notPublished === true);
+	// A test runs the draft of the consent and welcome, like its guide.
+	const draft = $derived(interviewType !== 'distributed');
 
 	// Help/Exit modal text — owned by the frontend, selected by language and
 	// interpolated with the underlying model(s) returned by the interview config.
@@ -74,7 +78,7 @@
 	let loadError = $state(false);
 
 	onMount(() => {
-		if (isDemoBlocked || isAuthBlocked || paramsInvalid) {
+		if (isDemoBlocked || isAuthBlocked || paramsInvalid || notPublished) {
 			isInitializing = false;
 			return;
 		}
@@ -139,7 +143,8 @@
 			path: {
 				project_id: projectId,
 				language: lang
-			}
+			},
+			query: { draft }
 		});
 
 		if (welcomeError) {
@@ -162,7 +167,8 @@
 			path: {
 				project_id: projectId,
 				language: lang
-			}
+			},
+			query: { draft }
 		});
 
 		if (consentError) {
@@ -221,7 +227,8 @@
 			path: {
 				project_id: projectId,
 				language: lang
-			}
+			},
+			query: { draft }
 		});
 
 		if (welcomeError) {
@@ -273,6 +280,16 @@
 	{:else if isAuthBlocked}
 		<div class="flex flex-1 items-center justify-center px-6">
 			<p class="text-center text-gray-600">You must be logged in to access this interview.</p>
+		</div>
+	{:else if notPublished}
+		<div class="flex flex-1 items-center justify-center px-6">
+			<div class="max-w-md text-center">
+				<h2 class="mb-2 text-lg font-semibold text-gray-900">This study is not open yet</h2>
+				<p class="text-sm text-gray-600">
+					It has not been published. Please try the link again later, or contact the person who
+					shared it with you.
+				</p>
+			</div>
 		</div>
 	{:else if loadError}
 		<div class="flex flex-1 items-center justify-center px-6">

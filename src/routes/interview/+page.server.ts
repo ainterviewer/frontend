@@ -55,6 +55,10 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 
 	const { cookieHeader } = locals;
 
+	// Respondents get the published version of the project; a test runs the
+	// draft, which the backend serves only to the project's collaborators.
+	const draft = interviewType !== 'distributed';
+
 	const { data: interviewConfig, error: configError } = await Projects.getInterviewConfig({
 		headers: { cookie: cookieHeader },
 		path: { project_id }
@@ -62,7 +66,8 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 
 	const { data: interviewModels, error: modelsError } = await Projects.getInterviewModels({
 		headers: { cookie: cookieHeader },
-		path: { project_id }
+		path: { project_id },
+		query: { draft }
 	});
 
 	const { data: isProjectOwnerDemoUser } = await Projects.checkProjectOwner({
@@ -85,10 +90,14 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 	// defaulting to a hardcoded 'EN' silently disagreed with the backend
 	// (which falls back to the project's default) for every project without an
 	// English localization.
-	const { data: projectLanguages } = await Projects.getProjectLanguages({
-		headers: { cookie: cookieHeader },
-		path: { project_id }
-	});
+	const { data: projectLanguages, response: languagesResponse } =
+		await Projects.getProjectLanguages({
+			headers: { cookie: cookieHeader },
+			path: { project_id },
+			query: { draft }
+		});
+	// Nothing has been published yet, so there is nothing to answer.
+	const notPublished = languagesResponse?.status === 409;
 	const languages = projectLanguages ?? [];
 
 	const requested = langParam
@@ -167,6 +176,7 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 		referer,
 		availableLanguages,
 		paramsInvalid,
-		resumeInterviewId
+		resumeInterviewId,
+		notPublished
 	};
 };

@@ -502,7 +502,7 @@
 
 <svelte:window onpointermove={(e) => (pointerY = e.clientY)} />
 
-{#key `${data.project_id}-${data.lang}`}
+{#key `${data.project_id}-${data.lang}-${data.revision}`}
 	<DragDropProvider
 		{sensors}
 		onDragOver={handleDragOver}
@@ -515,6 +515,7 @@
 			projectName={data.project_name}
 			availableLanguages={data.available_languages}
 			externalParams={data.external_params}
+			revision={data.revision}
 		/>
 
 		<AssistanceChat

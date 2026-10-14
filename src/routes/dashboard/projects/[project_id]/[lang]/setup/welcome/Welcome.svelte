@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
@@ -7,6 +7,8 @@
 	import { Projects } from '$lib/api';
 	import type { Consent, LocalizedWelcome, ProjectLanguage } from '$lib/api/types.gen';
 	import { WelcomeModal } from '$lib/components/modals';
+	import WelcomePreview from '$lib/components/preview/WelcomePreview.svelte';
+	import { contentRevision, isStale, saveWithRevision } from '$lib/content/revision.svelte';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
@@ -20,16 +22,25 @@
 		initialData?: LocalizedWelcome | null;
 		availableLanguages?: ProjectLanguage[];
 		projectName?: string;
+		/** The content revision this was loaded at (its `ETag`). */
+		revision?: string | null;
 	}
 
 	let {
 		initialData = null,
 		availableLanguages: initialAvailableLanguages = [],
-		projectName = 'Interview Guide'
+		projectName = 'Interview Guide',
+		revision = null
 	}: Props = $props();
 	const initialVideoFileName = $derived(initialData?.video_file_name || null);
 
 	let projectId = $derived(page.params.project_id ?? '');
+
+	// Adopted once, at mount: the revision the content on screen was loaded
+	// at. Later ones come only from this page's own saves, so reloading the
+	// page data (which the parent keys this component on) cannot make stale
+	// edits look current.
+	onMount(() => contentRevision.set(projectId, revision));
 	let language = $derived(page.params.lang ?? '');
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
@@ -94,9 +105,10 @@
 
 	async function loadData() {
 		if (!projectId) return;
-		const { data, error } = await Projects.getLocalizedWelcome({
+		const { data, error, response } = await Projects.getLocalizedWelcome({
 			path: { project_id: projectId }
 		});
+		contentRevision.take(projectId, response);
 		if (error) {
 			console.error('Failed to load welcome data:', error);
 			toast.error('Failed to load welcome data.');
@@ -110,7 +122,8 @@
 		}
 	}
 
-	async function saveWelcome() {
+	async function saveWelcome(): Promise<boolean> {
+		let saved = false;
 		saving = true;
 
 		// The video is shared by every language: stored first, then named in
@@ -124,19 +137,22 @@
 			if (upload.error || !upload.data) {
 				toast.error('Error when uploading the video.');
 				saving = false;
-				return;
+				return false;
 			}
 			video_file_name = upload.data;
 		}
 
-		const { error } = await Projects.updateWelcome({
-			path: { project_id: projectId },
-			body: { ...texts, email, video_file_name, with_id: withId }
-		});
+		const body = { ...texts, email, video_file_name, with_id: withId };
+		const result = await saveWithRevision(projectId, 'the welcome screen', (headers) =>
+			Projects.updateWelcome({ path: { project_id: projectId }, body, headers })
+		);
 
-		if (!error) {
+		if (isStale(result)) {
+			// Told already; the unsaved edits stay on screen.
+		} else if (!result.error) {
 			savedSnapshot = getSnapshot();
 			await invalidateAll();
+			saved = true;
 			toast.success('Welcome saved successfully.');
 			loadData();
 			videoFile = null;
@@ -144,6 +160,7 @@
 			toast.error('Error when saving welcome.');
 		}
 		saving = false;
+		return saved;
 	}
 
 	function handleFileChange(event: Event) {
@@ -171,8 +188,10 @@
 	let showExportPdfModal = $state(false);
 
 	async function fetchConsent(): Promise<Consent | null> {
+		// The draft's, like the welcome being exported.
 		const { data } = await Projects.getConsent({
-			path: { project_id: projectId, language: language }
+			path: { project_id: projectId, language: language },
+			query: { draft: true }
 		});
 		return data ?? null;
 	}
@@ -425,71 +444,7 @@
 
 				<!-- Modal Preview Container -->
 				<div class="rounded-lg border border-gray-200 bg-gray-100 p-4 shadow-inner">
-					<div class="overflow-hidden rounded-lg border border-gray-300 bg-white shadow-xl">
-						<!-- Simulated Modal -->
-						<div class="max-h-[600px] overflow-y-auto p-6">
-							<h2 class="mb-4 text-xl font-bold text-gray-900">
-								{title || 'Welcome Title'}
-							</h2>
-
-							{#if videoPreviewUrl}
-								<div class="mb-4 overflow-hidden rounded-lg bg-black">
-									<video controls class="w-full">
-										<source src={videoPreviewUrl} type="video/mp4" />
-										Your browser does not support the video tag.
-									</video>
-								</div>
-							{/if}
-
-							<div class="prose prose-sm max-w-none whitespace-pre-wrap text-gray-700">
-								{#if text}
-									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-									{@html text}
-								{:else}
-									<span class="text-gray-400 italic">
-										Your welcome message will appear here...
-									</span>
-								{/if}
-							</div>
-
-							<hr class="my-4 border-gray-200" />
-
-							<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-								<p class="mb-2">
-									If you wish to withdraw your consent or change your answers, please contact
-									{#if email}
-										<a href="mailto:{email}" class="font-medium text-primary hover:underline">
-											{email}
-										</a>
-									{:else}
-										<span class="text-gray-400">[contact email]</span>
-									{/if}
-									with a reference to the following code:
-								</p>
-
-								<div
-									class="my-2 flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
-								>
-									<code class="font-mono text-sm text-gray-700">&lt;interview-id&gt;</code>
-									<i class="fa-solid fa-fingerprint text-gray-400"></i>
-								</div>
-
-								<p class="text-xs text-gray-500">
-									It is your own responsibility to store this code securely before starting the
-									interview.
-								</p>
-							</div>
-
-							<div class="mt-6">
-								<button
-									class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm"
-									disabled
-								>
-									Start Interview
-								</button>
-							</div>
-						</div>
-					</div>
+					<WelcomePreview {title} {text} videoUrl={videoPreviewUrl} {email} />
 				</div>
 
 				<p class="mt-3 text-center text-xs text-gray-500">
@@ -533,21 +488,3 @@
 	onClose={() => (showFullscreenModal = false)}
 	isPreview={true}
 />
-
-<style>
-	#preview :global(a) {
-		color: #2563eb;
-		text-decoration: underline;
-		font-weight: 500;
-		transition:
-			color 0.2s ease,
-			text-decoration-color 0.2s ease;
-	}
-	#preview :global(a):hover {
-		color: #1547b0;
-		cursor: pointer;
-	}
-	#preview :global(a):active {
-		color: #0f2d6e;
-	}
-</style>

@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { AgentConfigs, ProbingAgentConfig, ProbingPromptSlots } from '$lib/api/types.gen';
+	import PublishControl from '$lib/content/PublishControl.svelte';
+	import { contentRevision, isStale, saveWithRevision } from '$lib/content/revision.svelte';
 
 	import type { PageData } from './$types';
 
@@ -13,6 +15,9 @@
 	let saving = $state(false);
 	let mode = $state<'basic' | 'advanced'>('basic');
 	let agents = $state<AgentConfigs>(untrack(() => data.agents));
+	// The revision the configuration on screen was loaded at; later ones come
+	// only from this page's own saves.
+	onMount(() => contentRevision.set(page.params.project_id ?? '', data.revision));
 	let models = $state<string[]>(untrack(() => data.models));
 	let promptDefaults = $state<ProbingPromptSlots>(untrack(() => data.promptDefaults));
 
@@ -120,8 +125,9 @@
 		return arraysEqual(items, fallback) ? null : items;
 	}
 
-	async function saveConfig() {
+	async function saveConfig(): Promise<boolean> {
 		saving = true;
+		let saved = false;
 
 		const persona = personaText.trim();
 		const slots: ProbingPromptSlots = {
@@ -138,18 +144,25 @@
 			agents.probing.few_shot_examples = examples.length > 0 ? examples : null;
 		}
 
-		const res = await Projects.createInterviewAgents({
-			path: { project_id: projectId },
-			body: agents as AgentConfigs
-		});
+		const res = await saveWithRevision(projectId, 'the agents', (headers) =>
+			Projects.createInterviewAgents({
+				path: { project_id: projectId },
+				body: agents as AgentConfigs,
+				headers
+			})
+		);
 
-		if (res.error) {
+		if (isStale(res)) {
+			// Told already; the unsaved edits stay on screen.
+		} else if (res.error) {
 			console.error('Failed to save config', res.error);
 			toast.error('Failed to save configuration');
 		} else {
+			saved = true;
 			toast.success('Configuration saved');
 		}
 		saving = false;
+		return saved;
 	}
 
 	function setAllModels(model: string) {
@@ -620,6 +633,10 @@
 				Advanced
 			</button>
 		</div>
+
+		<!-- Agent configs are part of each published version: respondents get
+		     them only once they are published. -->
+		<PublishControl {projectId} lang={page.params.lang ?? ''} onBeforePublish={saveConfig} />
 
 		<button
 			onclick={saveConfig}

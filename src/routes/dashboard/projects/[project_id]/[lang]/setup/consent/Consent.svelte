@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
@@ -6,6 +7,8 @@
 	import { Projects } from '$lib/api';
 	import type { LocalizedConsent, ProjectLanguage, Welcome } from '$lib/api/types.gen';
 	import { ConsentModal } from '$lib/components/modals';
+	import ConsentPreview from '$lib/components/preview/ConsentPreview.svelte';
+	import { contentRevision, isStale, saveWithRevision } from '$lib/content/revision.svelte';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
@@ -19,15 +22,24 @@
 		initialData?: LocalizedConsent | null;
 		availableLanguages?: ProjectLanguage[];
 		projectName?: string;
+		/** The content revision this was loaded at (its `ETag`). */
+		revision?: string | null;
 	}
 
 	let {
 		initialData = null,
 		availableLanguages: initialAvailableLanguages = [],
-		projectName = 'Interview Guide'
+		projectName = 'Interview Guide',
+		revision = null
 	}: Props = $props();
 
 	let projectId = $derived(page.params.project_id ?? '');
+
+	// Adopted once, at mount: the revision the content on screen was loaded
+	// at. Later ones come only from this page's own saves, so reloading the
+	// page data (which the parent keys this component on) cannot make stale
+	// edits look current.
+	onMount(() => contentRevision.set(projectId, revision));
 	let language = $derived(page.params.lang ?? '');
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 	// The consent in every language; this page edits `language`'s text.
@@ -61,21 +73,25 @@
 		}
 	});
 
-	async function saveConsent() {
+	async function saveConsent(): Promise<boolean> {
+		let saved = false;
 		saving = true;
-		const { error } = await Projects.updateConsent({
-			path: { project_id: projectId },
-			body: consent
-		});
+		const result = await saveWithRevision(projectId, 'the consent', (headers) =>
+			Projects.updateConsent({ path: { project_id: projectId }, body: consent, headers })
+		);
 
-		if (!error) {
+		if (isStale(result)) {
+			// Told already; the unsaved edits stay on screen.
+		} else if (!result.error) {
 			savedSnapshot = getSnapshot();
 			await invalidateAll();
+			saved = true;
 			toast.success('Consent saved successfully.');
 		} else {
 			toast.error('Error when saving consent.');
 		}
 		saving = false;
+		return saved;
 	}
 
 	async function getGuideForExport() {
@@ -91,8 +107,10 @@
 	let showExportPdfModal = $state(false);
 
 	async function fetchWelcome(): Promise<Welcome | null> {
+		// The draft's, like the consent being exported.
 		const { data } = await Projects.getWelcome({
-			path: { project_id: projectId, language: language }
+			path: { project_id: projectId, language: language },
+			query: { draft: true }
 		});
 		return data ?? null;
 	}
@@ -279,38 +297,7 @@
 
 				<!-- Modal Preview Container -->
 				<div class="rounded-lg border border-gray-200 bg-gray-100 p-4 shadow-inner">
-					<div class="overflow-hidden rounded-lg border border-gray-300 bg-white shadow-xl">
-						<!-- Simulated Modal -->
-						<div class="max-h-[500px] overflow-y-auto p-6">
-							<h2 class="mb-4 text-xl font-bold text-gray-900">
-								{title || 'Consent Title'}
-							</h2>
-							<div class="prose prose-sm max-w-none whitespace-pre-wrap text-gray-700">
-								{#if text}
-									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-									{@html text}
-								{:else}
-									<span class="text-gray-400 italic">
-										Your consent message will appear here...
-									</span>
-								{/if}
-							</div>
-							<div class="mt-6 flex gap-3">
-								<button
-									class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm"
-									disabled
-								>
-									Accept
-								</button>
-								<button
-									class="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300"
-									disabled
-								>
-									Decline
-								</button>
-							</div>
-						</div>
-					</div>
+					<ConsentPreview {title} {text} />
 				</div>
 
 				<p class="mt-3 text-center text-xs text-gray-500">
@@ -353,21 +340,3 @@
 	onClose={() => (showFullscreenModal = false)}
 	isPreview={true}
 />
-
-<style>
-	#preview :global(a) {
-		color: #2563eb;
-		text-decoration: underline;
-		font-weight: 500;
-		transition:
-			color 0.2s ease,
-			text-decoration-color 0.2s ease;
-	}
-	#preview :global(a):hover {
-		color: #1547b0;
-		cursor: pointer;
-	}
-	#preview :global(a):active {
-		color: #0f2d6e;
-	}
-</style>

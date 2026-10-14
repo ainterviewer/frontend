@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 
 import { Projects } from '$lib/api';
+import { etagOf } from '$lib/content/revision.svelte';
 
 import type { PageServerLoad } from './$types';
 
@@ -30,6 +31,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		welcome: welcomeRes.data,
+		revision: etagOf(welcomeRes.response),
 		available_languages: projectRes.data?.available_languages ?? [],
 		project_name: projectRes.data?.title ?? ''
 	};

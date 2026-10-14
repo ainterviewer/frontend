@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import { beforeNavigate } from '$app/navigation';
@@ -12,6 +13,7 @@
 		Welcome
 	} from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { contentRevision } from '$lib/content/revision.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
@@ -35,13 +37,16 @@
 		lang,
 		projectName = '',
 		availableLanguages = [],
-		externalParams = []
+		externalParams = [],
+		revision = null
 	} = $props<{
 		guide: LocalizedInterviewGuide | null;
 		lang: string;
 		projectName?: string;
 		availableLanguages?: ProjectLanguage[];
 		externalParams?: ExternalParam[];
+		/** The content revision the guide was loaded at (its `ETag`). */
+		revision?: string | null;
 	}>();
 
 	const guideStore = getGuideStore();
@@ -98,6 +103,12 @@
 	);
 
 	let projectId = $state(page.params.project_id ?? '');
+
+	// Adopted once, at mount: the revision the content on screen was loaded
+	// at. Later ones come only from this page's own saves, so reloading the
+	// page data (which the parent keys this component on) cannot make stale
+	// edits look current.
+	onMount(() => contentRevision.set(projectId, revision));
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
 	// Modal state
@@ -110,7 +121,7 @@
 	let activeId = $state('');
 
 	async function handleGenerateGuide(prompt: string) {
-		const { data, error } = await Projects.generateGuide({
+		const { data, error, response } = await Projects.generateGuide({
 			path: { project_id: projectId, lang: lang },
 			body: { prompt }
 		});
@@ -121,6 +132,7 @@
 		}
 		// The generated guide is already persisted server-side and replaces the
 		// guide in every language; the others show as untranslated.
+		contentRevision.take(projectId, response);
 		applyGuide(data);
 		savedSnapshot = getSnapshot();
 	}
@@ -181,6 +193,7 @@
 			externalParams
 		);
 		saving = false;
+		if (result.status === 'stale') return false;
 		if (result.status === 'invalid') {
 			guideStore.invalidConditionQuestionIds = result.invalidQuestionIds;
 			toast.error(
@@ -204,9 +217,10 @@
 	async function translateMissing() {
 		if (getSnapshot() !== savedSnapshot && !(await save())) return;
 		translating = true;
-		const { data, error } = await Projects.translateMissing({
+		const { data, error, response } = await Projects.translateMissing({
 			path: { project_id: projectId, lang }
 		});
+		contentRevision.take(projectId, response);
 		translating = false;
 		if (error || !data) {
 			console.error('Failed to translate', error);
@@ -281,15 +295,18 @@
 	let showExportPdfModal = $state(false);
 
 	async function fetchConsent(): Promise<Consent | null> {
+		// The draft's, like the guide being exported.
 		const { data } = await Projects.getConsent({
-			path: { project_id: projectId, language: lang }
+			path: { project_id: projectId, language: lang },
+			query: { draft: true }
 		});
 		return data ?? null;
 	}
 
 	async function fetchWelcome(): Promise<Welcome | null> {
 		const { data } = await Projects.getWelcome({
-			path: { project_id: projectId, language: lang }
+			path: { project_id: projectId, language: lang },
+			query: { draft: true }
 		});
 		return data ?? null;
 	}
@@ -667,9 +684,7 @@
 				{availableLanguages}
 				{saving}
 				{exporting}
-				onSave={async () => {
-					await save();
-				}}
+				onSave={save}
 				onExportPdf={() => {
 					showExportPdfModal = true;
 				}}

@@ -6,13 +6,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const { project_id, lang } = params;
 	const { cookieHeader } = locals;
 
+	// The draft's consent and welcome: this is the editor, not respondents.
 	const [consentRes, welcomeRes, guideRes, configRes, projectRes] = await Promise.all([
 		Projects.getConsent({
 			path: { project_id, language: lang },
+			query: { draft: true },
 			headers: { cookie: cookieHeader || '' }
 		}),
 		Projects.getWelcome({
 			path: { project_id, language: lang },
+			query: { draft: true },
 			headers: { cookie: cookieHeader || '' }
 		}),
 		Projects.getGuide({

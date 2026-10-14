@@ -7,9 +7,10 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-{#key page.params.lang}
+{#key `${page.params.lang}-${data.revision}`}
 	<Welcome
 		initialData={data.welcome}
+		revision={data.revision}
 		availableLanguages={data.available_languages}
 		projectName={data.project_name}
 	/>

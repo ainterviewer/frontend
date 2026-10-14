@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import type { ProjectLanguage } from '$lib/api/types.gen';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
+	import PublishControl from '$lib/content/PublishControl.svelte';
 
 	let {
 		projectId,
@@ -20,7 +21,8 @@
 		saving?: boolean;
 		exporting?: boolean;
 		saveLabel?: string;
-		onSave: () => Promise<void> | void;
+		/** Resolves to `false` when the save did not go through. */
+		onSave: () => Promise<boolean | void> | boolean | void;
 		onExportPdf?: () => Promise<void> | void;
 		onExportJson?: () => void;
 	} = $props();
@@ -111,6 +113,9 @@
 					{/if}
 				</div>
 			{/if}
+		</div>
+		<div data-tour="publish" class="flex">
+			<PublishControl {projectId} {lang} {availableLanguages} onBeforePublish={onSave} />
 		</div>
 		<button
 			data-tour="save"

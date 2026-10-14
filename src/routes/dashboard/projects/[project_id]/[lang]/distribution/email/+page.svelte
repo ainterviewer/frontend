@@ -13,11 +13,13 @@
 	} from '$lib/api/types.gen';
 	import PlaceholderInput from '$lib/components/editor/PlaceholderInput.svelte';
 	import { EditorLinkModal } from '$lib/components/modals';
+	import EmailPreview from '$lib/components/preview/EmailPreview.svelte';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
+	import PublishControl from '$lib/content/PublishControl.svelte';
+	import { contentRevision, isStale, saveWithRevision } from '$lib/content/revision.svelte';
 	import {
 		isUrlPlaceholder,
 		nodesToPlaceholders,
-		placeholderPattern,
 		placeholders,
 		placeholdersToNodes
 	} from '$lib/tiptap/placeholders';
@@ -102,30 +104,14 @@
 			!missingInterviewUrl
 	);
 
-	const origin = $derived(typeof window !== 'undefined' ? window.location.origin : '');
-
-	const sample: Record<TemplatePlaceholder, string> = $derived({
-		name: 'Jane Doe',
-		email: 'jane@example.com',
-		pid: 'P-001',
-		interview_url: origin ? `${origin}/interview?id=${project_id}&pid=P-001` : '',
-		project_title: 'Example project',
-		opt_out_url: origin ? `${origin}/opt-out/P-001` : ''
-	});
-
-	const previewHtml = $derived(
-		current.templateHtml.replace(placeholderPattern(), (_, k) => sample[k as TemplatePlaceholder])
-	);
-	const previewSubject = $derived(
-		current.subject.replace(placeholderPattern(), (_, k) => sample[k as TemplatePlaceholder])
-	);
-
 	const sendLabel = $derived(kind === 'reminder' ? 'Send reminders' : 'Send to participants');
 	const sendingLabel = $derived(kind === 'reminder' ? 'Sending...' : 'Sending...');
 	const confirmSendMessage = $derived(
-		kind === 'reminder'
+		(kind === 'reminder'
 			? 'Send the reminder email to all eligible participants?'
-			: 'Send the invitation email to all eligible participants?'
+			: 'Send the invitation email to all eligible participants?') +
+			// What goes out is the published version, like everything respondents get.
+			'\n\nThe published version of the email is sent. Publish template changes first.'
 	);
 	const introText = $derived(
 		kind === 'reminder'
@@ -170,6 +156,7 @@
 				: await Participants.getParticipantEmailTemplate({
 						path: { project_id, language }
 					});
+		contentRevision.take(project_id, res.response);
 		if (res.error) {
 			toast.error(`Failed to load ${k} email template`);
 			states[k].templateHtml = '';
@@ -194,17 +181,21 @@
 		const k = kind;
 		states[k].saving = true;
 		const body = { subject: states[k].subject || null, template: states[k].templateHtml || null };
-		const res =
+		const res = await saveWithRevision(project_id, `the ${k} email`, (headers) =>
 			k === 'reminder'
-				? await Participants.setParticipantReminderEmailTemplate({
+				? Participants.setParticipantReminderEmailTemplate({
 						path: { project_id, language },
-						body
+						body,
+						headers
 					})
-				: await Participants.setParticipantEmailTemplate({
+				: Participants.setParticipantEmailTemplate({
 						path: { project_id, language },
-						body
-					});
+						body,
+						headers
+					})
+		);
 		states[k].saving = false;
+		if (isStale(res)) return;
 		if (res.error) {
 			toast.error('Failed to save template');
 			return;
@@ -230,7 +221,8 @@
 					});
 		states[k].sending = false;
 		if (res.error) {
-			toast.error('Failed to send emails');
+			const detail = (res.error as { detail?: unknown }).detail;
+			toast.error(typeof detail === 'string' ? detail : 'Failed to send emails');
 			return;
 		}
 		const sent = res.data?.sent.length ?? 0;
@@ -253,7 +245,8 @@
 		});
 		exporting = false;
 		if (res.error || !res.data) {
-			toast.error('Failed to export bundle');
+			const detail = (res.error as { detail?: unknown } | undefined)?.detail;
+			toast.error(typeof detail === 'string' ? detail : 'Failed to export bundle');
 			return;
 		}
 		const url = window.URL.createObjectURL(res.data as Blob);
@@ -581,30 +574,7 @@
 			<div bind:this={editorEl} class="min-h-[260px]"></div>
 		</div>
 
-		<div class="rounded-lg border border-gray-200 bg-white shadow">
-			<div class="flex items-center justify-between border-b border-gray-200 px-3 py-2">
-				<span class="text-sm font-semibold text-gray-700">Preview</span>
-				<span class="text-xs text-gray-500">
-					Sample: {sample.name} &middot; {sample.email} &middot; {sample.pid}
-				</span>
-			</div>
-			<div class="px-3 py-2">
-				{#if !current.subject && !current.templateHtml}
-					<p class="text-sm text-gray-400">Nothing to preview yet.</p>
-				{:else}
-					{#if current.subject}
-						<div class="mb-2 border-b border-gray-100 pb-2 text-sm">
-							<span class="font-semibold text-gray-700">Subject:</span>
-							<span class="text-gray-800">{previewSubject}</span>
-						</div>
-					{/if}
-					<div class="prose prose-sm max-w-none">
-						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-						{@html previewHtml}
-					</div>
-				{/if}
-			</div>
-		</div>
+		<EmailPreview projectId={project_id} subject={current.subject} html={current.templateHtml} />
 	</div>
 
 	<div class="mt-4 rounded-lg border border-gray-200 bg-white shadow">
@@ -702,6 +672,15 @@
 			<i class="fa-solid fa-floppy-disk"></i>
 			{current.saving ? 'Saving...' : 'Save'}
 		</button>
+		<PublishControl
+			projectId={project_id}
+			lang={language}
+			{availableLanguages}
+			onBeforePublish={async () => {
+				if (dirty) await save();
+				return !dirty;
+			}}
+		/>
 		<button
 			type="button"
 			class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark disabled:opacity-50"

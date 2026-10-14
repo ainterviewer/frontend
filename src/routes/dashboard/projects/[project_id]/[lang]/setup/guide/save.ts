@@ -1,5 +1,6 @@
 import { Projects } from '$lib/api';
 import type { ExternalParam, LocalizedInterviewGuide } from '$lib/api/types.gen';
+import { isStale, saveWithRevision } from '$lib/content/revision.svelte';
 
 import { validateGuideConditions } from './conditions';
 import { surveyItemOptions, trimmed } from './localized';
@@ -9,6 +10,9 @@ import type { GuideQuestion, GuideSection, GuideTop } from './types';
 export type SaveGuideResult =
 	| { status: 'success' }
 	| { status: 'error'; error: unknown }
+	// Someone else saved first and the user chose not to overwrite; they
+	// have been told, and the editor keeps its unsaved state.
+	| { status: 'stale' }
 	| { status: 'invalid'; invalidQuestionIds: string[] };
 
 // Survey options are compared verbatim when an answer is checked, so stray
@@ -47,9 +51,10 @@ export async function saveGuide(
 		return { status: 'invalid', invalidQuestionIds };
 	}
 
-	const { error } = await Projects.updateGuide({
-		path: { project_id: projectId },
-		body: trimOptions(localGuide(top, sections, questions, externalParams))
-	});
-	return error ? { status: 'error', error } : { status: 'success' };
+	const body = trimOptions(localGuide(top, sections, questions, externalParams));
+	const result = await saveWithRevision(projectId, 'the guide', (headers) =>
+		Projects.updateGuide({ path: { project_id: projectId }, body, headers })
+	);
+	if (isStale(result)) return { status: 'stale' };
+	return result.error ? { status: 'error', error: result.error } : { status: 'success' };
 }

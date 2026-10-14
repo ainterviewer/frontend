@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 
 import { Default, Projects } from '$lib/api';
+import { etagOf } from '$lib/content/revision.svelte';
 
 import type { PageServerLoad } from './$types';
 
@@ -44,6 +45,7 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 	return {
 		models,
 		agents,
-		promptDefaults
+		promptDefaults,
+		revision: etagOf(agentsRes.response)
 	};
 };
