@@ -5050,6 +5050,10 @@ export const zGetBackgroundInfoResponse = zBackgroundInfoOptions;
 
 export const zUpdateBackgroundInfoBody = zUpdateBackgroundInfoRequest;
 
+export const zUpdateBackgroundInfoHeaders = z.object({
+    'if-match': z.string().nullish()
+});
+
 export const zUpdateBackgroundInfoPath = z.object({
     project_id: z.string().nullable(),
     test_id: z.string()
@@ -5077,6 +5081,10 @@ export const zGetFixedPersonasResponse = z.array(z.string()).nullable();
 
 export const zUpdateFixedPersonasBody = zUpdateFixedPersonasRequest;
 
+export const zUpdateFixedPersonasHeaders = z.object({
+    'if-match': z.string().nullish()
+});
+
 export const zUpdateFixedPersonasPath = z.object({
     project_id: z.string().nullable(),
     test_id: z.string()
@@ -5103,6 +5111,10 @@ export const zGetFixedAnswersQuery = z.object({
 export const zGetFixedAnswersResponse = z.record(z.string(), z.string()).nullable();
 
 export const zUpdateFixedAnswersBody = zUpdateFixedAnswersRequest;
+
+export const zUpdateFixedAnswersHeaders = z.object({
+    'if-match': z.string().nullish()
+});
 
 export const zUpdateFixedAnswersPath = z.object({
     project_id: z.string().nullable(),

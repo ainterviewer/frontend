@@ -10720,6 +10720,12 @@ export type GetBackgroundInfoResponse = GetBackgroundInfoResponses[keyof GetBack
 
 export type UpdateBackgroundInfoData = {
     body: UpdateBackgroundInfoRequest;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
     path: {
         /**
          * Project Id
@@ -10798,6 +10804,12 @@ export type GetFixedPersonasResponse = GetFixedPersonasResponses[keyof GetFixedP
 
 export type UpdateFixedPersonasData = {
     body: UpdateFixedPersonasRequest;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
     path: {
         /**
          * Project Id
@@ -10878,6 +10890,12 @@ export type GetFixedAnswersResponse = GetFixedAnswersResponses[keyof GetFixedAns
 
 export type UpdateFixedAnswersData = {
     body: UpdateFixedAnswersRequest;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
     path: {
         /**
          * Project Id
