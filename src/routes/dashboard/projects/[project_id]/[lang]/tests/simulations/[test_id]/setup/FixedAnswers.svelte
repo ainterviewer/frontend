@@ -7,44 +7,15 @@
 
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 
-	type SetupQuestion = Pick<Question, 'main_question' | 'can_answer'>;
+	type SetupQuestion = Pick<Question, 'main_question' | 'can_answer'> & { id: string };
 	type SetupSection = { description: string; questions: SetupQuestion[] };
 
 	let { test, sections }: { test: TestSetupPublic; sections: SetupSection[] } = $props();
-	// Seeded once from the test prop; deliberately not reactive to prop updates.
-	const initialFixedAnswers = untrack(() => (test.fixed_answers ? [...test.fixed_answers] : []));
 
-	// Answers are stored as one flat list, in guide order across all sections.
-	const answerIndexesBySection = $derived.by(() => {
-		let answerIndex = 0;
-
-		return sections.map((section) =>
-			section.questions.map((question) => {
-				if (question.can_answer !== true) {
-					return -1;
-				}
-
-				const currentIndex = answerIndex;
-				answerIndex += 1;
-				return currentIndex;
-			})
-		);
-	});
-
-	const answerableQuestionCount = $derived(
-		answerIndexesBySection.flat().filter((answerIndex) => answerIndex !== -1).length
-	);
-
-	let answers = $state(initialFixedAnswers);
-
-	// Ensure answers array is same length as answerable questions.
-	$effect(() => {
-		if (answers.length < answerableQuestionCount) {
-			answers = [...answers, ...new Array(answerableQuestionCount - answers.length).fill('')];
-		} else if (answers.length > answerableQuestionCount) {
-			answers = answers.slice(0, answerableQuestionCount);
-		}
-	});
+	// By question id, so an answer stays with its question however the guide is
+	// reordered or the interview shuffles it. Seeded once from the test prop;
+	// deliberately not reactive to prop updates.
+	let answers = $state<Record<string, string>>(untrack(() => ({ ...test.fixed_answers })));
 
 	let isSaving = $state(false);
 
@@ -56,7 +27,14 @@
 				test_id: test.id
 			},
 			body: {
-				answers
+				// Only the questions still in the guide: an answer to one removed
+				// since would never be asked for.
+				answers: Object.fromEntries(
+					sections
+						.flatMap((section) => section.questions)
+						.filter((question) => question.can_answer === true && answers[question.id])
+						.map((question) => [question.id, answers[question.id]])
+				)
 			}
 		});
 		isSaving = false;
@@ -93,7 +71,7 @@
 							<input
 								type="text"
 								id="question-{sectionIndex}-{questionIndex}-answer"
-								bind:value={answers[answerIndexesBySection[sectionIndex][questionIndex]]}
+								bind:value={answers[question.id]}
 								class="w-full flex-1 rounded border border-gray-300 p-2"
 							/>
 						</div>

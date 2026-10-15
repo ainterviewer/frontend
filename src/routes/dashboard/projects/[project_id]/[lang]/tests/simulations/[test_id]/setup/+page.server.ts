@@ -40,7 +40,7 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 			path: { project_id, test_id }
 		});
 		if (!answersResponse.error && answersResponse.data) {
-			test.fixed_answers = answersResponse.data as string[];
+			test.fixed_answers = answersResponse.data;
 		}
 	} else if (test.type === 'fixed_ai') {
 		const personasResponse = await Synthesize.getFixedPersonas({
@@ -66,13 +66,16 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 	// page can mirror the interview guide's section/question numbering.
 	const sections: Array<{
 		description: string;
-		questions: Array<Pick<Question, 'main_question' | 'can_answer'>>;
+		questions: Array<Pick<Question, 'main_question' | 'can_answer'> & { id: string }>;
 	}> = [];
 	if (!guideResponse.error && guideResponse.data?.question_sections) {
 		for (const section of guideResponse.data.question_sections) {
 			sections.push({
 				description: section.description,
 				questions: (section.questions ?? []).map((q) => ({
+					// Always set on a guide the server sends; optional in the type
+					// only because the server fills it in by default.
+					id: q.id ?? '',
 					main_question: q.main_question,
 					can_answer: q.can_answer
 				}))
