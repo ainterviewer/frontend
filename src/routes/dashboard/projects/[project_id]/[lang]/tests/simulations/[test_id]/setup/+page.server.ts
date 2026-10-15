@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 
 import { type BackgroundInfoOptions, Projects, type Question, Synthesize } from '$lib/api';
+import { etagOf } from '$lib/content/revision.svelte';
 
 import type { PageServerLoad } from './$types';
 
@@ -32,13 +33,16 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 		throw error(404, 'Test not found');
 	}
 
-	// Fetch detailed info based on type
+	// Fetch detailed info based on type, and the setup's revision with it:
+	// the page saves against it (`If-Match`).
+	let revision: string | null = null;
 	if (test.type === 'fixed_answers') {
 		const answersResponse = await Synthesize.getFixedAnswers({
 			headers: { cookie: cookieHeader },
 			fetch,
 			path: { project_id, test_id }
 		});
+		revision = etagOf(answersResponse.response);
 		if (!answersResponse.error && answersResponse.data) {
 			test.fixed_answers = answersResponse.data;
 		}
@@ -48,6 +52,7 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 			fetch,
 			path: { project_id, test_id }
 		});
+		revision = etagOf(personasResponse.response);
 		if (!personasResponse.error && personasResponse.data) {
 			test.fixed_personas = personasResponse.data as string[];
 		}
@@ -57,6 +62,7 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 			fetch,
 			path: { project_id, test_id }
 		});
+		revision = etagOf(bgInfoResponse.response);
 		if (!bgInfoResponse.error && bgInfoResponse.data) {
 			test.background_info = bgInfoResponse.data as BackgroundInfoOptions;
 		}
@@ -85,6 +91,7 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 
 	return {
 		test,
-		sections
+		sections,
+		revision
 	};
 };

@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	import { Synthesize, type TestSetupPublic } from '$lib/api';
+	import { Autosaver, saveRevisioned } from '$lib/content/autosave.svelte';
+	import AutosavePill from '$lib/content/AutosavePill.svelte';
 
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 
-	let { test }: { test: TestSetupPublic } = $props();
+	let { test, revision }: { test: TestSetupPublic; revision: string | null } = $props();
 
 	// Editable form drafts seeded once from the test prop;
 	// deliberately not kept in sync with later prop updates.
@@ -41,8 +42,6 @@
 		bg?.refusal_rate ? [bg.refusal_rate[0] * 100, bg.refusal_rate[1] * 100] : [0, 0]
 	);
 
-	let isSaving = $state(false);
-
 	function addRow(list: string[], defaultVal = '') {
 		list.push(defaultVal);
 	}
@@ -63,45 +62,47 @@
 		}
 	}
 
-	async function saveSetup() {
-		isSaving = true;
-		// Filter out empty strings/pairs
-		const cleanList = (list: string[]) => list.filter((item) => item && item.trim() !== '');
-		const cleanPairs = (list: [string, string][]) =>
-			list.filter((pair) => pair[0] && pair[0].trim() !== ''); // Check name at least
+	// The setup's revision, moved on by each save; a save based on an older one
+	// is refused (someone else saved) and the pill offers to keep either.
+	const etag = { value: untrack(() => revision) };
 
-		const { error } = await Synthesize.updateBackgroundInfo({
-			path: {
-				project_id: test.project_id,
-				test_id: test.id
+	// Saved as it is edited; there is no Save. Empty rows are left out.
+	const cleanList = (list: string[]) => list.filter((item) => item && item.trim() !== '');
+	const cleanPairs = (list: [string, string][]) =>
+		list.filter((pair) => pair[0] && pair[0].trim() !== ''); // Check name at least
+
+	const saver = new Autosaver({
+		read: () => ({
+			names_gender: cleanPairs($state.snapshot(names_gender)),
+			age_range: $state.snapshot(age_range) as [number, number],
+			educations: cleanList($state.snapshot(educations)),
+			occupations: cleanList($state.snapshot(occupations)),
+			locations: cleanList($state.snapshot(locations)),
+			personalities: cleanList($state.snapshot(personalities)),
+			communication_traits: {
+				length: cleanList($state.snapshot(comm_length)),
+				style: cleanList($state.snapshot(comm_style)),
+				tone: cleanList($state.snapshot(comm_tone))
 			},
-			body: {
-				background_info: {
-					names_gender: cleanPairs($state.snapshot(names_gender)),
-					age_range: $state.snapshot(age_range) as [number, number],
-					educations: cleanList($state.snapshot(educations)),
-					occupations: cleanList($state.snapshot(occupations)),
-					locations: cleanList($state.snapshot(locations)),
-					personalities: cleanList($state.snapshot(personalities)),
-					communication_traits: {
-						length: cleanList($state.snapshot(comm_length)),
-						style: cleanList($state.snapshot(comm_style)),
-						tone: cleanList($state.snapshot(comm_tone))
-					},
-					extra_traits: cleanList($state.snapshot(extra_traits)),
-					refusal_rate: [refusal_rate[0] / 100, refusal_rate[1] / 100]
-				}
-			}
-		});
-		isSaving = false;
-		if (error) {
-			console.error(error);
-			toast.error('Failed to save setup');
-			return;
-		}
-		toast.success('Background information saved');
-	}
+			extra_traits: cleanList($state.snapshot(extra_traits)),
+			refusal_rate: [refusal_rate[0] / 100, refusal_rate[1] / 100] as [number, number]
+		}),
+		save: (background_info, overwrite) =>
+			saveRevisioned(
+				etag,
+				(headers) =>
+					Synthesize.updateBackgroundInfo({
+						path: { project_id: test.project_id, test_id: test.id },
+						body: { background_info },
+						headers
+					}),
+				overwrite
+			)
+	});
+	saver.watch();
 </script>
+
+<AutosavePill savers={[saver]} />
 
 <div class="pb-32">
 	<h2 class="page-title">Setup - Shuffled AI Respondents</h2>
@@ -331,6 +332,6 @@
 	</div>
 </div>
 
-<SimulationActionBar current="setup" saving={isSaving} onSave={saveSetup} />
+<SimulationActionBar current="setup" />
 
 <!-- Export button not implemented yet as per request scope but present in HTML -->

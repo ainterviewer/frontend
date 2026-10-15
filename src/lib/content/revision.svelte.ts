@@ -128,8 +128,3 @@ export async function saveWithRevision<R extends WriteResult>(
 		});
 	});
 }
-
-/** Whether a failed write was a 412 the user chose not to overwrite. */
-export function isStale(result: WriteResult): boolean {
-	return result.response?.status === 412;
-}

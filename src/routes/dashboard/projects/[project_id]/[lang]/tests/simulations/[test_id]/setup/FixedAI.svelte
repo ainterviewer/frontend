@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	import { Synthesize, type TestSetupPublic } from '$lib/api';
+	import { Autosaver, saveRevisioned } from '$lib/content/autosave.svelte';
+	import AutosavePill from '$lib/content/AutosavePill.svelte';
 
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 
-	let { test }: { test: TestSetupPublic } = $props();
+	let { test, revision }: { test: TestSetupPublic; revision: string | null } = $props();
 
 	// Editable drafts seeded once from the test prop; deliberately not reactive to prop updates.
 	let personas = $state(
 		untrack(() => (test.fixed_personas?.length ? [...test.fixed_personas] : ['']))
 	);
-	let isSaving = $state(false);
 
 	function addPersona() {
 		personas.push('');
@@ -22,32 +22,33 @@
 		personas.splice(index, 1);
 	}
 
-	async function saveSetup() {
-		const nonEmpty = personas.filter((p) => p.trim().length > 0);
-		if (nonEmpty.length === 0) {
-			toast.error('Please add at least one persona');
-			return;
-		}
+	// The setup's revision, moved on by each save; a save based on an older one
+	// is refused (someone else saved) and the pill offers to keep either.
+	const etag = { value: untrack(() => revision) };
 
-		isSaving = true;
-		const { error } = await Synthesize.updateFixedPersonas({
-			path: {
-				project_id: test.project_id,
-				test_id: test.id
-			},
-			body: {
-				fixed_personas: nonEmpty
+	// Saved as it is edited; there is no Save.
+	const saver = new Autosaver({
+		read: () => personas.filter((p) => p.trim().length > 0),
+		save: async (fixed_personas, overwrite) => {
+			if (fixed_personas.length === 0) {
+				return { ok: false, invalid: 'Not saved: add at least one persona' };
 			}
-		});
-		isSaving = false;
-		if (error) {
-			console.error(error);
-			toast.error('Failed to save personas');
-			return;
+			return saveRevisioned(
+				etag,
+				(headers) =>
+					Synthesize.updateFixedPersonas({
+						path: { project_id: test.project_id, test_id: test.id },
+						body: { fixed_personas },
+						headers
+					}),
+				overwrite
+			);
 		}
-		toast.success('Personas saved');
-	}
+	});
+	saver.watch();
 </script>
+
+<AutosavePill savers={[saver]} />
 
 <div class="pb-32">
 	<h1 class="page-title">Setup - Fixed AI Respondents</h1>
@@ -85,4 +86,4 @@
 	</button>
 </div>
 
-<SimulationActionBar current="setup" saving={isSaving} onSave={saveSetup} />
+<SimulationActionBar current="setup" />

@@ -2,17 +2,8 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 
-	let {
-		current,
-		saving = false,
-		saveLabel = 'Save Setup',
-		onSave
-	}: {
-		current: 'setup' | 'runs';
-		saving?: boolean;
-		saveLabel?: string;
-		onSave?: () => Promise<void> | void;
-	} = $props();
+	// The setup saves itself as it is edited (`AutosavePill`); there is no Save.
+	let { current }: { current: 'setup' | 'runs' } = $props();
 
 	const projectId = $derived(page.params.project_id);
 	const lang = $derived(page.params.lang);
@@ -34,20 +25,6 @@
 		>
 			Runs
 		</a>
-		<button
-			type="button"
-			class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark disabled:cursor-not-allowed disabled:opacity-50"
-			onclick={() => onSave?.()}
-			disabled={saving}
-		>
-			{#if saving}
-				<i class="fas fa-spinner fa-spin"></i>
-				Saving...
-			{:else}
-				<i class="fa-solid fa-floppy-disk"></i>
-				{saveLabel}
-			{/if}
-		</button>
 	{:else}
 		<a
 			class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200"

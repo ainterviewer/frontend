@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { AgentConfigs, ProbingAgentConfig, ProbingPromptSlots } from '$lib/api/types.gen';
+	import { Autosaver, saveContent } from '$lib/content/autosave.svelte';
+	import AutosavePill from '$lib/content/AutosavePill.svelte';
 	import PublishControl from '$lib/content/PublishControl.svelte';
-	import { contentRevision, isStale, saveWithRevision } from '$lib/content/revision.svelte';
+	import { contentRevision } from '$lib/content/revision.svelte';
 
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	let saving = $state(false);
 	let mode = $state<'basic' | 'advanced'>('basic');
 	let agents = $state<AgentConfigs>(untrack(() => data.agents));
 	// The revision the configuration on screen was loaded at; later ones come
@@ -91,7 +91,11 @@
 		agents = data.agents;
 		models = data.models;
 		promptDefaults = data.promptDefaults;
-		untrack(seedSlotEditors);
+		untrack(() => {
+			seedSlotEditors();
+			// What was loaded is what is saved.
+			saver.reset();
+		});
 	});
 
 	let projectId = $state(page.params.project_id ?? '');
@@ -129,10 +133,9 @@
 		return arraysEqual(items, fallback) ? null : items;
 	}
 
-	async function saveConfig(): Promise<boolean> {
-		saving = true;
-		let saved = false;
-
+	// The configuration as saved: the agents, with the prompt slots read back
+	// out of their editors. Pure -- it is what autosave watches.
+	function buildConfig(): AgentConfigs {
 		const persona = personaText.trim();
 		const slots: ProbingPromptSlots = {
 			persona: persona === (promptDefaults.persona ?? '').trim() ? null : persona,
@@ -140,34 +143,28 @@
 			guidelines: listOverwrite(guidelinesText, promptDefaults.guidelines),
 			instructions: listOverwrite(instructionsText, promptDefaults.instructions)
 		};
-
 		const examples = splitLines(examplesText);
-
-		if (agents.probing) {
-			agents.probing.prompt_slots = slots;
-			agents.probing.few_shot_examples = examples.length > 0 ? examples : null;
+		const config = $state.snapshot(agents) as AgentConfigs;
+		if (config.probing) {
+			config.probing.prompt_slots = slots;
+			config.probing.few_shot_examples = examples.length > 0 ? examples : null;
 		}
-
-		const res = await saveWithRevision(projectId, 'agents', 'the agents', (headers) =>
-			Projects.createInterviewAgents({
-				path: { project_id: projectId },
-				body: agents as AgentConfigs,
-				headers
-			})
-		);
-
-		if (isStale(res)) {
-			// Told already; the unsaved edits stay on screen.
-		} else if (res.error) {
-			console.error('Failed to save config', res.error);
-			toast.error('Failed to save configuration');
-		} else {
-			saved = true;
-			toast.success('Configuration saved');
-		}
-		saving = false;
-		return saved;
+		return config;
 	}
+
+	// Saved as it is edited; there is no Save.
+	const saver = new Autosaver({
+		read: buildConfig,
+		save: (body, overwrite) =>
+			saveContent(
+				projectId,
+				'agents',
+				(headers) =>
+					Projects.createInterviewAgents({ path: { project_id: projectId }, body, headers }),
+				overwrite
+			)
+	});
+	saver.watch();
 
 	function setAllModels(model: string) {
 		if (model === '') return;
@@ -234,6 +231,8 @@
 		return () => clearTimeout(timer);
 	});
 </script>
+
+<AutosavePill savers={[saver]} />
 
 <h1 class="page-title">Agents</h1>
 
@@ -640,18 +639,11 @@
 
 		<!-- Agent configs are part of each published version: respondents get
 		     them only once they are published. -->
-		<PublishControl {projectId} lang={page.params.lang ?? ''} onBeforePublish={saveConfig} />
-
-		<button
-			onclick={saveConfig}
-			disabled={saving}
-			class="flex items-center gap-2 rounded-full bg-primary px-6 py-2 font-medium text-white shadow-sm hover:bg-dark disabled:cursor-not-allowed disabled:opacity-50"
-		>
-			{#if saving}
-				<i class="fas fa-spinner fa-spin"></i> Saving...
-			{:else}
-				<i class="fa-solid fa-floppy-disk"></i> Save Configuration
-			{/if}
-		</button>
+		<PublishControl
+			{projectId}
+			lang={page.params.lang ?? ''}
+			primary
+			onBeforePublish={() => saver.flush()}
+		/>
 	</div>
 </div>

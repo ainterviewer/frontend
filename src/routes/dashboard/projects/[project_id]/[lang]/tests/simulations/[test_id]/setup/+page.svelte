@@ -23,11 +23,11 @@
 	</a>
 
 	{#if test.type === 'fixed_answers'}
-		<FixedAnswers {test} sections={data.sections} />
+		<FixedAnswers {test} sections={data.sections} revision={data.revision} />
 	{:else if test.type === 'shuffled_ai'}
-		<ShuffledAI {test} />
+		<ShuffledAI {test} revision={data.revision} />
 	{:else if test.type === 'fixed_ai'}
-		<FixedAI {test} />
+		<FixedAI {test} revision={data.revision} />
 	{:else}
 		<p>Unknown test type: {test.type}</p>
 	{/if}

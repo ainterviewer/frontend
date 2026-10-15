@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	import { type Question, Synthesize, type TestSetupPublic } from '$lib/api';
+	import { Autosaver, saveRevisioned } from '$lib/content/autosave.svelte';
+	import AutosavePill from '$lib/content/AutosavePill.svelte';
 	import { sanitizeMarkup } from '$lib/utils/sanitize';
 
 	import SimulationActionBar from '../SimulationActionBar.svelte';
@@ -10,42 +11,47 @@
 	type SetupQuestion = Pick<Question, 'main_question' | 'can_answer'> & { id: string };
 	type SetupSection = { description: string; questions: SetupQuestion[] };
 
-	let { test, sections }: { test: TestSetupPublic; sections: SetupSection[] } = $props();
+	let {
+		test,
+		sections,
+		revision
+	}: { test: TestSetupPublic; sections: SetupSection[]; revision: string | null } = $props();
 
 	// By question id, so an answer stays with its question however the guide is
 	// reordered or the interview shuffles it. Seeded once from the test prop;
 	// deliberately not reactive to prop updates.
 	let answers = $state<Record<string, string>>(untrack(() => ({ ...test.fixed_answers })));
 
-	let isSaving = $state(false);
+	// The setup's revision, moved on by each save; a save based on an older one
+	// is refused (someone else saved) and the pill offers to keep either.
+	const etag = { value: untrack(() => revision) };
 
-	async function saveSetup() {
-		isSaving = true;
-		const { error } = await Synthesize.updateFixedAnswers({
-			path: {
-				project_id: test.project_id,
-				test_id: test.id
-			},
-			body: {
-				// Only the questions still in the guide: an answer to one removed
-				// since would never be asked for.
-				answers: Object.fromEntries(
-					sections
-						.flatMap((section) => section.questions)
-						.filter((question) => question.can_answer === true && answers[question.id])
-						.map((question) => [question.id, answers[question.id]])
-				)
-			}
-		});
-		isSaving = false;
-		if (error) {
-			console.error(error);
-			toast.error('Failed to save setup');
-			return;
-		}
-		toast.success('Answers saved');
-	}
+	// Saved as it is edited; there is no Save. Only the questions still in the
+	// guide: an answer to one removed since would never be asked for.
+	const saver = new Autosaver({
+		read: () =>
+			Object.fromEntries(
+				sections
+					.flatMap((section) => section.questions)
+					.filter((question) => question.can_answer === true && answers[question.id]?.trim())
+					.map((question) => [question.id, answers[question.id]])
+			),
+		save: (answers, overwrite) =>
+			saveRevisioned(
+				etag,
+				(headers) =>
+					Synthesize.updateFixedAnswers({
+						path: { project_id: test.project_id, test_id: test.id },
+						body: { answers },
+						headers
+					}),
+				overwrite
+			)
+	});
+	saver.watch();
 </script>
+
+<AutosavePill savers={[saver]} />
 
 <div class="pb-32">
 	<h1 class="page-title">Setup - Fixed Answers</h1>
@@ -82,4 +88,4 @@
 	{/each}
 </div>
 
-<SimulationActionBar current="setup" saving={isSaving} onSave={saveSetup} />
+<SimulationActionBar current="setup" />

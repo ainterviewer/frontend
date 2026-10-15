@@ -15,8 +15,10 @@
 	import { EditorLinkModal } from '$lib/components/modals';
 	import EmailPreview from '$lib/components/preview/EmailPreview.svelte';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
+	import { Autosaver, saveContent } from '$lib/content/autosave.svelte';
+	import AutosavePill from '$lib/content/AutosavePill.svelte';
 	import PublishControl from '$lib/content/PublishControl.svelte';
-	import { contentRevision, isStale, saveWithRevision } from '$lib/content/revision.svelte';
+	import { contentRevision } from '$lib/content/revision.svelte';
 	import {
 		isUrlPlaceholder,
 		nodesToPlaceholders,
@@ -36,30 +38,24 @@
 
 	type KindState = {
 		subject: string;
-		savedSubject: string;
 		templateHtml: string;
-		savedHtml: string;
 		attachments: ParticipantEmailAttachment[];
 		attachmentsLoading: boolean;
 		uploadingAttachments: boolean;
 		deletingAttachment: string | null;
 		loading: boolean;
-		saving: boolean;
 		sending: boolean;
 	};
 
 	function emptyKindState(): KindState {
 		return {
 			subject: '',
-			savedSubject: '',
 			templateHtml: '',
-			savedHtml: '',
 			attachments: [],
 			attachmentsLoading: false,
 			uploadingAttachments: false,
 			deletingAttachment: null,
 			loading: true,
-			saving: false,
 			sending: false
 		};
 	}
@@ -81,22 +77,51 @@
 	let insertTarget = $state<'subject' | 'body'>('body');
 	let attachmentInput: HTMLInputElement;
 
-	const dirty = $derived(
-		current.templateHtml !== current.savedHtml || current.subject !== current.savedSubject
-	);
-	const anyDirty = $derived(
-		states.invitation.templateHtml !== states.invitation.savedHtml ||
-			states.invitation.subject !== states.invitation.savedSubject ||
-			states.reminder.templateHtml !== states.reminder.savedHtml ||
-			states.reminder.subject !== states.reminder.savedSubject
-	);
+	// Each email saved as it is edited; there is no Save. One after the other
+	// (`queue`): they share the emails' revision. The language is read with the
+	// text, so a save still pending when the language changes goes to the
+	// language it was written in.
+	function emailSaver(k: Kind) {
+		return new Autosaver({
+			read: () => ({
+				language,
+				body: { subject: states[k].subject || null, template: states[k].templateHtml || null }
+			}),
+			save: ({ language, body }, overwrite) =>
+				saveContent(
+					project_id,
+					'emails',
+					(headers) =>
+						k === 'reminder'
+							? Participants.setParticipantReminderEmailTemplate({
+									path: { project_id, language },
+									body,
+									headers
+								})
+							: Participants.setParticipantEmailTemplate({
+									path: { project_id, language },
+									body,
+									headers
+								}),
+					overwrite
+				),
+			queue: 'emails'
+		});
+	}
+	const savers: Record<Kind, ReturnType<typeof emailSaver>> = {
+		invitation: emailSaver('invitation'),
+		reminder: emailSaver('reminder')
+	};
+	savers.invitation.watch();
+	savers.reminder.watch();
+	const dirty = $derived(savers[kind].state !== 'saved');
+	const anyDirty = $derived(Object.values(savers).some((s) => s.state !== 'saved'));
 	const missingInterviewUrl = $derived(
 		!!current.templateHtml && !/\{\{\s*interview_url\s*\}\}/.test(current.templateHtml)
 	);
 	const canSend = $derived(
 		!isDemo &&
 			!current.sending &&
-			!current.saving &&
 			!current.loading &&
 			!dirty &&
 			!!current.subject.trim() &&
@@ -160,49 +185,19 @@
 		if (res.error) {
 			toast.error(`Failed to load ${k} email template`);
 			states[k].templateHtml = '';
-			states[k].savedHtml = '';
 			states[k].subject = '';
-			states[k].savedSubject = '';
 		} else {
 			states[k].templateHtml = res.data?.template ?? '';
-			states[k].savedHtml = states[k].templateHtml;
 			states[k].subject = res.data?.subject ?? '';
-			states[k].savedSubject = states[k].subject;
 		}
 		if (k === kind) {
 			editor?.commands.setContent(placeholdersToNodes(states[k].templateHtml || ''), {
 				emitUpdate: false
 			});
 		}
+		// What was loaded is what is saved.
+		savers[k].reset();
 		states[k].loading = false;
-	}
-
-	async function save() {
-		const k = kind;
-		states[k].saving = true;
-		const body = { subject: states[k].subject || null, template: states[k].templateHtml || null };
-		const res = await saveWithRevision(project_id, 'emails', `the ${k} email`, (headers) =>
-			k === 'reminder'
-				? Participants.setParticipantReminderEmailTemplate({
-						path: { project_id, language },
-						body,
-						headers
-					})
-				: Participants.setParticipantEmailTemplate({
-						path: { project_id, language },
-						body,
-						headers
-					})
-		);
-		states[k].saving = false;
-		if (isStale(res)) return;
-		if (res.error) {
-			toast.error('Failed to save template');
-			return;
-		}
-		states[k].savedHtml = states[k].templateHtml;
-		states[k].savedSubject = states[k].subject;
-		toast.success('Template saved');
 	}
 
 	async function sendToParticipants() {
@@ -262,9 +257,10 @@
 		document.body.removeChild(a);
 	}
 
-	function confirmDiscardIfDirty() {
-		if (!anyDirty) return true;
-		return confirm('You have unsaved changes. Discard them and switch language?');
+	// Before switching language: save what is pending in this one.
+	function saveBeforeSwitching() {
+		for (const saver of Object.values(savers)) void saver.flush();
+		return true;
 	}
 
 	function switchKind(next: Kind) {
@@ -377,6 +373,8 @@
 		loadAttachments('reminder');
 	});
 </script>
+
+<AutosavePill savers={Object.values(savers)} />
 
 <div class="">
 	<div class="mb-2">
@@ -648,7 +646,7 @@
 			projectId={project_id}
 			currentLang={language}
 			{availableLanguages}
-			canSwitch={confirmDiscardIfDirty}
+			canSwitch={saveBeforeSwitching}
 		/>
 		<button
 			type="button"
@@ -656,29 +654,19 @@
 			onclick={exportBundle}
 			disabled={isDemo || exporting || anyDirty}
 			title={anyDirty
-				? 'Save your changes before exporting'
+				? 'Wait for your changes to be saved before exporting'
 				: 'Download a self-contained zip with participants, templates and attachments'}
 		>
 			<i class="fa-solid fa-file-zipper"></i>
 			{exporting ? 'Exporting...' : 'Export bundle'}
-		</button>
-		<button
-			type="button"
-			class="flex items-center gap-2 rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-			onclick={save}
-			disabled={isDemo || current.saving || current.loading || !dirty}
-			title="Save template"
-		>
-			<i class="fa-solid fa-floppy-disk"></i>
-			{current.saving ? 'Saving...' : 'Save'}
 		</button>
 		<PublishControl
 			projectId={project_id}
 			lang={language}
 			{availableLanguages}
 			onBeforePublish={async () => {
-				if (dirty) await save();
-				return !dirty;
+				const saved = await Promise.all(Object.values(savers).map((s) => s.flush()));
+				return saved.every(Boolean);
 			}}
 		/>
 		<button
@@ -687,7 +675,7 @@
 			onclick={sendToParticipants}
 			disabled={!canSend}
 			title={dirty
-				? 'Save your changes before sending'
+				? 'Wait for your changes to be saved before sending'
 				: !current.subject.trim()
 					? 'Subject is empty'
 					: missingInterviewUrl
