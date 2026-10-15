@@ -1,5 +1,4 @@
 import { Projects } from '$lib/api';
-import { etagOf } from '$lib/content/revision.svelte';
 
 import type { PageServerLoad } from './$types';
 
@@ -24,7 +23,6 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 		console.error('Error fetching guide:', response.error);
 		return {
 			guide: null,
-			revision: null,
 			lang,
 			project_id,
 			project_name: projectRes.data?.title ?? '',
@@ -35,7 +33,6 @@ export const load: PageServerLoad = async ({ params, locals, fetch }) => {
 
 	return {
 		guide: response.data,
-		revision: etagOf(response.response),
 		lang,
 		project_id,
 		project_name: projectRes.data?.title ?? '',

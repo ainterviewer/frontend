@@ -12,6 +12,7 @@
 		exporting = false,
 		saveLabel = 'Save Changes',
 		onSave,
+		onBeforePublish = onSave,
 		onExportPdf,
 		onExportJson
 	}: {
@@ -21,8 +22,11 @@
 		saving?: boolean;
 		exporting?: boolean;
 		saveLabel?: string;
-		/** Resolves to `false` when the save did not go through. */
-		onSave: () => Promise<boolean | void> | boolean | void;
+		/** Resolves to `false` when the save did not go through. Without it the
+		 * page saves as it goes (the guide), and says so itself. */
+		onSave?: () => Promise<boolean | void> | boolean | void;
+		/** Run before publishing; `false` stops it. The save, by default. */
+		onBeforePublish?: () => Promise<boolean | void> | boolean | void;
 		onExportPdf?: () => Promise<void> | void;
 		onExportJson?: () => void;
 	} = $props();
@@ -54,18 +58,6 @@
 		<div data-tour="language" class="flex">
 			<ProjectLanguagePicker {projectId} currentLang={lang} {availableLanguages} />
 		</div>
-		<a
-			data-tour="try-interview"
-			class="rounded-full bg-gray-100 px-4 py-2 font-medium whitespace-nowrap text-gray-700 hover:bg-gray-200 @3xl:px-6"
-			href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
-			target="_blank"
-			rel="opener"
-			title="Try Interview"
-			aria-label="Try Interview"
-		>
-			<i class="fa-solid fa-person-circle-question"></i>
-			<span class="hidden @3xl:inline">Try Interview</span>
-		</a>
 		<div data-tour="export" class="export-pdf-menu relative">
 			<button
 				type="button"
@@ -115,19 +107,43 @@
 			{/if}
 		</div>
 		<div data-tour="publish" class="flex">
-			<PublishControl {projectId} {lang} {availableLanguages} onBeforePublish={onSave} />
+			<!-- Try Interview beside Publish: test the draft, then send it out. -->
+			<PublishControl {projectId} {lang} {availableLanguages} {onBeforePublish} primary={!onSave}>
+				{#snippet beside()}
+					<a
+						data-tour="try-interview"
+						class={[
+							'rounded-full px-4 py-2 font-medium whitespace-nowrap @3xl:px-6',
+							// Outlined, as Publish is beside a Save; filled grey beside both.
+							onSave
+								? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+								: 'border border-primary text-primary hover:bg-primary/10'
+						]}
+						href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
+						target="_blank"
+						rel="opener"
+						title="Try Interview"
+						aria-label="Try Interview"
+					>
+						<i class="fa-solid fa-person-circle-question"></i>
+						<span class="hidden @3xl:inline">Try Interview</span>
+					</a>
+				{/snippet}
+			</PublishControl>
 		</div>
-		<button
-			data-tour="save"
-			type="button"
-			class="flex items-center gap-2 rounded-full bg-primary px-4 py-2 font-medium whitespace-nowrap text-white shadow-sm hover:bg-dark disabled:opacity-50 @3xl:px-6"
-			onclick={() => onSave()}
-			disabled={saving}
-			title={saveLabel}
-			aria-label={saveLabel}
-		>
-			<i class="fa-solid fa-floppy-disk"></i>
-			<span class="hidden @3xl:inline">{saveLabel}</span>
-		</button>
+		{#if onSave}
+			<button
+				data-tour="save"
+				type="button"
+				class="flex items-center gap-2 rounded-full bg-primary px-4 py-2 font-medium whitespace-nowrap text-white shadow-sm hover:bg-dark disabled:opacity-50 @3xl:px-6"
+				onclick={() => onSave()}
+				disabled={saving}
+				title={saveLabel}
+				aria-label={saveLabel}
+			>
+				<i class="fa-solid fa-floppy-disk"></i>
+				<span class="hidden @3xl:inline">{saveLabel}</span>
+			</button>
+		{/if}
 	</div>
 </div>

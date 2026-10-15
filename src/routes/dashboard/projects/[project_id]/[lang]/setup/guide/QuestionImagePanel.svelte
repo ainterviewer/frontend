@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
+
+	import { page } from '$app/state';
+	import { Projects } from '$lib/api';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
 	import AccordionPanel from './AccordionPanel.svelte';
@@ -15,21 +19,42 @@
 
 	const guideStore = getGuideStore();
 
-	function handleImageUpload(e: Event) {
+	// A preview of the file chosen here, for this tab only: the guide is shared
+	// and saved as it changes, so it names the uploaded file and never carries
+	// the image itself.
+	let preview = $state<string | null>(null);
+	let uploading = $state(false);
+
+	async function handleImageUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
-		if (input.files && input.files[0]) {
-			const file = input.files[0];
-			const reader = new FileReader();
-			reader.onload = (ev) => {
-				question.image = {
-					...(question.image ?? { description: {}, alt: {}, primer: {} }),
-					data: ev.target?.result as string,
-					name: file.name
-				};
-			};
-			reader.readAsDataURL(file);
+		const file = input.files?.[0];
+		if (!file) return;
+		uploading = true;
+		const { data: name, error } = await Projects.uploadImage({
+			path: { project_id: page.params.project_id ?? '' },
+			body: { file }
+		});
+		uploading = false;
+		if (error || !name) {
+			toast.error('Failed to upload the image');
+			return;
 		}
+		if (preview) URL.revokeObjectURL(preview);
+		preview = URL.createObjectURL(file);
+		question.image = {
+			...(question.image ?? { description: {}, alt: {}, primer: {} }),
+			data: null,
+			name
+		};
 	}
+
+	$effect(() => () => {
+		if (preview) URL.revokeObjectURL(preview);
+	});
+
+	let shown = $derived(
+		preview ?? (typeof question.image?.data === 'string' ? question.image.data : null)
+	);
 </script>
 
 {#if question.image}
@@ -45,8 +70,8 @@
 	>
 		{#snippet header()}
 			<div class="h-10 w-10 shrink-0 overflow-hidden rounded bg-gray-200">
-				{#if typeof image.data === 'string'}
-					<img src={image.data} alt="Preview" class="h-full w-full object-cover" />
+				{#if shown}
+					<img src={shown} alt="Preview" class="h-full w-full object-cover" />
 				{:else}
 					<div class="flex h-full w-full items-center justify-center bg-sky-50">
 						<i class="fa-solid fa-image text-lg text-sky-600"></i>
@@ -65,9 +90,9 @@
 
 		<div class="max-w-sm space-y-4">
 			<div class="flex gap-2">
-				{#if typeof image.data === 'string'}
+				{#if shown}
 					<img
-						src={image.data}
+						src={shown}
 						alt="Preview"
 						class="h-16 w-16 rounded border bg-gray-100 object-cover"
 					/>
@@ -77,6 +102,7 @@
 						type="file"
 						accept=".png,.jpg,.webp"
 						class="w-full text-sm text-gray-500 file:mr-2 file:rounded-full file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
+						disabled={uploading}
 						onchange={handleImageUpload}
 					/>
 					<label class="flex flex-col">

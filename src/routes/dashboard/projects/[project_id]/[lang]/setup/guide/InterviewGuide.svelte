@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
-	import { beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type {
@@ -12,8 +11,11 @@
 		ProjectLanguage,
 		Welcome
 	} from '$lib/api/types.gen';
+	import { acquireGuideSession, presenceUser } from '$lib/collab/guideSession.svelte';
+	import { presence } from '$lib/collab/presence.svelte';
+	import PresenceAvatars from '$lib/collab/PresenceAvatars.svelte';
+	import SyncState from '$lib/collab/SyncState.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { contentRevision } from '$lib/content/revision.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
@@ -21,13 +23,14 @@
 	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import SetupActionBar from '../SetupActionBar.svelte';
 	import TranslationBanner from '../TranslationBanner.svelte';
+	import { bindGuide } from './bindGuide.svelte';
 	import BulkSettingsModal from './BulkSettingsModal.svelte';
+	import { validateGuideConditions } from './conditions';
 	import GenerateModal from './GenerateModal.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
 	import { countUntranslated, pick } from './localized';
 	import { addLocalSections, localQuestion, mapToLocal, newSection } from './normalize';
 	import { renderLocal } from './render';
-	import { saveGuide } from './save';
 	import SortableSection from './SortableSection.svelte';
 	import TextField from './TextField.svelte';
 	import type { GuideQuestion } from './types';
@@ -37,22 +40,18 @@
 		lang,
 		projectName = '',
 		availableLanguages = [],
-		externalParams = [],
-		revision = null
+		externalParams = []
 	} = $props<{
 		guide: LocalizedInterviewGuide | null;
 		lang: string;
 		projectName?: string;
 		availableLanguages?: ProjectLanguage[];
 		externalParams?: ExternalParam[];
-		/** The content revision the guide was loaded at (its `ETag`). */
-		revision?: string | null;
 	}>();
 
 	const guideStore = getGuideStore();
 
 	// State
-	let saving = $state(false);
 	let exporting = $state(false);
 	let translating = $state(false);
 
@@ -70,26 +69,51 @@
 		guideStore.top = mapped.top;
 	}
 
+	// What the page was rendered with, until the shared doc has synced and
+	// replaces it (see `bindGuide`). Read-only until then.
 	// svelte-ignore state_referenced_locally
 	applyGuide(initialGuide);
 
-	function getSnapshot() {
-		return JSON.stringify({
-			top: guideStore.top,
-			sections: guideStore.localSections,
-			questions: guideStore.localQuestions
-		});
-	}
+	let projectId = $state(page.params.project_id ?? '');
 
-	let savedSnapshot = $state(getSnapshot());
-
-	beforeNavigate(({ cancel }) => {
-		if (getSnapshot() !== savedSnapshot) {
-			if (!confirm('You have unsaved changes. Are you sure you want to leave?')) {
-				cancel();
-			}
+	// Everyone with the guide open edits one shared doc, saved as they type:
+	// there is no Save. Viewers see it live and cannot change it.
+	const canEdit =
+		page.data.user?.scope === 'admin' ||
+		page.data.permissions?.role === 'editor' ||
+		page.data.permissions?.role === 'admin';
+	const session = acquireGuideSession(projectId, presenceUser(page.data.user));
+	onDestroy(() => session.release());
+	const unbind = bindGuide({
+		session,
+		store: guideStore,
+		languages: () => availableLanguages.map((l: ProjectLanguage) => l.code),
+		externalParams: () => externalParams,
+		onLoad: () => {
+			// A doc with no sections gets one to start from, as a new guide did.
+			if (canEdit && guideStore.localSections.length === 0) addSection();
 		}
 	});
+	onDestroy(unbind);
+	let editable = $derived(canEdit && session.loaded && session.status !== 'refused');
+
+	// Conditions that read a later question or a removed option: marked as they
+	// happen, since nothing waits for a Save to check them any more.
+	$effect(() => {
+		guideStore.invalidConditionQuestionIds = validateGuideConditions(
+			guideStore.localSections,
+			guideStore.localQuestions
+		).invalidQuestionIds;
+	});
+
+	// The blocks presence is reported by: what the editor gives an element id.
+	function isBlock(id: string) {
+		return (
+			['framing', 'introduction', 'outro', 'timed_messages'].includes(id) ||
+			guideStore.localSections.some((s) => s.id === id) ||
+			Object.values(guideStore.localQuestions).some((qs) => qs.some((q) => q.id === id))
+		);
+	}
 
 	let languageName = $derived(
 		availableLanguages.find((l: ProjectLanguage) => l.code === lang)?.name ?? lang
@@ -102,13 +126,6 @@
 		countUntranslated(guideStore.top, guideStore.localSections, guideStore.localQuestions, lang)
 	);
 
-	let projectId = $state(page.params.project_id ?? '');
-
-	// Adopted once, at mount: the revision the content on screen was loaded
-	// at. Later ones come only from this page's own saves, so reloading the
-	// page data (which the parent keys this component on) cannot make stale
-	// edits look current.
-	onMount(() => contentRevision.set(projectId, 'guide', revision));
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
 	// Modal state
@@ -121,7 +138,7 @@
 	let activeId = $state('');
 
 	async function handleGenerateGuide(prompt: string) {
-		const { data, error, response } = await Projects.generateGuide({
+		const { data, error } = await Projects.generateGuide({
 			path: { project_id: projectId, lang: lang },
 			body: { prompt }
 		});
@@ -130,11 +147,8 @@
 			toast.error('Failed to generate guide');
 			return;
 		}
-		// The generated guide is already persisted server-side and replaces the
-		// guide in every language; the others show as untranslated.
-		contentRevision.take(projectId, 'guide', response);
-		applyGuide(data);
-		savedSnapshot = getSnapshot();
+		// The server saved it, replacing the guide in every language (the others
+		// show as untranslated); it reaches the doc, and this page, from there.
 	}
 
 	async function handleGenerateSection(prompt: string) {
@@ -167,7 +181,7 @@
 			// since the last save is not in yet.
 			toast.error(
 				response?.status === 404
-					? 'Save the guide before generating questions for a new section'
+					? 'The new section is still being saved; try again in a moment'
 					: 'Failed to generate question'
 			);
 			return;
@@ -183,52 +197,30 @@
 		generatingQuestionSectionId = null;
 	}
 
-	async function save(): Promise<boolean> {
-		saving = true;
-		const result = await saveGuide(
-			projectId,
-			guideStore.top,
-			guideStore.localSections,
-			guideStore.localQuestions,
-			externalParams
-		);
-		saving = false;
-		if (result.status === 'stale') return false;
-		if (result.status === 'invalid') {
-			guideStore.invalidConditionQuestionIds = result.invalidQuestionIds;
-			toast.error(
-				'Some conditions reference a later question or section, or an option that is gone. Please fix the highlighted conditions.'
-			);
+	// Before publishing: what is published is what the server has, so this
+	// tab's changes must have reached it.
+	function readyToPublish(): boolean {
+		if (session.status !== 'synced') {
+			toast.error('Reconnecting to the server; publish once your changes are saved');
 			return false;
 		}
-		if (result.status === 'error') {
-			console.error('Failed to save guide', result.error);
-			toast.error('Failed to save guide');
-			return false;
-		}
-		guideStore.invalidConditionQuestionIds = [];
-		savedSnapshot = getSnapshot();
-		toast.success('Guide saved');
 		return true;
 	}
 
 	// Machine-translates what this language lacks, from the default language.
-	// The server translates the saved guide, so unsaved edits are saved first.
+	// The server saves the doc first and merges the translation into it, so it
+	// arrives here like anyone else's edit.
 	async function translateMissing() {
-		if (getSnapshot() !== savedSnapshot && !(await save())) return;
 		translating = true;
 		const { data, error } = await Projects.translateMissing({
 			path: { project_id: projectId, lang }
 		});
-		contentRevision.setNumber(projectId, 'guide', data?.revisions.guide);
 		translating = false;
 		if (error || !data) {
 			console.error('Failed to translate', error);
 			toast.error('Failed to translate the missing text');
 			return;
 		}
-		applyGuide(data.guide);
-		savedSnapshot = getSnapshot();
 		toast.success(`Translated the missing ${languageName} text`);
 	}
 
@@ -407,7 +399,8 @@
 
 <svelte:window
 	onbeforeunload={(e) => {
-		if (getSnapshot() !== savedSnapshot) {
+		// Changes made offline exist only in this tab until it reconnects.
+		if (session.status === 'offline' && session.unsaved) {
 			e.preventDefault();
 			e.returnValue = '';
 		}
@@ -419,14 +412,31 @@
      textareas -- and used to be written unscoped, which left them reaching
      into every other printable route. -->
 <div class="print-guide">
-	<div class="flex justify-between">
-		<h1 class="page-title">Interview Guide</h1>
-		<div class="mb-2 flex gap-2">
+	<!-- Who else is here and whether it is all saved: pinned to the window's
+	     top right, just under the header (2.75rem), clear of the pane's
+	     scrollbar, so it stays put however far the guide scrolls. -->
+	<div
+		data-tour="sync-state"
+		class={[
+			'fixed top-[3.75rem] right-6 z-30 flex h-9 items-center gap-3 rounded-full border border-gray-200 bg-white/90 py-1 pr-4 shadow-md backdrop-blur print:hidden',
+			session.peers.length > 0 ? 'pl-1' : 'pl-4'
+		]}
+	>
+		<PresenceAvatars peers={session.peers} />
+		<SyncState {session} />
+	</div>
+	<h1 class="page-title">Interview Guide</h1>
+	<div class="mb-6 flex items-center gap-8">
+		<p class="min-w-0 flex-1 text-gray-600">
+			On this page, you can create an interview guide that will be used by AInterviewer to conduct
+			the model. The interview guide consists of different components with different settings.
+		</p>
+		<div class="flex shrink-0 gap-2">
 			<button
 				data-tour="bulk-settings"
-				class="rounded-full bg-gray-100 px-6 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+				class="rounded-full bg-gray-100 px-6 py-2 font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
 				onclick={() => (showBulkSettingsModal = true)}
-				disabled={totalQuestions === 0}
+				disabled={!editable || totalQuestions === 0}
 				title={totalQuestions === 0 ? 'Add a question first' : 'Edit settings for all questions'}
 			>
 				<i class="fa-solid fa-sliders"></i>
@@ -434,19 +444,15 @@
 			</button>
 			<button
 				data-tour="generate"
-				class="rounded-full bg-secondary px-6 font-medium text-gray-700 hover:brightness-95"
+				class="rounded-full bg-secondary px-6 py-2 font-medium text-gray-700 hover:brightness-95"
 				onclick={() => (showGenerateGuideModal = true)}
+				disabled={!editable}
 			>
 				<i class="fa-solid fa-wand-magic-sparkles"></i>
 				Generate
 			</button>
 		</div>
 	</div>
-
-	<p class="mb-6 text-gray-600">
-		On this page, you can create an interview guide that will be used by AInterviewer to conduct the
-		model. The interview guide consists of different components with different settings.
-	</p>
 
 	<TranslationBanner
 		{languageName}
@@ -456,7 +462,7 @@
 		inProgress={availableLanguages.find((l: ProjectLanguage) => l.code === lang)?.in_progress ??
 			false}
 		{translating}
-		disabled={saving}
+		disabled={!editable}
 		onTranslate={translateMissing}
 	/>
 
@@ -469,224 +475,230 @@
 		/>
 
 		<div class="min-w-0 flex-1 space-y-8">
-			<!-- Framing -->
-			<div
-				data-tour="framing"
-				id="framing"
-				class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-			>
-				<h3 class="mb-2 text-lg font-medium">Framing</h3>
-				<p class="mb-4 text-sm text-gray-500">
-					Present the framing of your interview and relevant background information. This is only
-					used by the model to help it ask more relevant questions.
-				</p>
-				<TextField
-					multiline
-					class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
-					text={guideStore.top.framing}
-				/>
-			</div>
-
-			<!-- Introduction -->
-			<div
-				data-tour="introduction"
-				id="introduction"
-				class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-			>
-				<h3 class="mb-2 text-lg font-medium">Introduction</h3>
-				<p class="mb-4 text-sm text-gray-500">
-					Write an introduction to your interview. This is the first message the interviewee will
-					see in the chat and cannot be answered.
-				</p>
-				<TextField
-					multiline
-					class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
-					text={guideStore.top.introduction}
-				/>
-			</div>
-
-			<!-- Sections -->
-			<div id="sections" class="scroll-mt-6">
-				<h3 class="mb-2 text-lg font-medium">Question sections</h3>
-				<p class="mb-4 text-sm text-gray-500">
-					Group your questions into multiple relevant sections.
-				</p>
-
-				<div class="space-y-6">
-					{#each guideStore.localSections as section, sIdx (section.id)}
-						<SortableSection
-							{section}
-							dataTour={sIdx === 0 ? 'section' : undefined}
-							questions={guideStore.localQuestions[section.id]}
-							sectionIndex={sIdx}
-							allSections={guideStore.localSections}
-							allQuestions={guideStore.localQuestions}
-							onRemove={() => removeSection(sIdx)}
-							onGenerateQuestion={() => {
-								generatingQuestionSectionId = section.id;
-								showGenerateQuestionModal = true;
-							}}
-						/>
-					{/each}
-				</div>
-
-				<div class="mt-6 grid grid-cols-2 gap-4">
-					<button
-						class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
-						onclick={addSection}
-					>
-						<i class="fa-solid fa-plus"></i> Add Section
-					</button>
-					<button
-						class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
-						onclick={() => (showGenerateSectionModal = true)}
-					>
-						<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Section
-					</button>
-				</div>
-			</div>
-
-			<!-- AI Generated Sections -->
-			<div
-				data-tour="ai-generated-sections"
-				class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-			>
-				<div class="flex items-center gap-3">
-					<label class="text-sm font-medium text-gray-700" for="ai-generated-sections">
-						AI Generated Sections
-					</label>
-					<input
-						id="ai-generated-sections"
-						type="number"
-						min="0"
-						class="w-20 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
-						bind:value={guideStore.top.ai_generated_sections}
-					/>
-					<HoverInfo
-						text="Specifies the number of sections that will be automatically generated once the predefined ones are finished."
-					/>
-				</div>
-			</div>
-
-			<!-- Outro -->
-			<div
-				data-tour="outro"
-				id="outro"
-				class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-			>
-				<h3 class="mb-2 text-lg font-medium">Outro</h3>
-				<p class="mb-4 text-sm text-gray-500">Last message in the interview.</p>
-				<TextField
-					multiline
-					class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
-					text={guideStore.top.outro}
-				/>
-			</div>
-
-			<!-- Timed Messages -->
-			<div
-				data-tour="timed-messages"
-				id="timed_messages"
-				class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-			>
-				<h3 class="mb-2 text-lg font-medium">Timed Messages</h3>
-				<p class="mb-4 text-sm text-gray-500">
-					Schedule messages to be sent to the interviewee during the interview after a specified
-					number of seconds.
-				</p>
-
-				<div class="space-y-4">
-					{#each guideStore.top.timed_messages as tm, i (i)}
-						<div class="rounded-md border border-gray-200 bg-gray-50 p-4">
-							<div class="mb-3 flex items-center justify-between">
-								<span class="text-sm font-medium text-gray-700">Timed Message {i + 1}</span>
-								<button
-									class="cursor-pointer text-sm text-gray-700 transition-colors hover:text-red-500"
-									onclick={() => removeTimedMessage(i)}
-									title="Remove timed message"
-								>
-									<i class="fa-solid fa-trash"></i>
-								</button>
-							</div>
-
-							<div class="space-y-3">
-								<div>
-									<label class="mb-1 block text-sm font-medium text-gray-600" for="tm-message-{i}">
-										Message
-									</label>
-									<TextField
-										multiline
-										id="tm-message-{i}"
-										class="h-20 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
-										text={tm.message}
-									/>
-								</div>
-
-								<div>
-									<label class="mb-1 block text-sm font-medium text-gray-600" for="tm-time-{i}">
-										Time (seconds)
-									</label>
-									<input
-										id="tm-time-{i}"
-										type="number"
-										min="0"
-										class="w-32 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
-										bind:value={tm.time}
-									/>
-								</div>
-
-								<div class="flex gap-6">
-									<div class="flex gap-2">
-										<label
-											class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
-										>
-											<input
-												class="rounded border-gray-300 text-primary focus:ring-primary"
-												type="checkbox"
-												bind:checked={tm.include_in_history}
-											/>
-											Include in history
-										</label>
-										<HoverInfo
-											text="Includes the question in the conversation history. This means that the AInterviewer will have access to the information from this message when asking other questions."
-										></HoverInfo>
-									</div>
-									<div class="flex hidden gap-2">
-										<label
-											class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
-										>
-											<input
-												class="rounded border-gray-300 text-primary focus:ring-primary"
-												type="checkbox"
-												bind:checked={tm.as_modal}
-											/>
-											Show as modal
-										</label>
-										<HoverInfo
-											text="Should the message be shown as a modal (pop-up message) instead of a normal message in the chat interface?"
-										></HoverInfo>
-									</div>
-								</div>
-							</div>
-						</div>
-					{/each}
-				</div>
-
-				<button
-					class="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-white py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
-					onclick={addTimedMessage}
+			<!-- One shared doc: disabled for viewers, and until it has synced so
+			     nothing typed is replaced by it. -->
+			<fieldset class="min-w-0 space-y-8" disabled={!editable} use:presence={{ session, isBlock }}>
+				<!-- Framing -->
+				<div
+					data-tour="framing"
+					id="framing"
+					class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
 				>
-					<i class="fa-solid fa-plus"></i> Add Timed Message
-				</button>
-			</div>
+					<h3 class="mb-2 text-lg font-medium">Framing</h3>
+					<p class="mb-4 text-sm text-gray-500">
+						Present the framing of your interview and relevant background information. This is only
+						used by the model to help it ask more relevant questions.
+					</p>
+					<TextField
+						multiline
+						class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
+						text={guideStore.top.framing}
+					/>
+				</div>
+
+				<!-- Introduction -->
+				<div
+					data-tour="introduction"
+					id="introduction"
+					class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+				>
+					<h3 class="mb-2 text-lg font-medium">Introduction</h3>
+					<p class="mb-4 text-sm text-gray-500">
+						Write an introduction to your interview. This is the first message the interviewee will
+						see in the chat and cannot be answered.
+					</p>
+					<TextField
+						multiline
+						class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
+						text={guideStore.top.introduction}
+					/>
+				</div>
+
+				<!-- Sections -->
+				<div id="sections" class="scroll-mt-6">
+					<h3 class="mb-2 text-lg font-medium">Question sections</h3>
+					<p class="mb-4 text-sm text-gray-500">
+						Group your questions into multiple relevant sections.
+					</p>
+
+					<div class="space-y-6">
+						{#each guideStore.localSections as section, sIdx (section.id)}
+							<SortableSection
+								{section}
+								dataTour={sIdx === 0 ? 'section' : undefined}
+								questions={guideStore.localQuestions[section.id]}
+								sectionIndex={sIdx}
+								allSections={guideStore.localSections}
+								allQuestions={guideStore.localQuestions}
+								onRemove={() => removeSection(sIdx)}
+								onGenerateQuestion={() => {
+									generatingQuestionSectionId = section.id;
+									showGenerateQuestionModal = true;
+								}}
+							/>
+						{/each}
+					</div>
+
+					<div class="mt-6 grid grid-cols-2 gap-4">
+						<button
+							class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
+							onclick={addSection}
+						>
+							<i class="fa-solid fa-plus"></i> Add Section
+						</button>
+						<button
+							class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
+							onclick={() => (showGenerateSectionModal = true)}
+						>
+							<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Section
+						</button>
+					</div>
+				</div>
+
+				<!-- AI Generated Sections -->
+				<div
+					data-tour="ai-generated-sections"
+					class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+				>
+					<div class="flex items-center gap-3">
+						<label class="text-sm font-medium text-gray-700" for="ai-generated-sections">
+							AI Generated Sections
+						</label>
+						<input
+							id="ai-generated-sections"
+							type="number"
+							min="0"
+							class="w-20 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+							bind:value={guideStore.top.ai_generated_sections}
+						/>
+						<HoverInfo
+							text="Specifies the number of sections that will be automatically generated once the predefined ones are finished."
+						/>
+					</div>
+				</div>
+
+				<!-- Outro -->
+				<div
+					data-tour="outro"
+					id="outro"
+					class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+				>
+					<h3 class="mb-2 text-lg font-medium">Outro</h3>
+					<p class="mb-4 text-sm text-gray-500">Last message in the interview.</p>
+					<TextField
+						multiline
+						class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
+						text={guideStore.top.outro}
+					/>
+				</div>
+
+				<!-- Timed Messages -->
+				<div
+					data-tour="timed-messages"
+					id="timed_messages"
+					class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+				>
+					<h3 class="mb-2 text-lg font-medium">Timed Messages</h3>
+					<p class="mb-4 text-sm text-gray-500">
+						Schedule messages to be sent to the interviewee during the interview after a specified
+						number of seconds.
+					</p>
+
+					<div class="space-y-4">
+						{#each guideStore.top.timed_messages as tm, i (i)}
+							<div class="rounded-md border border-gray-200 bg-gray-50 p-4">
+								<div class="mb-3 flex items-center justify-between">
+									<span class="text-sm font-medium text-gray-700">Timed Message {i + 1}</span>
+									<button
+										class="cursor-pointer text-sm text-gray-700 transition-colors hover:text-red-500"
+										onclick={() => removeTimedMessage(i)}
+										title="Remove timed message"
+									>
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								</div>
+
+								<div class="space-y-3">
+									<div>
+										<label
+											class="mb-1 block text-sm font-medium text-gray-600"
+											for="tm-message-{i}"
+										>
+											Message
+										</label>
+										<TextField
+											multiline
+											id="tm-message-{i}"
+											class="h-20 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+											text={tm.message}
+										/>
+									</div>
+
+									<div>
+										<label class="mb-1 block text-sm font-medium text-gray-600" for="tm-time-{i}">
+											Time (seconds)
+										</label>
+										<input
+											id="tm-time-{i}"
+											type="number"
+											min="0"
+											class="w-32 rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+											bind:value={tm.time}
+										/>
+									</div>
+
+									<div class="flex gap-6">
+										<div class="flex gap-2">
+											<label
+												class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+											>
+												<input
+													class="rounded border-gray-300 text-primary focus:ring-primary"
+													type="checkbox"
+													bind:checked={tm.include_in_history}
+												/>
+												Include in history
+											</label>
+											<HoverInfo
+												text="Includes the question in the conversation history. This means that the AInterviewer will have access to the information from this message when asking other questions."
+											></HoverInfo>
+										</div>
+										<div class="flex hidden gap-2">
+											<label
+												class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+											>
+												<input
+													class="rounded border-gray-300 text-primary focus:ring-primary"
+													type="checkbox"
+													bind:checked={tm.as_modal}
+												/>
+												Show as modal
+											</label>
+											<HoverInfo
+												text="Should the message be shown as a modal (pop-up message) instead of a normal message in the chat interface?"
+											></HoverInfo>
+										</div>
+									</div>
+								</div>
+							</div>
+						{/each}
+					</div>
+
+					<button
+						class="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-white py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+						onclick={addTimedMessage}
+					>
+						<i class="fa-solid fa-plus"></i> Add Timed Message
+					</button>
+				</div>
+			</fieldset>
 
 			<SetupActionBar
 				{projectId}
 				{lang}
 				{availableLanguages}
-				{saving}
 				{exporting}
-				onSave={save}
+				onBeforePublish={readyToPublish}
 				onExportPdf={() => {
 					showExportPdfModal = true;
 				}}

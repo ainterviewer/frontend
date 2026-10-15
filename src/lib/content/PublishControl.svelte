@@ -9,6 +9,7 @@
 </script>
 
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import { Versions } from '$lib/api';
@@ -23,7 +24,9 @@
 		projectId,
 		lang,
 		availableLanguages = [],
-		onBeforePublish
+		onBeforePublish,
+		primary = false,
+		beside
 	}: {
 		projectId: string;
 		lang: string;
@@ -33,6 +36,10 @@
 		 * screen. Resolving to `false` stops the publish.
 		 */
 		onBeforePublish?: () => Promise<boolean | void> | boolean | void;
+		/** The page's main action, filled: where nothing else is (no Save). */
+		primary?: boolean;
+		/** Drawn right before the Publish button, after the history. */
+		beside?: Snippet;
 	} = $props();
 
 	// svelte-ignore state_referenced_locally
@@ -135,9 +142,13 @@
 			></span>
 		{/if}
 	</button>
+	{@render beside?.()}
 	<button
 		type="button"
-		class="flex items-center gap-2 rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 disabled:opacity-50 @3xl:px-6"
+		class={[
+			'flex items-center gap-2 rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap disabled:opacity-50 @3xl:px-6',
+			primary ? 'bg-primary text-white shadow-sm hover:bg-dark' : 'text-primary hover:bg-primary/10'
+		]}
 		onclick={openDialog}
 		disabled={publishing}
 		title="Publish the draft to respondents"

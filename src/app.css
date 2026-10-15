@@ -198,7 +198,7 @@
 	}
 
 	/* Hide helper description texts */
-	.print-guide .page-title + p {
+	.print-guide .page-title + div > p {
 		display: none !important;
 	}
 
@@ -405,5 +405,42 @@
 
 	&:hover {
 		color: var(--color-red-500) !important;
+	}
+}
+
+/* Someone else is in this block of the guide editor (`$lib/collab/presence`):
+   a ring in their colour, their name on it. Global because the blocks are
+   other components' elements. */
+.presence-ring {
+	position: relative;
+	box-shadow: 0 0 0 2px var(--presence-color);
+
+	&::after {
+		content: attr(data-presence);
+		position: absolute;
+		top: -0.6rem;
+		right: 0.75rem;
+		z-index: 10;
+		max-width: 16rem;
+		overflow: hidden;
+		border-radius: 9999px;
+		background-color: var(--presence-color);
+		padding: 0 0.4rem;
+		font-size: 11px;
+		line-height: 1.1rem;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		color: white;
+		pointer-events: none;
+	}
+}
+
+@media print {
+	.presence-ring {
+		box-shadow: none;
+
+		&::after {
+			content: none;
+		}
 	}
 }

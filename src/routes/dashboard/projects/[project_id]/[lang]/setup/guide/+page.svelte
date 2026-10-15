@@ -232,11 +232,11 @@
 					}
 				},
 				{
-					element: '[data-tour="save"]',
+					element: '[data-tour="sync-state"]',
 					popover: {
-						title: 'Save Changes',
+						title: 'Saved as you type',
 						description:
-							"Persist your edits. Don't forget to save — you'll be warned if you try to leave the page with unsaved changes."
+							'Your changes are saved as you make them, and anyone else with the guide open sees them straight away. This shows whether everything is saved.'
 					}
 				},
 				{
@@ -502,7 +502,7 @@
 
 <svelte:window onpointermove={(e) => (pointerY = e.clientY)} />
 
-{#key `${data.project_id}-${data.lang}-${data.revision}`}
+{#key `${data.project_id}-${data.lang}`}
 	<DragDropProvider
 		{sensors}
 		onDragOver={handleDragOver}
@@ -515,7 +515,6 @@
 			projectName={data.project_name}
 			availableLanguages={data.available_languages}
 			externalParams={data.external_params}
-			revision={data.revision}
 		/>
 
 		<AssistanceChat
