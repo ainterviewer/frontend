@@ -253,21 +253,21 @@ export type BodyUploadAudio = {
  */
 export type BodyUploadImage = {
     /**
-     * Primer
-     */
-    primer: string;
-    /**
-     * Description
-     */
-    description: string;
-    /**
-     * Alt
-     */
-    alt: string;
-    /**
      * File
      */
     file: Blob | File;
+    /**
+     * Primer
+     */
+    primer?: string;
+    /**
+     * Description
+     */
+    description?: string;
+    /**
+     * Alt
+     */
+    alt?: string;
 };
 
 /**
@@ -929,6 +929,10 @@ export type ContentStatus = {
     missing: {
         [key in LanguageCode]?: Array<string>;
     };
+    /**
+     * Guide Errors
+     */
+    guide_errors?: Array<string>;
 };
 
 /**
@@ -9657,10 +9661,14 @@ export type UploadImageError = UploadImageErrors[keyof UploadImageErrors];
 
 export type UploadImageResponses = {
     /**
+     * Response Upload Image
+     *
      * Successful Response
      */
-    200: unknown;
+    200: string;
 };
+
+export type UploadImageResponse = UploadImageResponses[keyof UploadImageResponses];
 
 export type GetInterviewAgentsData = {
     body?: never;

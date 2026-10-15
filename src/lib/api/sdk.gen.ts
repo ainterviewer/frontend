@@ -1808,6 +1808,9 @@ export class Projects {
     
     /**
      * Upload Image
+     *
+     * Store a guide image. Returns the name to put in the question's
+     * `image.name`; the guide never carries the image itself.
      */
     public static uploadImage<ThrowOnError extends boolean = false>(options: Options<UploadImageData, ThrowOnError>): RequestResult<UploadImageResponses, UploadImageErrors, ThrowOnError> {
         return (options.client ?? client).post<UploadImageResponses, UploadImageErrors, ThrowOnError>({

@@ -80,10 +80,10 @@ export const zBodyUploadAudio = z.object({
  * Body_upload_image
  */
 export const zBodyUploadImage = z.object({
-    primer: z.string(),
-    description: z.string(),
-    alt: z.string(),
-    file: z.string()
+    file: z.string(),
+    primer: z.string().optional().default(''),
+    description: z.string().optional().default(''),
+    alt: z.string().optional().default('')
 });
 
 /**
@@ -1156,7 +1156,8 @@ export const zContentStatus = z.object({
     ]),
     next_semver: z.string(),
     languages_in_progress: z.array(zLanguageCode),
-    missing: z.record(z.string(), z.array(z.string()))
+    missing: z.record(z.string(), z.array(z.string())),
+    guide_errors: z.array(z.string()).optional().default([])
 });
 
 /**
@@ -4668,6 +4669,13 @@ export const zUploadImagePath = z.object({
 export const zUploadImageQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+/**
+ * Response Upload Image
+ *
+ * Successful Response
+ */
+export const zUploadImageResponse = z.string();
 
 export const zGetInterviewAgentsPath = z.object({
     project_id: z.string().nullable()
