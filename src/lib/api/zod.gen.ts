@@ -2197,7 +2197,7 @@ export const zTestSetupPublic = z.object({
     id: z.string(),
     created_at: z.iso.datetime(),
     background_info: zBackgroundInfoOptions.nullish(),
-    fixed_answers: z.array(z.string()).nullish(),
+    fixed_answers: z.record(z.string(), z.string()).nullish(),
     fixed_personas: z.array(z.string()).nullish()
 });
 
@@ -2758,7 +2758,7 @@ export const zUpdateEmailRequest = z.object({
  * UpdateFixedAnswersRequest
  */
 export const zUpdateFixedAnswersRequest = z.object({
-    answers: z.array(z.string())
+    answers: z.record(z.string(), z.string())
 });
 
 /**
@@ -3211,7 +3211,8 @@ export const zOutgoingMessage = z.object({
     can_answer: z.boolean().optional().default(true),
     user_image: z.boolean().optional().default(false),
     progress: z.number().gte(0).lte(100).nullish().default(null),
-    is_probe: z.boolean().optional().default(false)
+    is_probe: z.boolean().optional().default(false),
+    question_id: z.uuid().nullish().default(null)
 });
 
 /**
@@ -5093,6 +5094,13 @@ export const zGetFixedAnswersPath = z.object({
 export const zGetFixedAnswersQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+/**
+ * Response Get Fixed Answers
+ *
+ * Successful Response
+ */
+export const zGetFixedAnswersResponse = z.record(z.string(), z.string()).nullable();
 
 export const zUpdateFixedAnswersBody = zUpdateFixedAnswersRequest;
 

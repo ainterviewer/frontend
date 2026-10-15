@@ -4892,7 +4892,9 @@ export type TestSetupPublic = {
     /**
      * Fixed Answers
      */
-    fixed_answers?: Array<string> | null;
+    fixed_answers?: {
+        [key: string]: string;
+    } | null;
     /**
      * Fixed Personas
      */
@@ -5101,7 +5103,9 @@ export type UpdateFixedAnswersRequest = {
     /**
      * Answers
      */
-    answers: Array<string>;
+    answers: {
+        [key: string]: string;
+    };
 };
 
 /**
@@ -5627,6 +5631,10 @@ export type OutgoingMessage = {
      * Is Probe
      */
     is_probe?: boolean;
+    /**
+     * Question Id
+     */
+    question_id?: string | null;
 };
 
 /**
@@ -10855,10 +10863,16 @@ export type GetFixedAnswersError = GetFixedAnswersErrors[keyof GetFixedAnswersEr
 
 export type GetFixedAnswersResponses = {
     /**
+     * Response Get Fixed Answers
+     *
      * Successful Response
      */
-    200: unknown;
+    200: {
+        [key: string]: string;
+    } | null;
 };
+
+export type GetFixedAnswersResponse = GetFixedAnswersResponses[keyof GetFixedAnswersResponses];
 
 export type UpdateFixedAnswersData = {
     body: UpdateFixedAnswersRequest;
