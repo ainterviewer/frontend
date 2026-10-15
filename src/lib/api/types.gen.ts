@@ -930,9 +930,11 @@ export type ContentStatus = {
         [key in LanguageCode]?: Array<string>;
     };
     /**
-     * Guide Errors
+     * Doc Errors
      */
-    guide_errors?: Array<string>;
+    doc_errors?: {
+        [key in ContentPart]?: Array<string>;
+    };
 };
 
 /**

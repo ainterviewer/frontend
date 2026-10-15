@@ -1157,7 +1157,7 @@ export const zContentStatus = z.object({
     next_semver: z.string(),
     languages_in_progress: z.array(zLanguageCode),
     missing: z.record(z.string(), z.array(z.string())),
-    guide_errors: z.array(z.string()).optional().default([])
+    doc_errors: z.record(z.string(), z.array(z.string())).optional().default({})
 });
 
 /**
