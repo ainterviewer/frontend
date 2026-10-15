@@ -1,14 +1,16 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
-	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { LocalizedConsent, ProjectLanguage, Welcome } from '$lib/api/types.gen';
+	import { bindFlat } from '$lib/collab/bindFlat.svelte';
+	import CollabPill from '$lib/collab/CollabPill.svelte';
+	import { acquireContentSession, presenceUser } from '$lib/collab/contentSession.svelte';
+	import { presence } from '$lib/collab/presence.svelte';
 	import { ConsentModal } from '$lib/components/modals';
 	import ConsentPreview from '$lib/components/preview/ConsentPreview.svelte';
-	import { contentRevision, isStale, saveWithRevision } from '$lib/content/revision.svelte';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
@@ -22,24 +24,16 @@
 		initialData?: LocalizedConsent | null;
 		availableLanguages?: ProjectLanguage[];
 		projectName?: string;
-		/** The content revision this was loaded at (its `ETag`). */
-		revision?: string | null;
 	}
 
 	let {
 		initialData = null,
 		availableLanguages: initialAvailableLanguages = [],
-		projectName = 'Interview Guide',
-		revision = null
+		projectName = 'Interview Guide'
 	}: Props = $props();
 
-	let projectId = $derived(page.params.project_id ?? '');
-
-	// Adopted once, at mount: the revision the content on screen was loaded
-	// at. Later ones come only from this page's own saves, so reloading the
-	// page data (which the parent keys this component on) cannot make stale
-	// edits look current.
-	onMount(() => contentRevision.set(projectId, 'consent', revision));
+	// The project a page is for never changes under it.
+	const projectId = page.params.project_id ?? '';
 	let language = $derived(page.params.lang ?? '');
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 	// The consent in every language; this page edits `language`'s text.
@@ -49,9 +43,27 @@
 		text: { ...(initialData?.text ?? {}) }
 	});
 	let showFullscreenModal = $state(false);
-	let saving = $state(false);
 	let exporting = $state(false);
 	const availableLanguages = $derived<ProjectLanguage[]>(initialAvailableLanguages);
+
+	// Co-edited live, like the guide: every keystroke goes into the shared doc,
+	// which the server saves. There is no Save. Viewers see it live and cannot
+	// change it.
+	const canEdit =
+		page.data.user?.scope === 'admin' ||
+		page.data.permissions?.role === 'editor' ||
+		page.data.permissions?.role === 'admin';
+	const session = acquireContentSession(projectId, 'consent', presenceUser(page.data.user));
+	onDestroy(() => session.release());
+	const unbind = bindFlat({
+		session,
+		state: consent,
+		texts: ['title', 'text'],
+		defaults: { title: {}, text: {} },
+		languages: () => availableLanguages.map((l) => l.code)
+	});
+	onDestroy(unbind);
+	let editable = $derived(canEdit && session.loaded && session.status !== 'refused');
 	let defaultLang = $derived(availableLanguages.find((l) => l.is_default)?.code ?? language);
 	let languages = $derived([language, defaultLang]);
 
@@ -59,39 +71,14 @@
 	let title = $derived(pick(consent.title, languages));
 	let text = $derived(pick(consent.text, languages));
 
-	function getSnapshot() {
-		return JSON.stringify(consent);
-	}
-
-	let savedSnapshot = $state(getSnapshot());
-
-	beforeNavigate(({ cancel }) => {
-		if (getSnapshot() !== savedSnapshot) {
-			if (!confirm('You have unsaved changes. Are you sure you want to leave?')) {
-				cancel();
-			}
+	// Before publishing: what is published is what the server has, so this
+	// tab's changes must have reached it.
+	function readyToPublish(): boolean {
+		if (session.status !== 'synced') {
+			toast.error('Reconnecting to the server; publish once your changes are saved');
+			return false;
 		}
-	});
-
-	async function saveConsent(): Promise<boolean> {
-		let saved = false;
-		saving = true;
-		const result = await saveWithRevision(projectId, 'consent', 'the consent', (headers) =>
-			Projects.updateConsent({ path: { project_id: projectId }, body: consent, headers })
-		);
-
-		if (isStale(result)) {
-			// Told already; the unsaved edits stay on screen.
-		} else if (!result.error) {
-			savedSnapshot = getSnapshot();
-			await invalidateAll();
-			saved = true;
-			toast.success('Consent saved successfully.');
-		} else {
-			toast.error('Error when saving consent.');
-		}
-		saving = false;
-		return saved;
+		return true;
 	}
 
 	async function getGuideForExport() {
@@ -171,33 +158,27 @@
 	let translating = $state(false);
 
 	// Machine-translates what this language lacks -- here and in the guide --
-	// from the default language. The server translates what is saved, so
-	// unsaved edits are saved first.
+	// from the default language. The server saves the doc first and merges the
+	// translation into it, so it arrives here like anyone else's edit.
 	async function translateMissing() {
-		if (getSnapshot() !== savedSnapshot) await saveConsent();
-		if (getSnapshot() !== savedSnapshot) return;
 		translating = true;
 		const { data, error } = await Projects.translateMissing({
 			path: { project_id: projectId, lang: language }
 		});
-		// The guide's text was translated too, but that is the guide editor's.
-		contentRevision.setNumber(projectId, 'consent', data?.revisions.consent);
 		translating = false;
-		if (error || !data?.consent) {
+		if (error || !data) {
 			console.error('Failed to translate', error);
 			toast.error('Failed to translate the missing text');
 			return;
 		}
-		consent.title = { ...(data.consent.title ?? {}) };
-		consent.text = { ...(data.consent.text ?? {}) };
-		savedSnapshot = getSnapshot();
 		toast.success(`Translated the missing ${languageName} text`);
 	}
 </script>
 
 <svelte:window
 	onbeforeunload={(e) => {
-		if (getSnapshot() !== savedSnapshot) {
+		// Changes made offline exist only in this tab until it reconnects.
+		if (session.status === 'offline' && session.unsaved) {
 			e.preventDefault();
 			e.returnValue = '';
 		}
@@ -205,6 +186,7 @@
 />
 
 <div class="flex min-h-full flex-col">
+	<CollabPill {session} />
 	<div class="mb-6">
 		<h1 class="page-title">Consent</h1>
 		<p class="mt-2 text-gray-600">
@@ -219,7 +201,7 @@
 		{untranslated}
 		inProgress={availableLanguages.find((l) => l.code === language)?.in_progress ?? false}
 		{translating}
-		disabled={saving}
+		disabled={!editable}
 		onTranslate={translateMissing}
 	/>
 
@@ -232,7 +214,11 @@
 					Edit Content
 				</h3>
 
-				<div class="space-y-5">
+				<fieldset
+					class="min-w-0 space-y-5"
+					disabled={!editable}
+					use:presence={{ session, isBlock: (id) => id.startsWith('consent-') }}
+				>
 					<div>
 						<label for="consent-title" class="mb-1.5 block text-sm font-medium text-gray-700">
 							Title
@@ -272,7 +258,7 @@
 							Supports plain text with line breaks preserved.
 						</p>
 					</div>
-				</div>
+				</fieldset>
 
 				<!-- Actions -->
 				<div class="mt-6 flex items-center gap-3 border-t border-gray-100 pt-5">
@@ -320,9 +306,8 @@
 			{projectId}
 			lang={language}
 			{availableLanguages}
-			{saving}
 			{exporting}
-			onSave={saveConsent}
+			onBeforePublish={readyToPublish}
 			onExportPdf={() => {
 				showExportPdfModal = true;
 			}}

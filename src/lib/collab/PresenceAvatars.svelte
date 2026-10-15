@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Peer } from './guideSession.svelte';
+	import type { Peer } from './contentSession.svelte';
 
 	/** Who else has the guide open: one initial each, in their colour. */
 	let { peers, max = 5 }: { peers: Peer[]; max?: number } = $props();

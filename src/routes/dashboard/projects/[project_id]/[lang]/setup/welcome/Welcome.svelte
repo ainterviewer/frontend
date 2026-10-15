@@ -1,14 +1,16 @@
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
-	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { Consent, LocalizedWelcome, ProjectLanguage } from '$lib/api/types.gen';
+	import { bindFlat } from '$lib/collab/bindFlat.svelte';
+	import CollabPill from '$lib/collab/CollabPill.svelte';
+	import { acquireContentSession, presenceUser } from '$lib/collab/contentSession.svelte';
+	import { presence } from '$lib/collab/presence.svelte';
 	import { WelcomeModal } from '$lib/components/modals';
 	import WelcomePreview from '$lib/components/preview/WelcomePreview.svelte';
-	import { contentRevision, isStale, saveWithRevision } from '$lib/content/revision.svelte';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
@@ -22,78 +24,85 @@
 		initialData?: LocalizedWelcome | null;
 		availableLanguages?: ProjectLanguage[];
 		projectName?: string;
-		/** The content revision this was loaded at (its `ETag`). */
-		revision?: string | null;
 	}
 
 	let {
 		initialData = null,
 		availableLanguages: initialAvailableLanguages = [],
-		projectName = 'Interview Guide',
-		revision = null
+		projectName = 'Interview Guide'
 	}: Props = $props();
-	const initialVideoFileName = $derived(initialData?.video_file_name || null);
 
-	let projectId = $derived(page.params.project_id ?? '');
-
-	// Adopted once, at mount: the revision the content on screen was loaded
-	// at. Later ones come only from this page's own saves, so reloading the
-	// page data (which the parent keys this component on) cannot make stale
-	// edits look current.
-	onMount(() => contentRevision.set(projectId, 'welcome', revision));
+	// The project a page is for never changes under it.
+	const projectId = page.params.project_id ?? '';
 	let language = $derived(page.params.lang ?? '');
 	let platformVersion = $derived(page.data.platformVersion?.platform_version ?? null);
 
-	// Title and text in every language; this page edits `language`'s. The
-	// email, video and id setting are shared by every language.
-	// svelte-ignore state_referenced_locally
-	let texts = $state({
-		title: { ...(initialData?.title ?? {}) },
-		text: { ...(initialData?.text ?? {}) }
-	});
-	// svelte-ignore state_referenced_locally
-	let email = $state(initialData?.email || '');
-	// svelte-ignore state_referenced_locally
-	let withId = $state(initialData?.with_id ?? true);
+	/** What a field the doc lacks reads as. */
+	const DEFAULTS = {
+		title: {},
+		text: {},
+		email: '',
+		with_id: true,
+		video_file_name: null
+	};
 
-	let videoFileName = $state<string | null>(untrack(() => initialVideoFileName));
+	// The welcome screen as the doc holds it: title and text in every language,
+	// of which this page edits `language`'s; the email, video and id setting
+	// are shared by every language.
+	// svelte-ignore state_referenced_locally
+	let welcome = $state<{
+		title: Record<string, string>;
+		text: Record<string, string>;
+		email: string;
+		with_id: boolean;
+		video_file_name: string | null;
+	}>({ ...DEFAULTS, ...structuredClone(initialData ?? {}) });
+
+	/** A video being uploaded: shown while it is, then named in the doc. */
 	let videoFile = $state<File | null>(null);
 
 	let showFullscreenModal = $state(false);
-	let saving = $state(false);
 	let exporting = $state(false);
 	const availableLanguages = $derived<ProjectLanguage[]>(initialAvailableLanguages);
+
+	// Co-edited live, like the guide: every keystroke goes into the shared doc,
+	// which the server saves. There is no Save. Viewers see it live and cannot
+	// change it.
+	const canEdit =
+		page.data.user?.scope === 'admin' ||
+		page.data.permissions?.role === 'editor' ||
+		page.data.permissions?.role === 'admin';
+	const session = acquireContentSession(projectId, 'welcome', presenceUser(page.data.user));
+	onDestroy(() => session.release());
+	const unbind = bindFlat({
+		session,
+		state: welcome,
+		texts: ['title', 'text'],
+		defaults: DEFAULTS,
+		languages: () => availableLanguages.map((l) => l.code)
+	});
+	onDestroy(unbind);
+	let editable = $derived(canEdit && session.loaded && session.status !== 'refused');
+	// The only thing the page can leave invalid: the server refuses a welcome
+	// screen without a valid contact email (`_validate_welcome`).
+	let emailInvalid = $derived(session.errors.length > 0);
 	let defaultLang = $derived(availableLanguages.find((l) => l.is_default)?.code ?? language);
 	let languages = $derived([language, defaultLang]);
 
 	// What respondents in `language` see: untranslated text is the default's.
-	let title = $derived(pick(texts.title, languages));
-	let text = $derived(pick(texts.text, languages));
+	let title = $derived(pick(welcome.title, languages));
+	let text = $derived(pick(welcome.text, languages));
 
 	let videoPreviewUrl = $state<string | null>(null);
-
-	function getSnapshot() {
-		return JSON.stringify({ texts, email, videoFileName, hasPendingUpload: !!videoFile });
-	}
-
-	let savedSnapshot = $state(getSnapshot());
-
-	beforeNavigate(({ cancel }) => {
-		if (getSnapshot() !== savedSnapshot) {
-			if (!confirm('You have unsaved changes. Are you sure you want to leave?')) {
-				cancel();
-			}
-		}
-	});
 
 	$effect(() => {
 		let url: string | null = null;
 		if (videoFile) {
 			url = URL.createObjectURL(videoFile);
 			videoPreviewUrl = url;
-		} else if (videoFileName) {
+		} else if (welcome.video_file_name) {
 			// FIXME: Unify shared storage location between backend and frontend
-			videoPreviewUrl = `/assets/videos/${videoFileName}`;
+			videoPreviewUrl = `/assets/videos/${welcome.video_file_name}`;
 		} else {
 			videoPreviewUrl = null;
 		}
@@ -103,76 +112,44 @@
 		};
 	});
 
-	async function loadData() {
-		if (!projectId) return;
-		const { data, error, response } = await Projects.getLocalizedWelcome({
-			path: { project_id: projectId }
+	// The video is shared by every language: stored as soon as it is chosen,
+	// then named in the doc, which saves it like any other edit.
+	async function handleFileChange(event: Event) {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+		input.value = '';
+		if (!file) return;
+		videoFile = file;
+		const upload = await Projects.uploadWelcomeVideo({
+			path: { project_id: projectId },
+			body: { video: file }
 		});
-		contentRevision.take(projectId, 'welcome', response);
-		if (error) {
-			console.error('Failed to load welcome data:', error);
-			toast.error('Failed to load welcome data.');
+		if (videoFile !== file) return;
+		videoFile = null;
+		if (upload.error || !upload.data) {
+			toast.error('Error when uploading the video.');
 			return;
 		}
-		if (data) {
-			texts = { title: { ...(data.title ?? {}) }, text: { ...(data.text ?? {}) } };
-			email = data.email;
-			withId = data.with_id ?? true;
-			videoFileName = data.video_file_name || null;
-		}
-	}
-
-	async function saveWelcome(): Promise<boolean> {
-		let saved = false;
-		saving = true;
-
-		// The video is shared by every language: stored first, then named in
-		// the welcome.
-		let video_file_name = videoFileName;
-		if (videoFile) {
-			const upload = await Projects.uploadWelcomeVideo({
-				path: { project_id: projectId },
-				body: { video: videoFile }
-			});
-			if (upload.error || !upload.data) {
-				toast.error('Error when uploading the video.');
-				saving = false;
-				return false;
-			}
-			video_file_name = upload.data;
-		}
-
-		const body = { ...texts, email, video_file_name, with_id: withId };
-		const result = await saveWithRevision(projectId, 'welcome', 'the welcome screen', (headers) =>
-			Projects.updateWelcome({ path: { project_id: projectId }, body, headers })
-		);
-
-		if (isStale(result)) {
-			// Told already; the unsaved edits stay on screen.
-		} else if (!result.error) {
-			savedSnapshot = getSnapshot();
-			await invalidateAll();
-			saved = true;
-			toast.success('Welcome saved successfully.');
-			loadData();
-			videoFile = null;
-		} else {
-			toast.error('Error when saving welcome.');
-		}
-		saving = false;
-		return saved;
-	}
-
-	function handleFileChange(event: Event) {
-		const input = event.target as HTMLInputElement;
-		if (input.files && input.files[0]) {
-			videoFile = input.files[0];
-		}
+		welcome.video_file_name = upload.data;
 	}
 
 	function removeVideo() {
 		videoFile = null;
-		videoFileName = null;
+		welcome.video_file_name = null;
+	}
+
+	// Before publishing: what is published is what the server has, so this
+	// tab's changes must have reached it.
+	function readyToPublish(): boolean {
+		if (session.status !== 'synced') {
+			toast.error('Reconnecting to the server; publish once your changes are saved');
+			return false;
+		}
+		if (videoFile) {
+			toast.error('Wait for the video to finish uploading before publishing');
+			return false;
+		}
+		return true;
 	}
 
 	async function getGuideForExport() {
@@ -201,8 +178,13 @@
 		try {
 			const { guide, sections, questions } = await getGuideForExport();
 			const consent = toggles.consent ? await fetchConsent() : null;
-			const welcome = toggles.welcome
-				? { title, text, email, video_file_name: videoFileName ?? null }
+			const welcomeScreen = toggles.welcome
+				? {
+						title,
+						text,
+						email: welcome.email,
+						video_file_name: welcome.video_file_name ?? null
+					}
 				: null;
 			await downloadGuidePdf({
 				guide,
@@ -212,7 +194,7 @@
 				platformVersion,
 				toggles,
 				consent,
-				welcome
+				welcome: welcomeScreen
 			});
 			showExportPdfModal = false;
 		} catch (e) {
@@ -233,12 +215,12 @@
 			downloadUnifiedSetupJson({
 				consent: consentRes.status === 'fulfilled' ? consentRes.value : null,
 				welcome:
-					title || text || email || videoFileName
+					title || text || welcome.email || welcome.video_file_name
 						? {
 								title,
 								text,
-								email,
-								video_file_name: videoFileName ?? null
+								email: welcome.email,
+								video_file_name: welcome.video_file_name ?? null
 							}
 						: null,
 				interview_guide: guideRes.status === 'fulfilled' ? guideRes.value.guide : null,
@@ -257,38 +239,33 @@
 		availableLanguages.find((l) => l.code === defaultLang)?.name ?? defaultLang
 	);
 	let untranslated = $derived(
-		[texts.title, texts.text].filter((t) => isUntranslated(t, language)).length
+		[welcome.title, welcome.text].filter((t) => isUntranslated(t, language)).length
 	);
 	let translating = $state(false);
 
 	// Machine-translates what this language lacks -- here and in the guide --
-	// from the default language. The server translates what is saved, so
-	// unsaved edits are saved first.
+	// from the default language. The server saves the doc first and merges the
+	// translation into it, so it arrives here like anyone else's edit.
 	async function translateMissing() {
-		if (getSnapshot() !== savedSnapshot) await saveWelcome();
-		if (getSnapshot() !== savedSnapshot) return;
 		translating = true;
 		const { data, error } = await Projects.translateMissing({
 			path: { project_id: projectId, lang: language }
 		});
-		// The guide's text was translated too, but that is the guide editor's.
-		contentRevision.setNumber(projectId, 'welcome', data?.revisions.welcome);
 		translating = false;
-		if (error || !data?.welcome) {
+		if (error || !data) {
 			console.error('Failed to translate', error);
 			toast.error('Failed to translate the missing text');
 			return;
 		}
-		texts.title = { ...(data.welcome.title ?? {}) };
-		texts.text = { ...(data.welcome.text ?? {}) };
-		savedSnapshot = getSnapshot();
 		toast.success(`Translated the missing ${languageName} text`);
 	}
 </script>
 
 <svelte:window
 	onbeforeunload={(e) => {
-		if (getSnapshot() !== savedSnapshot) {
+		// Changes made offline exist only in this tab until it reconnects, and
+		// a video being uploaded is not named in the doc yet.
+		if ((session.status === 'offline' && session.unsaved) || videoFile) {
 			e.preventDefault();
 			e.returnValue = '';
 		}
@@ -296,6 +273,7 @@
 />
 
 <div class="flex min-h-full flex-col">
+	<CollabPill {session} invalidLabel="Invalid: enter a valid contact email" />
 	<div class="mb-6">
 		<h1 class="page-title">Welcome</h1>
 		<p class="mt-2 text-gray-600">
@@ -311,7 +289,7 @@
 		{untranslated}
 		inProgress={availableLanguages.find((l) => l.code === language)?.in_progress ?? false}
 		{translating}
-		disabled={saving}
+		disabled={!editable}
 		onTranslate={translateMissing}
 	/>
 
@@ -324,7 +302,11 @@
 					Edit Content
 				</h3>
 
-				<div class="space-y-5">
+				<fieldset
+					class="min-w-0 space-y-5"
+					disabled={!editable}
+					use:presence={{ session, isBlock: (id) => id.startsWith('welcome-') }}
+				>
 					<div>
 						<label for="welcome-title" class="mb-1.5 block text-sm font-medium text-gray-700">
 							Title
@@ -332,13 +314,13 @@
 						<input
 							autocomplete="off"
 							id="welcome-title"
-							bind:value={texts.title[language]}
-							placeholder={isUntranslated(texts.title, language)
+							bind:value={welcome.title[language]}
+							placeholder={isUntranslated(welcome.title, language)
 								? title
 								: 'e.g., Thank you for participating!'}
 							class={[
 								'block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
-								isUntranslated(texts.title, language) && 'border-amber-400 bg-amber-50'
+								isUntranslated(welcome.title, language) && 'border-amber-400 bg-amber-50'
 							]}
 						/>
 					</div>
@@ -362,9 +344,14 @@
 									class="hidden"
 								/>
 							</label>
-							{#if videoFileName || videoFile}
+							{#if videoFile}
 								<span class="text-sm text-gray-600">
-									{videoFile?.name || videoFileName}
+									<i class="fa-solid fa-circle-notch mr-1 animate-spin text-gray-400"></i>
+									Uploading {videoFile.name}
+								</span>
+							{:else if welcome.video_file_name}
+								<span class="text-sm text-gray-600">
+									{welcome.video_file_name}
 								</span>
 								<button
 									type="button"
@@ -387,14 +374,14 @@
 						<textarea
 							autocomplete="off"
 							id="welcome-text"
-							bind:value={texts.text[language]}
-							placeholder={isUntranslated(texts.text, language)
+							bind:value={welcome.text[language]}
+							placeholder={isUntranslated(welcome.text, language)
 								? text
 								: 'Write your welcome message here. This will be shown to participants before they start the interview...'}
 							rows="8"
 							class={[
 								'block w-full resize-y rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
-								isUntranslated(texts.text, language) && 'border-amber-400 bg-amber-50'
+								isUntranslated(welcome.text, language) && 'border-amber-400 bg-amber-50'
 							]}
 						></textarea>
 					</div>
@@ -411,15 +398,26 @@
 							autocomplete="email"
 							id="welcome-email"
 							type="email"
-							bind:value={email}
+							bind:value={welcome.email}
 							placeholder="e.g., contact@university.edu"
-							class="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none"
+							aria-invalid={emailInvalid}
+							aria-describedby={emailInvalid ? 'welcome-email-error' : undefined}
+							class={[
+								'block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
+								emailInvalid && 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500'
+							]}
 						/>
+						{#if emailInvalid}
+							<p id="welcome-email-error" class="mt-1.5 text-xs text-red-600">
+								Enter a valid email address. Until you do, your changes on this page won't be used
+								in tests or published.
+							</p>
+						{/if}
 						<p class="mt-1.5 text-xs text-gray-500">
 							Participants can contact this email to withdraw consent or modify their data.
 						</p>
 					</div>
-				</div>
+				</fieldset>
 
 				<!-- Actions -->
 				<div class="mt-6 flex items-center gap-3 border-t border-gray-100 pt-5">
@@ -447,7 +445,7 @@
 
 				<!-- Modal Preview Container -->
 				<div class="rounded-lg border border-gray-200 bg-gray-100 p-4 shadow-inner">
-					<WelcomePreview {title} {text} videoUrl={videoPreviewUrl} {email} />
+					<WelcomePreview {title} {text} videoUrl={videoPreviewUrl} email={welcome.email} />
 				</div>
 
 				<p class="mt-3 text-center text-xs text-gray-500">
@@ -467,9 +465,8 @@
 			{projectId}
 			lang={language}
 			{availableLanguages}
-			{saving}
 			{exporting}
-			onSave={saveWelcome}
+			onBeforePublish={readyToPublish}
 			onExportPdf={() => {
 				showExportPdfModal = true;
 			}}
@@ -486,7 +483,7 @@
 	{title}
 	{text}
 	videoUrl={videoPreviewUrl}
-	{email}
+	email={welcome.email}
 	onProceed={() => (showFullscreenModal = false)}
 	onClose={() => (showFullscreenModal = false)}
 	isPreview={true}

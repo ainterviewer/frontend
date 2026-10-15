@@ -2,8 +2,8 @@ import { flushSync } from 'svelte';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
+import type { ContentSession } from '$lib/collab/contentSession.svelte';
 import { applyGuide, readGuide, roots } from '$lib/collab/guideDoc';
-import type { GuideSession } from '$lib/collab/guideSession.svelte';
 import { createGuideStore } from '$lib/stores/guideStore.svelte';
 
 import { bindGuide } from './bindGuide.svelte';
@@ -15,11 +15,11 @@ import { mapToLocal } from './normalize';
 const SECTION = '11111111-1111-4111-8111-111111111111';
 const QUESTION = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
-function loadedSession(): GuideSession {
+function loadedSession(): ContentSession {
 	return seededSession(true);
 }
 
-function seededSession(loaded: boolean): GuideSession {
+function seededSession(loaded: boolean): ContentSession {
 	const doc = new Y.Doc();
 	applyGuide(
 		doc,
@@ -37,12 +37,12 @@ function seededSession(loaded: boolean): GuideSession {
 	);
 	// Reactive, as the real session's `loaded` is.
 	const session = $state({ doc, loaded });
-	return session as unknown as GuideSession;
+	return session as unknown as ContentSession;
 }
 
 /** The editor bound to `session`. `rendered`: the store starts out holding
  * what the page was loaded with -- the doc's guide -- as the real page's does. */
-function bound(session: GuideSession, rendered = false) {
+function bound(session: ContentSession, rendered = false) {
 	const store = createGuideStore(
 		() => 'EN',
 		() => 'EN'

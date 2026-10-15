@@ -19,7 +19,7 @@ import type { LocalizedInterviewGuide } from '$lib/api/types.gen';
 //
 // Root keys: `meta` (`doc_id`), `guide`, `sections`, `questions`.
 
-type Json = Record<string, unknown>;
+export type Json = Record<string, unknown>;
 type Texts = Record<string, string>;
 
 export const ORDER = 'order';
@@ -95,7 +95,7 @@ function fillTexts(current: Y.Map<unknown>, texts: Texts, languages: readonly st
 	}
 }
 
-type Context = { languages: readonly string[] };
+export type Context = { languages: readonly string[] };
 
 function setTexts(parent: Y.Map<unknown>, key: string, texts: unknown, ctx: Context) {
 	if (texts == null) {
@@ -242,7 +242,7 @@ function child(parent: Y.Map<unknown>, key: string): Y.Map<unknown> {
 
 type Writer = (target: Y.Map<unknown>, data: Json, ctx: Context) => void;
 
-function setFields(
+export function setFields(
 	target: Y.Map<unknown>,
 	data: Json,
 	ctx: Context,
@@ -454,7 +454,7 @@ function readTexts(value: unknown): Texts {
 	return texts;
 }
 
-function readEntity(source: Y.Map<unknown>, texts: string[]): Json {
+export function readEntity(source: Y.Map<unknown>, texts: string[]): Json {
 	const data: Json = {};
 	for (const [key, value] of source.entries()) {
 		if (texts.includes(key)) data[key] = readTexts(value);

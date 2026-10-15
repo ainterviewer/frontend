@@ -11,10 +11,9 @@
 		ProjectLanguage,
 		Welcome
 	} from '$lib/api/types.gen';
-	import { acquireGuideSession, presenceUser } from '$lib/collab/guideSession.svelte';
+	import CollabPill from '$lib/collab/CollabPill.svelte';
+	import { acquireContentSession, presenceUser } from '$lib/collab/contentSession.svelte';
 	import { presence } from '$lib/collab/presence.svelte';
-	import PresenceAvatars from '$lib/collab/PresenceAvatars.svelte';
-	import SyncState from '$lib/collab/SyncState.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
@@ -82,7 +81,7 @@
 		page.data.user?.scope === 'admin' ||
 		page.data.permissions?.role === 'editor' ||
 		page.data.permissions?.role === 'admin';
-	const session = acquireGuideSession(projectId, presenceUser(page.data.user));
+	const session = acquireContentSession(projectId, 'guide', presenceUser(page.data.user));
 	onDestroy(() => session.release());
 	const unbind = bindGuide({
 		session,
@@ -412,19 +411,7 @@
      textareas -- and used to be written unscoped, which left them reaching
      into every other printable route. -->
 <div class="print-guide">
-	<!-- Who else is here and whether it is all saved: pinned to the window's
-	     top right, just under the header (2.75rem), clear of the pane's
-	     scrollbar, so it stays put however far the guide scrolls. -->
-	<div
-		data-tour="sync-state"
-		class={[
-			'fixed top-[3.75rem] right-6 z-30 flex h-9 items-center gap-3 rounded-full border border-gray-200 bg-white/90 py-1 pr-4 shadow-md backdrop-blur print:hidden',
-			session.peers.length > 0 ? 'pl-1' : 'pl-4'
-		]}
-	>
-		<PresenceAvatars peers={session.peers} />
-		<SyncState {session} />
-	</div>
+	<CollabPill {session} invalidLabel="Invalid: fix the guide" />
 	<h1 class="page-title">Interview Guide</h1>
 	<div class="mb-6 flex items-center gap-8">
 		<p class="min-w-0 flex-1 text-gray-600">

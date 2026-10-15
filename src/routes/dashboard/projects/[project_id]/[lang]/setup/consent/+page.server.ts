@@ -1,7 +1,6 @@
 import { error } from '@sveltejs/kit';
 
 import { Projects } from '$lib/api';
-import { etagOf } from '$lib/content/revision.svelte';
 
 import type { PageServerLoad } from './$types';
 
@@ -31,7 +30,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		consent: consentRes.data,
-		revision: etagOf(consentRes.response),
 		available_languages: projectRes.data?.available_languages ?? [],
 		project_name: projectRes.data?.title ?? ''
 	};

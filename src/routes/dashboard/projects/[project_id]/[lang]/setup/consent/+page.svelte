@@ -7,10 +7,9 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-{#key `${page.params.lang}-${data.revision}`}
+{#key page.params.lang}
 	<Consent
 		initialData={data.consent}
-		revision={data.revision}
 		availableLanguages={data.available_languages}
 		projectName={data.project_name}
 	/>

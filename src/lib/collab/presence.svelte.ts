@@ -1,6 +1,6 @@
 import type { Action } from 'svelte/action';
 
-import type { GuideSession, Peer } from './guideSession.svelte';
+import type { ContentSession, Peer } from './contentSession.svelte';
 
 // Where everyone is, by block: the question, section or top-level field
 // (`framing`, ...) whose element has that id. Blocks rather than single
@@ -8,7 +8,7 @@ import type { GuideSession, Peer } from './guideSession.svelte';
 // one person sees the other may not; the block is always there.
 
 type Params = {
-	session: GuideSession;
+	session: ContentSession;
 	/** Whether an element id names a block. */
 	isBlock: (id: string) => boolean;
 };
