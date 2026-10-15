@@ -4,6 +4,29 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.8.0] - 2026-10-15
+
+### Features
+
+- (content) A revision per part of the content
+- (guide) Co-edit the guide live
+- (setup) Co-edit the consent and welcome pages live
+- Autosave the agents, emails and simulation setups
+
+### Bug Fixes
+
+- (coding) A free icon for Saved
+- (guide) Match list entries by content, not position
+- (simulations) Key fixed answers by question id
+
+### Internal
+
+- (sdk) Regenerate for per-part revisions
+- (sdk) Regenerate for guide co-editing
+- (sdk) Regenerate for fixed answers by question
+- (sdk) Regenerate for per-part doc errors
+- (sdk) Regenerate for test setup revisions
+
 ## [0.7.1] - 2026-10-14
 
 ### Features
