@@ -37,7 +37,7 @@
 	</span>
 {:else}
 	<span class="flex h-4 items-center gap-1.5 text-xs leading-none text-gray-400">
-		<i class="fas fa-cloud-check w-3 text-center"></i>
+		<i class="fas fa-check w-3 text-center"></i>
 		Saved
 	</span>
 {/if}
