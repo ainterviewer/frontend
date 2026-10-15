@@ -12,7 +12,8 @@ import type { LocalizedInterviewGuide } from '$lib/api/types.gen';
 // - sections, questions and survey options are `Y.Map`s keyed by id, each
 //   entry carrying an `order` key (fractional indexing); questions are flat,
 //   with a `section_id`, so a move never loses a concurrent edit;
-// - probes, alternative wordings and timed messages are `Y.Array`s;
+// - probes, alternative wordings and timed messages are `Y.Array`s, matched
+//   by content when a write changes them (`align`);
 // - every other value is JSON *text* -- never a bare number, which Yjs would
 //   hand the server back as a float.
 //
@@ -106,28 +107,105 @@ function setTexts(parent: Y.Map<unknown>, key: string, texts: unknown, ctx: Cont
 	else parent.set(key, newTexts(texts as Texts, ctx.languages));
 }
 
+/** How much of `a` and `b` is one common prefix and suffix, 0 to 1: what
+ * `setText` would keep of one when turning it into the other. */
+function similarity(a: string, b: string): number {
+	if (a === b) return 1;
+	const limit = Math.min(a.length, b.length);
+	let start = 0;
+	while (start < limit && a[start] === b[start]) start++;
+	let end = 0;
+	while (end < limit - start && a[a.length - 1 - end] === b[b.length - 1 - end]) end++;
+	return (start + end) / Math.max(a.length, b.length);
+}
+
+/** What pairing two entries scores on top of their similarity; see `align`. */
+const PAIRED = 0.01;
+
+/**
+ * For each of `next`, the entry of `prev` it continues, or null for one to
+ * insert; entries of `prev` no one continues are to be deleted. The order is
+ * kept and the pairs are those with the most text in common, so an edited
+ * entry is edited in place and whoever types in a probe keeps typing in it
+ * when another is removed or added above it. Mirrors the backend's `align`.
+ */
+export function align(prev: string[], next: string[]): (number | null)[] {
+	const n = prev.length;
+	const m = next.length;
+	const score = prev.map((a) => next.map((b) => similarity(a, b) + PAIRED));
+	const best = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
+	for (let i = 1; i <= n; i++) {
+		for (let j = 1; j <= m; j++) {
+			best[i][j] = Math.max(
+				best[i - 1][j - 1] + score[i - 1][j - 1],
+				best[i - 1][j],
+				best[i][j - 1]
+			);
+		}
+	}
+	const pairs: (number | null)[] = new Array(m).fill(null);
+	let i = n;
+	let j = m;
+	while (i && j) {
+		if (best[i][j] === best[i - 1][j - 1] + score[i - 1][j - 1]) {
+			pairs[j - 1] = i - 1;
+			i--;
+			j--;
+		} else if (best[i][j] === best[i - 1][j]) i--;
+		else j--;
+	}
+	return pairs;
+}
+
+type ListSpec<T> = {
+	read: (entry: Y.Map<unknown>) => unknown;
+	normalize: (item: T) => unknown;
+	create: (item: T) => Y.Map<unknown>;
+	fill: (entry: Y.Map<unknown>, item: T) => void;
+};
+
+/** `parent[key]` as a `Y.Array` of maps reading `items`, changed as little as
+ * `align` can: entries are matched by content, not position. Each is filled
+ * once it is in the array, a new one included. */
+function setList<T>(parent: Y.Map<unknown>, key: string, items: T[], spec: ListSpec<T>) {
+	let current = parent.get(key);
+	if (!(current instanceof Y.Array)) {
+		current = new Y.Array<Y.Map<unknown>>();
+		parent.set(key, current);
+	}
+	const array = current as Y.Array<unknown>;
+	const entries = array.toArray();
+	const pairs = align(
+		entries.map((entry) => (entry instanceof Y.Map ? stableJson(spec.read(entry)) : '')),
+		items.map((item) => stableJson(spec.normalize(item)))
+	);
+	const kept = new Set(pairs.filter((i): i is number => i !== null && entries[i] instanceof Y.Map));
+	for (let index = entries.length - 1; index >= 0; index--) {
+		if (!kept.has(index)) array.delete(index, 1);
+	}
+	// What is left is the kept entries in order, each at the position of the
+	// item it continues once the new ones before it are inserted.
+	items.forEach((item, index) => {
+		const paired = pairs[index];
+		if (paired === null || !kept.has(paired)) array.insert(index, [spec.create(item)]);
+		spec.fill(array.get(index) as Y.Map<unknown>, item);
+	});
+}
+
+function nonEmpty(texts: Texts): Texts {
+	return Object.fromEntries(Object.entries(texts).filter(([, text]) => text));
+}
+
 function setTextList(parent: Y.Map<unknown>, key: string, items: unknown, ctx: Context) {
 	if (items == null) {
 		if (parent.has(key)) parent.delete(key);
 		return;
 	}
-	const list = items as Texts[];
-	const current = parent.get(key);
-	if (!(current instanceof Y.Array)) {
-		const array = new Y.Array<Y.Map<Y.Text>>();
-		array.push(list.map((texts) => newTexts(texts, ctx.languages)));
-		parent.set(key, array);
-		return;
-	}
-	// Removed or added at the end, as the editor does; in place otherwise.
-	if (current.length > list.length) current.delete(list.length, current.length - list.length);
-	list.forEach((texts, index) => {
-		const entry = index < current.length ? current.get(index) : undefined;
-		if (entry instanceof Y.Map) fillTexts(entry, texts, ctx.languages);
-		else {
-			if (entry !== undefined) current.delete(index, 1);
-			current.insert(index, [newTexts(texts, ctx.languages)]);
-		}
+	setList(parent, key, items as Texts[], {
+		read: readTexts,
+		normalize: nonEmpty,
+		create: (texts) => newTexts(texts, ctx.languages) as Y.Map<unknown>,
+		fill: (entry, texts) => fillTexts(entry, texts, ctx.languages)
 	});
 }
 
@@ -304,21 +382,17 @@ function writeTimed(top: Y.Map<unknown>, items: Json[] | null | undefined, ctx: 
 		if (top.has('timed_messages')) top.delete('timed_messages');
 		return;
 	}
-	let current = top.get('timed_messages');
-	if (!(current instanceof Y.Array)) {
-		current = new Y.Array<Y.Map<unknown>>();
-		top.set('timed_messages', current);
-	}
-	const array = current as Y.Array<Y.Map<unknown>>;
-	if (array.length > items.length) array.delete(items.length, array.length - items.length);
-	items.forEach((item, index) => {
-		let entry = index < array.length ? array.get(index) : undefined;
-		if (!(entry instanceof Y.Map)) {
-			if (entry !== undefined) array.delete(index, 1);
-			entry = new Y.Map<unknown>();
-			array.insert(index, [entry]);
-		}
-		setFields(entry, item, ctx, { texts: TIMED_TEXTS });
+	setList(top, 'timed_messages', items, {
+		read: (entry) => readEntity(entry, TIMED_TEXTS),
+		normalize: (item) =>
+			Object.fromEntries(
+				Object.entries(item).map(([key, value]) => [
+					key,
+					TIMED_TEXTS.includes(key) && value ? nonEmpty(value as Texts) : value
+				])
+			),
+		create: () => new Y.Map<unknown>(),
+		fill: (entry, item) => setFields(entry, item, ctx, { texts: TIMED_TEXTS })
 	});
 }
 
