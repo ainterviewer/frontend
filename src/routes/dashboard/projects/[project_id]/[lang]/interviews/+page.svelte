@@ -134,7 +134,7 @@
 			meta: { align: 'right', class: 'tabular-nums text-gray-600' }
 		}),
 		helper.accessor('n_reports', {
-			header: 'Reports',
+			header: 'Flagged',
 			meta: { align: 'right', class: 'tabular-nums' }
 		}),
 		helper.accessor('language', { header: 'Language', meta: { class: 'text-gray-600' } }),
@@ -235,8 +235,8 @@
 	// The `reported` facet answers a yes/no question, so its two values are
 	// "true"/"false" rather than a set of things to pick from.
 	const REPORTED_LABELS: Record<string, string> = {
-		true: 'Has reported questions',
-		false: 'None reported'
+		true: 'Has flagged messages',
+		false: 'None flagged'
 	};
 
 	/**
@@ -261,7 +261,7 @@
 		created_at: 'Created',
 		last_updated: 'Updated',
 		n_messages: 'Messages',
-		n_reports: 'Reports',
+		n_reports: 'Flagged',
 		language: 'Language',
 		status: 'Status'
 	};
@@ -527,7 +527,7 @@
 			counts={facetCounts(facets.language)}
 		/>
 		<FacetedFilter
-			title="Reported"
+			title="Flagged"
 			column={table.getColumn('n_reports')!}
 			options={facetOptions(facets.reported, REPORTED_LABELS)}
 			counts={facetCounts(facets.reported)}
@@ -570,7 +570,7 @@
 			{#if interview.n_reports}
 				<span
 					class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
-					title="{interview.n_reports} reported question{interview.n_reports === 1 ? '' : 's'}"
+					title="{interview.n_reports} flagged message{interview.n_reports === 1 ? '' : 's'}"
 				>
 					<i class="fa-solid fa-flag text-[10px]"></i>
 					{interview.n_reports}

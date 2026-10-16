@@ -19,8 +19,12 @@
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 
+	import { flagReason, flagSummary, SOURCE_LABELS } from './flags';
+
 	/**
-	 * A queue of reported questions, for whichever reviewer is looking.
+	 * A queue of flagged messages, for whichever reviewer is looking: the
+	 * questions respondents reported, and the answers the safety check
+	 * intervened on (`source`). Both share the review tracks below.
 	 *
 	 * There are two of them and they differ in one thing: which status column
 	 * they act on. A project member resolves the project track, a platform
@@ -66,8 +70,8 @@
 		onSetStatus,
 		onMarkRead,
 		onRefresh,
-		title = 'Reported Questions',
-		emptyDescription = 'Reports appear here when a respondent flags a question during an interview.'
+		title = 'Flagged',
+		emptyDescription = 'Messages appear here when a respondent reports a question or the safety check intervenes.'
 	}: Props = $props();
 
 	/**
@@ -108,7 +112,7 @@
 		helper.display({ id: 'select', enableHiding: false }),
 		helper.accessor((r) => sortableTime(r.created_at), {
 			id: 'created_at',
-			header: 'Reported',
+			header: 'Flagged',
 			sortFn: 'basic',
 			sortUndefined: 'last',
 			meta: { class: 'whitespace-nowrap tabular-nums text-gray-600' }
@@ -120,21 +124,30 @@
 			sortUndefined: 'last',
 			meta: { class: 'whitespace-nowrap font-medium text-dark' }
 		}),
+		helper.accessor((r) => r.source ?? 'respondent', {
+			id: 'source',
+			header: 'Source',
+			sortFn: 'text',
+			filterFn: matchesSelection
+		}),
 		helper.accessor((r) => sortableText(r.question), {
 			id: 'question',
-			header: 'Question',
+			header: 'Message',
 			sortFn: 'text',
 			sortUndefined: 'last',
 			meta: { class: 'max-w-md truncate text-gray-700' }
 		}),
-		helper.accessor('reason', {
+		// A safety flag has no reason of its own; the decision that triggered
+		// stands in for one, so both kinds facet in the same dropdown.
+		helper.accessor((r) => flagReason(r), {
+			id: 'reason',
 			header: 'Reason',
 			sortFn: 'text',
 			filterFn: matchesSelection
 		}),
-		helper.accessor((r) => sortableText(r.comment), {
+		helper.accessor((r) => sortableText(r.comment ?? r.safety?.reasoning), {
 			id: 'comment',
-			header: 'Comment',
+			header: 'Details',
 			sortFn: 'text',
 			sortUndefined: 'last',
 			meta: { class: 'max-w-xs truncate text-gray-600' }
@@ -201,11 +214,12 @@
 	});
 
 	const columnLabels = $derived({
-		created_at: 'Reported',
+		created_at: 'Flagged',
 		project_title: 'Project',
-		question: 'Question',
+		source: 'Source',
+		question: 'Message',
 		reason: 'Reason',
-		comment: 'Comment',
+		comment: 'Details',
 		status: 'Project review',
 		...(track === 'admin' ? { admin_status: 'Platform review' } : {}),
 		read_by_me: 'Read',
@@ -272,12 +286,17 @@
 	{loading}
 	hasLoaded={!loading || rows.length > 0}
 	search
-	rowLabel="report"
-	searchPlaceholder="Search project, question, comment or PID..."
-	emptyTitle="No reported questions"
+	rowLabel="flag"
+	searchPlaceholder="Search project, message, details or PID..."
+	emptyTitle="Nothing flagged"
 	{emptyDescription}
 >
 	{#snippet filters()}
+		<FacetedFilter
+			title="Source"
+			column={table.getColumn('source')!}
+			options={Object.entries(SOURCE_LABELS).map(([value, label]) => ({ value, label }))}
+		/>
 		<FacetedFilter title="Reason" column={table.getColumn('reason')!} />
 		<!-- Both tracks are filterable; this queue's own is the useful one, but
 		     "what has the other reviewer done with it" is a fair question too. -->
@@ -347,7 +366,7 @@
 					interview_id: report.interview_id
 				})}?message={report.message_id}"
 				class="group/link flex items-center gap-1.5 hover:text-primary hover:underline"
-				title="Open the transcript at this question"
+				title="Open the transcript at this message"
 				onclick={(e) => e.stopPropagation()}
 			>
 				<span class="font-mono text-xs text-gray-400">#{report.question_number}</span>
@@ -356,17 +375,53 @@
 					class="fa-solid fa-arrow-up-right-from-square shrink-0 text-[10px] text-gray-300 group-hover/link:text-primary"
 				></i>
 			</a>
+		{:else if columnId === 'source'}
+			{#if report.source === 'safety_check'}
+				<span
+					class="inline-flex items-center gap-1 text-xs font-medium whitespace-nowrap text-amber-800"
+				>
+					<i class="fa-solid fa-shield-heart"></i>
+					{SOURCE_LABELS.safety_check}
+				</span>
+			{:else}
+				<span class="inline-flex items-center gap-1 text-xs whitespace-nowrap text-gray-600">
+					<i class="fa-solid fa-flag"></i>
+					{SOURCE_LABELS.respondent}
+				</span>
+			{/if}
 		{:else if columnId === 'reason'}
-			<span
-				class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize {REASON_CLASS[
-					report.reason
-				] ?? 'bg-gray-100 text-gray-700'}"
-			>
-				{report.reason}
-			</span>
+			{#if report.safety}
+				<span
+					class="flex items-center gap-1.5 whitespace-nowrap"
+					title={flagSummary(report.safety)}
+				>
+					<span
+						class="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800"
+					>
+						{flagReason(report)}
+					</span>
+					{#if report.safety.probability != null}
+						<span class="text-xs text-gray-500 tabular-nums">
+							{Math.round(report.safety.probability * 100)}%
+						</span>
+					{/if}
+					{#if report.safety.override === 'override'}
+						<span class="text-xs text-gray-400">overridden</span>
+					{/if}
+				</span>
+			{:else}
+				<span
+					class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize {REASON_CLASS[
+						report.reason ?? ''
+					] ?? 'bg-gray-100 text-gray-700'}"
+				>
+					{report.reason}
+				</span>
+			{/if}
 		{:else if columnId === 'comment'}
-			<span title={report.comment || ''}>
-				{#if report.comment}{report.comment}{:else}<span class="text-gray-300">&ndash;</span>{/if}
+			{@const details = report.comment ?? report.safety?.reasoning}
+			<span title={details || ''}>
+				{#if details}{details}{:else}<span class="text-gray-300">&ndash;</span>{/if}
 			</span>
 		{:else if columnId === 'status' || columnId === 'admin_status'}
 			{@const value = columnId === 'admin_status' ? adminStatus(report) : report.status}

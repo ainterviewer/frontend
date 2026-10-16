@@ -2343,6 +2343,10 @@ export type InterviewFacets = {
      * Reported
      */
     reported?: Array<FacetCount>;
+    /**
+     * Intervened
+     */
+    intervened?: Array<FacetCount>;
 };
 
 /**
@@ -2396,6 +2400,10 @@ export type InterviewFilters = {
      * Reported
      */
     reported?: boolean | null;
+    /**
+     * Intervened
+     */
+    intervened?: boolean | null;
 };
 
 /**
@@ -2696,6 +2704,10 @@ export type InterviewSummaryPublic = {
      * N Reports
      */
     n_reports?: number;
+    /**
+     * N Interventions
+     */
+    n_interventions?: number;
     /**
      * Test Name
      */
@@ -3695,11 +3707,13 @@ export type MessageReportAdminRowPublic = {
      * Project Id
      */
     project_id: string;
-    reason: ReportReason;
+    source?: ReportSource;
+    reason?: ReportReason | null;
     /**
      * Comment
      */
     comment?: string | null;
+    safety?: SafetyFlag | null;
     /**
      * Created At
      */
@@ -3804,11 +3818,13 @@ export type MessageReportPublic = {
      * Project Id
      */
     project_id: string;
-    reason: ReportReason;
+    source?: ReportSource;
+    reason?: ReportReason | null;
     /**
      * Comment
      */
     comment?: string | null;
+    safety?: SafetyFlag | null;
     /**
      * Created At
      */
@@ -3859,11 +3875,13 @@ export type MessageReportRowPublic = {
      * Project Id
      */
     project_id: string;
-    reason: ReportReason;
+    source?: ReportSource;
+    reason?: ReportReason | null;
     /**
      * Comment
      */
     comment?: string | null;
+    safety?: SafetyFlag | null;
     /**
      * Created At
      */
@@ -4907,6 +4925,19 @@ export type ReportReviewResponse = {
 };
 
 /**
+ * ReportSource
+ *
+ * Who flagged a message: the respondent, or the interview's safety check.
+ *
+ * Both land in the same queues because they ask a reviewer the same thing --
+ * look at this part of the transcript -- and need the same two review tracks.
+ * A respondent's report names an interviewer question and carries a
+ * ``ReportReason``; a safety flag names the respondent answer the check
+ * intervened on and carries a ``SafetyFlag`` instead.
+ */
+export type ReportSource = 'respondent' | 'safety_check';
+
+/**
  * ReportStatus
  *
  * Where a report has got to in one review queue.
@@ -4941,6 +4972,39 @@ export type ResetPasswordRequest = {
      * Token
      */
     token: string;
+};
+
+/**
+ * SafetyFlag
+ *
+ * What the safety check decided, kept on the report it raised.
+ *
+ * Copied off the check's ``assess_security`` task when the intervention is
+ * stored, because nothing else joins the two: the task names the answer it
+ * assessed by its interview-scoped number, and the intervention message
+ * deliberately carries no decision -- it is sent to the respondent's client.
+ * Reviewers are not the respondent, and without the decision and its
+ * reasoning a flag says only that something happened.
+ */
+export type SafetyFlag = {
+    /**
+     * Decision
+     */
+    decision: string;
+    /**
+     * Probability
+     */
+    probability?: number | null;
+    /**
+     * Reasoning
+     */
+    reasoning?: string | null;
+    action: SecurityAction;
+    /**
+     * Respondent Override
+     */
+    respondent_override?: boolean;
+    override?: SecurityOverride | null;
 };
 
 /**
@@ -5033,6 +5097,11 @@ export type SecurityIntervention = {
      */
     respondent_override: boolean;
 };
+
+/**
+ * SecurityOverride
+ */
+export type SecurityOverride = 'accept' | 'override';
 
 /**
  * SecurityPolicy
@@ -6087,11 +6156,6 @@ export type ReceivedData = {
      */
     filename?: string | null;
 };
-
-/**
- * SecurityOverride
- */
-export type SecurityOverride = 'accept' | 'override';
 
 /**
  * TemplatePlaceholder
@@ -10748,6 +10812,10 @@ export type GetInterviewsData = {
          * Reported
          */
         reported?: boolean | null;
+        /**
+         * Intervened
+         */
+        intervened?: boolean | null;
         /**
          * Folder Id
          */

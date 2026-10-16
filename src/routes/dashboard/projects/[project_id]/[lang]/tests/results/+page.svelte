@@ -88,6 +88,24 @@
 		return columnFilters.find((filter) => filter.id === columnId)?.value as T[] | undefined;
 	}
 
+	/**
+	 * The `intervened` facet's selection as the boolean query param it maps
+	 * to, or undefined when it says nothing. Stored under the column the
+	 * control is attached to, as `FacetedFilter` does.
+	 */
+	function intervenedFilter(): boolean | undefined {
+		const selected = selection('n_interventions');
+		return selected?.length === 1 ? selected[0] === 'true' : undefined;
+	}
+
+	// Test interviews are never flagged for review -- a test built to probe
+	// the safety check would bury the queue -- so this is where their
+	// interventions are seen.
+	const INTERVENED_LABELS: Record<string, string> = {
+		true: 'Intervened',
+		false: 'No intervention'
+	};
+
 	const helper = createColumnHelper<DataTableFeatures, InterviewSummaryPublic>();
 
 	const columns = helper.columns([
@@ -106,6 +124,10 @@
 		helper.accessor('n_messages', {
 			header: 'Messages',
 			meta: { align: 'right', class: 'tabular-nums text-gray-600' }
+		}),
+		helper.accessor('n_interventions', {
+			header: 'Safety check',
+			meta: { align: 'right', class: 'tabular-nums' }
 		}),
 		helper.accessor('type', { header: 'Type', meta: { class: 'text-gray-600' } }),
 		helper.accessor('test_name', {
@@ -212,6 +234,7 @@
 		id: 'ID',
 		created_at: 'Created',
 		n_messages: 'Messages',
+		n_interventions: 'Safety check',
 		type: 'Type',
 		test_name: 'Test name',
 		language: 'Language',
@@ -231,6 +254,7 @@
 			search: globalFilter || undefined,
 			statuses: selection<InterviewStatus>('status'),
 			languages: selection('language'),
+			intervened: intervenedFilter(),
 			...dateRangeQuery(
 				columnFilters.find((filter) => filter.id === 'created_at')?.value as DateRange | undefined
 			)
@@ -460,6 +484,12 @@
 			options={facetOptions(facets.language)}
 			counts={facetCounts(facets.language)}
 		/>
+		<FacetedFilter
+			title="Safety check"
+			column={table.getColumn('n_interventions')!}
+			options={facetOptions(facets.intervened, INTERVENED_LABELS)}
+			counts={facetCounts(facets.intervened)}
+		/>
 		<DateRangeFilter title="Created" column={table.getColumn('created_at')!} />
 	{/snippet}
 
@@ -488,6 +518,21 @@
 			<span title={formatDateFull(interview.created_at)}>{formatDate(interview.created_at)}</span>
 		{:else if columnId === 'n_messages'}
 			{interview.n_messages}
+		{:else if columnId === 'n_interventions'}
+			{#if interview.n_interventions}
+				<span
+					class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
+					title="The safety check intervened {interview.n_interventions} time{interview.n_interventions ===
+					1
+						? ''
+						: 's'}"
+				>
+					<i class="fa-solid fa-shield-heart text-[10px]"></i>
+					{interview.n_interventions}
+				</span>
+			{:else}
+				<span class="text-gray-300">&ndash;</span>
+			{/if}
 		{:else if columnId === 'type'}
 			{InterviewTypeMap.get(interview.type) ?? ''}
 		{:else if columnId === 'test_name'}

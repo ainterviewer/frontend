@@ -52,7 +52,7 @@
 	let latestRelease = $derived(newsworthyVersion(data.releases));
 	let hasUnseenRelease = $derived(whatsNew.isUnseen(latestRelease));
 
-	// Reported questions waiting on this user, counted server-side — unlike the
+	// Flagged messages waiting on this user, counted server-side — unlike the
 	// release dot, which is per-browser localStorage and so has to wait for
 	// hydration before it dares render. These are already true on the server's
 	// first paint.
@@ -157,7 +157,7 @@
 								}}
 								class="font-inherit pointer-events-auto relative block cursor-pointer border-none bg-transparent text-center text-base font-normal text-black"
 								aria-label={unreadReports + unreadPlatformReports > 0
-									? `Account menu — ${unreadReports + unreadPlatformReports} unread reported question${
+									? `Account menu — ${unreadReports + unreadPlatformReports} unread flagged message${
 											unreadReports + unreadPlatformReports === 1 ? '' : 's'
 										}`
 									: hasUnseenRelease
@@ -210,7 +210,7 @@
 										only when there is something.
 									-->
 									<a href={resolve('/dashboard/reports')} class={reportRowClass} role="menuitem">
-										{@render reportRow('Reported questions', unreadReports)}
+										{@render reportRow('Flagged', unreadReports)}
 									</a>
 									{#if isPlatformReviewer}
 										<!-- The platform's own queue over the same reports, on its own
@@ -224,7 +224,7 @@
 											class={reportRowClass}
 											role="menuitem"
 										>
-											{@render reportRow('Reported questions', unreadPlatformReports, 'admin')}
+											{@render reportRow('Flagged', unreadPlatformReports, 'admin')}
 										</a>
 									{/if}
 									<button

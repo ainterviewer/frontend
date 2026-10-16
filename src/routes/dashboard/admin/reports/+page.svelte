@@ -86,7 +86,7 @@
 </script>
 
 <svelte:head>
-	<title>AInterviewer - Reported Questions</title>
+	<title>AInterviewer - Flagged</title>
 </svelte:head>
 
 <ReportQueue
@@ -97,5 +97,5 @@
 	onSetStatus={setStatus}
 	onMarkRead={markRead}
 	onRefresh={reload}
-	emptyDescription="Reports from every project appear here when a respondent flags a question."
+	emptyDescription="Messages from every project appear here when a respondent reports a question or the safety check intervenes."
 />

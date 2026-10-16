@@ -879,7 +879,8 @@ export const zInterviewFacets = z.object({
     status: z.array(zFacetCount).optional().default([]),
     language: z.array(zFacetCount).optional().default([]),
     type: z.array(zFacetCount).optional().default([]),
-    reported: z.array(zFacetCount).optional().default([])
+    reported: z.array(zFacetCount).optional().default([]),
+    intervened: z.array(zFacetCount).optional().default([])
 });
 
 /**
@@ -1034,7 +1035,8 @@ export const zInterviewFilters = z.object({
     completed: z.boolean().nullish(),
     search: z.string().max(200).nullish(),
     pid: z.string().max(200).nullish(),
-    reported: z.boolean().nullish()
+    reported: z.boolean().nullish(),
+    intervened: z.boolean().nullish()
 });
 
 /**
@@ -1250,6 +1252,7 @@ export const zInterviewSummaryPublic = z.object({
     total_time_spent: z.int().optional().default(0),
     n_messages: z.int(),
     n_reports: z.int().optional().default(0),
+    n_interventions: z.int().optional().default(0),
     test_name: z.string().nullish(),
     pid: z.string().nullish()
 });
@@ -1266,7 +1269,8 @@ export const zInterviewListResponse = z.object({
         status: [],
         language: [],
         type: [],
-        reported: []
+        reported: [],
+        intervened: []
     })
 });
 
@@ -2068,6 +2072,19 @@ export const zReportReviewResponse = z.object({
 });
 
 /**
+ * ReportSource
+ *
+ * Who flagged a message: the respondent, or the interview's safety check.
+ *
+ * Both land in the same queues because they ask a reviewer the same thing --
+ * look at this part of the transcript -- and need the same two review tracks.
+ * A respondent's report names an interviewer question and carries a
+ * ``ReportReason``; a safety flag names the respondent answer the check
+ * intervened on and carries a ``SafetyFlag`` instead.
+ */
+export const zReportSource = z.enum(['respondent', 'safety_check']);
+
+/**
  * ReportStatus
  *
  * Where a report has got to in one review queue.
@@ -2090,102 +2107,6 @@ export const zReportStatus = z.enum([
 export const zAdminReportReviewRequest = z.object({
     ids: z.array(z.string()),
     status: zReportStatus
-});
-
-/**
- * MessageReportAdminRowPublic
- *
- * A queue row for the platform's own review.
- *
- * The admin track is added back here, and only here: the project queue is
- * served `MessageReportRowPublic`, which has no field for it.
- */
-export const zMessageReportAdminRowPublic = z.object({
-    id: z.string(),
-    message_id: z.string(),
-    interview_id: z.string(),
-    project_id: z.string(),
-    reason: zReportReason,
-    comment: z.string().nullish(),
-    created_at: z.iso.datetime(),
-    updated_at: z.iso.datetime(),
-    status: zReportStatus,
-    resolved_by_id: z.string().nullish(),
-    resolved_at: z.iso.datetime().nullish(),
-    question_number: z.int(),
-    question: z.string(),
-    project_title: z.string(),
-    language: zLanguageCode.optional().default('EN'),
-    pid: z.string().nullish(),
-    read_by_me: z.boolean().optional().default(false),
-    admin_status: zReportStatus,
-    admin_resolved_by_id: z.string().nullish(),
-    admin_resolved_at: z.iso.datetime().nullish()
-});
-
-/**
- * MessageReportPublic
- *
- * A report as the project sees it.
- *
- * Carries the project's own review track and **not** the platform's. The
- * admin track is the platform's internal moderation record: whether a
- * reviewer there judged a question offensive or waved it through is not a
- * project member's business, and it is left off this model rather than
- * merely hidden in the UI -- a column can be hidden while the value still
- * sits in the JSON.
- *
- * `MessageReportAdminPublic` is the wider view, served only to the platform
- * queue. The respondent is not named because there is nothing to name: they
- * hold no account, and the interview the report hangs off already says whose
- * it was.
- */
-export const zMessageReportPublic = z.object({
-    id: z.string(),
-    message_id: z.string(),
-    interview_id: z.string(),
-    project_id: z.string(),
-    reason: zReportReason,
-    comment: z.string().nullish(),
-    created_at: z.iso.datetime(),
-    updated_at: z.iso.datetime(),
-    status: zReportStatus,
-    resolved_by_id: z.string().nullish(),
-    resolved_at: z.iso.datetime().nullish()
-});
-
-/**
- * MessageReportRowPublic
- *
- * A report with the context a reviewer needs to judge it.
- *
- * The question's wording, the project it belongs to and the respondent's pid
- * are joined in rather than left to the client: a queue of report ids is not
- * something anyone can review, and a reviewer holding one page cannot resolve
- * a message id against a transcript they have not opened.
- *
- * `read_by_me` is the calling reviewer's own read state, not a property of
- * the report -- a project member and a platform admin looking at the same
- * report each see their own.
- */
-export const zMessageReportRowPublic = z.object({
-    id: z.string(),
-    message_id: z.string(),
-    interview_id: z.string(),
-    project_id: z.string(),
-    reason: zReportReason,
-    comment: z.string().nullish(),
-    created_at: z.iso.datetime(),
-    updated_at: z.iso.datetime(),
-    status: zReportStatus,
-    resolved_by_id: z.string().nullish(),
-    resolved_at: z.iso.datetime().nullish(),
-    question_number: z.int(),
-    question: z.string(),
-    project_title: z.string(),
-    language: zLanguageCode.optional().default('EN'),
-    pid: z.string().nullish(),
-    read_by_me: z.boolean().optional().default(false)
 });
 
 /**
@@ -2272,6 +2193,134 @@ export const zSecurityDecision = z.object({
 export const zSecurityIntervention = z.object({
     action: zSecurityAction,
     respondent_override: z.boolean()
+});
+
+/**
+ * SecurityOverride
+ */
+export const zSecurityOverride = z.enum(['accept', 'override']);
+
+/**
+ * SafetyFlag
+ *
+ * What the safety check decided, kept on the report it raised.
+ *
+ * Copied off the check's ``assess_security`` task when the intervention is
+ * stored, because nothing else joins the two: the task names the answer it
+ * assessed by its interview-scoped number, and the intervention message
+ * deliberately carries no decision -- it is sent to the respondent's client.
+ * Reviewers are not the respondent, and without the decision and its
+ * reasoning a flag says only that something happened.
+ */
+export const zSafetyFlag = z.object({
+    decision: z.string(),
+    probability: z.number().nullish(),
+    reasoning: z.string().nullish(),
+    action: zSecurityAction,
+    respondent_override: z.boolean().optional().default(false),
+    override: zSecurityOverride.nullish()
+});
+
+/**
+ * MessageReportAdminRowPublic
+ *
+ * A queue row for the platform's own review.
+ *
+ * The admin track is added back here, and only here: the project queue is
+ * served `MessageReportRowPublic`, which has no field for it.
+ */
+export const zMessageReportAdminRowPublic = z.object({
+    id: z.string(),
+    message_id: z.string(),
+    interview_id: z.string(),
+    project_id: z.string(),
+    source: zReportSource.optional().default('respondent'),
+    reason: zReportReason.nullish(),
+    comment: z.string().nullish(),
+    safety: zSafetyFlag.nullish(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    status: zReportStatus,
+    resolved_by_id: z.string().nullish(),
+    resolved_at: z.iso.datetime().nullish(),
+    question_number: z.int(),
+    question: z.string(),
+    project_title: z.string(),
+    language: zLanguageCode.optional().default('EN'),
+    pid: z.string().nullish(),
+    read_by_me: z.boolean().optional().default(false),
+    admin_status: zReportStatus,
+    admin_resolved_by_id: z.string().nullish(),
+    admin_resolved_at: z.iso.datetime().nullish()
+});
+
+/**
+ * MessageReportPublic
+ *
+ * A report as the project sees it.
+ *
+ * Carries the project's own review track and **not** the platform's. The
+ * admin track is the platform's internal moderation record: whether a
+ * reviewer there judged a question offensive or waved it through is not a
+ * project member's business, and it is left off this model rather than
+ * merely hidden in the UI -- a column can be hidden while the value still
+ * sits in the JSON.
+ *
+ * `MessageReportAdminPublic` is the wider view, served only to the platform
+ * queue. The respondent is not named because there is nothing to name: they
+ * hold no account, and the interview the report hangs off already says whose
+ * it was.
+ */
+export const zMessageReportPublic = z.object({
+    id: z.string(),
+    message_id: z.string(),
+    interview_id: z.string(),
+    project_id: z.string(),
+    source: zReportSource.optional().default('respondent'),
+    reason: zReportReason.nullish(),
+    comment: z.string().nullish(),
+    safety: zSafetyFlag.nullish(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    status: zReportStatus,
+    resolved_by_id: z.string().nullish(),
+    resolved_at: z.iso.datetime().nullish()
+});
+
+/**
+ * MessageReportRowPublic
+ *
+ * A report with the context a reviewer needs to judge it.
+ *
+ * The question's wording, the project it belongs to and the respondent's pid
+ * are joined in rather than left to the client: a queue of report ids is not
+ * something anyone can review, and a reviewer holding one page cannot resolve
+ * a message id against a transcript they have not opened.
+ *
+ * `read_by_me` is the calling reviewer's own read state, not a property of
+ * the report -- a project member and a platform admin looking at the same
+ * report each see their own.
+ */
+export const zMessageReportRowPublic = z.object({
+    id: z.string(),
+    message_id: z.string(),
+    interview_id: z.string(),
+    project_id: z.string(),
+    source: zReportSource.optional().default('respondent'),
+    reason: zReportReason.nullish(),
+    comment: z.string().nullish(),
+    safety: zSafetyFlag.nullish(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    status: zReportStatus,
+    resolved_by_id: z.string().nullish(),
+    resolved_at: z.iso.datetime().nullish(),
+    question_number: z.int(),
+    question: z.string(),
+    project_title: z.string(),
+    language: zLanguageCode.optional().default('EN'),
+    pid: z.string().nullish(),
+    read_by_me: z.boolean().optional().default(false)
 });
 
 /**
@@ -3488,11 +3537,6 @@ export const zReceivedData = z.object({
     content: z.string(),
     filename: z.string().nullish().default(null)
 });
-
-/**
- * SecurityOverride
- */
-export const zSecurityOverride = z.enum(['accept', 'override']);
 
 /**
  * TemplatePlaceholder
@@ -5182,6 +5226,7 @@ export const zGetInterviewsQuery = z.object({
     search: z.string().max(200).nullish(),
     pid: z.string().max(200).nullish(),
     reported: z.boolean().nullish(),
+    intervened: z.boolean().nullish(),
     folder_id: z.string().nullish(),
     offset: z.int().lte(100).optional().default(0),
     limit: z.int().lte(100).optional().default(20),

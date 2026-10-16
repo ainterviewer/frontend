@@ -2159,8 +2159,11 @@ export class Projects {
      * it backs the "view interviews" link from the participants table, where the
      * pid is already known.
      *
-     * `reported` narrows to interviews in which the respondent reported at least
-     * one question, or to those in which they reported none.
+     * `reported` narrows to interviews with at least one message flagged for
+     * review -- reported by the respondent or by the safety check -- or to those
+     * with none. `intervened`
+     * does the same for the safety check, counted off the transcript, so test
+     * interviews -- which are never flagged for review -- can be filtered too.
      */
     public static getInterviews<ThrowOnError extends boolean = false>(options: Options<GetInterviewsData, ThrowOnError>): RequestResult<GetInterviewsResponses, GetInterviewsErrors, ThrowOnError> {
         return (options.client ?? client).get<GetInterviewsResponses, GetInterviewsErrors, ThrowOnError>({

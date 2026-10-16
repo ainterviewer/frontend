@@ -123,7 +123,7 @@
 </script>
 
 <svelte:head>
-	<title>AInterviewer - Reported Questions</title>
+	<title>AInterviewer - Flagged</title>
 </svelte:head>
 
 <Sidebar items={mainSidebarItems} />
@@ -135,5 +135,5 @@
 	onSetStatus={setStatus}
 	onMarkRead={markRead}
 	onRefresh={reload}
-	emptyDescription="Reports appear here when a respondent flags a question in one of your projects."
+	emptyDescription="Messages appear here when a respondent reports a question, or the safety check intervenes, in one of your projects."
 />

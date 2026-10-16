@@ -25,10 +25,10 @@ export const mainSidebarItems: SidebarItem[] = [
 		dataTour: 'sidebar-experiments'
 	},
 	{
-		// Questions respondents reported, across every project the user
-		// collaborates on. The admin entry below is the platform's review of
-		// the same reports, on its own track.
-		label: 'Reports',
+		// Questions respondents reported and answers the safety check flagged,
+		// across every project the user collaborates on. The admin entry below
+		// is the platform's review of the same flags, on its own track.
+		label: 'Flagged',
 		href: '/dashboard/reports',
 		icon: 'fas fa-flag'
 	},
@@ -49,7 +49,7 @@ export const mainSidebarItems: SidebarItem[] = [
 				icon: 'fas fa-user-plus'
 			},
 			{
-				label: 'Reports',
+				label: 'Flagged',
 				href: '/dashboard/admin/reports',
 				icon: 'fas fa-flag'
 			},
