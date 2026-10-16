@@ -215,13 +215,16 @@
 									{#if isPlatformReviewer}
 										<!-- The platform's own queue over the same reports, on its own
 										     track. A separate row because it is separate work: clearing
-										     one does not clear the other. -->
+										     one does not clear the other. Kept here rather than left to
+										     the Admin sidebar because its count lights the avatar dot,
+										     and named after the row above so it reads as the same
+										     queue, reviewed as an admin. -->
 										<a
 											href={resolve('/dashboard/admin/reports')}
 											class={reportRowClass}
 											role="menuitem"
 										>
-											{@render reportRow('Platform reports', unreadPlatformReports)}
+											{@render reportRow('Reported questions', unreadPlatformReports, 'admin')}
 										</a>
 									{/if}
 									<button
@@ -261,7 +264,8 @@
 	One queue row: its label and its count. Shared by the project queue and, for
 	a platform reviewer, the admin one — `resolve()` has to appear in each
 	`href` itself for the route to be checked, so the rows are written out and
-	only their contents come from here.
+	only their contents come from here. `tag` is a quieter qualifier after the
+	label, for the admin queue, which shares the project queue's name.
 
 	Deliberately undecorated: every other row in this menu is plain text, so an
 	icon here made it the one ornamented entry.
@@ -273,8 +277,10 @@
 	number, which is worth more than the symmetry, and leaves nothing to
 	outgrow at three digits.
 -->
-{#snippet reportRow(label: string, count: number)}
-	<span class="whitespace-nowrap">{label}</span>
+{#snippet reportRow(label: string, count: number, tag?: string)}
+	<span class="whitespace-nowrap"
+		>{label}{#if tag}<span class="ml-1.5 text-xs text-gray-400">{tag}</span>{/if}</span
+	>
 	{#if count > 0}
 		<span class="ml-3 text-sm font-semibold text-orange-500">{count}</span>
 	{/if}
