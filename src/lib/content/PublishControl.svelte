@@ -119,6 +119,7 @@
 
 <div class="flex items-center gap-2">
 	<button
+		data-tour="version-history"
 		type="button"
 		class="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-2 text-sm font-medium whitespace-nowrap text-gray-700 hover:bg-gray-200"
 		onclick={() => {
@@ -144,6 +145,7 @@
 	</button>
 	{@render beside?.()}
 	<button
+		data-tour="publish"
 		type="button"
 		class={[
 			'flex items-center gap-2 rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap disabled:opacity-50 @3xl:px-6',

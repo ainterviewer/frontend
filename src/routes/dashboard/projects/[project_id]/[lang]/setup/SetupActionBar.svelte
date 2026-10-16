@@ -106,7 +106,7 @@
 				</div>
 			{/if}
 		</div>
-		<div data-tour="publish" class="flex">
+		<div class="flex">
 			<!-- Try Interview beside Publish: test the draft, then send it out. -->
 			<PublishControl {projectId} {lang} {availableLanguages} {onBeforePublish} primary={!onSave}>
 				{#snippet beside()}

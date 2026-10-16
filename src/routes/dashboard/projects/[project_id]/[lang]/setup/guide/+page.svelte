@@ -200,6 +200,14 @@
 					}
 				},
 				{
+					element: '[data-tour="sync-state"]',
+					popover: {
+						title: 'Saved as you type',
+						description:
+							'Your changes are saved as you make them, and anyone else with the guide open sees them straight away. This shows whether everything is saved.'
+					}
+				},
+				{
 					element: '[data-action-bar]',
 					popover: {
 						title: 'Action Bar',
@@ -216,14 +224,6 @@
 					}
 				},
 				{
-					element: '[data-tour="try-interview"]',
-					popover: {
-						title: 'Try Interview',
-						description:
-							'Launch a test run in a new tab to experience the interview exactly as your interviewee would, without affecting your real data.'
-					}
-				},
-				{
 					element: '[data-tour="export"]',
 					popover: {
 						title: 'Export',
@@ -232,11 +232,27 @@
 					}
 				},
 				{
-					element: '[data-tour="sync-state"]',
+					element: '[data-tour="version-history"]',
 					popover: {
-						title: 'Saved as you type',
+						title: 'Version History',
 						description:
-							'Your changes are saved as you make them, and anyone else with the guide open sees them straight away. This shows whether everything is saved.'
+							'Shows the version respondents see now. A dot means the draft has changes they do not see yet. Open it to browse earlier versions and restore one.'
+					}
+				},
+				{
+					element: '[data-tour="try-interview"]',
+					popover: {
+						title: 'Try Interview',
+						description:
+							'Launch a test run of the draft in a new tab to experience the interview as your interviewee would, without affecting your real data.'
+					}
+				},
+				{
+					element: '[data-tour="publish"]',
+					popover: {
+						title: 'Publish',
+						description:
+							'Your edits stay a draft until you publish. Publishing makes the draft the version respondents see when you send them the interview: the guide along with the consent, welcome screen, agents and emails, in every language.'
 					}
 				},
 				{
