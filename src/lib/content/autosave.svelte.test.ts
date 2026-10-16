@@ -71,6 +71,31 @@ describe('Autosaver', () => {
 		stop();
 	});
 
+	it('saves once for two callers waiting on the same save', async () => {
+		const releases: (() => void)[] = [];
+		const save = vi.fn(
+			(_value: Page) =>
+				new Promise<SaveResult>((resolve) => releases.push(() => resolve({ ok: true })))
+		);
+		const { page, saver, stop } = setup(save);
+
+		page.text = 'first';
+		flushSync();
+		const first = saver.flush();
+		page.text = 'second';
+		flushSync();
+		// The timer and Publish, say: both wait on the save running.
+		const both = Promise.all([saver.flush(), saver.flush()]);
+		releases[0]();
+		await vi.advanceTimersByTimeAsync(0);
+		for (const release of releases.slice(1)) release();
+		await Promise.all([first, both]);
+
+		expect(save.mock.calls.map((call) => call[0].text)).toEqual(['first', 'second']);
+		expect(saver.state).toBe('saved');
+		stop();
+	});
+
 	it('stops on a conflict until the reader keeps their version', async () => {
 		const save = vi.fn(async (_value: Page, overwrite?: number): Promise<SaveResult> =>
 			overwrite === undefined ? { ok: false, conflict: 7 } : { ok: true }

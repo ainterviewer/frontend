@@ -113,7 +113,10 @@ export class Autosaver<T> {
 	 * everything on the page is saved. */
 	async flush(): Promise<boolean> {
 		this.#clearTimer();
-		if (this.#running) await this.#running;
+		// A loop, not one wait: two callers waiting on one save (the timer and
+		// Publish) would otherwise both start the next, against one revision,
+		// and the second would read the first as someone else's save.
+		while (this.#running) await this.#running;
 		if (this.state === 'conflict') return false;
 		if (this.#latest !== this.#baseline) await this.#run();
 		return this.state === 'saved';
