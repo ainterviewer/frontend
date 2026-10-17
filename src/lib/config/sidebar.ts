@@ -39,6 +39,11 @@ export const mainSidebarItems: SidebarItem[] = [
 		requiresAdmin: true,
 		children: [
 			{
+				label: 'Overview',
+				href: '/dashboard/admin/overview',
+				icon: 'fas fa-chart-line'
+			},
+			{
 				label: 'AWS',
 				href: '/dashboard/admin/aws',
 				icon: 'fas fa-server'
