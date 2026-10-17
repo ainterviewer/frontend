@@ -74,7 +74,10 @@
 		     min-h-full column it would push the bar up instead of adding scroll
 		     below it. It collapses on routes that render no bar, which would
 		     otherwise end in dead whitespace. -->
-		<div class="group flex min-h-full w-[90%] flex-col">
+		<!-- shrink-0: as a flex item of the scrolling <main> it would otherwise
+		     shrink to min-h-full and let a long page overflow it, which drops
+		     <main>'s bottom padding from the scroll area. -->
+		<div class="group flex min-h-full w-[90%] shrink-0 flex-col">
 			{@render children()}
 			<div aria-hidden="true" class="h-0 shrink-0 group-has-[[data-action-bar]]:h-10"></div>
 		</div>
