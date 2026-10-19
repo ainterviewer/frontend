@@ -6,7 +6,11 @@
 
 	import type { PageData } from './$types';
 	import { RANGES } from './ranges';
-	import TimeSeriesChart, { type TimeRow, type TimeSeries } from './TimeSeriesChart.svelte';
+	import TimeSeriesChart, {
+		DAYS_KEY,
+		type TimeRow,
+		type TimeSeries
+	} from './TimeSeriesChart.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -68,7 +72,10 @@
 
 	// Past this many days a bar per day is a hairline, so the bar charts
 	// switch to one bar per week (Monday first): counts are summed, daily active
-	// users averaged -- summing them would count a user once per day.
+	// users averaged -- summing them would count a user once per day. Only
+	// "All time" gets this long, and the server starts that on a Monday, so
+	// the one partial week is the current one; each row carries how many days
+	// it covers (`DAYS_KEY`) for the tooltip to say so.
 	const WEEKLY_AFTER = 120;
 	let period = $derived<'day' | 'week'>((stats?.days.length ?? 0) > WEEKLY_AFTER ? 'week' : 'day');
 
@@ -86,12 +93,14 @@
 			}
 		}
 		return Object.values(weeks).map(({ row, days }) => {
-			if (mode === 'sum') return row;
-			const mean: TimeRow = { date: row.date };
-			for (const [key, value] of Object.entries(row)) {
-				if (key !== 'date') mean[key] = Math.round(((value as number) / days) * 10) / 10;
+			const out: TimeRow = mode === 'sum' ? row : { date: row.date };
+			if (mode === 'mean') {
+				for (const [key, value] of Object.entries(row)) {
+					if (key !== 'date') out[key] = Math.round(((value as number) / days) * 10) / 10;
+				}
 			}
-			return mean;
+			out[DAYS_KEY] = days;
+			return out;
 		});
 	}
 

@@ -1,3 +1,9 @@
+<script lang="ts" module>
+	/** On a row that buckets several days, how many it covers: a week can be
+	 *  partial, and the tooltip says so rather than let it read as a drop. */
+	export const DAYS_KEY = '_days';
+</script>
+
 <script lang="ts">
 	import { scaleLinear } from 'd3-scale';
 	import { timeFormat } from 'd3-time-format';
@@ -90,6 +96,13 @@
 		}))
 	);
 
+	function heading(row: TimeRow): string {
+		if (period === 'day') return formatDay(row.date);
+		const days = row[DAYS_KEY] as number | undefined;
+		const partial = days !== undefined && days < 7 ? ` · ${days} of 7 days` : '';
+		return formatWeek(row.date) + partial;
+	}
+
 	function total(row: TimeRow): number {
 		return shown.reduce((sum, s) => sum + ((row[s.key] as number) ?? 0), 0);
 	}
@@ -128,9 +141,7 @@
 {#snippet tooltip()}
 	<Tooltip.Root>
 		{#snippet children({ data }: { data: TimeRow })}
-			<Tooltip.Header
-				>{period === 'week' ? formatWeek(data.date) : formatDay(data.date)}</Tooltip.Header
-			>
+			<Tooltip.Header>{heading(data)}</Tooltip.Header>
 			<Tooltip.List>
 				{#each [...shown].reverse() as s (s.key)}
 					<Tooltip.Item label={s.label} value={data[s.key]} color={s.color} />
@@ -174,9 +185,11 @@
 
 <!-- Mounted through the shared queue, one chart per idle slot, so navigating
      here paints the page before six charts are built in a single frame. Keyed
-     on the rows so new data (a range switch, a role toggle) goes back through
+     on the rows so new data (a range switch, the growth metric) goes back through
      the queue too: updating a mounted chart in place re-renders all of them
-     in the same frame, which is the stall the queue exists to avoid. -->
+     in the same frame, which is the stall the queue exists to avoid. A role
+     or legend toggle changes `series`, not `rows`, and does update in place:
+     restyling a mounted chart is cheap next to building one. -->
 {#key rows}
 	<LazyMount class="h-56 w-full">
 		{#snippet placeholder()}
