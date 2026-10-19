@@ -96,6 +96,44 @@ export type AdminReportReviewResponse = {
 };
 
 /**
+ * AdminStats
+ */
+export type AdminStats = {
+    /**
+     * Start
+     */
+    start: string;
+    /**
+     * End
+     */
+    end: string;
+    summary: AdminStatsSummary;
+    /**
+     * Days
+     */
+    days: Array<DailyStats>;
+    /**
+     * Retention
+     */
+    retention: Array<RetentionCohort>;
+};
+
+/**
+ * AdminStatsSummary
+ *
+ * Headline figures as of today, independent of the requested range.
+ */
+export type AdminStatsSummary = {
+    accounts: ScopeCounts;
+    usable: ScopeCounts;
+    active_today: ScopeCounts;
+    active_7d: ScopeCounts;
+    active_30d: ScopeCounts;
+    new_7d: ScopeCounts;
+    new_30d: ScopeCounts;
+};
+
+/**
  * AgentConfig
  */
 export type AgentConfig = {
@@ -1160,6 +1198,31 @@ export type DailyInterviewCount = {
      * Completed Count
      */
     completed_count: number;
+};
+
+/**
+ * DailyStats
+ *
+ * One calendar day (app time zone) of the admin overview.
+ *
+ * `accounts` and `usable` are of accounts that still exist: a deleted user
+ * leaves no trace, so the history shrinks with them.
+ */
+export type DailyStats = {
+    /**
+     * Day
+     */
+    day: string;
+    signups: ScopeCounts;
+    accounts: ScopeCounts;
+    usable: ScopeCounts;
+    active: ScopeCounts;
+    weekly_active: ScopeCounts;
+    interviews: InterviewTypeCounts;
+    /**
+     * Projects
+     */
+    projects: number;
 };
 
 /**
@@ -2758,6 +2821,24 @@ export type InterviewTranscript = {
  * InterviewType
  */
 export type InterviewType = 'manual_test' | 'synthetic_test' | 'distributed';
+
+/**
+ * InterviewTypeCounts
+ */
+export type InterviewTypeCounts = {
+    /**
+     * Distributed
+     */
+    distributed?: number;
+    /**
+     * Manual Test
+     */
+    manual_test?: number;
+    /**
+     * Synthetic Test
+     */
+    synthetic_test?: number;
+};
 
 /**
  * IntervieweeCreate
@@ -4975,6 +5056,48 @@ export type ResetPasswordRequest = {
 };
 
 /**
+ * RetentionCohort
+ *
+ * The users of one scope who signed up in one month (`YYYY-MM`).
+ */
+export type RetentionCohort = {
+    /**
+     * Month
+     */
+    month: string;
+    scope: Scope;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Weeks
+     */
+    weeks: Array<RetentionWeek>;
+};
+
+/**
+ * RetentionWeek
+ *
+ * Of a cohort's `eligible` members -- those whose week `week` after
+ * signing up has fully passed -- how many were active during it.
+ */
+export type RetentionWeek = {
+    /**
+     * Week
+     */
+    week: number;
+    /**
+     * Eligible
+     */
+    eligible: number;
+    /**
+     * Retained
+     */
+    retained: number;
+};
+
+/**
  * SafetyFlag
  *
  * What the safety check decided, kept on the report it raised.
@@ -5029,6 +5152,27 @@ export type SaveVersionRequest = {
  * Scope
  */
 export type Scope = 'admin' | 'user' | 'demo';
+
+/**
+ * ScopeCounts
+ *
+ * A count split by account scope, so the overview can hide demo accounts
+ * (invited in batches that would swamp real growth) without a refetch.
+ */
+export type ScopeCounts = {
+    /**
+     * Admin
+     */
+    admin?: number;
+    /**
+     * User
+     */
+    user?: number;
+    /**
+     * Demo
+     */
+    demo?: number;
+};
 
 export type SecurityAction = 'skip_probes' | 'skip_section' | 'end_interview';
 
@@ -5648,7 +5792,7 @@ export type UserAdmin = {
     /**
      * Last Login
      */
-    last_login: string;
+    last_login?: string | null;
     scope?: Scope;
     /**
      * Id
@@ -5743,7 +5887,7 @@ export type UserCreateRequest = {
     /**
      * Last Login
      */
-    last_login?: string;
+    last_login?: string | null;
     scope?: Scope;
     /**
      * Invite Token
@@ -5808,7 +5952,7 @@ export type UserPublic = {
     /**
      * Last Login
      */
-    last_login: string;
+    last_login?: string | null;
     scope?: Scope;
     /**
      * Id
@@ -12990,6 +13134,38 @@ export type ProxyToEc2ManagerPutResponses = {
      */
     200: unknown;
 };
+
+export type GetAdminStatsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Days
+         *
+         * Days of daily series to return, ending today; all history from the week of the first signup when omitted.
+         */
+        days?: number | null;
+    };
+    url: '/api/admin/stats';
+};
+
+export type GetAdminStatsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAdminStatsError = GetAdminStatsErrors[keyof GetAdminStatsErrors];
+
+export type GetAdminStatsResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminStats;
+};
+
+export type GetAdminStatsResponse = GetAdminStatsResponses[keyof GetAdminStatsResponses];
 
 export type DeleteUserData = {
     body?: never;

@@ -2187,6 +2187,75 @@ export const zAccessRequestsProcessRequest = z.object({
     action: z.enum(['approve', 'deny'])
 });
 
+/**
+ * RetentionCohort
+ *
+ * The users of one scope who signed up in one month (`YYYY-MM`).
+ */
+export const zRetentionCohort = z.object({
+    month: z.string(),
+    scope: zScope,
+    size: z.int(),
+    weeks: z.array(zRetentionWeek)
+});
+
+/**
+ * ScopeCounts
+ *
+ * A count split by account scope, so the overview can hide demo accounts
+ * (invited in batches that would swamp real growth) without a refetch.
+ */
+export const zScopeCounts = z.object({
+    admin: z.int().optional().default(0),
+    user: z.int().optional().default(0),
+    demo: z.int().optional().default(0)
+});
+
+/**
+ * AdminStatsSummary
+ *
+ * Headline figures as of today, independent of the requested range.
+ */
+export const zAdminStatsSummary = z.object({
+    accounts: zScopeCounts,
+    usable: zScopeCounts,
+    active_today: zScopeCounts,
+    active_7d: zScopeCounts,
+    active_30d: zScopeCounts,
+    new_7d: zScopeCounts,
+    new_30d: zScopeCounts
+});
+
+/**
+ * DailyStats
+ *
+ * One calendar day (app time zone) of the admin overview.
+ *
+ * `accounts` and `usable` are of accounts that still exist: a deleted user
+ * leaves no trace, so the history shrinks with them.
+ */
+export const zDailyStats = z.object({
+    day: z.iso.date(),
+    signups: zScopeCounts,
+    accounts: zScopeCounts,
+    usable: zScopeCounts,
+    active: zScopeCounts,
+    weekly_active: zScopeCounts,
+    interviews: zInterviewTypeCounts,
+    projects: z.int()
+});
+
+/**
+ * AdminStats
+ */
+export const zAdminStats = z.object({
+    start: z.iso.date(),
+    end: z.iso.date(),
+    summary: zAdminStatsSummary,
+    days: z.array(zDailyStats),
+    retention: z.array(zRetentionCohort)
+});
+
 export const zSecurityAction = z.enum([
     'skip_probes',
     'skip_section',
@@ -2349,75 +2418,6 @@ export const zMessageReportRowPublic = z.object({
  */
 export const zSecurityPolicy = z.object({
     decisions: z.array(zSecurityDecision).min(1)
-});
-
-/**
- * RetentionCohort
- *
- * The users of one scope who signed up in one month (`YYYY-MM`).
- */
-export const zRetentionCohort = z.object({
-    month: z.string(),
-    scope: zScope,
-    size: z.int(),
-    weeks: z.array(zRetentionWeek)
-});
-
-/**
- * ScopeCounts
- *
- * A count split by account scope, so the overview can hide demo accounts
- * (invited in batches that would swamp real growth) without a refetch.
- */
-export const zScopeCounts = z.object({
-    admin: z.int().optional().default(0),
-    user: z.int().optional().default(0),
-    demo: z.int().optional().default(0)
-});
-
-/**
- * AdminStatsSummary
- *
- * Headline figures as of today, independent of the requested range.
- */
-export const zAdminStatsSummary = z.object({
-    accounts: zScopeCounts,
-    usable: zScopeCounts,
-    active_today: zScopeCounts,
-    active_7d: zScopeCounts,
-    active_30d: zScopeCounts,
-    new_7d: zScopeCounts,
-    new_30d: zScopeCounts
-});
-
-/**
- * DailyStats
- *
- * One calendar day (app time zone) of the admin overview.
- *
- * `accounts` and `usable` are of accounts that still exist: a deleted user
- * leaves no trace, so the history shrinks with them.
- */
-export const zDailyStats = z.object({
-    day: z.iso.date(),
-    signups: zScopeCounts,
-    accounts: zScopeCounts,
-    usable: zScopeCounts,
-    active: zScopeCounts,
-    weekly_active: zScopeCounts,
-    interviews: zInterviewTypeCounts,
-    projects: z.int()
-});
-
-/**
- * AdminStats
- */
-export const zAdminStats = z.object({
-    start: z.iso.date(),
-    end: z.iso.date(),
-    summary: zAdminStatsSummary,
-    days: z.array(zDailyStats),
-    retention: z.array(zRetentionCohort)
 });
 
 /**
