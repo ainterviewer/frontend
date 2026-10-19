@@ -1678,7 +1678,7 @@
 	}
 </script>
 
-<div class="flex min-h-0 flex-1 flex-col gap-3">
+<div data-fill-viewport class="flex min-h-0 flex-1 flex-col gap-3">
 	<header>
 		<h1 class="text-2xl font-semibold text-gray-800">Explore</h1>
 		<!-- What the page is for, in one line and in every state. The controls

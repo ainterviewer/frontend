@@ -76,8 +76,13 @@
 		     otherwise end in dead whitespace. -->
 		<!-- shrink-0: as a flex item of the scrolling <main> it would otherwise
 		     shrink to min-h-full and let a long page overflow it, which drops
-		     <main>'s bottom padding from the scroll area. -->
-		<div class="group flex min-h-full w-[90%] shrink-0 flex-col">
+		     <main>'s bottom padding from the scroll area.
+		     A page that fills the viewport and scrolls inside its own panels
+		     (explore, codebook) marks its root `data-fill-viewport` and gets the
+		     shrink back: held to the viewport, the column has a definite height
+		     for the page's `flex-1 min-h-0` panels to divide, where grown to its
+		     content it would hand them their full height and scroll the page. -->
+		<div class="group flex min-h-full w-[90%] shrink-0 flex-col has-[[data-fill-viewport]]:shrink">
 			{@render children()}
 			<div aria-hidden="true" class="h-0 shrink-0 group-has-[[data-action-bar]]:h-10"></div>
 		</div>

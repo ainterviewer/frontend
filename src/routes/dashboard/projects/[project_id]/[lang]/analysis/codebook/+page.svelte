@@ -14,7 +14,7 @@
 	const book = $derived(codebookFor(data.project_id));
 </script>
 
-<div class="flex min-h-0 w-full flex-1 flex-col">
+<div data-fill-viewport class="flex min-h-0 w-full flex-1 flex-col">
 	<header class="mb-4">
 		<h1 class="page-title">Codebook</h1>
 		<p class="text-sm text-gray-500">
