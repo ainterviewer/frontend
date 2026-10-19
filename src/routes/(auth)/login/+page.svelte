@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { PinInput } from 'bits-ui';
+
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -18,6 +20,9 @@
 	let email = $state('');
 	let extended = $state(false);
 	let code = $state('');
+
+	// Matches the backend's six-digit login codes.
+	const CODE_LENGTH = 6;
 
 	function detail(error: unknown): string {
 		return (error as { detail?: string } | undefined)?.detail ?? '';
@@ -264,18 +269,37 @@
 
 					<div>
 						<label for="code" class="block text-sm font-medium text-gray-700"> Code </label>
-						<div class="mt-1">
-							<input
-								id="code"
-								name="code"
-								type="text"
-								inputmode="numeric"
-								autocomplete="one-time-code"
-								required
-								bind:value={code}
-								class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-center tracking-widest placeholder-gray-400 shadow-sm transition-all focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
-							/>
-						</div>
+						<PinInput.Root
+							inputId="code"
+							name="code"
+							required
+							maxlength={CODE_LENGTH}
+							pattern="^\d+$"
+							pasteTransformer={(text) => text.replace(/\D/g, '')}
+							disabled={isLoading}
+							bind:value={code}
+							onComplete={(event: Event) =>
+								(event.target as HTMLInputElement).form?.requestSubmit()}
+							class="mt-1 flex gap-2 has-disabled:opacity-50"
+						>
+							{#snippet children({ cells })}
+								{#each cells as cell, i (i)}
+									<PinInput.Cell
+										{cell}
+										class="relative flex h-14 flex-1 items-center justify-center rounded-md border border-gray-300 text-xl font-medium text-gray-900 shadow-sm transition-all data-active:border-primary data-active:ring-1 data-active:ring-primary"
+									>
+										{cell.char}
+										{#if cell.hasFakeCaret}
+											<div
+												class="pointer-events-none absolute inset-0 flex items-center justify-center"
+											>
+												<div class="h-5 w-px animate-pulse bg-gray-900"></div>
+											</div>
+										{/if}
+									</PinInput.Cell>
+								{/each}
+							{/snippet}
+						</PinInput.Root>
 					</div>
 
 					<div>
