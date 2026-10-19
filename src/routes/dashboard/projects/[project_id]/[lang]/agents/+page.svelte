@@ -14,6 +14,8 @@
 	import SecuritySettings from './SecuritySettings.svelte';
 
 	let { data }: { data: PageData } = $props();
+	let user = $derived(page.data.user);
+	let hasPreviewFeatures = $derived(!!user?.with_preview_features);
 
 	let mode = $state<'basic' | 'advanced'>('basic');
 	let agents = $state<AgentConfigs>(untrack(() => data.agents));
@@ -621,7 +623,7 @@
 		{/if}
 	</section>
 
-	{#if agents.security}
+	{#if agents.security && hasPreviewFeatures}
 		<SecuritySettings
 			bind:security={agents.security}
 			{models}
