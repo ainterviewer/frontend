@@ -2,11 +2,20 @@
 // safety check intervening on an answer (`source`). These read both the same
 // way wherever flags are listed: the queues and the transcript.
 
-import type { MessageReportPublic, ReportSource, SafetyFlag } from '$lib/api';
+import type { InterviewType, MessageReportPublic, ReportSource, SafetyFlag } from '$lib/api';
 
 export const SOURCE_LABELS: Record<ReportSource, string> = {
 	respondent: 'Respondent',
 	safety_check: 'Safety check'
+};
+
+/** Which kind of interview a flag was raised in: a real respondent's, or
+ *  someone testing the project. Synthetic tests never raise a safety flag,
+ *  but nothing stops a report row from naming one. */
+export const INTERVIEW_TYPE_LABELS: Record<InterviewType, string> = {
+	distributed: 'Distributed',
+	manual_test: 'Manual test',
+	synthetic_test: 'Synthetic test'
 };
 
 const ACTION_LABELS: Record<SafetyFlag['action'], string> = {

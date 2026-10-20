@@ -19,7 +19,7 @@
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 
-	import { flagReason, flagSummary, SOURCE_LABELS } from './flags';
+	import { flagReason, flagSummary, INTERVIEW_TYPE_LABELS, SOURCE_LABELS } from './flags';
 
 	/**
 	 * A queue of flagged messages, for whichever reviewer is looking: the
@@ -130,6 +130,14 @@
 			sortFn: 'text',
 			filterFn: matchesSelection
 		}),
+		// A flag from someone testing the project and one from a real
+		// respondent call for very different reviews.
+		helper.accessor((r) => r.interview_type ?? 'distributed', {
+			id: 'interview_type',
+			header: 'Interview',
+			sortFn: 'text',
+			filterFn: matchesSelection
+		}),
 		helper.accessor((r) => sortableText(r.question), {
 			id: 'question',
 			header: 'Message',
@@ -217,6 +225,7 @@
 		created_at: 'Flagged',
 		project_title: 'Project',
 		source: 'Source',
+		interview_type: 'Interview',
 		question: 'Message',
 		reason: 'Reason',
 		comment: 'Details',
@@ -296,6 +305,11 @@
 			title="Source"
 			column={table.getColumn('source')!}
 			options={Object.entries(SOURCE_LABELS).map(([value, label]) => ({ value, label }))}
+		/>
+		<FacetedFilter
+			title="Interview"
+			column={table.getColumn('interview_type')!}
+			options={Object.entries(INTERVIEW_TYPE_LABELS).map(([value, label]) => ({ value, label }))}
 		/>
 		<FacetedFilter title="Reason" column={table.getColumn('reason')!} />
 		<!-- Both tracks are filterable; this queue's own is the useful one, but
@@ -389,6 +403,15 @@
 					{SOURCE_LABELS.respondent}
 				</span>
 			{/if}
+		{:else if columnId === 'interview_type'}
+			{@const type = report.interview_type ?? 'distributed'}
+			<span
+				class="text-xs whitespace-nowrap {type === 'distributed'
+					? 'text-gray-600'
+					: 'font-medium text-sky-700'}"
+			>
+				{INTERVIEW_TYPE_LABELS[type]}
+			</span>
 		{:else if columnId === 'reason'}
 			{#if report.safety}
 				<span

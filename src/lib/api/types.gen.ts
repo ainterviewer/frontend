@@ -3825,6 +3825,7 @@ export type MessageReportAdminRowPublic = {
      */
     project_title: string;
     language?: LanguageCode;
+    interview_type?: InterviewType;
     /**
      * Pid
      */
@@ -3993,6 +3994,7 @@ export type MessageReportRowPublic = {
      */
     project_title: string;
     language?: LanguageCode;
+    interview_type?: InterviewType;
     /**
      * Pid
      */

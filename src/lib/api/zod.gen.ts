@@ -2337,6 +2337,7 @@ export const zMessageReportAdminRowPublic = z.object({
     question: z.string(),
     project_title: z.string(),
     language: zLanguageCode.optional().default('EN'),
+    interview_type: zInterviewType.optional().default('distributed'),
     pid: z.string().nullish(),
     read_by_me: z.boolean().optional().default(false),
     admin_status: zReportStatus,
@@ -2409,6 +2410,7 @@ export const zMessageReportRowPublic = z.object({
     question: z.string(),
     project_title: z.string(),
     language: zLanguageCode.optional().default('EN'),
+    interview_type: zInterviewType.optional().default('distributed'),
     pid: z.string().nullish(),
     read_by_me: z.boolean().optional().default(false)
 });
