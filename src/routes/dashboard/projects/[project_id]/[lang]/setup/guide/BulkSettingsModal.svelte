@@ -56,7 +56,7 @@
 		},
 		{
 			key: 'check_if_answered',
-			label: 'Check if answered',
+			label: 'Reformulate if answered',
 			info: 'Checks if the question has already been answered. If it has, the main question will be reformulated to take the previous answers into account.'
 		},
 		{

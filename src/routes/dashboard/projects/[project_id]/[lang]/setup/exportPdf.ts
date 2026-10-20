@@ -342,9 +342,9 @@ function buildQuestionContent(
 		if (q.can_answer === false) settings.push('Message only (no answer)');
 		if (q.can_skip === false) settings.push('Cannot skip');
 		if (q.shuffle) settings.push('Shuffle');
-		if (q.create_segue) settings.push('Create segue');
+		if (q.create_segue) settings.push('Create transition');
 		if (q.exclude_from_history) settings.push('Exclude from history');
-		if (q.check_if_answered) settings.push('Check if answered');
+		if (q.check_if_answered) settings.push('Reformulate if answered');
 		if (q.check_if_exhausted) settings.push('Check if exhausted');
 		if (q.user_image) settings.push('User can upload image');
 		if (q.probing_context) settings.push(`Probing context: ${q.probing_context}`);

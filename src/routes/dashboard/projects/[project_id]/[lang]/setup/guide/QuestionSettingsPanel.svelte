@@ -209,12 +209,12 @@
 						class="rounded border-gray-300 text-primary focus:ring-primary"
 						bind:checked={question.check_if_answered}
 					/>
-					Check if answered
+					Reformulate if answered
 				</label>
 				<HoverInfo
 					class="ml-2"
 					iconColor="gray-500"
-					text="Checks is the question has already been answered. If it has, the main question will be reformulated to take the previous answers into acocunt."
+					text="Checks if the question has already been answered. If it has, the main question will be reformulated to take the previous answers into account."
 				></HoverInfo>
 			</div>
 			<div class="flex">
@@ -282,7 +282,7 @@
 				<HoverInfo
 					class="ml-2"
 					iconColor="gray-500"
-					text="If the user should be able to reply with an image"
+					text="If the user should be able to reply with an image."
 				></HoverInfo>
 			</div>
 			<div class="flex">
