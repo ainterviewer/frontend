@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+	clusterQuery,
 	coverageLabel,
 	defaultClusterSettings,
 	defaultCoverage,
@@ -18,7 +19,8 @@ import {
 	surveyValueToken,
 	toggleQuestion,
 	toggleSection,
-	toggleSurveyValue
+	toggleSurveyValue,
+	unitQuery
 } from './explore';
 
 describe('toggleQuestion', () => {
@@ -397,5 +399,22 @@ describe('coverage axes', () => {
 		// With nothing to join it asks nothing, so a panel showing OR and two
 		// untouched rows is a panel narrowing nothing.
 		expect(isDefaultCoverage({ mine: null, others: null, join: 'or' })).toBe(true);
+	});
+});
+
+describe('the main-question unit', () => {
+	it('is the turn vectors narrowed to main answers', () => {
+		expect(unitQuery('main_question')).toEqual({ kind: 'message', main_answers_only: true });
+	});
+
+	it('leaves the stored units as they are', () => {
+		expect(unitQuery('message')).toEqual({ kind: 'message' });
+		expect(unitQuery('qa_pair')).toEqual({ kind: 'qa_pair' });
+	});
+
+	it('reaches the map request too', () => {
+		const query = clusterQuery({ ...defaultClusterSettings(), kind: 'main_question' });
+		expect(query.kind).toBe('message');
+		expect(query.main_answers_only).toBe(true);
 	});
 });

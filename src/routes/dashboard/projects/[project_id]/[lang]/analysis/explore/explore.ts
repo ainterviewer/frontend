@@ -14,36 +14,62 @@ import type { KeywordProblem } from './keywordQuery';
 /**
  * The unit of text the page works in.
  *
- * `qa_pair` leads because a respondent answer on its own is usually too short
- * to mean anything — the median one is barely a sentence — so a pair carries
- * the question and every probe that followed it. `section` is declared in the
- * API enum but never populated, so it is not offered here: an option that
- * always returns nothing is a bug report waiting to be filed.
+ * The stored kinds, plus `main_question`, which has no vectors of its own: it is
+ * the `message` vectors narrowed to the answers to main questions. A main
+ * answer is already embedded as a turn of its own, and embedding it again
+ * would be the same text under a second name.
  */
-export const KINDS: { value: EmbeddingKind; label: string; hint: string }[] = [
+export type Unit = EmbeddingKind | 'main_question';
+
+/** The stored kind a unit reads its vectors from. */
+export function kindOf(unit: Unit): EmbeddingKind {
+	return unit === 'main_question' ? 'message' : unit;
+}
+
+/** A unit as request parameters: the kind, and the narrowing that makes a
+ * turn a main answer. */
+export function unitQuery(unit: Unit): { kind: EmbeddingKind; main_answers_only?: boolean } {
+	return unit === 'main_question' ? { kind: 'message', main_answers_only: true } : { kind: unit };
+}
+
+/**
+ * Ordered from the smallest unit to the largest. `plural` is for counts, as in
+ * the status strip's "404 Sections".
+ */
+export const KINDS: { value: Unit; label: string; plural: string; hint: string }[] = [
+	{
+		value: 'main_question',
+		label: 'Main question',
+		plural: 'Main questions',
+		hint: 'A main question and the answer it drew, without the probes that followed — the answers to what the guide asked, side by side.'
+	},
 	{
 		value: 'message',
-		label: 'Single Q&As',
-		hint: 'One question and the answer it drew — a probe on its own. Short, but grouped by what was said rather than by what was asked.'
+		label: 'Single Q&A turn',
+		plural: 'Single Q&A turns',
+		hint: 'One question — the main question or a probe — and the answer it drew. Short, but grouped by what was said rather than by what was asked.'
 	},
 	{
 		value: 'qa_pair',
-		label: 'Main questions',
+		label: 'Main question & probes',
+		plural: 'Main questions & probes',
 		hint: 'A main question, its answer, and every probe that followed. The unit most analysis wants.'
 	},
 	{
 		value: 'section',
-		label: 'Sections',
+		label: 'Section',
+		plural: 'Sections',
 		hint: 'A whole section of the guide. The unit to read when a section opens with a closed question — “how often were you stressed?” — and then asks the open ones about it: the answer to the first is context for the rest, and no smaller unit holds both.'
 	},
 	{
 		value: 'interview',
-		label: 'Interviews',
+		label: 'Interview',
+		plural: 'Interviews',
 		hint: 'A whole transcript, for finding comparable conversations rather than comparable answers. The card shows the opening of one — or the part the keyword hit — and links to the rest.'
 	}
 ];
 
-export const DEFAULT_KIND: EmbeddingKind = 'section';
+export const DEFAULT_KIND: Unit = 'section';
 
 /** Search is a retrieval task: a question, matched against passages that answer it. */
 export const DEFAULT_TASK: QueryTask = 'retrieval';
@@ -540,7 +566,7 @@ export function toggleLanguage(
 
 /** Every knob the scatter is drawn from. */
 export type ClusterSettings = {
-	kind: EmbeddingKind;
+	kind: Unit;
 	projection: Projection;
 	n_neighbors: number;
 	min_dist: number;
@@ -565,7 +591,7 @@ export function defaultClusterSettings(): ClusterSettings {
 
 export function clusterQuery(settings: ClusterSettings) {
 	return {
-		kind: settings.kind,
+		...unitQuery(settings.kind),
 		projection: settings.projection,
 		// Left off under PCA, which ignores them: sending them anyway would make
 		// a UMAP knob the reader is not currently using into a reason to refetch.

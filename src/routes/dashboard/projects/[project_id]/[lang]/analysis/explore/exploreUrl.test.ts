@@ -212,3 +212,11 @@ describe('the coverage axes', () => {
 		expect(opened.coverage.others).toBe('any');
 	});
 });
+
+describe('the unit', () => {
+	it('round-trips the main-question unit, which the API does not know', () => {
+		const state = { ...defaultExploreUrl(), kind: 'main_question' as const };
+		expect(exploreUrlSearch(state)).toBe('?unit=main_question');
+		expect(roundTrip(state).kind).toBe('main_question');
+	});
+});

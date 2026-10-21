@@ -4080,6 +4080,7 @@ export const zSearchEmbeddingsQuery = z.object({
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
+    main_answers_only: z.boolean().optional().default(false),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -4124,6 +4125,7 @@ export const zBrowseEmbeddingsQuery = z.object({
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
+    main_answers_only: z.boolean().optional().default(false),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -4158,7 +4160,8 @@ export const zReadSurveyFacetsQuery = z.object({
     coded_mine: z.enum(['any', 'none']).nullish(),
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
-    coder_id: z.string().nullish()
+    coder_id: z.string().nullish(),
+    main_answers_only: z.boolean().optional().default(false)
 });
 
 /**
@@ -4192,7 +4195,8 @@ export const zReadCodeFacetsQuery = z.object({
     coded_mine: z.enum(['any', 'none']).nullish(),
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
-    coder_id: z.string().nullish()
+    coder_id: z.string().nullish(),
+    main_answers_only: z.boolean().optional().default(false)
 });
 
 /**
@@ -4250,6 +4254,7 @@ export const zFindEmbeddingsLikeCodeQuery = z.object({
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
+    main_answers_only: z.boolean().optional().default(false),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -4287,6 +4292,7 @@ export const zFindSimilarEmbeddingsQuery = z.object({
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
+    main_answers_only: z.boolean().optional().default(false),
     limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0)
 });
@@ -4330,7 +4336,8 @@ export const zClusterEmbeddingsQuery = z.object({
     coded_mine: z.enum(['any', 'none']).nullish(),
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
-    coder_id: z.string().nullish()
+    coder_id: z.string().nullish(),
+    main_answers_only: z.boolean().optional().default(false)
 });
 
 /**

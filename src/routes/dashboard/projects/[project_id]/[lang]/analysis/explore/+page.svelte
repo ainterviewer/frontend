@@ -11,7 +11,6 @@
 		EmbeddingClusterPoint,
 		EmbeddingClusterResponse,
 		EmbeddingCodeSimilarResponse,
-		EmbeddingKind,
 		EmbeddingSearchHit,
 		EmbeddingSearchResponse,
 		EmbeddingSimilarResponse,
@@ -47,12 +46,15 @@
 		groupOrder,
 		isToolbarChange,
 		keywordProblemOf,
+		kindOf,
 		type ListPaging,
 		MIN_CLUSTER_SIZE_RANGE,
 		offDefaultCount,
 		PAGE_SIZE,
 		sameClusterSettings,
-		sameCohortQuery
+		sameCohortQuery,
+		type Unit,
+		unitQuery
 	} from './explore';
 	import { ExploreState, type ExploreView } from './exploreState.svelte';
 	import { exploreUrlSearch, readExploreUrl } from './exploreUrl';
@@ -378,7 +380,7 @@
 	 * which lands well before the clustering does, so the wait can say what it is
 	 * waiting on. Null until it arrives, and the copy does without it.
 	 */
-	let embeddedCount = $derived(status?.coverage?.[kind] ?? null);
+	let embeddedCount = $derived(status?.coverage?.[kindOf(kind)] ?? null);
 
 	/** Text search is the one thing here that needs the inference server. */
 	/**
@@ -612,7 +614,7 @@
 		(async () => {
 			const { data: body } = await Analysis.readCodeFacets({
 				path: { project_id: projectId },
-				query: { kind: currentKind, ...query }
+				query: { ...unitQuery(currentKind), ...query }
 			});
 			if (disposed) return;
 			// Cleared on failure rather than left standing, unlike the cohort
@@ -795,7 +797,7 @@
 				path: { project_id: projectId },
 				query: {
 					query,
-					kind: currentKind,
+					...unitQuery(currentKind),
 					task: DEFAULT_TASK,
 					limit: PAGE_SIZE,
 					offset: 0,
@@ -850,7 +852,7 @@
 			path: { project_id: data.project_id },
 			query: {
 				query,
-				kind,
+				...unitQuery(kind),
 				task: DEFAULT_TASK,
 				limit: PAGE_SIZE,
 				offset: searchHits.length,
@@ -966,7 +968,7 @@
 			} = await Analysis.browseEmbeddings({
 				path: { project_id: projectId },
 				query: {
-					kind: currentKind,
+					...unitQuery(currentKind),
 					limit: PAGE_SIZE,
 					offset: 0,
 					order: currentOrder,
@@ -1015,7 +1017,7 @@
 		} = await Analysis.browseEmbeddings({
 			path: { project_id: data.project_id },
 			query: {
-				kind,
+				...unitQuery(kind),
 				limit: PAGE_SIZE,
 				offset: browseHits.length,
 				// The same seed as the page above it, so this continues that shuffle
@@ -1081,6 +1083,8 @@
 					limit: PAGE_SIZE,
 					offset: 0,
 					whole_interviews: currentWhole,
+					// The neighbours of a main answer are other main answers.
+					main_answers_only: unitQuery(kind).main_answers_only,
 					...currentFilters
 				},
 				signal: controller.signal
@@ -1145,7 +1149,7 @@
 			} = await Analysis.findEmbeddingsLikeCode({
 				path: { project_id: projectId, code_id: anchor.id },
 				query: {
-					kind: currentKind,
+					...unitQuery(currentKind),
 					subtree: anchor.subtree,
 					limit: PAGE_SIZE,
 					offset: 0,
@@ -1197,7 +1201,7 @@
 		} = await Analysis.findEmbeddingsLikeCode({
 			path: { project_id: data.project_id, code_id: anchor.id },
 			query: {
-				kind,
+				...unitQuery(kind),
 				subtree: anchor.subtree,
 				limit: PAGE_SIZE,
 				offset: codeLikeHits.length,
@@ -1236,6 +1240,7 @@
 				limit: PAGE_SIZE,
 				offset: detailHits.length,
 				whole_interviews: wholeInterviews,
+				main_answers_only: unitQuery(kind).main_answers_only,
 				...filterQuery(filters)
 			}
 		});
@@ -1666,7 +1671,7 @@
 
 	// Ids belong to the run that produced them, so a change of kind invalidates
 	// every selection made against the previous one.
-	function changeKind(next: EmbeddingKind) {
+	function changeKind(next: Unit) {
 		// Written to the state and not to the local `$derived` view of it: an
 		// override on a derived holds only until its dependency next changes, and
 		// everything reading the unit off `explore` — the question filter's own

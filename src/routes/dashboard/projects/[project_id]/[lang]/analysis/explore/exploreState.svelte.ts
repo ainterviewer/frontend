@@ -1,10 +1,4 @@
-import type {
-	EmbeddingKind,
-	GroupKind,
-	InterviewStatus,
-	LanguageCode,
-	Projection
-} from '$lib/api/types.gen';
+import type { GroupKind, InterviewStatus, LanguageCode, Projection } from '$lib/api/types.gen';
 
 import {
 	type ClusterSettings,
@@ -20,7 +14,8 @@ import {
 	defaultFilters,
 	type ExploreFilters,
 	type SurveyRanges,
-	type SurveySelection
+	type SurveySelection,
+	type Unit
 } from './explore';
 // Type-only on purpose: `exploreUrl` reads this module's defaults, so a value
 // import here would make the two a cycle at run time for no gain.
@@ -177,7 +172,7 @@ export class ExploreState {
 
 	// -- shared by both views -------------------------------------------------
 
-	kind = $state<EmbeddingKind>(DEFAULT_KIND);
+	kind = $state<Unit>(DEFAULT_KIND);
 	interviewStatus = $state<InterviewStatus | null>(defaultFilters().status);
 	filterLanguages = $state<LanguageCode[]>(defaultFilters().languages);
 	includeSynthetic = $state(defaultFilters().include_synthetic);

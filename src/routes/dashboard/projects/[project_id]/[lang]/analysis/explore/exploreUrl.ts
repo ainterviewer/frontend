@@ -26,13 +26,7 @@
  * shared random list is still shuffled for whoever opens it; and the rail,
  * which is furniture.
  */
-import type {
-	EmbeddingKind,
-	GroupKind,
-	InterviewStatus,
-	LanguageCode,
-	Projection
-} from '$lib/api/types.gen';
+import type { GroupKind, InterviewStatus, LanguageCode, Projection } from '$lib/api/types.gen';
 
 import {
 	type ClusterSettings,
@@ -58,7 +52,8 @@ import {
 	N_NEIGHBORS_RANGE,
 	PROJECTIONS,
 	type SurveyRanges,
-	type SurveySelection
+	type SurveySelection,
+	type Unit
 } from './explore';
 import {
 	DEFAULT_LIST_GROUPING,
@@ -79,7 +74,7 @@ import {
  */
 export type ExploreUrlState = {
 	view: ExploreView;
-	kind: EmbeddingKind;
+	kind: Unit;
 	/** The semantic query that was actually run, not what is half-typed in the box. */
 	query: string;
 	filters: ExploreFilters;

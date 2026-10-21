@@ -37,9 +37,12 @@
 	const POLL_LIMIT = 40;
 
 	let coverage = $derived(
-		KINDS.map((kind) => ({ label: kind.label, count: status.coverage?.[kind.value] ?? 0 })).filter(
-			(entry) => entry.count > 0
-		)
+		// What is stored, so the main-question unit -- a narrowing of the turns,
+		// with no vectors of its own -- is not counted twice.
+		KINDS.map((kind) => ({
+			label: kind.plural,
+			count: kind.value === 'main_question' ? 0 : (status.coverage?.[kind.value] ?? 0)
+		})).filter((entry) => entry.count > 0)
 	);
 
 	async function backfill() {

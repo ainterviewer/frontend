@@ -5,7 +5,6 @@
 	import { SvelteSet } from 'svelte/reactivity';
 
 	import type {
-		EmbeddingKind,
 		GroupKind,
 		InterviewGuide,
 		InterviewStatus,
@@ -16,7 +15,7 @@
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { plainMarkup, sanitizeMarkup } from '$lib/utils/sanitize';
 
-	import type { KeywordScope, SurveyRanges, SurveySelection } from './explore';
+	import type { KeywordScope, SurveyRanges, SurveySelection, Unit } from './explore';
 	import {
 		DEFAULT_CENTER_BY_LANGUAGE,
 		DEFAULT_CENTER_BY_QUESTION,
@@ -74,7 +73,7 @@
 		groupMode: GroupKind;
 		/** The grouping modes on offer, which is not every mode the API has. */
 		modes: { value: GroupKind; label: string; hint: string }[];
-		kind: EmbeddingKind;
+		kind: Unit;
 		projection: Projection;
 		nNeighbors: number;
 		minDist: number;
@@ -165,7 +164,7 @@
 		offDefault: number;
 		/** Both of these invalidate a selection, so the page owns them. */
 		ongroupmode: (next: GroupKind) => void;
-		onkind: (next: EmbeddingKind) => void;
+		onkind: (next: Unit) => void;
 	} = $props();
 
 	function reset() {
@@ -370,7 +369,7 @@
 {#snippet kindControl()}
 	<select
 		value={kind}
-		onchange={(event) => onkind(event.currentTarget.value as EmbeddingKind)}
+		onchange={(event) => onkind(event.currentTarget.value as Unit)}
 		aria-label="Unit"
 		class="w-full rounded-md border border-gray-200 py-1 pr-7 pl-2 text-xs focus:border-primary focus:ring-0"
 	>

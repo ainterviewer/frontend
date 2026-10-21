@@ -7386,6 +7386,10 @@ export type SearchEmbeddingsData = {
          */
         coder_id?: string | null;
         /**
+         * Main Answers Only
+         */
+        main_answers_only?: boolean;
+        /**
          * Limit
          */
         limit?: number;
@@ -7514,6 +7518,10 @@ export type BrowseEmbeddingsData = {
          */
         coder_id?: string | null;
         /**
+         * Main Answers Only
+         */
+        main_answers_only?: boolean;
+        /**
          * Limit
          */
         limit?: number;
@@ -7624,6 +7632,10 @@ export type ReadSurveyFacetsData = {
          * Coder Id
          */
         coder_id?: string | null;
+        /**
+         * Main Answers Only
+         */
+        main_answers_only?: boolean;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/survey-facets';
 };
@@ -7728,6 +7740,10 @@ export type ReadCodeFacetsData = {
          * Coder Id
          */
         coder_id?: string | null;
+        /**
+         * Main Answers Only
+         */
+        main_answers_only?: boolean;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/code-facets';
 };
@@ -7896,6 +7912,10 @@ export type FindEmbeddingsLikeCodeData = {
          */
         coder_id?: string | null;
         /**
+         * Main Answers Only
+         */
+        main_answers_only?: boolean;
+        /**
          * Limit
          */
         limit?: number;
@@ -8014,6 +8034,10 @@ export type FindSimilarEmbeddingsData = {
          * Coder Id
          */
         coder_id?: string | null;
+        /**
+         * Main Answers Only
+         */
+        main_answers_only?: boolean;
         /**
          * Limit
          */
@@ -8155,6 +8179,10 @@ export type ClusterEmbeddingsData = {
          * Coder Id
          */
         coder_id?: string | null;
+        /**
+         * Main Answers Only
+         */
+        main_answers_only?: boolean;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/clusters';
 };
