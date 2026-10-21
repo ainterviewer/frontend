@@ -36,7 +36,7 @@
 />
 
 <div
-	class="fixed top-[3.75rem] right-6 z-30 flex h-9 items-center gap-3 rounded-full border border-gray-200 bg-white/90 py-1 pr-4 pl-4 shadow-md backdrop-blur print:hidden"
+	class="fixed top-[4.25rem] right-7.5 z-30 flex h-9 items-center gap-3 rounded-full border border-gray-200 bg-white/90 py-1 pr-4 pl-4 shadow-md backdrop-blur print:hidden"
 >
 	{#if quiet}
 		<!-- Faded primary and red, the same as the live pages' `SyncState`. -->

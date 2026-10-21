@@ -5,9 +5,9 @@
 
 	/**
 	 * Who else is here and whether it is all saved, as two pills side by side:
-	 * pinned to the window's top right, just under the header (2.75rem), clear
-	 * of the pane's scrollbar, so they stay put however far the page scrolls.
-	 * The same on every page edited live.
+	 * pinned to the window's top right, a little under the header (2.75rem),
+	 * clear of the pane's scrollbar, so they stay put however far the page
+	 * scrolls. The same on every page edited live.
 	 */
 	let { session, invalidLabel }: { session: ContentSession; invalidLabel?: string } = $props();
 
@@ -26,7 +26,7 @@
      points at the row, since its step covers both. -->
 <div
 	data-tour="sync-state"
-	class="fixed top-[3.75rem] right-6 z-30 flex items-center gap-2 print:hidden"
+	class="fixed top-[4.25rem] right-7.5 z-30 flex items-center gap-2 print:hidden"
 >
 	{#if session.peers.length > 0}
 		<div
