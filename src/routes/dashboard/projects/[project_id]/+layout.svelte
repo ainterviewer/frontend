@@ -4,46 +4,54 @@
 	import { driver } from 'driver.js';
 	import { onMount } from 'svelte';
 
+	import { page } from '$app/state';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { projectSidebarItems } from '$lib/config/sidebar';
-	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
+	import { addSkipOnboardingButton, tourSteps } from '$lib/onboarding';
 
 	let { children } = $props();
 
+	// The steps a user who took the tour before steps had ids has seen.
+	const LEGACY_TOUR_STEPS = [
+		'setup',
+		'agents',
+		'pilot-interviews',
+		'distribute',
+		'interview-data',
+		'settings',
+		'done'
+	];
+	const DOCUMENTATION = '[data-tour="documentation"]';
+
 	function startOnboarding() {
-		const tour = driver({
-			showProgress: true,
-			stagePadding: 0,
-			stageRadius: 0,
-			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
-			// stagePadding/stageRadius are global, so give only the last step (the
-			// small documentation icon) some breathing room around its highlight.
-			onHighlightStarted: (_element, _step, { driver }) => {
-				const last = driver.isLastStep();
-				driver.setConfig({
-					...driver.getConfig(),
-					stagePadding: last ? 8 : 0,
-					stageRadius: last ? 5 : 0
-				});
-			},
-			steps: [
+		// The safety check is a preview feature; only mention it to those who have it.
+		const safetyCheck = !!page.data.user?.with_preview_features;
+		const steps = tourSteps(
+			'project',
+			[
 				{
+					id: 'setup-v2',
 					element: '[data-tour="setup"]',
 					popover: {
 						title: 'Setup',
 						description:
-							'The setup includes creating a <u>consent</u> and <u>welcome</u> message, and create your <u>interview guide</u>.'
+							'The setup includes creating a <u>consent</u> and <u>welcome</u> message, and create your <u>interview guide</u>. Your collaborators can edit them with you at the same time, and see your changes as you type.'
 					}
 				},
 				{
+					id: 'agents-v2',
 					element: '[data-tour="agents"]',
 					popover: {
 						title: 'Agents',
-						description:
-							'In the <u>agents</u> tab, you can modify the AI agent(s) configuration and behavior.'
+						description: `In the <u>agents</u> tab, you can modify the AI agent(s) configuration and behavior.${
+							safetyCheck
+								? ' You can also set up a <u>safety check</u> that reads every answer and shows the respondent a message when one of your rules applies.'
+								: ''
+						} Changes are saved as you make them.`
 					}
 				},
 				{
+					id: 'pilot-interviews',
 					element: '[data-tour="pilot-interviews"]',
 					popover: {
 						title: 'Pilot Interviews',
@@ -52,6 +60,7 @@
 					}
 				},
 				{
+					id: 'distribute',
 					element: '[data-tour="distribute"]',
 					popover: {
 						title: 'Distribute',
@@ -60,11 +69,13 @@
 					}
 				},
 				{
+					id: 'interview-data-v2',
 					element: '[data-tour="interview-data"]',
 					popover: {
 						title: 'Interview Data',
-						description:
-							'A table of your collected <u>interview data</u>, with the ability to view or export them.'
+						description: `A table of your collected <u>interview data</u>, with the ability to view or export them. Interviews with messages respondents reported${
+							safetyCheck ? ' or the safety check acted on' : ''
+						} are marked with a flag, and you can filter by it.`
 					}
 				},
 				// {
@@ -75,6 +86,7 @@
 				// 	}
 				// },
 				{
+					id: 'settings',
 					element: '[data-tour="settings"]',
 					popover: {
 						title: 'Settings',
@@ -82,7 +94,8 @@
 					}
 				},
 				{
-					element: '[data-tour="documentation"]',
+					id: 'done',
+					element: DOCUMENTATION,
 					popover: {
 						title: "That's it for the Project Sidebar!",
 						description:
@@ -90,17 +103,34 @@
 						popoverClass: 'driver-centered'
 					}
 				}
-			]
+			],
+			LEGACY_TOUR_STEPS
+		);
+		if (steps.length === 0) return;
+		const tour = driver({
+			showProgress: true,
+			stagePadding: 0,
+			stageRadius: 0,
+			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
+			// stagePadding/stageRadius are global, so give only the closing step
+			// (the small documentation icon) some breathing room around its highlight.
+			onHighlightStarted: (_element, step, { driver }) => {
+				const last = step.element === DOCUMENTATION;
+				driver.setConfig({
+					...driver.getConfig(),
+					stagePadding: last ? 8 : 0,
+					stageRadius: last ? 5 : 0
+				});
+			},
+			steps
 		});
 		tour.drive();
 	}
 
 	onMount(() => {
-		// Show the onboarding tour once per user, unless they opted out of all tours.
-		if (!isOnboardingDisabled() && !localStorage.getItem('project-onboarded')) {
-			startOnboarding();
-			localStorage.setItem('project-onboarded', 'true');
-		}
+		// The whole tour on a first visit, then only steps added since; nothing
+		// if the user opted out of all tours.
+		startOnboarding();
 	});
 </script>
 

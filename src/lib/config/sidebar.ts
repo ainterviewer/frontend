@@ -30,7 +30,8 @@ export const mainSidebarItems: SidebarItem[] = [
 		// is the platform's review of the same flags, on its own track.
 		label: 'Flagged',
 		href: '/dashboard/reports',
-		icon: 'fas fa-flag'
+		icon: 'fas fa-flag',
+		dataTour: 'sidebar-flagged'
 	},
 	{ type: 'separator', requiresAdmin: true },
 	{

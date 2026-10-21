@@ -13,7 +13,7 @@
 	import { onMount, tick } from 'svelte';
 
 	import AssistanceChat from '$lib/components/AssistanceChat.svelte';
-	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
+	import { addSkipOnboardingButton, tourSteps } from '$lib/onboarding';
 	import {
 		createGuideStore,
 		type GuideQuestion,
@@ -27,12 +27,42 @@
 	import SortableQuestion from './SortableQuestion.svelte';
 	import SortableSection from './SortableSection.svelte';
 
+	// The steps a user who took the tour before steps had ids has seen.
+	const LEGACY_TOUR_STEPS = [
+		'intro',
+		'generate',
+		'bulk-settings',
+		'assistant-chat',
+		'framing',
+		'introduction',
+		'section',
+		'question',
+		'question-settings',
+		'question-settings-menu',
+		'question-extras',
+		'probes',
+		'probing-limits',
+		'behavior-flags',
+		'ai-generated-questions',
+		'ai-generated-sections',
+		'outro',
+		'timed-messages',
+		'sync-state',
+		'action-bar',
+		'language',
+		'export',
+		'version-history',
+		'try-interview',
+		'publish',
+		'done'
+	];
+
 	function startOnboarding() {
-		const tour = driver({
-			showProgress: true,
-			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
-			steps: [
+		const steps = tourSteps(
+			'guide',
+			[
 				{
+					id: 'intro',
 					popover: {
 						title: 'Interview Guide',
 						description:
@@ -40,6 +70,7 @@
 					}
 				},
 				{
+					id: 'generate',
 					element: '[data-tour="generate"]',
 					popover: {
 						title: 'Generate Interview Guide',
@@ -48,6 +79,7 @@
 					}
 				},
 				{
+					id: 'bulk-settings',
 					element: '[data-tour="bulk-settings"]',
 					popover: {
 						title: 'Bulk Settings',
@@ -56,6 +88,7 @@
 					}
 				},
 				{
+					id: 'assistant-chat',
 					element: '[data-tour="assistant-chat"]',
 					popover: {
 						title: 'AI Assistant (experimental)',
@@ -64,6 +97,7 @@
 					}
 				},
 				{
+					id: 'framing',
 					element: '[data-tour="framing"]',
 					popover: {
 						title: 'Framing',
@@ -72,6 +106,7 @@
 					}
 				},
 				{
+					id: 'introduction',
 					element: '[data-tour="introduction"]',
 					popover: {
 						title: 'Introduction',
@@ -80,6 +115,7 @@
 					}
 				},
 				{
+					id: 'section',
 					element: '[data-tour="section"]',
 					popover: {
 						title: 'Sections',
@@ -88,6 +124,7 @@
 					}
 				},
 				{
+					id: 'question',
 					element: '[data-tour="question"]',
 					popover: {
 						title: 'Questions',
@@ -96,6 +133,7 @@
 					}
 				},
 				{
+					id: 'question-settings',
 					element: '[data-tour="question-settings"]',
 					popover: {
 						title: 'Question Settings',
@@ -116,6 +154,7 @@
 					}
 				},
 				{
+					id: 'question-settings-menu',
 					element: '[data-tour="question-settings-menu"]',
 					popover: {
 						title: 'Question Settings',
@@ -124,6 +163,7 @@
 					}
 				},
 				{
+					id: 'question-extras',
 					element: '[data-tour="question-extras"]',
 					popover: {
 						title: 'Add Extras',
@@ -132,6 +172,7 @@
 					}
 				},
 				{
+					id: 'probes',
 					element: '[data-tour="probes"]',
 					popover: {
 						title: 'Follow-up Probes',
@@ -140,6 +181,7 @@
 					}
 				},
 				{
+					id: 'probing-limits',
 					element: '[data-tour="probing-limits"]',
 					popover: {
 						title: 'Probing Limits',
@@ -148,11 +190,12 @@
 					}
 				},
 				{
+					id: 'behavior-flags',
 					element: '[data-tour="behavior-flags"]',
 					popover: {
 						title: 'Behavior Flags',
 						description:
-							'Toggle how a question behaves — exclude it from history, create a transition from the previous question, check whether it was already answered, and more.',
+							'Toggle how a question behaves — exclude it from history, create a transition from the previous question, reformulate a question that was already answered, and more.',
 						onNextClick: () => {
 							// The settings menu element only renders once the settings panel is
 							// open, so open it before advancing to the next step.
@@ -168,6 +211,7 @@
 					}
 				},
 				{
+					id: 'ai-generated-questions',
 					element: '[data-tour="ai-generated-questions"]',
 					popover: {
 						title: 'AI Generated Questions',
@@ -176,6 +220,7 @@
 					}
 				},
 				{
+					id: 'ai-generated-sections',
 					element: '[data-tour="ai-generated-sections"]',
 					popover: {
 						title: 'AI Generated Sections',
@@ -184,6 +229,7 @@
 					}
 				},
 				{
+					id: 'outro',
 					element: '[data-tour="outro"]',
 					popover: {
 						title: 'Outro',
@@ -192,6 +238,7 @@
 					}
 				},
 				{
+					id: 'timed-messages',
 					element: '[data-tour="timed-messages"]',
 					popover: {
 						title: 'Timed Messages',
@@ -200,14 +247,16 @@
 					}
 				},
 				{
+					id: 'sync-state',
 					element: '[data-tour="sync-state"]',
 					popover: {
 						title: 'Saved as you type',
 						description:
-							'Your changes are saved as you make them, and anyone else with the guide open sees them straight away. This shows whether everything is saved.'
+							'Your changes are saved as you make them. This shows whether everything is saved, and who else is editing with you right now.'
 					}
 				},
 				{
+					id: 'action-bar',
 					element: '[data-action-bar]',
 					popover: {
 						title: 'Action Bar',
@@ -216,14 +265,16 @@
 					}
 				},
 				{
+					id: 'language-v2',
 					element: '[data-tour="language"]',
 					popover: {
 						title: 'Language',
 						description:
-							'Switch between the languages your project supports, or add a new one. Every language shares the same questions and settings; switching changes only the text you edit.'
+							'Switch between the languages your project supports, or add a new one. Every language shares the same questions and settings; switching changes only the text you edit. Mark a language as <u>in progress</u> while it is being translated: publishing leaves it out, and its missing text does not block publishing.'
 					}
 				},
 				{
+					id: 'export',
 					element: '[data-tour="export"]',
 					popover: {
 						title: 'Export',
@@ -232,6 +283,7 @@
 					}
 				},
 				{
+					id: 'version-history',
 					element: '[data-tour="version-history"]',
 					popover: {
 						title: 'Version History',
@@ -240,6 +292,7 @@
 					}
 				},
 				{
+					id: 'try-interview',
 					element: '[data-tour="try-interview"]',
 					popover: {
 						title: 'Try Interview',
@@ -248,6 +301,7 @@
 					}
 				},
 				{
+					id: 'publish',
 					element: '[data-tour="publish"]',
 					popover: {
 						title: 'Publish',
@@ -256,6 +310,7 @@
 					}
 				},
 				{
+					id: 'done',
 					element: '[data-tour="documentation"]',
 					onHighlightStarted: () => {
 						// Scroll back to the top for the final, centered step. The page
@@ -269,17 +324,22 @@
 						popoverClass: 'driver-centered'
 					}
 				}
-			]
+			],
+			LEGACY_TOUR_STEPS
+		);
+		if (steps.length === 0) return;
+		const tour = driver({
+			showProgress: true,
+			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
+			steps
 		});
 		tour.drive();
 	}
 
 	onMount(() => {
-		// Show the onboarding tour once per user, unless they opted out of all tours.
-		if (!isOnboardingDisabled() && !localStorage.getItem('guide-onboarded')) {
-			startOnboarding();
-			localStorage.setItem('guide-onboarded', 'true');
-		}
+		// The whole tour on a first visit, then only steps added since; nothing
+		// if the user opted out of all tours.
+		startOnboarding();
 	});
 
 	let { data } = $props();

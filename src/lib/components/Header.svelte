@@ -199,6 +199,7 @@
 										{data.user.email}
 									</div>
 									<a
+										data-tour="header-profile"
 										href={resolve('/dashboard/settings/profile')}
 										class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
 										role="menuitem">Your profile</a
@@ -209,7 +210,12 @@
 										below is the same shape: permanently there, with an indicator
 										only when there is something.
 									-->
-									<a href={resolve('/dashboard/reports')} class={reportRowClass} role="menuitem">
+									<a
+										data-tour="header-flagged"
+										href={resolve('/dashboard/reports')}
+										class={reportRowClass}
+										role="menuitem"
+									>
 										{@render reportRow('Flagged', unreadReports)}
 									</a>
 									{#if isPlatformReviewer}
@@ -228,6 +234,7 @@
 										</a>
 									{/if}
 									<button
+										data-tour="header-whats-new"
 										type="button"
 										onclick={(e) => {
 											e.stopPropagation();

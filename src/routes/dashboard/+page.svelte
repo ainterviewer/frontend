@@ -7,6 +7,7 @@
 
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import type {
 		CollaboratorRole,
 		ProjectFolderWithProjects,
@@ -18,7 +19,7 @@
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
-	import { addSkipOnboardingButton, isOnboardingDisabled } from '$lib/onboarding';
+	import { addSkipOnboardingButton, tourSteps } from '$lib/onboarding';
 	import { formatDate, formatDay } from '$lib/utils/datetime';
 
 	import type { PageData } from './$types';
@@ -108,12 +109,34 @@
 		await invalidateAll();
 	}
 
+	// The steps a user who took the tour before steps had ids has seen.
+	const LEGACY_TOUR_STEPS = [
+		'welcome',
+		'header-menu',
+		'header-profile',
+		'home',
+		'experiments',
+		'new-folder',
+		'new-project',
+		'documentation',
+		'done'
+	];
+
+	function setHeaderMenuOpen(open: boolean) {
+		const visible = !!document.querySelector('[data-tour="header-menu-dropdown"].visible');
+		if (visible !== open) {
+			(document.querySelector('[data-tour="header-menu"]') as HTMLElement | null)?.click();
+		}
+	}
+
 	function startOnboarding() {
-		const tour = driver({
-			showProgress: true,
-			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
-			steps: [
+		// The safety check is a preview feature; only mention it to those who have it.
+		const safetyCheck = !!page.data.user?.with_preview_features;
+		const steps = tourSteps(
+			'dashboard',
+			[
 				{
+					id: 'welcome',
 					popover: {
 						title: 'Welcome to the AInterviewer Platform 👋',
 						description:
@@ -121,24 +144,45 @@
 					}
 				},
 				{
+					id: 'header-menu',
 					element: '[data-tour="header-menu-container"]',
-					onHighlightStarted: () => {
-						if (!document.querySelector('[data-tour="header-menu-dropdown"].visible')) {
-							(document.querySelector('[data-tour="header-menu"]') as HTMLElement | null)?.click();
-						}
-					},
-					onDeselected: () => {
-						if (document.querySelector('[data-tour="header-menu-dropdown"].visible')) {
-							(document.querySelector('[data-tour="header-menu"]') as HTMLElement | null)?.click();
-						}
-					},
 					popover: {
 						title: 'Global Menu',
-						description:
-							'In the global dropdown menu you can logout at any time. In <u>Your profile</u> you can edit your user information, and manage how you see these interactive tours.'
+						description: 'In the global dropdown menu you can logout at any time.'
 					}
 				},
 				{
+					id: 'header-profile',
+					element: '[data-tour="header-profile"]',
+					popover: {
+						title: 'Your Profile',
+						description:
+							'In <u>Your profile</u> you can edit your user information, and manage how you see these interactive tours.',
+						side: 'left'
+					}
+				},
+				{
+					id: 'header-flagged',
+					element: '[data-tour="header-flagged"]',
+					popover: {
+						title: 'Flagged Messages',
+						description:
+							"Counts the flagged messages you haven't read yet. While there are any, a dot shows on your avatar.",
+						side: 'left'
+					}
+				},
+				{
+					id: 'header-whats-new',
+					element: '[data-tour="header-whats-new"]',
+					popover: {
+						title: "What's New",
+						description:
+							'Read about recent changes to the platform. A dot here, and on your avatar, means there is a release you have not seen yet.',
+						side: 'left'
+					}
+				},
+				{
+					id: 'home',
 					element: '[data-tour="sidebar-home"]',
 					popover: {
 						title: 'Home',
@@ -147,6 +191,7 @@
 					}
 				},
 				{
+					id: 'experiments',
 					element: '[data-tour="sidebar-experiments"]',
 					popover: {
 						title: 'Experiments',
@@ -155,6 +200,17 @@
 					}
 				},
 				{
+					id: 'flagged',
+					element: '[data-tour="sidebar-flagged"]',
+					popover: {
+						title: 'Flagged',
+						description: `<u>Flagged</u> collects the messages respondents reported${
+							safetyCheck ? ', and the answers the safety check acted on,' : ''
+						} across all your projects. Review them here, and mark them read or resolved.`
+					}
+				},
+				{
+					id: 'new-folder',
 					element: '[data-tour="new-folder"]',
 					popover: {
 						title: 'Create a Folder',
@@ -163,6 +219,7 @@
 					}
 				},
 				{
+					id: 'new-project',
 					element: '[data-tour="new-project"]',
 					popover: {
 						title: 'Add a Project',
@@ -171,6 +228,7 @@
 					}
 				},
 				{
+					id: 'documentation',
 					element: '[data-tour="documentation"]',
 					popover: {
 						title: 'Read the Documentation',
@@ -180,22 +238,44 @@
 					}
 				},
 				{
+					id: 'done',
 					popover: {
 						title: "That's it for the Main Dashboard! 🎉",
 						description: 'Create and view a project to get started with your own AI-led interviews.'
 					}
 				}
-			]
+			],
+			LEGACY_TOUR_STEPS
+		);
+		if (steps.length === 0) return;
+		const tour = driver({
+			showProgress: true,
+			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
+			// One hook for every step rather than one on each, so a "what's new"
+			// tour that starts midway through still opens the menu and sizes the
+			// highlight.
+			onHighlightStarted: (_element, step, { driver }) => {
+				const selector = typeof step.element === 'string' ? step.element : '';
+				setHeaderMenuOpen(selector.startsWith('[data-tour="header-'));
+				// Sidebar items fill the sidebar's width, so pad them as the project
+				// sidebar tour does: flush, with square corners.
+				const sidebar = selector.startsWith('[data-tour="sidebar-');
+				driver.setConfig({
+					...driver.getConfig(),
+					stagePadding: sidebar ? 0 : 10,
+					stageRadius: sidebar ? 0 : 5
+				});
+			},
+			onDestroyed: () => setHeaderMenuOpen(false),
+			steps
 		});
 		tour.drive();
 	}
 
 	onMount(() => {
-		// Show the onboarding tour once per user, unless they opted out of all tours.
-		if (!isOnboardingDisabled() && !localStorage.getItem('dashboard-onboarded')) {
-			startOnboarding();
-			localStorage.setItem('dashboard-onboarded', 'true');
-		}
+		// The whole tour on a first visit, then only steps added since; nothing
+		// if the user opted out of all tours.
+		startOnboarding();
 
 		// Close dropdowns when clicking outside
 		const handleClickOutside = (e: MouseEvent) => {

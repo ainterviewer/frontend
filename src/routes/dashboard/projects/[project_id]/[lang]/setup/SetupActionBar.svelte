@@ -8,24 +8,16 @@
 		projectId,
 		lang,
 		availableLanguages = [],
-		saving = false,
 		exporting = false,
-		saveLabel = 'Save Changes',
-		onSave,
-		onBeforePublish = onSave,
+		onBeforePublish,
 		onExportPdf,
 		onExportJson
 	}: {
 		projectId: string;
 		lang: string;
 		availableLanguages?: ProjectLanguage[];
-		saving?: boolean;
 		exporting?: boolean;
-		saveLabel?: string;
-		/** Resolves to `false` when the save did not go through. Without it the
-		 * page saves as it goes (the guide), and says so itself. */
-		onSave?: () => Promise<boolean | void> | boolean | void;
-		/** Run before publishing; `false` stops it. The save, by default. */
+		/** Run before publishing; `false` stops it. */
 		onBeforePublish?: () => Promise<boolean | void> | boolean | void;
 		onExportPdf?: () => Promise<void> | void;
 		onExportJson?: () => void;
@@ -108,17 +100,11 @@
 		</div>
 		<div class="flex">
 			<!-- Try Interview beside Publish: test the draft, then send it out. -->
-			<PublishControl {projectId} {lang} {availableLanguages} {onBeforePublish} primary={!onSave}>
+			<PublishControl {projectId} {lang} {availableLanguages} {onBeforePublish} primary>
 				{#snippet beside()}
 					<a
 						data-tour="try-interview"
-						class={[
-							'rounded-full px-4 py-2 font-medium whitespace-nowrap @3xl:px-6',
-							// Outlined, as Publish is beside a Save; filled grey beside both.
-							onSave
-								? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-								: 'border border-primary text-primary hover:bg-primary/10'
-						]}
+						class="rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 @3xl:px-6"
 						href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
 						target="_blank"
 						rel="opener"
@@ -131,19 +117,5 @@
 				{/snippet}
 			</PublishControl>
 		</div>
-		{#if onSave}
-			<button
-				data-tour="save"
-				type="button"
-				class="flex items-center gap-2 rounded-full bg-primary px-4 py-2 font-medium whitespace-nowrap text-white shadow-sm hover:bg-dark disabled:opacity-50 @3xl:px-6"
-				onclick={() => onSave()}
-				disabled={saving}
-				title={saveLabel}
-				aria-label={saveLabel}
-			>
-				<i class="fa-solid fa-floppy-disk"></i>
-				<span class="hidden @3xl:inline">{saveLabel}</span>
-			</button>
-		{/if}
 	</div>
 </div>

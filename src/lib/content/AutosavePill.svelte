@@ -36,7 +36,6 @@
 />
 
 <div
-	data-tour="save-state"
 	class="fixed top-[3.75rem] right-6 z-30 flex h-9 items-center gap-3 rounded-full border border-gray-200 bg-white/90 py-1 pr-4 pl-4 shadow-md backdrop-blur print:hidden"
 >
 	{#if quiet}
