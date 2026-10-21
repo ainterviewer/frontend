@@ -292,6 +292,15 @@
 					}
 				},
 				{
+					id: 'organize-projects',
+					element: '[data-tour="organize-projects"]',
+					popover: {
+						title: 'Sort and Archive',
+						description:
+							'Order the projects in every folder by when they were last updated, created, or by name, and flip the arrow to reverse it. Folder admins can archive a folder or project from its menu to put it away; <u>Archived</u> shows them again.'
+					}
+				},
+				{
 					id: 'documentation',
 					element: '[data-tour="documentation"]',
 					popover: {
@@ -748,79 +757,82 @@
 <div class="flex flex-wrap items-center justify-between gap-3">
 	<h2 class="page-title">Folders</h2>
 	<div class="ml-auto flex flex-wrap items-center justify-end gap-2">
-		<!-- One pill for the order: the key opens a menu, the arrow beside it
-		     flips the direction. Same height and rounding as New Folder, so the
-		     bar reads as a row of controls rather than a form. -->
-		<div
-			class="flex h-10 items-center rounded-full border border-gray-200 bg-white text-sm text-gray-600 shadow-xs"
-		>
-			<Select
-				class="flex h-full cursor-pointer items-center gap-2 rounded-l-full pr-3 pl-4 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
-				aria-label="Sort projects by"
-				items={sortItems}
-				bind:value={() => view.sort, (value) => setSort(value as SortKey)}
+		<!-- One tour target for the two: they are one step, how the list is shown. -->
+		<div data-tour="organize-projects" class="flex flex-wrap items-center gap-2">
+			<!-- One pill for the order: the key opens a menu, the arrow beside it
+			     flips the direction. Same height and rounding as New Folder, so the
+			     bar reads as a row of controls rather than a form. -->
+			<div
+				class="flex h-10 items-center rounded-full border border-gray-200 bg-white text-sm text-gray-600 shadow-xs"
 			>
-				{#snippet trigger(label)}
-					<span class="text-gray-400">Sort</span>
-					<span class="font-medium whitespace-nowrap text-gray-800">{label}</span>
-					<i class="fa-solid fa-chevron-down text-[0.6rem] text-gray-400"></i>
-				{/snippet}
-			</Select>
-			<span aria-hidden="true" class="h-5 w-px bg-gray-200"></span>
+				<Select
+					class="flex h-full cursor-pointer items-center gap-2 rounded-l-full pr-3 pl-4 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+					aria-label="Sort projects by"
+					items={sortItems}
+					bind:value={() => view.sort, (value) => setSort(value as SortKey)}
+				>
+					{#snippet trigger(label)}
+						<span class="text-gray-400">Sort</span>
+						<span class="font-medium whitespace-nowrap text-gray-800">{label}</span>
+						<i class="fa-solid fa-chevron-down text-[0.6rem] text-gray-400"></i>
+					{/snippet}
+				</Select>
+				<span aria-hidden="true" class="h-5 w-px bg-gray-200"></span>
+				<button
+					type="button"
+					class="flex h-full w-10 cursor-pointer items-center justify-center rounded-r-full text-gray-500 hover:bg-gray-50 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+					onclick={() => setView({ direction: view.direction === 'asc' ? 'desc' : 'asc' })}
+					title={view.sort === 'name'
+						? view.direction === 'asc'
+							? 'A to Z'
+							: 'Z to A'
+						: view.direction === 'asc'
+							? 'Oldest first'
+							: 'Newest first'}
+					aria-label="Reverse the order"
+				>
+					<i
+						class={[
+							'fa-solid',
+							view.sort === 'name'
+								? view.direction === 'asc'
+									? 'fa-arrow-down-a-z'
+									: 'fa-arrow-down-z-a'
+								: view.direction === 'asc'
+									? 'fa-arrow-up-wide-short'
+									: 'fa-arrow-down-wide-short'
+						]}
+					></i>
+				</button>
+			</div>
 			<button
 				type="button"
-				class="flex h-full w-10 cursor-pointer items-center justify-center rounded-r-full text-gray-500 hover:bg-gray-50 hover:text-gray-900 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
-				onclick={() => setView({ direction: view.direction === 'asc' ? 'desc' : 'asc' })}
-				title={view.sort === 'name'
-					? view.direction === 'asc'
-						? 'A to Z'
-						: 'Z to A'
-					: view.direction === 'asc'
-						? 'Oldest first'
-						: 'Newest first'}
-				aria-label="Reverse the order"
+				aria-pressed={view.showArchived}
+				class={[
+					'flex h-10 cursor-pointer items-center gap-2 rounded-full border px-4 text-sm shadow-xs transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none',
+					view.showArchived
+						? 'border-primary/30 bg-primary/10 text-primary'
+						: 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+				]}
+				onclick={() => setView({ showArchived: !view.showArchived })}
+				title={view.showArchived
+					? 'Hide archived folders and projects'
+					: 'Show archived folders and projects'}
 			>
-				<i
-					class={[
-						'fa-solid',
-						view.sort === 'name'
-							? view.direction === 'asc'
-								? 'fa-arrow-down-a-z'
-								: 'fa-arrow-down-z-a'
-							: view.direction === 'asc'
-								? 'fa-arrow-up-wide-short'
-								: 'fa-arrow-down-wide-short'
-					]}
-				></i>
+				<i class="fa-solid fa-box-archive"></i>
+				Archived
+				{#if archivedCount > 0}
+					<span
+						class={[
+							'flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs leading-none font-semibold tabular-nums',
+							view.showArchived ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'
+						]}
+					>
+						{archivedCount}
+					</span>
+				{/if}
 			</button>
 		</div>
-		<button
-			type="button"
-			aria-pressed={view.showArchived}
-			class={[
-				'flex h-10 cursor-pointer items-center gap-2 rounded-full border px-4 text-sm shadow-xs transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none',
-				view.showArchived
-					? 'border-primary/30 bg-primary/10 text-primary'
-					: 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
-			]}
-			onclick={() => setView({ showArchived: !view.showArchived })}
-			title={view.showArchived
-				? 'Hide archived folders and projects'
-				: 'Show archived folders and projects'}
-		>
-			<i class="fa-solid fa-box-archive"></i>
-			Archived
-			{#if archivedCount > 0}
-				<span
-					class={[
-						'flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs leading-none font-semibold tabular-nums',
-						view.showArchived ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'
-					]}
-				>
-					{archivedCount}
-				</span>
-			{/if}
-		</button>
 		<button
 			data-tour="new-folder"
 			class="flex h-10 items-center rounded-full border-none bg-secondary px-4 text-sm font-medium text-dark hover:brightness-95"

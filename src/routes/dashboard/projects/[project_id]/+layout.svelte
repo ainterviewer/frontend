@@ -24,8 +24,9 @@
 	const DOCUMENTATION = '[data-tour="documentation"]';
 
 	function startOnboarding() {
-		// The safety check is a preview feature; only mention it to those who have it.
-		const safetyCheck = !!page.data.user?.with_preview_features;
+		// The safety check and Analysis are preview features; only mention them
+		// to those who have them.
+		const previewFeatures = !!page.data.user?.with_preview_features;
 		const steps = tourSteps(
 			'project',
 			[
@@ -44,7 +45,7 @@
 					popover: {
 						title: 'Agents',
 						description: `In the <u>agents</u> tab, you can modify the AI agent(s) configuration and behavior.${
-							safetyCheck
+							previewFeatures
 								? ` You can also set up a <u>safety check</u> ${PREVIEW_BADGE} that reads every answer and shows the respondent a message when one of your rules applies.`
 								: ''
 						} Changes are saved as you make them.`
@@ -74,17 +75,26 @@
 					popover: {
 						title: 'Interview Data',
 						description: `A table of your collected <u>interview data</u>, with the ability to view or export them. Interviews with messages respondents reported${
-							safetyCheck ? ` or the safety check ${PREVIEW_BADGE} acted on` : ''
+							previewFeatures ? ` or the safety check ${PREVIEW_BADGE} acted on` : ''
 						} are marked with a flag, and you can filter by it.`
 					}
 				},
-				// {
-				// 	element: '[data-tour="analysis"]',
-				// 	popover: {
-				// 		title: 'Analysis',
-				// 		description: 'Analyse your interviews through tags and scores.'
-				// 	}
-				// },
+				// Analysis is a preview feature: the sidebar only shows it to those
+				// who have them, so only they are toured through it. Left out, the
+				// step is not marked seen, and comes up as new once they do.
+				...(previewFeatures
+					? [
+							{
+								id: 'analysis',
+								element: '[data-tour="analysis"]',
+								popover: {
+									title: `Analysis ${PREVIEW_BADGE}`,
+									description:
+										'<u>Explore</u> your transcripts by wording or by meaning, build a <u>codebook</u>, <u>code</u> the answers with it, and see the result in a <u>report</u>.'
+								}
+							}
+						]
+					: []),
 				{
 					id: 'settings',
 					element: '[data-tour="settings"]',

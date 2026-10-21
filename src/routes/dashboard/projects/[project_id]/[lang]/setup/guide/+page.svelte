@@ -247,12 +247,12 @@
 					}
 				},
 				{
-					id: 'sync-state',
+					id: 'sync-state-v2',
 					element: '[data-tour="sync-state"]',
 					popover: {
 						title: 'Saved as you type',
 						description:
-							'Your changes are saved as you make them. This shows whether everything is saved, and who else is editing with you right now.'
+							'Your changes are saved as you make them, and the pill on the right says whether everything is. When others are editing with you, their avatars appear beside it: click one to jump to where they are.'
 					}
 				},
 				{
