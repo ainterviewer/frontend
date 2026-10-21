@@ -11,6 +11,7 @@
 		TimeDelta
 	} from '$lib/api';
 	import { Admin } from '$lib/api/sdk.gen';
+	import DemoLimitFields from '$lib/components/DemoLimitFields.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
@@ -45,6 +46,9 @@
 	let newUserExpiresDays = $state(0);
 	let newUserExpiresHours = $state(0);
 	let newUserExpiresMinutes = $state(0);
+	let newDemoConcurrentLimit = $state<number | null>(null);
+	let newDemoDailyLimit = $state<number | null>(null);
+	let newDemoLifetimeLimit = $state<number | null>(null);
 
 	let reusableInvitations = $derived(invitations.filter((invitation) => invitation.reuseable));
 	let singleUseInvitations = $derived(invitations.filter((invitation) => !invitation.reuseable));
@@ -121,7 +125,10 @@
 				reuseable: newReuseable,
 				user_scope: newUserScope,
 				title: newTitle || null,
-				user_expires: userExpires
+				user_expires: userExpires,
+				user_demo_concurrent_limit: newDemoConcurrentLimit,
+				user_demo_daily_limit: newDemoDailyLimit,
+				user_demo_lifetime_limit: newDemoLifetimeLimit
 			};
 
 			const response = await Admin.createInvitation({ body });
@@ -151,6 +158,9 @@
 		newUserExpiresDays = 0;
 		newUserExpiresHours = 0;
 		newUserExpiresMinutes = 0;
+		newDemoConcurrentLimit = null;
+		newDemoDailyLimit = null;
+		newDemoLifetimeLimit = null;
 		editingInvitation = null;
 	}
 
@@ -160,6 +170,9 @@
 		newEmail = invitation.email ?? '';
 		newReuseable = invitation.reuseable ?? true;
 		newUserScope = invitation.user_scope ?? 'user';
+		newDemoConcurrentLimit = invitation.user_demo_concurrent_limit ?? null;
+		newDemoDailyLimit = invitation.user_demo_daily_limit ?? null;
+		newDemoLifetimeLimit = invitation.user_demo_lifetime_limit ?? null;
 
 		if (invitation.expires_at) {
 			const d = new Date(invitation.expires_at);
@@ -217,6 +230,9 @@
 				user_scope: newUserScope,
 				title: newTitle || null,
 				user_expires: userExpires,
+				user_demo_concurrent_limit: newDemoConcurrentLimit,
+				user_demo_daily_limit: newDemoDailyLimit,
+				user_demo_lifetime_limit: newDemoLifetimeLimit,
 				email: !newReuseable ? newEmail || null : undefined
 			};
 
@@ -465,6 +481,17 @@
 					<option value="demo">Demo</option>
 				</select>
 			</div>
+			{#if newUserScope === 'demo'}
+				<div class="sm:col-span-2">
+					<DemoLimitFields
+						defaults={data.demoLimitDefaults}
+						bind:concurrent={newDemoConcurrentLimit}
+						bind:daily={newDemoDailyLimit}
+						bind:lifetime={newDemoLifetimeLimit}
+						inputClass="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+					/>
+				</div>
+			{/if}
 			<div class="sm:col-span-2">
 				<div class="mb-2 flex items-center gap-3">
 					<span class="block text-sm font-medium text-gray-700">User Expires</span>

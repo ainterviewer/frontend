@@ -5,8 +5,8 @@
 
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Synthesize } from '$lib/api';
-	import type { SynthesizeRequest } from '$lib/api/types.gen';
+	import { Me, Synthesize } from '$lib/api';
+	import type { DemoBudget, DemoBudgetItem, SynthesizeRequest } from '$lib/api/types.gen';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
@@ -25,17 +25,45 @@
 	let isAdmin = $derived(page.data.user?.scope === 'admin');
 	let isDemo = $derived(page.data.user?.scope === 'demo');
 
-	// Mirrors the defaults of the backend's `demo_limits` settings, which is what
-	// enforces them, counted per user across all of their tests. They are only
-	// shown here: how much of each budget is used is known to the backend, and
-	// its 429 says which one a run would cross.
-	const DEMO_LIMITS = {
-		concurrent: 10, // max_concurrent_synthetic_interviews
-		daily: 50, // daily_synthetic_interviews, a rolling 24 hours
-		lifetime: 100 // lifetime_synthetic_interviews
+	// A demo user's budgets, counted per user across all of their tests. The
+	// limits can differ per user, so they come from the backend along with how
+	// much of each is spent. The backend enforces them; its 429 is the backstop
+	// when this is stale.
+	let demoBudget = $state<DemoBudget | null>(null);
+	const DEMO_BUDGET_LABELS: Record<keyof DemoBudget, string> = {
+		concurrent: 'running at a time',
+		daily: 'started per 24 hours',
+		lifetime: 'in total'
 	};
-	// The concurrent budget is the smallest, so it also caps a single run.
-	let maxInterviews = $derived(isDemo ? DEMO_LIMITS.concurrent : 50);
+	let demoBudgetItems = $derived(
+		demoBudget
+			? (Object.keys(DEMO_BUDGET_LABELS) as (keyof DemoBudget)[]).map((key) => ({
+					key,
+					label: DEMO_BUDGET_LABELS[key],
+					...(demoBudget as DemoBudget)[key]
+				}))
+			: []
+	);
+	// Whatever budget has the least left also caps a single run.
+	let maxInterviews = $derived(
+		isDemo && demoBudget ? Math.min(50, ...demoBudgetItems.map((item) => item.remaining)) : 50
+	);
+
+	async function loadDemoBudget() {
+		if (!isDemo) return;
+		const { data: budget, error: budgetError } = await Me.getMyDemoBudget();
+		if (budgetError) {
+			console.error('Failed to load demo budget', budgetError);
+			return;
+		}
+		demoBudget = budget ?? null;
+	}
+
+	function demoBudgetError(item: DemoBudgetItem & { label: string }): string {
+		return item.remaining === 0
+			? `You have used all ${item.limit} of your synthetic interviews ${item.label}.`
+			: `You have ${item.remaining} of your ${item.limit} synthetic interviews ${item.label} left.`;
+	}
 
 	let { data }: { data: PageData } = $props();
 
@@ -69,10 +97,12 @@
 		if (!Number.isInteger(nInterviews) || nInterviews < 1) {
 			return 'Enter a whole number of at least 1.';
 		}
+		const exceeded = demoBudgetItems.find((item) => nInterviews > item.remaining);
+		if (isDemo && exceeded) {
+			return demoBudgetError(exceeded);
+		}
 		if (nInterviews > maxInterviews) {
-			return isDemo
-				? `Demo accounts can run at most ${DEMO_LIMITS.concurrent} synthetic interviews at a time.`
-				: `A test can run at most ${maxInterviews} synthetic interviews.`;
+			return `A test can run at most ${maxInterviews} synthetic interviews.`;
 		}
 		return null;
 	});
@@ -85,6 +115,8 @@
 
 	async function loadTestRuns() {
 		loading = true;
+		// Runs finishing free up the concurrent budget, so refresh it alongside.
+		loadDemoBudget();
 		const { data: statusData, error: statusError } = await Synthesize.getTestStatus({
 			path: { project_id: projectId, test_id: testId }
 		});
@@ -288,12 +320,7 @@
 					{/if}
 				</div>
 
-				{#if isDemo}
-					{@const limits = [
-						{ value: DEMO_LIMITS.concurrent, label: 'running at a time' },
-						{ value: DEMO_LIMITS.daily, label: 'started per 24 hours' },
-						{ value: DEMO_LIMITS.lifetime, label: 'in total' }
-					]}
+				{#if isDemo && demoBudget}
 					<div class="w-fit rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
 						<p class="flex items-center gap-2 text-sm font-medium text-gray-700">
 							<i class="fa-solid fa-circle-info text-gray-400"></i>
@@ -301,10 +328,20 @@
 							<span class="font-normal text-gray-500">&middot; across all of your tests</span>
 						</p>
 						<dl class="mt-2 flex flex-wrap gap-x-8 gap-y-2">
-							{#each limits as limit (limit.label)}
+							{#each demoBudgetItems as item (item.key)}
 								<div class="flex flex-col-reverse">
-									<dt class="text-xs text-gray-500">{limit.label}</dt>
-									<dd class="text-lg font-semibold text-gray-800 tabular-nums">{limit.value}</dd>
+									<dt class="text-xs text-gray-500">
+										{item.label} &middot; {item.remaining} left
+									</dt>
+									<dd
+										class="text-lg font-semibold tabular-nums {item.remaining === 0
+											? 'text-red-600'
+											: 'text-gray-800'}"
+									>
+										{item.used}<span class="text-sm font-normal text-gray-500">
+											/ {item.limit}</span
+										>
+									</dd>
 								</div>
 							{/each}
 						</dl>

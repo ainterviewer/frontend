@@ -4,7 +4,8 @@
 	import { toast } from 'svelte-sonner';
 
 	import { invalidateAll } from '$app/navigation';
-	import { Admin, type Scope, type UserAdmin } from '$lib/api';
+	import { Admin, type DemoBudget, type Scope, type UserAdmin } from '$lib/api';
+	import DemoLimitFields from '$lib/components/DemoLimitFields.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
@@ -33,8 +34,13 @@
 		organization: string;
 		expires_at: string;
 		two_factor_enabled: boolean;
+		demo_concurrent_limit: number | null;
+		demo_daily_limit: number | null;
+		demo_lifetime_limit: number | null;
 	};
 	let edits = $state<Record<string, UserEdit>>({});
+	// Each expanded user's demo budget usage, fetched when the row opens.
+	let demoUsage = $state<Record<string, DemoBudget>>({});
 
 	const SCOPES: Scope[] = ['admin', 'user', 'demo'];
 
@@ -60,7 +66,10 @@
 				with_preview_features: user.with_preview_features ?? false,
 				organization: user.organization ?? '',
 				expires_at: isoToLocalInput(user.expires_at),
-				two_factor_enabled: user.two_factor_enabled ?? false
+				two_factor_enabled: user.two_factor_enabled ?? false,
+				demo_concurrent_limit: user.demo_concurrent_limit ?? null,
+				demo_daily_limit: user.demo_daily_limit ?? null,
+				demo_lifetime_limit: user.demo_lifetime_limit ?? null
 			};
 		}
 		return edits[user.id];
@@ -74,7 +83,10 @@
 			e.with_preview_features !== (user.with_preview_features ?? false) ||
 			e.organization !== (user.organization ?? '') ||
 			e.expires_at !== isoToLocalInput(user.expires_at) ||
-			e.two_factor_enabled !== (user.two_factor_enabled ?? false)
+			e.two_factor_enabled !== (user.two_factor_enabled ?? false) ||
+			e.demo_concurrent_limit !== (user.demo_concurrent_limit ?? null) ||
+			e.demo_daily_limit !== (user.demo_daily_limit ?? null) ||
+			e.demo_lifetime_limit !== (user.demo_lifetime_limit ?? null)
 		);
 	}
 
@@ -90,7 +102,21 @@
 		} else {
 			expandedRows.add(user.id);
 			ensureEdit(user);
+			loadDemoUsage(user);
 		}
+	}
+
+	// Fetched for every scope, so the usage is there if the scope is switched
+	// to demo in the form. Shown only as context, so a failure is just logged.
+	async function loadDemoUsage(user: UserAdmin) {
+		const { data: budget, error: budgetError } = await Admin.getUserDemoBudget({
+			path: { user_id: user.id }
+		});
+		if (budgetError || !budget) {
+			console.error('Failed to load demo budget', budgetError);
+			return;
+		}
+		demoUsage[user.id] = budget;
 	}
 
 	async function saveUser(user: UserAdmin) {
@@ -106,7 +132,10 @@
 					with_preview_features: e.with_preview_features,
 					organization: e.organization.trim() || null,
 					expires_at: localInputToIso(e.expires_at),
-					two_factor_enabled: e.two_factor_enabled
+					two_factor_enabled: e.two_factor_enabled,
+					demo_concurrent_limit: e.demo_concurrent_limit,
+					demo_daily_limit: e.demo_daily_limit,
+					demo_lifetime_limit: e.demo_lifetime_limit
 				},
 				path: { user_id: user.id }
 			});
@@ -454,32 +483,7 @@
 			</div>
 		</div>
 		<div class="mt-4 border-t border-gray-200 pt-4">
-			<div class="mb-2 flex items-center justify-between">
-				<h4 class="text-sm font-semibold text-gray-700">Edit User</h4>
-				<div class="flex items-center gap-2">
-					{#if dirty && !saving}
-						<button
-							onclick={(e) => {
-								e.stopPropagation();
-								resetEdit(user);
-							}}
-							class="rounded px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
-						>
-							Reset
-						</button>
-					{/if}
-					<button
-						disabled={!dirty || saving}
-						onclick={(e) => {
-							e.stopPropagation();
-							saveUser(user);
-						}}
-						class="rounded bg-primary px-3 py-1.5 text-xs font-medium text-on-primary transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						{saving ? 'Saving...' : 'Save'}
-					</button>
-				</div>
-			</div>
+			<h4 class="mb-2 text-sm font-semibold text-gray-700">Edit User</h4>
 			<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
 				<label class="block text-sm">
 					<span class="text-xs font-medium text-gray-600">Scope</span>
@@ -532,6 +536,40 @@
 					/>
 					<span class="text-xs font-medium text-gray-600">Two-factor authentication enabled</span>
 				</label>
+			</div>
+			{#if edit.scope === 'demo'}
+				<div class="mt-4 md:w-1/2">
+					<DemoLimitFields
+						defaults={data.demoLimitDefaults}
+						usage={demoUsage[user.id]}
+						bind:concurrent={edit.demo_concurrent_limit}
+						bind:daily={edit.demo_daily_limit}
+						bind:lifetime={edit.demo_lifetime_limit}
+					/>
+				</div>
+			{/if}
+			<div class="mt-4 flex items-center justify-end gap-2">
+				{#if dirty && !saving}
+					<button
+						onclick={(e) => {
+							e.stopPropagation();
+							resetEdit(user);
+						}}
+						class="rounded px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
+					>
+						Reset
+					</button>
+				{/if}
+				<button
+					disabled={!dirty || saving}
+					onclick={(e) => {
+						e.stopPropagation();
+						saveUser(user);
+					}}
+					class="rounded bg-primary px-3 py-1.5 text-xs font-medium text-on-primary transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					{saving ? 'Saving...' : 'Save'}
+				</button>
 			</div>
 		</div>
 	{/snippet}

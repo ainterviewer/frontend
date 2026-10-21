@@ -1301,6 +1301,59 @@ export type DeleteParticipantsRequest = {
 };
 
 /**
+ * DemoBudget
+ *
+ * A demo user's synthetic-interview budgets and how much of each is spent.
+ *
+ * `limit` is the user's own (an override, else the configured default), so
+ * two demo users can see different numbers.
+ */
+export type DemoBudget = {
+    concurrent: DemoBudgetItem;
+    daily: DemoBudgetItem;
+    lifetime: DemoBudgetItem;
+};
+
+/**
+ * DemoBudgetItem
+ */
+export type DemoBudgetItem = {
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Used
+     */
+    used: number;
+    /**
+     * Remaining
+     */
+    readonly remaining: number;
+};
+
+/**
+ * DemoLimitDefaults
+ *
+ * The configured demo budgets (`app.demo_limits`): what a user without an
+ * override gets.
+ */
+export type DemoLimitDefaults = {
+    /**
+     * Concurrent
+     */
+    concurrent: number;
+    /**
+     * Daily
+     */
+    daily: number;
+    /**
+     * Lifetime
+     */
+    lifetime: number;
+};
+
+/**
  * DistributionBucket
  *
  * A histogram bucket carrying the same per-language split as a bar.
@@ -2902,6 +2955,18 @@ export type InvitationCreate = {
      * Access Request Id
      */
     access_request_id?: string | null;
+    /**
+     * User Demo Concurrent Limit
+     */
+    user_demo_concurrent_limit?: number | null;
+    /**
+     * User Demo Daily Limit
+     */
+    user_demo_daily_limit?: number | null;
+    /**
+     * User Demo Lifetime Limit
+     */
+    user_demo_lifetime_limit?: number | null;
 };
 
 /**
@@ -2929,6 +2994,18 @@ export type InvitationPublic = {
      * Access Request Id
      */
     access_request_id?: string | null;
+    /**
+     * User Demo Concurrent Limit
+     */
+    user_demo_concurrent_limit?: number | null;
+    /**
+     * User Demo Daily Limit
+     */
+    user_demo_daily_limit?: number | null;
+    /**
+     * User Demo Lifetime Limit
+     */
+    user_demo_lifetime_limit?: number | null;
     /**
      * Id
      */
@@ -2971,6 +3048,18 @@ export type InvitationUpdate = {
      * Title
      */
     title?: string | Unset | null;
+    /**
+     * User Demo Concurrent Limit
+     */
+    user_demo_concurrent_limit?: number | Unset | null;
+    /**
+     * User Demo Daily Limit
+     */
+    user_demo_daily_limit?: number | Unset | null;
+    /**
+     * User Demo Lifetime Limit
+     */
+    user_demo_lifetime_limit?: number | Unset | null;
 };
 
 /**
@@ -5832,6 +5921,18 @@ export type UserAdmin = {
      * Two Factor Enabled
      */
     two_factor_enabled?: boolean;
+    /**
+     * Demo Concurrent Limit
+     */
+    demo_concurrent_limit?: number | null;
+    /**
+     * Demo Daily Limit
+     */
+    demo_daily_limit?: number | null;
+    /**
+     * Demo Lifetime Limit
+     */
+    demo_lifetime_limit?: number | null;
 };
 
 /**
@@ -5858,6 +5959,18 @@ export type UserAdminUpdate = {
      * Two Factor Enabled
      */
     two_factor_enabled?: boolean | Unset;
+    /**
+     * Demo Concurrent Limit
+     */
+    demo_concurrent_limit?: number | Unset | null;
+    /**
+     * Demo Daily Limit
+     */
+    demo_daily_limit?: number | Unset | null;
+    /**
+     * Demo Lifetime Limit
+     */
+    demo_lifetime_limit?: number | Unset | null;
 };
 
 /**
@@ -6324,6 +6437,34 @@ export type CommunicationTraitOutputWritable = {
 };
 
 /**
+ * DemoBudget
+ *
+ * A demo user's synthetic-interview budgets and how much of each is spent.
+ *
+ * `limit` is the user's own (an override, else the configured default), so
+ * two demo users can see different numbers.
+ */
+export type DemoBudgetWritable = {
+    concurrent: DemoBudgetItemWritable;
+    daily: DemoBudgetItemWritable;
+    lifetime: DemoBudgetItemWritable;
+};
+
+/**
+ * DemoBudgetItem
+ */
+export type DemoBudgetItemWritable = {
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Used
+     */
+    used: number;
+};
+
+/**
  * InterviewSubject
  *
  * Dataclass representing the interview subject
@@ -6413,6 +6554,18 @@ export type InvitationPublicWritable = {
      * Access Request Id
      */
     access_request_id?: string | null;
+    /**
+     * User Demo Concurrent Limit
+     */
+    user_demo_concurrent_limit?: number | null;
+    /**
+     * User Demo Daily Limit
+     */
+    user_demo_daily_limit?: number | null;
+    /**
+     * User Demo Lifetime Limit
+     */
+    user_demo_lifetime_limit?: number | null;
     /**
      * Id
      */
@@ -13275,6 +13428,52 @@ export type UpdateUserResponses = {
 
 export type UpdateUserResponse = UpdateUserResponses[keyof UpdateUserResponses];
 
+export type GetDemoLimitDefaultsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/admin/demo-limits';
+};
+
+export type GetDemoLimitDefaultsResponses = {
+    /**
+     * Successful Response
+     */
+    200: DemoLimitDefaults;
+};
+
+export type GetDemoLimitDefaultsResponse = GetDemoLimitDefaultsResponses[keyof GetDemoLimitDefaultsResponses];
+
+export type GetUserDemoBudgetData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/admin/users/{user_id}/demo-budget';
+};
+
+export type GetUserDemoBudgetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetUserDemoBudgetError = GetUserDemoBudgetErrors[keyof GetUserDemoBudgetErrors];
+
+export type GetUserDemoBudgetResponses = {
+    /**
+     * Successful Response
+     */
+    200: DemoBudget;
+};
+
+export type GetUserDemoBudgetResponse = GetUserDemoBudgetResponses[keyof GetUserDemoBudgetResponses];
+
 export type GetModelsData = {
     body?: never;
     path?: never;
@@ -13368,6 +13567,24 @@ export type GetNotificationsResponses = {
 };
 
 export type GetNotificationsResponse = GetNotificationsResponses[keyof GetNotificationsResponses];
+
+export type GetMyDemoBudgetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/me/demo-budget';
+};
+
+export type GetMyDemoBudgetResponses = {
+    /**
+     * Response Get My Demo Budget
+     *
+     * Successful Response
+     */
+    200: DemoBudget | null;
+};
+
+export type GetMyDemoBudgetResponse = GetMyDemoBudgetResponses[keyof GetMyDemoBudgetResponses];
 
 export type GetMyReportsData = {
     body?: never;

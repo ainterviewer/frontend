@@ -519,6 +519,41 @@ export const zDeleteParticipantsRequest = z.object({
 });
 
 /**
+ * DemoBudgetItem
+ */
+export const zDemoBudgetItem = z.object({
+    limit: z.int(),
+    used: z.int(),
+    remaining: z.int().readonly()
+});
+
+/**
+ * DemoBudget
+ *
+ * A demo user's synthetic-interview budgets and how much of each is spent.
+ *
+ * `limit` is the user's own (an override, else the configured default), so
+ * two demo users can see different numbers.
+ */
+export const zDemoBudget = z.object({
+    concurrent: zDemoBudgetItem,
+    daily: zDemoBudgetItem,
+    lifetime: zDemoBudgetItem
+});
+
+/**
+ * DemoLimitDefaults
+ *
+ * The configured demo budgets (`app.demo_limits`): what a user without an
+ * override gets.
+ */
+export const zDemoLimitDefaults = z.object({
+    concurrent: z.int(),
+    daily: z.int(),
+    lifetime: z.int()
+});
+
+/**
  * DistributionKind
  *
  * Which of the distribution fields carries this item's data.
@@ -2607,7 +2642,10 @@ export const zInvitationCreate = z.object({
         zTimeDelta
     ]).nullish(),
     title: z.string().nullish(),
-    access_request_id: z.string().nullish()
+    access_request_id: z.string().nullish(),
+    user_demo_concurrent_limit: z.int().gte(0).nullish(),
+    user_demo_daily_limit: z.int().gte(0).nullish(),
+    user_demo_lifetime_limit: z.int().gte(0).nullish()
 });
 
 /**
@@ -2623,6 +2661,9 @@ export const zInvitationPublic = z.object({
     ]).nullish(),
     title: z.string().nullish(),
     access_request_id: z.string().nullish(),
+    user_demo_concurrent_limit: z.int().gte(0).nullish(),
+    user_demo_daily_limit: z.int().gte(0).nullish(),
+    user_demo_lifetime_limit: z.int().gte(0).nullish(),
     id: z.string(),
     email: z.string().nullable(),
     invitation_link: z.string().readonly()
@@ -3186,7 +3227,10 @@ export const zUserAdmin = z.object({
     access_request_message: z.string().nullish(),
     admin_note: z.string().nullish(),
     admin_note_updated_at: z.iso.datetime().nullish(),
-    two_factor_enabled: z.boolean().optional().default(true)
+    two_factor_enabled: z.boolean().optional().default(true),
+    demo_concurrent_limit: z.int().nullish(),
+    demo_daily_limit: z.int().nullish(),
+    demo_lifetime_limit: z.int().nullish()
 });
 
 /**
@@ -3425,6 +3469,18 @@ export const zInvitationUpdate = z.object({
     title: z.union([
         z.string(),
         zUnset
+    ]).nullish().default('UNSET'),
+    user_demo_concurrent_limit: z.union([
+        z.int().gte(0),
+        zUnset
+    ]).nullish().default('UNSET'),
+    user_demo_daily_limit: z.union([
+        z.int().gte(0),
+        zUnset
+    ]).nullish().default('UNSET'),
+    user_demo_lifetime_limit: z.union([
+        z.int().gte(0),
+        zUnset
     ]).nullish().default('UNSET')
 });
 
@@ -3473,7 +3529,19 @@ export const zUserAdminUpdate = z.object({
     two_factor_enabled: z.union([
         z.boolean(),
         zUnset
-    ]).optional().default('UNSET')
+    ]).optional().default('UNSET'),
+    demo_concurrent_limit: z.union([
+        z.int().gte(0),
+        zUnset
+    ]).nullish().default('UNSET'),
+    demo_daily_limit: z.union([
+        z.int().gte(0),
+        zUnset
+    ]).nullish().default('UNSET'),
+    demo_lifetime_limit: z.union([
+        z.int().gte(0),
+        zUnset
+    ]).nullish().default('UNSET')
 });
 
 /**
@@ -3652,6 +3720,28 @@ export const zCommunicationTraitOutputWritable = z.object({
 });
 
 /**
+ * DemoBudgetItem
+ */
+export const zDemoBudgetItemWritable = z.object({
+    limit: z.int(),
+    used: z.int()
+});
+
+/**
+ * DemoBudget
+ *
+ * A demo user's synthetic-interview budgets and how much of each is spent.
+ *
+ * `limit` is the user's own (an override, else the configured default), so
+ * two demo users can see different numbers.
+ */
+export const zDemoBudgetWritable = z.object({
+    concurrent: zDemoBudgetItemWritable,
+    daily: zDemoBudgetItemWritable,
+    lifetime: zDemoBudgetItemWritable
+});
+
+/**
  * InterviewSubject
  *
  * Dataclass representing the interview subject
@@ -3697,6 +3787,9 @@ export const zInvitationPublicWritable = z.object({
     ]).nullish(),
     title: z.string().nullish(),
     access_request_id: z.string().nullish(),
+    user_demo_concurrent_limit: z.int().gte(0).nullish(),
+    user_demo_daily_limit: z.int().gte(0).nullish(),
+    user_demo_lifetime_limit: z.int().gte(0).nullish(),
     id: z.string(),
     email: z.string().nullable()
 });
@@ -5967,6 +6060,20 @@ export const zUpdateUserPath = z.object({
 export const zUpdateUserResponse = zUserAdmin;
 
 /**
+ * Successful Response
+ */
+export const zGetDemoLimitDefaultsResponse = zDemoLimitDefaults;
+
+export const zGetUserDemoBudgetPath = z.object({
+    user_id: z.string()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetUserDemoBudgetResponse = zDemoBudget;
+
+/**
  * Response Get Languages
  *
  * Successful Response
@@ -5981,6 +6088,13 @@ export const zNewsletterSubscribeBody = zNewsletterRequest;
  * Successful Response
  */
 export const zGetNotificationsResponse = zUserNotifications;
+
+/**
+ * Response Get My Demo Budget
+ *
+ * Successful Response
+ */
+export const zGetMyDemoBudgetResponse = zDemoBudget.nullable();
 
 export const zGetMyReportsQuery = z.object({
     statuses: z.array(zReportStatus).nullish(),
