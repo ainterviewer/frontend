@@ -3,8 +3,9 @@ import { error } from '@sveltejs/kit';
 import { Default, Folders } from '$lib/api';
 
 import type { PageServerLoad } from './$types';
+import { parseView, VIEW_COOKIE } from './dashboardView';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ cookies, locals }) => {
 	const { cookieHeader } = locals;
 
 	const [foldersRes, langRes] = await Promise.all([
@@ -24,6 +25,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		folders: foldersRes.data,
-		languages: langRes.data
+		languages: langRes.data,
+		view: parseView(cookies.get(VIEW_COOKIE))
 	};
 };

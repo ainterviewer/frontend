@@ -48,13 +48,18 @@
 
 	let groups = $derived.by(() => {
 		const needle = query.trim().toLowerCase();
+		// Archived folders and projects are put away here as on the dashboard --
+		// all but the one you are in, which is where the list opens.
+		const listed = (folder: ProjectFolderWithProjects, project: ProjectPublic) =>
+			project.id === projectId || (!folder.archived_at && !project.archived_at);
 		return (folders ?? [])
-			.map((folder) => ({
-				folder,
-				projects: needle
-					? folder.projects.filter((p) => p.title.toLowerCase().includes(needle))
-					: folder.projects
-			}))
+			.map((folder) => {
+				const shown = folder.projects.filter((p) => listed(folder, p));
+				return {
+					folder,
+					projects: needle ? shown.filter((p) => p.title.toLowerCase().includes(needle)) : shown
+				};
+			})
 			.filter((group) => group.projects.length > 0);
 	});
 

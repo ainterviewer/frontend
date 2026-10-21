@@ -59,6 +59,13 @@ export const zAnswerLength = z.enum([
 ]);
 
 /**
+ * ArchiveRequest
+ */
+export const zArchiveRequest = z.object({
+    archived: z.boolean()
+});
+
+/**
  * AuthorPublic
  *
  * Who wrote a coding or a comment.
@@ -3304,6 +3311,7 @@ export const zCollaboratorPublic = z.object({
 export const zProjectFolderPublic = z.object({
     title: z.string(),
     id: z.string(),
+    archived_at: z.iso.datetime().nullish(),
     collaborators: z.array(zCollaboratorPublic).optional().default([])
 });
 
@@ -3316,6 +3324,7 @@ export const zProjectPublic = z.object({
     created_at: z.iso.datetime(),
     last_updated: z.iso.datetime().nullish(),
     status: zProjectStatus.optional().default('active'),
+    archived_at: z.iso.datetime().nullish(),
     config: zInterviewConfig,
     external_params: z.array(zExternalParam).nullish(),
     owner_id: z.string(),
@@ -3331,6 +3340,7 @@ export const zProjectPublic = z.object({
 export const zProjectFolderWithProjects = z.object({
     title: z.string(),
     id: z.string(),
+    archived_at: z.iso.datetime().nullish(),
     collaborators: z.array(zCollaboratorPublic).optional().default([]),
     projects: z.array(zProjectPublic)
 });
@@ -4471,6 +4481,16 @@ export const zEditFolderQuery = z.object({
     project_id: z.string().nullish()
 });
 
+export const zSetFolderArchivedBody = zArchiveRequest;
+
+export const zSetFolderArchivedPath = z.object({
+    folder_id: z.string().nullable()
+});
+
+export const zSetFolderArchivedQuery = z.object({
+    project_id: z.string().nullish()
+});
+
 export const zRemoveCollaboratorPath = z.object({
     folder_id: z.string().nullable()
 });
@@ -5011,6 +5031,16 @@ export const zChangeProjectStatusPath = z.object({
 });
 
 export const zChangeProjectStatusQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+export const zSetProjectArchivedBody = zArchiveRequest;
+
+export const zSetProjectArchivedPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zSetProjectArchivedQuery = z.object({
     folder_id: z.string().nullish()
 });
 

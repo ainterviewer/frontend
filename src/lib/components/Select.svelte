@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Select } from 'bits-ui';
+	import type { Snippet } from 'svelte';
 	import { fly } from 'svelte/transition';
 
 	type Item = { value: string; label: string; disabled?: boolean };
@@ -10,6 +11,7 @@
 		placeholder = 'Select an option',
 		class: className = '',
 		disabled = false,
+		trigger,
 		...restProps
 	}: {
 		value: string;
@@ -17,6 +19,9 @@
 		placeholder?: string;
 		class?: string;
 		disabled?: boolean;
+		/** Draws the trigger's contents instead of the bordered field; `class`
+		 * is then the trigger's only styling. */
+		trigger?: Snippet<[label: string]>;
 		[key: string]: unknown;
 	} = $props();
 
@@ -24,12 +29,18 @@
 </script>
 
 <Select.Root type="single" bind:value {items} {disabled} {...restProps}>
-	<Select.Trigger
-		class="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 {className}"
-	>
-		<span class="truncate">{selectedLabel}</span>
-		<i class="fa-solid fa-chevron-down text-gray-500"></i>
-	</Select.Trigger>
+	{#if trigger}
+		<Select.Trigger class={className}>
+			{@render trigger(selectedLabel)}
+		</Select.Trigger>
+	{:else}
+		<Select.Trigger
+			class="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 {className}"
+		>
+			<span class="truncate">{selectedLabel}</span>
+			<i class="fa-solid fa-chevron-down text-gray-500"></i>
+		</Select.Trigger>
+	{/if}
 	<Select.Portal>
 		<Select.Content
 			class="z-[2000] min-w-[8rem] overflow-hidden rounded-md border border-gray-200 bg-white text-gray-950 shadow-md focus:outline-none"

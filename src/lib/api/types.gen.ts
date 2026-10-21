@@ -188,6 +188,16 @@ export type AnswerSample = {
 };
 
 /**
+ * ArchiveRequest
+ */
+export type ArchiveRequest = {
+    /**
+     * Archived
+     */
+    archived: boolean;
+};
+
+/**
  * AssistanceChatRequest
  */
 export type AssistanceChatRequest = {
@@ -4600,6 +4610,10 @@ export type ProjectFolderPublic = {
      */
     id: string;
     /**
+     * Archived At
+     */
+    archived_at?: string | null;
+    /**
      * Collaborators
      */
     collaborators?: Array<CollaboratorPublic>;
@@ -4617,6 +4631,10 @@ export type ProjectFolderWithProjects = {
      * Id
      */
     id: string;
+    /**
+     * Archived At
+     */
+    archived_at?: string | null;
     /**
      * Collaborators
      */
@@ -4695,6 +4713,10 @@ export type ProjectPublic = {
      */
     last_updated?: string | null;
     status?: ProjectStatus;
+    /**
+     * Archived At
+     */
+    archived_at?: string | null;
     config: InterviewConfig;
     /**
      * External Params
@@ -8672,6 +8694,39 @@ export type EditFolderResponses = {
     200: unknown;
 };
 
+export type SetFolderArchivedData = {
+    body: ArchiveRequest;
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+    };
+    query?: {
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}/archive';
+};
+
+export type SetFolderArchivedErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetFolderArchivedError = SetFolderArchivedErrors[keyof SetFolderArchivedErrors];
+
+export type SetFolderArchivedResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type RemoveCollaboratorData = {
     body?: never;
     path: {
@@ -10061,6 +10116,39 @@ export type ChangeProjectStatusErrors = {
 export type ChangeProjectStatusError = ChangeProjectStatusErrors[keyof ChangeProjectStatusErrors];
 
 export type ChangeProjectStatusResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type SetProjectArchivedData = {
+    body: ArchiveRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/archive';
+};
+
+export type SetProjectArchivedErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetProjectArchivedError = SetProjectArchivedErrors[keyof SetProjectArchivedErrors];
+
+export type SetProjectArchivedResponses = {
     /**
      * Successful Response
      */
