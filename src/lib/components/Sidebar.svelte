@@ -6,6 +6,7 @@
 	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
 
 	import HoverInfo from './HoverInfo.svelte';
+	import PreviewBadge from './PreviewBadge.svelte';
 
 	let { items }: { items: SidebarItem[] } = $props();
 	let collapsed = $derived(sidebar.collapsed);
@@ -228,7 +229,8 @@
 						'item pl-1',
 						expanded ? 'block' : 'hidden',
 						active && "font-bold after:ml-2 after:content-['<']"
-					].join(' ')}>{item.label}</span
+					].join(' ')}
+					>{item.label}{#if item.previewFeature}<PreviewBadge compact class="ml-2" />{/if}</span
 				>
 			{/if}
 		</a>

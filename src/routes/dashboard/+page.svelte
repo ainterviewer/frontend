@@ -19,7 +19,7 @@
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
-	import { addSkipOnboardingButton, tourSteps } from '$lib/onboarding';
+	import { addSkipOnboardingButton, PREVIEW_BADGE, tourSteps } from '$lib/onboarding';
 	import { formatDate, formatDay } from '$lib/utils/datetime';
 
 	import type { PageData } from './$types';
@@ -205,7 +205,7 @@
 					popover: {
 						title: 'Flagged',
 						description: `<u>Flagged</u> collects the messages respondents reported${
-							safetyCheck ? ', and the answers the safety check acted on,' : ''
+							safetyCheck ? `, and the answers the safety check ${PREVIEW_BADGE} acted on,` : ''
 						} across all your projects. Review them here, and mark them read or resolved.`
 					}
 				},

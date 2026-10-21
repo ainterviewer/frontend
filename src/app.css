@@ -38,6 +38,27 @@
 /* Custom  */
 
 @layer components {
+	/* Marks a preview feature: only accounts with preview features turned on
+	   see it. A class rather than only a component, so driver.js tour
+	   popovers, which take HTML strings, render the same badge (see
+	   `PREVIEW_BADGE` in onboarding.ts). The sidebar uses `PreviewBadge`'s
+	   compact form, a bare icon, instead. */
+	.preview-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0 0.4rem;
+		border-radius: 9999px;
+		background-color: var(--color-secondary);
+		color: var(--color-on-secondary);
+		font-size: 0.65rem;
+		font-weight: 600;
+		line-height: 1.5;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		vertical-align: middle;
+		white-space: nowrap;
+	}
 	/* A bar that grows out of its left edge once its card has been reached.
 	   Set on the filled part, inside a `reveal()` container; a bar that is
 	   never scrolled to simply never animates. Transform rather than width so
@@ -347,7 +368,8 @@
  * win regardless of stylesheet import order.
  */
 
-.driver-popover * {
+/* Font Awesome icons keep their own font, or they render as missing glyphs. */
+.driver-popover *:not([class*='fa-']) {
 	font-family: 'Inter Variable', system-ui, sans-serif !important;
 }
 

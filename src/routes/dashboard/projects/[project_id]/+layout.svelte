@@ -7,7 +7,7 @@
 	import { page } from '$app/state';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { projectSidebarItems } from '$lib/config/sidebar';
-	import { addSkipOnboardingButton, tourSteps } from '$lib/onboarding';
+	import { addSkipOnboardingButton, PREVIEW_BADGE, tourSteps } from '$lib/onboarding';
 
 	let { children } = $props();
 
@@ -45,7 +45,7 @@
 						title: 'Agents',
 						description: `In the <u>agents</u> tab, you can modify the AI agent(s) configuration and behavior.${
 							safetyCheck
-								? ' You can also set up a <u>safety check</u> that reads every answer and shows the respondent a message when one of your rules applies.'
+								? ` You can also set up a <u>safety check</u> ${PREVIEW_BADGE} that reads every answer and shows the respondent a message when one of your rules applies.`
 								: ''
 						} Changes are saved as you make them.`
 					}
@@ -74,7 +74,7 @@
 					popover: {
 						title: 'Interview Data',
 						description: `A table of your collected <u>interview data</u>, with the ability to view or export them. Interviews with messages respondents reported${
-							safetyCheck ? ' or the safety check acted on' : ''
+							safetyCheck ? ` or the safety check ${PREVIEW_BADGE} acted on` : ''
 						} are marked with a flag, and you can filter by it.`
 					}
 				},

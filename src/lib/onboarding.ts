@@ -8,6 +8,15 @@ const DISABLED_KEY = 'onboarding-disabled';
 const ONBOARDED_KEY_SUFFIX = '-onboarded';
 
 /**
+ * `PreviewBadge` as HTML, for tour popovers (driver.js takes strings). Put it
+ * after the title of a step about a preview feature, or inline after the
+ * clause that mentions one, and only show either to accounts that have
+ * preview features.
+ */
+export const PREVIEW_BADGE =
+	'<span class="preview-badge" title="Preview feature"><i class="fa-solid fa-eye" aria-hidden="true"></i>Preview</span>';
+
+/**
  * A tour step with a stable id, so a later visit can tell which steps are new.
  * Give a step a new id (e.g. `language-v2`) when its content changes enough
  * that returning users should see it again. A step that only works after the

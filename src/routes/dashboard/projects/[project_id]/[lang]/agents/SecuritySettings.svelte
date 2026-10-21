@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SecurityAction, SecurityConfig, SecurityPolicy } from '$lib/api';
+	import PreviewBadge from '$lib/components/PreviewBadge.svelte';
 
 	import { ACTION_LABELS, newDecision, policyErrors } from './securityPolicy';
 
@@ -35,7 +36,9 @@
 
 <section class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 	<div class="mb-6">
-		<h3 class="mb-2 text-lg font-medium text-gray-800">Safety Check</h3>
+		<h3 class="mb-2 text-lg font-medium text-gray-800">
+			Safety Check <PreviewBadge />
+		</h3>
 		<p class="text-sm text-gray-500">
 			After every answer, a separate agent reads the question so far and estimates, for each
 			decision below, how likely its question is to apply to the respondent. A decision whose

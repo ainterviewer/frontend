@@ -6,6 +6,7 @@
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { ExternalParam, InterviewConfig, ProbingStrategy } from '$lib/api/types.gen';
+	import PreviewBadge from '$lib/components/PreviewBadge.svelte';
 
 	import type { PageData } from './$types';
 
@@ -288,7 +289,10 @@
 									class="mt-0.5 rounded border-gray-300 text-primary focus:ring-blue-500"
 								/>
 								<span class="min-w-0">
-									<span class="block text-sm font-medium text-gray-700">{toggle.label}</span>
+									<span class="block text-sm font-medium text-gray-700"
+										>{toggle.label}
+										{#if toggle.is_preview_feature}<PreviewBadge />{/if}</span
+									>
 									<span class="block text-xs text-gray-500">{toggle.description}</span>
 								</span>
 							</label>
@@ -298,7 +302,9 @@
 
 				{#if hasPreviewFeatures}
 					<div class="mt-5">
-						<span class="block text-sm font-medium text-gray-700">Probing strategy</span>
+						<span class="block text-sm font-medium text-gray-700"
+							>Probing strategy <PreviewBadge /></span
+						>
 						<p class="mb-2 text-xs text-gray-500">
 							Select which probing strategies are available for this interview.
 						</p>
