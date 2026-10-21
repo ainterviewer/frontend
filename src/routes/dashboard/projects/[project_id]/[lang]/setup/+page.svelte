@@ -154,9 +154,14 @@
 				'Create the interview structure with framing, introduction, questions, and outro.',
 			href: `/dashboard/projects/${projectId}/${lang}/setup/guide`,
 			icon: 'fa-solid fa-clipboard-question',
+			// A new project's guide already holds one section with one blank
+			// question for the editor to fill in, so a section alone says nothing:
+			// it takes words, in the introduction or in a question.
 			isConfigured: !!(
-				data.guide?.introduction ||
-				(data.guide?.question_sections && data.guide.question_sections.length > 0)
+				data.guide?.introduction?.trim() ||
+				data.guide?.question_sections?.some((section) =>
+					section.questions.some((question) => question.main_question.trim())
+				)
 			),
 			preview: data.guide?.introduction
 				? data.guide.introduction.slice(0, 60) + (data.guide.introduction.length > 60 ? '...' : '')
