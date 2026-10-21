@@ -39,7 +39,13 @@
 	class="fixed top-[3.75rem] right-6 z-30 flex h-9 items-center gap-3 rounded-full border border-gray-200 bg-white/90 py-1 pr-4 pl-4 shadow-md backdrop-blur print:hidden"
 >
 	{#if quiet}
-		<span class="flex h-4 items-center gap-1.5 text-xs leading-none text-gray-400">
+		<!-- Faded primary and red, the same as the live pages' `SyncState`. -->
+		<span
+			class={[
+				'flex h-4 items-center gap-1.5 text-xs leading-none',
+				quiet === 'saved' ? 'text-primary/70' : 'text-red-600/60'
+			]}
+		>
 			<i
 				class={[
 					'fas w-3 text-center',

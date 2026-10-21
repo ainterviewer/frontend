@@ -35,6 +35,13 @@
 		saving: 'fa-circle-notch animate-spin'
 	};
 
+	/** Faded, so the pill tells saved from not-yet at a glance without
+	 * competing with the page; the loud states below stay full strength. */
+	const COLORS: Record<Quiet, string> = {
+		saved: 'text-primary/70',
+		saving: 'text-red-600/60'
+	};
+
 	let quiet = $derived<Quiet | null>(
 		session.status !== 'synced' || session.errors.length > 0
 			? null
@@ -63,7 +70,7 @@
 		Connecting
 	</span>
 {:else if quiet}
-	<span class="flex h-4 items-center gap-1.5 text-xs leading-none text-gray-400">
+	<span class={['flex h-4 items-center gap-1.5 text-xs leading-none', COLORS[quiet]]}>
 		<i class="fas {ICONS[quiet]} w-3 text-center"></i>
 		<span class="grid">
 			{#each QUIET as { state, label } (state)}
