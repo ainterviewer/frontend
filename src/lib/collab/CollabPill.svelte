@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ContentSession } from './contentSession.svelte';
+	import type { ContentSession, Peer } from './contentSession.svelte';
 	import PresenceAvatars from './PresenceAvatars.svelte';
 	import SyncState from './SyncState.svelte';
 
@@ -10,6 +10,15 @@
 	 * The same on every page edited live.
 	 */
 	let { session, invalidLabel }: { session: ContentSession; invalidLabel?: string } = $props();
+
+	/**
+	 * To the block someone is in, which their ring already marks. Centred,
+	 * since the top of the pane is under this pill.
+	 */
+	function goTo(peer: Peer) {
+		if (!peer.block) return;
+		document.getElementById(peer.block)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+	}
 </script>
 
 <!-- Two pills, not one: who is here comes and goes, and folding it into the
@@ -23,7 +32,7 @@
 		<div
 			class="flex h-9 items-center rounded-full border border-gray-200 bg-white/90 px-1 shadow-md backdrop-blur"
 		>
-			<PresenceAvatars peers={session.peers} />
+			<PresenceAvatars peers={session.peers} onselect={goTo} />
 		</div>
 	{/if}
 	<div
