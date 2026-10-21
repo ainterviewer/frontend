@@ -2,21 +2,19 @@
 	import { Folders } from '$lib/api';
 	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
 
-	// The folder tree is fetched the first time a switcher is opened and kept for
-	// the rest of the session: it is the same list on every dashboard page, and
-	// loading it in +layout.server.ts would cost a request on every navigation.
-	let foldersPromise: Promise<ProjectFolderWithProjects[]> | null = null;
+	// The folder tree is fetched each time a switcher opens rather than once a
+	// session: projects are created, renamed, cloned and deleted from other
+	// pages, other tabs and by other people, and a list kept for the session
+	// went stale. Not in +layout.server.ts either, which would cost a request on
+	// every navigation. The last list is kept, so a reopened switcher shows it
+	// at once while the fresh one loads.
+	let lastFolders: ProjectFolderWithProjects[] | null = null;
 
-	function loadFolders() {
-		foldersPromise ??= Folders.getFolders().then(({ data, error }) => {
-			if (error) {
-				// Let the next open retry rather than caching the failure.
-				foldersPromise = null;
-				throw error;
-			}
-			return data ?? [];
-		});
-		return foldersPromise;
+	async function loadFolders() {
+		const { data, error } = await Folders.getFolders();
+		if (error) throw error;
+		lastFolders = data ?? [];
+		return lastFolders;
 	}
 </script>
 
@@ -39,6 +37,7 @@
 	let highlighted = $state(0);
 	let folders = $state<ProjectFolderWithProjects[] | null>(null);
 	let failed = $state(false);
+	let requests = 0;
 	// Row elements by project id, so scrolling the highlighted row into view does
 	// not depend on list indices that shift as the search filters.
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- written from an attachment, read from a key handler; nothing renders from it
@@ -68,9 +67,18 @@
 		highlighted = 0;
 		failed = false;
 		revealed = false;
+		folders = lastFolders;
+		// Only the latest open's answer is taken: a slow one from an earlier
+		// open must not land on top of it.
+		const request = ++requests;
 		loadFolders().then(
-			(data) => (folders = data),
-			() => (failed = true)
+			(data) => {
+				if (request === requests) folders = data;
+			},
+			() => {
+				// A stale list is still a list; only say it failed with nothing to show.
+				if (request === requests && !folders) failed = true;
+			}
 		);
 	}
 

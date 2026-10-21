@@ -4,6 +4,7 @@
 
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { Projects } from '$lib/api';
 	import type { ProjectLanguage } from '$lib/api/types.gen';
 
 	let {
@@ -20,7 +21,32 @@
 
 	let open = $state(false);
 
-	let current = $derived(languages.find((l) => l.code === languageCode));
+	/**
+	 * The project's languages as of the last open.
+	 *
+	 * `languages` comes from the layout load, which re-runs on navigation and on
+	 * this tab's own edits, but not when a language is added or removed in
+	 * another tab or by a collaborator. So opening the menu asks again, showing
+	 * the layout's list until the answer is in. The answer is kept only while
+	 * the layout's list is the one it replaced: a newer load -- a navigation,
+	 * another project -- is at least as fresh, and wins.
+	 */
+	let fresh = $state.raw<{ basis: ProjectLanguage[]; languages: ProjectLanguage[] } | null>(null);
+	let list = $derived(fresh?.basis === languages ? fresh.languages : languages);
+	let requests = 0;
+
+	let current = $derived(list.find((l) => l.code === languageCode));
+
+	function onOpenChange(next: boolean) {
+		if (!next) return;
+		const request = ++requests;
+		const basis = languages;
+		Projects.getProject({ path: { project_id: projectId } }).then(({ data }) => {
+			// Only the latest open's answer, and a failure keeps what is shown.
+			if (request === requests && data?.available_languages)
+				fresh = { basis, languages: data.available_languages };
+		});
+	}
 
 	function select(language: ProjectLanguage) {
 		open = false;
@@ -38,7 +64,7 @@
 	}
 </script>
 
-<Popover.Root bind:open>
+<Popover.Root bind:open {onOpenChange}>
 	<Popover.Trigger
 		class="flex cursor-pointer items-center gap-2 rounded-md border-none bg-transparent px-2 py-1 text-xs text-light hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
 		aria-label="Switch language"
@@ -61,7 +87,7 @@
 								Switch language
 							</div>
 							<div class="py-1" role="listbox" aria-label="Languages">
-								{#each languages as language (language.code)}
+								{#each list as language (language.code)}
 									<button
 										type="button"
 										role="option"
