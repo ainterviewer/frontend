@@ -4,6 +4,19 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.5] - 2026-10-22
+
+### Breaking Changes
+
+- (errors) Needs the backend's section_not_found code.
+
+### Internal
+
+- (api) Regenerate the SDK with section_not_found
+- (errors) Report every failed SDK call through toastApiError [**breaking**]
+- Ignore vitest's browser-mode attachments
+- (explore) Hover a code row before clicking its actions
+
 ## [0.9.4] - 2026-10-22
 
 ### Breaking Changes
