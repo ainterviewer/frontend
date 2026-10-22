@@ -3345,7 +3345,6 @@ export const zProjectPublic = z.object({
     owner_id: z.string(),
     n_interviews: z.int().nullish(),
     available_languages: z.array(zProjectLanguage).nullish(),
-    tests: z.array(zTestSetupPublic).nullish(),
     owner: zUserPublic
 });
 

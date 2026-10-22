@@ -4766,10 +4766,6 @@ export type ProjectPublic = {
      * Available Languages
      */
     available_languages?: Array<ProjectLanguage> | null;
-    /**
-     * Tests
-     */
-    tests?: Array<TestSetupPublic> | null;
     owner: UserPublic;
 };
 
