@@ -26,7 +26,11 @@ export default defineConfig({
 					browser: {
 						enabled: true,
 						provider: playwright(),
-						instances: [{ browser: 'chromium', headless: true }]
+						instances: [{ browser: 'chromium', headless: true }],
+						// Font Awesome glyphs are CSS content, which Chromium folds into
+						// the accessible name, so "Expand all" is really "<glyph> Expand
+						// all". Vitest 5 matches names exactly by default.
+						locators: { exact: false }
 					},
 					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
 					exclude: ['src/lib/server/**']

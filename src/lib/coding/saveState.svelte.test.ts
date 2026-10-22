@@ -14,12 +14,12 @@ const book = (saving: boolean) =>
  * here. The heights are stood in for instead -- what matters is whether the
  * indicator's position depends on them, and the real icons differ.
  */
-function boxes(saving: boolean, wrapper: string) {
+async function boxes(saving: boolean, wrapper: string) {
 	document.body.innerHTML = '';
 	const host = document.createElement('div');
 	host.className = wrapper;
 	document.body.append(host);
-	render(SaveState, { book: book(saving) });
+	await render(SaveState, { book: book(saving) });
 	host.append(document.body.querySelector('span')!);
 	const icon = host.querySelector('i')!;
 	icon.style.display = 'inline-block';
@@ -28,9 +28,9 @@ function boxes(saving: boolean, wrapper: string) {
 	return { top: span.getBoundingClientRect().top - host.getBoundingClientRect().top };
 }
 
-test('the indicator stays put when a save swaps its icon', () => {
+test('the indicator stays put when a save swaps its icon', async () => {
 	// In a plain block, which is the demanding case: an inline-level indicator
 	// would be aligned by the icon's baseline and drop down the line as soon as
 	// the taller glyph arrived.
-	expect(boxes(true, '').top).toBeCloseTo(boxes(false, '').top, 1);
+	expect((await boxes(true, '')).top).toBeCloseTo((await boxes(false, '')).top, 1);
 });

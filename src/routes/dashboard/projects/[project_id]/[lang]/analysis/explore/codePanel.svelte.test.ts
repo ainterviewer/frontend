@@ -20,9 +20,9 @@ import { type CoverageAxes, defaultCoverage } from './explore';
  * pane draws without a save indicator and touches no network -- what is under
  * test here is the table, not where its edits go.
  */
-function renderPanel() {
+async function renderPanel() {
 	const tree = seededTree();
-	render(CodePanel, { tree });
+	await render(CodePanel, { tree });
 	return tree;
 }
 
@@ -31,7 +31,7 @@ const PANE = { width: 420, height: 700 };
 
 test('draws the codebook as a tree, opened on its branches', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderPanel();
+	await renderPanel();
 
 	// A top-level code and one of its children: the second only appears if the
 	// sub-rows survived the walk and the branch opened.
@@ -47,7 +47,7 @@ test('draws the codebook as a tree, opened on its branches', async () => {
 
 test('expand all reaches the leaves, and collapse all takes back the branches', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderPanel();
+	await renderPanel();
 
 	await page.getByRole('button', { name: 'Expand all' }).click();
 	await expect.element(page.getByText('Everyday choices as moral acts').first()).toBeVisible();
@@ -60,7 +60,7 @@ test('expand all reaches the leaves, and collapse all takes back the branches', 
 
 test('an open branch pins its own row, indented under its ancestors', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderPanel();
+	await renderPanel();
 
 	// Sticky is what keeps the reader's place in a deep branch. It is set on the
 	// row, offset by its depth, and only for a row with something open under it
@@ -81,7 +81,7 @@ test('an open branch pins its own row, indented under its ancestors', async () =
 
 test('double-clicking a row renames the code in place', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const tree = renderPanel();
+	const tree = await renderPanel();
 
 	await page.getByText('Who is responsible').first().dblClick();
 
@@ -96,7 +96,7 @@ test('double-clicking a row renames the code in place', async () => {
 
 test('adding a code opens the branch it lands in and starts naming it', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const tree = renderPanel();
+	const tree = await renderPanel();
 
 	await page.getByRole('button', { name: 'Expand all' }).click();
 	await page.getByText('Everyday choices as moral acts').first().click();
@@ -117,7 +117,7 @@ test('a chevron closes its own branch and leaves every other one alone', async (
 	// `onExpandedChange` gave it, which was the table's own copy and not the
 	// pane's -- so one chevron closed the whole tree and nothing would reopen.
 	await page.viewport(PANE.width, PANE.height);
-	renderPanel();
+	await renderPanel();
 
 	await page.getByRole('button', { name: 'Collapse Who is responsible' }).click();
 
@@ -170,7 +170,7 @@ async function dragOnto(from: string, to: string, fraction: number) {
 
 test('dragging a code onto another nests it, and leaves the tree open', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const tree = renderPanel();
+	const tree = await renderPanel();
 
 	// The middle of a row means "under this one".
 	await dragOnto('Rapport', 'Positioning oneself', 0.5);
@@ -190,7 +190,7 @@ test('dragging a code onto another nests it, and leaves the tree open', async ()
 
 test('dragging onto a row’s edge reorders without changing the parent', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const tree = renderPanel();
+	const tree = await renderPanel();
 
 	const before = tree.codes.find((code) => code.name === 'Elaboration')?.parentId;
 	// The top of a row means "into the gap above it".
@@ -211,10 +211,10 @@ test('dragging onto a row’s edge reorders without changing the parent', async 
  * one out. `codeFilter.test.ts` covers what gets written; this covers that the
  * row is wired to it and says which state it is in.
  */
-function renderFiltering(keyword = '') {
+async function renderFiltering(keyword = '') {
 	const tree = seededTree();
 	const box = $state({ keyword });
-	render(CodePanel, {
+	await render(CodePanel, {
 		tree,
 		get keyword() {
 			return box.keyword;
@@ -228,7 +228,7 @@ function renderFiltering(keyword = '') {
 
 test('filtering by a leaf writes its reference into the keyword box', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const box = renderFiltering();
+	const box = await renderFiltering();
 
 	await page.getByRole('button', { name: 'Filter to The state and regulation' }).click();
 
@@ -237,7 +237,7 @@ test('filtering by a leaf writes its reference into the keyword box', async () =
 
 test('filtering by a branch takes the branch', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const box = renderFiltering();
+	const box = await renderFiltering();
 
 	// The label says so before the click does it: a branch picked from a
 	// codebook almost always means the branch.
@@ -250,7 +250,7 @@ test('filtering by a branch takes the branch', async () => {
 
 test('a filtering row says so, and a second click takes it back out', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const box = renderFiltering();
+	const box = await renderFiltering();
 
 	const on = page.getByRole('button', { name: 'Filter to The state and regulation' });
 	await on.click();
@@ -264,7 +264,7 @@ test('a filtering row says so, and a second click takes it back out', async () =
 
 test('a reference already in the box is shown as filtering without a click', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderFiltering('code:"The state and regulation"');
+	await renderFiltering('code:"The state and regulation"');
 
 	await expect
 		.element(page.getByRole('button', { name: 'Stop filtering by The state and regulation' }))
@@ -273,7 +273,7 @@ test('a reference already in the box is shown as filtering without a click', asy
 
 test('filtering by a second code narrows to both', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const box = renderFiltering('kids');
+	const box = await renderFiltering('kids');
 
 	await page.getByRole('button', { name: 'Filter to The state and regulation' }).click();
 
@@ -288,10 +288,10 @@ test('filtering by a second code narrows to both', async () => {
  * `explore.test.ts` covers what a combination means; these cover that the rows
  * set the axes and that a recognised combination says its name.
  */
-function renderCoverage(coverage: CoverageAxes = defaultCoverage()) {
+async function renderCoverage(coverage: CoverageAxes = defaultCoverage()) {
 	const tree = seededTree();
 	const box = $state<{ coverage: CoverageAxes }>({ coverage });
-	render(CodePanel, {
+	await render(CodePanel, {
 		tree,
 		get coverage() {
 			return box.coverage;
@@ -305,7 +305,7 @@ function renderCoverage(coverage: CoverageAxes = defaultCoverage()) {
 
 test('each row sets its own axis', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const box = renderCoverage();
+	const box = await renderCoverage();
 
 	const mine = page.getByRole('group', { name: 'Mine' });
 	await mine.getByRole('button', { name: 'Uncoded', exact: true }).click();
@@ -318,7 +318,7 @@ test('each row sets its own axis', async () => {
 
 test('a recognised combination says what it is called', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderCoverage({ mine: 'none', others: 'any', join: 'and' });
+	await renderCoverage({ mine: 'none', others: 'any', join: 'and' });
 
 	// "mine: uncoded, others: coded" is the second-coder pass, and says so to
 	// nobody until it is named.
@@ -327,7 +327,7 @@ test('a recognised combination says what it is called', async () => {
 
 test('a combination with no name says nothing', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderCoverage({ mine: null, others: 'none', join: 'or' });
+	await renderCoverage({ mine: null, others: 'none', join: 'or' });
 
 	await expect.element(page.getByText('To review', { exact: false })).not.toBeInTheDocument();
 	await expect.element(page.getByText('Only me', { exact: false })).not.toBeInTheDocument();
@@ -335,7 +335,7 @@ test('a combination with no name says nothing', async () => {
 
 test('the operator turns the grid into its own complement', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const box = renderCoverage({ mine: 'any', others: 'any', join: 'and' });
+	const box = await renderCoverage({ mine: 'any', others: 'any', join: 'and' });
 
 	// "Coded by both" is the quadrant; flipping the operator asks for its
 	// complement, which is "somebody has coded this" -- the one reading a
@@ -348,7 +348,7 @@ test('the operator turns the grid into its own complement', async () => {
 
 test('the operator says so when it is joining nothing', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderCoverage({ mine: 'any', others: null, join: 'and' });
+	await renderCoverage({ mine: 'any', others: null, join: 'and' });
 
 	// `or` over one condition is that condition, so until both rows are set it
 	// decides nothing and should not look as though it does.
@@ -357,7 +357,7 @@ test('the operator says so when it is joining nothing', async () => {
 
 test('the operator divides on the line between Coded and Uncoded', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderCoverage({ mine: 'any', others: 'any', join: 'and' });
+	await renderCoverage({ mine: 'any', others: 'any', join: 'and' });
 
 	// Alignment is the whole point of where it sits, and it is held by
 	// mirroring the segments' own labels rather than by a measured offset --
@@ -387,7 +387,7 @@ test('the operator divides on the line between Coded and Uncoded', async () => {
 
 test('the operator stays out of the way until both rows are set', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderCoverage({ mine: 'none', others: 'any', join: 'and' });
+	await renderCoverage({ mine: 'none', others: 'any', join: 'and' });
 
 	await expect.element(page.getByText('Set both rows to join them')).not.toBeInTheDocument();
 });
@@ -399,10 +399,10 @@ test('the operator stays out of the way until both rows are set', async () => {
  * rule the pane owns -- which of the two numbers a row shows, and when it
  * shows both.
  */
-function renderCounted(counts: Record<string, { count: number; subtree: number }>) {
+async function renderCounted(counts: Record<string, { count: number; subtree: number }>) {
 	const tree = seededTree();
 	const idOf = (name: string) => tree.codes.find((code) => code.name === name)?.id ?? '';
-	render(CodePanel, {
+	await render(CodePanel, {
 		tree,
 		countOf: (id: string) => {
 			const entry = Object.entries(counts).find(([name]) => idOf(name) === id);
@@ -414,7 +414,7 @@ function renderCounted(counts: Record<string, { count: number; subtree: number }
 
 test('a leaf shows one number', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderCounted({ 'The state and regulation': { count: 4, subtree: 4 } });
+	await renderCounted({ 'The state and regulation': { count: 4, subtree: 4 } });
 
 	await expect.element(page.getByText('4', { exact: true }).first()).toBeVisible();
 	// Not the wide form: the two numbers agree, and `4 · 4` is width this pane
@@ -424,14 +424,14 @@ test('a leaf shows one number', async () => {
 
 test('a branch shows its own count beside the branch total', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderCounted({ 'Who is responsible': { count: 2, subtree: 9 } });
+	await renderCounted({ 'Who is responsible': { count: 2, subtree: 9 } });
 
 	await expect.element(page.getByText('2 · 9').first()).toBeVisible();
 });
 
 test('a code nothing in view carries shows no badge at all', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderCounted({});
+	await renderCounted({});
 
 	// Drawn as nothing rather than as a zero, so the rows with ink on them are
 	// the ones with something to say.
@@ -440,7 +440,7 @@ test('a code nothing in view carries shows no badge at all', async () => {
 
 test('a group shows only its branch, because it is never applied', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderCounted({ 'How the interview went': { count: 0, subtree: 12 } });
+	await renderCounted({ 'How the interview went': { count: 0, subtree: 12 } });
 
 	await expect.element(page.getByText('12', { exact: true }).first()).toBeVisible();
 	// `0 · 12` is what the ordinary rule would print, and the zero says nothing:
@@ -456,11 +456,11 @@ test('a group shows only its branch, because it is never applied', async () => {
  * reports which was chosen on which code; what either does to the list is the
  * page's.
  */
-function renderSearchable(counts: Record<string, { count: number; subtree: number }> = {}) {
+async function renderSearchable(counts: Record<string, { count: number; subtree: number }> = {}) {
 	const tree = seededTree();
 	const idOf = (name: string) => tree.codes.find((code) => code.name === name)?.id ?? '';
 	const chosen: { action: string; name: string; subtree?: boolean }[] = [];
-	render(CodePanel, {
+	await render(CodePanel, {
 		tree,
 		countOf: (id: string) => {
 			const entry = Object.entries(counts).find(([name]) => idOf(name) === id);
@@ -474,7 +474,7 @@ function renderSearchable(counts: Record<string, { count: number; subtree: numbe
 
 test('a row offers both ways of searching from its code', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const chosen = renderSearchable({ 'The state and regulation': { count: 3, subtree: 3 } });
+	const chosen = await renderSearchable({ 'The state and regulation': { count: 3, subtree: 3 } });
 
 	await page.getByRole('button', { name: 'Search from The state and regulation' }).click();
 	await page.getByText('Search by definition').click();
@@ -484,7 +484,7 @@ test('a row offers both ways of searching from its code', async () => {
 
 test('finding more like a branch takes the branch', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const chosen = renderSearchable({ 'Who is responsible': { count: 1, subtree: 9 } });
+	const chosen = await renderSearchable({ 'Who is responsible': { count: 1, subtree: 9 } });
 
 	await page.getByRole('button', { name: 'Search from Who is responsible' }).click();
 	await page.getByText('Find more like these').click();
@@ -496,7 +496,7 @@ test('finding more like a branch takes the branch', async () => {
 
 test('a code nothing carries cannot be asked what it is like', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderSearchable();
+	await renderSearchable();
 
 	await page.getByRole('button', { name: 'Search from The state and regulation' }).click();
 
@@ -507,7 +507,7 @@ test('a code nothing carries cannot be asked what it is like', async () => {
 
 test('the menu is absent where there is nothing for it to search', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderPanel();
+	await renderPanel();
 
 	// The pane is also drawn against a codebook with no corpus behind it, and
 	// an action that goes nowhere is worse than one that is not offered.
@@ -525,7 +525,7 @@ test('the menu is absent where there is nothing for it to search', async () => {
  */
 test('escape lets go of the selected row', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const tree = renderPanel();
+	const tree = await renderPanel();
 
 	await page.getByText('Who is responsible').first().click();
 	expect(tree.selectedId).not.toBeNull();
@@ -536,7 +536,7 @@ test('escape lets go of the selected row', async () => {
 
 test('clicking away from the pane lets go too', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const tree = renderPanel();
+	const tree = await renderPanel();
 
 	await page.getByText('Who is responsible').first().click();
 	expect(tree.selectedId).not.toBeNull();
@@ -547,7 +547,7 @@ test('clicking away from the pane lets go too', async () => {
 
 test('the pane’s own controls are not “away”', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const tree = renderPanel();
+	const tree = await renderPanel();
 
 	await page.getByText('Who is responsible').first().click();
 	const selected = tree.selectedId;
@@ -564,7 +564,7 @@ test('the pane’s own controls are not “away”', async () => {
 
 test('a score shows its kind as an icon alone', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderPanel();
+	await renderPanel();
 
 	// The range used to print beside the icon, which made one row wider than
 	// its siblings and pushed the column out of line. Still on hover.
@@ -581,7 +581,7 @@ test('a score shows its kind as an icon alone', async () => {
  */
 test('the count and the row’s actions share one slot', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderSearchable({ 'The state and regulation': { count: 3, subtree: 3 } });
+	await renderSearchable({ 'The state and regulation': { count: 3, subtree: 3 } });
 
 	const row = [...document.querySelectorAll<HTMLElement>('[data-code-row]')].find((one) =>
 		one.textContent?.includes('The state and regulation')
@@ -600,7 +600,7 @@ test('a row that is filtering shows its buttons at rest', async () => {
 	await page.viewport(PANE.width, PANE.height);
 	const tree = seededTree();
 	const name = 'The state and regulation';
-	render(CodePanel, { tree, keyword: `code:"${name}"` });
+	await render(CodePanel, { tree, keyword: `code:"${name}"` });
 
 	const pressed = [...document.querySelectorAll<HTMLElement>('[aria-pressed="true"]')].find(
 		(button) => button.getAttribute('aria-label')?.includes(name)
@@ -622,7 +622,7 @@ test('a row that is filtering shows its buttons at rest', async () => {
  */
 test('selecting a row opens its definition and memo', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	renderPanel();
+	await renderPanel();
 
 	await expect.element(page.getByRole('textbox', { name: 'Definition' })).not.toBeInTheDocument();
 
@@ -634,7 +634,7 @@ test('selecting a row opens its definition and memo', async () => {
 
 test('typing a memo writes it to the codebook', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const tree = renderPanel();
+	const tree = await renderPanel();
 
 	await page.getByText('Who is responsible').first().click();
 	await page.getByRole('textbox', { name: 'Memo' }).fill('#43 is borderline');
@@ -645,7 +645,7 @@ test('typing a memo writes it to the codebook', async () => {
 
 test('escape leaves the field before it lets go of the row', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const tree = renderPanel();
+	const tree = await renderPanel();
 
 	await page.getByText('Who is responsible').first().click();
 	const memo = page.getByRole('textbox', { name: 'Memo' });
@@ -663,7 +663,7 @@ test('escape leaves the field before it lets go of the row', async () => {
 
 test('clicking away while writing does not close the notes', async () => {
 	await page.viewport(PANE.width, PANE.height);
-	const tree = renderPanel();
+	const tree = await renderPanel();
 
 	await page.getByText('Who is responsible').first().click();
 	await page.getByRole('textbox', { name: 'Definition' }).click();

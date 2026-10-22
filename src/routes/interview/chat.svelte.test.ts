@@ -96,7 +96,7 @@ describe('ChatClient security interventions', () => {
 describe('SecurityInterventionModal', () => {
 	test('offers both answers when the respondent may override', async () => {
 		const onRespond = vi.fn();
-		render(SecurityInterventionModal, {
+		await render(SecurityInterventionModal, {
 			intervention: { action: 'end_interview', respondent_override: true, text: TEXT },
 			lang: 'EN',
 			onRespond,
@@ -112,7 +112,7 @@ describe('SecurityInterventionModal', () => {
 
 	test('can only be acknowledged otherwise', async () => {
 		const onDismiss = vi.fn();
-		render(SecurityInterventionModal, {
+		await render(SecurityInterventionModal, {
 			intervention: { action: 'end_interview', respondent_override: false, text: TEXT },
 			lang: 'DA',
 			onRespond: () => {},

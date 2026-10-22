@@ -38,7 +38,7 @@ function renderPage() {
 
 test('draws the seed codebook and opens the inspector on a code', async () => {
 	await page.viewport(DESKTOP.width, DESKTOP.height);
-	renderPage();
+	await renderPage();
 
 	const responsibility = page.getByText('Who is responsible').first();
 	await expect.element(responsibility).toBeVisible();
@@ -62,7 +62,7 @@ test('draws the seed codebook and opens the inspector on a code', async () => {
 
 test('renaming a code in the inspector renames it on the canvas', async () => {
 	await page.viewport(DESKTOP.width, DESKTOP.height);
-	renderPage();
+	await renderPage();
 
 	await page.getByText('The interview as a situation').first().click();
 	const name = page.getByPlaceholder('Untitled code');
@@ -74,7 +74,7 @@ test('renaming a code in the inspector renames it on the canvas', async () => {
 
 test('no ancestor clips the connection handles', async () => {
 	await page.viewport(DESKTOP.width, DESKTOP.height);
-	renderPage();
+	await renderPage();
 
 	await expect.element(page.getByText('Who is responsible').first()).toBeVisible();
 
@@ -104,7 +104,7 @@ test('leaves the caret where the reader is typing', async () => {
 	// The one that steals focus is only visible as this: a field that takes the
 	// first character of a word and loses the rest to the name at the top.
 	await page.viewport(DESKTOP.width, DESKTOP.height);
-	renderPage();
+	await renderPage();
 
 	await page.getByText('Who is responsible').first().click();
 
@@ -118,7 +118,7 @@ test('leaves the caret where the reader is typing', async () => {
 
 test('keeps focus in a score range while it is being typed', async () => {
 	await page.viewport(DESKTOP.width, DESKTOP.height);
-	renderPage();
+	await renderPage();
 
 	await page.getByText('Elaboration').first().click();
 
@@ -135,7 +135,7 @@ test('a single click opens a code without taking the caret', async () => {
 	// on selection makes the panel unusable with the keyboard: every subsequent
 	// keystroke has to be aimed back at the field it was taken from.
 	await page.viewport(DESKTOP.width, DESKTOP.height);
-	renderPage();
+	await renderPage();
 
 	await page.getByText('Who is responsible').first().click();
 
@@ -146,7 +146,7 @@ test('a single click opens a code without taking the caret', async () => {
 
 test('a double click on a node selects the name, ready to be typed over', async () => {
 	await page.viewport(DESKTOP.width, DESKTOP.height);
-	renderPage();
+	await renderPage();
 
 	await page.getByText('Who is responsible').first().dblClick();
 
@@ -160,7 +160,7 @@ test('a double click on a node selects the name, ready to be typed over', async 
 
 test('a new code lands in the name field', async () => {
 	await page.viewport(DESKTOP.width, DESKTOP.height);
-	renderPage();
+	await renderPage();
 
 	await page.getByRole('button', { name: 'New code' }).click();
 
@@ -174,7 +174,7 @@ test('a rename does not outlive the panel that was asked for it', async () => {
 	// request that is never consumed comes back to life with the next panel:
 	// rename, click away, click anything, and an ordinary click opened an edit.
 	await page.viewport(DESKTOP.width, DESKTOP.height);
-	renderPage();
+	await renderPage();
 
 	await page.getByText('Who is responsible').first().dblClick();
 	await expect.element(page.getByPlaceholder('Untitled code')).toHaveValue('Who is responsible');
