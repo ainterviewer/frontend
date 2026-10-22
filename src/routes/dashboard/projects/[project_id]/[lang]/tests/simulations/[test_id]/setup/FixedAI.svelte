@@ -63,8 +63,7 @@
 					bind:value={personas[index]}
 					placeholder="Describe persona {index + 1}..."
 					rows="3"
-					class="w-full flex-1 rounded border border-gray-300 p-2"
-				></textarea>
+					class="w-full flex-1 rounded border border-gray-300 p-2"></textarea>
 				{#if personas.length > 1}
 					<button
 						onclick={() => removePersona(index)}

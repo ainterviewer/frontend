@@ -265,8 +265,7 @@
 						: 'What counts as this code? What does not?'}
 				oninput={(event) =>
 					tree.patch(code.id, { definition: event.currentTarget.value }, `def:${code.id}`)}
-				onblur={() => tree.endEdit()}
-			></textarea>
+				onblur={() => tree.endEdit()}></textarea>
 		</label>
 
 		<label class="block">
@@ -283,8 +282,7 @@
 				placeholder="Why this code exists, what it borders on, what you are unsure about."
 				oninput={(event) =>
 					tree.patch(code.id, { memo: event.currentTarget.value }, `memo:${code.id}`)}
-				onblur={() => tree.endEdit()}
-			></textarea>
+				onblur={() => tree.endEdit()}></textarea>
 		</label>
 
 		{#if children.length > 0}

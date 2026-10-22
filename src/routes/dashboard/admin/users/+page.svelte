@@ -478,8 +478,7 @@
 							e.preventDefault();
 							e.currentTarget.blur();
 						}
-					}}
-				></textarea>
+					}}></textarea>
 			</div>
 		</div>
 		<div class="mt-4 border-t border-gray-200 pt-4">

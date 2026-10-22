@@ -558,8 +558,7 @@
 				class:min-h-25={!surveyActive}
 				class:min-h-10={surveyActive}
 				oninput={handleInput}
-				onkeydown={handleKeydown}
-			></textarea>
+				onkeydown={handleKeydown}></textarea>
 		{/if}
 
 		<!-- Send Button -->

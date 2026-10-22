@@ -31,8 +31,7 @@
 		class={[className, untranslated && 'untranslated']}
 		placeholder={hint}
 		title={untranslated ? 'Not translated yet; the default language is shown as a hint' : undefined}
-		bind:value={text[guideStore.lang]}
-	></textarea>
+		bind:value={text[guideStore.lang]}></textarea>
 {:else}
 	<input
 		{id}

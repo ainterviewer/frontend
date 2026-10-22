@@ -382,8 +382,7 @@
 							class={[
 								'block w-full resize-y rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
 								isUntranslated(welcome.text, language) && 'border-amber-400 bg-amber-50'
-							]}
-						></textarea>
+							]}></textarea>
 					</div>
 
 					<div>

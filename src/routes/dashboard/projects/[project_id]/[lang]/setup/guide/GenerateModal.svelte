@@ -108,8 +108,7 @@
 					id="prompt"
 					class="h-36 w-full resize-none rounded-lg border border-gray-300 bg-gray-50 p-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/30 focus:outline-none"
 					{placeholder}
-					bind:value={generatePrompt}
-				></textarea>
+					bind:value={generatePrompt}></textarea>
 				<p class="mt-2 text-xs text-gray-400">
 					Tip: press <kbd
 						class="rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 font-mono text-[11px] text-gray-600"

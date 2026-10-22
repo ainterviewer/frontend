@@ -148,8 +148,7 @@
 								id="decision-{i}-description"
 								bind:value={decision.description}
 								rows="2"
-								class={inputClass}
-							></textarea>
+								class={inputClass}></textarea>
 						</div>
 
 						<div class="mt-4">
@@ -162,8 +161,7 @@
 								id="decision-{i}-action-text"
 								bind:value={decision.action_text}
 								rows="2"
-								class={inputClass}
-							></textarea>
+								class={inputClass}></textarea>
 						</div>
 
 						<div class="mt-4 flex items-center justify-between">

@@ -369,8 +369,7 @@
 					rows="1"
 					disabled={isStreaming}
 					class="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none disabled:opacity-50"
-					style="max-height: 100px; overflow-y: auto;"
-				></textarea>
+					style="max-height: 100px; overflow-y: auto;"></textarea>
 				<button
 					onclick={send}
 					disabled={isStreaming || !input.trim()}

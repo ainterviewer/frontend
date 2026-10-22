@@ -139,8 +139,7 @@
 							e,
 							() => submitEdit(entry.id),
 							() => (editingId = null)
-						)}
-				></textarea>
+						)}></textarea>
 				<div class="mt-1 flex justify-end gap-2">
 					<button
 						type="button"
@@ -210,8 +209,7 @@
 								e,
 								() => submitReply(root.id),
 								() => (replyingTo = null)
-							)}
-					></textarea>
+							)}></textarea>
 					<div class="mt-1 flex justify-end gap-2">
 						<button
 							type="button"
@@ -245,8 +243,7 @@
 			rows={compact ? 2 : 3}
 			placeholder="Add a comment..."
 			class="w-full resize-none rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-			onkeydown={(e) => onKeydown(e, submitNew)}
-		></textarea>
+			onkeydown={(e) => onKeydown(e, submitNew)}></textarea>
 		<div class="mt-2 flex items-center justify-between">
 			<span class="text-[10px] text-gray-400">⌘/Ctrl + Enter to post</span>
 			<button
