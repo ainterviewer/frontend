@@ -1871,6 +1871,14 @@ export const zParticipantUpdate = z.object({
 });
 
 /**
+ * ParticipantUploadResponse
+ */
+export const zParticipantUploadResponse = z.object({
+    participants: z.array(zParticipantPublic),
+    skipped_rows: z.int()
+});
+
+/**
  * PlatformRelease
  *
  * What the app shows a user: no components, no versions, no hashes.
@@ -3394,14 +3402,6 @@ export const zUpdatePasswordRequest = z.object({
 });
 
 /**
- * UploadParticipantsResponse
- */
-export const zUploadParticipantsResponse = z.object({
-    participants: z.array(zParticipantPublic),
-    skipped_rows: z.int()
-});
-
-/**
  * UserAdminPublic
  */
 export const zUserAdminPublic = z.object({
@@ -4764,7 +4764,7 @@ export const zUploadParticipantsQuery = z.object({
 /**
  * Successful Response
  */
-export const zUploadParticipantsResponse2 = zUploadParticipantsResponse;
+export const zUploadParticipantsResponse = zParticipantUploadResponse;
 
 export const zGetParticipantEmailTemplatePath = z.object({
     project_id: z.string().nullable(),

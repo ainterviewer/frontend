@@ -4648,6 +4648,20 @@ export type ParticipantUpdate = {
 };
 
 /**
+ * ParticipantUploadResponse
+ */
+export type ParticipantUploadResponse = {
+    /**
+     * Participants
+     */
+    participants: Array<ParticipantPublic>;
+    /**
+     * Skipped Rows
+     */
+    skipped_rows: number;
+};
+
+/**
  * PlatformManifest
  */
 export type PlatformManifest = {
@@ -6164,20 +6178,6 @@ export type UpdatePasswordRequest = {
      * Current Password
      */
     current_password: string;
-};
-
-/**
- * UploadParticipantsResponse
- */
-export type UploadParticipantsResponse = {
-    /**
-     * Participants
-     */
-    participants: Array<ParticipantPublic>;
-    /**
-     * Skipped Rows
-     */
-    skipped_rows: number;
 };
 
 /**
@@ -9964,10 +9964,10 @@ export type UploadParticipantsResponses = {
     /**
      * Successful Response
      */
-    200: UploadParticipantsResponse;
+    200: ParticipantUploadResponse;
 };
 
-export type UploadParticipantsResponse2 = UploadParticipantsResponses[keyof UploadParticipantsResponses];
+export type UploadParticipantsResponse = UploadParticipantsResponses[keyof UploadParticipantsResponses];
 
 export type GetParticipantEmailTemplateData = {
     body?: never;
