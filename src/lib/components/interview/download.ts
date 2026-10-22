@@ -1,7 +1,6 @@
-import { toast } from 'svelte-sonner';
-
 import { Projects as Api } from '$lib/api';
 import type { ExportMessagesRequest } from '$lib/api/types.gen';
+import { toastApiError } from '$lib/utils/toast';
 
 export type ExportFormat = NonNullable<ExportMessagesRequest['format']>;
 
@@ -33,8 +32,7 @@ export async function downloadInterviews(
 	});
 
 	if (error || !data) {
-		console.error('Error downloading interviews:', error);
-		toast.error('Failed to download');
+		toastApiError(error, 'Failed to download');
 		return false;
 	}
 

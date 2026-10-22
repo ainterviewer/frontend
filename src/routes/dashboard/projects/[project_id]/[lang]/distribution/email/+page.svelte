@@ -26,7 +26,7 @@
 		placeholdersToNodes
 	} from '$lib/tiptap/placeholders';
 	import { TemplatePlaceholderNode } from '$lib/tiptap/templatePlaceholder';
-	import { errorDetail } from '$lib/utils/errors';
+	import { toastApiError } from '$lib/utils/toast';
 
 	let { data }: { data: { available_languages: ProjectLanguage[] } } = $props();
 
@@ -184,7 +184,7 @@
 					});
 		contentRevision.take(project_id, 'emails', res.response);
 		if (res.error) {
-			toast.error(`Failed to load ${k} email template`);
+			toastApiError(res.error, `Failed to load ${k} email template`);
 			states[k].templateHtml = '';
 			states[k].subject = '';
 		} else {
@@ -217,7 +217,7 @@
 					});
 		states[k].sending = false;
 		if (res.error) {
-			toast.error(errorDetail(res.error, 'Failed to send emails'));
+			toastApiError(res.error, 'Failed to send emails');
 			return;
 		}
 		const sent = res.data?.sent.length ?? 0;
@@ -240,7 +240,7 @@
 		});
 		exporting = false;
 		if (res.error || !res.data) {
-			toast.error(errorDetail(res.error, 'Failed to export bundle'));
+			toastApiError(res.error, 'Failed to export the bundle');
 			return;
 		}
 		const url = window.URL.createObjectURL(res.data as Blob);
@@ -302,7 +302,7 @@
 					});
 		states[k].uploadingAttachments = false;
 		if (res.error) {
-			toast.error('Failed to upload attachments');
+			toastApiError(res.error, 'Failed to upload attachments');
 			return;
 		}
 		states[k].attachments = res.data ?? [];
@@ -322,7 +322,7 @@
 					});
 		states[k].deletingAttachment = null;
 		if (res.error) {
-			toast.error('Failed to delete attachment');
+			toastApiError(res.error, 'Failed to delete attachment');
 			return;
 		}
 		states[k].attachments = res.data ?? [];

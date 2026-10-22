@@ -2,6 +2,10 @@ import { toast } from 'svelte-sonner';
 
 import { client } from '../api/client.gen';
 
+// Only a fetch that never got a response is reported here: there is no body
+// to say why, and the page cannot tell it from any other failure. Every
+// answered error -- a 5xx included -- is reported once, by the page that made
+// the call, through `toastApiError`.
 client.interceptors.error.use((error, response, _request, _options) => {
 	if (typeof window === 'undefined') {
 		return error;
@@ -15,13 +19,8 @@ client.interceptors.error.use((error, response, _request, _options) => {
 	}
 
 	if (!response) {
-		// Network error / fetch failed
-		toast.error('Network error — please check your connection');
-		return error;
-	}
-
-	if (response.status >= 500) {
-		toast.error('Something went wrong — please try again');
+		// One toast for a burst of requests failing together.
+		toast.error('Network error — please check your connection', { id: 'network-error' });
 	}
 
 	return error;

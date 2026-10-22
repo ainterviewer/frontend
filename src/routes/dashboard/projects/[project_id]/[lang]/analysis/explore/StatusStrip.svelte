@@ -5,6 +5,7 @@
 	import { Analysis } from '$lib/api';
 	import type { EmbeddingStatus } from '$lib/api/types.gen';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import { KINDS } from './explore';
 
@@ -53,7 +54,7 @@
 
 		if (error || !data) {
 			running = false;
-			toast.error('Could not start the backfill');
+			toastApiError(error, 'Failed to start the backfill');
 			return;
 		}
 
@@ -71,7 +72,7 @@
 			// changed is never queued — so nothing to do is the normal answer for a
 			// project that is already covered, not a failure.
 			running = false;
-			toast.success('Everything is already embedded');
+			toast.info('Everything is already embedded');
 			return;
 		}
 

@@ -1,10 +1,10 @@
 import { untrack } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-import { toast } from 'svelte-sonner';
 
 import { Analysis } from '$lib/api';
 import type { MessageCommentPublic, MessagePublic } from '$lib/api/types.gen';
 import { countComments } from '$lib/utils/coding';
+import { toastApiError } from '$lib/utils/toast';
 
 /**
  * The discussion threads of the messages currently on screen.
@@ -98,8 +98,7 @@ export class MessageComments {
 			this.#threads.set(messageId, thread);
 			return true;
 		} catch (e) {
-			console.error('Failed to add comment:', e);
-			toast.error(parentId ? 'Could not post reply' : 'Could not post comment');
+			toastApiError(e, parentId ? 'Failed to post the reply' : 'Failed to post the comment');
 			return false;
 		} finally {
 			this.#pending.delete(messageId);
@@ -131,8 +130,7 @@ export class MessageComments {
 			);
 			return true;
 		} catch (e) {
-			console.error('Failed to update comment:', e);
-			toast.error('Could not save the change');
+			toastApiError(e, 'Failed to save the change');
 			return false;
 		} finally {
 			this.#pending.delete(messageId);
@@ -160,8 +158,7 @@ export class MessageComments {
 			);
 			return true;
 		} catch (e) {
-			console.error('Failed to delete comment:', e);
-			toast.error('Could not delete the comment');
+			toastApiError(e, 'Failed to delete the comment');
 			return false;
 		} finally {
 			this.#pending.delete(messageId);

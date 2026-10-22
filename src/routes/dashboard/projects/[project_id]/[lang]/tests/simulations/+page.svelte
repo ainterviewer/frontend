@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Synthesize, type TestType } from '$lib/api';
 	import Info from '$lib/components/Info.svelte';
 	import { formatDate, formatDay } from '$lib/utils/datetime';
+	import { toastApiError } from '$lib/utils/toast';
 
 	let { data } = $props();
 
@@ -76,8 +75,7 @@
 			headers: { 'Content-Type': 'application/json' }
 		});
 		if (error) {
-			console.error('Failed to delete tests', error);
-			toast.error('Failed to delete test');
+			toastApiError(error, 'Failed to delete test');
 			return;
 		}
 		await invalidateAll();
@@ -97,8 +95,7 @@
 			}
 		});
 		if (error) {
-			console.error('Failed to create test', error);
-			toast.error('Failed to create test');
+			toastApiError(error, 'Failed to create test');
 			isCreating = false;
 			return;
 		}

@@ -9,7 +9,6 @@
 		type Updater
 	} from '@tanstack/svelte-table';
 	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	import { page } from '$app/state';
 	import type {
@@ -34,6 +33,7 @@
 		facetOptions
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
+	import { toastApiError } from '$lib/utils/toast';
 
 	// State
 	let interviews = $state<InterviewSummaryPublic[]>([]);
@@ -330,8 +330,7 @@
 			body: selectionBody()
 		});
 		if (deleteError) {
-			console.error('Error deleting test results:', deleteError);
-			toast.error('Failed to delete test results');
+			toastApiError(deleteError, 'Failed to delete test results');
 			return;
 		}
 		table.resetRowSelection(true);
@@ -374,8 +373,7 @@
 					body: { interview_ids: [id] }
 				}).then((result) => {
 					if (result.error) {
-						console.error('Error deleting result:', result.error);
-						toast.error('Failed to delete result');
+						toastApiError(result.error, 'Failed to delete result');
 						return;
 					}
 					loadInterviews();

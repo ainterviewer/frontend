@@ -11,6 +11,7 @@
 	import { presence } from '$lib/collab/presence.svelte';
 	import { ConsentModal } from '$lib/components/modals';
 	import ConsentPreview from '$lib/components/preview/ConsentPreview.svelte';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
@@ -167,8 +168,7 @@
 		});
 		translating = false;
 		if (error || !data) {
-			console.error('Failed to translate', error);
-			toast.error('Failed to translate the missing text');
+			toastApiError(error, 'Failed to translate the missing text');
 			return;
 		}
 		toast.success(`Translated the missing ${languageName} text`);

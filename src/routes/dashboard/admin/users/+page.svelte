@@ -16,14 +16,14 @@
 		sortableTime
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	let users = $derived(data.users as UserAdminPublic[]);
+	let users = $derived(data.users);
 	let loading = $state(false);
-	let error = $derived<string | null>(data.error);
 	const expandedRows = new SvelteSet<string>();
 	const savingNote = new SvelteSet<string>();
 	const savingUser = new SvelteSet<string>();
@@ -141,16 +141,12 @@
 			});
 
 			if (response.error) {
-				toast.error('Failed to update user');
-				console.error(response.error);
+				toastApiError(response.error, 'Failed to update user');
 			} else {
 				delete edits[user.id];
 				await invalidateAll();
 				toast.success('User updated');
 			}
-		} catch (err) {
-			toast.error('An unexpected error occurred');
-			console.error(err);
 		} finally {
 			savingUser.delete(user.id);
 		}
@@ -170,9 +166,6 @@
 		loading = true;
 		try {
 			await invalidateAll();
-		} catch (e) {
-			error = 'An unexpected error occurred';
-			console.error(e);
 		} finally {
 			loading = false;
 		}
@@ -181,21 +174,15 @@
 	async function deleteUser(id: string) {
 		if (!confirm('Are you sure you want to delete this user?')) return;
 
-		try {
-			const response = await Admin.deleteUser({
-				query: { user_id: id }
-			});
+		const response = await Admin.deleteUser({
+			query: { user_id: id }
+		});
 
-			if (response.error) {
-				toast.error('Failed to delete user');
-				console.error(response.error);
-			} else {
-				await invalidateAll();
-				toast.success('User deleted');
-			}
-		} catch (e) {
-			toast.error('An unexpected error occurred');
-			console.error(e);
+		if (response.error) {
+			toastApiError(response.error, 'Failed to delete user');
+		} else {
+			await invalidateAll();
+			toast.success('User deleted');
 		}
 	}
 
@@ -212,15 +199,11 @@
 			});
 
 			if (response.error) {
-				toast.error('Failed to save note');
-				console.error(response.error);
+				toastApiError(response.error, 'Failed to save note');
 			} else {
 				await invalidateAll();
 				toast.success('Note saved');
 			}
-		} catch (e) {
-			toast.error('An unexpected error occurred');
-			console.error(e);
 		} finally {
 			savingNote.delete(user.id);
 		}
@@ -338,16 +321,6 @@
 		<i class="fa-solid fa-arrows-rotate {loading ? 'animate-spin' : ''}"></i>
 	</button>
 </div>
-
-{#if error}
-	<div
-		class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
-		role="alert"
-	>
-		<strong class="font-bold">Error!</strong>
-		<span class="block sm:inline">{error}</span>
-	</div>
-{/if}
 
 <DataTable
 	{table}

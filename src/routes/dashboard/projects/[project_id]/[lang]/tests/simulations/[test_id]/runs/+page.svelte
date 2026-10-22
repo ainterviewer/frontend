@@ -18,7 +18,7 @@
 		sortableTime
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
-	import { errorDetail } from '$lib/utils/errors';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 	import type { PageData } from './$types';
@@ -133,13 +133,13 @@
 
 	async function runTest() {
 		if (delayBeforeAnswersRandom > delayBeforeAnswers) {
-			toast.error('The random delay cannot be greater than the base delay.');
+			toast.error('The random delay cannot be greater than the base delay');
 			return;
 		}
 
 		// The button is disabled while this is set; this guards other callers.
 		if (nInterviewsError) {
-			toast.error(nInterviewsError);
+			toastApiError(nInterviewsError, nInterviewsError);
 			return;
 		}
 
@@ -153,18 +153,13 @@
 				: null
 		};
 
-		const { error: runError, response } = await Synthesize.runSyntheticTest({
+		const { error: runError } = await Synthesize.runSyntheticTest({
 			path: { project_id: projectId, test_id: testId },
 			body
 		});
 		if (runError) {
-			console.error('Failed to run test', runError);
-			// 429 is the demo limit; its detail says how many are already running.
-			toast.error(
-				response?.status === 429
-					? errorDetail(runError, 'Failed to run test')
-					: 'Failed to run test'
-			);
+			// A 429 is the demo limit; its detail says how many are already running.
+			toastApiError(runError, 'Failed to run test');
 			running = false;
 			return;
 		}

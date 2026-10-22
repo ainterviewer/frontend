@@ -97,7 +97,9 @@
 		} catch {
 			// Clipboard access can be refused outright; the URL is selectable in
 			// the field either way, so say so rather than failing silently.
-			toast.error('Could not copy — select the link and copy it manually.');
+			toast.error('Failed to copy the link', {
+				description: 'Select it in the field and copy it yourself.'
+			});
 		}
 	}
 

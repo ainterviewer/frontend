@@ -11,6 +11,7 @@
 	import { presence } from '$lib/collab/presence.svelte';
 	import { WelcomeModal } from '$lib/components/modals';
 	import WelcomePreview from '$lib/components/preview/WelcomePreview.svelte';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
@@ -127,7 +128,7 @@
 		if (videoFile !== file) return;
 		videoFile = null;
 		if (upload.error || !upload.data) {
-			toast.error('Error when uploading the video.');
+			toastApiError(upload.error, 'Failed to upload the video');
 			return;
 		}
 		welcome.video_file_name = upload.data;
@@ -253,8 +254,7 @@
 		});
 		translating = false;
 		if (error || !data) {
-			console.error('Failed to translate', error);
-			toast.error('Failed to translate the missing text');
+			toastApiError(error, 'Failed to translate the missing text');
 			return;
 		}
 		toast.success(`Translated the missing ${languageName} text`);

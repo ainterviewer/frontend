@@ -13,6 +13,7 @@
 		NO_PAGINATION,
 		sortableText
 	} from '$lib/components/table/features';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
 	import type { Instance, PoolSettings, PoolSettingsPatch, SettingsByService } from './types';
@@ -210,7 +211,7 @@
 			body: { services: targets, settings: effectivePatch } as unknown as never
 		});
 		if (updateError) {
-			toast.error('Failed to update settings');
+			toastApiError(updateError, 'Failed to update settings');
 			return;
 		}
 
@@ -233,8 +234,7 @@
 				path: { full_path: 'instances/start-all' }
 			});
 			if (startError) {
-				error = 'Failed to start instances';
-				toast.error(error);
+				toastApiError(startError, 'Failed to start instances');
 				return;
 			}
 		} else {
@@ -247,8 +247,7 @@
 			);
 			const failed = results.filter((r) => r.error);
 			if (failed.length > 0) {
-				error = `Failed to start ${failed.length} instance(s)`;
-				toast.error(error);
+				toastApiError(failed[0].error, `Failed to start ${failed.length} instance(s)`);
 				return;
 			}
 		}
@@ -265,8 +264,7 @@
 				path: { full_path: 'instances/stop-all' }
 			});
 			if (stopError) {
-				error = 'Failed to stop instances';
-				toast.error(error);
+				toastApiError(stopError, 'Failed to stop instances');
 				return;
 			}
 		} else {
@@ -279,8 +277,7 @@
 			);
 			const failed = results.filter((r) => r.error);
 			if (failed.length > 0) {
-				error = `Failed to stop ${failed.length} instance(s)`;
-				toast.error(error);
+				toastApiError(failed[0].error, `Failed to stop ${failed.length} instance(s)`);
 				return;
 			}
 		}

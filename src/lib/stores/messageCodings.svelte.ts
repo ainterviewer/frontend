@@ -1,10 +1,9 @@
 import { untrack } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-import { toast } from 'svelte-sonner';
 
 import { Analysis } from '$lib/api';
 import type { CodingCreate, CodingPublic, MessagePublic } from '$lib/api/types.gen';
-import { apiError } from '$lib/utils/errors';
+import { toastApiError } from '$lib/utils/toast';
 
 /**
  * The codings of the messages currently on screen.
@@ -154,8 +153,7 @@ export class MessageCodings {
 			this.#byMessage.set(messageId, [...this.get(messageId), data]);
 			return true;
 		} catch (e) {
-			console.error('Failed to apply code:', e);
-			toast.error(detail(e) ?? 'Could not apply the code');
+			toastApiError(e, 'Failed to apply the code');
 			return false;
 		} finally {
 			this.#pending.delete(messageId);
@@ -178,8 +176,7 @@ export class MessageCodings {
 			);
 			return true;
 		} catch (e) {
-			console.error('Failed to change the coding:', e);
-			toast.error(detail(e) ?? 'Could not save the change');
+			toastApiError(e, 'Failed to save the change');
 			return false;
 		} finally {
 			this.#pending.delete(messageId);
@@ -200,8 +197,7 @@ export class MessageCodings {
 			);
 			return true;
 		} catch (e) {
-			console.error('Failed to remove the coding:', e);
-			toast.error(detail(e) ?? 'Could not remove the coding');
+			toastApiError(e, 'Failed to remove the coding');
 			return false;
 		} finally {
 			this.#pending.delete(messageId);
@@ -225,16 +221,4 @@ export class MessageCodings {
 			}
 		}
 	}
-}
-
-/**
- * The server's own words, when it refused for a reason worth repeating.
- *
- * The codings API says exactly what is wrong -- a score off its scale, a group
- * that is not applied to anything, a passage already carrying the code -- and
- * replacing that with "could not apply the code" would hide the one sentence
- * that tells the coder what to do instead.
- */
-function detail(error: unknown): string | null {
-	return apiError(error)?.detail ?? null;
 }

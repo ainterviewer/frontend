@@ -24,7 +24,7 @@
 		sortableTime
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
-	import { apiError, errorMessage } from '$lib/utils/errors';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
 
@@ -32,7 +32,6 @@
 
 	let invitations = $derived(data.invitations as InvitationPublic[]);
 	let isLoading = $state(false);
-	let error = $derived<string | null>(data.error);
 	let showCreateForm = $state(false);
 	let editingInvitation = $state<InvitationPublic | null>(null);
 
@@ -66,25 +65,17 @@
 		invitations[0]?.invitation_link.split('?')[0] ?? `${page.url.origin}/sign-up`
 	);
 
-	/** The backend's message for a failed request: its `detail`, or the first
-	 * validation error's (an alias in the wrong shape answers 422). */
-	function responseError(err: unknown, fallback: string): string {
-		const body = apiError(err);
-		if (body) return body.detail;
-		const detail = (err as { detail?: unknown }).detail;
-		if (Array.isArray(detail) && typeof detail[0]?.msg === 'string') return detail[0].msg;
-		return fallback;
+	/** Rerun the load. Unguarded, for an action that already holds `isLoading`. */
+	async function refresh() {
+		await invalidateAll();
+		clearSelections();
 	}
 
 	async function loadInvitations() {
 		if (isLoading) return;
 		isLoading = true;
-		error = null;
 		try {
-			await invalidateAll();
-			clearSelections();
-		} catch (e) {
-			error = errorMessage(e) || 'Failed to fetch invitations';
+			await refresh();
 		} finally {
 			isLoading = false;
 		}
@@ -107,14 +98,13 @@
 				body: { ids }
 			});
 			if (response.error) {
-				throw new Error(String(response.error));
+				throw response.error;
 			}
-			isLoading = false;
-			await loadInvitations();
+			await refresh();
 			toast.success('Invitations deleted');
 		} catch (e) {
-			error = `Failed to delete invitations: ${errorMessage(e)}`;
-			toast.error(error);
+			toastApiError(e, 'Failed to delete invitations');
+		} finally {
 			isLoading = false;
 		}
 	}
@@ -151,16 +141,15 @@
 
 			const response = await Admin.createInvitation({ body });
 			if (response.error) {
-				throw new Error(responseError(response.error, 'Request failed'));
+				throw response.error;
 			}
-			isLoading = false;
 			showCreateForm = false;
 			resetForm();
-			await loadInvitations();
+			await refresh();
 			toast.success('Invitation created');
 		} catch (e) {
-			error = `Failed to create invitation: ${errorMessage(e)}`;
-			toast.error(error);
+			toastApiError(e, 'Failed to create invitation');
+		} finally {
 			isLoading = false;
 		}
 	}
@@ -262,16 +251,15 @@
 				body
 			});
 			if (response.error) {
-				throw new Error(responseError(response.error, 'Request failed'));
+				throw response.error;
 			}
-			isLoading = false;
 			showCreateForm = false;
 			resetForm();
-			await loadInvitations();
+			await refresh();
 			toast.success('Invitation updated');
 		} catch (e) {
-			error = `Failed to update invitation: ${errorMessage(e)}`;
-			toast.error(error);
+			toastApiError(e, 'Failed to update invitation');
+		} finally {
 			isLoading = false;
 		}
 	}
@@ -281,7 +269,7 @@
 			await navigator.clipboard.writeText(link);
 			toast.success('Link copied to clipboard');
 		} catch {
-			toast.error('Failed to copy link');
+			toast.error('Failed to copy the link');
 		}
 	}
 
@@ -446,16 +434,6 @@
 		</button>
 	</div>
 </div>
-
-{#if error}
-	<div
-		class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
-		role="alert"
-	>
-		<strong class="font-bold">Error:</strong>
-		<span class="block sm:inline">{error}</span>
-	</div>
-{/if}
 
 {#if showCreateForm}
 	<div class="mb-4 rounded-lg bg-white p-6 shadow-md">

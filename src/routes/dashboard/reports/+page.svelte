@@ -3,11 +3,11 @@
 
 	import { invalidateAll } from '$app/navigation';
 	import { Reports } from '$lib/api';
-	import type { MessageReportRowPublic, ReportStatus } from '$lib/api/types.gen';
+	import type { ReportStatus } from '$lib/api/types.gen';
 	import ReportQueue from '$lib/components/reports/ReportQueue.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
-	import { errorMessage } from '$lib/utils/errors';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
 
@@ -31,18 +31,19 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let reports = $derived(data.reports as MessageReportRowPublic[]);
+	let reports = $derived(data.reports);
 	let isLoading = $state(false);
-	let error = $derived<string | null>(data.error);
+
+	/** Rerun the load. Unguarded, for an action that already holds `isLoading`. */
+	async function refresh() {
+		await invalidateAll();
+	}
 
 	async function reload() {
 		if (isLoading) return;
 		isLoading = true;
-		error = null;
 		try {
-			await invalidateAll();
-		} catch (e) {
-			error = errorMessage(e) || 'Failed to fetch reports';
+			await refresh();
 		} finally {
 			isLoading = false;
 		}
@@ -73,7 +74,7 @@
 
 	async function setStatus(ids: string[], status: ReportStatus) {
 		if (ids.length === 0) {
-			toast.error('Please select one or more reports.');
+			toast.error('Please select one or more reports');
 			return;
 		}
 
@@ -84,21 +85,20 @@
 					path: { project_id },
 					body: { ids: projectIds, status }
 				});
-				if (response.error) throw new Error(String(response.error));
+				if (response.error) throw response.error;
 			}
-			isLoading = false;
-			await reload();
+			await refresh();
 			toast.success(`Reports ${STATUS_VERB[status]}`);
 		} catch (e) {
-			error = `Failed to update reports: ${errorMessage(e)}`;
-			toast.error(error);
+			toastApiError(e, 'Failed to update reports');
+		} finally {
 			isLoading = false;
 		}
 	}
 
 	async function markRead(ids: string[]) {
 		if (ids.length === 0) {
-			toast.error('Please select one or more reports.');
+			toast.error('Please select one or more reports');
 			return;
 		}
 
@@ -109,14 +109,13 @@
 					path: { project_id },
 					body: { ids: projectIds }
 				});
-				if (response.error) throw new Error(String(response.error));
+				if (response.error) throw response.error;
 			}
-			isLoading = false;
-			await reload();
+			await refresh();
 			toast.success('Reports marked as read');
 		} catch (e) {
-			error = `Failed to mark reports as read: ${errorMessage(e)}`;
-			toast.error(error);
+			toastApiError(e, 'Failed to mark reports as read');
+		} finally {
 			isLoading = false;
 		}
 	}
@@ -131,7 +130,6 @@
 	rows={reports}
 	track="owner"
 	loading={isLoading}
-	{error}
 	onSetStatus={setStatus}
 	onMarkRead={markRead}
 	onRefresh={reload}

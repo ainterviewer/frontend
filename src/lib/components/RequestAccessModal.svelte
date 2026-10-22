@@ -27,22 +27,15 @@
 		const message = formData.get('message') as string;
 		const organization = formData.get('organization') as string;
 
-		try {
-			const { error } = await Auth.requestAccess({
-				body: { name, email, message, organization }
-			});
+		const { error } = await Auth.requestAccess({
+			body: { name, email, message, organization }
+		});
+		isLoading = false;
 
-			if (error) {
-				errorMessage = errorDetail(error, 'Invalid request');
-				return;
-			}
-		} catch {
-			errorMessage = 'An unexpected error occurred';
+		if (error) {
+			errorMessage = errorDetail(error, 'Invalid request');
 			return;
-		} finally {
-			isLoading = false;
 		}
-
 		close();
 	}
 </script>

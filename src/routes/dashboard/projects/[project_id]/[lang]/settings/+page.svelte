@@ -3,6 +3,7 @@
 
 	import { invalidateAll } from '$app/navigation';
 	import { Projects } from '$lib/api';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
 
@@ -26,8 +27,7 @@
 			body: { title }
 		});
 		if (error) {
-			console.error(error);
-			toast.error('Failed to update title');
+			toastApiError(error, 'Failed to update title');
 		} else {
 			await invalidateAll();
 			toast.success('Title updated');
@@ -43,8 +43,7 @@
 			body: defaultLanguage
 		});
 		if (error) {
-			console.error(error);
-			toast.error('Failed to update language');
+			toastApiError(error, 'Failed to update language');
 		} else {
 			await invalidateAll();
 			toast.success('Default language updated');
@@ -60,8 +59,7 @@
 			body: { status: newStatus }
 		});
 		if (error) {
-			console.error(error);
-			toast.error('Failed to change status');
+			toastApiError(error, 'Failed to change status');
 		} else {
 			await invalidateAll();
 			toast.success(`Project status changed to ${newStatus}`);

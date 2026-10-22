@@ -1,4 +1,6 @@
-import { Admin, type UserAdminPublic } from '$lib/api';
+import { error } from '@sveltejs/kit';
+
+import { Admin } from '$lib/api';
 
 import type { PageServerLoad } from './$types';
 
@@ -17,17 +19,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const demoLimitDefaults = defaultsResponse.data ?? null;
 
 	if (response.error) {
-		console.error(response.error);
-		return {
-			users: [],
-			demoLimitDefaults,
-			error: 'Failed to load users'
-		};
+		console.error('Failed to load users', response.error);
+		error(500, 'Failed to load users');
 	}
 
 	return {
-		users: (response.data as unknown as UserAdminPublic[]) || [],
-		demoLimitDefaults,
-		error: null
+		users: response.data ?? [],
+		demoLimitDefaults
 	};
 };

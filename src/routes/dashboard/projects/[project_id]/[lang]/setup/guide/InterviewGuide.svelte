@@ -16,6 +16,8 @@
 	import { presence } from '$lib/collab/presence.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
+	import { hasErrorCode } from '$lib/utils/errors';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import { downloadUnifiedSetupJson } from '../exportJson';
 	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
@@ -136,54 +138,53 @@
 
 	let activeId = $state('');
 
-	async function handleGenerateGuide(prompt: string) {
+	async function handleGenerateGuide(prompt: string): Promise<boolean> {
 		const { data, error } = await Projects.generateGuide({
 			path: { project_id: projectId, lang: lang },
 			body: { prompt }
 		});
 		if (error || !data) {
-			console.error('Failed to generate guide', error);
-			toast.error('Failed to generate guide');
-			return;
+			toastApiError(error, 'Failed to generate guide');
+			return false;
 		}
 		// The server saved it, replacing the guide in every language (the others
 		// show as untranslated); it reaches the doc, and this page, from there.
+		return true;
 	}
 
-	async function handleGenerateSection(prompt: string) {
+	async function handleGenerateSection(prompt: string): Promise<boolean> {
 		const { data, error } = await Projects.generateGuideSection({
 			path: { project_id: projectId, lang: lang },
 			body: { prompt }
 		});
 
 		if (error || !data) {
-			console.error('Failed to generate section', error);
-			toast.error('Failed to generate section');
-			return;
+			toastApiError(error, 'Failed to generate section');
+			return false;
 		}
 
 		addLocalSections([data], guideStore.localSections, guideStore.localQuestions);
+		return true;
 	}
 
-	async function handleGenerateQuestion(prompt: string) {
+	async function handleGenerateQuestion(prompt: string): Promise<boolean> {
 		const sectionId = generatingQuestionSectionId;
-		if (!sectionId) return;
+		if (!sectionId) return false;
 
-		const { data, error, response } = await Projects.generateSectionQuestion({
+		const { data, error } = await Projects.generateSectionQuestion({
 			path: { project_id: projectId, lang: lang },
 			body: { prompt, section_id: sectionId }
 		});
 
 		if (error || !data) {
-			console.error('Failed to generate question', error);
 			// The server generates against the saved guide, which a section added
 			// since the last save is not in yet.
-			toast.error(
-				response?.status === 404
-					? 'The new section is still being saved; try again in a moment'
-					: 'Failed to generate question'
-			);
-			return;
+			if (hasErrorCode(error, 'section_not_found')) {
+				toast.error('The new section is still being saved; try again in a moment');
+			} else {
+				toastApiError(error, 'Failed to generate question');
+			}
+			return false;
 		}
 
 		if (!guideStore.localQuestions[sectionId]) {
@@ -194,6 +195,7 @@
 		);
 
 		generatingQuestionSectionId = null;
+		return true;
 	}
 
 	// Before publishing: what is published is what the server has, so this
@@ -216,8 +218,7 @@
 		});
 		translating = false;
 		if (error || !data) {
-			console.error('Failed to translate', error);
-			toast.error('Failed to translate the missing text');
+			toastApiError(error, 'Failed to translate the missing text');
 			return;
 		}
 		toast.success(`Translated the missing ${languageName} text`);

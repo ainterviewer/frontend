@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-
 	let {
 		open = $bindable(),
 		title = 'Generate',
@@ -11,7 +9,8 @@
 		open: boolean;
 		title?: string;
 		description?: string;
-		onGenerate: (prompt: string) => Promise<void>;
+		/** Whether it worked; a failure is the caller's to report. */
+		onGenerate: (prompt: string) => Promise<boolean>;
 		placeholder?: string;
 	} = $props();
 
@@ -22,12 +21,10 @@
 	async function handleGenerate() {
 		generating = true;
 		try {
-			await onGenerate(generatePrompt);
+			// On a failure the dialog stays open with the prompt, to try again.
+			if (!(await onGenerate(generatePrompt))) return;
 			open = false;
 			generatePrompt = '';
-		} catch (e) {
-			console.error('Failed to generate', e);
-			toast.error('Failed to generate. Please try again.');
 		} finally {
 			generating = false;
 		}

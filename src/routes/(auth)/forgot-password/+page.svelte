@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { Auth } from '$lib/api';
+	import { errorDetail, hasErrorCode } from '$lib/utils/errors';
 
 	let email = $state('');
 	let isLoading = $state(false);
@@ -15,18 +16,16 @@
 		try {
 			const { error, response } = await Auth.forgotPassword({ body: { email } });
 
-			if (response?.status === 502) {
+			if (hasErrorCode(error, 'email_send_failed')) {
 				errorMessage = "We couldn't send the reset email. Please try again.";
 			} else if (response?.status === 422) {
 				errorMessage = 'Please enter a valid email address.';
 			} else if (error) {
-				errorMessage = 'An unexpected error occurred';
+				errorMessage = errorDetail(error, 'An unexpected error occurred');
 			} else {
 				// The backend answers the same whether or not the account exists.
 				isSuccess = true;
 			}
-		} catch {
-			errorMessage = 'An unexpected error occurred';
 		} finally {
 			isLoading = false;
 		}

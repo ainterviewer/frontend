@@ -8,7 +8,9 @@
 		ContentVersionSummaryPublic,
 		ProjectLanguage
 	} from '$lib/api/types.gen';
+	import { hasErrorCode } from '$lib/utils/errors';
 	import { portal } from '$lib/utils/portal';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import { contentRevision, saveWithRevision } from './revision.svelte';
 	import VersionPreview from './VersionPreview.svelte';
@@ -44,12 +46,15 @@
 
 	async function load(offset = 0) {
 		loading = true;
-		const { data } = await Versions.listContentVersions({
+		const { data, error } = await Versions.listContentVersions({
 			path: { project_id: projectId },
 			query: { limit: PAGE, offset }
 		});
 		loading = false;
-		if (!data) return;
+		if (error || !data) {
+			toastApiError(error, 'Failed to load the history');
+			return;
+		}
 		versions = offset === 0 ? data.items : [...versions, ...data.items];
 		total = data.total;
 	}
@@ -64,9 +69,9 @@
 			})
 		);
 		saving = false;
-		if (result.response?.status === 412) return;
+		if (hasErrorCode(result.error, 'stale_revision')) return;
 		if (result.error) {
-			toast.error('Failed to save the version');
+			toastApiError(result.error, 'Failed to save the version');
 			return;
 		}
 		label = '';
@@ -79,7 +84,7 @@
 			path: { project_id: projectId, version_id: version.id }
 		});
 		if (error || !data) {
-			toast.error('Failed to load the version');
+			toastApiError(error, 'Failed to load the version');
 			return;
 		}
 		preview = data;
@@ -100,9 +105,9 @@
 				headers
 			})
 		);
-		if (result.response?.status === 412) return;
+		if (hasErrorCode(result.error, 'stale_revision')) return;
 		if (result.error) {
-			toast.error('Failed to restore');
+			toastApiError(result.error, 'Failed to restore');
 			return;
 		}
 		// Every editor page holds its own copy of the draft, loaded once.

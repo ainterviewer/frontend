@@ -34,7 +34,7 @@ async function serverSideRefresh(fetchFn: typeof fetch, cookies: Cookies): Promi
 	}
 
 	if (!res.ok) {
-		if (res.status === 401 || res.status === 403 || (res.status >= 400 && res.status < 500)) {
+		if (res.status >= 400 && res.status < 500) {
 			return 'unauthorized';
 		}
 		return 'unavailable';

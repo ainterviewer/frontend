@@ -84,7 +84,9 @@
 			// No clipboard access (an insecure origin, say): leave the link
 			// selected so it can be copied by hand.
 			linkInput?.select();
-			toast.error('Could not copy the link. It is selected, so you can copy it yourself.');
+			toast.error('Failed to copy the link', {
+				description: 'It is selected, so you can copy it yourself.'
+			});
 		}
 	}
 </script>

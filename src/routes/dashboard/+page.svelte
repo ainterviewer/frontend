@@ -21,7 +21,7 @@
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { addSkipOnboardingButton, PREVIEW_BADGE, tourSteps } from '$lib/onboarding';
 	import { formatDate, formatDay } from '$lib/utils/datetime';
-	import { errorDetail } from '$lib/utils/errors';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
 	import {
@@ -368,7 +368,7 @@
 	async function handleCreateProject() {
 		if (!createProjectFolderId) {
 			console.error('No folder selected for project creation.');
-			toast.error('Please select a folder to create a project in.');
+			toast.error('Please select a folder to create a project in');
 			return;
 		}
 		const { error } = await Folders.createProject({
@@ -381,8 +381,7 @@
 			}
 		});
 		if (error) {
-			console.error('Failed to create project:', error);
-			toast.error('Failed to create project');
+			toastApiError(error, 'Failed to create project');
 			return;
 		}
 		// Reset and refresh
@@ -402,8 +401,7 @@
 			}
 		});
 		if (error) {
-			console.error('Failed to create folder:', error);
-			toast.error('Failed to create folder');
+			toastApiError(error, 'Failed to create folder');
 			return;
 		}
 		// Reset and refresh
@@ -477,8 +475,7 @@
 				body: { title: editFolderName }
 			});
 			if (error) {
-				console.error('Failed to edit folder:', error);
-				toast.error('Failed to edit folder');
+				toastApiError(error, 'Failed to edit folder');
 				return;
 			}
 		}
@@ -489,8 +486,7 @@
 				query: { user_id: collaborator.user.id }
 			});
 			if (error) {
-				console.error('Failed to remove collaborator:', error);
-				toast.error(`Failed to remove ${collaborator.user.email}`);
+				toastApiError(error, `Failed to remove ${collaborator.user.email}`);
 				await loadData();
 				return;
 			}
@@ -502,8 +498,7 @@
 				query: { user_id: collaborator.userId!, role: collaborator.role }
 			});
 			if (error) {
-				console.error('Failed to update role:', error);
-				toast.error(`Failed to update the role of ${collaborator.email}`);
+				toastApiError(error, `Failed to update the role of ${collaborator.email}`);
 				await loadData();
 				return;
 			}
@@ -515,8 +510,7 @@
 				body: { email: collaborator.email, role: collaborator.role }
 			});
 			if (error) {
-				console.error('Failed to add collaborator:', error);
-				toast.error(`Failed to add ${collaborator.email}`);
+				toastApiError(error, `Failed to add ${collaborator.email}`);
 				await loadData();
 				return;
 			}
@@ -538,8 +532,7 @@
 			body: { archived }
 		});
 		if (error) {
-			console.error('Failed to archive folder:', error);
-			toast.error(archived ? 'Failed to archive folder' : 'Failed to unarchive folder');
+			toastApiError(error, archived ? 'Failed to archive folder' : 'Failed to unarchive folder');
 			return;
 		}
 		await loadData();
@@ -557,8 +550,7 @@
 			body: { archived }
 		});
 		if (error) {
-			console.error('Failed to archive project:', error);
-			toast.error(archived ? 'Failed to archive project' : 'Failed to unarchive project');
+			toastApiError(error, archived ? 'Failed to archive project' : 'Failed to unarchive project');
 			return;
 		}
 		await loadData();
@@ -583,8 +575,7 @@
 			path: { folder_id: selectedFolder.id }
 		});
 		if (error) {
-			console.error('Failed to delete folder:', error);
-			toast.error('Failed to delete folder');
+			toastApiError(error, 'Failed to delete folder');
 			return;
 		}
 		isDeleteFolderModalOpen = false;
@@ -606,8 +597,7 @@
 			path: { project_id: selectedProject.id }
 		});
 		if (error) {
-			console.error('Failed to delete project:', error);
-			toast.error('Failed to delete project');
+			toastApiError(error, 'Failed to delete project');
 			return;
 		}
 		isDeleteProjectModalOpen = false;
@@ -620,8 +610,7 @@
 			path: { project_id: project.id }
 		});
 		if (error) {
-			console.error('Failed to clone project:', error);
-			toast.error('Failed to clone project');
+			toastApiError(error, 'Failed to clone project');
 			return;
 		}
 		activeDropdown = null;
@@ -652,8 +641,7 @@
 		if (error) {
 			// Drop the optimistic move so the card snaps back to its old folder.
 			pendingMoves = remaining;
-			console.error('Failed to move project:', error);
-			toast.error(errorDetail(error, 'Failed to move project'));
+			toastApiError(error, 'Failed to move project');
 			return;
 		}
 

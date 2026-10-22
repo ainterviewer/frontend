@@ -31,10 +31,10 @@
 		isError = false;
 
 		try {
-			const { error, response } = await Auth.resendVerification({ body: { email } });
+			const { error } = await Auth.resendVerification({ body: { email } });
 
-			// 502 means the email failed to send — let the user retry immediately.
-			if (error || response?.status === 502) {
+			// Most likely `email_send_failed` -- let the user retry immediately.
+			if (error) {
 				isError = true;
 				message = "We couldn't send the email just now. Please try again.";
 			} else {
@@ -43,9 +43,6 @@
 				message = "If an account exists for that email, we've sent a new verification link.";
 				startCooldown();
 			}
-		} catch {
-			isError = true;
-			message = 'An unexpected error occurred. Please try again.';
 		} finally {
 			isLoading = false;
 		}

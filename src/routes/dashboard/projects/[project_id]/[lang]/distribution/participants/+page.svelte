@@ -17,6 +17,7 @@
 		sortableTime
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
+	import { toastApiError } from '$lib/utils/toast';
 
 	const project_id = $derived(page.params.project_id as string);
 	const lang = $derived(page.params.lang ?? 'en');
@@ -187,7 +188,7 @@
 			parseAs: 'blob'
 		});
 		if (exportError) {
-			toast.error('Failed to export participants');
+			toastApiError(exportError, 'Failed to export participants');
 			return;
 		}
 		if (!data) return;
@@ -221,7 +222,7 @@
 			const res = await Participants.addParticipant({ path: { project_id }, body: cleaned[0] });
 			saving = false;
 			if (res.error) {
-				toast.error('Failed to add participant');
+				toastApiError(res.error, 'Failed to add participant');
 				return;
 			}
 			toast.success('Participant added');
@@ -229,7 +230,7 @@
 			const res = await Participants.addParticipants({ path: { project_id }, body: cleaned });
 			saving = false;
 			if (res.error) {
-				toast.error('Failed to add participants');
+				toastApiError(res.error, 'Failed to add participants');
 				return;
 			}
 			toast.success(`Added ${cleaned.length} participants`);
@@ -264,7 +265,7 @@
 			}
 		});
 		if (res.error) {
-			toast.error('Failed to update participant');
+			toastApiError(res.error, 'Failed to update participant');
 			return;
 		}
 		editingId = null;
@@ -277,7 +278,7 @@
 			path: { project_id, participant_id: id }
 		});
 		if (res.error) {
-			toast.error('Failed to delete participant');
+			toastApiError(res.error, 'Failed to delete participant');
 			return;
 		}
 		// Row selection is independent state and keeps ids after the row is gone.
@@ -297,7 +298,7 @@
 			body: { participant_ids: selectedIds }
 		});
 		if (res.error) {
-			toast.error('Failed to delete participants');
+			toastApiError(res.error, 'Failed to delete participants');
 			return;
 		}
 		table.resetRowSelection(true);
@@ -312,7 +313,7 @@
 		const res = await Participants.uploadParticipants({ path: { project_id }, body: { file } });
 		input.value = '';
 		if (res.error) {
-			toast.error('Failed to upload file');
+			toastApiError(res.error, 'Failed to upload file');
 			return;
 		}
 		const skipped = res.data?.skipped_rows ?? 0;

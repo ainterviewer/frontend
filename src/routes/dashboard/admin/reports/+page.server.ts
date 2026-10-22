@@ -1,5 +1,6 @@
+import { error } from '@sveltejs/kit';
+
 import { Admin } from '$lib/api';
-import type { MessageReportRowPublic } from '$lib/api/types.gen';
 
 import type { PageServerLoad } from './$types';
 
@@ -16,15 +17,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 	});
 
 	if (response.error) {
-		console.error(response.error);
-		return {
-			reports: [] as MessageReportRowPublic[],
-			error: String(response.error)
-		};
+		console.error('Failed to load reports', response.error);
+		error(500, 'Failed to load reports');
 	}
 
 	return {
-		reports: response.data ?? [],
-		error: null
+		reports: response.data ?? []
 	};
 };

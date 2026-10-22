@@ -7,7 +7,7 @@
 	import { Auth } from '$lib/api';
 	import RequestAccessModal from '$lib/components/RequestAccessModal.svelte';
 	import ResendVerification from '$lib/components/ResendVerification.svelte';
-	import { hasErrorCode } from '$lib/utils/errors';
+	import { errorDetail, hasErrorCode } from '$lib/utils/errors';
 
 	type Step = 'credentials' | 'twoFactor' | 'notVerified';
 	let step = $state<Step>('credentials');
@@ -37,7 +37,7 @@
 		extended = formData.get('remember-me') === 'on';
 
 		try {
-			const { data, error, response } = await Auth.login({
+			const { data, error } = await Auth.login({
 				body: { email, password, extended }
 			});
 
@@ -47,16 +47,13 @@
 				step = 'twoFactor';
 			} else if (hasErrorCode(error, 'email_not_verified')) {
 				step = 'notVerified';
-			} else if (response?.status === 429) {
-				errorMessage = 'A code was just sent. Please wait a moment before trying again.';
 			} else if (error) {
-				errorMessage = 'Invalid email or password';
+				// Wrong credentials, or a code sent too recently to send another.
+				errorMessage = errorDetail(error, 'Invalid email or password');
 			} else {
 				// 200 + cookies: 2FA disabled, normal login.
 				await goto(resolve('/dashboard'));
 			}
-		} catch {
-			errorMessage = 'An unexpected error occurred';
 		} finally {
 			isLoading = false;
 		}
@@ -68,20 +65,16 @@
 		isLoading = true;
 
 		try {
-			const { error, response } = await Auth.verifyLoginCode({
+			const { error } = await Auth.verifyLoginCode({
 				body: { email, code, extended }
 			});
 
-			if (response?.status === 429) {
-				errorMessage = 'Too many attempts. Please sign in again to request a new code.';
-			} else if (error) {
-				// 403 → invalid or expired code.
-				errorMessage = 'That code is invalid or has expired.';
+			if (error) {
+				// An invalid or expired code, or too many attempts at one.
+				errorMessage = errorDetail(error, 'That code is invalid or has expired.');
 			} else {
 				await goto(resolve('/dashboard'));
 			}
-		} catch {
-			errorMessage = 'An unexpected error occurred';
 		} finally {
 			isLoading = false;
 		}

@@ -3,7 +3,7 @@
 	import { toast } from 'svelte-sonner';
 
 	import { invalidateAll } from '$app/navigation';
-	import { Admin, type Scope } from '$lib/api';
+	import { type AccessRequestPublic, Admin, type Scope } from '$lib/api';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
@@ -15,27 +15,14 @@
 		sortableTime
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
-	import { errorMessage } from '$lib/utils/errors';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
 
-	interface AccessRequest {
-		id: string;
-		name: string;
-		email: string;
-		organization: string | null;
-		status: string;
-		message: string | null;
-		created_at: string;
-		updated_at: string;
-	}
-
 	let { data }: { data: PageData } = $props();
 
-	let requests = $derived(data.requests as AccessRequest[]);
+	let requests = $derived(data.requests);
 	let isLoading = $state(false);
-	let error = $state<string | null>(null);
-	let scopeByRequest = $state<Record<string, Scope>>({});
 
 	const DEFAULT_USER_SCOPE: Scope = 'demo';
 	const scopeOptions: Scope[] = ['admin', 'user', 'demo'];
@@ -45,14 +32,14 @@
 		demo: 'bg-amber-100 text-amber-800 focus:border-amber-800 focus:ring-amber-800'
 	};
 
-	$effect(() => {
-		error = data.error;
-		scopeByRequest = Object.fromEntries(data.requests.map((r) => [r.id, DEFAULT_USER_SCOPE]));
-	});
+	/** The scope each request is granted on approval; reset when the requests reload. */
+	let scopeByRequest = $derived<Record<string, Scope>>(
+		Object.fromEntries(data.requests.map((r) => [r.id, DEFAULT_USER_SCOPE]))
+	);
 
 	/* ---------------------------------------------------------------- table */
 
-	const helper = createColumnHelper<DataTableFeatures, AccessRequest>();
+	const helper = createColumnHelper<DataTableFeatures, AccessRequestPublic>();
 
 	const columns = helper.columns([
 		helper.display({ id: 'select', enableHiding: false }),
@@ -135,15 +122,17 @@
 
 	/* --------------------------------------------------------------- actions */
 
+	/** Rerun the load. Unguarded, for an action that already holds `isLoading`. */
+	async function refresh() {
+		await invalidateAll();
+		table.resetRowSelection(true);
+	}
+
 	async function loadRequests() {
 		if (isLoading) return;
 		isLoading = true;
-		error = null;
 		try {
-			await invalidateAll();
-			table.resetRowSelection(true);
-		} catch (e) {
-			error = errorMessage(e) || 'Failed to fetch requests';
+			await refresh();
 		} finally {
 			isLoading = false;
 		}
@@ -152,7 +141,7 @@
 	async function handleAction(action: 'approve' | 'deny') {
 		const ids = selectedIds;
 		if (ids.length === 0) {
-			toast.error(`Please select one or more requests to ${action}.`);
+			toast.error(`Please select one or more requests to ${action}`);
 			return;
 		}
 
@@ -166,15 +155,13 @@
 				}
 			});
 			if (response.error) {
-				throw new Error(String(response.error));
+				throw response.error;
 			}
-			// Reset loading state so loadRequests can proceed (avoid deadlock)
-			isLoading = false;
-			await loadRequests();
+			await refresh();
 			toast.success(`Requests ${action === 'approve' ? 'approved' : 'denied'}`);
 		} catch (e) {
-			error = `Failed to ${action} requests: ${errorMessage(e)}`;
-			toast.error(error);
+			toastApiError(e, `Failed to ${action} requests`);
+		} finally {
 			isLoading = false;
 		}
 	}
@@ -182,7 +169,7 @@
 	async function handleDelete() {
 		const ids = selectedIds;
 		if (ids.length === 0) {
-			toast.error('Please select one or more requests to delete.');
+			toast.error('Please select one or more requests to delete');
 			return;
 		}
 
@@ -194,14 +181,13 @@
 		try {
 			const response = await Admin.deleteAccessRequests({ body: { ids } });
 			if (response.error) {
-				throw new Error(String(response.error));
+				throw response.error;
 			}
-			isLoading = false;
-			await loadRequests();
+			await refresh();
 			toast.success('Requests deleted');
 		} catch (e) {
-			error = `Failed to delete requests: ${errorMessage(e)}`;
-			toast.error(error);
+			toastApiError(e, 'Failed to delete requests');
+		} finally {
 			isLoading = false;
 		}
 	}
@@ -223,16 +209,6 @@
 		<i class="fa-solid fa-arrows-rotate {isLoading ? 'animate-spin' : ''}"></i>
 	</button>
 </div>
-
-{#if error}
-	<div
-		class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
-		role="alert"
-	>
-		<strong class="font-bold">Error:</strong>
-		<span class="block sm:inline">{error}</span>
-	</div>
-{/if}
 
 <DataTable
 	{table}
@@ -293,7 +269,7 @@
 				class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize
 					{request.status === 'fulfilled'
 					? 'bg-green-100 text-green-800'
-					: request.status === 'denied' || request.status === 'error'
+					: request.status === 'denied'
 						? 'bg-red-100 text-red-800'
 						: 'bg-orange-100 text-orange-800'}"
 			>

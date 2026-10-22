@@ -14,8 +14,9 @@
 
 	import { Versions } from '$lib/api';
 	import type { ProjectLanguage } from '$lib/api/types.gen';
-	import { errorDetail } from '$lib/utils/errors';
+	import { hasErrorCode } from '$lib/utils/errors';
 	import { portal } from '$lib/utils/portal';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import { contentRevision, saveWithRevision } from './revision.svelte';
 	import { allowedBumps, type Bump, BUMP_MEANING, nextVersion } from './semver';
@@ -100,9 +101,9 @@
 			})
 		);
 		publishing = false;
-		if (result.response?.status === 412) return;
+		if (hasErrorCode(result.error, 'stale_revision')) return;
 		if (result.error || !result.data) {
-			toast.error(errorDetail(result.error, 'Failed to publish'));
+			toastApiError(result.error, 'Failed to publish');
 			return;
 		}
 		dialogOpen = false;

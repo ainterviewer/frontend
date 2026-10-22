@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-
 	import type { LanguageDict } from '$lib/api';
 	import { Default } from '$lib/api';
 	import { portal } from '$lib/utils/portal';
+	import { toastApiError } from '$lib/utils/toast';
 
 	let {
 		open = $bindable(),
@@ -43,18 +42,13 @@
 		search = '';
 		loading = true;
 		error = null;
-		try {
-			const { data, error: apiError } = await Default.getLanguages();
-			if (apiError) {
-				error = 'Failed to load languages.';
-			} else if (data) {
-				languages = data;
-			}
-		} catch {
+		const { data, error: apiError } = await Default.getLanguages();
+		loading = false;
+		if (apiError || !data) {
 			error = 'Failed to load languages.';
-		} finally {
-			loading = false;
+			return;
 		}
+		languages = data;
 	}
 
 	async function handleAdd(code: string) {
@@ -63,7 +57,7 @@
 			await onAdd(code, translate);
 			open = false;
 		} catch (err) {
-			toast.error(err instanceof Error ? err.message : 'Failed to add language.');
+			toastApiError(err, 'Failed to add language');
 		} finally {
 			addingCode = null;
 		}

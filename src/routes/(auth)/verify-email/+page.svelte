@@ -16,19 +16,15 @@
 			return;
 		}
 
-		try {
-			const { error, response } = await Auth.verifyEmail({ body: { token } });
+		const { error } = await Auth.verifyEmail({ body: { token } });
 
-			if (error || !response?.ok) {
-				// 400 → invalid or expired link.
-				status = 'error';
-			} else {
-				status = 'success';
-				// Send them to sign in shortly after confirming.
-				setTimeout(() => goto(resolve('/login')), 2500);
-			}
-		} catch {
+		if (error) {
+			// 400 → invalid or expired link.
 			status = 'error';
+		} else {
+			status = 'success';
+			// Send them to sign in shortly after confirming.
+			setTimeout(() => goto(resolve('/login')), 2500);
 		}
 	}
 

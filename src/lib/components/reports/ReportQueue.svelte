@@ -52,8 +52,6 @@
 		/** Which review track this queue acts on. */
 		track: 'owner' | 'admin';
 		loading?: boolean;
-		/** Set when the rows could not be loaded; rendered above the table. */
-		error?: string | null;
 		onSetStatus: (ids: string[], status: ReportStatus) => void;
 		onMarkRead: (ids: string[]) => void;
 		onRefresh: () => void;
@@ -66,7 +64,6 @@
 		rows,
 		track,
 		loading = false,
-		error = null,
 		onSetStatus,
 		onMarkRead,
 		onRefresh,
@@ -278,16 +275,6 @@
 		<i class="fa-solid fa-arrows-rotate {loading ? 'animate-spin' : ''}"></i>
 	</button>
 </div>
-
-{#if error}
-	<div
-		class="relative mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
-		role="alert"
-	>
-		<strong class="font-bold">Error:</strong>
-		<span class="block sm:inline">{error}</span>
-	</div>
-{/if}
 
 <DataTable
 	{table}

@@ -7,6 +7,7 @@
 	import { Projects } from '$lib/api';
 	import type { ExternalParam, InterviewConfig, ProbingStrategy } from '$lib/api/types.gen';
 	import PreviewBadge from '$lib/components/PreviewBadge.svelte';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
 
@@ -76,8 +77,7 @@
 			body: config
 		});
 		if (error) {
-			console.error(error);
-			toast.error('Failed to save interview configuration');
+			toastApiError(error, 'Failed to save interview configuration');
 		} else {
 			await invalidateAll();
 			config = structuredClone(data.config ?? {});
@@ -117,8 +117,7 @@
 			body: { params: externalParams }
 		});
 		if (error) {
-			console.error(error);
-			toast.error('Failed to save external parameters');
+			toastApiError(error, 'Failed to save external parameters');
 		} else {
 			await invalidateAll();
 			externalParams = structuredClone(data.external_params ?? []);

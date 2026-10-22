@@ -9,7 +9,6 @@
 		type Updater
 	} from '@tanstack/svelte-table';
 	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	import { replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -36,6 +35,7 @@
 		facetOptions
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import ResumeLinkModal from './ResumeLinkModal.svelte';
 
@@ -359,8 +359,7 @@
 			body: selectionBody()
 		});
 		if (deleteError) {
-			console.error('Error deleting interviews:', deleteError);
-			toast.error('Failed to delete interviews');
+			toastApiError(deleteError, 'Failed to delete interviews');
 			return;
 		}
 		table.resetRowSelection(true);
@@ -403,8 +402,7 @@
 					body: { interview_ids: [id] }
 				}).then((res) => {
 					if (res.error) {
-						console.error('Failed to delete interview:', res.error);
-						toast.error('Failed to delete interview');
+						toastApiError(res.error, 'Failed to delete interview');
 						return;
 					}
 					loadInterviews();

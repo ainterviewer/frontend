@@ -19,6 +19,7 @@
 		sortableText
 	} from '$lib/components/table/features';
 	import { mainSidebarItems } from '$lib/config/sidebar';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
 
@@ -44,6 +45,7 @@
 	let isQRModalOpen = $state(false);
 
 	let selectedExperiment = $state<Experiment | null>(null);
+	let qrCode = $state<Blob | null>(null);
 	let qrCodeUrl = $state<string | null>(null);
 	let openDropdownId = $state<string | null>(null);
 	let dropdownPosition = $state<{ top: number; left: number } | null>(null);
@@ -112,41 +114,38 @@
 		isDeleteModalOpen = true;
 	}
 
+	/** Show `blob` as the QR code, releasing the URL of the one before. */
+	function showQrCode(blob: Blob | null) {
+		if (qrCodeUrl) URL.revokeObjectURL(qrCodeUrl);
+		qrCode = blob;
+		qrCodeUrl = blob && URL.createObjectURL(blob);
+	}
+
 	async function openQRModal(experiment: Experiment) {
 		selectedExperiment = experiment;
-		qrCodeUrl = null;
+		showQrCode(null);
 
-		// Fetch QR Code
-		const { data, error: fetchErr } = await Experiments.generateExperimentQr({
-			path: { experiment_id: experiment.id }
+		const { data, error } = await Experiments.generateExperimentQr({
+			path: { experiment_id: experiment.id },
+			parseAs: 'blob'
 		});
-
-		if (fetchErr) {
-			console.error('Failed to fetch QR', fetchErr);
-			// Fallback: try fetching from static endpoint
-			try {
-				const res = await fetch(`/api/experiments/${experiment.id}/qr.png`);
-				const blob = await res.blob();
-				qrCodeUrl = URL.createObjectURL(blob);
-			} catch (fallbackErr) {
-				console.error('Fallback QR fetch also failed', fallbackErr);
-				toast.error('Failed to load QR code');
-			}
-		} else if (data) {
-			const blob = data as unknown as Blob;
-			qrCodeUrl = URL.createObjectURL(blob);
+		if (error || !data) {
+			toastApiError(error, 'Failed to load the QR code');
+			return;
 		}
-
+		showQrCode(data as unknown as Blob);
 		isQRModalOpen = true;
 	}
 
-	function copyToClipboard(blob: Blob) {
+	async function copyQrCode() {
+		if (!qrCode) return;
 		try {
-			navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-			toast.success('QR Code copied to clipboard');
+			await navigator.clipboard.write([new ClipboardItem({ 'image/png': qrCode })]);
+			toast.success('QR code copied to clipboard');
 		} catch (e) {
+			// Clipboard access can be refused outright.
 			console.error(e);
-			toast.error('Failed to copy image');
+			toast.error('Failed to copy the QR code');
 		}
 	}
 
@@ -163,8 +162,7 @@
 		});
 
 		if (response.error) {
-			console.error('Failed to create experiment', response.error);
-			toast.error('Failed to create experiment');
+			toastApiError(response.error, 'Failed to create experiment');
 			return;
 		}
 
@@ -181,8 +179,7 @@
 			path: { experiment_id: selectedExperiment.id }
 		});
 		if (error) {
-			console.error('Failed to delete experiment', error);
-			toast.error('Failed to delete experiment');
+			toastApiError(error, 'Failed to delete experiment');
 			return;
 		}
 		await invalidateAll();
@@ -193,7 +190,7 @@
 	function copyLink(experiment: Experiment) {
 		const url = `${window.location.origin}/interview/redirect?id=${experiment.id}`;
 		navigator.clipboard.writeText(url);
-		toast.success('Link copied to clipboard!');
+		toast.success('Link copied to clipboard');
 	}
 
 	function getStatusClass(status: string) {
@@ -590,15 +587,8 @@
 				</button>
 				<button
 					class="hover:bg-opacity-90 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-					onclick={() => {
-						// We need the blob here. If qrCodeUrl is object URL, we can fetch it back or store blob.
-						// For simplicity, just fetch it again or alert user if copy fails.
-						// But actually navigator.clipboard.write works with Blob.
-						fetch(qrCodeUrl!)
-							.then((r) => r.blob())
-							.then(copyToClipboard);
-					}}
-					disabled={!qrCodeUrl}
+					onclick={copyQrCode}
+					disabled={!qrCode}
 				>
 					Copy
 				</button>

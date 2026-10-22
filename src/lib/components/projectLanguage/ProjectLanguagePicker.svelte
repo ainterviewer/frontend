@@ -4,7 +4,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { Projects } from '$lib/api';
 	import type { ProjectLanguage } from '$lib/api/types.gen';
-	import { errorDetail } from '$lib/utils/errors';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import AddLanguageModal from './AddLanguageModal.svelte';
 	import ProjectLanguageMenu from './ProjectLanguageMenu.svelte';
@@ -39,16 +39,10 @@
 			path: { project_id: projectId },
 			body: { language: code, translate }
 		});
-		if (error) {
-			throw new Error('Failed to add language');
-		}
+		// The modal reports it, and stays open.
+		if (error) throw error;
 		await invalidateAll();
 		toast.success('Language added, in progress until you mark it ready');
-	}
-
-	/** The backend refuses to drop the default or the last language; show its reason. */
-	function removalError(error: unknown): string {
-		return errorDetail(error, 'Failed to remove language');
 	}
 
 	async function handleRemove(code: string) {
@@ -58,8 +52,7 @@
 			body: code
 		});
 		if (error) {
-			console.error('Failed to remove language', error);
-			toast.error(removalError(error));
+			toastApiError(error, 'Failed to remove language');
 			return;
 		}
 		toast.success('Language removed');
@@ -84,8 +77,7 @@
 			body: code
 		});
 		if (error) {
-			console.error('Failed to set default language', error);
-			toast.error(removalError(error));
+			toastApiError(error, 'Failed to set the default language');
 			return;
 		}
 		await invalidateAll();
@@ -98,8 +90,7 @@
 			body: { in_progress: inProgress }
 		});
 		if (error) {
-			console.error('Failed to change language progress', error);
-			toast.error(removalError(error));
+			toastApiError(error, 'Failed to change the language progress');
 			return;
 		}
 		await invalidateAll();

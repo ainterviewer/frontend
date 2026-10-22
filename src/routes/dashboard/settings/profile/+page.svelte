@@ -8,6 +8,7 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { enableOnboarding, isOnboardingDisabled } from '$lib/onboarding';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
 
@@ -70,7 +71,7 @@
 				}
 			});
 			if (error) {
-				toast.error('Failed to update profile');
+				toastApiError(error, 'Failed to update profile');
 			} else {
 				toast.success('Profile updated');
 				await invalidateAll();
@@ -88,7 +89,7 @@
 				body: { new_email: newEmail.trim(), password: emailPassword }
 			});
 			if (error) {
-				toast.error('Failed to update email. Please check your password.');
+				toastApiError(error, 'Failed to update email');
 			} else {
 				toast.success('Email updated');
 				newEmail = '';
@@ -112,7 +113,7 @@
 				body: { current_password: currentPassword, new_password: newPassword }
 			});
 			if (error) {
-				toast.error('Failed to update password. Please check your current password.');
+				toastApiError(error, 'Failed to update password');
 			} else {
 				toast.success('Password updated');
 				currentPassword = '';
@@ -137,7 +138,7 @@
 		try {
 			const { error } = await Auth.deleteMe({ body: { password: deletePassword } });
 			if (error) {
-				toast.error('Failed to delete account. Please check your password.');
+				toastApiError(error, 'Failed to delete account');
 			} else {
 				goto(resolve('/login'));
 			}

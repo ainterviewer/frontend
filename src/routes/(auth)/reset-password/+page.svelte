@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Auth } from '$lib/api';
+	import { errorDetail } from '$lib/utils/errors';
 
 	const token = $derived(page.url.searchParams.get('token'));
 
@@ -41,13 +42,11 @@
 			} else if (response?.status === 422) {
 				errorMessage = 'Password must be between 8 and 72 characters.';
 			} else if (error) {
-				errorMessage = 'An unexpected error occurred';
+				errorMessage = errorDetail(error, 'An unexpected error occurred');
 			} else {
 				status = 'success';
 				setTimeout(() => goto(resolve('/login')), 2500);
 			}
-		} catch {
-			errorMessage = 'An unexpected error occurred';
 		} finally {
 			isLoading = false;
 		}

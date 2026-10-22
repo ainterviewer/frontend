@@ -63,8 +63,6 @@
 				registeredEmail = email;
 				isRegistered = true;
 			}
-		} catch {
-			errorMessage = 'An unexpected error occurred';
 		} finally {
 			isLoading = false;
 		}

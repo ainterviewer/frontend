@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import AccordionPanel from './AccordionPanel.svelte';
 	import { pick } from './localized';
@@ -36,7 +35,7 @@
 		});
 		uploading = false;
 		if (error || !name) {
-			toast.error('Failed to upload the image');
+			toastApiError(error, 'Failed to upload the image');
 			return;
 		}
 		if (preview) URL.revokeObjectURL(preview);

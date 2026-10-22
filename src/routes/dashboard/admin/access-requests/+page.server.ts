@@ -1,17 +1,8 @@
+import { error } from '@sveltejs/kit';
+
 import { Admin } from '$lib/api';
 
 import type { PageServerLoad } from './$types';
-
-interface AccessRequest {
-	id: string;
-	name: string;
-	email: string;
-	organization: string | null;
-	status: string;
-	message: string | null;
-	created_at: string;
-	updated_at: string;
-}
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { cookieHeader } = locals;
@@ -23,15 +14,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 	});
 
 	if (response.error) {
-		console.error(response.error);
-		return {
-			requests: [],
-			error: String(response.error)
-		};
+		console.error('Failed to load access requests', response.error);
+		error(500, 'Failed to load access requests');
 	}
 
 	return {
-		requests: (response.data as unknown as AccessRequest[]) ?? [],
-		error: null
+		requests: response.data ?? []
 	};
 };
