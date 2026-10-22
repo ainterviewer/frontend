@@ -2649,6 +2649,7 @@ export const zInvitationCreate = z.object({
         zTimeDelta
     ]).nullish(),
     title: z.string().nullish(),
+    alias: z.string().nullish(),
     access_request_id: z.string().nullish(),
     user_demo_concurrent_limit: z.int().gte(0).nullish(),
     user_demo_daily_limit: z.int().gte(0).nullish(),
@@ -2667,6 +2668,7 @@ export const zInvitationPublic = z.object({
         zTimeDelta
     ]).nullish(),
     title: z.string().nullish(),
+    alias: z.string().nullish(),
     access_request_id: z.string().nullish(),
     user_demo_concurrent_limit: z.int().gte(0).nullish(),
     user_demo_daily_limit: z.int().gte(0).nullish(),
@@ -3480,6 +3482,10 @@ export const zInvitationUpdate = z.object({
         z.string(),
         zUnset
     ]).nullish().default('UNSET'),
+    alias: z.union([
+        z.string(),
+        zUnset
+    ]).nullish().default('UNSET'),
     user_demo_concurrent_limit: z.union([
         z.int().gte(0),
         zUnset
@@ -3796,6 +3802,7 @@ export const zInvitationPublicWritable = z.object({
         zTimeDelta
     ]).nullish(),
     title: z.string().nullish(),
+    alias: z.string().nullish(),
     access_request_id: z.string().nullish(),
     user_demo_concurrent_limit: z.int().gte(0).nullish(),
     user_demo_daily_limit: z.int().gte(0).nullish(),

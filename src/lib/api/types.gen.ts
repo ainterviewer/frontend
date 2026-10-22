@@ -2962,6 +2962,10 @@ export type InvitationCreate = {
      */
     title?: string | null;
     /**
+     * Alias
+     */
+    alias?: string | null;
+    /**
      * Access Request Id
      */
     access_request_id?: string | null;
@@ -3000,6 +3004,10 @@ export type InvitationPublic = {
      * Title
      */
     title?: string | null;
+    /**
+     * Alias
+     */
+    alias?: string | null;
     /**
      * Access Request Id
      */
@@ -3058,6 +3066,10 @@ export type InvitationUpdate = {
      * Title
      */
     title?: string | Unset | null;
+    /**
+     * Alias
+     */
+    alias?: string | Unset | null;
     /**
      * User Demo Concurrent Limit
      */
@@ -6572,6 +6584,10 @@ export type InvitationPublicWritable = {
      * Title
      */
     title?: string | null;
+    /**
+     * Alias
+     */
+    alias?: string | null;
     /**
      * Access Request Id
      */

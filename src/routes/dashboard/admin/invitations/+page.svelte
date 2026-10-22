@@ -3,6 +3,7 @@
 	import { toast } from 'svelte-sonner';
 
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import type {
 		InvitationCreate,
 		InvitationPublic,
@@ -37,6 +38,7 @@
 
 	// Create form fields
 	let newTitle = $state('');
+	let newAlias = $state('');
 	let newEmail = $state('');
 	let newExpiresAt = $state('');
 	let newReuseable = $state(true);
@@ -58,6 +60,20 @@
 		user: 'bg-blue-100 text-blue-800',
 		demo: 'bg-amber-100 text-amber-800'
 	};
+
+	/** The base of an invitation link, to preview what an alias turns it into. */
+	let signUpBase = $derived(
+		invitations[0]?.invitation_link.split('?')[0] ?? `${page.url.origin}/sign-up`
+	);
+
+	/** The backend's message for a failed request: its `detail`, or the first
+	 * validation error's (an alias in the wrong shape answers 422). */
+	function responseError(err: unknown, fallback: string): string {
+		const detail = (err as { detail?: unknown }).detail;
+		if (typeof detail === 'string') return detail;
+		if (Array.isArray(detail) && typeof detail[0]?.msg === 'string') return detail[0].msg;
+		return fallback;
+	}
 
 	async function loadInvitations() {
 		if (isLoading) return;
@@ -125,6 +141,7 @@
 				reuseable: newReuseable,
 				user_scope: newUserScope,
 				title: newTitle || null,
+				alias: newAlias.trim() || null,
 				user_expires: userExpires,
 				user_demo_concurrent_limit: newDemoConcurrentLimit,
 				user_demo_daily_limit: newDemoDailyLimit,
@@ -133,7 +150,7 @@
 
 			const response = await Admin.createInvitation({ body });
 			if (response.error) {
-				throw new Error(String(response.error));
+				throw new Error(responseError(response.error, 'Request failed'));
 			}
 			isLoading = false;
 			showCreateForm = false;
@@ -149,6 +166,7 @@
 
 	function resetForm() {
 		newTitle = '';
+		newAlias = '';
 		newEmail = '';
 		newExpiresAt = '';
 		newReuseable = true;
@@ -167,6 +185,7 @@
 	function startEdit(invitation: InvitationPublic) {
 		editingInvitation = invitation;
 		newTitle = invitation.title ?? '';
+		newAlias = invitation.alias ?? '';
 		newEmail = invitation.email ?? '';
 		newReuseable = invitation.reuseable ?? true;
 		newUserScope = invitation.user_scope ?? 'user';
@@ -229,6 +248,7 @@
 				reuseable: newReuseable,
 				user_scope: newUserScope,
 				title: newTitle || null,
+				alias: newAlias.trim() || null,
 				user_expires: userExpires,
 				user_demo_concurrent_limit: newDemoConcurrentLimit,
 				user_demo_daily_limit: newDemoDailyLimit,
@@ -241,7 +261,7 @@
 				body
 			});
 			if (response.error) {
-				throw new Error(String(response.error));
+				throw new Error(responseError(response.error, 'Request failed'));
 			}
 			isLoading = false;
 			showCreateForm = false;
@@ -323,6 +343,14 @@
 		meta: { class: 'font-medium whitespace-nowrap text-dark' }
 	});
 
+	const aliasColumn = helper.accessor((i) => sortableText(i.alias), {
+		id: 'alias',
+		header: 'Alias',
+		sortFn: 'text',
+		sortUndefined: 'last',
+		meta: { class: 'whitespace-nowrap font-mono text-xs text-gray-700' }
+	});
+
 	const emailColumn = helper.accessor((i) => sortableText(i.email), {
 		id: 'email',
 		header: 'Email',
@@ -333,19 +361,21 @@
 
 	const columnLabels: Record<string, string> = {
 		title: 'Title',
+		alias: 'Alias',
 		email: 'Email',
 		user_scope: 'Scope',
 		expires_at: 'Expires at',
 		user_expires: 'User expires'
 	};
 
-	const searchable = ['title', 'email'];
+	const searchable = ['title', 'alias', 'email'];
 
 	const reusableTable = createTable({
 		features: dataTableFeatures,
 		columns: helper.columns([
 			helper.display({ id: 'select', enableHiding: false }),
 			titleColumn,
+			aliasColumn,
 			...sharedColumns
 		]),
 		get data() {
@@ -362,6 +392,7 @@
 		columns: helper.columns([
 			helper.display({ id: 'select', enableHiding: false }),
 			titleColumn,
+			aliasColumn,
 			emailColumn,
 			...sharedColumns
 		]),
@@ -447,6 +478,27 @@
 					placeholder="Optional title"
 					class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
 				/>
+			</div>
+			<div>
+				<label for="alias" class="block text-sm font-medium text-gray-700">Alias</label>
+				<input
+					id="alias"
+					type="text"
+					bind:value={newAlias}
+					placeholder="Optional, e.g. workshop-2026"
+					pattern={'[A-Za-z0-9][A-Za-z0-9_\\-]{1,63}'}
+					title="2-64 letters, digits, '-' or '_', starting with a letter or digit"
+					autocomplete="off"
+					spellcheck="false"
+					class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
+				/>
+				<p class="mt-1 truncate text-xs text-gray-500">
+					{#if newAlias.trim()}
+						Link: {signUpBase}?token={newAlias.trim().toLowerCase()}
+					{:else}
+						Stands in for the id in the sign-up link.
+					{/if}
+				</p>
 			</div>
 			{#if editingInvitation && !editingInvitation.reuseable}
 				<div>
@@ -601,7 +653,7 @@
 			hasLoaded={!isLoading || invitations.length > 0}
 			search
 			rowLabel="invitation"
-			searchPlaceholder="Search title or email..."
+			searchPlaceholder="Search title, alias or email..."
 			emptyTitle={group.reusable ? 'No reusable invitations' : 'No single-use invitations'}
 			emptyDescription="Create one with the + button above."
 		>
@@ -626,6 +678,9 @@
 				{@const invitation = row.original}
 				{#if columnId === 'title'}
 					{#if invitation.title}{invitation.title}{:else}<span class="text-gray-300">&ndash;</span
+						>{/if}
+				{:else if columnId === 'alias'}
+					{#if invitation.alias}{invitation.alias}{:else}<span class="text-gray-300">&ndash;</span
 						>{/if}
 				{:else if columnId === 'email'}
 					{#if invitation.email}{invitation.email}{:else}<span class="text-gray-300">&ndash;</span
