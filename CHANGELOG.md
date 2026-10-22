@@ -4,6 +4,25 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.4] - 2026-10-22
+
+### Breaking Changes
+
+- (api) Regenerate the SDK without ProjectPublic.tests
+- (api) Needs the backend's error-response release; the interview
+page reads an invalid link from `invalid_link_params`, not from a 422.
+- (api) Needs the backend that renames UploadParticipantsResponse.
+
+### Features
+
+- (api) Read errors through the backend's ApiError and its codes [**breaking**]
+
+### Internal
+
+- (api) Regenerate the SDK without ProjectPublic.tests [**breaking**]
+- (api) Regenerate the SDK with ParticipantUploadResponse [**breaking**]
+- (api) Regenerate the SDK with FastAPI's copies of the shared models
+
 ## [0.9.3] - 2026-10-22
 
 ### Breaking Changes
