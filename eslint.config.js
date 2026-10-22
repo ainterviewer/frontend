@@ -52,5 +52,13 @@ export default defineConfig(
 				svelteConfig
 			}
 		}
+	},
+	{
+		files: ['**/*.svelte'],
+		rules: {
+			// Writing to a `$bindable()` prop reaches the parent, which this rule
+			// cannot see, so a write-only bindable reads as a useless assignment.
+			'no-useless-assignment': 'off'
+		}
 	}
 );
