@@ -4,6 +4,16 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.2] - 2026-10-22
+
+### Breaking Changes
+
+- (api) Regenerate the SDK for the backend's renamed schemas
+
+### Internal
+
+- (api) Regenerate the SDK for the backend's renamed schemas [**breaking**]
+
 ## [0.9.1] - 2026-10-22
 
 ### Bug Fixes
