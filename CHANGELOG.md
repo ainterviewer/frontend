@@ -4,6 +4,22 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.1] - 2026-10-22
+
+### Bug Fixes
+
+- (build) Strip console chatter from the client bundle
+- (a11y) Make Font Awesome glyphs decorative
+
+### Internal
+
+- (deps) Update to latest minor and patch versions
+- (deps) Update prettier-plugin-svelte to v4 and prettier-plugin-tailwindcss to 0.8
+- (deps) Update eslint to v10
+- (deps) Update vite to v8 and vite-plugin-svelte to v7
+- (deps) Update typescript to v6
+- (deps) Update vitest to v5 and vitest-browser-svelte to v3
+
 ## [0.9.0] - 2026-10-22
 
 ### Features
