@@ -4,7 +4,7 @@
 	import { toast } from 'svelte-sonner';
 
 	import { invalidateAll } from '$app/navigation';
-	import { Admin, type DemoBudget, type Scope, type UserAdmin } from '$lib/api';
+	import { Admin, type DemoBudget, type Scope, type UserAdminPublic } from '$lib/api';
 	import DemoLimitFields from '$lib/components/DemoLimitFields.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
@@ -21,7 +21,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let users = $derived(data.users as UserAdmin[]);
+	let users = $derived(data.users as UserAdminPublic[]);
 	let loading = $state(false);
 	let error = $derived<string | null>(data.error);
 	const expandedRows = new SvelteSet<string>();
@@ -59,7 +59,7 @@
 		return d.toISOString();
 	}
 
-	function ensureEdit(user: UserAdmin): UserEdit {
+	function ensureEdit(user: UserAdminPublic): UserEdit {
 		if (!edits[user.id]) {
 			edits[user.id] = {
 				scope: (user.scope as Scope) ?? 'user',
@@ -75,7 +75,7 @@
 		return edits[user.id];
 	}
 
-	function isDirty(user: UserAdmin): boolean {
+	function isDirty(user: UserAdminPublic): boolean {
 		const e = edits[user.id];
 		if (!e) return false;
 		return (
@@ -96,7 +96,7 @@
 		demo: 'bg-amber-100 text-amber-800'
 	};
 
-	function toggleRow(user: UserAdmin) {
+	function toggleRow(user: UserAdminPublic) {
 		if (expandedRows.has(user.id)) {
 			expandedRows.delete(user.id);
 		} else {
@@ -108,7 +108,7 @@
 
 	// Fetched for every scope, so the usage is there if the scope is switched
 	// to demo in the form. Shown only as context, so a failure is just logged.
-	async function loadDemoUsage(user: UserAdmin) {
+	async function loadDemoUsage(user: UserAdminPublic) {
 		const { data: budget, error: budgetError } = await Admin.getUserDemoBudget({
 			path: { user_id: user.id }
 		});
@@ -119,7 +119,7 @@
 		demoUsage[user.id] = budget;
 	}
 
-	async function saveUser(user: UserAdmin) {
+	async function saveUser(user: UserAdminPublic) {
 		const e = edits[user.id];
 		if (!e) return;
 
@@ -156,7 +156,7 @@
 		}
 	}
 
-	function resetEdit(user: UserAdmin) {
+	function resetEdit(user: UserAdminPublic) {
 		delete edits[user.id];
 		ensureEdit(user);
 	}
@@ -199,7 +199,7 @@
 		}
 	}
 
-	async function saveAdminNote(user: UserAdmin, note: string) {
+	async function saveAdminNote(user: UserAdminPublic, note: string) {
 		const trimmed = note.trim() || null;
 		if (trimmed === (user.admin_note ?? null)) return;
 
@@ -228,9 +228,9 @@
 
 	/* ---------------------------------------------------------------- table */
 
-	const helper = createColumnHelper<DataTableFeatures, UserAdmin>();
+	const helper = createColumnHelper<DataTableFeatures, UserAdminPublic>();
 
-	const fullName = (u: UserAdmin) => `${u.first_name}${u.last_name ? ` ${u.last_name}` : ''}`;
+	const fullName = (u: UserAdminPublic) => `${u.first_name}${u.last_name ? ` ${u.last_name}` : ''}`;
 
 	const columns = helper.columns([
 		helper.display({ id: 'expand', enableHiding: false, meta: { class: 'w-8' } }),

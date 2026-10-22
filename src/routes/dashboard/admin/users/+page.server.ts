@@ -1,4 +1,4 @@
-import { Admin, type UserAdmin } from '$lib/api';
+import { Admin, type UserAdminPublic } from '$lib/api';
 
 import type { PageServerLoad } from './$types';
 
@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	return {
-		users: (response.data as unknown as UserAdmin[]) || [],
+		users: (response.data as unknown as UserAdminPublic[]) || [],
 		demoLimitDefaults,
 		error: null
 	};

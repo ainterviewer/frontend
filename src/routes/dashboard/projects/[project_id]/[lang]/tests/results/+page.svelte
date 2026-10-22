@@ -14,7 +14,7 @@
 	import { page } from '$app/state';
 	import type {
 		InterviewFacets,
-		InterviewFilters,
+		InterviewFilterParams,
 		InterviewStatus,
 		InterviewSummaryPublic,
 		InterviewType
@@ -258,7 +258,7 @@
 			...dateRangeQuery(
 				columnFilters.find((filter) => filter.id === 'created_at')?.value as DateRange | undefined
 			)
-		} satisfies InterviewFilters;
+		} satisfies InterviewFilterParams;
 	}
 
 	/** What a bulk action targets: the ticked ids, or everything matching. */

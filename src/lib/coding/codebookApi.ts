@@ -1,4 +1,4 @@
-import type { CodeBase, CodePublic } from '$lib/api/types.gen';
+import type { CodeInput, CodePublic } from '$lib/api/types.gen';
 
 import { type Code, DEFAULT_CODE_COLOR, DEFAULT_SCORE_MAX, DEFAULT_SCORE_MIN } from './codingTree';
 
@@ -43,7 +43,7 @@ export function codeFromApi(code: CodePublic): Code {
 	};
 }
 
-export function codeToApi(code: Code): CodeBase {
+export function codeToApi(code: Code): CodeInput {
 	return {
 		id: code.id,
 		parent_id: code.parentId,
@@ -63,6 +63,6 @@ export function codesFromApi(codes: CodePublic[]): Code[] {
 	return codes.map(codeFromApi);
 }
 
-export function codesToApi(codes: readonly Code[]): CodeBase[] {
+export function codesToApi(codes: readonly Code[]): CodeInput[] {
 	return codes.map(codeToApi);
 }

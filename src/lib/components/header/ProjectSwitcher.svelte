@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { Folders } from '$lib/api';
-	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
+	import type { FolderWithProjectsPublic } from '$lib/api/types.gen';
 
 	// The folder tree is fetched each time a switcher opens rather than once a
 	// session: projects are created, renamed, cloned and deleted from other
@@ -8,7 +8,7 @@
 	// went stale. Not in +layout.server.ts either, which would cost a request on
 	// every navigation. The last list is kept, so a reopened switcher shows it
 	// at once while the fresh one loads.
-	let lastFolders: ProjectFolderWithProjects[] | null = null;
+	let lastFolders: FolderWithProjectsPublic[] | null = null;
 
 	async function loadFolders() {
 		const { data, error } = await Folders.getFolders();
@@ -35,7 +35,7 @@
 	let open = $state(false);
 	let query = $state('');
 	let highlighted = $state(0);
-	let folders = $state<ProjectFolderWithProjects[] | null>(null);
+	let folders = $state<FolderWithProjectsPublic[] | null>(null);
 	let failed = $state(false);
 	let requests = 0;
 	// Row elements by project id, so scrolling the highlighted row into view does
@@ -50,7 +50,7 @@
 		const needle = query.trim().toLowerCase();
 		// Archived folders and projects are put away here as on the dashboard --
 		// all but the one you are in, which is where the list opens.
-		const listed = (folder: ProjectFolderWithProjects, project: ProjectPublic) =>
+		const listed = (folder: FolderWithProjectsPublic, project: ProjectPublic) =>
 			project.id === projectId || (!folder.archived_at && !project.archived_at);
 		return (folders ?? [])
 			.map((folder) => {

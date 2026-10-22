@@ -6,7 +6,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Experiments } from '$lib/api/sdk.gen';
-	import type { ProjectFolderWithProjects } from '$lib/api/types.gen';
+	import type { FolderWithProjectsPublic } from '$lib/api/types.gen';
 	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
@@ -35,8 +35,8 @@
 	let isDemo = $derived(page.data.user?.scope === 'demo');
 
 	let experiments = $derived(data.experiments as unknown as Experiment[]);
-	let folders = $derived<ProjectFolderWithProjects[]>(
-		data.folders as unknown as ProjectFolderWithProjects[]
+	let folders = $derived<FolderWithProjectsPublic[]>(
+		data.folders as unknown as FolderWithProjectsPublic[]
 	);
 
 	let isCreateModalOpen = $state(false);

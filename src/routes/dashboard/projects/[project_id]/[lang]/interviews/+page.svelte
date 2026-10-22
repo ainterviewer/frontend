@@ -17,7 +17,7 @@
 	import { Projects as Api } from '$lib/api';
 	import type {
 		InterviewFacets,
-		InterviewFilters,
+		InterviewFilterParams,
 		InterviewStatus,
 		InterviewSummaryPublic
 	} from '$lib/api/types.gen';
@@ -283,7 +283,7 @@
 			...dateRangeQuery(
 				columnFilters.find((filter) => filter.id === 'created_at')?.value as DateRange | undefined
 			)
-		} satisfies InterviewFilters;
+		} satisfies InterviewFilterParams;
 	}
 
 	/** What a bulk action targets: the ticked ids, or everything matching. */

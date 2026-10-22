@@ -590,7 +590,7 @@ export function moveCode(
  * Merging is the one removal that must not take its codings with it, and the
  * codebook is saved whole -- a code left out is deleted, codings and all. So
  * the merge is recorded beside the codes and travels with them to the server,
- * which moves the codings before it deletes the code. See `CodebookPut`.
+ * which moves the codings before it deletes the code. See `CodebookReplace`.
  */
 export type Merges = Readonly<Record<CodeId, CodeId>>;
 

@@ -27,20 +27,6 @@ export const zAdminNoteUpdate = z.object({
 });
 
 /**
- * AdminReportReadRequest
- */
-export const zAdminReportReadRequest = z.object({
-    ids: z.array(z.string())
-});
-
-/**
- * AdminReportReviewResponse
- */
-export const zAdminReportReviewResponse = z.object({
-    updated: z.int()
-});
-
-/**
  * AgentConfig
  */
 export const zAgentConfig = z.object({
@@ -148,8 +134,8 @@ export const zBodyUploadWelcomeVideo = z.object({
  * CheckboxItem
  */
 export const zCheckboxItem = z.object({
-    type: z.literal('checkbox').optional().default('checkbox'),
     required: z.boolean().optional().default(true),
+    type: z.literal('checkbox').optional().default('checkbox'),
     options: z.array(z.string()),
     with_other: z.boolean().optional().default(false)
 });
@@ -183,14 +169,14 @@ export const zCodeKind = z.enum([
 ]);
 
 /**
- * CodeBase
+ * CodeInput
  *
  * One code as the client sends it, id and all.
  *
  * The id is the client's because a code is dragged, renamed and coded with
  * long before the codebook is saved; see ``CodeTable``.
  */
-export const zCodeBase = z.object({
+export const zCodeInput = z.object({
     id: z.string(),
     parent_id: z.string().nullish(),
     name: z.string().optional().default(''),
@@ -234,7 +220,7 @@ export const zCodebookPublic = z.object({
 });
 
 /**
- * CodebookPut
+ * CodebookReplace
  *
  * A whole codebook, replacing the stored one.
  *
@@ -253,8 +239,8 @@ export const zCodebookPublic = z.object({
  * already gone from the store is a merge an earlier save carried out, and is
  * ignored.
  */
-export const zCodebookPut = z.object({
-    codes: z.array(zCodeBase),
+export const zCodebookReplace = z.object({
+    codes: z.array(zCodeInput),
     palette: z.array(z.string()),
     merges: z.record(z.string(), z.string()).optional().default({})
 });
@@ -267,6 +253,20 @@ export const zCodingCreate = z.object({
     start_offset: z.int().nullish(),
     end_offset: z.int().nullish(),
     value_int: z.int().nullish()
+});
+
+/**
+ * CodingLookupRequest
+ *
+ * Which messages to read the codings of.
+ *
+ * A POST for a read, like the filtered-message endpoints beside it: the
+ * explore page draws a page of results as a mosaic of turns from many
+ * interviews, so the ask is a few hundred message ids -- more than belongs in
+ * a query string, and a request per turn would be a request per turn.
+ */
+export const zCodingLookupRequest = z.object({
+    message_ids: z.array(z.string()).max(500)
 });
 
 /**
@@ -286,20 +286,6 @@ export const zCodingPublic = z.object({
 });
 
 /**
- * CodingsForMessages
- *
- * Which messages to read the codings of.
- *
- * A POST for a read, like the filtered-message endpoints beside it: the
- * explore page draws a page of results as a mosaic of turns from many
- * interviews, so the ask is a few hundred message ids -- more than belongs in
- * a query string, and a request per turn would be a request per turn.
- */
-export const zCodingsForMessages = z.object({
-    message_ids: z.array(z.string()).max(500)
-});
-
-/**
  * CollaboratorRole
  */
 export const zCollaboratorRole = z.enum([
@@ -308,14 +294,6 @@ export const zCollaboratorRole = z.enum([
     'editor',
     'admin'
 ]);
-
-/**
- * Collaborator
- */
-export const zCollaborator = z.object({
-    email: z.email(),
-    role: zCollaboratorRole
-});
 
 /**
  * CollaboratorCreate
@@ -462,6 +440,20 @@ export const zContentPart = z.enum([
 ]);
 
 /**
+ * ContentVersionCreate
+ */
+export const zContentVersionCreate = z.object({
+    label: z.string().max(200).nullish(),
+    publish: z.boolean().optional().default(false),
+    bump: z.enum([
+        'none',
+        'patch',
+        'minor',
+        'major'
+    ]).nullish()
+});
+
+/**
  * ContentVersionKind
  *
  * Why a `projectcontentversion` was written.
@@ -495,8 +487,8 @@ export const zDailyInterviewCount = z.object({
  * DateItem
  */
 export const zDateItem = z.object({
-    type: z.literal('date').optional().default('date'),
     required: z.boolean().optional().default(true),
+    type: z.literal('date').optional().default('date'),
     min: z.string().nullish().default(null),
     max: z.string().nullish().default(null)
 });
@@ -505,8 +497,8 @@ export const zDateItem = z.object({
  * DatetimeItem
  */
 export const zDatetimeItem = z.object({
-    type: z.literal('datetime').optional().default('datetime'),
     required: z.boolean().optional().default(true),
+    type: z.literal('datetime').optional().default('datetime'),
     min: z.string().nullish().default(null),
     max: z.string().nullish().default(null)
 });
@@ -738,9 +730,9 @@ export const zExternalParam = z.object({
 });
 
 /**
- * ExternalParamsRequest
+ * ExternalParamsReplace
  */
-export const zExternalParamsRequest = z.object({
+export const zExternalParamsReplace = z.object({
     params: z.array(zExternalParam)
 });
 
@@ -769,6 +761,21 @@ export const zFilteredMessagesRequest = z.object({
     case_sensitive: z.boolean().optional().default(false),
     questions: z.array(z.tuple([z.int(), z.int()])).nullish(),
     include_previous_on_user: z.boolean().optional().default(true)
+});
+
+/**
+ * FolderCreate
+ */
+export const zFolderCreate = z.object({
+    title: z.string(),
+    folder_collaborations: z.array(zCollaboratorCreate).optional().default([])
+});
+
+/**
+ * FolderUpdate
+ */
+export const zFolderUpdate = z.object({
+    title: z.string()
 });
 
 /**
@@ -940,16 +947,6 @@ export const zInterviewMessage = z.object({
 });
 
 /**
- * InterviewResumeLinkCreated
- *
- * A freshly minted resume link. The only time the URL ever exists.
- */
-export const zInterviewResumeLinkCreated = z.object({
-    url: z.string(),
-    expires_at: z.iso.datetime()
-});
-
-/**
  * InterviewResumeLinkPublic
  *
  * The state of an interview's most recent resume link.
@@ -967,14 +964,24 @@ export const zInterviewResumeLinkPublic = z.object({
 });
 
 /**
- * InterviewResumeRedeemed
+ * InterviewResumeLinkResponse
+ *
+ * A freshly minted resume link. The only time the URL ever exists.
+ */
+export const zInterviewResumeLinkResponse = z.object({
+    url: z.string(),
+    expires_at: z.iso.datetime()
+});
+
+/**
+ * InterviewResumeResponse
  *
  * What the interview page needs to resume after redeeming a link.
  *
  * The credential itself rides back as the httponly ``interview_token``
  * cookie; these ids only tell the page which interview to reconnect to.
  */
-export const zInterviewResumeRedeemed = z.object({
+export const zInterviewResumeResponse = z.object({
     project_id: z.string(),
     interview_id: z.string()
 });
@@ -1058,16 +1065,16 @@ export const zInterviewType = z.enum([
 ]);
 
 /**
- * InterviewFilters
+ * InterviewFilterParams
  *
  * The interview list's filters, as the list endpoint takes them.
  *
  * Lets a bulk action target "everything matching" rather than ids the client
  * has seen: with server-side paging it only ever holds one page of them.
- * Same names and same defaults as the query parameters of `get_interviews`,
- * so "all 123 selected" means exactly the 123 the list counted.
+ * `get_interviews` takes this same model as its query parameters, so "all
+ * 123 selected" means exactly the 123 the list counted.
  */
-export const zInterviewFilters = z.object({
+export const zInterviewFilterParams = z.object({
     interview_types: z.array(zInterviewType).nullish(),
     types: z.array(zInterviewType).nullish(),
     statuses: z.array(zInterviewStatus).nullish(),
@@ -1082,14 +1089,6 @@ export const zInterviewFilters = z.object({
 });
 
 /**
- * DeleteInterviewRequest
- */
-export const zDeleteInterviewRequest = z.object({
-    interview_ids: z.array(z.string()).nullish(),
-    filters: zInterviewFilters.nullish()
-});
-
-/**
  * ExportMessagesRequest
  *
  * `csv` and `xlsx` export the message table, `docx` and `pdf` readable
@@ -1097,7 +1096,7 @@ export const zDeleteInterviewRequest = z.object({
  */
 export const zExportMessagesRequest = z.object({
     interview_ids: z.array(z.string()).nullish(),
-    filters: zInterviewFilters.nullish(),
+    filters: zInterviewFilterParams.nullish(),
     format: z.enum([
         'csv',
         'xlsx',
@@ -1106,6 +1105,16 @@ export const zExportMessagesRequest = z.object({
     ]).optional().default('csv'),
     archive: z.boolean().optional().default(false),
     timezone: z.string().nullish()
+});
+
+/**
+ * InterviewSelection
+ *
+ * Interviews picked either by id or by the list's filters, never both.
+ */
+export const zInterviewSelection = z.object({
+    interview_ids: z.array(z.string()).nullish(),
+    filters: zInterviewFilterParams.nullish()
 });
 
 /**
@@ -1189,11 +1198,11 @@ export const zCategoryCount = z.object({
 });
 
 /**
- * ContentVersionSummary
+ * ContentVersionSummaryPublic
  *
  * One version of a project's content, as the history lists it.
  */
-export const zContentVersionSummary = z.object({
+export const zContentVersionSummaryPublic = z.object({
     id: z.string(),
     version_no: z.int(),
     kind: zContentVersionKind,
@@ -1215,7 +1224,7 @@ export const zContentVersionSummary = z.object({
  */
 export const zContentStatus = z.object({
     revision: z.int(),
-    published: zContentVersionSummary.nullable(),
+    published: zContentVersionSummaryPublic.nullable(),
     has_unpublished_changes: z.boolean(),
     pending_bump: z.enum([
         'none',
@@ -1227,14 +1236,6 @@ export const zContentStatus = z.object({
     languages_in_progress: z.array(zLanguageCode),
     missing: z.record(z.string(), z.array(z.string())),
     doc_errors: z.record(z.string(), z.array(z.string())).optional().default({})
-});
-
-/**
- * CreateProjectRequest
- */
-export const zCreateProjectRequest = z.object({
-    title: z.string(),
-    default_language: zLanguageCode
 });
 
 /**
@@ -1347,8 +1348,8 @@ export const zLanguageDict = z.object({
  * LikertItem
  */
 export const zLikertItem = z.object({
-    type: z.literal('likert').optional().default('likert'),
     required: z.boolean().optional().default(true),
+    type: z.literal('likert').optional().default('likert'),
     options: z.array(z.string()),
     ui: z.enum(['radio', 'slider']).optional().default('radio')
 });
@@ -1423,8 +1424,8 @@ export const zLocalizedOption = z.object({
  * LocalizedCheckboxItem
  */
 export const zLocalizedCheckboxItem = z.object({
-    type: z.literal('checkbox').optional().default('checkbox'),
     required: z.boolean().optional().default(true),
+    type: z.literal('checkbox').optional().default('checkbox'),
     options: z.array(zLocalizedOption),
     with_other: z.boolean().optional().default(false)
 });
@@ -1433,8 +1434,8 @@ export const zLocalizedCheckboxItem = z.object({
  * LocalizedLikertItem
  */
 export const zLocalizedLikertItem = z.object({
-    type: z.literal('likert').optional().default('likert'),
     required: z.boolean().optional().default(true),
+    type: z.literal('likert').optional().default('likert'),
     options: z.array(zLocalizedOption),
     ui: z.enum(['radio', 'slider']).optional().default('radio')
 });
@@ -1443,8 +1444,8 @@ export const zLocalizedLikertItem = z.object({
  * LocalizedRadioItem
  */
 export const zLocalizedRadioItem = z.object({
-    type: z.literal('radio').optional().default('radio'),
     required: z.boolean().optional().default(true),
+    type: z.literal('radio').optional().default('radio'),
     options: z.array(zLocalizedOption),
     with_other: z.boolean().optional().default(false)
 });
@@ -1453,8 +1454,8 @@ export const zLocalizedRadioItem = z.object({
  * LocalizedSliderItem
  */
 export const zLocalizedSliderItem = z.object({
-    type: z.literal('slider').optional().default('slider'),
     required: z.boolean().optional().default(true),
+    type: z.literal('slider').optional().default('slider'),
     min: z.union([
         z.int(),
         z.number()
@@ -1495,9 +1496,9 @@ export const zLocalizedWelcome = z.object({
 });
 
 /**
- * LoginData
+ * LoginRequest
  */
-export const zLoginData = z.object({
+export const zLoginRequest = z.object({
     email: z.string(),
     password: z.string(),
     extended: z.boolean().optional().default(false)
@@ -1646,8 +1647,8 @@ export const zNewsletterRequest = z.object({
  * NumberItem
  */
 export const zNumberItem = z.object({
-    type: z.literal('number').optional().default('number'),
     required: z.boolean().optional().default(true),
+    type: z.literal('number').optional().default('number'),
     min: z.union([
         z.int(),
         z.number()
@@ -1678,11 +1679,11 @@ export const zNumericStats = z.object({
 });
 
 /**
- * PaginatedResponse[ContentVersionSummary]
+ * PaginatedResponse[ContentVersionSummaryPublic]
  */
-export const zPaginatedResponseContentVersionSummary = z.object({
+export const zPaginatedResponseContentVersionSummaryPublic = z.object({
     total: z.int(),
-    items: z.array(zContentVersionSummary)
+    items: z.array(zContentVersionSummaryPublic)
 });
 
 /**
@@ -1707,9 +1708,9 @@ export const zParticipantEmail = z.object({
 });
 
 /**
- * ParticipantEmailAttachment
+ * ParticipantEmailAttachmentPublic
  */
-export const zParticipantEmailAttachment = z.object({
+export const zParticipantEmailAttachmentPublic = z.object({
     filename: z.string(),
     size: z.int(),
     content_type: z.string().nullish()
@@ -1749,6 +1750,16 @@ export const zParticipantPublic = z.object({
     created_at: z.iso.datetime(),
     latest_interview_at: z.iso.datetime().nullish(),
     latest_interview_status: zInterviewStatus.nullish()
+});
+
+/**
+ * ParticipantUpdate
+ */
+export const zParticipantUpdate = z.object({
+    name: z.string().nullish(),
+    email: z.email().nullish(),
+    pid: z.string().optional(),
+    participating: z.boolean().optional()
 });
 
 /**
@@ -1828,18 +1839,11 @@ export const zInterviewConfig = z.object({
 });
 
 /**
- * ProjectFolderCreate
+ * ProjectCreate
  */
-export const zProjectFolderCreate = z.object({
+export const zProjectCreate = z.object({
     title: z.string(),
-    folder_collaborations: z.array(zCollaborator).optional().default([])
-});
-
-/**
- * ProjectFolderEdit
- */
-export const zProjectFolderEdit = z.object({
-    title: z.string()
+    default_language: zLanguageCode
 });
 
 /**
@@ -2020,8 +2024,8 @@ export const zQuestionSectionGenerationRequest = z.object({
  * RadioItem
  */
 export const zRadioItem = z.object({
-    type: z.literal('radio').optional().default('radio'),
     required: z.boolean().optional().default(true),
+    type: z.literal('radio').optional().default('radio'),
     options: z.array(z.string()),
     with_other: z.boolean().optional().default(false)
 });
@@ -2036,6 +2040,27 @@ export const zRadioItem = z.object({
 export const zReference = z.object({
     question_index: zQuestionIndex,
     question_id: z.uuid()
+});
+
+/**
+ * RegisterRequest
+ *
+ * API request model for user registration.
+ *
+ * Only what the person signing up chooses. The scope, the timestamps and the
+ * invitation's snapshot are the server's, so there is no field for a client
+ * to send them in.
+ */
+export const zRegisterRequest = z.object({
+    email: z.email(),
+    first_name: z.string(),
+    last_name: z.string().nullish(),
+    invite_token: z.union([
+        z.string(),
+        z.string()
+    ]).nullable(),
+    research_consent: z.boolean().optional().default(false),
+    password: z.string().min(8)
 });
 
 /**
@@ -2114,9 +2139,10 @@ export const zMessageReportCreate = z.object({
  *
  * How many rows the call actually changed.
  *
- * Not an error when it is fewer than were asked for: an id belonging to
- * another project is dropped rather than refused, so a stale client cannot
- * learn from the response whether a report it should not see exists.
+ * Not an error when it is fewer than were asked for: on the project track an
+ * id belonging to another project is dropped rather than refused, so a stale
+ * client cannot learn from the response whether a report it should not see
+ * exists.
  */
 export const zReportReviewResponse = z.object({
     updated: z.int()
@@ -2153,14 +2179,6 @@ export const zReportStatus = z.enum([
 ]);
 
 /**
- * AdminReportReviewRequest
- */
-export const zAdminReportReviewRequest = z.object({
-    ids: z.array(z.string()),
-    status: zReportStatus
-});
-
-/**
  * ReportReviewRequest
  *
  * Set one track's status on a batch of reports.
@@ -2195,20 +2213,6 @@ export const zRetentionWeek = z.object({
     week: z.int(),
     eligible: z.int(),
     retained: z.int()
-});
-
-/**
- * SaveVersionRequest
- */
-export const zSaveVersionRequest = z.object({
-    label: z.string().max(200).nullish(),
-    publish: z.boolean().optional().default(false),
-    bump: z.enum([
-        'none',
-        'patch',
-        'minor',
-        'major'
-    ]).nullish()
 });
 
 /**
@@ -2493,8 +2497,8 @@ export const zSendParticipantEmailResponse = z.object({
  * SliderItem
  */
 export const zSliderItem = z.object({
-    type: z.literal('slider').optional().default('slider'),
     required: z.boolean().optional().default(true),
+    type: z.literal('slider').optional().default('slider'),
     min: z.union([
         z.int(),
         z.number()
@@ -2576,9 +2580,9 @@ export const zTestType = z.enum([
 ]);
 
 /**
- * CreateInterviewRequest
+ * InterviewCreate
  */
-export const zCreateInterviewRequest = z.object({
+export const zInterviewCreate = z.object({
     interviewer: zInterviewer.optional().default('ai'),
     interview_type: zInterviewType.optional().default('distributed'),
     test_run_id: z.string().nullish(),
@@ -2679,11 +2683,30 @@ export const zInvitationPublic = z.object({
 });
 
 /**
+ * InvitationUpdate
+ */
+export const zInvitationUpdate = z.object({
+    email: z.string().nullish(),
+    expires_at: z.iso.datetime().nullish(),
+    reuseable: z.boolean().optional(),
+    user_scope: zScope.optional(),
+    user_expires: z.union([
+        z.iso.datetime(),
+        zTimeDelta
+    ]).nullish(),
+    title: z.string().nullish(),
+    alias: z.string().nullish(),
+    user_demo_concurrent_limit: z.int().gte(0).nullish(),
+    user_demo_daily_limit: z.int().gte(0).nullish(),
+    user_demo_lifetime_limit: z.int().gte(0).nullish()
+});
+
+/**
  * TimeItem
  */
 export const zTimeItem = z.object({
-    type: z.literal('time').optional().default('time'),
     required: z.boolean().optional().default(true),
+    type: z.literal('time').optional().default('time'),
     min: z.string().nullish().default(null),
     max: z.string().nullish().default(null)
 });
@@ -2698,7 +2721,7 @@ export const zItemDistribution = z.object({
     main_question: z.int(),
     question: z.string(),
     kind: zDistributionKind,
-    item: z.union([
+    item: z.discriminatedUnion('type', [
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
@@ -2748,7 +2771,7 @@ export const zLocalizedQuestion = z.object({
     alternative_main_questions: z.array(zLocalizedText).nullish(),
     max_probes_n: z.int().gte(0).nullish().default(3),
     max_probes_time: z.number().gt(0).nullish(),
-    survey_item: z.union([
+    survey_item: z.discriminatedUnion('type', [
         zLocalizedRadioItem,
         zLocalizedCheckboxItem,
         zLocalizedLikertItem,
@@ -2832,7 +2855,7 @@ export const zMessagePublic = z.object({
         zImage,
         z.array(zImage)
     ]).nullish(),
-    survey_item: z.union([
+    survey_item: z.discriminatedUnion('type', [
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
@@ -2874,7 +2897,7 @@ export const zQuestion = z.object({
     probes: z.array(z.string()).nullish(),
     max_probes_n: z.int().gte(0).nullish().default(3),
     max_probes_time: z.number().gt(0).nullish(),
-    survey_item: z.union([
+    survey_item: z.discriminatedUnion('type', [
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
@@ -3024,11 +3047,11 @@ export const zEmbeddingSearchHit = z.object({
  * tailing off.
  */
 export const zEmbeddingBrowseResponse = z.object({
-    kind: zEmbeddingKind,
     total: z.int().optional().default(0),
     interviews: z.int().optional().default(0),
     offset: z.int().optional().default(0),
-    items: z.array(zEmbeddingSearchHit).optional().default([])
+    items: z.array(zEmbeddingSearchHit).optional().default([]),
+    kind: zEmbeddingKind
 });
 
 /**
@@ -3072,13 +3095,13 @@ export const zEmbeddingClusterResponse = z.object({
  * the two actions in the panel are deliberately both there.
  */
 export const zEmbeddingCodeSimilarResponse = z.object({
-    code_id: z.string(),
-    seeds: z.int().optional().default(0),
-    candidates: z.int().optional().default(0),
     total: z.int().optional().default(0),
     interviews: z.int().optional().default(0),
     offset: z.int().optional().default(0),
-    items: z.array(zEmbeddingSearchHit).optional().default([])
+    items: z.array(zEmbeddingSearchHit).optional().default([]),
+    candidates: z.int().optional().default(0),
+    code_id: z.string(),
+    seeds: z.int().optional().default(0)
 });
 
 /**
@@ -3086,20 +3109,17 @@ export const zEmbeddingCodeSimilarResponse = z.object({
  *
  * One page of results for one query.
  *
- * Paged with `limit`/`offset` like the rest of the dashboard's lists, but
- * `total` is not a promise that every row is worth reading: the tail of a
- * ranked scan is whatever scored least, not a further set of matches. The
- * scores are in the response so a client can cut its own cut-off.
+ * Paged with `limit`/`offset` like the rest of the dashboard's lists.
  */
 export const zEmbeddingSearchResponse = z.object({
-    query: z.string(),
-    kind: zEmbeddingKind,
-    task: z.string(),
-    candidates: z.int().optional().default(0),
     total: z.int().optional().default(0),
     interviews: z.int().optional().default(0),
     offset: z.int().optional().default(0),
-    items: z.array(zEmbeddingSearchHit).optional().default([])
+    items: z.array(zEmbeddingSearchHit).optional().default([]),
+    candidates: z.int().optional().default(0),
+    query: z.string(),
+    kind: zEmbeddingKind,
+    task: z.string()
 });
 
 /**
@@ -3108,12 +3128,12 @@ export const zEmbeddingSearchResponse = z.object({
  * One page of the neighbours of a chunk already in the corpus.
  */
 export const zEmbeddingSimilarResponse = z.object({
-    source: zEmbeddingSearchHit,
-    candidates: z.int().optional().default(0),
     total: z.int().optional().default(0),
     interviews: z.int().optional().default(0),
     offset: z.int().optional().default(0),
-    items: z.array(zEmbeddingSearchHit).optional().default([])
+    items: z.array(zEmbeddingSearchHit).optional().default([]),
+    candidates: z.int().optional().default(0),
+    source: zEmbeddingSearchHit
 });
 
 /**
@@ -3142,7 +3162,7 @@ export const zTranscriptTurn = z.object({
     section: z.int().nullish(),
     main_question: z.int().nullish(),
     sub_question: z.int().nullish(),
-    survey_item: z.union([
+    survey_item: z.discriminatedUnion('type', [
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
@@ -3218,9 +3238,9 @@ export const zUploadParticipantsResponse = z.object({
 });
 
 /**
- * UserAdmin
+ * UserAdminPublic
  */
-export const zUserAdmin = z.object({
+export const zUserAdminPublic = z.object({
     email: z.email(),
     first_name: z.string(),
     last_name: z.string().nullish(),
@@ -3243,24 +3263,17 @@ export const zUserAdmin = z.object({
 });
 
 /**
- * UserCreateRequest
- *
- * API request model for user registration.
+ * UserAdminUpdate
  */
-export const zUserCreateRequest = z.object({
-    email: z.email(),
-    first_name: z.string(),
-    last_name: z.string().nullish(),
-    created_at: z.iso.datetime().optional(),
-    last_active: z.iso.datetime().optional(),
-    last_login: z.iso.datetime().nullish(),
-    scope: zScope.optional().default('user'),
-    invite_token: z.union([
-        z.string(),
-        z.string()
-    ]).nullable(),
-    research_consent: z.boolean().optional().default(false),
-    password: z.string().min(8)
+export const zUserAdminUpdate = z.object({
+    scope: zScope.optional(),
+    with_preview_features: z.boolean().optional(),
+    organization: z.string().nullish(),
+    expires_at: z.iso.datetime().nullish(),
+    two_factor_enabled: z.boolean().optional(),
+    demo_concurrent_limit: z.int().gte(0).nullish(),
+    demo_daily_limit: z.int().gte(0).nullish(),
+    demo_lifetime_limit: z.int().gte(0).nullish()
 });
 
 /**
@@ -3308,9 +3321,9 @@ export const zCollaboratorPublic = z.object({
 });
 
 /**
- * ProjectFolderPublic
+ * FolderPublic
  */
-export const zProjectFolderPublic = z.object({
+export const zFolderPublic = z.object({
     title: z.string(),
     id: z.string(),
     archived_at: z.iso.datetime().nullish(),
@@ -3337,14 +3350,25 @@ export const zProjectPublic = z.object({
 });
 
 /**
- * ProjectFolderWithProjects
+ * FolderWithProjectsPublic
  */
-export const zProjectFolderWithProjects = z.object({
+export const zFolderWithProjectsPublic = z.object({
     title: z.string(),
     id: z.string(),
     archived_at: z.iso.datetime().nullish(),
     collaborators: z.array(zCollaboratorPublic).optional().default([]),
     projects: z.array(zProjectPublic)
+});
+
+/**
+ * UserSelfUpdate
+ *
+ * Profile fields a user may change on their own account.
+ */
+export const zUserSelfUpdate = z.object({
+    first_name: z.string().optional(),
+    last_name: z.string().nullish(),
+    organization: z.string().nullish()
 });
 
 /**
@@ -3449,138 +3473,6 @@ export const zWelcome = z.object({
 });
 
 /**
- * _Unset
- */
-export const zUnset = z.enum(['UNSET']);
-
-/**
- * InvitationUpdate
- */
-export const zInvitationUpdate = z.object({
-    email: z.union([
-        z.string(),
-        zUnset
-    ]).nullish().default('UNSET'),
-    expires_at: z.union([
-        z.iso.datetime(),
-        zUnset
-    ]).nullish().default('UNSET'),
-    reuseable: z.union([
-        z.boolean(),
-        zUnset
-    ]).optional().default('UNSET'),
-    user_scope: z.union([
-        zScope,
-        zUnset
-    ]).optional().default('UNSET'),
-    user_expires: z.union([
-        z.iso.datetime(),
-        zTimeDelta,
-        zUnset
-    ]).nullish().default('UNSET'),
-    title: z.union([
-        z.string(),
-        zUnset
-    ]).nullish().default('UNSET'),
-    alias: z.union([
-        z.string(),
-        zUnset
-    ]).nullish().default('UNSET'),
-    user_demo_concurrent_limit: z.union([
-        z.int().gte(0),
-        zUnset
-    ]).nullish().default('UNSET'),
-    user_demo_daily_limit: z.union([
-        z.int().gte(0),
-        zUnset
-    ]).nullish().default('UNSET'),
-    user_demo_lifetime_limit: z.union([
-        z.int().gte(0),
-        zUnset
-    ]).nullish().default('UNSET')
-});
-
-/**
- * ParticipantUpdate
- */
-export const zParticipantUpdate = z.object({
-    name: z.union([
-        z.string(),
-        zUnset
-    ]).nullish().default('UNSET'),
-    email: z.union([
-        z.email(),
-        zUnset
-    ]).nullish().default('UNSET'),
-    pid: z.union([
-        z.string(),
-        zUnset
-    ]).optional().default('UNSET'),
-    participating: z.union([
-        z.boolean(),
-        zUnset
-    ]).optional().default('UNSET')
-});
-
-/**
- * UserAdminUpdate
- */
-export const zUserAdminUpdate = z.object({
-    scope: z.union([
-        zScope,
-        zUnset
-    ]).optional().default('UNSET'),
-    with_preview_features: z.union([
-        z.boolean(),
-        zUnset
-    ]).optional().default('UNSET'),
-    organization: z.union([
-        z.string(),
-        zUnset
-    ]).nullish().default('UNSET'),
-    expires_at: z.union([
-        z.iso.datetime(),
-        zUnset
-    ]).nullish().default('UNSET'),
-    two_factor_enabled: z.union([
-        z.boolean(),
-        zUnset
-    ]).optional().default('UNSET'),
-    demo_concurrent_limit: z.union([
-        z.int().gte(0),
-        zUnset
-    ]).nullish().default('UNSET'),
-    demo_daily_limit: z.union([
-        z.int().gte(0),
-        zUnset
-    ]).nullish().default('UNSET'),
-    demo_lifetime_limit: z.union([
-        z.int().gte(0),
-        zUnset
-    ]).nullish().default('UNSET')
-});
-
-/**
- * UserSelfUpdate
- *
- * Profile fields a user may change on their own account.
- */
-export const zUserSelfUpdate = z.object({
-    first_name: z.union([
-        z.string(),
-        zUnset
-    ]).optional().default('UNSET'),
-    last_name: z.union([
-        z.string(),
-        zUnset
-    ]).nullish().default('UNSET'),
-    organization: z.union([
-        z.string(),
-        zUnset
-    ]).nullish().default('UNSET')
-});
-
-/**
  * AuthToken
  */
 export const zAuthToken = z.object({
@@ -3647,7 +3539,6 @@ export const zOutgoingData = z.object({
  * OutgoingHistoryMessage
  */
 export const zOutgoingHistoryMessage = z.object({
-    type: z.literal('history').optional().default('history'),
     content: z.string(),
     role: zMessageRole,
     message_id: z.int(),
@@ -3656,33 +3547,7 @@ export const zOutgoingHistoryMessage = z.object({
         zImage,
         z.array(zImage)
     ]).nullish().default(null),
-    survey_item: z.union([
-        zRadioItem,
-        zCheckboxItem,
-        zLikertItem,
-        zSliderItem,
-        zNumberItem,
-        zDateItem,
-        zDatetimeItem,
-        zTimeItem
-    ]).nullish().default(null),
-    security_intervention: zSecurityIntervention.nullish().default(null)
-});
-
-/**
- * OutgoingMessage
- */
-export const zOutgoingMessage = z.object({
-    type: z.literal('message').optional().default('message'),
-    content: z.string(),
-    role: zMessageRole,
-    message_id: z.int(),
-    feedback: zFeedback.nullish().default(null),
-    image: z.union([
-        zImage,
-        z.array(zImage)
-    ]).nullish().default(null),
-    survey_item: z.union([
+    survey_item: z.discriminatedUnion('type', [
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
@@ -3693,6 +3558,33 @@ export const zOutgoingMessage = z.object({
         zTimeItem
     ]).nullish().default(null),
     security_intervention: zSecurityIntervention.nullish().default(null),
+    type: z.literal('history').optional().default('history')
+});
+
+/**
+ * OutgoingMessage
+ */
+export const zOutgoingMessage = z.object({
+    content: z.string(),
+    role: zMessageRole,
+    message_id: z.int(),
+    feedback: zFeedback.nullish().default(null),
+    image: z.union([
+        zImage,
+        z.array(zImage)
+    ]).nullish().default(null),
+    survey_item: z.discriminatedUnion('type', [
+        zRadioItem,
+        zCheckboxItem,
+        zLikertItem,
+        zSliderItem,
+        zNumberItem,
+        zDateItem,
+        zDatetimeItem,
+        zTimeItem
+    ]).nullish().default(null),
+    security_intervention: zSecurityIntervention.nullish().default(null),
+    type: z.literal('message').optional().default('message'),
     can_answer: z.boolean().optional().default(true),
     user_image: z.boolean().optional().default(false),
     progress: z.number().gte(0).lte(100).nullish().default(null),
@@ -3826,7 +3718,7 @@ export const zGetCodebookQuery = z.object({
  */
 export const zGetCodebookResponse = zCodebookPublic;
 
-export const zSaveCodebookBody = zCodebookPut;
+export const zSaveCodebookBody = zCodebookReplace;
 
 export const zSaveCodebookPath = z.object({
     project_id: z.string().nullable()
@@ -3888,7 +3780,7 @@ export const zAddMessageCodingQuery = z.object({
  */
 export const zAddMessageCodingResponse = zCodingPublic;
 
-export const zGetCodingsForMessagesBody = zCodingsForMessages;
+export const zGetCodingsForMessagesBody = zCodingLookupRequest;
 
 export const zGetCodingsForMessagesPath = z.object({
     project_id: z.string().nullable()
@@ -4062,6 +3954,8 @@ export const zSearchEmbeddingsPath = z.object({
 });
 
 export const zSearchEmbeddingsQuery = z.object({
+    limit: z.int().gte(1).lte(100).optional().default(10),
+    offset: z.int().gte(0).optional().default(0),
     query: z.string().min(1).max(2000),
     kind: zEmbeddingKind.optional().default('qa_pair'),
     task: zQueryTask.optional().default('retrieval'),
@@ -4087,9 +3981,7 @@ export const zSearchEmbeddingsQuery = z.object({
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
-    main_answers_only: z.boolean().optional().default(false),
-    limit: z.int().gte(1).lte(100).optional().default(10),
-    offset: z.int().gte(0).optional().default(0)
+    main_answers_only: z.boolean().optional().default(false)
 });
 
 /**
@@ -4102,6 +3994,8 @@ export const zBrowseEmbeddingsPath = z.object({
 });
 
 export const zBrowseEmbeddingsQuery = z.object({
+    limit: z.int().gte(1).lte(100).optional().default(10),
+    offset: z.int().gte(0).optional().default(0),
     kind: zEmbeddingKind.optional().default('qa_pair'),
     order: z.enum([
         'random',
@@ -4132,9 +4026,7 @@ export const zBrowseEmbeddingsQuery = z.object({
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
-    main_answers_only: z.boolean().optional().default(false),
-    limit: z.int().gte(1).lte(100).optional().default(10),
-    offset: z.int().gte(0).optional().default(0)
+    main_answers_only: z.boolean().optional().default(false)
 });
 
 /**
@@ -4237,6 +4129,8 @@ export const zFindEmbeddingsLikeCodePath = z.object({
 });
 
 export const zFindEmbeddingsLikeCodeQuery = z.object({
+    limit: z.int().gte(1).lte(100).optional().default(10),
+    offset: z.int().gte(0).optional().default(0),
     kind: zEmbeddingKind.optional().default('qa_pair'),
     subtree: z.boolean().optional().default(false),
     whole_interviews: z.boolean().optional().default(false),
@@ -4261,9 +4155,7 @@ export const zFindEmbeddingsLikeCodeQuery = z.object({
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
-    main_answers_only: z.boolean().optional().default(false),
-    limit: z.int().gte(1).lte(100).optional().default(10),
-    offset: z.int().gte(0).optional().default(0)
+    main_answers_only: z.boolean().optional().default(false)
 });
 
 /**
@@ -4277,6 +4169,8 @@ export const zFindSimilarEmbeddingsPath = z.object({
 });
 
 export const zFindSimilarEmbeddingsQuery = z.object({
+    limit: z.int().gte(1).lte(100).optional().default(10),
+    offset: z.int().gte(0).optional().default(0),
     whole_interviews: z.boolean().optional().default(false),
     folder_id: z.string().nullish(),
     language: z.array(zLanguageCode).nullish(),
@@ -4299,9 +4193,7 @@ export const zFindSimilarEmbeddingsQuery = z.object({
     coded_others: z.enum(['any', 'none']).nullish(),
     coder_join: z.enum(['and', 'or']).optional().default('and'),
     coder_id: z.string().nullish(),
-    main_answers_only: z.boolean().optional().default(false),
-    limit: z.int().gte(1).lte(100).optional().default(10),
-    offset: z.int().gte(0).optional().default(0)
+    main_answers_only: z.boolean().optional().default(false)
 });
 
 /**
@@ -4468,14 +4360,14 @@ export const zGenerateExperimentQrPath = z.object({
  *
  * Successful Response
  */
-export const zGetFoldersResponse = z.array(zProjectFolderWithProjects);
+export const zGetFoldersResponse = z.array(zFolderWithProjectsPublic);
 
-export const zCreateFolderBody = zProjectFolderCreate;
+export const zCreateFolderBody = zFolderCreate;
 
 /**
  * Successful Response
  */
-export const zCreateFolderResponse = zProjectFolderPublic;
+export const zCreateFolderResponse = zFolderPublic;
 
 export const zDeleteFolderPath = z.object({
     folder_id: z.string().nullable()
@@ -4485,7 +4377,7 @@ export const zDeleteFolderQuery = z.object({
     project_id: z.string().nullish()
 });
 
-export const zEditFolderBody = zProjectFolderEdit;
+export const zEditFolderBody = zFolderUpdate;
 
 export const zEditFolderPath = z.object({
     folder_id: z.string().nullable()
@@ -4559,7 +4451,7 @@ export const zAddCollaboratorQuery = z.object({
  */
 export const zAddCollaboratorResponse = zCollaboratorPublic;
 
-export const zCreateProjectBody = zCreateProjectRequest;
+export const zCreateProjectBody = zProjectCreate;
 
 export const zCreateProjectPath = z.object({
     folder_id: z.string().nullable()
@@ -4754,7 +4646,7 @@ export const zListParticipantEmailAttachmentsQuery = z.object({
  *
  * Successful Response
  */
-export const zListParticipantEmailAttachmentsResponse = z.array(zParticipantEmailAttachment);
+export const zListParticipantEmailAttachmentsResponse = z.array(zParticipantEmailAttachmentPublic);
 
 export const zUploadParticipantEmailAttachmentsBody = zBodyUploadParticipantEmailAttachments;
 
@@ -4772,7 +4664,7 @@ export const zUploadParticipantEmailAttachmentsQuery = z.object({
  *
  * Successful Response
  */
-export const zUploadParticipantEmailAttachmentsResponse = z.array(zParticipantEmailAttachment);
+export const zUploadParticipantEmailAttachmentsResponse = z.array(zParticipantEmailAttachmentPublic);
 
 export const zDeleteParticipantEmailAttachmentPath = z.object({
     project_id: z.string().nullable(),
@@ -4789,7 +4681,7 @@ export const zDeleteParticipantEmailAttachmentQuery = z.object({
  *
  * Successful Response
  */
-export const zDeleteParticipantEmailAttachmentResponse = z.array(zParticipantEmailAttachment);
+export const zDeleteParticipantEmailAttachmentResponse = z.array(zParticipantEmailAttachmentPublic);
 
 export const zSendParticipantEmailsBody = zSendParticipantEmailRequest;
 
@@ -4854,7 +4746,7 @@ export const zListParticipantReminderEmailAttachmentsQuery = z.object({
  *
  * Successful Response
  */
-export const zListParticipantReminderEmailAttachmentsResponse = z.array(zParticipantEmailAttachment);
+export const zListParticipantReminderEmailAttachmentsResponse = z.array(zParticipantEmailAttachmentPublic);
 
 export const zUploadParticipantReminderEmailAttachmentsBody = zBodyUploadParticipantReminderEmailAttachments;
 
@@ -4872,7 +4764,7 @@ export const zUploadParticipantReminderEmailAttachmentsQuery = z.object({
  *
  * Successful Response
  */
-export const zUploadParticipantReminderEmailAttachmentsResponse = z.array(zParticipantEmailAttachment);
+export const zUploadParticipantReminderEmailAttachmentsResponse = z.array(zParticipantEmailAttachmentPublic);
 
 export const zDeleteParticipantReminderEmailAttachmentPath = z.object({
     project_id: z.string().nullable(),
@@ -4889,7 +4781,7 @@ export const zDeleteParticipantReminderEmailAttachmentQuery = z.object({
  *
  * Successful Response
  */
-export const zDeleteParticipantReminderEmailAttachmentResponse = z.array(zParticipantEmailAttachment);
+export const zDeleteParticipantReminderEmailAttachmentResponse = z.array(zParticipantEmailAttachmentPublic);
 
 export const zSendParticipantReminderEmailsBody = zSendParticipantEmailRequest;
 
@@ -5293,7 +5185,7 @@ export const zGetInterviewModelsQuery = z.object({
  */
 export const zGetInterviewModelsResponse = z.array(z.string());
 
-export const zUpdateExternalParamsBody = zExternalParamsRequest;
+export const zUpdateExternalParamsBody = zExternalParamsReplace;
 
 export const zUpdateExternalParamsPath = z.object({
     project_id: z.string().nullable()
@@ -5430,7 +5322,7 @@ export const zUploadWelcomeVideoQuery = z.object({
  */
 export const zUploadWelcomeVideoResponse = z.string();
 
-export const zDeleteInterviewsBody = zDeleteInterviewRequest;
+export const zDeleteInterviewsBody = zInterviewSelection;
 
 export const zDeleteInterviewsPath = z.object({
     project_id: z.string().nullable()
@@ -5445,6 +5337,10 @@ export const zGetInterviewsPath = z.object({
 });
 
 export const zGetInterviewsQuery = z.object({
+    offset: z.int().gte(0).optional().default(0),
+    limit: z.int().gte(1).lte(100).optional().default(20),
+    column: z.string().optional().default('created_at'),
+    order: z.enum(['asc', 'desc']).optional().default('desc'),
     interview_types: z.array(zInterviewType).nullish(),
     types: z.array(zInterviewType).nullish(),
     statuses: z.array(zInterviewStatus).nullish(),
@@ -5456,11 +5352,7 @@ export const zGetInterviewsQuery = z.object({
     pid: z.string().max(200).nullish(),
     reported: z.boolean().nullish(),
     intervened: z.boolean().nullish(),
-    folder_id: z.string().nullish(),
-    offset: z.int().lte(100).optional().default(0),
-    limit: z.int().lte(100).optional().default(20),
-    column: z.string().optional().default('created_at'),
-    order: z.enum(['asc', 'desc']).optional().default('desc')
+    folder_id: z.string().nullish()
 });
 
 /**
@@ -5512,7 +5404,7 @@ export const zCreateInterviewResumeLinkQuery = z.object({
 /**
  * Successful Response
  */
-export const zCreateInterviewResumeLinkResponse = zInterviewResumeLinkCreated;
+export const zCreateInterviewResumeLinkResponse = zInterviewResumeLinkResponse;
 
 export const zGetMessagePath = z.object({
     project_id: z.string().nullable(),
@@ -5818,19 +5710,19 @@ export const zListContentVersionsPath = z.object({
 });
 
 export const zListContentVersionsQuery = z.object({
-    folder_id: z.string().nullish(),
-    offset: z.int().lte(100).optional().default(0),
-    limit: z.int().lte(100).optional().default(20),
+    offset: z.int().gte(0).optional().default(0),
+    limit: z.int().gte(1).lte(100).optional().default(20),
     column: z.string().optional().default('created_at'),
-    order: z.enum(['asc', 'desc']).optional().default('desc')
+    order: z.enum(['asc', 'desc']).optional().default('desc'),
+    folder_id: z.string().nullish()
 });
 
 /**
  * Successful Response
  */
-export const zListContentVersionsResponse = zPaginatedResponseContentVersionSummary;
+export const zListContentVersionsResponse = zPaginatedResponseContentVersionSummaryPublic;
 
-export const zSaveContentVersionBody = zSaveVersionRequest;
+export const zSaveContentVersionBody = zContentVersionCreate;
 
 export const zSaveContentVersionHeaders = z.object({
     'if-match': z.string().nullish()
@@ -5847,7 +5739,7 @@ export const zSaveContentVersionQuery = z.object({
 /**
  * Successful Response
  */
-export const zSaveContentVersionResponse = zContentVersionSummary;
+export const zSaveContentVersionResponse = zContentVersionSummaryPublic;
 
 export const zGetContentVersionPath = z.object({
     project_id: z.string().nullable(),
@@ -5887,7 +5779,7 @@ export const zValidateInterviewParamsPath = z.object({
     project_id: z.string()
 });
 
-export const zCreateInterviewBody = zCreateInterviewRequest;
+export const zCreateInterviewBody = zInterviewCreate;
 
 export const zCreateInterviewHeaders = z.object({
     'user-agent': z.string().nullish(),
@@ -5913,7 +5805,7 @@ export const zRedeemInterviewResumeLinkPath = z.object({
 /**
  * Successful Response
  */
-export const zRedeemInterviewResumeLinkResponse = zInterviewResumeRedeemed;
+export const zRedeemInterviewResumeLinkResponse = zInterviewResumeResponse;
 
 export const zPutFeedbackBody = zMessageFeedbackRequest;
 
@@ -5950,7 +5842,7 @@ export const zSynthesizeSpeechBody = zSpeechRequest;
  */
 export const zSynthesizeSpeechResponse = z.string();
 
-export const zLoginBody = zLoginData;
+export const zLoginBody = zLoginRequest;
 
 export const zVerifyLoginCodeBody = zVerifyLoginCodeRequest;
 
@@ -5977,7 +5869,7 @@ export const zUpdateMyEmailResponse = zUserPublic;
 
 export const zUpdateMyPasswordBody = zUpdatePasswordRequest;
 
-export const zRegisterBody = zUserCreateRequest;
+export const zRegisterBody = zRegisterRequest;
 
 export const zVerifyEmailBody = zVerifyEmailRequest;
 
@@ -6027,19 +5919,19 @@ export const zGetReportsQuery = z.object({
  */
 export const zGetReportsResponse = z.array(zMessageReportAdminRowPublic);
 
-export const zResolveReportsBody = zAdminReportReviewRequest;
+export const zResolveReportsBody = zReportReviewRequest;
 
 /**
  * Successful Response
  */
-export const zResolveReportsResponse = zAdminReportReviewResponse;
+export const zResolveReportsResponse = zReportReviewResponse;
 
-export const zMarkReportsReadBody = zAdminReportReadRequest;
+export const zMarkReportsReadBody = zReportReadRequest;
 
 /**
  * Successful Response
  */
-export const zMarkReportsReadResponse = zAdminReportReviewResponse;
+export const zMarkReportsReadResponse = zReportReviewResponse;
 
 export const zProxyToEc2ManagerDeletePath = z.object({
     full_path: z.string()
@@ -6079,7 +5971,7 @@ export const zDeleteUserQuery = z.object({
  *
  * Successful Response
  */
-export const zGetUsersResponse = z.array(zUserAdmin);
+export const zGetUsersResponse = z.array(zUserAdminPublic);
 
 export const zUpdateAdminNoteBody = zAdminNoteUpdate;
 
@@ -6090,7 +5982,7 @@ export const zUpdateAdminNotePath = z.object({
 /**
  * Successful Response
  */
-export const zUpdateAdminNoteResponse = zUserAdmin;
+export const zUpdateAdminNoteResponse = zUserAdminPublic;
 
 export const zUpdateUserBody = zUserAdminUpdate;
 
@@ -6101,7 +5993,7 @@ export const zUpdateUserPath = z.object({
 /**
  * Successful Response
  */
-export const zUpdateUserResponse = zUserAdmin;
+export const zUpdateUserResponse = zUserAdminPublic;
 
 /**
  * Successful Response

@@ -5,7 +5,7 @@
 	import type {
 		ContentVersionKind,
 		ContentVersionPublic,
-		ContentVersionSummary,
+		ContentVersionSummaryPublic,
 		ProjectLanguage
 	} from '$lib/api/types.gen';
 	import { portal } from '$lib/utils/portal';
@@ -27,7 +27,7 @@
 
 	const PAGE = 20;
 
-	let versions = $state<ContentVersionSummary[]>([]);
+	let versions = $state<ContentVersionSummaryPublic[]>([]);
 	let total = $state(0);
 	let loading = $state(false);
 	let saving = $state(false);
@@ -74,7 +74,7 @@
 		await load();
 	}
 
-	async function showPreview(version: ContentVersionSummary) {
+	async function showPreview(version: ContentVersionSummaryPublic) {
 		const { data, error } = await Versions.getContentVersion({
 			path: { project_id: projectId, version_id: version.id }
 		});
@@ -85,7 +85,7 @@
 		preview = data;
 	}
 
-	async function restore(version: ContentVersionSummary) {
+	async function restore(version: ContentVersionSummaryPublic) {
 		const name = version.semver ? `version ${version.semver}` : `snapshot #${version.version_no}`;
 		if (
 			!confirm(

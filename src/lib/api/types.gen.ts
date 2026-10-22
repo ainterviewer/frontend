@@ -65,37 +65,6 @@ export type AdminNoteUpdate = {
 };
 
 /**
- * AdminReportReadRequest
- */
-export type AdminReportReadRequest = {
-    /**
-     * Ids
-     */
-    ids: Array<string>;
-};
-
-/**
- * AdminReportReviewRequest
- */
-export type AdminReportReviewRequest = {
-    /**
-     * Ids
-     */
-    ids: Array<string>;
-    status: ReportStatus;
-};
-
-/**
- * AdminReportReviewResponse
- */
-export type AdminReportReviewResponse = {
-    /**
-     * Updated
-     */
-    updated: number;
-};
-
-/**
  * AdminStats
  */
 export type AdminStats = {
@@ -438,13 +407,13 @@ export type CategoryCount = {
  */
 export type CheckboxItem = {
     /**
-     * Type
-     */
-    type?: 'checkbox';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'checkbox';
     /**
      * Options
      */
@@ -456,14 +425,51 @@ export type CheckboxItem = {
 };
 
 /**
- * CodeBase
+ * CodeFacet
+ *
+ * One code, with how much of the current view carries it.
+ */
+export type CodeFacet = {
+    /**
+     * Code Id
+     */
+    code_id: string;
+    /**
+     * Count
+     */
+    count?: number;
+    /**
+     * Subtree
+     */
+    subtree?: number;
+};
+
+/**
+ * CodeFacets
+ *
+ * What each code in the codebook is worth over the chunks now in view.
+ */
+export type CodeFacets = {
+    kind: EmbeddingKind;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Items
+     */
+    items?: Array<CodeFacet>;
+};
+
+/**
+ * CodeInput
  *
  * One code as the client sends it, id and all.
  *
  * The id is the client's because a code is dragged, renamed and coded with
  * long before the codebook is saved; see ``CodeTable``.
  */
-export type CodeBase = {
+export type CodeInput = {
     /**
      * Id
      */
@@ -505,43 +511,6 @@ export type CodeBase = {
      * Position Y
      */
     position_y?: number | null;
-};
-
-/**
- * CodeFacet
- *
- * One code, with how much of the current view carries it.
- */
-export type CodeFacet = {
-    /**
-     * Code Id
-     */
-    code_id: string;
-    /**
-     * Count
-     */
-    count?: number;
-    /**
-     * Subtree
-     */
-    subtree?: number;
-};
-
-/**
- * CodeFacets
- *
- * What each code in the codebook is worth over the chunks now in view.
- */
-export type CodeFacets = {
-    kind: EmbeddingKind;
-    /**
-     * Total
-     */
-    total?: number;
-    /**
-     * Items
-     */
-    items?: Array<CodeFacet>;
 };
 
 /**
@@ -629,7 +598,7 @@ export type CodebookPublic = {
 };
 
 /**
- * CodebookPut
+ * CodebookReplace
  *
  * A whole codebook, replacing the stored one.
  *
@@ -648,11 +617,11 @@ export type CodebookPublic = {
  * already gone from the store is a merge an earlier save carried out, and is
  * ignored.
  */
-export type CodebookPut = {
+export type CodebookReplace = {
     /**
      * Codes
      */
-    codes: Array<CodeBase>;
+    codes: Array<CodeInput>;
     /**
      * Palette
      */
@@ -685,6 +654,23 @@ export type CodingCreate = {
      * Value Int
      */
     value_int?: number | null;
+};
+
+/**
+ * CodingLookupRequest
+ *
+ * Which messages to read the codings of.
+ *
+ * A POST for a read, like the filtered-message endpoints beside it: the
+ * explore page draws a page of results as a mosaic of turns from many
+ * interviews, so the ask is a few hundred message ids -- more than belongs in
+ * a query string, and a request per turn would be a request per turn.
+ */
+export type CodingLookupRequest = {
+    /**
+     * Message Ids
+     */
+    message_ids: Array<string>;
 };
 
 /**
@@ -728,34 +714,6 @@ export type CodingPublic = {
      */
     updated_at: string;
     author: AuthorPublic;
-};
-
-/**
- * CodingsForMessages
- *
- * Which messages to read the codings of.
- *
- * A POST for a read, like the filtered-message endpoints beside it: the
- * explore page draws a page of results as a mosaic of turns from many
- * interviews, so the ask is a few hundred message ids -- more than belongs in
- * a query string, and a request per turn would be a request per turn.
- */
-export type CodingsForMessages = {
-    /**
-     * Message Ids
-     */
-    message_ids: Array<string>;
-};
-
-/**
- * Collaborator
- */
-export type Collaborator = {
-    /**
-     * Email
-     */
-    email: string;
-    role: CollaboratorRole;
 };
 
 /**
@@ -985,7 +943,7 @@ export type ContentStatus = {
      * Revision
      */
     revision: number;
-    published: ContentVersionSummary | null;
+    published: ContentVersionSummaryPublic | null;
     /**
      * Has Unpublished Changes
      */
@@ -1014,6 +972,24 @@ export type ContentStatus = {
     doc_errors?: {
         [key in ContentPart]?: Array<string>;
     };
+};
+
+/**
+ * ContentVersionCreate
+ */
+export type ContentVersionCreate = {
+    /**
+     * Label
+     */
+    label?: string | null;
+    /**
+     * Publish
+     */
+    publish?: boolean;
+    /**
+     * Bump
+     */
+    bump?: 'none' | 'patch' | 'minor' | 'major' | null;
 };
 
 /**
@@ -1091,11 +1067,11 @@ export type ContentVersionPublic = {
 };
 
 /**
- * ContentVersionSummary
+ * ContentVersionSummaryPublic
  *
  * One version of a project's content, as the history lists it.
  */
-export type ContentVersionSummary = {
+export type ContentVersionSummaryPublic = {
     /**
      * Id
      */
@@ -1138,56 +1114,6 @@ export type ContentVersionSummary = {
      * Languages In Progress
      */
     languages_in_progress: Array<LanguageCode>;
-};
-
-/**
- * CreateInterviewRequest
- */
-export type CreateInterviewRequest = {
-    interviewer?: Interviewer;
-    interview_type?: InterviewType;
-    /**
-     * Test Run Id
-     */
-    test_run_id?: string | null;
-    /**
-     * Experiment Id
-     */
-    experiment_id?: string | null;
-    synthetic_test_type?: TestType | null;
-    /**
-     * Participant Id
-     */
-    participant_id?: string | null;
-    /**
-     * Pid
-     */
-    pid?: string | null;
-    /**
-     * External Params
-     *
-     * Extra query parameters, can include external user-id or the like.
-     */
-    external_params?: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Referer
-     *
-     * The referer of original request
-     */
-    referer?: string | null;
-};
-
-/**
- * CreateProjectRequest
- */
-export type CreateProjectRequest = {
-    /**
-     * Title
-     */
-    title: string;
-    default_language: LanguageCode;
 };
 
 /**
@@ -1240,13 +1166,13 @@ export type DailyStats = {
  */
 export type DateItem = {
     /**
-     * Type
-     */
-    type?: 'date';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'date';
     /**
      * Min
      */
@@ -1262,13 +1188,13 @@ export type DateItem = {
  */
 export type DatetimeItem = {
     /**
-     * Type
-     */
-    type?: 'datetime';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'datetime';
     /**
      * Min
      */
@@ -1287,17 +1213,6 @@ export type DeleteAccountRequest = {
      * Password
      */
     password: string;
-};
-
-/**
- * DeleteInterviewRequest
- */
-export type DeleteInterviewRequest = {
-    /**
-     * Interview Ids
-     */
-    interview_ids?: Array<string> | null;
-    filters?: InterviewFilters | null;
 };
 
 /**
@@ -1501,7 +1416,6 @@ export type EmbeddingBackfillResponse = {
  * tailing off.
  */
 export type EmbeddingBrowseResponse = {
-    kind: EmbeddingKind;
     /**
      * Total
      */
@@ -1518,6 +1432,7 @@ export type EmbeddingBrowseResponse = {
      * Items
      */
     items?: Array<EmbeddingSearchHit>;
+    kind: EmbeddingKind;
 };
 
 /**
@@ -1652,18 +1567,6 @@ export type EmbeddingClusterResponse = {
  */
 export type EmbeddingCodeSimilarResponse = {
     /**
-     * Code Id
-     */
-    code_id: string;
-    /**
-     * Seeds
-     */
-    seeds?: number;
-    /**
-     * Candidates
-     */
-    candidates?: number;
-    /**
      * Total
      */
     total?: number;
@@ -1679,6 +1582,18 @@ export type EmbeddingCodeSimilarResponse = {
      * Items
      */
     items?: Array<EmbeddingSearchHit>;
+    /**
+     * Candidates
+     */
+    candidates?: number;
+    /**
+     * Code Id
+     */
+    code_id: string;
+    /**
+     * Seeds
+     */
+    seeds?: number;
 };
 
 /**
@@ -1806,12 +1721,29 @@ export type EmbeddingSearchHit = {
  *
  * One page of results for one query.
  *
- * Paged with `limit`/`offset` like the rest of the dashboard's lists, but
- * `total` is not a promise that every row is worth reading: the tail of a
- * ranked scan is whatever scored least, not a further set of matches. The
- * scores are in the response so a client can cut its own cut-off.
+ * Paged with `limit`/`offset` like the rest of the dashboard's lists.
  */
 export type EmbeddingSearchResponse = {
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Interviews
+     */
+    interviews?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
+    /**
+     * Items
+     */
+    items?: Array<EmbeddingSearchHit>;
+    /**
+     * Candidates
+     */
+    candidates?: number;
     /**
      * Query
      */
@@ -1821,26 +1753,6 @@ export type EmbeddingSearchResponse = {
      * Task
      */
     task: string;
-    /**
-     * Candidates
-     */
-    candidates?: number;
-    /**
-     * Total
-     */
-    total?: number;
-    /**
-     * Interviews
-     */
-    interviews?: number;
-    /**
-     * Offset
-     */
-    offset?: number;
-    /**
-     * Items
-     */
-    items?: Array<EmbeddingSearchHit>;
 };
 
 /**
@@ -1849,11 +1761,6 @@ export type EmbeddingSearchResponse = {
  * One page of the neighbours of a chunk already in the corpus.
  */
 export type EmbeddingSimilarResponse = {
-    source: EmbeddingSearchHit;
-    /**
-     * Candidates
-     */
-    candidates?: number;
     /**
      * Total
      */
@@ -1870,6 +1777,11 @@ export type EmbeddingSimilarResponse = {
      * Items
      */
     items?: Array<EmbeddingSearchHit>;
+    /**
+     * Candidates
+     */
+    candidates?: number;
+    source: EmbeddingSearchHit;
 };
 
 /**
@@ -2083,7 +1995,7 @@ export type ExportMessagesRequest = {
      * Interview Ids
      */
     interview_ids?: Array<string> | null;
-    filters?: InterviewFilters | null;
+    filters?: InterviewFilterParams | null;
     /**
      * Format
      */
@@ -2149,9 +2061,9 @@ export type ExternalParam = {
 };
 
 /**
- * ExternalParamsRequest
+ * ExternalParamsReplace
  */
-export type ExternalParamsRequest = {
+export type ExternalParamsReplace = {
     /**
      * Params
      */
@@ -2210,6 +2122,78 @@ export type FilteredMessagesRequest = {
      * Include Previous On User
      */
     include_previous_on_user?: boolean;
+};
+
+/**
+ * FolderCreate
+ */
+export type FolderCreate = {
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Folder Collaborations
+     */
+    folder_collaborations?: Array<CollaboratorCreate>;
+};
+
+/**
+ * FolderPublic
+ */
+export type FolderPublic = {
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Archived At
+     */
+    archived_at?: string | null;
+    /**
+     * Collaborators
+     */
+    collaborators?: Array<CollaboratorPublic>;
+};
+
+/**
+ * FolderUpdate
+ */
+export type FolderUpdate = {
+    /**
+     * Title
+     */
+    title: string;
+};
+
+/**
+ * FolderWithProjectsPublic
+ */
+export type FolderWithProjectsPublic = {
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Archived At
+     */
+    archived_at?: string | null;
+    /**
+     * Collaborators
+     */
+    collaborators?: Array<CollaboratorPublic>;
+    /**
+     * Projects
+     */
+    projects: Array<ProjectPublic>;
 };
 
 /**
@@ -2417,6 +2401,45 @@ export type InterviewConfig = {
 };
 
 /**
+ * InterviewCreate
+ */
+export type InterviewCreate = {
+    interviewer?: Interviewer;
+    interview_type?: InterviewType;
+    /**
+     * Test Run Id
+     */
+    test_run_id?: string | null;
+    /**
+     * Experiment Id
+     */
+    experiment_id?: string | null;
+    synthetic_test_type?: TestType | null;
+    /**
+     * Participant Id
+     */
+    participant_id?: string | null;
+    /**
+     * Pid
+     */
+    pid?: string | null;
+    /**
+     * External Params
+     *
+     * Extra query parameters, can include external user-id or the like.
+     */
+    external_params?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Referer
+     *
+     * The referer of original request
+     */
+    referer?: string | null;
+};
+
+/**
  * InterviewDurationStats
  *
  * Statistics about interview duration (active time spent).
@@ -2476,16 +2499,16 @@ export type InterviewFacets = {
 };
 
 /**
- * InterviewFilters
+ * InterviewFilterParams
  *
  * The interview list's filters, as the list endpoint takes them.
  *
  * Lets a bulk action target "everything matching" rather than ids the client
  * has seen: with server-side paging it only ever holds one page of them.
- * Same names and same defaults as the query parameters of `get_interviews`,
- * so "all 123 selected" means exactly the 123 the list counted.
+ * `get_interviews` takes this same model as its query parameters, so "all
+ * 123 selected" means exactly the 123 the list counted.
  */
-export type InterviewFilters = {
+export type InterviewFilterParams = {
     /**
      * Interview Types
      */
@@ -2616,22 +2639,6 @@ export type InterviewMessage = {
 };
 
 /**
- * InterviewResumeLinkCreated
- *
- * A freshly minted resume link. The only time the URL ever exists.
- */
-export type InterviewResumeLinkCreated = {
-    /**
-     * Url
-     */
-    url: string;
-    /**
-     * Expires At
-     */
-    expires_at: string;
-};
-
-/**
  * InterviewResumeLinkPublic
  *
  * The state of an interview's most recent resume link.
@@ -2664,14 +2671,30 @@ export type InterviewResumeLinkPublic = {
 };
 
 /**
- * InterviewResumeRedeemed
+ * InterviewResumeLinkResponse
+ *
+ * A freshly minted resume link. The only time the URL ever exists.
+ */
+export type InterviewResumeLinkResponse = {
+    /**
+     * Url
+     */
+    url: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+};
+
+/**
+ * InterviewResumeResponse
  *
  * What the interview page needs to resume after redeeming a link.
  *
  * The credential itself rides back as the httponly ``interview_token``
  * cookie; these ids only tell the page which interview to reconnect to.
  */
-export type InterviewResumeRedeemed = {
+export type InterviewResumeResponse = {
     /**
      * Project Id
      */
@@ -2680,6 +2703,19 @@ export type InterviewResumeRedeemed = {
      * Interview Id
      */
     interview_id: string;
+};
+
+/**
+ * InterviewSelection
+ *
+ * Interviews picked either by id or by the list's filters, never both.
+ */
+export type InterviewSelection = {
+    /**
+     * Interview Ids
+     */
+    interview_ids?: Array<string> | null;
+    filters?: InterviewFilterParams | null;
 };
 
 /**
@@ -3045,43 +3081,40 @@ export type InvitationUpdate = {
     /**
      * Email
      */
-    email?: string | Unset | null;
+    email?: string | null;
     /**
      * Expires At
      */
-    expires_at?: string | Unset | null;
+    expires_at?: string | null;
     /**
      * Reuseable
      */
-    reuseable?: boolean | Unset;
-    /**
-     * User Scope
-     */
-    user_scope?: Scope | Unset;
+    reuseable?: boolean;
+    user_scope?: Scope;
     /**
      * User Expires
      */
-    user_expires?: string | TimeDelta | Unset | null;
+    user_expires?: string | TimeDelta | null;
     /**
      * Title
      */
-    title?: string | Unset | null;
+    title?: string | null;
     /**
      * Alias
      */
-    alias?: string | Unset | null;
+    alias?: string | null;
     /**
      * User Demo Concurrent Limit
      */
-    user_demo_concurrent_limit?: number | Unset | null;
+    user_demo_concurrent_limit?: number | null;
     /**
      * User Demo Daily Limit
      */
-    user_demo_daily_limit?: number | Unset | null;
+    user_demo_daily_limit?: number | null;
     /**
      * User Demo Lifetime Limit
      */
-    user_demo_lifetime_limit?: number | Unset | null;
+    user_demo_lifetime_limit?: number | null;
 };
 
 /**
@@ -3116,7 +3149,23 @@ export type ItemDistribution = {
     /**
      * Item
      */
-    item: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    item: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     conditions?: Conditions | null;
     /**
      * N Asked
@@ -3220,13 +3269,13 @@ export type LanguageDict = {
  */
 export type LikertItem = {
     /**
-     * Type
-     */
-    type?: 'likert';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'likert';
     /**
      * Options
      */
@@ -3242,13 +3291,13 @@ export type LikertItem = {
  */
 export type LocalizedCheckboxItem = {
     /**
-     * Type
-     */
-    type?: 'checkbox';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'checkbox';
     /**
      * Options
      */
@@ -3395,13 +3444,13 @@ export type LocalizedInterviewGuide = {
  */
 export type LocalizedLikertItem = {
     /**
-     * Type
-     */
-    type?: 'likert';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'likert';
     /**
      * Options
      */
@@ -3458,7 +3507,23 @@ export type LocalizedQuestion = {
     /**
      * Survey Item
      */
-    survey_item?: LocalizedRadioItem | LocalizedCheckboxItem | LocalizedLikertItem | LocalizedSliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    survey_item?: ({
+        type: 'radio';
+    } & LocalizedRadioItem) | ({
+        type: 'checkbox';
+    } & LocalizedCheckboxItem) | ({
+        type: 'likert';
+    } & LocalizedLikertItem) | ({
+        type: 'slider';
+    } & LocalizedSliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     /**
      * Can Answer
      */
@@ -3527,13 +3592,13 @@ export type LocalizedQuestionSection = {
  */
 export type LocalizedRadioItem = {
     /**
-     * Type
-     */
-    type?: 'radio';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'radio';
     /**
      * Options
      */
@@ -3549,13 +3614,13 @@ export type LocalizedRadioItem = {
  */
 export type LocalizedSliderItem = {
     /**
-     * Type
-     */
-    type?: 'slider';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'slider';
     /**
      * Min
      */
@@ -3618,9 +3683,9 @@ export type LocalizedWelcome = {
 };
 
 /**
- * LoginData
+ * LoginRequest
  */
-export type LoginData = {
+export type LoginRequest = {
     /**
      * Email
      */
@@ -3849,7 +3914,23 @@ export type MessagePublic = {
     /**
      * Survey Item
      */
-    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    survey_item?: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     /**
      * Skipped By Condition
      */
@@ -4229,13 +4310,13 @@ export type NewsletterRequest = {
  */
 export type NumberItem = {
     /**
-     * Type
-     */
-    type?: 'number';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'number';
     /**
      * Min
      */
@@ -4278,9 +4359,9 @@ export type NumericStats = {
 };
 
 /**
- * PaginatedResponse[ContentVersionSummary]
+ * PaginatedResponse[ContentVersionSummaryPublic]
  */
-export type PaginatedResponseContentVersionSummary = {
+export type PaginatedResponseContentVersionSummaryPublic = {
     /**
      * Total
      */
@@ -4288,7 +4369,7 @@ export type PaginatedResponseContentVersionSummary = {
     /**
      * Items
      */
-    items: Array<ContentVersionSummary>;
+    items: Array<ContentVersionSummaryPublic>;
 };
 
 /**
@@ -4325,9 +4406,9 @@ export type ParticipantEmail = {
 };
 
 /**
- * ParticipantEmailAttachment
+ * ParticipantEmailAttachmentPublic
  */
-export type ParticipantEmailAttachment = {
+export type ParticipantEmailAttachmentPublic = {
     /**
      * Filename
      */
@@ -4421,19 +4502,19 @@ export type ParticipantUpdate = {
     /**
      * Name
      */
-    name?: string | Unset | null;
+    name?: string | null;
     /**
      * Email
      */
-    email?: string | Unset | null;
+    email?: string | null;
     /**
      * Pid
      */
-    pid?: string | Unset;
+    pid?: string;
     /**
      * Participating
      */
-    participating?: boolean | Unset;
+    participating?: boolean;
 };
 
 /**
@@ -4586,75 +4667,14 @@ export type ProjectContentPublic = {
 };
 
 /**
- * ProjectFolderCreate
+ * ProjectCreate
  */
-export type ProjectFolderCreate = {
+export type ProjectCreate = {
     /**
      * Title
      */
     title: string;
-    /**
-     * Folder Collaborations
-     */
-    folder_collaborations?: Array<Collaborator>;
-};
-
-/**
- * ProjectFolderEdit
- */
-export type ProjectFolderEdit = {
-    /**
-     * Title
-     */
-    title: string;
-};
-
-/**
- * ProjectFolderPublic
- */
-export type ProjectFolderPublic = {
-    /**
-     * Title
-     */
-    title: string;
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Archived At
-     */
-    archived_at?: string | null;
-    /**
-     * Collaborators
-     */
-    collaborators?: Array<CollaboratorPublic>;
-};
-
-/**
- * ProjectFolderWithProjects
- */
-export type ProjectFolderWithProjects = {
-    /**
-     * Title
-     */
-    title: string;
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Archived At
-     */
-    archived_at?: string | null;
-    /**
-     * Collaborators
-     */
-    collaborators?: Array<CollaboratorPublic>;
-    /**
-     * Projects
-     */
-    projects: Array<ProjectPublic>;
+    default_language: LanguageCode;
 };
 
 /**
@@ -4842,7 +4862,23 @@ export type Question = {
     /**
      * Survey Item
      */
-    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    survey_item?: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     /**
      * Can Answer
      *
@@ -5015,13 +5051,13 @@ export type QuestionSectionQuestion = {
  */
 export type RadioItem = {
     /**
-     * Type
-     */
-    type?: 'radio';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'radio';
     /**
      * Options
      */
@@ -5050,6 +5086,42 @@ export type Reference = {
      * The referred question.
      */
     question_id: string;
+};
+
+/**
+ * RegisterRequest
+ *
+ * API request model for user registration.
+ *
+ * Only what the person signing up chooses. The scope, the timestamps and the
+ * invitation's snapshot are the server's, so there is no field for a client
+ * to send them in.
+ */
+export type RegisterRequest = {
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * First Name
+     */
+    first_name: string;
+    /**
+     * Last Name
+     */
+    last_name?: string | null;
+    /**
+     * Invite Token
+     */
+    invite_token: string | string | null;
+    /**
+     * Research Consent
+     */
+    research_consent?: boolean;
+    /**
+     * Password
+     */
+    password: string;
 };
 
 /**
@@ -5119,9 +5191,10 @@ export type ReportReviewRequest = {
  *
  * How many rows the call actually changed.
  *
- * Not an error when it is fewer than were asked for: an id belonging to
- * another project is dropped rather than refused, so a stale client cannot
- * learn from the response whether a report it should not see exists.
+ * Not an error when it is fewer than were asked for: on the project track an
+ * id belonging to another project is dropped rather than refused, so a stale
+ * client cannot learn from the response whether a report it should not see
+ * exists.
  */
 export type ReportReviewResponse = {
     /**
@@ -5253,24 +5326,6 @@ export type SafetyFlag = {
      */
     respondent_override?: boolean;
     override?: SecurityOverride | null;
-};
-
-/**
- * SaveVersionRequest
- */
-export type SaveVersionRequest = {
-    /**
-     * Label
-     */
-    label?: string | null;
-    /**
-     * Publish
-     */
-    publish?: boolean;
-    /**
-     * Bump
-     */
-    bump?: 'none' | 'patch' | 'minor' | 'major' | null;
 };
 
 /**
@@ -5411,13 +5466,13 @@ export type SendParticipantEmailResponse = {
  */
 export type SliderItem = {
     /**
-     * Type
-     */
-    type?: 'slider';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'slider';
     /**
      * Min
      */
@@ -5689,13 +5744,13 @@ export type TimeDelta = {
  */
 export type TimeItem = {
     /**
-     * Type
-     */
-    type?: 'time';
-    /**
      * Required
      */
     required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'time';
     /**
      * Min
      */
@@ -5800,7 +5855,23 @@ export type TranscriptTurn = {
     /**
      * Survey Item
      */
-    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    survey_item?: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     /**
      * Skipped
      */
@@ -5891,9 +5962,9 @@ export type UploadParticipantsResponse = {
 };
 
 /**
- * UserAdmin
+ * UserAdminPublic
  */
-export type UserAdmin = {
+export type UserAdminPublic = {
     /**
      * Email
      */
@@ -5973,83 +6044,35 @@ export type UserAdmin = {
  * UserAdminUpdate
  */
 export type UserAdminUpdate = {
-    /**
-     * Scope
-     */
-    scope?: Scope | Unset;
+    scope?: Scope;
     /**
      * With Preview Features
      */
-    with_preview_features?: boolean | Unset;
+    with_preview_features?: boolean;
     /**
      * Organization
      */
-    organization?: string | Unset | null;
+    organization?: string | null;
     /**
      * Expires At
      */
-    expires_at?: string | Unset | null;
+    expires_at?: string | null;
     /**
      * Two Factor Enabled
      */
-    two_factor_enabled?: boolean | Unset;
+    two_factor_enabled?: boolean;
     /**
      * Demo Concurrent Limit
      */
-    demo_concurrent_limit?: number | Unset | null;
+    demo_concurrent_limit?: number | null;
     /**
      * Demo Daily Limit
      */
-    demo_daily_limit?: number | Unset | null;
+    demo_daily_limit?: number | null;
     /**
      * Demo Lifetime Limit
      */
-    demo_lifetime_limit?: number | Unset | null;
-};
-
-/**
- * UserCreateRequest
- *
- * API request model for user registration.
- */
-export type UserCreateRequest = {
-    /**
-     * Email
-     */
-    email: string;
-    /**
-     * First Name
-     */
-    first_name: string;
-    /**
-     * Last Name
-     */
-    last_name?: string | null;
-    /**
-     * Created At
-     */
-    created_at?: string;
-    /**
-     * Last Active
-     */
-    last_active?: string;
-    /**
-     * Last Login
-     */
-    last_login?: string | null;
-    scope?: Scope;
-    /**
-     * Invite Token
-     */
-    invite_token: string | string | null;
-    /**
-     * Research Consent
-     */
-    research_consent?: boolean;
-    /**
-     * Password
-     */
-    password: string;
+    demo_lifetime_limit?: number | null;
 };
 
 /**
@@ -6134,15 +6157,15 @@ export type UserSelfUpdate = {
     /**
      * First Name
      */
-    first_name?: string | Unset;
+    first_name?: string;
     /**
      * Last Name
      */
-    last_name?: string | Unset | null;
+    last_name?: string | null;
     /**
      * Organization
      */
-    organization?: string | Unset | null;
+    organization?: string | null;
 };
 
 /**
@@ -6260,11 +6283,6 @@ export type Welcome = {
 };
 
 /**
- * _Unset
- */
-export type Unset = 'UNSET';
-
-/**
  * AuthToken
  */
 export type AuthToken = {
@@ -6356,10 +6374,6 @@ export type OutgoingData = {
  */
 export type OutgoingHistoryMessage = {
     /**
-     * Type
-     */
-    type?: 'history';
-    /**
      * Content
      */
     content: string;
@@ -6376,8 +6390,28 @@ export type OutgoingHistoryMessage = {
     /**
      * Survey Item
      */
-    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    survey_item?: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     security_intervention?: SecurityIntervention | null;
+    /**
+     * Type
+     */
+    type?: 'history';
 };
 
 /**
@@ -6385,10 +6419,6 @@ export type OutgoingHistoryMessage = {
  */
 export type OutgoingMessage = {
     /**
-     * Type
-     */
-    type?: 'message';
-    /**
      * Content
      */
     content: string;
@@ -6405,8 +6435,28 @@ export type OutgoingMessage = {
     /**
      * Survey Item
      */
-    survey_item?: RadioItem | CheckboxItem | LikertItem | SliderItem | NumberItem | DateItem | DatetimeItem | TimeItem | null;
+    survey_item?: ({
+        type: 'radio';
+    } & RadioItem) | ({
+        type: 'checkbox';
+    } & CheckboxItem) | ({
+        type: 'likert';
+    } & LikertItem) | ({
+        type: 'slider';
+    } & SliderItem) | ({
+        type: 'number';
+    } & NumberItem) | ({
+        type: 'date';
+    } & DateItem) | ({
+        type: 'datetime';
+    } & DatetimeItem) | ({
+        type: 'time';
+    } & TimeItem) | null;
     security_intervention?: SecurityIntervention | null;
+    /**
+     * Type
+     */
+    type?: 'message';
     /**
      * Can Answer
      */
@@ -6658,7 +6708,7 @@ export type GetCodebookResponses = {
 export type GetCodebookResponse = GetCodebookResponses[keyof GetCodebookResponses];
 
 export type SaveCodebookData = {
-    body: CodebookPut;
+    body: CodebookReplace;
     path: {
         /**
          * Project Id
@@ -6828,7 +6878,7 @@ export type AddMessageCodingResponses = {
 export type AddMessageCodingResponse = AddMessageCodingResponses[keyof AddMessageCodingResponses];
 
 export type GetCodingsForMessagesData = {
-    body: CodingsForMessages;
+    body: CodingLookupRequest;
     path: {
         /**
          * Project Id
@@ -7324,6 +7374,14 @@ export type SearchEmbeddingsData = {
     };
     query: {
         /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
          * Query
          */
         query: string;
@@ -7405,14 +7463,6 @@ export type SearchEmbeddingsData = {
          * Main Answers Only
          */
         main_answers_only?: boolean;
-        /**
-         * Limit
-         */
-        limit?: number;
-        /**
-         * Offset
-         */
-        offset?: number;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/search';
 };
@@ -7448,6 +7498,14 @@ export type BrowseEmbeddingsData = {
         project_id: string;
     };
     query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
         kind?: EmbeddingKind;
         /**
          * Order
@@ -7537,14 +7595,6 @@ export type BrowseEmbeddingsData = {
          * Main Answers Only
          */
         main_answers_only?: boolean;
-        /**
-         * Limit
-         */
-        limit?: number;
-        /**
-         * Offset
-         */
-        offset?: number;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/browse';
 };
@@ -7850,6 +7900,14 @@ export type FindEmbeddingsLikeCodeData = {
         code_id: string;
     };
     query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
         kind?: EmbeddingKind;
         /**
          * Subtree
@@ -7931,14 +7989,6 @@ export type FindEmbeddingsLikeCodeData = {
          * Main Answers Only
          */
         main_answers_only?: boolean;
-        /**
-         * Limit
-         */
-        limit?: number;
-        /**
-         * Offset
-         */
-        offset?: number;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/codes/{code_id}/similar';
 };
@@ -7978,6 +8028,14 @@ export type FindSimilarEmbeddingsData = {
         embedding_id: string;
     };
     query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
         /**
          * Whole Interviews
          */
@@ -8054,14 +8112,6 @@ export type FindSimilarEmbeddingsData = {
          * Main Answers Only
          */
         main_answers_only?: boolean;
-        /**
-         * Limit
-         */
-        limit?: number;
-        /**
-         * Offset
-         */
-        offset?: number;
     };
     url: '/api/projects/{project_id}/analysis/embeddings/{embedding_id}/similar';
 };
@@ -8642,13 +8692,13 @@ export type GetFoldersResponses = {
      *
      * Successful Response
      */
-    200: Array<ProjectFolderWithProjects>;
+    200: Array<FolderWithProjectsPublic>;
 };
 
 export type GetFoldersResponse = GetFoldersResponses[keyof GetFoldersResponses];
 
 export type CreateFolderData = {
-    body: ProjectFolderCreate;
+    body: FolderCreate;
     path?: never;
     query?: never;
     url: '/api/folders';
@@ -8667,7 +8717,7 @@ export type CreateFolderResponses = {
     /**
      * Successful Response
      */
-    200: ProjectFolderPublic;
+    200: FolderPublic;
 };
 
 export type CreateFolderResponse = CreateFolderResponses[keyof CreateFolderResponses];
@@ -8706,7 +8756,7 @@ export type DeleteFolderResponses = {
 };
 
 export type EditFolderData = {
-    body: ProjectFolderEdit;
+    body: FolderUpdate;
     path: {
         /**
          * Folder Id
@@ -8921,7 +8971,7 @@ export type AddCollaboratorResponses = {
 export type AddCollaboratorResponse = AddCollaboratorResponses[keyof AddCollaboratorResponses];
 
 export type CreateProjectData = {
-    body: CreateProjectRequest;
+    body: ProjectCreate;
     path: {
         /**
          * Folder Id
@@ -9436,7 +9486,7 @@ export type ListParticipantEmailAttachmentsResponses = {
      *
      * Successful Response
      */
-    200: Array<ParticipantEmailAttachment>;
+    200: Array<ParticipantEmailAttachmentPublic>;
 };
 
 export type ListParticipantEmailAttachmentsResponse = ListParticipantEmailAttachmentsResponses[keyof ListParticipantEmailAttachmentsResponses];
@@ -9477,7 +9527,7 @@ export type UploadParticipantEmailAttachmentsResponses = {
      *
      * Successful Response
      */
-    200: Array<ParticipantEmailAttachment>;
+    200: Array<ParticipantEmailAttachmentPublic>;
 };
 
 export type UploadParticipantEmailAttachmentsResponse = UploadParticipantEmailAttachmentsResponses[keyof UploadParticipantEmailAttachmentsResponses];
@@ -9522,7 +9572,7 @@ export type DeleteParticipantEmailAttachmentResponses = {
      *
      * Successful Response
      */
-    200: Array<ParticipantEmailAttachment>;
+    200: Array<ParticipantEmailAttachmentPublic>;
 };
 
 export type DeleteParticipantEmailAttachmentResponse = DeleteParticipantEmailAttachmentResponses[keyof DeleteParticipantEmailAttachmentResponses];
@@ -9682,7 +9732,7 @@ export type ListParticipantReminderEmailAttachmentsResponses = {
      *
      * Successful Response
      */
-    200: Array<ParticipantEmailAttachment>;
+    200: Array<ParticipantEmailAttachmentPublic>;
 };
 
 export type ListParticipantReminderEmailAttachmentsResponse = ListParticipantReminderEmailAttachmentsResponses[keyof ListParticipantReminderEmailAttachmentsResponses];
@@ -9723,7 +9773,7 @@ export type UploadParticipantReminderEmailAttachmentsResponses = {
      *
      * Successful Response
      */
-    200: Array<ParticipantEmailAttachment>;
+    200: Array<ParticipantEmailAttachmentPublic>;
 };
 
 export type UploadParticipantReminderEmailAttachmentsResponse = UploadParticipantReminderEmailAttachmentsResponses[keyof UploadParticipantReminderEmailAttachmentsResponses];
@@ -9768,7 +9818,7 @@ export type DeleteParticipantReminderEmailAttachmentResponses = {
      *
      * Successful Response
      */
-    200: Array<ParticipantEmailAttachment>;
+    200: Array<ParticipantEmailAttachmentPublic>;
 };
 
 export type DeleteParticipantReminderEmailAttachmentResponse = DeleteParticipantReminderEmailAttachmentResponses[keyof DeleteParticipantReminderEmailAttachmentResponses];
@@ -10822,7 +10872,7 @@ export type GetInterviewModelsResponses = {
 export type GetInterviewModelsResponse = GetInterviewModelsResponses[keyof GetInterviewModelsResponses];
 
 export type UpdateExternalParamsData = {
-    body: ExternalParamsRequest;
+    body: ExternalParamsReplace;
     path: {
         /**
          * Project Id
@@ -11162,7 +11212,7 @@ export type UploadWelcomeVideoResponses = {
 export type UploadWelcomeVideoResponse = UploadWelcomeVideoResponses[keyof UploadWelcomeVideoResponses];
 
 export type DeleteInterviewsData = {
-    body: DeleteInterviewRequest;
+    body: InterviewSelection;
     path: {
         /**
          * Project Id
@@ -11203,6 +11253,26 @@ export type GetInterviewsData = {
         project_id: string | null;
     };
     query?: {
+        /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Column
+         *
+         * Column to sort by
+         */
+        column?: string;
+        /**
+         * Order
+         *
+         * Sorting order
+         */
+        order?: 'asc' | 'desc';
         /**
          * Interview Types
          */
@@ -11251,22 +11321,6 @@ export type GetInterviewsData = {
          * Folder Id
          */
         folder_id?: string | null;
-        /**
-         * Offset
-         */
-        offset?: number;
-        /**
-         * Limit
-         */
-        limit?: number;
-        /**
-         * Column
-         */
-        column?: string;
-        /**
-         * Order
-         */
-        order?: 'asc' | 'desc';
     };
     url: '/api/projects/{project_id}/interviews';
 };
@@ -11405,7 +11459,7 @@ export type CreateInterviewResumeLinkResponses = {
     /**
      * Successful Response
      */
-    200: InterviewResumeLinkCreated;
+    200: InterviewResumeLinkResponse;
 };
 
 export type CreateInterviewResumeLinkResponse = CreateInterviewResumeLinkResponses[keyof CreateInterviewResumeLinkResponses];
@@ -12298,10 +12352,6 @@ export type ListContentVersionsData = {
     };
     query?: {
         /**
-         * Folder Id
-         */
-        folder_id?: string | null;
-        /**
          * Offset
          */
         offset?: number;
@@ -12311,12 +12361,20 @@ export type ListContentVersionsData = {
         limit?: number;
         /**
          * Column
+         *
+         * Column to sort by
          */
         column?: string;
         /**
          * Order
+         *
+         * Sorting order
          */
         order?: 'asc' | 'desc';
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
     };
     url: '/api/projects/{project_id}/versions';
 };
@@ -12334,13 +12392,13 @@ export type ListContentVersionsResponses = {
     /**
      * Successful Response
      */
-    200: PaginatedResponseContentVersionSummary;
+    200: PaginatedResponseContentVersionSummaryPublic;
 };
 
 export type ListContentVersionsResponse = ListContentVersionsResponses[keyof ListContentVersionsResponses];
 
 export type SaveContentVersionData = {
-    body: SaveVersionRequest;
+    body: ContentVersionCreate;
     headers?: {
         /**
          * If-Match
@@ -12375,7 +12433,7 @@ export type SaveContentVersionResponses = {
     /**
      * Successful Response
      */
-    200: ContentVersionSummary;
+    200: ContentVersionSummaryPublic;
 };
 
 export type SaveContentVersionResponse = SaveContentVersionResponses[keyof SaveContentVersionResponses];
@@ -12493,7 +12551,7 @@ export type ValidateInterviewParamsResponses = {
 };
 
 export type CreateInterviewData = {
-    body: CreateInterviewRequest;
+    body: InterviewCreate;
     headers?: {
         /**
          * User-Agent
@@ -12560,7 +12618,7 @@ export type RedeemInterviewResumeLinkResponses = {
     /**
      * Successful Response
      */
-    200: InterviewResumeRedeemed;
+    200: InterviewResumeResponse;
 };
 
 export type RedeemInterviewResumeLinkResponse = RedeemInterviewResumeLinkResponses[keyof RedeemInterviewResumeLinkResponses];
@@ -12690,8 +12748,8 @@ export type SynthesizeSpeechResponses = {
 
 export type SynthesizeSpeechResponse = SynthesizeSpeechResponses[keyof SynthesizeSpeechResponses];
 
-export type LoginData2 = {
-    body: LoginData;
+export type LoginData = {
+    body: LoginRequest;
     path?: never;
     query?: never;
     url: '/api/login';
@@ -12849,7 +12907,7 @@ export type UpdateMyPasswordResponses = {
 };
 
 export type RegisterData = {
-    body: UserCreateRequest;
+    body: RegisterRequest;
     path?: never;
     query?: never;
     url: '/api/register';
@@ -13233,7 +13291,7 @@ export type GetReportsResponses = {
 export type GetReportsResponse = GetReportsResponses[keyof GetReportsResponses];
 
 export type ResolveReportsData = {
-    body: AdminReportReviewRequest;
+    body: ReportReviewRequest;
     path?: never;
     query?: never;
     url: '/api/admin/reports/resolve';
@@ -13252,13 +13310,13 @@ export type ResolveReportsResponses = {
     /**
      * Successful Response
      */
-    200: AdminReportReviewResponse;
+    200: ReportReviewResponse;
 };
 
 export type ResolveReportsResponse = ResolveReportsResponses[keyof ResolveReportsResponses];
 
 export type MarkReportsReadData = {
-    body: AdminReportReadRequest;
+    body: ReportReadRequest;
     path?: never;
     query?: never;
     url: '/api/admin/reports/read';
@@ -13277,7 +13335,7 @@ export type MarkReportsReadResponses = {
     /**
      * Successful Response
      */
-    200: AdminReportReviewResponse;
+    200: ReportReviewResponse;
 };
 
 export type MarkReportsReadResponse = MarkReportsReadResponses[keyof MarkReportsReadResponses];
@@ -13495,7 +13553,7 @@ export type GetUsersResponses = {
      *
      * Successful Response
      */
-    200: Array<UserAdmin>;
+    200: Array<UserAdminPublic>;
 };
 
 export type GetUsersResponse = GetUsersResponses[keyof GetUsersResponses];
@@ -13525,7 +13583,7 @@ export type UpdateAdminNoteResponses = {
     /**
      * Successful Response
      */
-    200: UserAdmin;
+    200: UserAdminPublic;
 };
 
 export type UpdateAdminNoteResponse = UpdateAdminNoteResponses[keyof UpdateAdminNoteResponses];
@@ -13555,7 +13613,7 @@ export type UpdateUserResponses = {
     /**
      * Successful Response
      */
-    200: UserAdmin;
+    200: UserAdminPublic;
 };
 
 export type UpdateUserResponse = UpdateUserResponses[keyof UpdateUserResponses];

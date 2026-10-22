@@ -10,7 +10,7 @@
 	import { page } from '$app/state';
 	import type {
 		CollaboratorRole,
-		ProjectFolderWithProjects,
+		FolderWithProjectsPublic,
 		ProjectLanguage,
 		ProjectPublic
 	} from '$lib/api';
@@ -104,7 +104,7 @@
 	 * admins, who pass every role check. Only to leave the action out -- the API
 	 * checks for itself.
 	 */
-	function canArchive(folder: ProjectFolderWithProjects): boolean {
+	function canArchive(folder: FolderWithProjectsPublic): boolean {
 		const user = page.data.user;
 		if (!user) return false;
 		if (user.scope === 'admin') return true;
@@ -154,7 +154,7 @@
 	let createProjectFolderId: string | null = $state(null);
 
 	// Folder Actions
-	let selectedFolder: ProjectFolderWithProjects | null = $state(null);
+	let selectedFolder: FolderWithProjectsPublic | null = $state(null);
 	let deleteFolderConfirmation = $state('');
 
 	// Move Project
@@ -412,7 +412,7 @@
 		await loadData();
 	}
 
-	function openEditFolderModal(folder: ProjectFolderWithProjects) {
+	function openEditFolderModal(folder: FolderWithProjectsPublic) {
 		selectedFolder = folder;
 		editFolderName = folder.title;
 		editCollaborators = (folder.collaborators ?? []).map((collaborator) => ({
@@ -530,7 +530,7 @@
 		await loadData();
 	}
 
-	async function setFolderArchived(folder: ProjectFolderWithProjects, archived: boolean) {
+	async function setFolderArchived(folder: FolderWithProjectsPublic, archived: boolean) {
 		activeDropdown = null;
 		const { error } = await Folders.setFolderArchived({
 			path: { folder_id: folder.id },
@@ -568,7 +568,7 @@
 		);
 	}
 
-	function openDeleteFolderModal(folder: ProjectFolderWithProjects) {
+	function openDeleteFolderModal(folder: FolderWithProjectsPublic) {
 		selectedFolder = folder;
 		deleteFolderConfirmation = '';
 		isDeleteFolderModalOpen = true;

@@ -7,7 +7,7 @@
 	import { page } from '$app/state';
 	import { Participants } from '$lib/api';
 	import type {
-		ParticipantEmailAttachment,
+		ParticipantEmailAttachmentPublic,
 		ProjectLanguage,
 		TemplatePlaceholder
 	} from '$lib/api/types.gen';
@@ -39,7 +39,7 @@
 	type KindState = {
 		subject: string;
 		templateHtml: string;
-		attachments: ParticipantEmailAttachment[];
+		attachments: ParticipantEmailAttachmentPublic[];
 		attachmentsLoading: boolean;
 		uploadingAttachments: boolean;
 		deletingAttachment: string | null;
