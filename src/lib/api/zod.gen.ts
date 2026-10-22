@@ -721,6 +721,7 @@ export const zErrorCode = z.enum([
     'stale_revision',
     'revision_required',
     'project_language',
+    'section_not_found',
     'invalid_link_params',
     'invalid_codebook',
     'invalid_coding',
