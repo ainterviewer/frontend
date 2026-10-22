@@ -141,6 +141,22 @@ function rowFor(name: string): HTMLElement {
 }
 
 /**
+ * Click one of a row's action buttons the way a pointer gets to it.
+ *
+ * They take the pointer only while their row is hovered, and until then the
+ * count drawn in the same cell is what sits under it. Whether the row already
+ * counts as hovered depends on where the last test left the mouse -- under
+ * `CI=true` it never does -- so hover it on purpose first.
+ */
+async function clickRowAction(name: string) {
+	const button = page.getByRole('button', { name });
+	const row = button.element().closest<HTMLElement>('[data-code-row]');
+	if (!row) throw new Error(`no row around ${name}`);
+	await page.elementLocator(row).hover();
+	await button.click();
+}
+
+/**
  * A drag from one row's handle to a point in another row.
  *
  * Real pointer events at real coordinates, because the pane resolves its drop
@@ -230,7 +246,7 @@ test('filtering by a leaf writes its reference into the keyword box', async () =
 	await page.viewport(PANE.width, PANE.height);
 	const box = await renderFiltering();
 
-	await page.getByRole('button', { name: 'Filter to The state and regulation' }).click();
+	await clickRowAction('Filter to The state and regulation');
 
 	expect(box.keyword).toBe('code:"The state and regulation"');
 });
@@ -241,9 +257,7 @@ test('filtering by a branch takes the branch', async () => {
 
 	// The label says so before the click does it: a branch picked from a
 	// codebook almost always means the branch.
-	await page
-		.getByRole('button', { name: 'Filter to Who is responsible and everything under it' })
-		.click();
+	await clickRowAction('Filter to Who is responsible and everything under it');
 
 	expect(box.keyword).toBe('code:"Who is responsible"/*');
 });
@@ -252,8 +266,7 @@ test('a filtering row says so, and a second click takes it back out', async () =
 	await page.viewport(PANE.width, PANE.height);
 	const box = await renderFiltering();
 
-	const on = page.getByRole('button', { name: 'Filter to The state and regulation' });
-	await on.click();
+	await clickRowAction('Filter to The state and regulation');
 
 	const off = page.getByRole('button', { name: 'Stop filtering by The state and regulation' });
 	await expect.element(off).toHaveAttribute('aria-pressed', 'true');
@@ -275,7 +288,7 @@ test('filtering by a second code narrows to both', async () => {
 	await page.viewport(PANE.width, PANE.height);
 	const box = await renderFiltering('kids');
 
-	await page.getByRole('button', { name: 'Filter to The state and regulation' }).click();
+	await clickRowAction('Filter to The state and regulation');
 
 	// Adjacency is AND: two codes picked from a codebook mean what carries both.
 	expect(box.keyword).toBe('kids code:"The state and regulation"');
@@ -476,7 +489,7 @@ test('a row offers both ways of searching from its code', async () => {
 	await page.viewport(PANE.width, PANE.height);
 	const chosen = await renderSearchable({ 'The state and regulation': { count: 3, subtree: 3 } });
 
-	await page.getByRole('button', { name: 'Search from The state and regulation' }).click();
+	await clickRowAction('Search from The state and regulation');
 	await page.getByText('Search by definition').click();
 
 	expect(chosen).toEqual([{ action: 'define', name: 'The state and regulation' }]);
@@ -486,7 +499,7 @@ test('finding more like a branch takes the branch', async () => {
 	await page.viewport(PANE.width, PANE.height);
 	const chosen = await renderSearchable({ 'Who is responsible': { count: 1, subtree: 9 } });
 
-	await page.getByRole('button', { name: 'Search from Who is responsible' }).click();
+	await clickRowAction('Search from Who is responsible');
 	await page.getByText('Find more like these').click();
 
 	// A row with children filters as a branch, so it has to seed as one too --
@@ -498,7 +511,7 @@ test('a code nothing carries cannot be asked what it is like', async () => {
 	await page.viewport(PANE.width, PANE.height);
 	await renderSearchable();
 
-	await page.getByRole('button', { name: 'Search from The state and regulation' }).click();
+	await clickRowAction('Search from The state and regulation');
 
 	// Offered rather than hidden, with the reason in the line under it: the
 	// action is real and the way to earn it is to code something.
