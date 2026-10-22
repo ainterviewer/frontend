@@ -2601,7 +2601,7 @@ export const zTestSetupCreate = z.object({
     name: z.string().nullish(),
     type: zTestType,
     project_id: z.string(),
-    answering_model: z.string().optional().default('openrouter:openai/gpt-oss-120b'),
+    answering_model: z.string().optional(),
     last_updated: z.iso.datetime().nullish(),
     language: zLanguageCode.optional().default('EN'),
     n_interviews: z.int().optional().default(5),
@@ -2615,7 +2615,7 @@ export const zTestSetupPublic = z.object({
     name: z.string().nullish(),
     type: zTestType,
     project_id: z.string(),
-    answering_model: z.string().optional().default('openrouter:openai/gpt-oss-120b'),
+    answering_model: z.string().optional(),
     last_updated: z.iso.datetime().nullish(),
     language: zLanguageCode.optional().default('EN'),
     n_interviews: z.int().optional().default(5),
@@ -3846,8 +3846,8 @@ export const zGetFilteredMessagesPath = z.object({
 });
 
 export const zGetFilteredMessagesQuery = z.object({
-    skip: z.int().optional().default(0),
-    limit: z.int().optional().default(20),
+    offset: z.int().gte(0).optional().default(0),
+    limit: z.int().gte(1).lte(100).optional().default(20),
     folder_id: z.string().nullish()
 });
 
@@ -3954,8 +3954,8 @@ export const zSearchEmbeddingsPath = z.object({
 });
 
 export const zSearchEmbeddingsQuery = z.object({
-    limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0),
+    limit: z.int().gte(1).lte(100).optional().default(10),
     query: z.string().min(1).max(2000),
     kind: zEmbeddingKind.optional().default('qa_pair'),
     task: zQueryTask.optional().default('retrieval'),
@@ -3994,8 +3994,8 @@ export const zBrowseEmbeddingsPath = z.object({
 });
 
 export const zBrowseEmbeddingsQuery = z.object({
-    limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0),
+    limit: z.int().gte(1).lte(100).optional().default(10),
     kind: zEmbeddingKind.optional().default('qa_pair'),
     order: z.enum([
         'random',
@@ -4129,8 +4129,8 @@ export const zFindEmbeddingsLikeCodePath = z.object({
 });
 
 export const zFindEmbeddingsLikeCodeQuery = z.object({
-    limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0),
+    limit: z.int().gte(1).lte(100).optional().default(10),
     kind: zEmbeddingKind.optional().default('qa_pair'),
     subtree: z.boolean().optional().default(false),
     whole_interviews: z.boolean().optional().default(false),
@@ -4169,8 +4169,8 @@ export const zFindSimilarEmbeddingsPath = z.object({
 });
 
 export const zFindSimilarEmbeddingsQuery = z.object({
-    limit: z.int().gte(1).lte(100).optional().default(10),
     offset: z.int().gte(0).optional().default(0),
+    limit: z.int().gte(1).lte(100).optional().default(10),
     whole_interviews: z.boolean().optional().default(false),
     folder_id: z.string().nullish(),
     language: z.array(zLanguageCode).nullish(),
@@ -4276,9 +4276,9 @@ export const zGetProjectMonitoringStatsPath = z.object({
 
 export const zGetProjectMonitoringStatsQuery = z.object({
     interview_types: z.array(zInterviewType).optional(),
+    deduplicate_by_pid: z.boolean().optional().default(false),
     start_date: z.iso.datetime().nullish(),
     end_date: z.iso.datetime().nullish(),
-    deduplicate_by_pid: z.boolean().optional().default(false),
     folder_id: z.string().nullish()
 });
 
@@ -4293,9 +4293,9 @@ export const zGetProjectItemDistributionsPath = z.object({
 
 export const zGetProjectItemDistributionsQuery = z.object({
     interview_types: z.array(zInterviewType).optional(),
+    deduplicate_by_pid: z.boolean().optional().default(false),
     languages: z.array(z.string()).nullish(),
     completed_only: z.boolean().optional().default(false),
-    deduplicate_by_pid: z.boolean().optional().default(false),
     folder_id: z.string().nullish()
 });
 

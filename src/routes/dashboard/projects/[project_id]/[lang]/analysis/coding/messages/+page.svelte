@@ -387,7 +387,7 @@
 				},
 				query: {
 					limit,
-					skip: 0
+					offset: 0
 				}
 			})
 		]);
@@ -424,7 +424,7 @@
 
 		loadingMore = true;
 
-		const skip = rawMessages.length;
+		const offset = rawMessages.length;
 		const { data, error: err } = await Analysis.getFilteredMessages({
 			path: { project_id: projectId },
 			body: {
@@ -436,7 +436,7 @@
 			},
 			query: {
 				limit,
-				skip
+				offset
 			}
 		});
 

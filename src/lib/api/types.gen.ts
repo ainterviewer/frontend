@@ -7055,9 +7055,9 @@ export type GetFilteredMessagesData = {
     };
     query?: {
         /**
-         * Skip
+         * Offset
          */
-        skip?: number;
+        offset?: number;
         /**
          * Limit
          */
@@ -7374,13 +7374,13 @@ export type SearchEmbeddingsData = {
     };
     query: {
         /**
-         * Limit
-         */
-        limit?: number;
-        /**
          * Offset
          */
         offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
         /**
          * Query
          */
@@ -7499,13 +7499,13 @@ export type BrowseEmbeddingsData = {
     };
     query?: {
         /**
-         * Limit
-         */
-        limit?: number;
-        /**
          * Offset
          */
         offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
         kind?: EmbeddingKind;
         /**
          * Order
@@ -7901,13 +7901,13 @@ export type FindEmbeddingsLikeCodeData = {
     };
     query?: {
         /**
-         * Limit
-         */
-        limit?: number;
-        /**
          * Offset
          */
         offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
         kind?: EmbeddingKind;
         /**
          * Subtree
@@ -8029,13 +8029,13 @@ export type FindSimilarEmbeddingsData = {
     };
     query?: {
         /**
-         * Limit
-         */
-        limit?: number;
-        /**
          * Offset
          */
         offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
         /**
          * Whole Interviews
          */
@@ -8367,6 +8367,12 @@ export type GetProjectMonitoringStatsData = {
          */
         interview_types?: Array<InterviewType>;
         /**
+         * Deduplicate By Pid
+         *
+         * Count one interview per participant ID, keeping the one that got furthest
+         */
+        deduplicate_by_pid?: boolean;
+        /**
          * Start Date
          */
         start_date?: string | null;
@@ -8374,10 +8380,6 @@ export type GetProjectMonitoringStatsData = {
          * End Date
          */
         end_date?: string | null;
-        /**
-         * Deduplicate By Pid
-         */
-        deduplicate_by_pid?: boolean;
         /**
          * Folder Id
          */
@@ -8422,6 +8424,12 @@ export type GetProjectItemDistributionsData = {
          */
         interview_types?: Array<InterviewType>;
         /**
+         * Deduplicate By Pid
+         *
+         * Count one interview per participant ID, keeping the one that got furthest
+         */
+        deduplicate_by_pid?: boolean;
+        /**
          * Languages
          *
          * Restrict to interviews conducted in these languages
@@ -8433,12 +8441,6 @@ export type GetProjectItemDistributionsData = {
          * Count only interviews that reached the end
          */
         completed_only?: boolean;
-        /**
-         * Deduplicate By Pid
-         *
-         * Count one interview per participant ID, keeping the one that got furthest
-         */
-        deduplicate_by_pid?: boolean;
         /**
          * Folder Id
          */
