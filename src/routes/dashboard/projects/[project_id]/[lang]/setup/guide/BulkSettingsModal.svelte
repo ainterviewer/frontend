@@ -7,11 +7,11 @@
 		open = $bindable(),
 		questionCount = 0,
 		onApply
-	} = $props<{
+	}: {
 		open: boolean;
 		questionCount?: number;
 		onApply: (changes: Partial<GuideQuestion>) => void;
-	}>();
+	} = $props();
 
 	type FieldState = { enabled: boolean; value: number | boolean };
 

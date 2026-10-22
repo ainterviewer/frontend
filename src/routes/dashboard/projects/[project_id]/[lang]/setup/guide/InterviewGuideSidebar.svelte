@@ -14,11 +14,15 @@
 
 	const guideStore = getGuideStore();
 
-	let { activeId, localSections, localQuestions } = $props<{
+	let {
+		activeId,
+		localSections,
+		localQuestions
+	}: {
 		activeId: string;
 		localSections: GuideSection[];
 		localQuestions: Record<string, GuideQuestion[]>;
-	}>();
+	} = $props();
 
 	const sensors = [PointerSensor, KeyboardSensor];
 

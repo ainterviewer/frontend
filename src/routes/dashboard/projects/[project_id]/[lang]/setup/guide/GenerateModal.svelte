@@ -7,13 +7,13 @@
 		description = '',
 		onGenerate,
 		placeholder = 'Describe what you want to generate...'
-	} = $props<{
+	}: {
 		open: boolean;
 		title?: string;
 		description?: string;
 		onGenerate: (prompt: string) => Promise<void>;
 		placeholder?: string;
-	}>();
+	} = $props();
 
 	let generatePrompt = $state('');
 	let generating = $state(false);

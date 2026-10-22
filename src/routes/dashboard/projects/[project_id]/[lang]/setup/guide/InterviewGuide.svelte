@@ -40,13 +40,13 @@
 		projectName = '',
 		availableLanguages = [],
 		externalParams = []
-	} = $props<{
+	}: {
 		guide: LocalizedInterviewGuide | null;
 		lang: string;
 		projectName?: string;
 		availableLanguages?: ProjectLanguage[];
 		externalParams?: ExternalParam[];
-	}>();
+	} = $props();
 
 	const guideStore = getGuideStore();
 

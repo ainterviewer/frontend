@@ -10,14 +10,12 @@
 		answer = '',
 		lang = 'EN',
 		...surveyItem
-	} = $props<
-		SurveyItemUnion & {
-			onAnswer?: (value: unknown) => void;
-			readonly?: boolean;
-			answer?: string;
-			lang?: string;
-		}
-	>();
+	}: SurveyItemUnion & {
+		onAnswer?: (value: unknown) => void;
+		readonly?: boolean;
+		answer?: string;
+		lang?: string;
+	} = $props();
 
 	type StringKey =
 		| 'pickValue'
@@ -308,7 +306,7 @@
 <div class="w-full max-w-full min-w-60">
 	<fieldset
 		class="flex flex-wrap gap-1.5 rounded-2xl border border-gray-100 bg-gray-200 p-4 sm:gap-2
-            {['radio', 'checkbox'].includes(surveyItem.type) ? 'flex-col' : ''}
+            {surveyItem.type === 'radio' || surveyItem.type === 'checkbox' ? 'flex-col' : ''}
             {readonly ? 'pointer-events-none' : ''}"
 	>
 		<legend
