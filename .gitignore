@@ -3,6 +3,8 @@ openapi-ts-error-*
 !lib/
 
 test-results
+# Vitest 5 browser-mode attachments (failure screenshots)
+.vitest
 node_modules
 
 # Output
