@@ -35,6 +35,27 @@
 	}
 }
 
+/* Icons  */
+
+/* Font Awesome draws its glyphs as CSS content, which browsers read out as part
+   of the surrounding text, so a button would be announced as "<glyph> Expand
+   all". The `/ ''` gives every glyph empty alt text, so icons are decorative and
+   an icon-only control needs its own aria-label. Unlayered and after the
+   import, with Font Awesome's own selectors, so it wins on source order. The
+   `@supports` guard matters: a browser that cannot parse the alt text drops the
+   whole declaration, and with it the icon. */
+@supports (content: 'x' / '') {
+	.fa::before,
+	.fas::before,
+	.far::before,
+	.fab::before,
+	.fa-solid::before,
+	.fa-regular::before,
+	.fa-brands::before {
+		content: var(--fa) / '';
+	}
+}
+
 /* Custom  */
 
 @layer components {

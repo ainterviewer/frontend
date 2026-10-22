@@ -38,9 +38,10 @@ export default defineConfig(({ isSsrBuild }) => ({
 						enabled: true,
 						provider: playwright(),
 						instances: [{ browser: 'chromium', headless: true }],
-						// Font Awesome glyphs are CSS content, which Chromium folds into
-						// the accessible name, so "Expand all" is really "<glyph> Expand
-						// all". Vitest 5 matches names exactly by default.
+						// The in-page name matcher behind `.element()` and `.query()` reads
+						// a pseudo-element's `content` as one string and ignores CSS alt
+						// text, so an icon's `"+" / ""` lands in the name as `+" / "`.
+						// Vitest 5 matches names exactly by default.
 						locators: { exact: false }
 					},
 					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
