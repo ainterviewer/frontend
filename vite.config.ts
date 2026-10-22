@@ -3,8 +3,19 @@ import tailwindcss from '@tailwindcss/vite';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
 	plugins: [tailwindcss(), sveltekit()],
+	build: {
+		rolldownOptions: {
+			// Strip chatter from the browser bundle, but keep `error` and `warn`
+			// for when a user reports a problem. The server bundle keeps every
+			// call: its `console.error` is the log. `debugger` is already gone,
+			// since the client minifier drops it by default.
+			treeshake: isSsrBuild
+				? true
+				: { manualPureFunctions: ['console.log', 'console.debug', 'console.info', 'console.trace'] }
+		}
+	},
 	server: {
 		port: 5173,
 		proxy: {
@@ -47,4 +58,4 @@ export default defineConfig({
 			}
 		]
 	}
-});
+}));
