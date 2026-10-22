@@ -4,6 +4,49 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.0] - 2026-10-22
+
+### Features
+
+- Add safety agent configuration and interview intervention
+- Add message reporting functionality
+- Add reported message notifications
+- Add user facing report queue
+- Show safety-check flags alongside reports
+- (preview) Gate security agent configuration behind preview flag
+- Add an admin overview of user growth and activity
+- (login) Enter the 2FA code one digit per box
+- (reports) Show and filter flags by interview type
+- (admin) Per-user demo limits
+- (tours) Cover recent features, and show returning users what changed
+- (preview) Mark preview features with a badge
+- (collab) Split the live pill into one for collaborators and one for save state
+- (autosave) Colour the saved and saving states faded green and red
+- (collab) Click a collaborator's avatar to jump to where they are
+- (dashboard) Archive folders and projects, and sort projects within folders
+- (explore) Add a main-question unit and relabel the others
+- (tours) Cover sorting and archiving, the collaborator pills, and Analysis
+- (distribution) Rework the page around the full link and QR code
+- (admin) Set an alias on invitations
+
+### Bug Fixes
+
+- (reports) Label the admin queue in the account menu
+- Keep the dashboard's bottom padding on long pages
+- Type last_login as nullable
+- Say when a weekly bar on the admin overview covers a partial week
+- Scroll explore, codebook and coding within their panels
+- (guide) Rename 'Check if answered' to 'Reformulate if answered' and fix setting typos
+- (explore) Draw the code menu and its fold-outs above the sidebar
+- (setup) Don't count the blank starter guide as configured
+- (header) Refresh the project and language pickers each time they open
+
+### Internal
+
+- Regenerate the SDK for both features
+- Regenerate the SDK for both features
+- (pills) Nudge the save and collaborator pills down and left
+
 ## [0.8.2] - 2026-10-16
 
 ### Bug Fixes
