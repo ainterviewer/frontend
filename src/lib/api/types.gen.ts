@@ -221,7 +221,7 @@ export type AnswerSample = {
  *
  * `detail` is a sentence to show; `code` says what went wrong for a client
  * that handles it, and is null for errors no client tells apart. Raised as
- * `app.errors.AppError` and answered by the handlers in `app/main.py`.
+ * `app.errors.AppError` and answered by `app.errors.add_error_handlers`.
  */
 export type ApiError = {
     /**
@@ -5574,6 +5574,9 @@ export type SecurityIntervention = {
 
 /**
  * SecurityOverride
+ *
+ * The respondent's answer to a security intervention with
+ * `respondent_override`, sent back as the content of an ordinary message.
  */
 export type SecurityOverride = 'accept' | 'override';
 
@@ -6721,6 +6724,12 @@ export type ReceivedData = {
 
 /**
  * TemplatePlaceholder
+ *
+ * Every variable a participant email template may reference.
+ *
+ * Adding a member here is the only step needed on the backend; regenerating
+ * the frontend SDK then turns a missing label in the editor into a build
+ * error rather than a silently unavailable placeholder.
  */
 export type TemplatePlaceholder = 'name' | 'email' | 'pid' | 'interview_url' | 'project_title' | 'opt_out_url';
 

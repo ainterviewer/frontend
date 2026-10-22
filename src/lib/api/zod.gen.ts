@@ -534,8 +534,8 @@ export const zDailyInterviewCount = z.object({
 export const zDateItem = z.object({
     required: z.boolean().optional().default(true),
     type: z.literal('date').optional().default('date'),
-    min: z.string().nullish().default(null),
-    max: z.string().nullish().default(null)
+    min: z.string().nullish(),
+    max: z.string().nullish()
 });
 
 /**
@@ -544,8 +544,8 @@ export const zDateItem = z.object({
 export const zDatetimeItem = z.object({
     required: z.boolean().optional().default(true),
     type: z.literal('datetime').optional().default('datetime'),
-    min: z.string().nullish().default(null),
-    max: z.string().nullish().default(null)
+    min: z.string().nullish(),
+    max: z.string().nullish()
 });
 
 /**
@@ -745,7 +745,7 @@ export const zErrorCode = z.enum([
  *
  * `detail` is a sentence to show; `code` says what went wrong for a client
  * that handles it, and is null for errors no client tells apart. Raised as
- * `app.errors.AppError` and answered by the handlers in `app/main.py`.
+ * `app.errors.AppError` and answered by `app.errors.add_error_handlers`.
  */
 export const zApiError = z.object({
     detail: z.string(),
@@ -980,7 +980,7 @@ export const zImage = z.object({
     ]).optional().default('image'),
     name: z.string(),
     data: z.string().nullable(),
-    primer: z.string().nullish().default(null),
+    primer: z.string().nullish(),
     description: z.string(),
     alt: z.string()
 });
@@ -1760,11 +1760,11 @@ export const zNumberItem = z.object({
     min: z.union([
         z.int(),
         z.number()
-    ]).nullish().default(null),
+    ]).nullish(),
     max: z.union([
         z.int(),
         z.number()
-    ]).nullish().default(null),
+    ]).nullish(),
     step: z.union([
         z.int(),
         z.number()
@@ -2456,6 +2456,9 @@ export const zSecurityIntervention = z.object({
 
 /**
  * SecurityOverride
+ *
+ * The respondent's answer to a security intervention with
+ * `respondent_override`, sent back as the content of an ordinary message.
  */
 export const zSecurityOverride = z.enum(['accept', 'override']);
 
@@ -2630,8 +2633,8 @@ export const zSliderItem = z.object({
         z.int(),
         z.number()
     ]),
-    min_label: z.string().nullish().default(null),
-    max_label: z.string().nullish().default(null),
+    min_label: z.string().nullish(),
+    max_label: z.string().nullish(),
     step: z.union([
         z.int(),
         z.number()
@@ -2879,8 +2882,8 @@ export const zInvitationUpdate = z.object({
 export const zTimeItem = z.object({
     required: z.boolean().optional().default(true),
     type: z.literal('time').optional().default('time'),
-    min: z.string().nullish().default(null),
-    max: z.string().nullish().default(null)
+    min: z.string().nullish(),
+    max: z.string().nullish()
 });
 
 /**
@@ -3771,6 +3774,12 @@ export const zReceivedData = z.object({
 
 /**
  * TemplatePlaceholder
+ *
+ * Every variable a participant email template may reference.
+ *
+ * Adding a member here is the only step needed on the backend; regenerating
+ * the frontend SDK then turns a missing label in the editor into a build
+ * error rather than a silently unavailable placeholder.
  */
 export const zTemplatePlaceholder = z.enum([
     'name',
