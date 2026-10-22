@@ -18,6 +18,7 @@
 		sortableTime
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
+	import { errorDetail } from '$lib/utils/errors';
 
 	import SimulationActionBar from '../SimulationActionBar.svelte';
 	import type { PageData } from './$types';
@@ -159,9 +160,10 @@
 		if (runError) {
 			console.error('Failed to run test', runError);
 			// 429 is the demo limit; its detail says how many are already running.
-			const detail = (runError as { detail?: unknown }).detail;
 			toast.error(
-				response?.status === 429 && typeof detail === 'string' ? detail : 'Failed to run test'
+				response?.status === 429
+					? errorDetail(runError, 'Failed to run test')
+					: 'Failed to run test'
 			);
 			running = false;
 			return;

@@ -4,6 +4,7 @@
 	import { Projects as Api } from '$lib/api';
 	import type { InterviewResumeLinkPublic } from '$lib/api/types.gen';
 	import { formatDate } from '$lib/utils/datetime';
+	import { errorDetail } from '$lib/utils/errors';
 
 	interface Props {
 		open: boolean;
@@ -54,13 +55,6 @@
 		link = data ?? null;
 	}
 
-	/** The message body of a FastAPI error, when it carries one. */
-	function detail(apiError: unknown, fallback: string) {
-		return typeof apiError === 'object' && apiError && 'detail' in apiError
-			? String((apiError as { detail: unknown }).detail)
-			: fallback;
-	}
-
 	async function generate() {
 		if (!interviewId) return;
 		working = true;
@@ -70,7 +64,7 @@
 		});
 		working = false;
 		if (apiError || !data) {
-			error = detail(apiError, 'Could not create a resume link.');
+			error = errorDetail(apiError, 'Could not create a resume link.');
 			return;
 		}
 		freshUrl = data.url;
@@ -87,7 +81,7 @@
 		});
 		working = false;
 		if (apiError) {
-			error = detail(apiError, 'Could not revoke the link.');
+			error = errorDetail(apiError, 'Could not revoke the link.');
 			return;
 		}
 		link = data ?? null;

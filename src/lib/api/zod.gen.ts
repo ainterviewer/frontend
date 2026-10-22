@@ -13,10 +13,44 @@ export const zAccessRequestCreate = z.object({
 });
 
 /**
+ * AccessRequestStatus
+ */
+export const zAccessRequestStatus = z.enum([
+    'waiting',
+    'fulfilled',
+    'denied'
+]);
+
+/**
+ * AccessRequestPublic
+ */
+export const zAccessRequestPublic = z.object({
+    name: z.string(),
+    email: z.email(),
+    organization: z.string().nullish(),
+    message: z.string().nullish(),
+    id: z.string(),
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    status: zAccessRequestStatus,
+    processed_by_id: z.string().nullable()
+});
+
+/**
  * AccessRequestsDeleteRequest
  */
 export const zAccessRequestsDeleteRequest = z.object({
     ids: z.array(z.string())
+});
+
+/**
+ * ActionResponse
+ *
+ * The result of an action that returns nothing but a sentence to show
+ * (logged out, password reset). Errors are `ApiError`s instead.
+ */
+export const zActionResponse = z.object({
+    message: z.string()
 });
 
 /**
@@ -49,6 +83,17 @@ export const zAnswerLength = z.enum([
  */
 export const zArchiveRequest = z.object({
     archived: z.boolean()
+});
+
+/**
+ * AuthResponse
+ *
+ * `two_factor_required` comes with a 202: no session yet, a code was
+ * emailed for `/login/verify-code`.
+ */
+export const zAuthResponse = z.object({
+    message: z.string(),
+    two_factor_required: z.boolean().optional().default(false)
 });
 
 /**
@@ -661,10 +706,50 @@ export const zCodeFacets = z.object({
 });
 
 /**
- * ErrorResponse
+ * ErrorCode
+ *
+ * What went wrong, for a client to branch on: the `code` of an
+ * `ApiError` body. `detail` is the sentence to show; this is what to test.
+ *
+ * Only errors a client handles differently carry one. Values are part of
+ * the API -- the frontend matches on them -- so rename none without it.
  */
-export const zErrorResponse = z.object({
-    detail: z.string()
+export const zErrorCode = z.enum([
+    'internal',
+    'not_published',
+    'cannot_publish',
+    'stale_revision',
+    'revision_required',
+    'project_language',
+    'invalid_link_params',
+    'invalid_codebook',
+    'invalid_coding',
+    'invalid_comment_thread',
+    'invalid_keyword_query',
+    'alias_taken',
+    'email_taken',
+    'email_not_verified',
+    'email_send_failed',
+    'invite_required',
+    'invite_invalid',
+    'invite_expired',
+    'access_request_exists',
+    'preview_features_required'
+]);
+
+/**
+ * ApiError
+ *
+ * The body of every error response but FastAPI's 422, whose `detail` is
+ * a list of validation errors (`HTTPValidationError`).
+ *
+ * `detail` is a sentence to show; `code` says what went wrong for a client
+ * that handles it, and is null for errors no client tells apart. Raised as
+ * `app.errors.AppError` and answered by the handlers in `app/main.py`.
+ */
+export const zApiError = z.object({
+    detail: z.string(),
+    code: zErrorCode.nullable()
 });
 
 /**
@@ -1155,6 +1240,18 @@ export const zIntervieweePublic = z.object({
 export const zInterviewer = z.enum(['human', 'ai']);
 
 /**
+ * InvalidKeywordQueryError
+ *
+ * 400 `invalid_keyword_query`: where in the query it went wrong, as a
+ * zero-based offset, or null when the problem is the query as a whole.
+ */
+export const zInvalidKeywordQueryError = z.object({
+    detail: z.string(),
+    code: zErrorCode.nullable(),
+    position: z.int().nullable()
+});
+
+/**
  * InvitationsDeleteRequest
  */
 export const zInvitationsDeleteRequest = z.object({
@@ -1183,6 +1280,17 @@ export const zAnswerSample = z.object({
 export const zBodyAddProjectLanguage = z.object({
     language: zLanguageCode,
     translate: z.boolean().optional().default(true)
+});
+
+/**
+ * CannotPublishError
+ *
+ * 409 `cannot_publish`: the paths each offered language still lacks.
+ */
+export const zCannotPublishError = z.object({
+    detail: z.string(),
+    code: zErrorCode.nullable(),
+    missing: z.record(z.string(), z.array(z.string()))
 });
 
 /**
@@ -1844,6 +1952,13 @@ export const zInterviewConfig = z.object({
 export const zProjectCreate = z.object({
     title: z.string(),
     default_language: zLanguageCode
+});
+
+/**
+ * ProjectCreateResponse
+ */
+export const zProjectCreateResponse = z.object({
+    project_id: z.string()
 });
 
 /**
@@ -2523,6 +2638,21 @@ export const zSpeechRequest = z.object({
 });
 
 /**
+ * StaleRevisionError
+ *
+ * 412 `stale_revision`: someone saved the content since it was loaded.
+ *
+ * `current_revision` is what to send as `If-Match` to overwrite; `part` the
+ * `ContentPart` whose revision was checked, null for the overall one.
+ */
+export const zStaleRevisionError = z.object({
+    detail: z.string(),
+    code: zErrorCode.nullable(),
+    current_revision: z.int(),
+    part: zContentPart.nullable()
+});
+
+/**
  * SurveyFacetValue
  *
  * One answer on offer in the survey filter, with how many gave it.
@@ -2568,6 +2698,40 @@ export const zSynthesizeRequest = z.object({
     n_interviews: z.int().gte(1).lte(100),
     language: zLanguageCode.optional().default('EN'),
     delay_before_answers: z.tuple([z.number(), z.number()]).nullish()
+});
+
+/**
+ * SynthesizeResponse
+ */
+export const zSynthesizeResponse = z.object({
+    project_id: z.string(),
+    message: z.string(),
+    status: z.string()
+});
+
+/**
+ * TestRunStatus
+ */
+export const zTestRunStatus = z.enum([
+    'pending',
+    'running',
+    'completed',
+    'failed'
+]);
+
+/**
+ * TestRunPublic
+ */
+export const zTestRunPublic = z.object({
+    test_setup_id: z.string(),
+    language: zLanguageCode.optional().default('EN'),
+    n_interviews: z.int(),
+    answering_model: z.string(),
+    delay_before_answers: z.tuple([z.number(), z.number()]).nullish(),
+    id: z.string(),
+    created_at: z.iso.datetime(),
+    last_updated: z.iso.datetime().nullish(),
+    status: zTestRunStatus
 });
 
 /**
@@ -4460,6 +4624,11 @@ export const zCreateProjectQuery = z.object({
     project_id: z.string().nullish()
 });
 
+/**
+ * Successful Response
+ */
+export const zCreateProjectResponse = zProjectCreateResponse;
+
 export const zDeleteParticipantsBody = zDeleteParticipantsRequest;
 
 export const zDeleteParticipantsPath = z.object({
@@ -5680,6 +5849,13 @@ export const zGetTestStatusQuery = z.object({
     folder_id: z.string().nullish()
 });
 
+/**
+ * Response Get Test Status
+ *
+ * Successful Response
+ */
+export const zGetTestStatusResponse = z.array(zTestRunPublic);
+
 export const zRunSyntheticTestBody = zSynthesizeRequest;
 
 export const zRunSyntheticTestPath = z.object({
@@ -5690,6 +5866,11 @@ export const zRunSyntheticTestPath = z.object({
 export const zRunSyntheticTestQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+/**
+ * Successful Response
+ */
+export const zRunSyntheticTestResponse = zSynthesizeResponse;
 
 export const zGetContentStatusPath = z.object({
     project_id: z.string().nullable()
@@ -5843,9 +6024,24 @@ export const zSynthesizeSpeechResponse = z.string();
 
 export const zLoginBody = zLoginRequest;
 
+/**
+ * Successful Response
+ */
+export const zLoginResponse = zAuthResponse;
+
 export const zVerifyLoginCodeBody = zVerifyLoginCodeRequest;
 
+/**
+ * Successful Response
+ */
+export const zVerifyLoginCodeResponse = zAuthResponse;
+
 export const zDeleteMeBody = zDeleteAccountRequest;
+
+/**
+ * Successful Response
+ */
+export const zDeleteMeResponse = zActionResponse;
 
 /**
  * Successful Response
@@ -5868,17 +6064,74 @@ export const zUpdateMyEmailResponse = zUserPublic;
 
 export const zUpdateMyPasswordBody = zUpdatePasswordRequest;
 
+/**
+ * Successful Response
+ */
+export const zUpdateMyPasswordResponse = zActionResponse;
+
 export const zRegisterBody = zRegisterRequest;
+
+/**
+ * Successful Response
+ */
+export const zRegisterResponse = zActionResponse;
 
 export const zVerifyEmailBody = zVerifyEmailRequest;
 
+/**
+ * Successful Response
+ */
+export const zVerifyEmailResponse = zActionResponse;
+
 export const zResendVerificationBody = zResendVerificationRequest;
+
+/**
+ * Successful Response
+ */
+export const zResendVerificationResponse = zActionResponse;
 
 export const zForgotPasswordBody = zForgotPasswordRequest;
 
+/**
+ * Successful Response
+ */
+export const zForgotPasswordResponse = zActionResponse;
+
 export const zResetPasswordBody = zResetPasswordRequest;
 
+/**
+ * Successful Response
+ */
+export const zResetPasswordResponse = zActionResponse;
+
 export const zRequestAccessBody = zAccessRequestCreate;
+
+/**
+ * Successful Response
+ */
+export const zLogoutResponse = zActionResponse;
+
+/**
+ * Successful Response
+ */
+export const zLogoutEverywhereResponse = zActionResponse;
+
+/**
+ * Successful Response
+ */
+export const zExitResponse = zActionResponse;
+
+/**
+ * Successful Response
+ */
+export const zRefreshResponse = zActionResponse;
+
+/**
+ * Response Get Access Requests
+ *
+ * Successful Response
+ */
+export const zGetAccessRequestsResponse = z.array(zAccessRequestPublic);
 
 export const zProcessAccessRequestsBody = zAccessRequestsProcessRequest;
 
@@ -6009,6 +6262,13 @@ export const zGetUserDemoBudgetPath = z.object({
 export const zGetUserDemoBudgetResponse = zDemoBudget;
 
 /**
+ * Response Get Models
+ *
+ * Successful Response
+ */
+export const zGetModelsResponse = z.array(z.string());
+
+/**
  * Response Get Languages
  *
  * Successful Response
@@ -6044,6 +6304,13 @@ export const zGetMyReportsQuery = z.object({
 export const zGetMyReportsResponse = z.array(zMessageReportRowPublic);
 
 /**
+ * Response Health
+ *
+ * Successful Response
+ */
+export const zHealthResponse = z.string();
+
+/**
  * Response Version
  *
  * Successful Response
@@ -6053,6 +6320,11 @@ export const zVersionResponse = zPlatformManifest.nullable();
 export const zPlatformVersionPath = z.object({
     platform_version: z.string()
 });
+
+/**
+ * Successful Response
+ */
+export const zPlatformVersionResponse = zPlatformManifest;
 
 export const zReleasesQuery = z.object({
     limit: z.int().optional().default(10)

@@ -1,6 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 
 import { Auth, Interviews, type InterviewType, Projects } from '$lib/api';
+import { hasErrorCode } from '$lib/utils/errors';
 
 import type { PageServerLoad } from './$types';
 
@@ -90,14 +91,13 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 	// defaulting to a hardcoded 'EN' silently disagreed with the backend
 	// (which falls back to the project's default) for every project without an
 	// English localization.
-	const { data: projectLanguages, response: languagesResponse } =
-		await Projects.getProjectLanguages({
-			headers: { cookie: cookieHeader },
-			path: { project_id },
-			query: { draft }
-		});
+	const { data: projectLanguages, error: languagesError } = await Projects.getProjectLanguages({
+		headers: { cookie: cookieHeader },
+		path: { project_id },
+		query: { draft }
+	});
 	// Nothing has been published yet, so there is nothing to answer.
-	const notPublished = languagesResponse?.status === 409;
+	const notPublished = hasErrorCode(languagesError, 'not_published');
 	const languages = projectLanguages ?? [];
 
 	const requested = langParam
@@ -150,12 +150,11 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 	// before any *new* interview can be created.
 	let paramsInvalid = false;
 	if (interviewType === 'distributed' && !resumeInterviewId) {
-		const { error: paramsError, response: paramsResponse } =
-			await Interviews.validateInterviewParams({
-				path: { project_id },
-				body: { external_params: Object.keys(externalParams).length > 0 ? externalParams : null }
-			});
-		paramsInvalid = paramsResponse?.status === 422;
+		const { error: paramsError } = await Interviews.validateInterviewParams({
+			path: { project_id },
+			body: { external_params: Object.keys(externalParams).length > 0 ? externalParams : null }
+		});
+		paramsInvalid = hasErrorCode(paramsError, 'invalid_link_params');
 		if (paramsError && !paramsInvalid) {
 			console.error('Failed to validate external params', paramsError);
 		}

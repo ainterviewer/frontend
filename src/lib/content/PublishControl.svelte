@@ -14,6 +14,7 @@
 
 	import { Versions } from '$lib/api';
 	import type { ProjectLanguage } from '$lib/api/types.gen';
+	import { errorDetail } from '$lib/utils/errors';
 	import { portal } from '$lib/utils/portal';
 
 	import { contentRevision, saveWithRevision } from './revision.svelte';
@@ -101,8 +102,7 @@
 		publishing = false;
 		if (result.response?.status === 412) return;
 		if (result.error || !result.data) {
-			const detail = (result.error as { detail?: unknown } | undefined)?.detail;
-			toast.error(typeof detail === 'string' ? detail : 'Failed to publish');
+			toast.error(errorDetail(result.error, 'Failed to publish'));
 			return;
 		}
 		dialogOpen = false;

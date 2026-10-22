@@ -26,6 +26,7 @@
 		placeholdersToNodes
 	} from '$lib/tiptap/placeholders';
 	import { TemplatePlaceholderNode } from '$lib/tiptap/templatePlaceholder';
+	import { errorDetail } from '$lib/utils/errors';
 
 	let { data }: { data: { available_languages: ProjectLanguage[] } } = $props();
 
@@ -216,8 +217,7 @@
 					});
 		states[k].sending = false;
 		if (res.error) {
-			const detail = (res.error as { detail?: unknown }).detail;
-			toast.error(typeof detail === 'string' ? detail : 'Failed to send emails');
+			toast.error(errorDetail(res.error, 'Failed to send emails'));
 			return;
 		}
 		const sent = res.data?.sent.length ?? 0;
@@ -240,8 +240,7 @@
 		});
 		exporting = false;
 		if (res.error || !res.data) {
-			const detail = (res.error as { detail?: unknown } | undefined)?.detail;
-			toast.error(typeof detail === 'string' ? detail : 'Failed to export bundle');
+			toast.error(errorDetail(res.error, 'Failed to export bundle'));
 			return;
 		}
 		const url = window.URL.createObjectURL(res.data as Blob);

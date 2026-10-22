@@ -13,6 +13,7 @@ import {
 	type SecurityOverride
 } from '$lib/api';
 import { type Message, WS_UNAUTHORIZED } from '$lib/components/interview/types';
+import { hasErrorCode } from '$lib/utils/errors';
 
 // Messages arriving over the interview WebSocket. `OutgoingData` is extended
 // with the session identifiers the server includes on `data` frames.
@@ -172,10 +173,10 @@ export async function createInterview(
 			}
 		});
 		if (error || !response?.ok) {
-			// A 422 means the link's params don't satisfy the project's schema.
-			// The body says no more than that on purpose — see the backend's
-			// `validate_external_params`.
-			if (response?.status === 422) {
+			// `invalid_link_params`: the link's params don't satisfy the
+			// project's schema. The body says no more than that on purpose — see
+			// the backend's `validate_external_params`.
+			if (hasErrorCode(error, 'invalid_link_params')) {
 				return { ok: false, paramsInvalid: true };
 			}
 			console.error('Failed to create interview');

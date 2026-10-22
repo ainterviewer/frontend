@@ -1,5 +1,7 @@
 import { untrack } from 'svelte';
 
+import { staleRevision } from '$lib/utils/errors';
+
 import { contentRevision, type RevisionKey } from './revision.svelte';
 
 // Saving a page as it is edited, for the pages not co-edited live (agents,
@@ -197,10 +199,8 @@ type Headers = { 'if-match'?: string };
 
 /** What a write answered, as a save's result: a 412 is a conflict. */
 function outcome(result: WriteResult): SaveResult {
-	if (result.response?.status === 412) {
-		const current = (result.error as { current_revision?: unknown } | undefined)?.current_revision;
-		if (typeof current === 'number') return { ok: false, conflict: current };
-	}
+	const current = staleRevision(result.error);
+	if (current !== null) return { ok: false, conflict: current };
 	if (result.error) {
 		console.error('Saving failed', result.error);
 		return { ok: false, error: 'Not saved' };

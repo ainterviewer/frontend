@@ -4,6 +4,7 @@ import { toast } from 'svelte-sonner';
 
 import { Analysis } from '$lib/api';
 import type { CodingCreate, CodingPublic, MessagePublic } from '$lib/api/types.gen';
+import { apiError } from '$lib/utils/errors';
 
 /**
  * The codings of the messages currently on screen.
@@ -235,7 +236,5 @@ export class MessageCodings {
  * that tells the coder what to do instead.
  */
 function detail(error: unknown): string | null {
-	if (typeof error !== 'object' || error === null) return null;
-	const body = (error as { detail?: unknown }).detail;
-	return typeof body === 'string' ? body : null;
+	return apiError(error)?.detail ?? null;
 }

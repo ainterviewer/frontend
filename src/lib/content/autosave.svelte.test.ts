@@ -164,7 +164,7 @@ describe('Autosaver', () => {
 describe('saveContent', () => {
 	it('reads a stale revision as a conflict, and sends the revision to overwrite', async () => {
 		const stale = await saveContent('p', 'agents', async () => ({
-			error: { detail: 'stale', code: 'stale_revision', current_revision: 6 },
+			error: { detail: 'stale', code: 'stale_revision', current_revision: 6, part: 'agents' },
 			response: new Response(null, { status: 412 })
 		}));
 		expect(stale).toEqual({ ok: false, conflict: 6 });
@@ -188,7 +188,7 @@ describe('saveRevisioned', () => {
 		expect(etag.value).toBe('"4"');
 
 		const stale = await saveRevisioned(etag, async () => ({
-			error: { current_revision: 9 },
+			error: { detail: 'stale', code: 'stale_revision', current_revision: 9, part: null },
 			response: new Response(null, { status: 412 })
 		}));
 		expect(stale).toEqual({ ok: false, conflict: 9 });

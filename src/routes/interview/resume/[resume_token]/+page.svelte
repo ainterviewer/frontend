@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { Interviews } from '$lib/api';
 	import Wave from '$lib/components/Wave.svelte';
+	import { errorDetail } from '$lib/utils/errors';
 
 	import { saveInterviewSession } from '../../chat.svelte';
 
@@ -28,10 +29,10 @@
 
 		if (apiError || !data) {
 			isLoading = false;
-			errorMessage =
-				typeof apiError === 'object' && apiError && 'detail' in apiError
-					? String((apiError as { detail: unknown }).detail)
-					: 'This link is no longer valid. Please ask for a new one.';
+			errorMessage = errorDetail(
+				apiError,
+				'This link is no longer valid. Please ask for a new one.'
+			);
 			return;
 		}
 

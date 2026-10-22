@@ -24,7 +24,7 @@
 		sortableTime
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
-	import { errorMessage } from '$lib/utils/errors';
+	import { apiError, errorMessage } from '$lib/utils/errors';
 
 	import type { PageData } from './$types';
 
@@ -69,8 +69,9 @@
 	/** The backend's message for a failed request: its `detail`, or the first
 	 * validation error's (an alias in the wrong shape answers 422). */
 	function responseError(err: unknown, fallback: string): string {
+		const body = apiError(err);
+		if (body) return body.detail;
 		const detail = (err as { detail?: unknown }).detail;
-		if (typeof detail === 'string') return detail;
 		if (Array.isArray(detail) && typeof detail[0]?.msg === 'string') return detail[0].msg;
 		return fallback;
 	}

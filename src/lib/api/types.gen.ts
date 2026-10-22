@@ -27,6 +27,50 @@ export type AccessRequestCreate = {
 };
 
 /**
+ * AccessRequestPublic
+ */
+export type AccessRequestPublic = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Organization
+     */
+    organization?: string | null;
+    /**
+     * Message
+     */
+    message?: string | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    status: AccessRequestStatus;
+    /**
+     * Processed By Id
+     */
+    processed_by_id: string | null;
+};
+
+/**
+ * AccessRequestStatus
+ */
+export type AccessRequestStatus = 'waiting' | 'fulfilled' | 'denied';
+
+/**
  * AccessRequestsDeleteRequest
  */
 export type AccessRequestsDeleteRequest = {
@@ -52,6 +96,19 @@ export type AccessRequestsProcessRequest = {
      * Action
      */
     action: 'approve' | 'deny';
+};
+
+/**
+ * ActionResponse
+ *
+ * The result of an action that returns nothing but a sentence to show
+ * (logged out, password reset). Errors are `ApiError`s instead.
+ */
+export type ActionResponse = {
+    /**
+     * Message
+     */
+    message: string;
 };
 
 /**
@@ -157,6 +214,24 @@ export type AnswerSample = {
 };
 
 /**
+ * ApiError
+ *
+ * The body of every error response but FastAPI's 422, whose `detail` is
+ * a list of validation errors (`HTTPValidationError`).
+ *
+ * `detail` is a sentence to show; `code` says what went wrong for a client
+ * that handles it, and is null for errors no client tells apart. Raised as
+ * `app.errors.AppError` and answered by the handlers in `app/main.py`.
+ */
+export type ApiError = {
+    /**
+     * Detail
+     */
+    detail: string;
+    code: ErrorCode | null;
+};
+
+/**
  * ArchiveRequest
  */
 export type ArchiveRequest = {
@@ -175,6 +250,23 @@ export type AssistanceChatRequest = {
      */
     prompt: string;
     guide: InterviewGuide;
+};
+
+/**
+ * AuthResponse
+ *
+ * `two_factor_required` comes with a 202: no session yet, a code was
+ * emailed for `/login/verify-code`.
+ */
+export type AuthResponse = {
+    /**
+     * Message
+     */
+    message: string;
+    /**
+     * Two Factor Required
+     */
+    two_factor_required?: boolean;
 };
 
 /**
@@ -374,6 +466,25 @@ export type BodyUploadWelcomeVideo = {
      * Video
      */
     video: Blob | File;
+};
+
+/**
+ * CannotPublishError
+ *
+ * 409 `cannot_publish`: the paths each offered language still lacks.
+ */
+export type CannotPublishError = {
+    /**
+     * Detail
+     */
+    detail: string;
+    code: ErrorCode | null;
+    /**
+     * Missing
+     */
+    missing: {
+        [key in LanguageCode]?: Array<string>;
+    };
 };
 
 /**
@@ -1894,14 +2005,15 @@ export type EmbeddingTurn = {
 };
 
 /**
- * ErrorResponse
+ * ErrorCode
+ *
+ * What went wrong, for a client to branch on: the `code` of an
+ * `ApiError` body. `detail` is the sentence to show; this is what to test.
+ *
+ * Only errors a client handles differently carry one. Values are part of
+ * the API -- the frontend matches on them -- so rename none without it.
  */
-export type ErrorResponse = {
-    /**
-     * Detail
-     */
-    detail: string;
-};
+export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'stale_revision' | 'revision_required' | 'project_language' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'email_send_failed' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'access_request_exists' | 'preview_features_required';
 
 /**
  * ExperimentCreate
@@ -2975,6 +3087,24 @@ export type IntervieweePublic = {
  * Interviewer
  */
 export type Interviewer = 'human' | 'ai';
+
+/**
+ * InvalidKeywordQueryError
+ *
+ * 400 `invalid_keyword_query`: where in the query it went wrong, as a
+ * zero-based offset, or null when the problem is the query as a whole.
+ */
+export type InvalidKeywordQueryError = {
+    /**
+     * Detail
+     */
+    detail: string;
+    code: ErrorCode | null;
+    /**
+     * Position
+     */
+    position: number | null;
+};
 
 /**
  * InvitationCreate
@@ -4678,6 +4808,16 @@ export type ProjectCreate = {
 };
 
 /**
+ * ProjectCreateResponse
+ */
+export type ProjectCreateResponse = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+};
+
+/**
  * ProjectLanguage
  *
  * A language a project offers.
@@ -5502,6 +5642,27 @@ export type SpeechRequest = {
 };
 
 /**
+ * StaleRevisionError
+ *
+ * 412 `stale_revision`: someone saved the content since it was loaded.
+ *
+ * `current_revision` is what to send as `If-Match` to overwrite; `part` the
+ * `ContentPart` whose revision was checked, null for the overall one.
+ */
+export type StaleRevisionError = {
+    /**
+     * Detail
+     */
+    detail: string;
+    code: ErrorCode | null;
+    /**
+     * Current Revision
+     */
+    current_revision: number;
+    part: ContentPart | null;
+};
+
+/**
  * SurveyFacet
  *
  * One survey item, as something to filter a cohort by.
@@ -5602,6 +5763,68 @@ export type SynthesizeRequest = {
         number
     ] | null;
 };
+
+/**
+ * SynthesizeResponse
+ */
+export type SynthesizeResponse = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Message
+     */
+    message: string;
+    /**
+     * Status
+     */
+    status: string;
+};
+
+/**
+ * TestRunPublic
+ */
+export type TestRunPublic = {
+    /**
+     * Test Setup Id
+     */
+    test_setup_id: string;
+    language?: LanguageCode;
+    /**
+     * N Interviews
+     */
+    n_interviews: number;
+    /**
+     * Answering Model
+     */
+    answering_model: string;
+    /**
+     * Delay Before Answers
+     */
+    delay_before_answers?: [
+        number,
+        number
+    ] | null;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Last Updated
+     */
+    last_updated?: string | null;
+    status: TestRunStatus;
+};
+
+/**
+ * TestRunStatus
+ */
+export type TestRunStatus = 'pending' | 'running' | 'completed' | 'failed';
 
 /**
  * TestSetupCreate
@@ -6683,13 +6906,17 @@ export type GetCodebookData = {
 
 export type GetCodebookErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetCodebookError = GetCodebookErrors[keyof GetCodebookErrors];
@@ -6722,13 +6949,17 @@ export type SaveCodebookData = {
 
 export type SaveCodebookErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SaveCodebookError = SaveCodebookErrors[keyof SaveCodebookErrors];
@@ -6761,13 +6992,17 @@ export type GetCodeCountsData = {
 
 export type GetCodeCountsErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetCodeCountsError = GetCodeCountsErrors[keyof GetCodeCountsErrors];
@@ -6808,13 +7043,17 @@ export type GetMessageCodingsData = {
 
 export type GetMessageCodingsErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetMessageCodingsError = GetMessageCodingsErrors[keyof GetMessageCodingsErrors];
@@ -6853,13 +7092,17 @@ export type AddMessageCodingData = {
 
 export type AddMessageCodingErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type AddMessageCodingError = AddMessageCodingErrors[keyof AddMessageCodingErrors];
@@ -6892,13 +7135,17 @@ export type GetCodingsForMessagesData = {
 
 export type GetCodingsForMessagesErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetCodingsForMessagesError = GetCodingsForMessagesErrors[keyof GetCodingsForMessagesErrors];
@@ -6939,13 +7186,17 @@ export type DeleteMessageCodingData = {
 
 export type DeleteMessageCodingErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteMessageCodingError = DeleteMessageCodingErrors[keyof DeleteMessageCodingErrors];
@@ -6980,13 +7231,17 @@ export type UpdateMessageCodingData = {
 
 export type UpdateMessageCodingErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateMessageCodingError = UpdateMessageCodingErrors[keyof UpdateMessageCodingErrors];
@@ -7019,13 +7274,17 @@ export type GetFilteredMessagesCountData = {
 
 export type GetFilteredMessagesCountErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetFilteredMessagesCountError = GetFilteredMessagesCountErrors[keyof GetFilteredMessagesCountErrors];
@@ -7068,13 +7327,17 @@ export type GetFilteredMessagesData = {
 
 export type GetFilteredMessagesErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetFilteredMessagesError = GetFilteredMessagesErrors[keyof GetFilteredMessagesErrors];
@@ -7117,13 +7380,17 @@ export type GetMessageContextBeforeData = {
 
 export type GetMessageContextBeforeErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetMessageContextBeforeError = GetMessageContextBeforeErrors[keyof GetMessageContextBeforeErrors];
@@ -7166,13 +7433,17 @@ export type GetMessageContextAfterData = {
 
 export type GetMessageContextAfterErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetMessageContextAfterError = GetMessageContextAfterErrors[keyof GetMessageContextAfterErrors];
@@ -7211,13 +7482,17 @@ export type GetMessageCommentsData = {
 
 export type GetMessageCommentsErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetMessageCommentsError = GetMessageCommentsErrors[keyof GetMessageCommentsErrors];
@@ -7256,13 +7531,17 @@ export type AddMessageCommentData = {
 
 export type AddMessageCommentErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type AddMessageCommentError = AddMessageCommentErrors[keyof AddMessageCommentErrors];
@@ -7299,13 +7578,17 @@ export type DeleteMessageCommentData = {
 
 export type DeleteMessageCommentErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteMessageCommentError = DeleteMessageCommentErrors[keyof DeleteMessageCommentErrors];
@@ -7340,13 +7623,17 @@ export type UpdateMessageCommentData = {
 
 export type UpdateMessageCommentErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateMessageCommentError = UpdateMessageCommentErrors[keyof UpdateMessageCommentErrors];
@@ -7465,13 +7752,23 @@ export type SearchEmbeddingsData = {
 
 export type SearchEmbeddingsErrors = {
     /**
-     * Invalid request
+     * Response 400 Search Embeddings
+     *
+     * Bad Request
      */
-    400: ErrorResponse;
+    400: InvalidKeywordQueryError | ApiError;
     /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SearchEmbeddingsError = SearchEmbeddingsErrors[keyof SearchEmbeddingsErrors];
@@ -7597,13 +7894,23 @@ export type BrowseEmbeddingsData = {
 
 export type BrowseEmbeddingsErrors = {
     /**
-     * Invalid request
+     * Response 400 Browse Embeddings
+     *
+     * Bad Request
      */
-    400: ErrorResponse;
+    400: InvalidKeywordQueryError | ApiError;
     /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type BrowseEmbeddingsError = BrowseEmbeddingsErrors[keyof BrowseEmbeddingsErrors];
@@ -7704,13 +8011,23 @@ export type ReadSurveyFacetsData = {
 
 export type ReadSurveyFacetsErrors = {
     /**
-     * Invalid request
+     * Response 400 Read Survey Facets
+     *
+     * Bad Request
      */
-    400: ErrorResponse;
+    400: InvalidKeywordQueryError | ApiError;
     /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ReadSurveyFacetsError = ReadSurveyFacetsErrors[keyof ReadSurveyFacetsErrors];
@@ -7812,13 +8129,23 @@ export type ReadCodeFacetsData = {
 
 export type ReadCodeFacetsErrors = {
     /**
-     * Invalid request
+     * Response 400 Read Code Facets
+     *
+     * Bad Request
      */
-    400: ErrorResponse;
+    400: InvalidKeywordQueryError | ApiError;
     /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ReadCodeFacetsError = ReadCodeFacetsErrors[keyof ReadCodeFacetsErrors];
@@ -7863,13 +8190,17 @@ export type ReadInterviewTranscriptData = {
 
 export type ReadInterviewTranscriptErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ReadInterviewTranscriptError = ReadInterviewTranscriptErrors[keyof ReadInterviewTranscriptErrors];
@@ -7991,13 +8322,23 @@ export type FindEmbeddingsLikeCodeData = {
 
 export type FindEmbeddingsLikeCodeErrors = {
     /**
-     * Invalid request
+     * Response 400 Find Embeddings Like Code
+     *
+     * Bad Request
      */
-    400: ErrorResponse;
+    400: InvalidKeywordQueryError | ApiError;
     /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type FindEmbeddingsLikeCodeError = FindEmbeddingsLikeCodeErrors[keyof FindEmbeddingsLikeCodeErrors];
@@ -8114,13 +8455,23 @@ export type FindSimilarEmbeddingsData = {
 
 export type FindSimilarEmbeddingsErrors = {
     /**
-     * Invalid request
+     * Response 400 Find Similar Embeddings
+     *
+     * Bad Request
      */
-    400: ErrorResponse;
+    400: InvalidKeywordQueryError | ApiError;
     /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type FindSimilarEmbeddingsError = FindSimilarEmbeddingsErrors[keyof FindSimilarEmbeddingsErrors];
@@ -8251,13 +8602,23 @@ export type ClusterEmbeddingsData = {
 
 export type ClusterEmbeddingsErrors = {
     /**
-     * Invalid request
+     * Response 400 Cluster Embeddings
+     *
+     * Bad Request
      */
-    400: ErrorResponse;
+    400: InvalidKeywordQueryError | ApiError;
     /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ClusterEmbeddingsError = ClusterEmbeddingsErrors[keyof ClusterEmbeddingsErrors];
@@ -8290,13 +8651,17 @@ export type GetEmbeddingStatusData = {
 
 export type GetEmbeddingStatusErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetEmbeddingStatusError = GetEmbeddingStatusErrors[keyof GetEmbeddingStatusErrors];
@@ -8329,13 +8694,17 @@ export type TriggerEmbeddingBackfillData = {
 
 export type TriggerEmbeddingBackfillErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type TriggerEmbeddingBackfillError = TriggerEmbeddingBackfillErrors[keyof TriggerEmbeddingBackfillErrors];
@@ -8386,13 +8755,17 @@ export type GetProjectMonitoringStatsData = {
 
 export type GetProjectMonitoringStatsErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetProjectMonitoringStatsError = GetProjectMonitoringStatsErrors[keyof GetProjectMonitoringStatsErrors];
@@ -8447,13 +8820,17 @@ export type GetProjectItemDistributionsData = {
 
 export type GetProjectItemDistributionsErrors = {
     /**
-     * Invalid request
-     */
-    400: ErrorResponse;
-    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetProjectItemDistributionsError = GetProjectItemDistributionsErrors[keyof GetProjectItemDistributionsErrors];
@@ -8493,6 +8870,14 @@ export type ResetSessionErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ResetSessionError = ResetSessionErrors[keyof ResetSessionErrors];
@@ -8530,6 +8915,14 @@ export type GetChatErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetChatError = GetChatErrors[keyof GetChatErrors];
@@ -8567,6 +8960,14 @@ export type SendChatErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SendChatError = SendChatErrors[keyof SendChatErrors];
@@ -8584,6 +8985,19 @@ export type GetExperimentsData = {
     query?: never;
     url: '/api/experiments';
 };
+
+export type GetExperimentsErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetExperimentsError = GetExperimentsErrors[keyof GetExperimentsErrors];
 
 export type GetExperimentsResponses = {
     /**
@@ -8608,6 +9022,14 @@ export type CreateExperimentErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CreateExperimentError = CreateExperimentErrors[keyof CreateExperimentErrors];
@@ -8638,6 +9060,14 @@ export type DeleteExperimentErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteExperimentError = DeleteExperimentErrors[keyof DeleteExperimentErrors];
@@ -8666,6 +9096,14 @@ export type GenerateExperimentQrErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GenerateExperimentQrError = GenerateExperimentQrErrors[keyof GenerateExperimentQrErrors];
@@ -8683,6 +9121,19 @@ export type GetFoldersData = {
     query?: never;
     url: '/api/folders';
 };
+
+export type GetFoldersErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetFoldersError = GetFoldersErrors[keyof GetFoldersErrors];
 
 export type GetFoldersResponses = {
     /**
@@ -8707,6 +9158,14 @@ export type CreateFolderErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CreateFolderError = CreateFolderErrors[keyof CreateFolderErrors];
@@ -8742,6 +9201,14 @@ export type DeleteFolderErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteFolderError = DeleteFolderErrors[keyof DeleteFolderErrors];
@@ -8775,6 +9242,14 @@ export type EditFolderErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type EditFolderError = EditFolderErrors[keyof EditFolderErrors];
@@ -8808,6 +9283,14 @@ export type SetFolderArchivedErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SetFolderArchivedError = SetFolderArchivedErrors[keyof SetFolderArchivedErrors];
@@ -8845,6 +9328,14 @@ export type RemoveCollaboratorErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type RemoveCollaboratorError = RemoveCollaboratorErrors[keyof RemoveCollaboratorErrors];
@@ -8878,6 +9369,14 @@ export type GetCollaboratorsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetCollaboratorsError = GetCollaboratorsErrors[keyof GetCollaboratorsErrors];
@@ -8920,6 +9419,14 @@ export type UpdateCollaboratorRoleErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateCollaboratorRoleError = UpdateCollaboratorRoleErrors[keyof UpdateCollaboratorRoleErrors];
@@ -8955,6 +9462,14 @@ export type AddCollaboratorErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type AddCollaboratorError = AddCollaboratorErrors[keyof AddCollaboratorErrors];
@@ -8990,6 +9505,14 @@ export type CreateProjectErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CreateProjectError = CreateProjectErrors[keyof CreateProjectErrors];
@@ -8998,8 +9521,10 @@ export type CreateProjectResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ProjectCreateResponse;
 };
+
+export type CreateProjectResponse = CreateProjectResponses[keyof CreateProjectResponses];
 
 export type DeleteParticipantsData = {
     body: DeleteParticipantsRequest;
@@ -9023,6 +9548,14 @@ export type DeleteParticipantsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteParticipantsError = DeleteParticipantsErrors[keyof DeleteParticipantsErrors];
@@ -9056,6 +9589,14 @@ export type GetParticipantsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetParticipantsError = GetParticipantsErrors[keyof GetParticipantsErrors];
@@ -9093,6 +9634,14 @@ export type AddParticipantErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type AddParticipantError = AddParticipantErrors[keyof AddParticipantErrors];
@@ -9132,6 +9681,14 @@ export type DeleteParticipantErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteParticipantError = DeleteParticipantErrors[keyof DeleteParticipantErrors];
@@ -9169,6 +9726,14 @@ export type GetParticipantErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetParticipantError = GetParticipantErrors[keyof GetParticipantErrors];
@@ -9208,6 +9773,14 @@ export type UpdateParticipantErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateParticipantError = UpdateParticipantErrors[keyof UpdateParticipantErrors];
@@ -9243,6 +9816,14 @@ export type ExportParticipantsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ExportParticipantsError = ExportParticipantsErrors[keyof ExportParticipantsErrors];
@@ -9276,6 +9857,14 @@ export type ExportEmailBundleErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ExportEmailBundleError = ExportEmailBundleErrors[keyof ExportEmailBundleErrors];
@@ -9314,6 +9903,14 @@ export type AddParticipantsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type AddParticipantsError = AddParticipantsErrors[keyof AddParticipantsErrors];
@@ -9351,6 +9948,14 @@ export type UploadParticipantsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UploadParticipantsError = UploadParticipantsErrors[keyof UploadParticipantsErrors];
@@ -9390,6 +9995,14 @@ export type GetParticipantEmailTemplateErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetParticipantEmailTemplateError = GetParticipantEmailTemplateErrors[keyof GetParticipantEmailTemplateErrors];
@@ -9432,9 +10045,21 @@ export type SetParticipantEmailTemplateData = {
 
 export type SetParticipantEmailTemplateErrors = {
     /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SetParticipantEmailTemplateError = SetParticipantEmailTemplateErrors[keyof SetParticipantEmailTemplateErrors];
@@ -9474,6 +10099,14 @@ export type ListParticipantEmailAttachmentsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ListParticipantEmailAttachmentsError = ListParticipantEmailAttachmentsErrors[keyof ListParticipantEmailAttachmentsErrors];
@@ -9515,6 +10148,14 @@ export type UploadParticipantEmailAttachmentsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UploadParticipantEmailAttachmentsError = UploadParticipantEmailAttachmentsErrors[keyof UploadParticipantEmailAttachmentsErrors];
@@ -9560,6 +10201,14 @@ export type DeleteParticipantEmailAttachmentErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteParticipantEmailAttachmentError = DeleteParticipantEmailAttachmentErrors[keyof DeleteParticipantEmailAttachmentErrors];
@@ -9597,6 +10246,14 @@ export type SendParticipantEmailsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SendParticipantEmailsError = SendParticipantEmailsErrors[keyof SendParticipantEmailsErrors];
@@ -9636,6 +10293,14 @@ export type GetParticipantReminderEmailTemplateErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetParticipantReminderEmailTemplateError = GetParticipantReminderEmailTemplateErrors[keyof GetParticipantReminderEmailTemplateErrors];
@@ -9678,9 +10343,21 @@ export type SetParticipantReminderEmailTemplateData = {
 
 export type SetParticipantReminderEmailTemplateErrors = {
     /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SetParticipantReminderEmailTemplateError = SetParticipantReminderEmailTemplateErrors[keyof SetParticipantReminderEmailTemplateErrors];
@@ -9720,6 +10397,14 @@ export type ListParticipantReminderEmailAttachmentsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ListParticipantReminderEmailAttachmentsError = ListParticipantReminderEmailAttachmentsErrors[keyof ListParticipantReminderEmailAttachmentsErrors];
@@ -9761,6 +10446,14 @@ export type UploadParticipantReminderEmailAttachmentsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UploadParticipantReminderEmailAttachmentsError = UploadParticipantReminderEmailAttachmentsErrors[keyof UploadParticipantReminderEmailAttachmentsErrors];
@@ -9806,6 +10499,14 @@ export type DeleteParticipantReminderEmailAttachmentErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteParticipantReminderEmailAttachmentError = DeleteParticipantReminderEmailAttachmentErrors[keyof DeleteParticipantReminderEmailAttachmentErrors];
@@ -9843,6 +10544,14 @@ export type SendParticipantReminderEmailsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SendParticipantReminderEmailsError = SendParticipantReminderEmailsErrors[keyof SendParticipantReminderEmailsErrors];
@@ -9876,6 +10585,14 @@ export type OptOutErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type OptOutError = OptOutErrors[keyof OptOutErrors];
@@ -9911,6 +10628,14 @@ export type DeleteProjectErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteProjectError = DeleteProjectErrors[keyof DeleteProjectErrors];
@@ -9944,6 +10669,14 @@ export type GetProjectErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetProjectError = GetProjectErrors[keyof GetProjectErrors];
@@ -9979,6 +10712,14 @@ export type CloneProjectErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CloneProjectError = CloneProjectErrors[keyof CloneProjectErrors];
@@ -10014,6 +10755,14 @@ export type RemoveProjectLanguageErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type RemoveProjectLanguageError = RemoveProjectLanguageErrors[keyof RemoveProjectLanguageErrors];
@@ -10051,6 +10800,14 @@ export type GetProjectLanguagesErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetProjectLanguagesError = GetProjectLanguagesErrors[keyof GetProjectLanguagesErrors];
@@ -10088,6 +10845,14 @@ export type AddProjectLanguageErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type AddProjectLanguageError = AddProjectLanguageErrors[keyof AddProjectLanguageErrors];
@@ -10129,6 +10894,14 @@ export type SetLanguageInProgressErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SetLanguageInProgressError = SetLanguageInProgressErrors[keyof SetLanguageInProgressErrors];
@@ -10166,6 +10939,14 @@ export type SetDefaultLanguageErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SetDefaultLanguageError = SetDefaultLanguageErrors[keyof SetDefaultLanguageErrors];
@@ -10203,6 +10984,14 @@ export type ChangeProjectStatusErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ChangeProjectStatusError = ChangeProjectStatusErrors[keyof ChangeProjectStatusErrors];
@@ -10236,6 +11025,14 @@ export type SetProjectArchivedErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SetProjectArchivedError = SetProjectArchivedErrors[keyof SetProjectArchivedErrors];
@@ -10269,6 +11066,14 @@ export type ChangeProjectTitleErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ChangeProjectTitleError = ChangeProjectTitleErrors[keyof ChangeProjectTitleErrors];
@@ -10302,6 +11107,14 @@ export type MoveProjectErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type MoveProjectError = MoveProjectErrors[keyof MoveProjectErrors];
@@ -10335,6 +11148,14 @@ export type GetProjectPermissionsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetProjectPermissionsError = GetProjectPermissionsErrors[keyof GetProjectPermissionsErrors];
@@ -10370,6 +11191,14 @@ export type GetLocalizedGuideErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetLocalizedGuideError = GetLocalizedGuideErrors[keyof GetLocalizedGuideErrors];
@@ -10408,9 +11237,21 @@ export type UpdateGuideData = {
 
 export type UpdateGuideErrors = {
     /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateGuideError = UpdateGuideErrors[keyof UpdateGuideErrors];
@@ -10450,6 +11291,14 @@ export type GetGuideErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetGuideError = GetGuideErrors[keyof GetGuideErrors];
@@ -10489,6 +11338,14 @@ export type TranslateMissingErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type TranslateMissingError = TranslateMissingErrors[keyof TranslateMissingErrors];
@@ -10528,6 +11385,14 @@ export type GenerateGuideErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GenerateGuideError = GenerateGuideErrors[keyof GenerateGuideErrors];
@@ -10567,6 +11432,14 @@ export type GenerateGuideSectionErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GenerateGuideSectionError = GenerateGuideSectionErrors[keyof GenerateGuideSectionErrors];
@@ -10606,6 +11479,14 @@ export type GenerateSectionQuestionErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GenerateSectionQuestionError = GenerateSectionQuestionErrors[keyof GenerateSectionQuestionErrors];
@@ -10641,6 +11522,14 @@ export type UploadImageErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UploadImageError = UploadImageErrors[keyof UploadImageErrors];
@@ -10678,6 +11567,14 @@ export type GetInterviewAgentsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetInterviewAgentsError = GetInterviewAgentsErrors[keyof GetInterviewAgentsErrors];
@@ -10716,9 +11613,21 @@ export type CreateInterviewAgentsData = {
 
 export type CreateInterviewAgentsErrors = {
     /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CreateInterviewAgentsError = CreateInterviewAgentsErrors[keyof CreateInterviewAgentsErrors];
@@ -10756,6 +11665,14 @@ export type PreviewProbingPromptsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type PreviewProbingPromptsError = PreviewProbingPromptsErrors[keyof PreviewProbingPromptsErrors];
@@ -10786,6 +11703,14 @@ export type GetInterviewConfigErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetInterviewConfigError = GetInterviewConfigErrors[keyof GetInterviewConfigErrors];
@@ -10821,6 +11746,14 @@ export type CreateInterviewConfigErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CreateInterviewConfigError = CreateInterviewConfigErrors[keyof CreateInterviewConfigErrors];
@@ -10854,6 +11787,14 @@ export type GetInterviewModelsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetInterviewModelsError = GetInterviewModelsErrors[keyof GetInterviewModelsErrors];
@@ -10891,6 +11832,14 @@ export type UpdateExternalParamsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateExternalParamsError = UpdateExternalParamsErrors[keyof UpdateExternalParamsErrors];
@@ -10909,6 +11858,19 @@ export type GetPromptDefaultsData = {
     url: '/api/prompt-defaults';
 };
 
+export type GetPromptDefaultsErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetPromptDefaultsError = GetPromptDefaultsErrors[keyof GetPromptDefaultsErrors];
+
 export type GetPromptDefaultsResponses = {
     /**
      * Successful Response
@@ -10924,6 +11886,19 @@ export type GetSecurityPolicyDefaultsData = {
     query?: never;
     url: '/api/security-policy-defaults';
 };
+
+export type GetSecurityPolicyDefaultsErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetSecurityPolicyDefaultsError = GetSecurityPolicyDefaultsErrors[keyof GetSecurityPolicyDefaultsErrors];
 
 export type GetSecurityPolicyDefaultsResponses = {
     /**
@@ -10960,6 +11935,14 @@ export type GetConsentErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetConsentError = GetConsentErrors[keyof GetConsentErrors];
@@ -10997,6 +11980,14 @@ export type GetLocalizedConsentErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetLocalizedConsentError = GetLocalizedConsentErrors[keyof GetLocalizedConsentErrors];
@@ -11037,9 +12028,21 @@ export type UpdateConsentData = {
 
 export type UpdateConsentErrors = {
     /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateConsentError = UpdateConsentErrors[keyof UpdateConsentErrors];
@@ -11079,6 +12082,14 @@ export type GetWelcomeErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetWelcomeError = GetWelcomeErrors[keyof GetWelcomeErrors];
@@ -11116,6 +12127,14 @@ export type GetLocalizedWelcomeErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetLocalizedWelcomeError = GetLocalizedWelcomeErrors[keyof GetLocalizedWelcomeErrors];
@@ -11156,9 +12175,21 @@ export type UpdateWelcomeData = {
 
 export type UpdateWelcomeErrors = {
     /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateWelcomeError = UpdateWelcomeErrors[keyof UpdateWelcomeErrors];
@@ -11194,6 +12225,14 @@ export type UploadWelcomeVideoErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UploadWelcomeVideoError = UploadWelcomeVideoErrors[keyof UploadWelcomeVideoErrors];
@@ -11231,6 +12270,14 @@ export type DeleteInterviewsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteInterviewsError = DeleteInterviewsErrors[keyof DeleteInterviewsErrors];
@@ -11328,6 +12375,14 @@ export type GetInterviewsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetInterviewsError = GetInterviewsErrors[keyof GetInterviewsErrors];
@@ -11367,6 +12422,14 @@ export type RevokeInterviewResumeLinkErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type RevokeInterviewResumeLinkError = RevokeInterviewResumeLinkErrors[keyof RevokeInterviewResumeLinkErrors];
@@ -11408,6 +12471,14 @@ export type GetInterviewResumeLinkErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetInterviewResumeLinkError = GetInterviewResumeLinkErrors[keyof GetInterviewResumeLinkErrors];
@@ -11449,6 +12520,14 @@ export type CreateInterviewResumeLinkErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CreateInterviewResumeLinkError = CreateInterviewResumeLinkErrors[keyof CreateInterviewResumeLinkErrors];
@@ -11492,6 +12571,14 @@ export type GetMessageErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetMessageError = GetMessageErrors[keyof GetMessageErrors];
@@ -11529,6 +12616,14 @@ export type GetInterviewMessagesErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetInterviewMessagesError = GetInterviewMessagesErrors[keyof GetInterviewMessagesErrors];
@@ -11574,6 +12669,14 @@ export type GetInterviewAudioErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetInterviewAudioError = GetInterviewAudioErrors[keyof GetInterviewAudioErrors];
@@ -11607,6 +12710,14 @@ export type ExportMessagesErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ExportMessagesError = ExportMessagesErrors[keyof ExportMessagesErrors];
@@ -11640,6 +12751,14 @@ export type GenerateProjectQrErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GenerateProjectQrError = GenerateProjectQrErrors[keyof GenerateProjectQrErrors];
@@ -11668,6 +12787,14 @@ export type CheckProjectOwnerErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CheckProjectOwnerError = CheckProjectOwnerErrors[keyof CheckProjectOwnerErrors];
@@ -11713,6 +12840,14 @@ export type GetProjectReportsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetProjectReportsError = GetProjectReportsErrors[keyof GetProjectReportsErrors];
@@ -11750,6 +12885,14 @@ export type ResolveProjectReportsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ResolveProjectReportsError = ResolveProjectReportsErrors[keyof ResolveProjectReportsErrors];
@@ -11785,6 +12928,14 @@ export type MarkProjectReportsReadErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type MarkProjectReportsReadError = MarkProjectReportsReadErrors[keyof MarkProjectReportsReadErrors];
@@ -11824,6 +12975,14 @@ export type GetBackgroundInfoErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetBackgroundInfoError = GetBackgroundInfoErrors[keyof GetBackgroundInfoErrors];
@@ -11866,9 +13025,21 @@ export type UpdateBackgroundInfoData = {
 
 export type UpdateBackgroundInfoErrors = {
     /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateBackgroundInfoError = UpdateBackgroundInfoErrors[keyof UpdateBackgroundInfoErrors];
@@ -11906,6 +13077,14 @@ export type GetFixedPersonasErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetFixedPersonasError = GetFixedPersonasErrors[keyof GetFixedPersonasErrors];
@@ -11950,9 +13129,21 @@ export type UpdateFixedPersonasData = {
 
 export type UpdateFixedPersonasErrors = {
     /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateFixedPersonasError = UpdateFixedPersonasErrors[keyof UpdateFixedPersonasErrors];
@@ -11990,6 +13181,14 @@ export type GetFixedAnswersErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetFixedAnswersError = GetFixedAnswersErrors[keyof GetFixedAnswersErrors];
@@ -12036,9 +13235,21 @@ export type UpdateFixedAnswersData = {
 
 export type UpdateFixedAnswersErrors = {
     /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateFixedAnswersError = UpdateFixedAnswersErrors[keyof UpdateFixedAnswersErrors];
@@ -12072,6 +13283,14 @@ export type GetTestSetupsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetTestSetupsError = GetTestSetupsErrors[keyof GetTestSetupsErrors];
@@ -12109,6 +13328,14 @@ export type CreateTestSetupErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CreateTestSetupError = CreateTestSetupErrors[keyof CreateTestSetupErrors];
@@ -12148,6 +13375,14 @@ export type DeleteTestSetupErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteTestSetupError = DeleteTestSetupErrors[keyof DeleteTestSetupErrors];
@@ -12185,6 +13420,14 @@ export type GetIntervieweeErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetIntervieweeError = GetIntervieweeErrors[keyof GetIntervieweeErrors];
@@ -12220,6 +13463,14 @@ export type AddIntervieweeErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type AddIntervieweeError = AddIntervieweeErrors[keyof AddIntervieweeErrors];
@@ -12257,16 +13508,28 @@ export type GetTestStatusErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetTestStatusError = GetTestStatusErrors[keyof GetTestStatusErrors];
 
 export type GetTestStatusResponses = {
     /**
+     * Response Get Test Status
+     *
      * Successful Response
      */
-    200: unknown;
+    200: Array<TestRunPublic>;
 };
+
+export type GetTestStatusResponse = GetTestStatusResponses[keyof GetTestStatusResponses];
 
 export type RunSyntheticTestData = {
     body: SynthesizeRequest;
@@ -12294,6 +13557,14 @@ export type RunSyntheticTestErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type RunSyntheticTestError = RunSyntheticTestErrors[keyof RunSyntheticTestErrors];
@@ -12302,8 +13573,10 @@ export type RunSyntheticTestResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: SynthesizeResponse;
 };
+
+export type RunSyntheticTestResponse = RunSyntheticTestResponses[keyof RunSyntheticTestResponses];
 
 export type GetContentStatusData = {
     body?: never;
@@ -12327,6 +13600,14 @@ export type GetContentStatusErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetContentStatusError = GetContentStatusErrors[keyof GetContentStatusErrors];
@@ -12382,6 +13663,14 @@ export type ListContentVersionsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ListContentVersionsError = ListContentVersionsErrors[keyof ListContentVersionsErrors];
@@ -12420,9 +13709,27 @@ export type SaveContentVersionData = {
 
 export type SaveContentVersionErrors = {
     /**
+     * Response 409 Save Content Version
+     *
+     * Conflict
+     */
+    409: CannotPublishError | ApiError;
+    /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SaveContentVersionError = SaveContentVersionErrors[keyof SaveContentVersionErrors];
@@ -12462,6 +13769,14 @@ export type GetContentVersionErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetContentVersionError = GetContentVersionErrors[keyof GetContentVersionErrors];
@@ -12504,9 +13819,21 @@ export type RestoreContentVersionData = {
 
 export type RestoreContentVersionErrors = {
     /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type RestoreContentVersionError = RestoreContentVersionErrors[keyof RestoreContentVersionErrors];
@@ -12537,6 +13864,14 @@ export type ValidateInterviewParamsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ValidateInterviewParamsError = ValidateInterviewParamsErrors[keyof ValidateInterviewParamsErrors];
@@ -12576,6 +13911,14 @@ export type CreateInterviewErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CreateInterviewError = CreateInterviewErrors[keyof CreateInterviewErrors];
@@ -12608,6 +13951,14 @@ export type RedeemInterviewResumeLinkErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type RedeemInterviewResumeLinkError = RedeemInterviewResumeLinkErrors[keyof RedeemInterviewResumeLinkErrors];
@@ -12633,6 +13984,14 @@ export type PutFeedbackErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type PutFeedbackError = PutFeedbackErrors[keyof PutFeedbackErrors];
@@ -12658,6 +14017,14 @@ export type ReportMessageErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ReportMessageError = ReportMessageErrors[keyof ReportMessageErrors];
@@ -12683,6 +14050,14 @@ export type UploadInterviewImageErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UploadInterviewImageError = UploadInterviewImageErrors[keyof UploadInterviewImageErrors];
@@ -12708,6 +14083,14 @@ export type UploadAudioErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UploadAudioError = UploadAudioErrors[keyof UploadAudioErrors];
@@ -12733,6 +14116,14 @@ export type SynthesizeSpeechErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type SynthesizeSpeechError = SynthesizeSpeechErrors[keyof SynthesizeSpeechErrors];
@@ -12758,6 +14149,14 @@ export type LoginErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type LoginError = LoginErrors[keyof LoginErrors];
@@ -12766,8 +14165,14 @@ export type LoginResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: AuthResponse;
+    /**
+     * Accepted
+     */
+    202: AuthResponse;
 };
+
+export type LoginResponse = LoginResponses[keyof LoginResponses];
 
 export type VerifyLoginCodeData = {
     body: VerifyLoginCodeRequest;
@@ -12781,6 +14186,14 @@ export type VerifyLoginCodeErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type VerifyLoginCodeError = VerifyLoginCodeErrors[keyof VerifyLoginCodeErrors];
@@ -12789,8 +14202,10 @@ export type VerifyLoginCodeResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: AuthResponse;
 };
+
+export type VerifyLoginCodeResponse = VerifyLoginCodeResponses[keyof VerifyLoginCodeResponses];
 
 export type DeleteMeData = {
     body: DeleteAccountRequest;
@@ -12804,6 +14219,14 @@ export type DeleteMeErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteMeError = DeleteMeErrors[keyof DeleteMeErrors];
@@ -12812,8 +14235,10 @@ export type DeleteMeResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ActionResponse;
 };
+
+export type DeleteMeResponse = DeleteMeResponses[keyof DeleteMeResponses];
 
 export type MeData = {
     body?: never;
@@ -12821,6 +14246,19 @@ export type MeData = {
     query?: never;
     url: '/api/me';
 };
+
+export type MeErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type MeError = MeErrors[keyof MeErrors];
 
 export type MeResponses = {
     /**
@@ -12843,6 +14281,14 @@ export type UpdateMeErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateMeError = UpdateMeErrors[keyof UpdateMeErrors];
@@ -12868,6 +14314,14 @@ export type UpdateMyEmailErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateMyEmailError = UpdateMyEmailErrors[keyof UpdateMyEmailErrors];
@@ -12893,6 +14347,14 @@ export type UpdateMyPasswordErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateMyPasswordError = UpdateMyPasswordErrors[keyof UpdateMyPasswordErrors];
@@ -12901,8 +14363,10 @@ export type UpdateMyPasswordResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ActionResponse;
 };
+
+export type UpdateMyPasswordResponse = UpdateMyPasswordResponses[keyof UpdateMyPasswordResponses];
 
 export type RegisterData = {
     body: RegisterRequest;
@@ -12916,6 +14380,14 @@ export type RegisterErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type RegisterError = RegisterErrors[keyof RegisterErrors];
@@ -12924,8 +14396,10 @@ export type RegisterResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    201: ActionResponse;
 };
+
+export type RegisterResponse = RegisterResponses[keyof RegisterResponses];
 
 export type VerifyEmailData = {
     body: VerifyEmailRequest;
@@ -12939,6 +14413,14 @@ export type VerifyEmailErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type VerifyEmailError = VerifyEmailErrors[keyof VerifyEmailErrors];
@@ -12947,8 +14429,10 @@ export type VerifyEmailResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ActionResponse;
 };
+
+export type VerifyEmailResponse = VerifyEmailResponses[keyof VerifyEmailResponses];
 
 export type ResendVerificationData = {
     body: ResendVerificationRequest;
@@ -12962,6 +14446,14 @@ export type ResendVerificationErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ResendVerificationError = ResendVerificationErrors[keyof ResendVerificationErrors];
@@ -12970,8 +14462,10 @@ export type ResendVerificationResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ActionResponse;
 };
+
+export type ResendVerificationResponse = ResendVerificationResponses[keyof ResendVerificationResponses];
 
 export type ForgotPasswordData = {
     body: ForgotPasswordRequest;
@@ -12985,6 +14479,14 @@ export type ForgotPasswordErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ForgotPasswordError = ForgotPasswordErrors[keyof ForgotPasswordErrors];
@@ -12993,8 +14495,10 @@ export type ForgotPasswordResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ActionResponse;
 };
+
+export type ForgotPasswordResponse = ForgotPasswordResponses[keyof ForgotPasswordResponses];
 
 export type ResetPasswordData = {
     body: ResetPasswordRequest;
@@ -13008,6 +14512,14 @@ export type ResetPasswordErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ResetPasswordError = ResetPasswordErrors[keyof ResetPasswordErrors];
@@ -13016,8 +14528,10 @@ export type ResetPasswordResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ActionResponse;
 };
+
+export type ResetPasswordResponse = ResetPasswordResponses[keyof ResetPasswordResponses];
 
 export type RequestAccessData = {
     body: AccessRequestCreate;
@@ -13031,6 +14545,14 @@ export type RequestAccessErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type RequestAccessError = RequestAccessErrors[keyof RequestAccessErrors];
@@ -13049,12 +14571,27 @@ export type LogoutData = {
     url: '/api/logout';
 };
 
+export type LogoutErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type LogoutError = LogoutErrors[keyof LogoutErrors];
+
 export type LogoutResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ActionResponse;
 };
+
+export type LogoutResponse = LogoutResponses[keyof LogoutResponses];
 
 export type LogoutEverywhereData = {
     body?: never;
@@ -13063,12 +14600,27 @@ export type LogoutEverywhereData = {
     url: '/api/logout-everywhere';
 };
 
+export type LogoutEverywhereErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type LogoutEverywhereError = LogoutEverywhereErrors[keyof LogoutEverywhereErrors];
+
 export type LogoutEverywhereResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ActionResponse;
 };
+
+export type LogoutEverywhereResponse = LogoutEverywhereResponses[keyof LogoutEverywhereResponses];
 
 export type ExitData = {
     body?: never;
@@ -13077,12 +14629,27 @@ export type ExitData = {
     url: '/api/exit';
 };
 
+export type ExitErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type ExitError = ExitErrors[keyof ExitErrors];
+
 export type ExitResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ActionResponse;
 };
+
+export type ExitResponse = ExitResponses[keyof ExitResponses];
 
 export type RefreshData = {
     body?: never;
@@ -13091,12 +14658,27 @@ export type RefreshData = {
     url: '/api/refresh';
 };
 
+export type RefreshErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type RefreshError = RefreshErrors[keyof RefreshErrors];
+
 export type RefreshResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: ActionResponse;
 };
+
+export type RefreshResponse = RefreshResponses[keyof RefreshResponses];
 
 export type GetAccessRequestsData = {
     body?: never;
@@ -13105,12 +14687,29 @@ export type GetAccessRequestsData = {
     url: '/api/admin/admin/access-requests';
 };
 
+export type GetAccessRequestsErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetAccessRequestsError = GetAccessRequestsErrors[keyof GetAccessRequestsErrors];
+
 export type GetAccessRequestsResponses = {
     /**
+     * Response Get Access Requests
+     *
      * Successful Response
      */
-    200: unknown;
+    200: Array<AccessRequestPublic>;
 };
+
+export type GetAccessRequestsResponse = GetAccessRequestsResponses[keyof GetAccessRequestsResponses];
 
 export type ProcessAccessRequestsData = {
     body: AccessRequestsProcessRequest;
@@ -13124,6 +14723,14 @@ export type ProcessAccessRequestsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ProcessAccessRequestsError = ProcessAccessRequestsErrors[keyof ProcessAccessRequestsErrors];
@@ -13147,6 +14754,14 @@ export type DeleteAccessRequestsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteAccessRequestsError = DeleteAccessRequestsErrors[keyof DeleteAccessRequestsErrors];
@@ -13164,6 +14779,19 @@ export type GetInvitationsData = {
     query?: never;
     url: '/api/admin/admin/invitations';
 };
+
+export type GetInvitationsErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetInvitationsError = GetInvitationsErrors[keyof GetInvitationsErrors];
 
 export type GetInvitationsResponses = {
     /**
@@ -13188,6 +14816,14 @@ export type CreateInvitationErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type CreateInvitationError = CreateInvitationErrors[keyof CreateInvitationErrors];
@@ -13216,6 +14852,14 @@ export type UpdateInvitationErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateInvitationError = UpdateInvitationErrors[keyof UpdateInvitationErrors];
@@ -13241,6 +14885,14 @@ export type DeleteInvitationsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteInvitationsError = DeleteInvitationsErrors[keyof DeleteInvitationsErrors];
@@ -13273,6 +14925,14 @@ export type GetReportsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetReportsError = GetReportsErrors[keyof GetReportsErrors];
@@ -13300,6 +14960,14 @@ export type ResolveReportsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ResolveReportsError = ResolveReportsErrors[keyof ResolveReportsErrors];
@@ -13325,6 +14993,14 @@ export type MarkReportsReadErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type MarkReportsReadError = MarkReportsReadErrors[keyof MarkReportsReadErrors];
@@ -13355,6 +15031,14 @@ export type ProxyToEc2ManagerDeleteErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ProxyToEc2ManagerDeleteError = ProxyToEc2ManagerDeleteErrors[keyof ProxyToEc2ManagerDeleteErrors];
@@ -13383,6 +15067,14 @@ export type ProxyToEc2ManagerGetErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ProxyToEc2ManagerGetError = ProxyToEc2ManagerGetErrors[keyof ProxyToEc2ManagerGetErrors];
@@ -13411,6 +15103,14 @@ export type ProxyToEc2ManagerPatchErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ProxyToEc2ManagerPatchError = ProxyToEc2ManagerPatchErrors[keyof ProxyToEc2ManagerPatchErrors];
@@ -13439,6 +15139,14 @@ export type ProxyToEc2ManagerPostErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ProxyToEc2ManagerPostError = ProxyToEc2ManagerPostErrors[keyof ProxyToEc2ManagerPostErrors];
@@ -13467,6 +15175,14 @@ export type ProxyToEc2ManagerPutErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ProxyToEc2ManagerPutError = ProxyToEc2ManagerPutErrors[keyof ProxyToEc2ManagerPutErrors];
@@ -13497,6 +15213,14 @@ export type GetAdminStatsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetAdminStatsError = GetAdminStatsErrors[keyof GetAdminStatsErrors];
@@ -13527,6 +15251,14 @@ export type DeleteUserErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type DeleteUserError = DeleteUserErrors[keyof DeleteUserErrors];
@@ -13544,6 +15276,19 @@ export type GetUsersData = {
     query?: never;
     url: '/api/admin/users';
 };
+
+export type GetUsersErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetUsersError = GetUsersErrors[keyof GetUsersErrors];
 
 export type GetUsersResponses = {
     /**
@@ -13573,6 +15318,14 @@ export type UpdateAdminNoteErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateAdminNoteError = UpdateAdminNoteErrors[keyof UpdateAdminNoteErrors];
@@ -13603,6 +15356,14 @@ export type UpdateUserErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type UpdateUserError = UpdateUserErrors[keyof UpdateUserErrors];
@@ -13622,6 +15383,19 @@ export type GetDemoLimitDefaultsData = {
     query?: never;
     url: '/api/admin/demo-limits';
 };
+
+export type GetDemoLimitDefaultsErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetDemoLimitDefaultsError = GetDemoLimitDefaultsErrors[keyof GetDemoLimitDefaultsErrors];
 
 export type GetDemoLimitDefaultsResponses = {
     /**
@@ -13649,6 +15423,14 @@ export type GetUserDemoBudgetErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetUserDemoBudgetError = GetUserDemoBudgetErrors[keyof GetUserDemoBudgetErrors];
@@ -13669,12 +15451,29 @@ export type GetModelsData = {
     url: '/api/models';
 };
 
+export type GetModelsErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetModelsError = GetModelsErrors[keyof GetModelsErrors];
+
 export type GetModelsResponses = {
     /**
+     * Response Get Models
+     *
      * Successful Response
      */
-    200: unknown;
+    200: Array<string>;
 };
+
+export type GetModelsResponse = GetModelsResponses[keyof GetModelsResponses];
 
 export type GetLanguagesData = {
     body?: never;
@@ -13682,6 +15481,19 @@ export type GetLanguagesData = {
     query?: never;
     url: '/api/languages';
 };
+
+export type GetLanguagesErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetLanguagesError = GetLanguagesErrors[keyof GetLanguagesErrors];
 
 export type GetLanguagesResponses = {
     /**
@@ -13706,6 +15518,14 @@ export type NewsletterUnsubscribeErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type NewsletterUnsubscribeError = NewsletterUnsubscribeErrors[keyof NewsletterUnsubscribeErrors];
@@ -13729,6 +15549,14 @@ export type NewsletterSubscribeErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type NewsletterSubscribeError = NewsletterSubscribeErrors[keyof NewsletterSubscribeErrors];
@@ -13747,6 +15575,19 @@ export type GetNotificationsData = {
     url: '/api/me/notifications';
 };
 
+export type GetNotificationsErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetNotificationsError = GetNotificationsErrors[keyof GetNotificationsErrors];
+
 export type GetNotificationsResponses = {
     /**
      * Successful Response
@@ -13762,6 +15603,19 @@ export type GetMyDemoBudgetData = {
     query?: never;
     url: '/api/me/demo-budget';
 };
+
+export type GetMyDemoBudgetErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetMyDemoBudgetError = GetMyDemoBudgetErrors[keyof GetMyDemoBudgetErrors];
 
 export type GetMyDemoBudgetResponses = {
     /**
@@ -13795,6 +15649,14 @@ export type GetMyReportsErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type GetMyReportsError = GetMyReportsErrors[keyof GetMyReportsErrors];
@@ -13817,12 +15679,29 @@ export type HealthData = {
     url: '/api/health';
 };
 
+export type HealthErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type HealthError = HealthErrors[keyof HealthErrors];
+
 export type HealthResponses = {
     /**
+     * Response Health
+     *
      * Successful Response
      */
-    200: unknown;
+    200: string;
 };
+
+export type HealthResponse = HealthResponses[keyof HealthResponses];
 
 export type VersionData = {
     body?: never;
@@ -13830,6 +15709,19 @@ export type VersionData = {
     query?: never;
     url: '/api/version';
 };
+
+export type VersionErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type VersionError = VersionErrors[keyof VersionErrors];
 
 export type VersionResponses = {
     /**
@@ -13859,6 +15751,14 @@ export type PlatformVersionErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type PlatformVersionError = PlatformVersionErrors[keyof PlatformVersionErrors];
@@ -13867,8 +15767,10 @@ export type PlatformVersionResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: PlatformManifest;
 };
+
+export type PlatformVersionResponse = PlatformVersionResponses[keyof PlatformVersionResponses];
 
 export type ReleasesData = {
     body?: never;
@@ -13887,6 +15789,14 @@ export type ReleasesErrors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
 };
 
 export type ReleasesError = ReleasesErrors[keyof ReleasesErrors];

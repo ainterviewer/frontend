@@ -1,4 +1,5 @@
 import { Analysis } from '$lib/api';
+import { apiError } from '$lib/utils/errors';
 
 import { codesFromApi, codesToApi } from './codebookApi';
 import { CodingTreeState } from './codingTreeState.svelte';
@@ -125,10 +126,8 @@ export class Codebook {
 			// A refusal says why -- a merge whose codings would not fit the code
 			// they were moving to, say -- and the reader cannot act on a bare
 			// "could not save" when the fix is to undo that one edit.
-			const detail =
-				error && typeof error === 'object' && 'detail' in error && typeof error.detail === 'string'
-					? ` ${error.detail}.`
-					: '';
+			const reason = apiError(error)?.detail;
+			const detail = reason ? ` ${reason}.` : '';
 			this.error = `Could not save the codebook.${detail} Your last change is not stored.`;
 			return;
 		}

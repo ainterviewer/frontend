@@ -21,6 +21,7 @@
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { addSkipOnboardingButton, PREVIEW_BADGE, tourSteps } from '$lib/onboarding';
 	import { formatDate, formatDay } from '$lib/utils/datetime';
+	import { errorDetail } from '$lib/utils/errors';
 
 	import type { PageData } from './$types';
 	import {
@@ -652,8 +653,7 @@
 			// Drop the optimistic move so the card snaps back to its old folder.
 			pendingMoves = remaining;
 			console.error('Failed to move project:', error);
-			const detail = (error as { detail?: unknown }).detail;
-			toast.error(typeof detail === 'string' ? detail : 'Failed to move project');
+			toast.error(errorDetail(error, 'Failed to move project'));
 			return;
 		}
 

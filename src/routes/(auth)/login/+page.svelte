@@ -7,6 +7,7 @@
 	import { Auth } from '$lib/api';
 	import RequestAccessModal from '$lib/components/RequestAccessModal.svelte';
 	import ResendVerification from '$lib/components/ResendVerification.svelte';
+	import { hasErrorCode } from '$lib/utils/errors';
 
 	type Step = 'credentials' | 'twoFactor' | 'notVerified';
 	let step = $state<Step>('credentials');
@@ -24,10 +25,6 @@
 	// Matches the backend's six-digit login codes.
 	const CODE_LENGTH = 6;
 
-	function detail(error: unknown): string {
-		return (error as { detail?: string } | undefined)?.detail ?? '';
-	}
-
 	async function handleLogin(event: Event) {
 		event.preventDefault();
 		errorMessage = '';
@@ -40,15 +37,15 @@
 		extended = formData.get('remember-me') === 'on';
 
 		try {
-			const { error, response } = await Auth.login({
+			const { data, error, response } = await Auth.login({
 				body: { email, password, extended }
 			});
 
-			if (response?.status === 202) {
+			if (data?.two_factor_required) {
 				// 2FA is enabled — a code was emailed; collect it next.
 				code = '';
 				step = 'twoFactor';
-			} else if (response?.status === 403 && /not verified/i.test(detail(error))) {
+			} else if (hasErrorCode(error, 'email_not_verified')) {
 				step = 'notVerified';
 			} else if (response?.status === 429) {
 				errorMessage = 'A code was just sent. Please wait a moment before trying again.';

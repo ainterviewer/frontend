@@ -286,17 +286,15 @@ describe('the survey cohort filter', () => {
  *
  * The body shape is the one `_checked_keyword` produces and
  * `backend/tests/test_search_filters.py::TestCodeReferences` pins, down to the
- * position. These exist because the message used to be thrown away: a 422 read
+ * position. These exist because the message used to be thrown away: an error read
  * "The search could not be run as entered", which tells a reader whose codebook
  * holds two codes of one name nothing they can act on.
  */
 describe('keywordProblemOf', () => {
 	const problem = {
-		detail: {
-			error: 'invalid_keyword_query',
-			message: 'No code in this project is called “tress”.',
-			position: 0
-		}
+		detail: 'No code in this project is called “tress”.',
+		code: 'invalid_keyword_query',
+		position: 0
 	};
 
 	it('reads the message and position the server sent', () => {
@@ -307,13 +305,11 @@ describe('keywordProblemOf', () => {
 	});
 
 	it('keeps a position further into the query', () => {
-		const detail = { ...problem.detail, position: 9 };
-		expect(keywordProblemOf({ detail })?.position).toBe(9);
+		expect(keywordProblemOf({ ...problem, position: 9 })?.position).toBe(9);
 	});
 
 	it('accepts a problem with no position', () => {
-		const detail = { ...problem.detail, position: null };
-		expect(keywordProblemOf({ detail })?.position).toBeNull();
+		expect(keywordProblemOf({ ...problem, position: null })?.position).toBeNull();
 	});
 
 	it.each([
@@ -321,26 +317,25 @@ describe('keywordProblemOf', () => {
 		['a string body', 'Internal Server Error'],
 		['a body with no detail', { message: 'nope' }],
 		['a validation error from FastAPI itself', { detail: [{ loc: ['query', 'kind'] }] }],
-		['a different tagged error', { detail: { error: 'something_else', message: 'x' } }],
-		['a detail with no message', { detail: { error: 'invalid_keyword_query' } }]
+		['an error with another code', { detail: 'x', code: 'invalid_coding' }],
+		['an error with no code', { detail: 'x', code: null }],
+		['the old nested shape', { detail: { error: 'invalid_keyword_query', message: 'x' } }]
 	])('returns null for %s', (_label, body) => {
 		expect(keywordProblemOf(body)).toBeNull();
 	});
 });
 
 describe('describeError', () => {
-	it('repeats a 422 the server explained', () => {
+	it('repeats a 400 the server explained', () => {
 		const body = {
-			detail: {
-				error: 'invalid_keyword_query',
-				message: '2 codes are called “New code”.',
-				position: 0
-			}
+			detail: '2 codes are called “New code”.',
+			code: 'invalid_keyword_query',
+			position: 0
 		};
-		expect(describeError(422, 'fallback', body)).toBe('2 codes are called “New code”.');
+		expect(describeError(400, 'fallback', body)).toBe('2 codes are called “New code”.');
 	});
 
-	it('falls back on a 422 it cannot read', () => {
+	it('falls back on a 422, which has no sentence for a reader', () => {
 		expect(describeError(422, 'fallback', { detail: [] })).toBe(
 			'The search could not be run as entered.'
 		);

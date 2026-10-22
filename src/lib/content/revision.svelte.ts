@@ -2,6 +2,7 @@ import { toast } from 'svelte-sonner';
 
 import { browser } from '$app/environment';
 import type { ContentPart } from '$lib/api/types.gen';
+import { staleRevision } from '$lib/utils/errors';
 
 // Each part of a project's content -- guide, consent, welcome, agents,
 // participant emails, languages -- has its own revision on the server
@@ -71,12 +72,6 @@ export function etagOf(response: Response | undefined): string | null {
 
 type WriteResult = { error?: unknown; response?: Response };
 
-function staleRevision(result: WriteResult): number | null {
-	if (result.response?.status !== 412) return null;
-	const current = (result.error as { current_revision?: unknown } | undefined)?.current_revision;
-	return typeof current === 'number' ? current : null;
-}
-
 /**
  * Run a write to `key` with `If-Match`, and record the revision it returns.
  *
@@ -93,7 +88,7 @@ export async function saveWithRevision<R extends WriteResult>(
 	write: (headers: { 'if-match'?: string }) => Promise<R>
 ): Promise<R> {
 	const result = await write(contentRevision.headers(projectId, key));
-	const current = staleRevision(result);
+	const current = staleRevision(result.error);
 	if (current === null) {
 		contentRevision.take(projectId, key, result.response);
 		return result;

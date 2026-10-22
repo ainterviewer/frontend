@@ -4,6 +4,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { Projects } from '$lib/api';
 	import type { ProjectLanguage } from '$lib/api/types.gen';
+	import { errorDetail } from '$lib/utils/errors';
 
 	import AddLanguageModal from './AddLanguageModal.svelte';
 	import ProjectLanguageMenu from './ProjectLanguageMenu.svelte';
@@ -47,8 +48,7 @@
 
 	/** The backend refuses to drop the default or the last language; show its reason. */
 	function removalError(error: unknown): string {
-		const detail = (error as { detail?: unknown } | null)?.detail;
-		return typeof detail === 'string' ? detail : 'Failed to remove language';
+		return errorDetail(error, 'Failed to remove language');
 	}
 
 	async function handleRemove(code: string) {

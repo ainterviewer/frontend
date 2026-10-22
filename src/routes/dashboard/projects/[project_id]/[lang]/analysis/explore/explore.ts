@@ -4,10 +4,12 @@ import type {
 	EmbeddingKind,
 	GroupKind,
 	InterviewStatus,
+	InvalidKeywordQueryError,
 	LanguageCode,
 	Projection,
 	QueryTask
 } from '$lib/api/types.gen';
+import { apiError, errorDetail } from '$lib/utils/errors';
 
 import type { KeywordProblem } from './keywordQuery';
 
@@ -891,19 +893,18 @@ export function coverageLabel(axes: CoverageAxes): { label: string; hint: string
  * which is most of what a reader gets wrong. It cannot catch the rest: whether
  * `code:stress` names a code in this project, whether it names only one, and
  * whether that code is a GROUP nothing is ever coded with. Those are answered
- * where the codebook is, and come back as a 422 shaped like the client's own
- * `KeywordProblem` so the box can show either without caring which found it.
+ * where the codebook is, and come back as a 400 `invalid_keyword_query`
+ * carrying the message and position the client's own `KeywordProblem` does, so
+ * the box can show either without caring which found it.
  *
  * Read defensively: this is an error path, and a body that is not the shape it
  * should be must not throw on the way to reporting that something went wrong.
  */
 export function keywordProblemOf(error: unknown): KeywordProblem | null {
-	if (typeof error !== 'object' || error === null) return null;
-	const detail = (error as { detail?: unknown }).detail;
-	if (typeof detail !== 'object' || detail === null) return null;
-	const { error: kind, message, position } = detail as Record<string, unknown>;
-	if (kind !== 'invalid_keyword_query' || typeof message !== 'string') return null;
-	return { message, position: typeof position === 'number' ? position : null };
+	const body = apiError(error);
+	if (body?.code !== 'invalid_keyword_query') return null;
+	const { position } = body as InvalidKeywordQueryError;
+	return { message: body.detail, position: typeof position === 'number' ? position : null };
 }
 
 /**
@@ -915,10 +916,12 @@ export function keywordProblemOf(error: unknown): KeywordProblem | null {
  * separate "no access" from "no such thing" — the API will not confirm that a
  * project exists to somebody with no role on it, and neither should this.
  *
- * A 422 the server explained is repeated verbatim. The generic line is a
- * fallback and reads like one: told only that a query "could not be run as
- * entered", a reader whose codebook holds two codes of one name has nothing to
- * act on, and the server already wrote the sentence that says what to do.
+ * A 400 -- a filter the server could not read, the keyword query among them --
+ * is repeated verbatim. The generic line is a fallback and reads like one: told
+ * only that a query "could not be run as entered", a reader whose codebook
+ * holds two codes of one name has nothing to act on, and the server already
+ * wrote the sentence that says what to do. A 422 is a parameter that did not
+ * match the API's schema, which no sentence for a reader comes with.
  */
 export function describeError(status: number | undefined, fallback: string, error?: unknown) {
 	switch (status) {
@@ -928,8 +931,10 @@ export function describeError(status: number | undefined, fallback: string, erro
 			return 'The embedding model has changed since this project was embedded. The corpus needs re-embedding — an administrator has to run it.';
 		case 404:
 			return 'Not found.';
+		case 400:
+			return errorDetail(error, 'The search could not be run as entered.');
 		case 422:
-			return keywordProblemOf(error)?.message ?? 'The search could not be run as entered.';
+			return 'The search could not be run as entered.';
 		default:
 			return fallback;
 	}

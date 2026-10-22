@@ -2,6 +2,7 @@
 	import { fade, fly } from 'svelte/transition';
 
 	import { Auth } from '$lib/api';
+	import { errorDetail } from '$lib/utils/errors';
 
 	let { isOpen = false, close } = $props();
 
@@ -32,8 +33,7 @@
 			});
 
 			if (error) {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				errorMessage = (error as any).details || 'Invalid request';
+				errorMessage = errorDetail(error, 'Invalid request');
 				return;
 			}
 		} catch {

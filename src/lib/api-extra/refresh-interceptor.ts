@@ -3,6 +3,7 @@ import { resolve } from '$app/paths';
 
 import { Auth } from '../api';
 import { client } from '../api/client.gen';
+import { hasErrorCode } from '../utils/errors';
 
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -17,17 +18,15 @@ client.interceptors.request.use((request) => {
 	return request;
 });
 
-// The backend's 403 detail when the access token says preview features are off.
-// The claim is only re-read from the database on refresh, so after an admin
-// enables the flag the token is stale for up to one access-token lifetime --
-// while /me, which the UI gates on, already says yes. A refresh fixes it.
-const PREVIEW_FEATURES_REQUIRED = 'preview_features_required';
-
+// The backend's 403 when the access token says preview features are off
+// carries code `preview_features_required`. The claim is only re-read from the
+// database on refresh, so after an admin enables the flag the token is stale
+// for up to one access-token lifetime -- while /me, which the UI gates on,
+// already says yes. A refresh fixes it.
 async function isStalePreviewFeatures(response: Response): Promise<boolean> {
 	if (response.status !== 403) return false;
 	try {
-		const body = await response.clone().json();
-		return body?.detail === PREVIEW_FEATURES_REQUIRED;
+		return hasErrorCode(await response.clone().json(), 'preview_features_required');
 	} catch {
 		return false;
 	}

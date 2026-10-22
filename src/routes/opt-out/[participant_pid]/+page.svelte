@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { Participants } from '$lib/api';
 	import Wave from '$lib/components/Wave.svelte';
+	import { errorDetail } from '$lib/utils/errors';
 
 	let reason = $state('');
 	let isLoading = $state(false);
@@ -24,10 +25,7 @@
 		isLoading = false;
 
 		if (apiError) {
-			errorMessage =
-				typeof apiError === 'object' && apiError && 'detail' in apiError
-					? String((apiError as { detail: unknown }).detail)
-					: 'Failed to opt out. Please try again later.';
+			errorMessage = errorDetail(apiError, 'Failed to opt out. Please try again later.');
 			return;
 		}
 

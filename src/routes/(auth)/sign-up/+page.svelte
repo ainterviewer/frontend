@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { Auth } from '$lib/api';
 	import ResendVerification from '$lib/components/ResendVerification.svelte';
+	import { errorDetail, hasErrorCode } from '$lib/utils/errors';
 
 	let showPassword = $state(false);
 	let showConfirmPassword = $state(false);
@@ -39,7 +40,7 @@
 		}
 
 		try {
-			const { error, response } = await Auth.register({
+			const { error } = await Auth.register({
 				body: {
 					email,
 					password,
@@ -49,12 +50,14 @@
 				}
 			});
 
-			if (response?.status === 502) {
+			if (hasErrorCode(error, 'email_send_failed')) {
 				// The verification email failed to send and the account was rolled
 				// back — let the user try again.
 				errorMessage = "We couldn't send your verification email. Please try again.";
 			} else if (error) {
-				errorMessage = 'Registration failed. Please check your details and token.';
+				// The backend says what was wrong — an expired invite, an email
+				// already in use — except for a malformed field (a 422).
+				errorMessage = errorDetail(error, 'Registration failed. Please check your details.');
 			} else {
 				// Registration no longer logs the user in — they must verify by email.
 				registeredEmail = email;
