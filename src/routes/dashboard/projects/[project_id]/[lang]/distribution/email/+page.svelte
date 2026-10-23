@@ -243,7 +243,7 @@
 			toastApiError(res.error, 'Failed to export the bundle');
 			return;
 		}
-		const url = window.URL.createObjectURL(res.data as Blob);
+		const url = window.URL.createObjectURL(res.data);
 		const a = document.createElement('a');
 		a.href = url;
 		// The backend percent-encodes the header: HTTP header values are

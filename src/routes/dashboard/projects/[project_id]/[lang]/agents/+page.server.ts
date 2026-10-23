@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 		throw error(500, 'Failed to load security policy defaults');
 	}
 
-	const models = (modelsRes.data as unknown as string[]) || [];
+	const models = modelsRes.data ?? [];
 	const agents = agentsRes.data || {};
 	const promptDefaults = defaultsRes.data || {};
 

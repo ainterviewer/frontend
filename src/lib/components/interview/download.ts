@@ -40,7 +40,7 @@ export async function downloadInterviews(
 	const filename =
 		/filename="([^"]+)"/.exec(disposition)?.[1] ?? `interviews.${archive ? 'zip' : format}`;
 
-	const url = URL.createObjectURL(data as Blob);
+	const url = URL.createObjectURL(data);
 	const a = document.createElement('a');
 	a.href = url;
 	a.download = filename;

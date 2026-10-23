@@ -192,7 +192,7 @@
 			return;
 		}
 		if (!data) return;
-		const url = window.URL.createObjectURL(data as Blob);
+		const url = window.URL.createObjectURL(data);
 		const a = document.createElement('a');
 		a.href = url;
 		a.download = `participants_${project_id}.csv`;

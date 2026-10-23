@@ -6,7 +6,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Experiments } from '$lib/api/sdk.gen';
-	import type { FolderWithProjectsPublic } from '$lib/api/types.gen';
+	import type { ExperimentPublic } from '$lib/api/types.gen';
 	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
@@ -23,28 +23,18 @@
 
 	import type { PageData } from './$types';
 
-	interface Experiment {
-		id: string;
-		title: string;
-		status: string;
-		weights: number[];
-		project_ids: string[];
-	}
-
 	let { data }: { data: PageData } = $props();
 
 	let isDemo = $derived(page.data.user?.scope === 'demo');
 
-	let experiments = $derived(data.experiments as unknown as Experiment[]);
-	let folders = $derived<FolderWithProjectsPublic[]>(
-		data.folders as unknown as FolderWithProjectsPublic[]
-	);
+	let experiments = $derived(data.experiments);
+	let folders = $derived(data.folders);
 
 	let isCreateModalOpen = $state(false);
 	let isDeleteModalOpen = $state(false);
 	let isQRModalOpen = $state(false);
 
-	let selectedExperiment = $state<Experiment | null>(null);
+	let selectedExperiment = $state<ExperimentPublic | null>(null);
 	let qrCode = $state<Blob | null>(null);
 	let qrCodeUrl = $state<string | null>(null);
 	let openDropdownId = $state<string | null>(null);
@@ -108,7 +98,7 @@
 		isCreateModalOpen = true;
 	}
 
-	function openDeleteModal(experiment: Experiment) {
+	function openDeleteModal(experiment: ExperimentPublic) {
 		selectedExperiment = experiment;
 		deleteConfirmationText = '';
 		isDeleteModalOpen = true;
@@ -121,7 +111,7 @@
 		qrCodeUrl = blob && URL.createObjectURL(blob);
 	}
 
-	async function openQRModal(experiment: Experiment) {
+	async function openQRModal(experiment: ExperimentPublic) {
 		selectedExperiment = experiment;
 		showQrCode(null);
 
@@ -133,7 +123,7 @@
 			toastApiError(error, 'Failed to load the QR code');
 			return;
 		}
-		showQrCode(data as unknown as Blob);
+		showQrCode(data);
 		isQRModalOpen = true;
 	}
 
@@ -187,7 +177,7 @@
 		selectedExperiment = null;
 	}
 
-	function copyLink(experiment: Experiment) {
+	function copyLink(experiment: ExperimentPublic) {
 		const url = `${window.location.origin}/interview/redirect?id=${experiment.id}`;
 		navigator.clipboard.writeText(url);
 		toast.success('Link copied to clipboard');
@@ -221,7 +211,7 @@
 
 	/* ---------------------------------------------------------------- table */
 
-	const helper = createColumnHelper<DataTableFeatures, Experiment>();
+	const helper = createColumnHelper<DataTableFeatures, ExperimentPublic>();
 
 	const columns = helper.columns([
 		helper.display({ id: 'icon', enableHiding: false, meta: { class: 'w-10 text-gray-400' } }),
@@ -319,17 +309,15 @@
 		{:else if columnId === 'title'}
 			{experiment.title || experiment.id}
 		{:else if columnId === 'status'}
-			<span
-				class="rounded-full border px-3 py-1 text-xs font-semibold {getStatusClass(
-					experiment.status
-				)}"
-			>
-				{experiment.status}
+			<!-- The schema's default, which the type leaves optional. -->
+			{@const status = experiment.status ?? 'active'}
+			<span class="rounded-full border px-3 py-1 text-xs font-semibold {getStatusClass(status)}">
+				{status}
 			</span>
 		{:else if columnId === 'weights'}
-			{#if experiment.weights}
-				{experiment.weights.map((w: number) => w.toFixed(2)).join(' ')}
-			{/if}
+			{experiment.projects
+				?.map((project) => (project.weight == null ? '–' : project.weight.toFixed(2)))
+				.join(' ')}
 		{:else if columnId === 'actions'}
 			<button
 				class="dropdown-trigger rounded-full p-1.5 text-gray-400 hover:bg-secondary/40 hover:text-dark"

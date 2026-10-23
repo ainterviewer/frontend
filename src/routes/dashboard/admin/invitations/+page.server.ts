@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 
-import { Admin, type InvitationPublic } from '$lib/api';
+import { Admin } from '$lib/api';
 
 import type { PageServerLoad } from './$types';
 
@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	return {
-		invitations: (response.data as unknown as InvitationPublic[]) ?? [],
+		invitations: response.data ?? [],
 		demoLimitDefaults
 	};
 };

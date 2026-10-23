@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ locals, params, fetch }) => {
 		throw error(500, 'Failed to load test setups');
 	}
 
-	const models = (modelsRes.error ? [] : (modelsRes.data as unknown as string[])) || [];
+	const models = modelsRes.data ?? [];
 	const languages = projectRes.data.available_languages;
 
 	const test = testsResponse.data?.find((t) => t.id === test_id);
