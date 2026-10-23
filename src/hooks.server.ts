@@ -56,11 +56,19 @@ async function serverSideRefresh(fetchFn: typeof fetch, cookies: Cookies): Promi
 			attrs[key.toLowerCase()] = val.length ? val.join('=') : true;
 		}
 
+		// Carried over, or a "remember me" refresh cookie would come back from
+		// a server-side refresh as a session cookie, gone when the browser
+		// closes.
+		const maxAge = typeof attrs['max-age'] === 'string' ? Number(attrs['max-age']) : undefined;
+		const expires = typeof attrs.expires === 'string' ? new Date(attrs.expires) : undefined;
+
 		cookies.set(name, value, {
 			path: (attrs.path as string) || '/',
 			secure: 'secure' in attrs,
 			httpOnly: 'httponly' in attrs,
-			sameSite: ((attrs.samesite as string) || 'lax') as 'lax' | 'strict' | 'none'
+			sameSite: ((attrs.samesite as string) || 'lax') as 'lax' | 'strict' | 'none',
+			maxAge,
+			expires
 		});
 	}
 
@@ -74,10 +82,16 @@ function clearAuthCookies(cookies: Cookies) {
 
 export { clearAuthCookies };
 
+// How long before its expiry a token counts as expired. It still has to reach
+// the backend and pass its check there, possibly by a clock a little ahead of
+// this one; a token that lapses on the way gets a 401, and the dashboard
+// layout takes a 401 for a dead session and logs the user out.
+const EXPIRY_MARGIN_MS = 30_000;
+
 function isTokenExpired(token: string): boolean {
 	try {
 		const payload = JSON.parse(atob(token.split('.')[1]));
-		return payload.exp * 1000 < Date.now();
+		return payload.exp * 1000 < Date.now() + EXPIRY_MARGIN_MS;
 	} catch {
 		return true;
 	}

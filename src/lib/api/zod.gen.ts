@@ -730,6 +730,7 @@ export const zErrorCode = z.enum([
     'alias_taken',
     'email_taken',
     'email_not_verified',
+    'account_expired',
     'email_send_failed',
     'email_link_invalid',
     'invite_required',
