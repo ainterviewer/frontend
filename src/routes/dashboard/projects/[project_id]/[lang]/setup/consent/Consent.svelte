@@ -1,23 +1,27 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { toast } from 'svelte-sonner';
 
 	import { page } from '$app/state';
-	import { Projects } from '$lib/api';
-	import type { LocalizedConsent, ProjectLanguage, Welcome } from '$lib/api/types.gen';
+	import type { LocalizedConsent, ProjectLanguage } from '$lib/api/types.gen';
 	import { bindFlat } from '$lib/collab/bindFlat.svelte';
 	import CollabPill from '$lib/collab/CollabPill.svelte';
 	import { acquireContentSession, presenceUser } from '$lib/collab/contentSession.svelte';
 	import { presence } from '$lib/collab/presence.svelte';
 	import { ConsentModal } from '$lib/components/modals';
 	import ConsentPreview from '$lib/components/preview/ConsentPreview.svelte';
-	import { toastApiError } from '$lib/utils/toast';
 
-	import { downloadUnifiedSetupJson } from '../exportJson';
-	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
+	import {
+		draftWelcome,
+		exportSetupJson,
+		exportSetupPdf,
+		savedGuide,
+		type SetupParts,
+		syncedForPublish,
+		translateMissing
+	} from '../editorActions';
+	import type { PdfToggles } from '../exportPdf';
 	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import { isUntranslated, pick } from '../guide/localized';
-	import { renderSaved } from '../guide/render';
 	import SetupActionBar from '../SetupActionBar.svelte';
 	import TranslationBanner from '../TranslationBanner.svelte';
 
@@ -72,79 +76,29 @@
 	let title = $derived(pick(consent.title, languages));
 	let text = $derived(pick(consent.text, languages));
 
-	// Before publishing: what is published is what the server has, so this
-	// tab's changes must have reached it.
 	function readyToPublish(): boolean {
-		if (session.status !== 'synced') {
-			toast.error('Reconnecting to the server; publish once your changes are saved');
-			return false;
-		}
-		return true;
+		return syncedForPublish(session);
 	}
 
-	async function getGuideForExport() {
-		const { data, error } = await Projects.getLocalizedGuide({
-			path: { project_id: projectId }
-		});
-		if (error || !data) {
-			throw new Error('Failed to load interview guide for export.');
-		}
-		return renderSaved(data, languages);
-	}
+	// The consent from this page, the rest from the server.
+	const parts: SetupParts = {
+		guide: () => savedGuide(projectId, languages),
+		consent: () => (title || text ? { title, text } : null),
+		welcome: () => draftWelcome(projectId, language)
+	};
 
 	let showExportPdfModal = $state(false);
 
-	async function fetchWelcome(): Promise<Welcome | null> {
-		// The draft's, like the consent being exported.
-		const { data } = await Projects.getWelcome({
-			path: { project_id: projectId, language: language },
-			query: { draft: true }
-		});
-		return data ?? null;
-	}
-
 	async function handleExportPdf(toggles: PdfToggles) {
 		exporting = true;
-		try {
-			const { guide, sections, questions } = await getGuideForExport();
-			const welcome = toggles.welcome ? await fetchWelcome() : null;
-			const consent = toggles.consent ? { title, text } : null;
-			await downloadGuidePdf({
-				guide,
-				sections,
-				questions,
-				projectName,
-				platformVersion,
-				toggles,
-				consent,
-				welcome
-			});
+		if (await exportSetupPdf(parts, toggles, { projectName, platformVersion })) {
 			showExportPdfModal = false;
-		} catch (e) {
-			console.error('Failed to export PDF', e);
-			toast.error('Failed to export PDF');
-		} finally {
-			exporting = false;
 		}
+		exporting = false;
 	}
 
-	async function exportJson() {
-		try {
-			const [guideRes, welcomeRes] = await Promise.allSettled([
-				getGuideForExport(),
-				fetchWelcome()
-			]);
-
-			downloadUnifiedSetupJson({
-				consent: title || text ? { title, text } : null,
-				welcome: welcomeRes.status === 'fulfilled' ? welcomeRes.value : null,
-				interview_guide: guideRes.status === 'fulfilled' ? guideRes.value.guide : null,
-				platform_version: platformVersion
-			});
-		} catch (e) {
-			console.error('Failed to export JSON', e);
-			toast.error('Failed to export JSON');
-		}
+	function exportJson() {
+		return exportSetupJson(parts, platformVersion);
 	}
 
 	let languageName = $derived(
@@ -158,20 +112,10 @@
 	);
 	let translating = $state(false);
 
-	// Machine-translates what this language lacks -- here and in the guide --
-	// from the default language. The server saves the doc first and merges the
-	// translation into it, so it arrives here like anyone else's edit.
-	async function translateMissing() {
+	async function translate() {
 		translating = true;
-		const { data, error } = await Projects.translateMissing({
-			path: { project_id: projectId, lang: language }
-		});
+		await translateMissing(projectId, language, languageName);
 		translating = false;
-		if (error || !data) {
-			toastApiError(error, 'Failed to translate the missing text');
-			return;
-		}
-		toast.success(`Translated the missing ${languageName} text`);
 	}
 </script>
 
@@ -202,7 +146,7 @@
 		inProgress={availableLanguages.find((l) => l.code === language)?.in_progress ?? false}
 		{translating}
 		disabled={!editable}
-		onTranslate={translateMissing}
+		onTranslate={translate}
 	/>
 
 	<div class="flex gap-8">

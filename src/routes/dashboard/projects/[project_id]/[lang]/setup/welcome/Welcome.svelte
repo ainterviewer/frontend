@@ -4,7 +4,7 @@
 
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { Consent, LocalizedWelcome, ProjectLanguage } from '$lib/api/types.gen';
+	import type { LocalizedWelcome, ProjectLanguage } from '$lib/api/types.gen';
 	import { bindFlat } from '$lib/collab/bindFlat.svelte';
 	import CollabPill from '$lib/collab/CollabPill.svelte';
 	import { acquireContentSession, presenceUser } from '$lib/collab/contentSession.svelte';
@@ -13,11 +13,18 @@
 	import WelcomePreview from '$lib/components/preview/WelcomePreview.svelte';
 	import { toastApiError } from '$lib/utils/toast';
 
-	import { downloadUnifiedSetupJson } from '../exportJson';
-	import { downloadGuidePdf, type PdfToggles } from '../exportPdf';
+	import {
+		draftConsent,
+		exportSetupJson,
+		exportSetupPdf,
+		savedGuide,
+		type SetupParts,
+		syncedForPublish,
+		translateMissing
+	} from '../editorActions';
+	import type { PdfToggles } from '../exportPdf';
 	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import { isUntranslated, pick } from '../guide/localized';
-	import { renderSaved } from '../guide/render';
 	import SetupActionBar from '../SetupActionBar.svelte';
 	import TranslationBanner from '../TranslationBanner.svelte';
 
@@ -139,13 +146,8 @@
 		welcome.video_file_name = null;
 	}
 
-	// Before publishing: what is published is what the server has, so this
-	// tab's changes must have reached it.
 	function readyToPublish(): boolean {
-		if (session.status !== 'synced') {
-			toast.error('Reconnecting to the server; publish once your changes are saved');
-			return false;
-		}
+		if (!syncedForPublish(session)) return false;
 		if (videoFile) {
 			toast.error('Wait for the video to finish uploading before publishing');
 			return false;
@@ -153,84 +155,28 @@
 		return true;
 	}
 
-	async function getGuideForExport() {
-		const { data, error } = await Projects.getLocalizedGuide({
-			path: { project_id: projectId }
-		});
-		if (error || !data) {
-			throw new Error('Failed to load interview guide for export.');
-		}
-		return renderSaved(data, languages);
-	}
+	// The welcome from this page, the rest from the server.
+	const parts: SetupParts = {
+		guide: () => savedGuide(projectId, languages),
+		consent: () => draftConsent(projectId, language),
+		welcome: () =>
+			title || text || welcome.email || welcome.video_file_name
+				? { title, text, email: welcome.email, video_file_name: welcome.video_file_name ?? null }
+				: null
+	};
 
 	let showExportPdfModal = $state(false);
 
-	async function fetchConsent(): Promise<Consent | null> {
-		// The draft's, like the welcome being exported.
-		const { data } = await Projects.getConsent({
-			path: { project_id: projectId, language: language },
-			query: { draft: true }
-		});
-		return data ?? null;
-	}
-
 	async function handleExportPdf(toggles: PdfToggles) {
 		exporting = true;
-		try {
-			const { guide, sections, questions } = await getGuideForExport();
-			const consent = toggles.consent ? await fetchConsent() : null;
-			const welcomeScreen = toggles.welcome
-				? {
-						title,
-						text,
-						email: welcome.email,
-						video_file_name: welcome.video_file_name ?? null
-					}
-				: null;
-			await downloadGuidePdf({
-				guide,
-				sections,
-				questions,
-				projectName,
-				platformVersion,
-				toggles,
-				consent,
-				welcome: welcomeScreen
-			});
+		if (await exportSetupPdf(parts, toggles, { projectName, platformVersion })) {
 			showExportPdfModal = false;
-		} catch (e) {
-			console.error('Failed to export PDF', e);
-			toast.error('Failed to export PDF');
-		} finally {
-			exporting = false;
 		}
+		exporting = false;
 	}
 
-	async function exportJson() {
-		try {
-			const [guideRes, consentRes] = await Promise.allSettled([
-				getGuideForExport(),
-				fetchConsent()
-			]);
-
-			downloadUnifiedSetupJson({
-				consent: consentRes.status === 'fulfilled' ? consentRes.value : null,
-				welcome:
-					title || text || welcome.email || welcome.video_file_name
-						? {
-								title,
-								text,
-								email: welcome.email,
-								video_file_name: welcome.video_file_name ?? null
-							}
-						: null,
-				interview_guide: guideRes.status === 'fulfilled' ? guideRes.value.guide : null,
-				platform_version: platformVersion
-			});
-		} catch (e) {
-			console.error('Failed to export JSON', e);
-			toast.error('Failed to export JSON');
-		}
+	function exportJson() {
+		return exportSetupJson(parts, platformVersion);
 	}
 
 	let languageName = $derived(
@@ -244,20 +190,10 @@
 	);
 	let translating = $state(false);
 
-	// Machine-translates what this language lacks -- here and in the guide --
-	// from the default language. The server saves the doc first and merges the
-	// translation into it, so it arrives here like anyone else's edit.
-	async function translateMissing() {
+	async function translate() {
 		translating = true;
-		const { data, error } = await Projects.translateMissing({
-			path: { project_id: projectId, lang: language }
-		});
+		await translateMissing(projectId, language, languageName);
 		translating = false;
-		if (error || !data) {
-			toastApiError(error, 'Failed to translate the missing text');
-			return;
-		}
-		toast.success(`Translated the missing ${languageName} text`);
 	}
 </script>
 
@@ -290,7 +226,7 @@
 		inProgress={availableLanguages.find((l) => l.code === language)?.in_progress ?? false}
 		{translating}
 		disabled={!editable}
-		onTranslate={translateMissing}
+		onTranslate={translate}
 	/>
 
 	<div class="flex gap-8">
