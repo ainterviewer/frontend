@@ -13,6 +13,7 @@
 		NO_PAGINATION,
 		sortableText
 	} from '$lib/components/table/features';
+	import { errorDetail } from '$lib/utils/errors';
 	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
@@ -180,24 +181,17 @@
 		isLoading = true;
 		error = '';
 
-		try {
-			const response = await Admin.proxyToEc2ManagerGet({
-				path: { full_path: 'instances/status' }
-			});
+		const response = await Admin.proxyToEc2ManagerGet({
+			path: { full_path: 'instances/status' }
+		});
+		isLoading = false;
 
-			if (response.error) {
-				throw new Error('Failed to fetch status');
-			}
-
-			instances = response.data as Instance[];
-		} catch (err) {
-			console.error(err);
-			error =
-				'Failed to fetch instance status: ' +
-				(err instanceof Error && err.message ? err.message : 'Unknown error');
-		} finally {
-			isLoading = false;
+		if (response.error) {
+			console.error('Failed to fetch instance status', response.error);
+			error = errorDetail(response.error, 'Failed to fetch instance status');
+			return;
 		}
+		instances = response.data as Instance[];
 	}
 
 	async function updateSettings() {

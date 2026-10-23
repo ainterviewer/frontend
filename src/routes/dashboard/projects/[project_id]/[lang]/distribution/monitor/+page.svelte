@@ -128,8 +128,10 @@
 					query: { deduplicate_by_pid: deduplicate },
 					signal: controller.signal
 				});
+				// Includes the abort below, which is this component's own doing.
 				if (disposed) return;
 				if (fetchError || !statsData) {
+					console.error('Failed to fetch monitoring stats:', fetchError);
 					// Only surface a hard error when there is nothing to show; a
 					// failed recount after a toggle leaves the previous numbers up.
 					if (initial && !stats) error = 'Failed to load monitoring stats';
@@ -137,11 +139,6 @@
 					stats = statsData;
 					error = null;
 				}
-			} catch (e) {
-				// Includes the abort below, which is this component's own doing.
-				if (disposed) return;
-				console.error('Failed to fetch monitoring stats:', e);
-				if (initial && !stats) error = 'Failed to load monitoring stats';
 			} finally {
 				inFlight = false;
 			}
