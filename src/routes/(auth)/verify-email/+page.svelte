@@ -4,23 +4,25 @@
 	import { page } from '$app/state';
 	import { Auth } from '$lib/api';
 	import ResendVerification from '$lib/components/ResendVerification.svelte';
+	import { hasErrorCode } from '$lib/utils/errors';
 
-	type Status = 'verifying' | 'success' | 'error';
+	// `invalid`: the link is spent or unknown, so a new one is the way on.
+	// `error`: anything else -- the server, the connection -- worth a retry.
+	type Status = 'verifying' | 'success' | 'invalid' | 'error';
 	let status = $state<Status>('verifying');
 
 	async function verify() {
 		const token = page.url.searchParams.get('token');
 
 		if (!token) {
-			status = 'error';
+			status = 'invalid';
 			return;
 		}
 
 		const { error } = await Auth.verifyEmail({ body: { token } });
 
 		if (error) {
-			// 400 → invalid or expired link.
-			status = 'error';
+			status = hasErrorCode(error, 'email_link_invalid') ? 'invalid' : 'error';
 		} else {
 			status = 'success';
 			// Send them to sign in shortly after confirming.
@@ -38,7 +40,7 @@
 		<h2 class="text-center text-3xl font-bold tracking-tight text-dark">
 			{#if status === 'success'}
 				Email verified
-			{:else if status === 'error'}
+			{:else if status === 'invalid' || status === 'error'}
 				Verification failed
 			{:else}
 				Verifying your email
@@ -62,6 +64,12 @@
 						Continue to sign in
 					</a>
 				</div>
+			</div>
+		{:else if status === 'error'}
+			<div class="rounded-md bg-red-50 p-4">
+				<h3 class="text-sm font-medium text-red-800">
+					We couldn't verify your email just now. Reload the page to try again.
+				</h3>
 			</div>
 		{:else}
 			<div class="space-y-6">

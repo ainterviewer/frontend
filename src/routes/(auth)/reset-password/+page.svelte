@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Auth } from '$lib/api';
-	import { errorDetail } from '$lib/utils/errors';
+	import { errorDetail, hasErrorCode } from '$lib/utils/errors';
 
 	const token = $derived(page.url.searchParams.get('token'));
 
@@ -37,7 +37,7 @@
 				body: { token, new_password: password }
 			});
 
-			if (response?.status === 400) {
+			if (hasErrorCode(error, 'email_link_invalid')) {
 				status = 'invalid';
 			} else if (response?.status === 422) {
 				errorMessage = 'Password must be between 8 and 72 characters.';
