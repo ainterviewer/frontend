@@ -1,6 +1,6 @@
 import { toast } from 'svelte-sonner';
 
-import { errorReason } from './errors';
+import { errorReason, NetworkError } from './errors';
 
 /**
  * Report a failed SDK call: `title` says what failed, and `errorReason`,
@@ -12,7 +12,7 @@ import { errorReason } from './errors';
  */
 export function toastApiError(error: unknown, title: string): void {
 	console.error(title, error);
-	if (error instanceof TypeError) return;
+	if (error instanceof NetworkError) return;
 	if (error instanceof DOMException && error.name === 'AbortError') return;
 	toast.error(title, { description: errorReason(error) });
 }

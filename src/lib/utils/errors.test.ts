@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { apiError, errorDetail, errorReason, hasErrorCode, staleRevision } from './errors';
+import {
+	apiError,
+	errorDetail,
+	errorReason,
+	hasErrorCode,
+	NetworkError,
+	staleRevision
+} from './errors';
 
 // Every error the backend answers is `{ detail, code }` but FastAPI's own 422,
 // whose `detail` is a list. These read one without tripping over the other.
@@ -41,7 +48,7 @@ describe('errorReason', () => {
 
 	it.each([
 		['nothing', undefined],
-		['a network failure', new TypeError('Failed to fetch')],
+		['a network failure', new NetworkError(new TypeError('Failed to fetch'))],
 		['a plain-text body', 'Internal Server Error']
 	])('is undefined for %s', (_label, error) => {
 		expect(errorReason(error)).toBeUndefined();

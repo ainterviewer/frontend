@@ -1,6 +1,18 @@
 import type { ApiError, ErrorCode, StaleRevisionError } from '$lib/api';
 
 /**
+ * A request that got no response, as the toast interceptor hands it on once
+ * it has told the user; the fetch's own error is its `cause`. In the browser
+ * only -- on the server a failed fetch stays the `TypeError` it was.
+ */
+export class NetworkError extends Error {
+	constructor(cause: unknown) {
+		super('No response from the server', { cause });
+		this.name = 'NetworkError';
+	}
+}
+
+/**
  * The `ApiError` body of a failed SDK call, or null when there is none: a
  * network failure, or FastAPI's 422, whose `detail` is a list of validation
  * errors rather than a sentence.

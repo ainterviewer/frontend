@@ -1,6 +1,7 @@
 import { toast } from 'svelte-sonner';
 
 import { client } from '../api/client.gen';
+import { NetworkError } from '../utils/errors';
 
 // Only a fetch that never got a response is reported here: there is no body
 // to say why, and the page cannot tell it from any other failure. Every
@@ -21,6 +22,9 @@ client.interceptors.error.use((error, response, _request, _options) => {
 	if (!response) {
 		// One toast for a burst of requests failing together.
 		toast.error('Network error — please check your connection', { id: 'network-error' });
+		// Marked as told, so `toastApiError` does not say it again -- unlike a
+		// bare TypeError, which may as well be a bug in the caller's own code.
+		return new NetworkError(error);
 	}
 
 	return error;

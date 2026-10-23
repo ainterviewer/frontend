@@ -1,6 +1,7 @@
 import { toast } from 'svelte-sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { NetworkError } from './errors';
 import { toastApiError } from './toast';
 
 vi.mock('svelte-sonner', () => ({ toast: { error: vi.fn() } }));
@@ -32,8 +33,13 @@ describe('toastApiError', () => {
 		expect(toast.error).toHaveBeenCalledWith('Failed to save', { description: undefined });
 	});
 
+	it("reports a bug's TypeError, which the interceptor never saw", () => {
+		toastApiError(new TypeError("Cannot read properties of undefined (reading 'id')"), 'Failed');
+		expect(toast.error).toHaveBeenCalledWith('Failed', { description: undefined });
+	});
+
 	it.each([
-		['a network failure', new TypeError('Failed to fetch')],
+		['a network failure', new NetworkError(new TypeError('Failed to fetch'))],
 		['a cancelled request', new DOMException('aborted', 'AbortError')]
 	])('leaves %s to the interceptor', (_label, error) => {
 		toastApiError(error, 'Failed to save');
