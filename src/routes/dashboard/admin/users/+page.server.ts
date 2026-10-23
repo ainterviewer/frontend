@@ -4,16 +4,10 @@ import { Admin } from '$lib/api';
 
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	const { cookieHeader } = locals;
-
+export const load: PageServerLoad = async () => {
 	const [response, defaultsResponse] = await Promise.all([
-		Admin.getUsers({
-			headers: {
-				cookie: cookieHeader
-			}
-		}),
-		Admin.getDemoLimitDefaults({ headers: { cookie: cookieHeader } })
+		Admin.getUsers(),
+		Admin.getDemoLimitDefaults()
 	]);
 	// Only the placeholders of the demo limit fields; the page works without.
 	const demoLimitDefaults = defaultsResponse.data ?? null;

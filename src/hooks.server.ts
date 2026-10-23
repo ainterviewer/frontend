@@ -3,14 +3,18 @@ import { error, type Handle, redirect } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
 import { client } from '$lib/api/client.gen';
+import { currentAccessToken } from '$lib/server/auth';
 
 const API_BASE = () => env.API_URL || 'http://localhost:8666';
 
 // Configure the API client for server-side requests
 // This ensures that calls made from load functions or form actions
 // hit the running backend service directly, as there is no browser proxy on the server.
+// Each call authenticates as the user whose request is being served; see
+// `currentAccessToken`.
 client.setConfig({
-	baseUrl: API_BASE()
+	baseUrl: API_BASE(),
+	auth: currentAccessToken
 });
 
 type RefreshResult = 'ok' | 'unauthorized' | 'unavailable';
@@ -103,8 +107,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 			if (refreshResult === 'unavailable') {
 				throw error(503, 'Backend unavailable');
 			}
-			// Successfully refreshed — fall through; event.locals.cookieHeader
-			// will carry the new tokens to all server load functions.
+			// Successfully refreshed — fall through; the API client reads the
+			// new access token from event.cookies.
 		}
 	}
 
@@ -126,12 +130,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 		}
 	}
-
-	// Propagate cookies (including any freshly refreshed ones) to all server loads.
-	event.locals.cookieHeader = event.cookies
-		.getAll()
-		.map(({ name, value }) => `${name}=${value}`)
-		.join('; ');
 
 	return resolve(event);
 };

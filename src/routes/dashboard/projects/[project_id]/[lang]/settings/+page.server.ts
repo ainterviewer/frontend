@@ -4,12 +4,10 @@ import { Projects } from '$lib/api';
 
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, params }) => {
-	const { cookieHeader } = locals;
+export const load: PageServerLoad = async ({ params }) => {
 	const { project_id } = params;
 
 	const projectRes = await Projects.getProject({
-		headers: { cookie: cookieHeader },
 		path: { project_id: project_id }
 	});
 

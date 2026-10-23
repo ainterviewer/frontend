@@ -4,14 +4,8 @@ import { Experiments, Folders } from '$lib/api/sdk.gen';
 
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	const { cookieHeader } = locals;
-
-	const options = {
-		headers: {
-			cookie: cookieHeader
-		}
-	};
+export const load: PageServerLoad = async () => {
+	const options = {};
 
 	const [foldersResponse, experimentsResponse] = await Promise.all([
 		Folders.getFolders(options),

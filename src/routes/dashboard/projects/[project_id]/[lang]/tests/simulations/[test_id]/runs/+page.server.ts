@@ -4,22 +4,18 @@ import { Default, Projects, Synthesize } from '$lib/api';
 
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, params, fetch }) => {
-	const { cookieHeader } = locals;
+export const load: PageServerLoad = async ({ params, fetch }) => {
 	const { project_id, test_id } = params;
 
 	const [modelsRes, testsResponse, projectRes] = await Promise.all([
 		Default.getModels({
-			headers: { cookie: cookieHeader },
 			fetch
 		}),
 		Synthesize.getTestSetups({
 			path: { project_id },
-			headers: { cookie: cookieHeader },
 			fetch
 		}),
 		Projects.getProject({
-			headers: { cookie: cookieHeader },
 			path: { project_id: project_id },
 			fetch
 		})

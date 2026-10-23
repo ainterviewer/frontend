@@ -3,13 +3,11 @@ import { Admin, type AdminStats } from '$lib/api';
 import type { PageServerLoad } from './$types';
 import { parseRange } from './ranges';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
-	const { cookieHeader } = locals;
+export const load: PageServerLoad = async ({ url }) => {
 	const range = parseRange(url.searchParams.get('range'));
 
 	const response = await Admin.getAdminStats({
-		query: range === 'all' ? {} : { days: Number(range) },
-		headers: { cookie: cookieHeader }
+		query: range === 'all' ? {} : { days: Number(range) }
 	});
 
 	if (response.error) {

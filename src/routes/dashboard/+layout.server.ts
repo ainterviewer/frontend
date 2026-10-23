@@ -6,9 +6,7 @@ import { parseProjectRoute } from '$lib/utils/urls';
 import { clearAuthCookies } from '../../hooks.server';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ cookies, depends, locals, url }) => {
-	const { cookieHeader } = locals;
-
+export const load: LayoutServerLoad = async ({ cookies, depends, url }) => {
 	// Declared so the account-menu badge can be refreshed on its own, without
 	// a navigation: the dashboard layout re-runs this load on
 	// `invalidate('app:notifications')`. See the poll in +layout.svelte.
@@ -18,8 +16,8 @@ export const load: LayoutServerLoad = async ({ cookies, depends, locals, url }) 
 	// rendered without a second round trip — and so it keys off the newest
 	// release that has something to announce rather than the deployed version,
 	// which may not have been written up yet, or may have nothing to write up.
-	// The cookie matters: highlights about preview features are only served to
-	// users who have them.
+	// Authenticated (see `currentAccessToken`), which matters: highlights about
+	// preview features are only served to users who have them.
 	const { projectId } = parseProjectRoute(url.pathname);
 
 	const [
@@ -30,15 +28,14 @@ export const load: LayoutServerLoad = async ({ cookies, depends, locals, url }) 
 		projectResponse,
 		permissionsResponse
 	] = await Promise.all([
-		Auth.me({ headers: { cookie: cookieHeader } }),
-		Default.version({}),
-		Default.releases({ headers: { cookie: cookieHeader }, query: { limit: 10 } }),
+		Auth.me(),
+		Default.version(),
+		Default.releases({ query: { limit: 10 } }),
 		// Badge counts for the account menu. In this fan-out rather than a
 		// client fetch so the dot is right on the first paint.
-		Me.getNotifications({ headers: { cookie: cookieHeader } }),
+		Me.getNotifications(),
 		projectId
 			? Projects.getProject({
-					headers: { cookie: cookieHeader },
 					path: { project_id: projectId }
 				})
 			: null,
@@ -46,7 +43,6 @@ export const load: LayoutServerLoad = async ({ cookies, depends, locals, url }) 
 		// the API would refuse — moderating other people's comments, above all.
 		projectId
 			? Projects.getProjectPermissions({
-					headers: { cookie: cookieHeader },
 					path: { project_id: projectId }
 				})
 			: null

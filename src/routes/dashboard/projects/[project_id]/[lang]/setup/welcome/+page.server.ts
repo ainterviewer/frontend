@@ -4,22 +4,15 @@ import { Projects } from '$lib/api';
 
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params }) => {
 	const { project_id } = params;
-	const { cookieHeader } = locals;
 
 	const [welcomeRes, projectRes] = await Promise.all([
 		Projects.getLocalizedWelcome({
-			path: { project_id },
-			headers: {
-				cookie: cookieHeader || ''
-			}
+			path: { project_id }
 		}),
 		Projects.getProject({
-			path: { project_id },
-			headers: {
-				cookie: cookieHeader || ''
-			}
+			path: { project_id }
 		})
 	]);
 

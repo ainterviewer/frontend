@@ -5,13 +5,8 @@ import { Default, Folders } from '$lib/api';
 import type { PageServerLoad } from './$types';
 import { parseView, VIEW_COOKIE } from './dashboardView';
 
-export const load: PageServerLoad = async ({ cookies, locals }) => {
-	const { cookieHeader } = locals;
-
-	const [foldersRes, langRes] = await Promise.all([
-		Folders.getFolders({ headers: { cookie: cookieHeader || '' } }),
-		Default.getLanguages({ headers: { cookie: cookieHeader || '' } })
-	]);
+export const load: PageServerLoad = async ({ cookies }) => {
+	const [foldersRes, langRes] = await Promise.all([Folders.getFolders(), Default.getLanguages()]);
 
 	if (foldersRes.error) {
 		console.error('Failed to load folders', foldersRes.error);

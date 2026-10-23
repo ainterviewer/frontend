@@ -3,9 +3,8 @@ import { codesFromApi } from '$lib/coding/codebookApi';
 
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params }) => {
 	const { project_id, interview_id, lang } = params;
-	const { cookieHeader } = locals;
 
 	// Fetch messages, the codebook and the guide in parallel
 	const [messagesRes, codebookRes, guideRes] = await Promise.all([
@@ -13,28 +12,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			path: {
 				project_id,
 				interview_id
-			},
-			headers: {
-				cookie: cookieHeader || ''
 			}
 		}),
 		// The codebook, so the transcript can show what each passage is coded as
 		// and offer the codes to apply. Read-only here -- a codebook is edited
 		// on the Coding page.
 		Analysis.getCodebook({
-			path: { project_id },
-			headers: {
-				cookie: cookieHeader || ''
-			}
+			path: { project_id }
 		}),
 		// For the conditions a question was subject to. The transcript already
 		// shows a skipped question faded; the guide is what says why it was
 		// skipped, and what the questions that *were* asked depended on.
 		Projects.getGuide({
-			path: { project_id, lang },
-			headers: {
-				cookie: cookieHeader || ''
-			}
+			path: { project_id, lang }
 		})
 	]);
 

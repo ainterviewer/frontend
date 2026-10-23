@@ -4,10 +4,8 @@ import { Monitoring } from '$lib/api';
 
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ locals, params }) => {
-	const { cookieHeader } = locals;
+export const GET: RequestHandler = async ({ params }) => {
 	const { data, error } = await Monitoring.getProjectMonitoringStats({
-		headers: { cookie: cookieHeader },
 		path: {
 			project_id: params.project_id
 		}

@@ -4,12 +4,10 @@ import { Synthesize } from '$lib/api';
 
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, locals, fetch }) => {
+export const load: PageServerLoad = async ({ params, fetch }) => {
 	const { project_id } = params;
-	const { cookieHeader } = locals;
 
 	const { data, error: fetchError } = await Synthesize.getTestSetups({
-		headers: { cookie: cookieHeader },
 		fetch,
 		path: { project_id }
 	});

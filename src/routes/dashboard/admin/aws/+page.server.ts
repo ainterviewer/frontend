@@ -3,12 +3,9 @@ import { Admin } from '$lib/api';
 import type { PageServerLoad } from './$types';
 import type { SettingsByService } from './types';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	const { cookieHeader } = locals;
-
+export const load: PageServerLoad = async () => {
 	const response = await Admin.proxyToEc2ManagerGet({
-		path: { full_path: 'settings' },
-		headers: { cookie: cookieHeader }
+		path: { full_path: 'settings' }
 	});
 
 	if (response.error || !response.data || typeof response.data !== 'object') {

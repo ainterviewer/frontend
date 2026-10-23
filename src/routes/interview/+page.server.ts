@@ -28,7 +28,7 @@ function resumableInterviewId(token: string | undefined, project_id: string): st
 	}
 }
 
-export const load: PageServerLoad = async ({ url, cookies, request, locals }) => {
+export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	const project_id = url.searchParams.get('id');
 
 	if (!project_id) {
@@ -44,7 +44,7 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 		if (!cookies.get('access_token') && !cookies.get('refresh_token')) {
 			authError = true;
 		} else {
-			const response = await Auth.me({ headers: { cookie: locals.cookieHeader } });
+			const response = await Auth.me();
 			if (response.error) {
 				if (!response.response || response.response.status >= 500) {
 					throw error(503, 'Backend unavailable');
@@ -54,25 +54,20 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 		}
 	}
 
-	const { cookieHeader } = locals;
-
 	// Respondents get the published version of the project; a test runs the
 	// draft, which the backend serves only to the project's collaborators.
 	const draft = interviewType !== 'distributed';
 
 	const { data: interviewConfig, error: configError } = await Projects.getInterviewConfig({
-		headers: { cookie: cookieHeader },
 		path: { project_id }
 	});
 
 	const { data: interviewModels, error: modelsError } = await Projects.getInterviewModels({
-		headers: { cookie: cookieHeader },
 		path: { project_id },
 		query: { draft }
 	});
 
 	const { data: isProjectOwnerDemoUser } = await Projects.checkProjectOwner({
-		headers: { cookie: cookieHeader },
 		path: { project_id }
 	});
 
@@ -92,7 +87,6 @@ export const load: PageServerLoad = async ({ url, cookies, request, locals }) =>
 	// (which falls back to the project's default) for every project without an
 	// English localization.
 	const { data: projectLanguages, error: languagesError } = await Projects.getProjectLanguages({
-		headers: { cookie: cookieHeader },
 		path: { project_id },
 		query: { draft }
 	});
