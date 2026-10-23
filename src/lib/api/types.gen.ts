@@ -2013,7 +2013,7 @@ export type EmbeddingTurn = {
  * Only errors a client handles differently carry one. Values are part of
  * the API -- the frontend matches on them -- so rename none without it.
  */
-export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'email_send_failed' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'access_request_exists' | 'preview_features_required';
+export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'access_request_exists' | 'preview_features_required';
 
 /**
  * ExperimentCreate
@@ -9121,8 +9121,10 @@ export type GenerateExperimentQrResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: Blob | File;
 };
+
+export type GenerateExperimentQrResponse = GenerateExperimentQrResponses[keyof GenerateExperimentQrResponses];
 
 export type GetFoldersData = {
     body?: never;
@@ -9841,8 +9843,10 @@ export type ExportParticipantsResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: Blob | File;
 };
+
+export type ExportParticipantsResponse = ExportParticipantsResponses[keyof ExportParticipantsResponses];
 
 export type ExportEmailBundleData = {
     body?: never;
@@ -12694,8 +12698,10 @@ export type GetInterviewAudioResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: Blob | File;
 };
+
+export type GetInterviewAudioResponse = GetInterviewAudioResponses[keyof GetInterviewAudioResponses];
 
 export type ExportMessagesData = {
     body: ExportMessagesRequest;
@@ -12735,8 +12741,10 @@ export type ExportMessagesResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: Blob | File;
 };
+
+export type ExportMessagesResponse = ExportMessagesResponses[keyof ExportMessagesResponses];
 
 export type GenerateProjectQrData = {
     body?: never;
@@ -12776,8 +12784,10 @@ export type GenerateProjectQrResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: Blob | File;
 };
+
+export type GenerateProjectQrResponse = GenerateProjectQrResponses[keyof GenerateProjectQrResponses];
 
 export type CheckProjectOwnerData = {
     body?: never;

@@ -731,6 +731,7 @@ export const zErrorCode = z.enum([
     'email_taken',
     'email_not_verified',
     'email_send_failed',
+    'email_link_invalid',
     'invite_required',
     'invite_invalid',
     'invite_expired',
@@ -4529,6 +4530,11 @@ export const zGenerateExperimentQrPath = z.object({
 });
 
 /**
+ * Successful Response
+ */
+export const zGenerateExperimentQrResponse = z.string();
+
+/**
  * Response Get Folders
  *
  * Successful Response
@@ -4727,6 +4733,11 @@ export const zExportParticipantsPath = z.object({
 export const zExportParticipantsQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+/**
+ * Successful Response
+ */
+export const zExportParticipantsResponse = z.string();
 
 export const zExportEmailBundlePath = z.object({
     project_id: z.string().nullable()
@@ -5620,6 +5631,11 @@ export const zGetInterviewAudioQuery = z.object({
     folder_id: z.string().nullish()
 });
 
+/**
+ * Successful Response
+ */
+export const zGetInterviewAudioResponse = z.string();
+
 export const zExportMessagesBody = zExportMessagesRequest;
 
 export const zExportMessagesPath = z.object({
@@ -5630,6 +5646,11 @@ export const zExportMessagesQuery = z.object({
     folder_id: z.string().nullish()
 });
 
+/**
+ * Successful Response
+ */
+export const zExportMessagesResponse = z.string();
+
 export const zGenerateProjectQrPath = z.object({
     project_id: z.string().nullable()
 });
@@ -5637,6 +5658,11 @@ export const zGenerateProjectQrPath = z.object({
 export const zGenerateProjectQrQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+/**
+ * Successful Response
+ */
+export const zGenerateProjectQrResponse = z.string();
 
 export const zCheckProjectOwnerPath = z.object({
     project_id: z.string()
