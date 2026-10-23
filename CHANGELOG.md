@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.7] - 2026-10-23
+
+### Bug Fixes
+
+- (errors) Toast a TypeError that the interceptor never reported
+- (auth) Refresh tokens before they lapse and keep remembered cookies
+
+### Internal
+
+- (auth) Authenticate server SDK calls through the client's auth callback
+
 ## [0.9.6] - 2026-10-23
 
 ### Breaking Changes
