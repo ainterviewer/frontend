@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { apiError, errorDetail, hasErrorCode, staleRevision } from './errors';
+import { apiError, errorDetail, errorReason, hasErrorCode, staleRevision } from './errors';
 
 // Every error the backend answers is `{ detail, code }` but FastAPI's own 422,
 // whose `detail` is a list. These read one without tripping over the other.
@@ -30,10 +30,29 @@ describe('hasErrorCode', () => {
 	});
 });
 
+describe('errorReason', () => {
+	it("reads an ApiError's detail", () => {
+		expect(errorReason(expired)).toBe('Invite token expired');
+	});
+
+	it('falls back to the first validation message of a 422', () => {
+		expect(errorReason(validation)).toBe('not an email');
+	});
+
+	it.each([
+		['nothing', undefined],
+		['a network failure', new TypeError('Failed to fetch')],
+		['a plain-text body', 'Internal Server Error']
+	])('is undefined for %s', (_label, error) => {
+		expect(errorReason(error)).toBeUndefined();
+	});
+});
+
 describe('errorDetail', () => {
 	it('shows what the backend said, or the fallback', () => {
 		expect(errorDetail(expired, 'fallback')).toBe('Invite token expired');
-		expect(errorDetail(validation, 'fallback')).toBe('fallback');
+		expect(errorDetail(validation, 'fallback')).toBe('not an email');
+		expect(errorDetail(undefined, 'fallback')).toBe('fallback');
 	});
 });
 

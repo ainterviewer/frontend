@@ -1,11 +1,5 @@
 import type { ApiError, ErrorCode, StaleRevisionError } from '$lib/api';
 
-/** Extract a human-readable message from an unknown thrown value. */
-export function errorMessage(e: unknown): string {
-	if (e instanceof Error) return e.message;
-	return String(e);
-}
-
 /**
  * The `ApiError` body of a failed SDK call, or null when there is none: a
  * network failure, or FastAPI's 422, whose `detail` is a list of validation
@@ -40,7 +34,21 @@ export function staleRevision(error: unknown): number | null {
 	return body?.code === 'stale_revision' ? (body as StaleRevisionError).current_revision : null;
 }
 
+/**
+ * Why a failed SDK call failed, in the backend's words: an `ApiError`'s
+ * `detail`, or else the first message of FastAPI's 422, whose `detail` is a
+ * list of validation errors -- an alias in the wrong shape, say. Undefined
+ * when there is neither: a network failure, a plain-text body.
+ */
+export function errorReason(error: unknown): string | undefined {
+	const body = apiError(error);
+	if (body) return body.detail;
+	const detail = (error as { detail?: unknown } | null)?.detail;
+	if (Array.isArray(detail) && typeof detail[0]?.msg === 'string') return detail[0].msg;
+	return undefined;
+}
+
 /** The sentence to show for a failed SDK call, or `fallback` when it has none. */
 export function errorDetail(error: unknown, fallback: string): string {
-	return apiError(error)?.detail ?? fallback;
+	return errorReason(error) ?? fallback;
 }

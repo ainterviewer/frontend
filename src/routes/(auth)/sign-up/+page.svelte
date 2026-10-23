@@ -56,7 +56,8 @@
 				errorMessage = "We couldn't send your verification email. Please try again.";
 			} else if (error) {
 				// The backend says what was wrong — an expired invite, an email
-				// already in use — except for a malformed field (a 422).
+				// already in use, or for a malformed field the first validation
+				// message.
 				errorMessage = errorDetail(error, 'Registration failed. Please check your details.');
 			} else {
 				// Registration no longer logs the user in — they must verify by email.
