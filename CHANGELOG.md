@@ -4,6 +4,27 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.6] - 2026-10-23
+
+### Breaking Changes
+
+- (api) Needs the backend that declares both.
+
+### Features
+
+- (auth) Tell a spent email link from a failed request
+
+### Bug Fixes
+
+- (experiments) Show each project's weight, dropping casts the SDK types
+
+### Internal
+
+- (api) Regenerate the SDK with email_link_invalid and binary downloads [**breaking**]
+- (errors) Give toasts and inline errors one reason
+- (setup) Share what the three setup editors do alike
+- Drop the last catch blocks around SDK calls
+
 ## [0.9.5] - 2026-10-22
 
 ### Breaking Changes
