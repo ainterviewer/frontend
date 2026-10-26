@@ -4,6 +4,13 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.8] - 2026-10-26
+
+### Features
+
+- Better padding in sidebar on smaller screens
+- (invitations) Show how many accounts each reusable invitation registered
+
 ## [0.9.7] - 2026-10-23
 
 ### Bug Fixes
