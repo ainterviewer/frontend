@@ -340,6 +340,14 @@
 		meta: { class: 'whitespace-nowrap font-mono text-xs text-gray-700' }
 	});
 
+	// Reusable invitations only: claiming a single-use one deletes it.
+	const usesColumn = helper.accessor((i) => i.uses ?? 0, {
+		id: 'uses',
+		header: 'Uses',
+		sortFn: 'basic',
+		meta: { align: 'right', class: 'tabular-nums text-gray-700' }
+	});
+
 	const emailColumn = helper.accessor((i) => sortableText(i.email), {
 		id: 'email',
 		header: 'Email',
@@ -352,6 +360,7 @@
 		title: 'Title',
 		alias: 'Alias',
 		email: 'Email',
+		uses: 'Uses',
 		user_scope: 'Scope',
 		expires_at: 'Expires at',
 		user_expires: 'User expires'
@@ -365,6 +374,7 @@
 			helper.display({ id: 'select', enableHiding: false }),
 			titleColumn,
 			aliasColumn,
+			usesColumn,
 			...sharedColumns
 		]),
 		get data() {
@@ -664,6 +674,8 @@
 				{:else if columnId === 'email'}
 					{#if invitation.email}{invitation.email}{:else}<span class="text-gray-300">&ndash;</span
 						>{/if}
+				{:else if columnId === 'uses'}
+					{invitation.uses ?? 0}
 				{:else if columnId === 'user_scope'}
 					<span
 						class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {scopeColors[

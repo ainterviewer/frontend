@@ -2857,6 +2857,7 @@ export const zInvitationPublic = z.object({
     user_demo_lifetime_limit: z.int().gte(0).nullish(),
     id: z.string(),
     email: z.string().nullable(),
+    uses: z.int().optional().default(0),
     invitation_link: z.string().readonly()
 });
 
@@ -3875,7 +3876,8 @@ export const zInvitationPublicWritable = z.object({
     user_demo_daily_limit: z.int().gte(0).nullish(),
     user_demo_lifetime_limit: z.int().gte(0).nullish(),
     id: z.string(),
-    email: z.string().nullable()
+    email: z.string().nullable(),
+    uses: z.int().optional().default(0)
 });
 
 export const zLocalizedTextWritable = z.record(z.string(), z.string());

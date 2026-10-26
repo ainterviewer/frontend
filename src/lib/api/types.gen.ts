@@ -3199,6 +3199,10 @@ export type InvitationPublic = {
      */
     email: string | null;
     /**
+     * Uses
+     */
+    uses?: number;
+    /**
      * Invitation Link
      */
     readonly invitation_link: string;
@@ -6890,6 +6894,10 @@ export type InvitationPublicWritable = {
      * Email
      */
     email: string | null;
+    /**
+     * Uses
+     */
+    uses?: number;
 };
 
 export type LocalizedTextWritable = {
