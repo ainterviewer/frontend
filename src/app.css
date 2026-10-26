@@ -26,6 +26,14 @@
 /* Base  */
 
 @layer base {
+	/* Required, not just descriptive: the production build lowers layerchart's
+	   light-dark() to --lightningcss-light/-dark variables, which lightningcss
+	   only defines alongside a color-scheme declaration. Without it both
+	   fallbacks apply, the colour is invalid, and the chart tooltip's
+	   background disappears. */
+	:root {
+		color-scheme: light;
+	}
 	html {
 		font-family: 'Inter Variable', system-ui, sans-serif;
 	}
