@@ -89,7 +89,6 @@ export async function createInterview(
 	project_id: string,
 	lang: string,
 	interviewType: InterviewType | undefined,
-	experimentID: string | undefined,
 	externalParams: Record<string, unknown> | null | undefined,
 	referer: string | null | undefined,
 	pid: string | null | undefined
@@ -102,7 +101,6 @@ export async function createInterview(
 			},
 			body: {
 				...(interviewType != null && { interview_type: interviewType }),
-				experiment_id: experimentID,
 				...(externalParams != null && { external_params: externalParams }),
 				...(referer != null && { referer }),
 				...(pid != null && { pid })

@@ -31,6 +31,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		welcome: welcomeRes.error ? null : (welcomeRes.data ?? null),
 		guide: guideRes.error ? null : (guideRes.data ?? null),
 		config: configRes.error ? null : (configRes.data ?? null),
-		external_params: projectRes.data?.external_params ?? []
+		external_params: projectRes.data?.external_params ?? [],
+		experiment_only: projectRes.data?.experiment_only ?? false
 	};
 };

@@ -110,6 +110,32 @@
 		externalParams.splice(index, 1);
 	}
 
+	// Saved as soon as it is toggled: it is one flag, and it decides whether
+	// the project's own link takes respondents at all. Derived so a reload of
+	// the page data resets it; set by hand while a save is in flight.
+	let experimentOnly = $derived(data.experiment_only);
+	let savingExperimentOnly = $state(false);
+
+	async function saveExperimentOnly(value: boolean) {
+		experimentOnly = value;
+		savingExperimentOnly = true;
+		const { error } = await Projects.setProjectExperimentOnly({
+			path: { project_id: projectId },
+			body: { experiment_only: value }
+		});
+		if (error) {
+			experimentOnly = !value;
+			toastApiError(error, 'Failed to save the setting');
+		} else {
+			toast.success(
+				value
+					? 'Only experiments can send respondents to this project now'
+					: 'This project takes respondents from its own link again'
+			);
+		}
+		savingExperimentOnly = false;
+	}
+
 	async function saveExternalParams() {
 		savingParams = true;
 		const { error } = await Projects.updateExternalParams({
@@ -338,6 +364,30 @@
 						Save configuration
 					</button>
 				</div>
+
+				<hr class="my-6 border-gray-200" />
+
+				<h3 class="text-sm font-semibold text-gray-900">Distribution</h3>
+				<label class="mt-3 flex items-start gap-3">
+					<input
+						type="checkbox"
+						checked={experimentOnly}
+						onchange={(e) => saveExperimentOnly(e.currentTarget.checked)}
+						disabled={savingExperimentOnly}
+						class="mt-0.5 rounded border-gray-300 text-primary focus:ring-blue-500"
+					/>
+					<span class="min-w-0">
+						<span class="block text-sm font-medium text-gray-700">
+							Only take respondents through experiments
+						</span>
+						<span class="block text-xs text-gray-500">
+							The project's own link stops taking new respondents; only an experiment that assigns
+							someone here can send them. Use it for projects that are arms of an experiment, so
+							nobody can choose their arm by using the project's link. Test interviews are not
+							affected.
+						</span>
+					</span>
+				</label>
 
 				<hr class="my-6 border-gray-200" />
 

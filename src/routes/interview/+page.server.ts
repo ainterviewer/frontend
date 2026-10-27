@@ -79,7 +79,6 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	}
 
 	const langParam = url.searchParams.get('lang');
-	const experimentID = url.searchParams.get('x');
 
 	// Resolve the interview language against what the project actually has.
 	// The link generated at project creation carries no `lang` param, so
@@ -115,7 +114,7 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	const resumeInterviewId = resumableInterviewId(cookies.get('interview_token'), project_id);
 
 	// Collect extra query params (exclude known ones)
-	const knownParams = new Set(['id', 'interview_type', 'lang', 'x']);
+	const knownParams = new Set(['id', 'interview_type', 'lang']);
 	const externalParams: Record<string, string> = {};
 	for (const [key, value] of url.searchParams.entries()) {
 		if (!knownParams.has(key)) {
@@ -160,7 +159,6 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 		project_id,
 		lang,
 		interviewType,
-		experimentID,
 		interviewConfig,
 		interviewModels,
 		isProjectOwnerDemoUser: isProjectOwnerDemoUser ?? false,

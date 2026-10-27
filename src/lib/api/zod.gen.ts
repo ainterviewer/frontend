@@ -749,13 +749,58 @@ export const zApiError = z.object({
 });
 
 /**
+ * ExperimentAllocation
+ *
+ * How an experiment picks the project for a new respondent.
+ *
+ * `random` draws by weight. The balanced modes give the respondent to the
+ * project furthest below its weighted share, counted in assignments or in
+ * completed interviews. Counting completions steers new respondents towards
+ * projects people drop out of, which can bias the comparison; it is there for
+ * studies that need completed interviews in fixed proportions.
+ */
+export const zExperimentAllocation = z.enum([
+    'random',
+    'balanced',
+    'balanced_completed'
+]);
+
+/**
+ * ExperimentEntryRequest
+ *
+ * A respondent opening an experiment's link. `pid` is the link's, when it
+ * names a known participant: their assignment is then kept for good.
+ */
+export const zExperimentEntryRequest = z.object({
+    pid: z.string().max(200).nullish()
+});
+
+/**
+ * ExperimentEntryResponse
+ *
+ * The project the experiment gave this respondent, to send them on to.
+ */
+export const zExperimentEntryResponse = z.object({
+    project_id: z.string()
+});
+
+/**
+ * ExperimentOnlyRequest
+ */
+export const zExperimentOnlyRequest = z.object({
+    experiment_only: z.boolean()
+});
+
+/**
  * ExperimentProjectCreate
  *
  * Input model for adding a project to an experiment.
  */
 export const zExperimentProjectCreate = z.object({
     project_id: z.string(),
-    weight: z.number().nullish()
+    weight: z.number().nullish(),
+    target: z.int().gte(1).nullish(),
+    experiment_only: z.boolean().nullish()
 });
 
 /**
@@ -763,6 +808,7 @@ export const zExperimentProjectCreate = z.object({
  */
 export const zExperimentCreate = z.object({
     title: z.string(),
+    allocation: zExperimentAllocation.optional().default('random'),
     projects: z.array(zExperimentProjectCreate)
 });
 
@@ -775,7 +821,10 @@ export const zExperimentProjectPublic = z.object({
     id: z.string(),
     project_id: z.string(),
     weight: z.number().nullish(),
-    added_at: z.iso.datetime()
+    target: z.int().nullish(),
+    added_at: z.iso.datetime(),
+    assigned: z.int().optional().default(0),
+    completed: z.int().optional().default(0)
 });
 
 /**
@@ -2051,6 +2100,7 @@ export const zExperimentPublic = z.object({
     user_id: z.string(),
     created_at: z.iso.datetime(),
     status: zProjectStatus.optional().default('active'),
+    allocation: zExperimentAllocation.optional().default('random'),
     projects: z.array(zExperimentProjectPublic).optional().default([])
 });
 
@@ -2797,7 +2847,6 @@ export const zInterviewCreate = z.object({
     interviewer: zInterviewer.optional().default('ai'),
     interview_type: zInterviewType.optional().default('distributed'),
     test_run_id: z.string().nullish(),
-    experiment_id: z.string().nullish(),
     synthetic_test_type: zTestType.nullish(),
     participant_id: z.string().nullish(),
     pid: z.string().nullish(),
@@ -3544,6 +3593,7 @@ export const zProjectPublic = z.object({
     last_updated: z.iso.datetime().nullish(),
     status: zProjectStatus.optional().default('active'),
     archived_at: z.iso.datetime().nullish(),
+    experiment_only: z.boolean().optional().default(false),
     config: zInterviewConfig,
     external_params: z.array(zExternalParam).nullish(),
     owner_id: z.string(),
@@ -4561,6 +4611,10 @@ export const zDeleteExperimentPath = z.object({
     experiment_id: z.string()
 });
 
+export const zDeleteExperimentQuery = z.object({
+    clear_experiment_only: z.boolean().optional().default(false)
+});
+
 export const zGenerateExperimentQrPath = z.object({
     experiment_id: z.string()
 });
@@ -5177,6 +5231,16 @@ export const zSetProjectArchivedPath = z.object({
 });
 
 export const zSetProjectArchivedQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+export const zSetProjectExperimentOnlyBody = zExperimentOnlyRequest;
+
+export const zSetProjectExperimentOnlyPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zSetProjectExperimentOnlyQuery = z.object({
     folder_id: z.string().nullish()
 });
 
@@ -6035,6 +6099,17 @@ export const zValidateInterviewParamsBody = zValidateExternalParamsRequest;
 export const zValidateInterviewParamsPath = z.object({
     project_id: z.string()
 });
+
+export const zEnterExperimentBody = zExperimentEntryRequest;
+
+export const zEnterExperimentPath = z.object({
+    experiment_id: z.string()
+});
+
+/**
+ * Successful Response
+ */
+export const zEnterExperimentResponse = zExperimentEntryResponse;
 
 export const zCreateInterviewBody = zInterviewCreate;
 

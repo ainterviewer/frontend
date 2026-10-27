@@ -2006,6 +2006,19 @@ export type EmbeddingTurn = {
 export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'access_request_exists' | 'preview_features_required';
 
 /**
+ * ExperimentAllocation
+ *
+ * How an experiment picks the project for a new respondent.
+ *
+ * `random` draws by weight. The balanced modes give the respondent to the
+ * project furthest below its weighted share, counted in assignments or in
+ * completed interviews. Counting completions steers new respondents towards
+ * projects people drop out of, which can bias the comparison; it is there for
+ * studies that need completed interviews in fixed proportions.
+ */
+export type ExperimentAllocation = 'random' | 'balanced' | 'balanced_completed';
+
+/**
  * ExperimentCreate
  */
 export type ExperimentCreate = {
@@ -2013,10 +2026,46 @@ export type ExperimentCreate = {
      * Title
      */
     title: string;
+    allocation?: ExperimentAllocation;
     /**
      * Projects
      */
     projects: Array<ExperimentProjectCreate>;
+};
+
+/**
+ * ExperimentEntryRequest
+ *
+ * A respondent opening an experiment's link. `pid` is the link's, when it
+ * names a known participant: their assignment is then kept for good.
+ */
+export type ExperimentEntryRequest = {
+    /**
+     * Pid
+     */
+    pid?: string | null;
+};
+
+/**
+ * ExperimentEntryResponse
+ *
+ * The project the experiment gave this respondent, to send them on to.
+ */
+export type ExperimentEntryResponse = {
+    /**
+     * Project Id
+     */
+    project_id: string;
+};
+
+/**
+ * ExperimentOnlyRequest
+ */
+export type ExperimentOnlyRequest = {
+    /**
+     * Experiment Only
+     */
+    experiment_only: boolean;
 };
 
 /**
@@ -2033,6 +2082,14 @@ export type ExperimentProjectCreate = {
      * Weight
      */
     weight?: number | null;
+    /**
+     * Target
+     */
+    target?: number | null;
+    /**
+     * Experiment Only
+     */
+    experiment_only?: boolean | null;
 };
 
 /**
@@ -2054,9 +2111,21 @@ export type ExperimentProjectPublic = {
      */
     weight?: number | null;
     /**
+     * Target
+     */
+    target?: number | null;
+    /**
      * Added At
      */
     added_at: string;
+    /**
+     * Assigned
+     */
+    assigned?: number;
+    /**
+     * Completed
+     */
+    completed?: number;
 };
 
 /**
@@ -2080,6 +2149,7 @@ export type ExperimentPublic = {
      */
     created_at: string;
     status?: ProjectStatus;
+    allocation?: ExperimentAllocation;
     /**
      * Projects
      */
@@ -2502,10 +2572,6 @@ export type InterviewCreate = {
      * Test Run Id
      */
     test_run_id?: string | null;
-    /**
-     * Experiment Id
-     */
-    experiment_id?: string | null;
     synthetic_test_type?: TestType | null;
     /**
      * Participant Id
@@ -4958,6 +5024,10 @@ export type ProjectPublic = {
      * Archived At
      */
     archived_at?: string | null;
+    /**
+     * Experiment Only
+     */
+    experiment_only?: boolean;
     config: InterviewConfig;
     /**
      * External Params
@@ -9119,7 +9189,12 @@ export type DeleteExperimentData = {
          */
         experiment_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Clear Experiment Only
+         */
+        clear_experiment_only?: boolean;
+    };
     url: '/api/experiments/{experiment_id}';
 };
 
@@ -11140,6 +11215,47 @@ export type SetProjectArchivedErrors = {
 export type SetProjectArchivedError = SetProjectArchivedErrors[keyof SetProjectArchivedErrors];
 
 export type SetProjectArchivedResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type SetProjectExperimentOnlyData = {
+    body: ExperimentOnlyRequest;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/experiment-only';
+};
+
+export type SetProjectExperimentOnlyErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type SetProjectExperimentOnlyError = SetProjectExperimentOnlyErrors[keyof SetProjectExperimentOnlyErrors];
+
+export type SetProjectExperimentOnlyResponses = {
     /**
      * Successful Response
      */
@@ -13990,6 +14106,44 @@ export type ValidateInterviewParamsResponses = {
      */
     200: unknown;
 };
+
+export type EnterExperimentData = {
+    body: ExperimentEntryRequest;
+    path: {
+        /**
+         * Experiment Id
+         */
+        experiment_id: string;
+    };
+    query?: never;
+    url: '/api/experiments/{experiment_id}/enter';
+};
+
+export type EnterExperimentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type EnterExperimentError = EnterExperimentErrors[keyof EnterExperimentErrors];
+
+export type EnterExperimentResponses = {
+    /**
+     * Successful Response
+     */
+    200: ExperimentEntryResponse;
+};
+
+export type EnterExperimentResponse = EnterExperimentResponses[keyof EnterExperimentResponses];
 
 export type CreateInterviewData = {
     body: InterviewCreate;

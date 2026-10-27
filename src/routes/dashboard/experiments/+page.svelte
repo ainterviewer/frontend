@@ -6,7 +6,12 @@
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Experiments } from '$lib/api/sdk.gen';
-	import type { ExperimentPublic, FolderWithProjectsPublic } from '$lib/api/types.gen';
+	import type {
+		ExperimentAllocation,
+		ExperimentPublic,
+		FolderWithProjectsPublic,
+		ProjectPublic
+	} from '$lib/api/types.gen';
 	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
@@ -42,11 +47,55 @@
 
 	// Create Form State
 	let newExperimentTitle = $state('');
+	let allocation = $state<ExperimentAllocation>('random');
 	let selectedProjectIds = $state<string[]>([]);
 	let projectWeights = $state<Record<string, number>>({});
+	/** Completed interviews wanted per project; empty for no limit. */
+	let projectTargets = $state<Record<string, number | null>>({});
+	let projectExperimentOnly = $state<Record<string, boolean>>({});
+
+	const ALLOCATIONS: { value: ExperimentAllocation; label: string; description: string }[] = [
+		{
+			value: 'random',
+			label: 'Random',
+			description: 'Each respondent is drawn by the weights.'
+		},
+		{
+			value: 'balanced',
+			label: 'Balanced',
+			description: 'Each respondent goes to the project furthest below its share of assignments.'
+		},
+		{
+			value: 'balanced_completed',
+			label: 'Balanced on completed interviews',
+			description:
+				'Each respondent goes to the project furthest below its share of completed interviews. This steers respondents towards projects people drop out of, which can bias the comparison.'
+		}
+	];
+
+	const ALLOCATION_LABELS: Record<ExperimentAllocation, string> = {
+		random: 'Random',
+		balanced: 'Balanced',
+		balanced_completed: 'Balanced (completed)'
+	};
+
+	/** Every project the reader can see, for titles and settings by id. */
+	const projectsById = $derived(
+		new Map<string, ProjectPublic>(
+			folders.flatMap((folder) => folder.projects.map((project) => [project.id, project]))
+		)
+	);
 
 	// Delete Form State
 	let deleteConfirmationText = $state('');
+	let clearExperimentOnly = $state(true);
+
+	/** The experiment's projects that take respondents only through experiments. */
+	const restrictedProjects = $derived(
+		(selectedExperiment?.projects ?? [])
+			.map((arm) => projectsById.get(arm.project_id))
+			.filter((project) => project?.experiment_only)
+	);
 
 	// Close dropdowns on outside click
 	function handleWindowClick(event: MouseEvent) {
@@ -93,14 +142,18 @@
 
 	function openCreateModal() {
 		newExperimentTitle = '';
+		allocation = 'random';
 		selectedProjectIds = [];
 		projectWeights = {};
+		projectTargets = {};
+		projectExperimentOnly = {};
 		isCreateModalOpen = true;
 	}
 
 	function openDeleteModal(experiment: ExperimentPublic) {
 		selectedExperiment = experiment;
 		deleteConfirmationText = '';
+		clearExperimentOnly = true;
 		isDeleteModalOpen = true;
 	}
 
@@ -140,14 +193,16 @@
 	}
 
 	async function handleCreate() {
-		const weights = selectedProjectIds.map((id) => projectWeights[id] || 0);
-
 		const response = await Experiments.createExperiment({
 			body: {
 				title: newExperimentTitle,
-				projects: selectedProjectIds.map(function (project_id, i) {
-					return { project_id: project_id, weight: weights[i] };
-				})
+				allocation,
+				projects: selectedProjectIds.map((project_id) => ({
+					project_id,
+					weight: projectWeights[project_id] || 0,
+					target: projectTargets[project_id] || null,
+					experiment_only: projectExperimentOnly[project_id] ?? null
+				}))
 			}
 		});
 
@@ -166,7 +221,8 @@
 		if (!selectedExperiment) return;
 
 		const { error } = await Experiments.deleteExperiment({
-			path: { experiment_id: selectedExperiment.id }
+			path: { experiment_id: selectedExperiment.id },
+			query: { clear_experiment_only: restrictedProjects.length > 0 && clearExperimentOnly }
 		});
 		if (error) {
 			toastApiError(error, 'Failed to delete experiment');
@@ -216,12 +272,16 @@
 		);
 	}
 
-	function handleCheckboxChange(projectId: string, event: Event) {
+	function handleCheckboxChange(project: ProjectPublic, event: Event) {
 		const checked = (event.target as HTMLInputElement).checked;
 		if (checked) {
-			projectWeights[projectId] = 1;
+			projectWeights[project.id] = 1;
+			projectTargets[project.id] = null;
+			projectExperimentOnly[project.id] = project.experiment_only ?? false;
 		} else {
-			delete projectWeights[projectId];
+			delete projectWeights[project.id];
+			delete projectTargets[project.id];
+			delete projectExperimentOnly[project.id];
 		}
 	}
 
@@ -243,10 +303,16 @@
 			sortFn: 'text',
 			filterFn: matchesSelection
 		}),
+		helper.accessor((e) => e.allocation ?? 'random', {
+			id: 'allocation',
+			header: 'Allocation',
+			sortFn: 'text',
+			meta: { class: 'whitespace-nowrap text-gray-600' }
+		}),
 		helper.display({
-			id: 'weights',
-			header: 'Weights',
-			meta: { align: 'center', class: 'tabular-nums text-gray-600' }
+			id: 'projects',
+			header: 'Projects',
+			meta: { class: 'tabular-nums text-gray-600' }
 		}),
 		helper.display({
 			id: 'actions',
@@ -271,7 +337,8 @@
 	const columnLabels: Record<string, string> = {
 		title: 'Experiment',
 		status: 'Status',
-		weights: 'Weights'
+		allocation: 'Allocation',
+		projects: 'Projects'
 	};
 </script>
 
@@ -330,10 +397,23 @@
 			<span class="rounded-full border px-3 py-1 text-xs font-semibold {getStatusClass(status)}">
 				{status}
 			</span>
-		{:else if columnId === 'weights'}
-			{experiment.projects
-				?.map((project) => (project.weight == null ? '–' : project.weight.toFixed(2)))
-				.join(' ')}
+		{:else if columnId === 'allocation'}
+			{ALLOCATION_LABELS[experiment.allocation ?? 'random']}
+		{:else if columnId === 'projects'}
+			<ul class="space-y-0.5 text-xs">
+				{#each experiment.projects ?? [] as arm (arm.id)}
+					<li class="flex flex-wrap gap-x-2">
+						<span class="font-medium text-dark">
+							{projectsById.get(arm.project_id)?.title ?? 'Project'}
+						</span>
+						<span title="Weight">&times;{(arm.weight ?? 1).toFixed(2)}</span>
+						<span title="Respondents given this project">{arm.assigned ?? 0} assigned</span>
+						<span title="Completed interviews">
+							{arm.completed ?? 0}{arm.target ? ` / ${arm.target}` : ''} completed
+						</span>
+					</li>
+				{/each}
+			</ul>
 		{:else if columnId === 'actions'}
 			<button
 				class="dropdown-trigger rounded-full p-1.5 text-gray-400 hover:bg-secondary/40 hover:text-dark"
@@ -432,6 +512,26 @@
 						required
 					/>
 				</div>
+				<fieldset>
+					<legend class="mb-1 block text-sm font-medium text-gray-700">Allocation</legend>
+					<div class="space-y-2">
+						{#each ALLOCATIONS as option (option.value)}
+							<label class="flex cursor-pointer items-start gap-2 text-sm text-gray-700">
+								<input
+									type="radio"
+									name="allocation"
+									value={option.value}
+									bind:group={allocation}
+									class="mt-0.5 border-gray-300 text-primary focus:ring-primary"
+								/>
+								<span>
+									<span class="font-medium">{option.label}</span>
+									<span class="block text-xs text-gray-500">{option.description}</span>
+								</span>
+							</label>
+						{/each}
+					</div>
+				</fieldset>
 				<fieldset class="rounded-md border border-gray-200 p-4">
 					<legend class="px-2 text-sm font-medium text-gray-700">Projects</legend>
 					<div class="max-h-60 space-y-4 overflow-y-auto">
@@ -449,7 +549,7 @@
 									</h3>
 									<div class="space-y-2 pl-2">
 										{#each folder.projects as project (project.id)}
-											<div class="flex items-center justify-between">
+											<div>
 												<label
 													class="flex items-center gap-2 text-sm {linkable
 														? 'cursor-pointer text-gray-700'
@@ -462,22 +562,52 @@
 														type="checkbox"
 														value={project.id}
 														bind:group={selectedProjectIds}
-														onchange={(e) => handleCheckboxChange(project.id, e)}
+														onchange={(e) => handleCheckboxChange(project, e)}
 														disabled={!linkable}
 														class="rounded border-gray-300 text-primary focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
 													/>
 													{project.title}
 												</label>
 												{#if selectedProjectIds.includes(project.id)}
-													<div class="flex items-center gap-2" transition:fade>
-														<span class="text-xs text-gray-500">Weight:</span>
-														<input
-															type="number"
-															bind:value={projectWeights[project.id]}
-															min="0"
-															step="0.01"
-															class="h-8 w-20 rounded-md border-gray-300 text-sm focus:border-primary focus:ring-primary"
-														/>
+													<div
+														class="mt-1 mb-2 ml-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500"
+														transition:fade
+													>
+														<label class="flex items-center gap-1.5">
+															Weight
+															<input
+																type="number"
+																bind:value={projectWeights[project.id]}
+																min="0"
+																step="0.01"
+																class="h-7 w-16 rounded-md border-gray-300 text-xs focus:border-primary focus:ring-primary"
+															/>
+														</label>
+														<label
+															class="flex items-center gap-1.5"
+															title="Completed interviews wanted. Once reached, the project takes no new respondents."
+														>
+															Target
+															<input
+																type="number"
+																bind:value={projectTargets[project.id]}
+																min="1"
+																step="1"
+																placeholder="none"
+																class="h-7 w-16 rounded-md border-gray-300 text-xs focus:border-primary focus:ring-primary"
+															/>
+														</label>
+														<label
+															class="flex cursor-pointer items-center gap-1.5"
+															title="A project setting: its own link stops taking respondents, so only experiments can send them there."
+														>
+															<input
+																type="checkbox"
+																bind:checked={projectExperimentOnly[project.id]}
+																class="rounded border-gray-300 text-primary focus:ring-primary"
+															/>
+															Only through experiments
+														</label>
 													</div>
 												{/if}
 											</div>
@@ -549,6 +679,23 @@
 						class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
 					/>
 				</div>
+				{#if restrictedProjects.length > 0}
+					<label class="flex cursor-pointer items-start gap-2 text-sm text-gray-700">
+						<input
+							type="checkbox"
+							bind:checked={clearExperimentOnly}
+							class="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary"
+						/>
+						<span>
+							Let its projects take respondents from their own links again
+							<span class="block text-xs text-gray-500">
+								{restrictedProjects.map((project) => project?.title).join(', ')}
+								{restrictedProjects.length === 1 ? 'only takes' : 'only take'} respondents through experiments.
+								Projects another experiment still uses are left as they are.
+							</span>
+						</span>
+					</label>
+				{/if}
 			</div>
 			<div class="flex justify-end gap-3 border-t border-gray-100 bg-gray-50 p-6">
 				<button

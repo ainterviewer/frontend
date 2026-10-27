@@ -13,7 +13,6 @@
 		project_id: string;
 		lang: string;
 		interviewType?: InterviewType;
-		experimentID?: string;
 		interviewConfig: InterviewConfig;
 		interviewModels: string[];
 		isProjectOwnerDemoUser: boolean;
@@ -115,7 +114,6 @@
 			projectId,
 			lang,
 			data.interviewType,
-			data.experimentID,
 			data.externalParams,
 			data.referer,
 			data.externalParams?.pid ?? null
