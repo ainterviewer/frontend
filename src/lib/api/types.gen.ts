@@ -2157,6 +2157,23 @@ export type ExperimentPublic = {
 };
 
 /**
+ * ExperimentUpdate
+ *
+ * The experiment's settings in full: projects left out are removed.
+ */
+export type ExperimentUpdate = {
+    /**
+     * Title
+     */
+    title: string;
+    allocation?: ExperimentAllocation;
+    /**
+     * Projects
+     */
+    projects: Array<ExperimentProjectCreate>;
+};
+
+/**
  * ExportMessagesRequest
  *
  * `csv` and `xlsx` export the message table, `docx` and `pdf` readable
@@ -9221,6 +9238,44 @@ export type DeleteExperimentResponses = {
      */
     200: unknown;
 };
+
+export type UpdateExperimentData = {
+    body: ExperimentUpdate;
+    path: {
+        /**
+         * Experiment Id
+         */
+        experiment_id: string;
+    };
+    query?: never;
+    url: '/api/experiments/{experiment_id}';
+};
+
+export type UpdateExperimentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type UpdateExperimentError = UpdateExperimentErrors[keyof UpdateExperimentErrors];
+
+export type UpdateExperimentResponses = {
+    /**
+     * Successful Response
+     */
+    200: ExperimentPublic;
+};
+
+export type UpdateExperimentResponse = UpdateExperimentResponses[keyof UpdateExperimentResponses];
 
 export type GenerateExperimentQrData = {
     body?: never;

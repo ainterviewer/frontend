@@ -828,6 +828,17 @@ export const zExperimentProjectPublic = z.object({
 });
 
 /**
+ * ExperimentUpdate
+ *
+ * The experiment's settings in full: projects left out are removed.
+ */
+export const zExperimentUpdate = z.object({
+    title: z.string(),
+    allocation: zExperimentAllocation.optional().default('random'),
+    projects: z.array(zExperimentProjectCreate)
+});
+
+/**
  * ExternalParam
  *
  * Definition of a single external URL query parameter.
@@ -4614,6 +4625,17 @@ export const zDeleteExperimentPath = z.object({
 export const zDeleteExperimentQuery = z.object({
     clear_experiment_only: z.boolean().optional().default(false)
 });
+
+export const zUpdateExperimentBody = zExperimentUpdate;
+
+export const zUpdateExperimentPath = z.object({
+    experiment_id: z.string()
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateExperimentResponse = zExperimentPublic;
 
 export const zGenerateExperimentQrPath = z.object({
     experiment_id: z.string()

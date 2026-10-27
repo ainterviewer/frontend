@@ -8,6 +8,8 @@
 	import { Experiments } from '$lib/api/sdk.gen';
 	import type {
 		ExperimentAllocation,
+		ExperimentCreate,
+		ExperimentProjectCreate,
 		ExperimentPublic,
 		FolderWithProjectsPublic,
 		ProjectPublic
@@ -35,7 +37,7 @@
 	let experiments = $derived(data.experiments);
 	let folders = $derived(data.folders);
 
-	let isCreateModalOpen = $state(false);
+	let isExperimentModalOpen = $state(false);
 	let isDeleteModalOpen = $state(false);
 	let isQRModalOpen = $state(false);
 
@@ -45,7 +47,9 @@
 	let openDropdownId = $state<string | null>(null);
 	let dropdownPosition = $state<{ top: number; left: number } | null>(null);
 
-	// Create Form State
+	// Create/Edit Form State
+	/** The experiment being edited; null while creating one. */
+	let editingExperiment = $state<ExperimentPublic | null>(null);
 	let newExperimentTitle = $state('');
 	let allocation = $state<ExperimentAllocation>('random');
 	let selectedProjectIds = $state<string[]>([]);
@@ -85,6 +89,20 @@
 			folders.flatMap((folder) => folder.projects.map((project) => [project.id, project]))
 		)
 	);
+
+	/** The edited experiment's projects, by id. */
+	const editingArms = $derived(
+		new Map((editingExperiment?.projects ?? []).map((arm) => [arm.project_id, arm]))
+	);
+
+	/**
+	 * A project respondents were already given cannot be removed: the API
+	 * refuses, as their assignments would no longer count.
+	 */
+	function isLocked(projectId: string): boolean {
+		const arm = editingArms.get(projectId);
+		return !!arm && ((arm.assigned ?? 0) > 0 || (arm.completed ?? 0) > 0);
+	}
 
 	// Delete Form State
 	let deleteConfirmationText = $state('');
@@ -141,13 +159,33 @@
 	}
 
 	function openCreateModal() {
+		editingExperiment = null;
 		newExperimentTitle = '';
 		allocation = 'random';
 		selectedProjectIds = [];
 		projectWeights = {};
 		projectTargets = {};
 		projectExperimentOnly = {};
-		isCreateModalOpen = true;
+		isExperimentModalOpen = true;
+	}
+
+	function openEditModal(experiment: ExperimentPublic) {
+		// Projects the reader cannot see are not in the form; `experimentBody`
+		// sends them back unchanged.
+		const arms = (experiment.projects ?? []).filter((arm) => projectsById.has(arm.project_id));
+		editingExperiment = experiment;
+		newExperimentTitle = experiment.title;
+		allocation = experiment.allocation ?? 'random';
+		selectedProjectIds = arms.map((arm) => arm.project_id);
+		projectWeights = Object.fromEntries(arms.map((arm) => [arm.project_id, arm.weight ?? 1]));
+		projectTargets = Object.fromEntries(arms.map((arm) => [arm.project_id, arm.target ?? null]));
+		projectExperimentOnly = Object.fromEntries(
+			arms.map((arm) => [
+				arm.project_id,
+				projectsById.get(arm.project_id)?.experiment_only ?? false
+			])
+		);
+		isExperimentModalOpen = true;
 	}
 
 	function openDeleteModal(experiment: ExperimentPublic) {
@@ -192,28 +230,48 @@
 		}
 	}
 
-	async function handleCreate() {
-		const response = await Experiments.createExperiment({
-			body: {
-				title: newExperimentTitle,
-				allocation,
-				projects: selectedProjectIds.map((project_id) => ({
-					project_id,
-					weight: projectWeights[project_id] || 0,
-					target: projectTargets[project_id] || null,
-					experiment_only: projectExperimentOnly[project_id] ?? null
-				}))
-			}
+	function experimentBody(): ExperimentCreate {
+		const projects: ExperimentProjectCreate[] = selectedProjectIds.map((project_id) => {
+			const experimentOnly = projectExperimentOnly[project_id] ?? false;
+			return {
+				project_id,
+				weight: projectWeights[project_id] || 0,
+				target: projectTargets[project_id] || null,
+				// Sent only when changed: it is the project's own setting, which
+				// the API asks for the editor role to change.
+				experiment_only:
+					experimentOnly !== (projectsById.get(project_id)?.experiment_only ?? false)
+						? experimentOnly
+						: null
+			};
 		});
+		for (const [project_id, arm] of editingArms) {
+			if (!projectsById.has(project_id)) {
+				projects.push({ project_id, weight: arm.weight, target: arm.target });
+			}
+		}
+		return { title: newExperimentTitle, allocation, projects };
+	}
 
-		if (response.error) {
-			toastApiError(response.error, 'Failed to create experiment');
+	async function handleSave() {
+		const { data, error } = editingExperiment
+			? await Experiments.updateExperiment({
+					path: { experiment_id: editingExperiment.id },
+					body: experimentBody()
+				})
+			: await Experiments.createExperiment({ body: experimentBody() });
+
+		if (error) {
+			toastApiError(
+				error,
+				editingExperiment ? 'Failed to update experiment' : 'Failed to create experiment'
+			);
 			return;
 		}
 
-		if (response.data) {
+		if (data) {
 			await invalidateAll();
-			isCreateModalOpen = false;
+			isExperimentModalOpen = false;
 		}
 	}
 
@@ -461,7 +519,7 @@
 			<button
 				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
 				onclick={() => {
-					/* Edit logic would go here */
+					openEditModal(experiment);
 					openDropdownId = null;
 					dropdownPosition = null;
 				}}
@@ -482,18 +540,20 @@
 	</div>
 {/if}
 
-<!-- Create Modal -->
-{#if isCreateModalOpen}
+<!-- Create/Edit Modal -->
+{#if isExperimentModalOpen}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
 		transition:fade={{ duration: 150 }}
 	>
-		<div class="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl">
+		<div class="w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
 			<div class="flex items-center justify-between border-b border-gray-100 p-6">
-				<h2 class="text-xl font-semibold text-gray-800">Create New Experiment</h2>
+				<h2 class="text-xl font-semibold text-gray-800">
+					{editingExperiment ? 'Edit Experiment' : 'Create New Experiment'}
+				</h2>
 				<button
 					class="text-gray-400 hover:text-gray-600"
-					onclick={() => (isCreateModalOpen = false)}
+					onclick={() => (isExperimentModalOpen = false)}
 					aria-label="Close modal"
 				>
 					<i class="fa-solid fa-xmark"></i>
@@ -534,7 +594,7 @@
 				</fieldset>
 				<fieldset class="rounded-md border border-gray-200 p-4">
 					<legend class="px-2 text-sm font-medium text-gray-700">Projects</legend>
-					<div class="max-h-60 space-y-4 overflow-y-auto">
+					<div class="max-h-[40vh] space-y-4 overflow-y-auto">
 						{#each folders as folder (folder.id)}
 							{#if folder.projects.length > 0}
 								{@const linkable = canLink(folder)}
@@ -549,21 +609,27 @@
 									</h3>
 									<div class="space-y-2 pl-2">
 										{#each folder.projects as project (project.id)}
+											<!-- A linked project stays removable without the role: it only
+											     takes owning the experiment. -->
+											{@const locked = isLocked(project.id)}
+											{@const selectable = !locked && (linkable || editingArms.has(project.id))}
 											<div>
 												<label
-													class="flex items-center gap-2 text-sm {linkable
+													class="flex items-center gap-2 text-sm {selectable
 														? 'cursor-pointer text-gray-700'
 														: 'cursor-not-allowed text-gray-400'}"
-													title={linkable
-														? undefined
-														: 'You need the editor role in this folder to add its projects to an experiment'}
+													title={locked
+														? 'Respondents were already given this project, so it cannot be removed. Set its weight to 0 to stop sending new ones.'
+														: selectable
+															? undefined
+															: 'You need the editor role in this folder to add its projects to an experiment'}
 												>
 													<input
 														type="checkbox"
 														value={project.id}
 														bind:group={selectedProjectIds}
 														onchange={(e) => handleCheckboxChange(project, e)}
-														disabled={!linkable}
+														disabled={!selectable}
 														class="rounded border-gray-300 text-primary focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
 													/>
 													{project.title}
@@ -580,7 +646,7 @@
 																bind:value={projectWeights[project.id]}
 																min="0"
 																step="0.01"
-																class="h-7 w-16 rounded-md border-gray-300 text-xs focus:border-primary focus:ring-primary"
+																class="h-7 w-20 rounded-md border-gray-300 text-xs focus:border-primary focus:ring-primary"
 															/>
 														</label>
 														<label
@@ -594,16 +660,21 @@
 																min="1"
 																step="1"
 																placeholder="none"
-																class="h-7 w-16 rounded-md border-gray-300 text-xs focus:border-primary focus:ring-primary"
+																class="h-7 w-20 rounded-md border-gray-300 text-xs focus:border-primary focus:ring-primary"
 															/>
 														</label>
 														<label
-															class="flex cursor-pointer items-center gap-1.5"
-															title="A project setting: its own link stops taking respondents, so only experiments can send them there."
+															class="flex items-center gap-1.5 {linkable
+																? 'cursor-pointer'
+																: 'cursor-not-allowed opacity-50'}"
+															title={linkable
+																? 'A project setting: its own link stops taking respondents, so only experiments can send them there.'
+																: 'You need the editor role in this folder to change this project setting'}
 														>
 															<input
 																type="checkbox"
 																bind:checked={projectExperimentOnly[project.id]}
+																disabled={!linkable}
 																class="rounded border-gray-300 text-primary focus:ring-primary"
 															/>
 															Only through experiments
@@ -625,16 +696,16 @@
 			<div class="flex justify-end gap-3 border-t border-gray-100 bg-gray-50 p-6">
 				<button
 					class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-					onclick={() => (isCreateModalOpen = false)}
+					onclick={() => (isExperimentModalOpen = false)}
 				>
 					Cancel
 				</button>
 				<button
 					class="hover:bg-opacity-90 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-					onclick={handleCreate}
+					onclick={handleSave}
 					disabled={!newExperimentTitle || selectedProjectIds.length === 0}
 				>
-					Create
+					{editingExperiment ? 'Save' : 'Create'}
 				</button>
 			</div>
 		</div>
