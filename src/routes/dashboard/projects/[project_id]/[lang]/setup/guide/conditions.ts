@@ -159,6 +159,37 @@ export function isConditionTargetValid(
 	return true;
 }
 
+// Whether some respondents are never asked the question a condition reads,
+// because a condition takes it out first: its own rule reading an earlier
+// question, or a rule on an earlier question of its section that skips the
+// section. For those respondents the condition is unknown -- the action fires
+// only if the rest of the rule decides it without that answer, and an
+// undecided rule does not fire. A rule reading only its own question is
+// checked after that question is answered, so it never leaves it unanswered.
+// A respondent skipping the question (`can_skip`) has the same effect but is
+// left out here: it is on by default and would flag every condition there is.
+export function mayGoUnasked(
+	ctx: { sectionId: string; questionId: string },
+	sections: GuideSection[],
+	questionsMap: Record<string, GuideQuestion[]>
+): boolean {
+	const target = resolveConditionTarget(ctx, sections, questionsMap);
+	if (!target.question) return false;
+
+	const readsAnother = (question: GuideQuestion) =>
+		(question.conditions?.conditions ?? []).some(
+			(c) => c.question_context.questionId !== question.id
+		);
+	const { action } = target.question.conditions ?? {};
+	if ((action === 'skip_question' || action === 'skip_section') && readsAnother(target.question)) {
+		return true;
+	}
+
+	return questionsMap[target.sectionId]
+		.slice(0, target.questionIndex)
+		.some((q) => q.conditions?.action === 'skip_section' && q.conditions.conditions.length > 0);
+}
+
 // A condition on a choice question has to name one of its options. One whose
 // option was deleted -- or that never had one picked -- would match nothing.
 export function isConditionOptionValid(

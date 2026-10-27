@@ -5,6 +5,7 @@
 	import {
 		isConditionOptionValid,
 		isConditionTargetValid,
+		mayGoUnasked,
 		resolveConditionTarget
 	} from './conditions';
 	import { pick, surveyItemOptions } from './localized';
@@ -228,6 +229,17 @@
 									{/each}
 								</select>
 							</label>
+
+							{#if targetValid && referencedQuestion?.id !== question.id && mayGoUnasked(condition.question_context, allSections, allQuestions)}
+								<p class="flex items-start gap-1.5 text-xs text-amber-700">
+									<i class="fa-solid fa-circle-info mt-0.5"></i>
+									<span>
+										That question has conditions of its own, so some respondents are never asked it.
+										For them this block is unknown: the action only happens if the other blocks
+										decide it on their own.
+									</span>
+								</p>
+							{/if}
 
 							<!-- Negate Condition -->
 							<div class="flex items-center">

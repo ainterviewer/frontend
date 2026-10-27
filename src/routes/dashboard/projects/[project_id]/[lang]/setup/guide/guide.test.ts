@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { LocalizedInterviewGuide } from '$lib/api/types.gen';
 import { zLocalizedQuestion } from '$lib/api/zod.gen';
 
-import { validateGuideConditions } from './conditions';
+import { mayGoUnasked, validateGuideConditions } from './conditions';
 import { countUntranslated, isUntranslated, pick, QUESTION_TEXT_FIELDS } from './localized';
 import { localGuide, localizeRenderedQuestion, mapToLocal, newQuestion } from './normalize';
 import { renderLocal } from './render';
@@ -155,6 +155,35 @@ describe('validateGuideConditions', () => {
 	it('accepts the guide as loaded', () => {
 		const { sections, questions } = mapToLocal(guide());
 		expect(validateGuideConditions(sections, questions).invalidQuestionIds).toEqual([]);
+	});
+});
+
+describe('mayGoUnasked', () => {
+	const reads = (questionId: string) => ({ sectionId: SECTION, questionId });
+
+	it('flags a question a rule can skip before it is asked', () => {
+		const { sections, questions } = mapToLocal(guide());
+		expect(mayGoUnasked(reads(GATED), sections, questions)).toBe(true);
+	});
+
+	it('leaves an unconditional question alone', () => {
+		const { sections, questions } = mapToLocal(guide());
+		expect(mayGoUnasked(reads(RADIO), sections, questions)).toBe(false);
+	});
+
+	it('ignores a rule reading only its own question', () => {
+		const { sections, questions } = mapToLocal(guide());
+		const gated = questions[SECTION][1];
+		gated.conditions!.conditions[0].question_context.questionId = GATED;
+		expect(mayGoUnasked(reads(GATED), sections, questions)).toBe(false);
+	});
+
+	it('flags a question an earlier rule can skip the section past', () => {
+		const { sections, questions } = mapToLocal(guide());
+		const [radio, gated] = questions[SECTION];
+		radio.conditions = { ...gated.conditions!, action: 'skip_section' };
+		gated.conditions = null;
+		expect(mayGoUnasked(reads(GATED), sections, questions)).toBe(true);
 	});
 });
 
