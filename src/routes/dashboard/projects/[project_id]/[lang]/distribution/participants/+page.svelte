@@ -1,20 +1,33 @@
 <script lang="ts">
-	import { createColumnHelper, createTable } from '@tanstack/svelte-table';
+	import {
+		type ColumnFiltersState,
+		createColumnHelper,
+		createTable,
+		type PaginationState,
+		type RowSelectionState,
+		type SortingState,
+		type Updater
+	} from '@tanstack/svelte-table';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Participants } from '$lib/api';
-	import type { ParticipantPublic } from '$lib/api/types.gen';
+	import type {
+		InterviewStatus,
+		ParticipantFacets,
+		ParticipantFilterParams,
+		ParticipantPublic,
+		ParticipantSelection
+	} from '$lib/api/types.gen';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
 		type DataTableFeatures,
 		dataTableFeatures,
-		matchesSelection,
-		sortableText,
-		sortableTime
+		facetCounts,
+		facetOptions
 	} from '$lib/components/table/features';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 	import { toastApiError } from '$lib/utils/toast';
@@ -32,6 +45,8 @@
 	let participants = $state<ParticipantPublic[]>([]);
 	let loading = $state(false);
 	let hasLoaded = $state(false);
+	let totalItems = $state(0);
+	let facets = $state<ParticipantFacets>({});
 	let error = $state<string | null>(null);
 
 	type EditState = { name: string; email: string; pid: string; participating: boolean };
@@ -52,56 +67,44 @@
 
 	/* ---------------------------------------------------------------- table */
 
+	// Everything about this table happens on the server, so every state slice
+	// that shapes the query is owned here and every change refetches. The
+	// controls still read and write TanStack's own state, which keeps
+	// DataTable's search box, "Clear filters" and empty states working.
+	let sorting = $state<SortingState>([{ id: 'created_at', desc: true }]);
+	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 25 });
+	let columnFilters = $state<ColumnFiltersState>([]);
+	let globalFilter = $state('');
+	let rowSelection = $state<RowSelectionState>({});
+
+	// "Select all 1,234": the selection is every participant matching the
+	// filters, not the ids in `rowSelection`, most of which were never loaded.
+	// Any change to the selection or the filters drops back to plain ids.
+	let allMatching = $state(false);
+
+	/** A column's selected facet values, as `FacetedFilter` stores them. */
+	function selection<T extends string = string>(columnId: string) {
+		return columnFilters.find((filter) => filter.id === columnId)?.value as T[] | undefined;
+	}
+
 	const helper = createColumnHelper<DataTableFeatures, ParticipantPublic>();
 
 	const columns = helper.columns([
 		helper.display({ id: 'select', enableHiding: false }),
-		helper.accessor((p) => sortableText(p.name), {
-			id: 'name',
-			header: 'Name',
-			sortFn: 'text',
-			sortUndefined: 'last',
-			meta: { class: 'font-medium text-dark' }
-		}),
-		helper.accessor((p) => sortableText(p.email), {
-			id: 'email',
-			header: 'Email',
-			sortFn: 'text',
-			sortUndefined: 'last',
-			meta: { class: 'text-gray-700' }
-		}),
-		helper.accessor((p) => sortableText(p.pid), {
-			id: 'pid',
-			header: 'PID',
-			sortFn: 'text',
-			sortUndefined: 'last',
-			meta: { class: 'font-mono text-xs text-gray-500' }
-		}),
-		helper.accessor('participating', {
-			header: 'Participating',
-			sortFn: 'basic',
-			filterFn: matchesSelection
-		}),
-		helper.accessor((p) => sortableTime(p.created_at), {
-			id: 'created_at',
+		helper.accessor('name', { header: 'Name', meta: { class: 'font-medium text-dark' } }),
+		helper.accessor('email', { header: 'Email', meta: { class: 'text-gray-700' } }),
+		helper.accessor('pid', { header: 'PID', meta: { class: 'font-mono text-xs text-gray-500' } }),
+		helper.accessor('participating', { header: 'Participating' }),
+		helper.accessor('created_at', {
 			header: 'Created',
-			sortFn: 'basic',
-			sortUndefined: 'last',
 			meta: { class: 'whitespace-nowrap tabular-nums text-gray-600' }
 		}),
-		helper.accessor((p) => sortableTime(p.latest_interview_at), {
-			id: 'latest_interview_at',
+		helper.accessor('latest_interview_at', {
 			header: 'Latest interview activity',
-			sortFn: 'basic',
-			sortUndefined: 'last',
 			meta: { class: 'whitespace-nowrap tabular-nums text-gray-600' }
 		}),
-		helper.accessor((p) => sortableText(p.latest_interview_status), {
-			id: 'latest_interview_status',
+		helper.accessor('latest_interview_status', {
 			header: 'Latest interview status',
-			sortFn: 'text',
-			sortUndefined: 'last',
-			filterFn: matchesSelection,
 			meta: { class: 'text-gray-600' }
 		}),
 		helper.display({
@@ -112,8 +115,6 @@
 		})
 	]);
 
-	const searchableColumns = ['name', 'email', 'pid'];
-
 	const table = createTable({
 		features: dataTableFeatures,
 		columns,
@@ -121,13 +122,85 @@
 			return participants;
 		},
 		getRowId: (p) => p.id,
-		globalFilterFn: 'includesString',
-		getColumnCanGlobalFilter: (column) => searchableColumns.includes(column.id),
-		initialState: {
-			pagination: { pageIndex: 0, pageSize: 25 },
-			sorting: [{ id: 'created_at', desc: true }]
+		// The server has already filtered, sorted and sliced.
+		manualSorting: true,
+		manualPagination: true,
+		manualFiltering: true,
+		// The API always needs a column and order: clicking cycles asc/desc only.
+		enableSortingRemoval: false,
+		get rowCount() {
+			return totalItems;
+		},
+		state: {
+			get sorting() {
+				return sorting;
+			},
+			get pagination() {
+				return pagination;
+			},
+			get columnFilters() {
+				return columnFilters;
+			},
+			get globalFilter() {
+				return globalFilter;
+			},
+			get rowSelection() {
+				return rowSelection;
+			}
+		},
+		onRowSelectionChange: (updater: Updater<RowSelectionState>) => {
+			// Leaving "all" mode by unticking a row starts from what was on screen:
+			// every row of this page ticked, not just the ones visited before.
+			const base: RowSelectionState = allMatching
+				? {
+						...rowSelection,
+						...Object.fromEntries(participants.map((p) => [p.id, true as const]))
+					}
+				: rowSelection;
+			rowSelection = typeof updater === 'function' ? updater(base) : updater;
+			allMatching = false;
+		},
+		onSortingChange: (updater: Updater<SortingState>) => {
+			sorting = typeof updater === 'function' ? updater(sorting) : updater;
+			pagination = { ...pagination, pageIndex: 0 };
+			scheduleLoad();
+		},
+		onPaginationChange: (updater: Updater<PaginationState>) => {
+			pagination = typeof updater === 'function' ? updater(pagination) : updater;
+			scheduleLoad();
+		},
+		// Filtering has to reset the page by hand: TanStack only does that
+		// automatically for tables it paginates itself.
+		onColumnFiltersChange: (updater: Updater<ColumnFiltersState>) => {
+			columnFilters = typeof updater === 'function' ? updater(columnFilters) : updater;
+			allMatching = false;
+			pagination = { ...pagination, pageIndex: 0 };
+			scheduleLoad();
+		},
+		onGlobalFilterChange: (updater: Updater<string>) => {
+			globalFilter = typeof updater === 'function' ? updater(globalFilter) : updater;
+			allMatching = false;
+			pagination = { ...pagination, pageIndex: 0 };
+			scheduleLoad();
 		}
 	});
+
+	const PARTICIPATING_LABELS: Record<string, string> = { true: 'Yes', false: 'No' };
+
+	/**
+	 * One fetch per burst of state changes: "Clear filters" resets the global
+	 * and the column filters back to back, each through its own handler.
+	 */
+	let queued = false;
+
+	function scheduleLoad() {
+		if (queued) return;
+		queued = true;
+		queueMicrotask(() => {
+			queued = false;
+			load();
+		});
+	}
 
 	const columnLabels: Record<string, string> = {
 		name: 'Name',
@@ -140,21 +213,68 @@
 	};
 
 	const selectedIds = $derived(table.getSelectedRowIds());
+	const selectedCount = $derived(allMatching ? totalItems : selectedIds.length);
+
+	/** The list's filters, as both the list and the bulk actions send them. */
+	function currentFilters() {
+		// Both values selected is the same query as neither.
+		const participating = selection('participating');
+		return {
+			search: globalFilter || undefined,
+			participating: participating?.length === 1 ? participating[0] === 'true' : undefined,
+			statuses: selection<InterviewStatus>('latest_interview_status')
+		} satisfies ParticipantFilterParams;
+	}
+
+	/** What a bulk action targets: the ticked ids, or everything matching. */
+	function selectionBody(): ParticipantSelection {
+		return allMatching ? { filters: currentFilters() } : { participant_ids: selectedIds };
+	}
 
 	/* ----------------------------------------------------------------- data */
 
+	// Sorting and paging both refetch, so two requests can be in flight at once.
+	// Only the newest may write.
+	let requestId = 0;
+
 	async function load() {
+		const id = ++requestId;
 		loading = true;
 		error = null;
-		const res = await Participants.getParticipants({ path: { project_id } });
-		if (res.error) {
-			error = 'Failed to load participants';
-			participants = [];
-		} else {
-			participants = (res.data ?? []) as ParticipantPublic[];
+		try {
+			const res = await Participants.getParticipants({
+				path: { project_id },
+				query: {
+					offset: pagination.pageIndex * pagination.pageSize,
+					limit: pagination.pageSize,
+					column: sorting[0]?.id ?? 'created_at',
+					order: sorting[0]?.desc ? 'desc' : 'asc',
+					...currentFilters()
+				}
+			});
+			if (id !== requestId) return;
+			if (res.error || !res.data) {
+				error = 'Failed to load participants';
+				participants = [];
+				totalItems = 0;
+				facets = {};
+			} else {
+				participants = res.data.items;
+				totalItems = res.data.total;
+				facets = res.data.facets ?? {};
+				// Deleting the last rows of the final page leaves it past the end.
+				const lastPage = Math.max(0, Math.ceil(totalItems / pagination.pageSize) - 1);
+				if (pagination.pageIndex > lastPage) {
+					pagination = { ...pagination, pageIndex: lastPage };
+					scheduleLoad();
+				}
+			}
+		} finally {
+			if (id === requestId) {
+				loading = false;
+				hasLoaded = true;
+			}
 		}
-		loading = false;
-		hasLoaded = true;
 	}
 
 	function trimOrNull(v: string): string | null {
@@ -181,10 +301,11 @@
 		addRows = [blankRow()];
 	}
 
+	/** The ticked participants, or with none ticked every one the list matches. */
 	async function exportParticipants() {
 		const { data, error: exportError } = await Participants.exportParticipants({
 			path: { project_id },
-			body: { participant_ids: selectedIds },
+			body: selectedCount > 0 ? selectionBody() : { filters: currentFilters() },
 			parseAs: 'blob'
 		});
 		if (exportError) {
@@ -291,11 +412,18 @@
 	}
 
 	async function deleteSelected() {
-		if (selectedIds.length === 0) return;
-		if (!confirm(`Delete ${selectedIds.length} participant(s)? This cannot be undone.`)) return;
+		if (selectedCount === 0) return;
+		if (
+			!confirm(
+				allMatching
+					? `Delete all ${selectedCount} participant(s) matching the current filters? This cannot be undone.`
+					: `Delete ${selectedCount} participant(s)? This cannot be undone.`
+			)
+		)
+			return;
 		const res = await Participants.deleteParticipants({
 			path: { project_id },
-			body: { participant_ids: selectedIds }
+			body: selectionBody()
 		});
 		if (res.error) {
 			toastApiError(res.error, 'Failed to delete participants');
@@ -376,10 +504,10 @@
 		<button
 			class="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:bg-secondary/40 hover:text-dark focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30"
 			onclick={exportParticipants}
-			disabled={isDemo || participants.length === 0}
-			title={selectedIds.length > 0
-				? `Export ${selectedIds.length} selected as CSV`
-				: 'Export all as CSV'}
+			disabled={isDemo || totalItems === 0}
+			title={selectedCount > 0
+				? `Export ${selectedCount} selected as CSV`
+				: `Export all ${totalItems} as CSV`}
 			aria-label="Export CSV"
 		>
 			<i class="fa-solid fa-file-arrow-down"></i>
@@ -493,24 +621,26 @@
 	{hasLoaded}
 	search
 	searchPlaceholder="Search name, email or PID..."
+	rowCount={totalItems}
 	rowLabel="participant"
+	allMatchingSelected={allMatching}
+	onSelectAllMatching={() => (allMatching = true)}
 	emptyTitle="No participants yet"
 	emptyDescription="Add participants directly, or upload a CSV or Excel file."
 >
 	{#snippet filters()}
-		{#if table.getColumn('participating')}
-			<FacetedFilter
-				title="Participating"
-				column={table.getColumn('participating')!}
-				options={[
-					{ value: 'true', label: 'Yes' },
-					{ value: 'false', label: 'No' }
-				]}
-			/>
-		{/if}
-		{#if table.getColumn('latest_interview_status')}
-			<FacetedFilter title="Status" column={table.getColumn('latest_interview_status')!} />
-		{/if}
+		<FacetedFilter
+			title="Participating"
+			column={table.getColumn('participating')!}
+			options={facetOptions(facets.participating, PARTICIPATING_LABELS)}
+			counts={facetCounts(facets.participating)}
+		/>
+		<FacetedFilter
+			title="Status"
+			column={table.getColumn('latest_interview_status')!}
+			options={facetOptions(facets.status)}
+			counts={facetCounts(facets.status)}
+		/>
 	{/snippet}
 
 	{#snippet selectionActions()}

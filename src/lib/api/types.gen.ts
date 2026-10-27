@@ -1327,16 +1327,6 @@ export type DeleteAccountRequest = {
 };
 
 /**
- * DeleteParticipantsRequest
- */
-export type DeleteParticipantsRequest = {
-    /**
-     * Participant Ids
-     */
-    participant_ids: Array<string>;
-};
-
-/**
  * DemoBudget
  *
  * A demo user's synthetic-interview budgets and how much of each is spent.
@@ -2120,16 +2110,6 @@ export type ExportMessagesRequest = {
      * Timezone
      */
     timezone?: string | null;
-};
-
-/**
- * ExportParticipantsRequest
- */
-export type ExportParticipantsRequest = {
-    /**
-     * Participant Ids
-     */
-    participant_ids?: Array<string> | null;
 };
 
 /**
@@ -4582,6 +4562,64 @@ export type ParticipantEmails = {
 };
 
 /**
+ * ParticipantFacets
+ *
+ * The values each participant filter can usefully offer, counted over the
+ * whole result set rather than the page the client holds.
+ */
+export type ParticipantFacets = {
+    /**
+     * Participating
+     */
+    participating?: Array<FacetCount>;
+    /**
+     * Status
+     */
+    status?: Array<FacetCount>;
+};
+
+/**
+ * ParticipantFilterParams
+ *
+ * The participant list's filters, as the list endpoint takes them.
+ *
+ * Shared with the bulk actions so that "all 1,234 selected" means exactly
+ * the rows the list counted -- with server-side paging the client only ever
+ * holds one page of their ids.
+ */
+export type ParticipantFilterParams = {
+    /**
+     * Search
+     */
+    search?: string | null;
+    /**
+     * Participating
+     */
+    participating?: boolean | null;
+    /**
+     * Statuses
+     */
+    statuses?: Array<InterviewStatus> | null;
+};
+
+/**
+ * ParticipantListResponse
+ *
+ * A page of participants plus the filter options that fit the query.
+ */
+export type ParticipantListResponse = {
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Items
+     */
+    items: Array<ParticipantPublic>;
+    facets?: ParticipantFacets;
+};
+
+/**
  * ParticipantPublic
  */
 export type ParticipantPublic = {
@@ -4627,6 +4665,19 @@ export type ParticipantPublic = {
      */
     latest_interview_at?: string | null;
     latest_interview_status?: InterviewStatus | null;
+};
+
+/**
+ * ParticipantSelection
+ *
+ * Participants picked either by id or by the list's filters, never both.
+ */
+export type ParticipantSelection = {
+    /**
+     * Participant Ids
+     */
+    participant_ids?: Array<string> | null;
+    filters?: ParticipantFilterParams | null;
 };
 
 /**
@@ -9546,7 +9597,7 @@ export type CreateProjectResponses = {
 export type CreateProjectResponse = CreateProjectResponses[keyof CreateProjectResponses];
 
 export type DeleteParticipantsData = {
-    body: DeleteParticipantsRequest;
+    body: ParticipantSelection;
     path: {
         /**
          * Project Id
@@ -9596,6 +9647,38 @@ export type GetParticipantsData = {
     };
     query?: {
         /**
+         * Offset
+         */
+        offset?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Column
+         *
+         * Column to sort by
+         */
+        column?: string;
+        /**
+         * Order
+         *
+         * Sorting order
+         */
+        order?: 'asc' | 'desc';
+        /**
+         * Search
+         */
+        search?: string | null;
+        /**
+         * Participating
+         */
+        participating?: boolean | null;
+        /**
+         * Statuses
+         */
+        statuses?: Array<InterviewStatus> | null;
+        /**
          * Folder Id
          */
         folder_id?: string | null;
@@ -9622,11 +9705,9 @@ export type GetParticipantsError = GetParticipantsErrors[keyof GetParticipantsEr
 
 export type GetParticipantsResponses = {
     /**
-     * Response Get Participants
-     *
      * Successful Response
      */
-    200: Array<ParticipantPublic>;
+    200: ParticipantListResponse;
 };
 
 export type GetParticipantsResponse = GetParticipantsResponses[keyof GetParticipantsResponses];
@@ -9814,7 +9895,7 @@ export type UpdateParticipantResponses = {
 export type UpdateParticipantResponse = UpdateParticipantResponses[keyof UpdateParticipantResponses];
 
 export type ExportParticipantsData = {
-    body: ExportParticipantsRequest;
+    body: ParticipantSelection;
     path: {
         /**
          * Project Id

@@ -556,13 +556,6 @@ export const zDeleteAccountRequest = z.object({
 });
 
 /**
- * DeleteParticipantsRequest
- */
-export const zDeleteParticipantsRequest = z.object({
-    participant_ids: z.array(z.string())
-});
-
-/**
  * DemoBudgetItem
  */
 export const zDemoBudgetItem = z.object({
@@ -783,13 +776,6 @@ export const zExperimentProjectPublic = z.object({
     project_id: z.string(),
     weight: z.number().nullish(),
     added_at: z.iso.datetime()
-});
-
-/**
- * ExportParticipantsRequest
- */
-export const zExportParticipantsRequest = z.object({
-    participant_ids: z.array(z.string()).nullish()
 });
 
 /**
@@ -1846,6 +1832,32 @@ export const zParticipantEmails = z.object({
 });
 
 /**
+ * ParticipantFacets
+ *
+ * The values each participant filter can usefully offer, counted over the
+ * whole result set rather than the page the client holds.
+ */
+export const zParticipantFacets = z.object({
+    participating: z.array(zFacetCount).optional().default([]),
+    status: z.array(zFacetCount).optional().default([])
+});
+
+/**
+ * ParticipantFilterParams
+ *
+ * The participant list's filters, as the list endpoint takes them.
+ *
+ * Shared with the bulk actions so that "all 1,234 selected" means exactly
+ * the rows the list counted -- with server-side paging the client only ever
+ * holds one page of their ids.
+ */
+export const zParticipantFilterParams = z.object({
+    search: z.string().max(200).nullish(),
+    participating: z.boolean().nullish(),
+    statuses: z.array(zInterviewStatus).nullish()
+});
+
+/**
  * ParticipantPublic
  */
 export const zParticipantPublic = z.object({
@@ -1861,6 +1873,27 @@ export const zParticipantPublic = z.object({
     created_at: z.iso.datetime(),
     latest_interview_at: z.iso.datetime().nullish(),
     latest_interview_status: zInterviewStatus.nullish()
+});
+
+/**
+ * ParticipantListResponse
+ *
+ * A page of participants plus the filter options that fit the query.
+ */
+export const zParticipantListResponse = z.object({
+    total: z.int(),
+    items: z.array(zParticipantPublic),
+    facets: zParticipantFacets.optional().default({ participating: [], status: [] })
+});
+
+/**
+ * ParticipantSelection
+ *
+ * Participants picked either by id or by the list's filters, never both.
+ */
+export const zParticipantSelection = z.object({
+    participant_ids: z.array(z.string()).nullish(),
+    filters: zParticipantFilterParams.nullish()
 });
 
 /**
@@ -4648,7 +4681,7 @@ export const zCreateProjectQuery = z.object({
  */
 export const zCreateProjectResponse = zProjectCreateResponse;
 
-export const zDeleteParticipantsBody = zDeleteParticipantsRequest;
+export const zDeleteParticipantsBody = zParticipantSelection;
 
 export const zDeleteParticipantsPath = z.object({
     project_id: z.string().nullable()
@@ -4663,15 +4696,20 @@ export const zGetParticipantsPath = z.object({
 });
 
 export const zGetParticipantsQuery = z.object({
+    offset: z.int().gte(0).optional().default(0),
+    limit: z.int().gte(1).lte(100).optional().default(20),
+    column: z.string().optional().default('created_at'),
+    order: z.enum(['asc', 'desc']).optional().default('desc'),
+    search: z.string().max(200).nullish(),
+    participating: z.boolean().nullish(),
+    statuses: z.array(zInterviewStatus).nullish(),
     folder_id: z.string().nullish()
 });
 
 /**
- * Response Get Participants
- *
  * Successful Response
  */
-export const zGetParticipantsResponse = z.array(zParticipantPublic);
+export const zGetParticipantsResponse = zParticipantListResponse;
 
 export const zAddParticipantBody = zParticipantCreate;
 
@@ -4727,7 +4765,7 @@ export const zUpdateParticipantQuery = z.object({
  */
 export const zUpdateParticipantResponse = zParticipantPublic;
 
-export const zExportParticipantsBody = zExportParticipantsRequest;
+export const zExportParticipantsBody = zParticipantSelection;
 
 export const zExportParticipantsPath = z.object({
     project_id: z.string().nullable()

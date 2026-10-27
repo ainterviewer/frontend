@@ -1065,6 +1065,11 @@ export class Participants {
     
     /**
      * Get Participants
+     *
+     * One page of participants, with the filter options that fit the query.
+     *
+     * `search` matches name, email and pid. `statuses` matches the status of each
+     * participant's most recent interview.
      */
     public static getParticipants<ThrowOnError extends boolean = false>(options: Options<GetParticipantsData, ThrowOnError>): RequestResult<GetParticipantsResponses, GetParticipantsErrors, ThrowOnError> {
         return (options.client ?? client).get<GetParticipantsResponses, GetParticipantsErrors, ThrowOnError>({
@@ -1148,6 +1153,9 @@ export class Participants {
     
     /**
      * Export Participants
+     *
+     * Export the selected participants as CSV. `filters` exports every
+     * participant matching them; empty filters, the whole project.
      */
     public static exportParticipants<ThrowOnError extends boolean = false>(options: Options<ExportParticipantsData, ThrowOnError>): RequestResult<ExportParticipantsResponses, ExportParticipantsErrors, ThrowOnError> {
         return (options.client ?? client).post<ExportParticipantsResponses, ExportParticipantsErrors, ThrowOnError>({
