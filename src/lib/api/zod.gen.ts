@@ -3850,6 +3850,7 @@ export const zOutgoingMessage = z.object({
     security_intervention: zSecurityIntervention.nullish().default(null),
     type: z.literal('message').optional().default('message'),
     can_answer: z.boolean().optional().default(true),
+    can_skip: z.boolean().optional().default(true),
     user_image: z.boolean().optional().default(false),
     progress: z.number().gte(0).lte(100).nullish().default(null),
     is_probe: z.boolean().optional().default(false),

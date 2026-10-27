@@ -6826,6 +6826,10 @@ export type OutgoingMessage = {
      */
     can_answer?: boolean;
     /**
+     * Can Skip
+     */
+    can_skip?: boolean;
+    /**
      * User Image
      */
     user_image?: boolean;

@@ -37,6 +37,9 @@ export interface Message {
 	/** A survey message whose answer has been submitted. Set live by the chat
 	 *  client; the transcript builds already-answered messages without it. */
 	answered?: boolean;
+	/** A survey message the respondent skipped rather than answered. Set live
+	 *  by the chat client, so the item stops taking input. */
+	skipped?: boolean;
 	/** A question whose answer is the survey item pushed a beat after it. The
 	 *  two are one turn, and in that beat the list ends on what looks like an
 	 *  ordinary typed-answer question — see `surveyActive` in `InterviewChat`. */
@@ -46,6 +49,8 @@ export interface Message {
 	/** Server-side recording a transcribed voice message came from. */
 	audio_file?: string | null;
 	can_answer?: boolean;
+	/** The guide's `can_skip` for the question this asks. Absent means yes. */
+	can_skip?: boolean;
 	user_image?: boolean;
 	question_label?: string;
 	section?: number | null;

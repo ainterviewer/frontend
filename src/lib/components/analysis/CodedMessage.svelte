@@ -146,7 +146,6 @@
 			<InterviewMessage
 				{message}
 				{lang}
-				isLast={false}
 				readonly={true}
 				onFeedback={() => {}}
 				onSkip={() => {}}

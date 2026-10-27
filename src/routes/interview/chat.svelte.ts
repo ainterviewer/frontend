@@ -631,6 +631,13 @@ export class ChatClient {
 
 		this.markHealthy();
 
+		// A skipped survey stays in the list, but no longer takes an answer.
+		const last = this.messages[this.messages.length - 1];
+		if (last?.survey_item && !last.answered) {
+			last.answered = true;
+			last.skipped = true;
+		}
+
 		// Add to local UI
 		this.messages.push({
 			type: 'sent',
@@ -771,14 +778,16 @@ export class ChatClient {
 							type: 'received',
 							text: data.content,
 							message_id: data.message_id,
-							survey_prompt: true
+							survey_prompt: true,
+							can_skip: data.can_skip
 						});
 					}
 					await this.sleep(200);
 					await this.addMessage({
 						type: 'sent', // Survey is technically received content
 						survey_item: data.survey_item,
-						message_id: data.message_id
+						message_id: data.message_id,
+						can_skip: data.can_skip
 					});
 					this.inputEnabled = false; // Input disabled while survey is active
 				} else if (data.content) {
@@ -786,7 +795,8 @@ export class ChatClient {
 						type: 'received',
 						text: data.content,
 						message_id: data.message_id,
-						can_answer: data.can_answer
+						can_answer: data.can_answer,
+						can_skip: data.can_skip
 					});
 				}
 

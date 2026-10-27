@@ -55,20 +55,36 @@
 	const reportText = $derived(getReportText(lang));
 
 	/**
-	 * Whether skipping is on the table for the question just reported.
+	 * The index of the message that offers "Skip", or -1 for none.
 	 *
 	 * The skip control message applies to whatever question the interview is
-	 * waiting on, so it may only be offered for the last message — and only
-	 * when that message is something the respondent was actually asked. The
-	 * same two tests `InterviewMessage` uses to show the Skip button, or the
-	 * dialog would offer to skip a question and skip a different one.
+	 * waiting on, so it is only offered on that question -- when it is something
+	 * the respondent was actually asked (`can_answer`; a section intro takes no
+	 * answer and the next message arrives on its own), and when the guide lets
+	 * it be skipped (`can_skip`). Usually that is the last message. A survey's
+	 * options arrive as a message of their own after the question, so for one
+	 * still waiting on an answer it is the question bubble before them.
 	 */
-	let reportedQuestionIsCurrent = $derived.by(() => {
-		if (reportingMessageId === null) return false;
-		const last = chat.messages[chat.messages.length - 1];
-		if (!last || last.message_id !== reportingMessageId) return false;
-		return last.type === 'received' && last.can_answer !== false;
+	let skippableIndex = $derived.by(() => {
+		const i = chat.messages.length - 1;
+		const last = chat.messages[i];
+		if (!last || last.can_skip === false) return -1;
+		if (last.survey_item) {
+			const prompt = chat.messages[i - 1];
+			const isPrompt =
+				prompt?.survey_prompt && String(prompt.message_id) === String(last.message_id);
+			return !last.answered && isPrompt ? i - 1 : -1;
+		}
+		return last.type === 'received' && last.can_answer !== false ? i : -1;
 	});
+
+	// The dialog offers to skip only the question the Skip button is on, or it
+	// would offer to skip one question and skip another.
+	let reportedQuestionSkippable = $derived(
+		reportingMessageId !== null &&
+			skippableIndex >= 0 &&
+			chat.messages[skippableIndex].message_id === reportingMessageId
+	);
 
 	let imageUpload = $state(false);
 
@@ -346,7 +362,7 @@
 					<InterviewMessage
 						message={msg}
 						{lang}
-						isLast={i === chat.messages.length - 1}
+						skippable={i === skippableIndex}
 						onFeedback={(f: 'positive' | 'negative' | null, id: string | number) =>
 							chat.sendFeedback(f, id)}
 						onSkip={() => chat.sendSkip()}
@@ -603,7 +619,7 @@
 <ReportDialog
 	show={reportingMessageId !== null}
 	text={reportText}
-	canSkip={reportedQuestionIsCurrent}
+	canSkip={reportedQuestionSkippable}
 	onSubmit={(reason: ReportReason, comment: string | null) =>
 		reportingMessageId === null
 			? Promise.resolve(false)

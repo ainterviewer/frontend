@@ -18,7 +18,9 @@
 	let {
 		message,
 		lang = 'en',
-		isLast = false,
+		// Whether this is the question the interview is waiting on and the
+		// respondent may skip it; `InterviewChat` decides.
+		skippable = false,
 		readonly = false,
 		onFeedback,
 		onSkip,
@@ -38,21 +40,6 @@
 	// drawn into the conversation the respondent is reading.
 	let reports = $derived(message.reports ?? []);
 	let showReportIndicator = $derived(readonly && reports.length > 0);
-
-	/**
-	 * Whether there is anything here to skip.
-	 *
-	 * A guide message with `can_answer: false` is something the interviewer
-	 * says, not something it asks — a section intro, a hand-off — and the
-	 * respondent is given no input for it. Offering "Skip" on one invites them
-	 * to skip a question that was never put to them, and the next message
-	 * arrives on its own regardless.
-	 *
-	 * The same test the socket uses to decide whether to enable the input, so
-	 * the button and the textbox appear and disappear together rather than each
-	 * having its own idea of what can be answered.
-	 */
-	let answerable = $derived(message.can_answer !== false);
 </script>
 
 <MessageBubble
@@ -65,7 +52,7 @@
 	condition={message.condition ?? null}
 	time={message.created_at ?? null}
 	skipped={message.skipped_by_condition ?? false}
-	{readonly}
+	readonly={readonly || message.skipped === true}
 	{lang}
 	onSurveyAnswer={(given: unknown) => onSurveyAnswer(given, message.message_id)}
 >
@@ -107,7 +94,7 @@
 						onFeedback={(f: 'positive' | 'negative' | null) => onFeedback(f, message.message_id)}
 					/>
 					<ReportButton label={reportLabel} onReport={() => onReport(message.message_id)} />
-					{#if isLast && answerable}
+					{#if skippable}
 						<SkipButton {onSkip} />
 					{/if}
 				{/if}
