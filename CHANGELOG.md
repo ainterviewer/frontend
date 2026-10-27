@@ -4,6 +4,21 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.10] - 2026-10-27
+
+### Features
+
+- (participants) Page, sort and filter the participant table on the server
+- (experiments) Restore the experiment link, with balancing and quotas
+- (experiments) Edit an experiment
+- (interview) Offer Skip only where the guide allows it
+- (guide) Note when a condition reads a question that may go unasked
+
+### Bug Fixes
+
+- (experiments) Disable projects the user cannot edit in the picker
+- (interview) Resume from the interview cookie only
+
 ## [0.9.9] - 2026-10-26
 
 ### Bug Fixes
