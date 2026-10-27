@@ -4,7 +4,7 @@
 	import { Auth, type InterviewConfig, type InterviewType, type ReportReason } from '$lib/api';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 
-	import { type ChatClient, clearInterviewSession } from '../../../routes/interview/chat.svelte';
+	import { type ChatClient } from '../../../routes/interview/chat.svelte';
 	import { getReportText } from '../../../routes/interview/reportText';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
@@ -249,8 +249,6 @@
 			console.error('Failed to exit interview:', error);
 			return;
 		}
-
-		clearInterviewSession(chat.project_id);
 
 		if (interviewType === 'manual_test' && window.opener) {
 			window.close();

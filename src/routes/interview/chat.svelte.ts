@@ -45,20 +45,6 @@ export function parseInterviewIdFromToken(token: string): string | null {
 	}
 }
 
-// The credential is the httponly `interview_token` cookie, which the browser
-// sends automatically on the WebSocket handshake. JavaScript cannot (and must
-// not) read it, so this entry can only ever be a guess at whether the cookie is
-// still there — the cookie is authoritative, and this mirrors its Max-Age
-// (APP jwt_interview_token_expiration, 3 days) as a best effort.
-//
-// The two can still diverge (cleared cookies, a different browser), which is
-// why divergence must be *recoverable* rather than merely unlikely: the
-// backend closes an unauthenticated socket with WS_UNAUTHORIZED and we clear
-// this entry and start over. Do not treat matching numbers here as a
-// guarantee; that assumption is what previously stranded respondents in a
-// reconnect loop.
-const SESSION_TTL_MS = 3 * 24 * 60 * 60 * 1000;
-
 // How long a connection must survive before it counts as healthy. A backend
 // that crashes part-way through a turn still opens the socket and replays the
 // stored history first, so "the server sent something" is not evidence that
@@ -88,56 +74,6 @@ const MAX_TRANSIENT_RETRIES = 3;
 // means the server is accepting us and then failing, which is a broken
 // interview rather than a broken network -- worth saying so.
 const SHORT_LIVED_OPENS_FOR_SERVICE_FAILURE = 2;
-
-function sessionKey(projectId: string): string {
-	return `interview_session:${projectId}`;
-}
-
-interface StoredSession {
-	interview_id: string;
-	project_id: string;
-	expires_at: number;
-}
-
-export function saveInterviewSession(projectId: string, interviewId: string): void {
-	if (!browser) return;
-	try {
-		const session: StoredSession = {
-			interview_id: interviewId,
-			project_id: projectId,
-			expires_at: Date.now() + SESSION_TTL_MS
-		};
-		localStorage.setItem(sessionKey(projectId), JSON.stringify(session));
-	} catch (e) {
-		console.error('Failed to persist interview session', e);
-	}
-}
-
-export function getStoredInterviewId(projectId: string): string | null {
-	if (!browser) return null;
-	try {
-		const raw = localStorage.getItem(sessionKey(projectId));
-		if (!raw) return null;
-		const session: StoredSession = JSON.parse(raw);
-		if (session.project_id !== projectId || session.expires_at <= Date.now()) {
-			localStorage.removeItem(sessionKey(projectId));
-			return null;
-		}
-		return session.interview_id;
-	} catch (e) {
-		console.error('Failed to read interview session', e);
-		return null;
-	}
-}
-
-export function clearInterviewSession(projectId: string): void {
-	if (!browser) return;
-	try {
-		localStorage.removeItem(sessionKey(projectId));
-	} catch (e) {
-		console.error('Failed to clear interview session', e);
-	}
-}
 
 /** A message from the interview's security check, shown in a modal rather
  *  than in the chat. */
@@ -520,8 +456,8 @@ export class ChatClient {
 
 	/** The backend closed us with WS_UNAUTHORIZED: the interview token is gone
 	 *  or no longer valid, so this interview can never be resumed from this
-	 *  browser. Drop the stale resume entry and surface it — `startOver()`
-	 *  takes the respondent back through consent into a new interview. */
+	 *  browser. Drop the dead cookie and surface it — `startOver()` takes the
+	 *  respondent back through consent into a new interview. */
 	private async handleSessionExpired() {
 		this.disableReconnect();
 		this.isReconnecting = false;
@@ -529,10 +465,6 @@ export class ChatClient {
 		this.inputEnabled = false;
 		this.forceTypingIndicator = false;
 		this.sessionExpired = true;
-
-		// Clear the local entry first: it is the thing that decides whether the
-		// next load tries to resume, and leaving it behind reproduces the loop.
-		clearInterviewSession(this.project_id);
 
 		const { error: exitError } = await Auth.exit();
 		if (exitError) {
@@ -542,7 +474,6 @@ export class ChatClient {
 
 	/** Discard the expired session and start a fresh interview. */
 	startOver() {
-		clearInterviewSession(this.project_id);
 		window.location.reload();
 	}
 
@@ -929,7 +860,6 @@ export class ChatClient {
 					if (exitError) {
 						console.error('Error during exit', exitError);
 					}
-					clearInterviewSession(this.project_id);
 					window.location.reload();
 					return;
 				}
@@ -941,7 +871,6 @@ export class ChatClient {
 					if (exitError) {
 						console.error('Error during exit', exitError);
 					}
-					clearInterviewSession(this.project_id);
 					// NOTE:
 					// Type received to have styling applied, consider styling special
 					// tokens for system as well

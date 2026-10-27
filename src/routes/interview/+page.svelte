@@ -6,13 +6,7 @@
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
 
-	import {
-		ChatClient,
-		createInterview,
-		getStoredInterviewId,
-		parseInterviewIdFromToken,
-		saveInterviewSession
-	} from './chat.svelte';
+	import { ChatClient, createInterview, parseInterviewIdFromToken } from './chat.svelte';
 	import { getModalText } from './modalText';
 
 	interface PageData {
@@ -83,12 +77,11 @@
 			return;
 		}
 
-		// The cookie is preferred over the stored session: it is the credential
-		// the websocket will actually be authenticated with, so it cannot
-		// disagree with what the server is willing to serve, and it is present
-		// in a browser that has no stored session at all -- which is exactly
-		// the browser a resume link is opened in.
-		const existingInterviewId = data.resumeInterviewId ?? getStoredInterviewId(projectId);
+		// Resumed from the `interview_token` cookie alone, read server-side: it
+		// is the credential the websocket authenticates with, and the socket
+		// serves the interview *it* names, whatever id this page passes.
+		forgetStoredSessions();
+		const existingInterviewId = data.resumeInterviewId;
 
 		if (existingInterviewId && !(interviewType === 'manual_test')) {
 			initializeChat(existingInterviewId);
@@ -101,6 +94,21 @@
 
 		return () => chat?.disconnect();
 	});
+
+	/**
+	 * Remove the resume entries this page used to keep in localStorage. They
+	 * could name an interview other than the cookie's, and the socket would then
+	 * serve the cookie's interview inside this project's page.
+	 */
+	function forgetStoredSessions() {
+		try {
+			for (const key of Object.keys(localStorage)) {
+				if (key.startsWith('interview_session:')) localStorage.removeItem(key);
+			}
+		} catch {
+			// Storage blocked: then nothing was stored either.
+		}
+	}
 
 	async function createInterviewAndGetId(): Promise<string | null> {
 		const result = await createInterview(
@@ -117,7 +125,6 @@
 			const parsedId = parseInterviewIdFromToken(result.token);
 			if (parsedId) {
 				interviewId = parsedId;
-				saveInterviewSession(projectId, parsedId);
 				return parsedId;
 			} else {
 				console.error('Failed to parse interview ID from token');

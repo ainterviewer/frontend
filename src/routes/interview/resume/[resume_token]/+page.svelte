@@ -6,8 +6,6 @@
 	import Wave from '$lib/components/Wave.svelte';
 	import { errorDetail } from '$lib/utils/errors';
 
-	import { saveInterviewSession } from '../../chat.svelte';
-
 	// Nothing happens on arrival, deliberately. The link is single-use, and
 	// corporate mail security (Outlook Safe Links and friends) pre-fetches URLs
 	// out of email before the recipient clicks. Redeeming on load would let a
@@ -38,9 +36,7 @@
 
 		// The interview page reads which interview to reconnect to out of the
 		// httponly cookie the redeem response just set, so nothing identifying
-		// needs to travel in this URL. The stored entry is only a fallback for
-		// the existing reconnect path.
-		saveInterviewSession(data.project_id, data.interview_id);
+		// needs to travel in this URL.
 		await goto(resolve(`/interview?id=${data.project_id}`));
 	}
 </script>
