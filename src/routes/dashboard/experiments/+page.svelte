@@ -6,7 +6,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Experiments } from '$lib/api/sdk.gen';
-	import type { ExperimentPublic } from '$lib/api/types.gen';
+	import type { ExperimentPublic, FolderWithProjectsPublic } from '$lib/api/types.gen';
 	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
@@ -198,6 +198,22 @@
 			default:
 				return 'bg-gray-100 text-gray-800 border-gray-200';
 		}
+	}
+
+	/**
+	 * Whether the reader may put this folder's projects in an experiment: the
+	 * API asks for the editor role on each, and platform admins pass every
+	 * role check. Only to disable the choice -- the API checks for itself.
+	 */
+	function canLink(folder: FolderWithProjectsPublic): boolean {
+		const user = page.data.user;
+		if (!user) return false;
+		if (user.scope === 'admin') return true;
+		return (folder.collaborators ?? []).some(
+			(collaborator) =>
+				collaborator.user.id === user.id &&
+				(collaborator.role === 'editor' || collaborator.role === 'admin')
+		);
 	}
 
 	function handleCheckboxChange(projectId: string, event: Event) {
@@ -421,18 +437,34 @@
 					<div class="max-h-60 space-y-4 overflow-y-auto">
 						{#each folders as folder (folder.id)}
 							{#if folder.projects.length > 0}
+								{@const linkable = canLink(folder)}
 								<div>
-									<h3 class="mb-2 text-xs font-semibold text-gray-500 uppercase">{folder.title}</h3>
+									<h3 class="mb-2 text-xs font-semibold text-gray-500 uppercase">
+										{folder.title}
+										{#if !linkable}
+											<span class="ml-1 font-normal normal-case">
+												&middot; needs editor access
+											</span>
+										{/if}
+									</h3>
 									<div class="space-y-2 pl-2">
 										{#each folder.projects as project (project.id)}
 											<div class="flex items-center justify-between">
-												<label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+												<label
+													class="flex items-center gap-2 text-sm {linkable
+														? 'cursor-pointer text-gray-700'
+														: 'cursor-not-allowed text-gray-400'}"
+													title={linkable
+														? undefined
+														: 'You need the editor role in this folder to add its projects to an experiment'}
+												>
 													<input
 														type="checkbox"
 														value={project.id}
 														bind:group={selectedProjectIds}
 														onchange={(e) => handleCheckboxChange(project.id, e)}
-														class="rounded border-gray-300 text-primary focus:ring-primary"
+														disabled={!linkable}
+														class="rounded border-gray-300 text-primary focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
 													/>
 													{project.title}
 												</label>
