@@ -13,6 +13,7 @@
 	let expanded = $derived(!collapsed);
 
 	let user = $derived(page.data.user);
+	let docsUrl = $derived(page.data.instance?.docs_url);
 	let isAdmin = $derived(user?.scope === 'admin');
 	let hasPreviewFeatures = $derived(!!user?.with_preview_features);
 
@@ -113,26 +114,22 @@
 		</ul>
 	</div>
 
-	<div
-		class="group absolute bottom-6 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
-	>
-		<HoverInfo text="Documentation" sideOffset={12} asChild>
-			{#snippet children({ props })}
-				<a
-					{...props}
-					class="pt-1"
-					href="https://docs.ainterviewer.dk"
-					target="_blank"
-					aria-label="Documentation"
-				>
-					<span
-						data-tour="documentation"
-						class="fa-regular fa-question-circle text-2xl text-gray-300 hover:text-gray-100"
-					></span>
-				</a>
-			{/snippet}
-		</HoverInfo>
-	</div>
+	{#if docsUrl}
+		<div
+			class="group absolute bottom-6 left-0 w-full overflow-visible px-4 py-2 text-center text-xs text-light/60"
+		>
+			<HoverInfo text="Documentation" sideOffset={12} asChild>
+				{#snippet children({ props })}
+					<a {...props} class="pt-1" href={docsUrl} target="_blank" aria-label="Documentation">
+						<span
+							data-tour="documentation"
+							class="fa-regular fa-question-circle text-2xl text-gray-300 hover:text-gray-100"
+						></span>
+					</a>
+				{/snippet}
+			</HoverInfo>
+		</div>
+	{/if}
 
 	{#if platformVersion}
 		<div

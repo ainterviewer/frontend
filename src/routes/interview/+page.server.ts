@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 
-import { Auth, Interviews, type InterviewType, Projects } from '$lib/api';
+import { Auth, Default, Interviews, type InterviewType, Projects } from '$lib/api';
 import { hasErrorCode } from '$lib/utils/errors';
 
 import type { PageServerLoad } from './$types';
@@ -71,11 +71,18 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 		path: { project_id }
 	});
 
+	// Who respondents should write to about their interview: this deployment's
+	// operator. On failure the help text simply leaves the paragraph out.
+	const { data: instance, error: instanceError } = await Default.getInstance();
+
 	if (configError) {
 		console.error('Failed to load interview config', configError);
 	}
 	if (modelsError) {
 		console.error('Failed to load interview models', modelsError);
+	}
+	if (instanceError) {
+		console.error('Failed to load instance info', instanceError);
 	}
 
 	const langParam = url.searchParams.get('lang');
@@ -162,6 +169,7 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 		interviewConfig,
 		interviewModels,
 		isProjectOwnerDemoUser: isProjectOwnerDemoUser ?? false,
+		contactEmail: instance?.contact_email ?? null,
 		authError,
 		externalParams: Object.keys(externalParams).length > 0 ? externalParams : null,
 		referer,

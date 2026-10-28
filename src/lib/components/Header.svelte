@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { Auth } from '$lib/api';
 	import type {
+		InstanceInfo,
 		PlatformRelease,
 		ProjectPublic,
 		UserNotifications,
@@ -24,10 +25,22 @@
 			releases?: PlatformRelease[];
 			/** Badge counts from the dashboard layout; null if they failed to load. */
 			notifications?: UserNotifications | null;
+			/** This deployment's contact and links; null if they failed to load. */
+			instance?: InstanceInfo | null;
 		};
 	}
 
 	let { data }: HeaderProps = $props();
+
+	// Whoever runs this deployment grants upgrades, so the notice points there.
+	let contactEmail = $derived(data.instance?.contact_email);
+	let demoNotice = $derived(
+		"You're currently active as a demo user, which means that you have restricted access to parts of the platform.<br><br>" +
+			(contactEmail
+				? `Please get <a class='text-primary underline' href='mailto:${contactEmail}'>in contact</a> with us`
+				: 'Please get in contact with us') +
+			' if you need an upgrade, allowing you to use all features of the platform.'
+	);
 	let { projectId, languageCode } = $derived(parseProjectRoute(page.url.pathname));
 	// Carried into both switchers so switching keeps you on the page you are on.
 	let subRoute = $derived(portableSubRoute(page.url.pathname, page.route.id));
@@ -131,12 +144,7 @@
 				<!-- </li> -->
 				{#if data.user?.scope === 'demo'}
 					<li class="m-2 block p-2 text-center text-sm text-gray-200 no-underline hover:text-light">
-						<HoverInfo
-							text="You're currently active as a demo user, which means that you have restricted access to parts of the platform.
-            <br><br>
-            Please get <a class='text-primary underline' href='mailto:contact@ainterviewer.dk'>in contact</a> with us if you need an upgrade, allowing you to use all features of the platform."
-							>Demo Access</HoverInfo
-						>
+						<HoverInfo text={demoNotice}>Demo Access</HoverInfo>
 					</li>
 				{/if}
 				<li>

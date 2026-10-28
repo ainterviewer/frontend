@@ -5,7 +5,7 @@
 	import { formatDay } from '$lib/utils/datetime';
 	import { whatsNew } from '$lib/whatsNew.svelte';
 
-	let { releases = [] }: { releases?: PlatformRelease[] } = $props();
+	let { releases = [], docsUrl }: { releases?: PlatformRelease[]; docsUrl?: string } = $props();
 
 	const KIND_LABELS = {
 		new: 'New',
@@ -131,17 +131,21 @@
 				{/each}
 			</div>
 
-			<div class="border-t border-dark/10 px-6 py-3 text-center">
-				<a
-					class="text-sm text-primary hover:underline"
-					href="https://docs.ainterviewer.dk/releases/"
-					target="_blank"
-					rel="noopener"
-				>
-					Full release notes
-					<span class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></span>
-				</a>
-			</div>
+			{#if docsUrl}
+				<div class="border-t border-dark/10 px-6 py-3 text-center">
+					<!-- eslint-disable svelte/no-navigation-without-resolve -- external docs site, not a route -->
+					<a
+						class="text-sm text-primary hover:underline"
+						href="{docsUrl}/releases/"
+						target="_blank"
+						rel="noopener"
+					>
+						Full release notes
+						<span class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></span>
+					</a>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}

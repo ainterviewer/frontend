@@ -16,6 +16,7 @@
 		interviewConfig: InterviewConfig;
 		interviewModels: string[];
 		isProjectOwnerDemoUser: boolean;
+		contactEmail: string | null;
 		availableLanguages: ProjectLanguage[];
 		resumeInterviewId?: string | null;
 		authError?: boolean;
@@ -40,7 +41,7 @@
 	// Help/Exit modal text — owned by the frontend, selected by language and
 	// interpolated with the underlying model(s) returned by the interview config.
 	const models = $derived(data.interviewModels ?? []);
-	const modalText = $derived(getModalText(lang, models));
+	const modalText = $derived(getModalText(lang, models, data.contactEmail));
 
 	// Chat client - initialized after consent/interview creation
 	let chat = $state<ChatClient | null>(null);

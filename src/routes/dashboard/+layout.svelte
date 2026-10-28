@@ -53,7 +53,7 @@
 
 <!-- Rendered once here: the sidebar is per-route, but both it and the header
      open this dialog. -->
-<WhatsNewModal releases={data.releases} />
+<WhatsNewModal releases={data.releases} docsUrl={data.instance?.docs_url} />
 
 <div class="bg-dark">
 	<!-- How tall a table card may grow before it scrolls its own rows instead of

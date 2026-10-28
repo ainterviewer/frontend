@@ -2552,6 +2552,29 @@ export type Image = {
 };
 
 /**
+ * InstanceInfo
+ *
+ * What the frontend needs to know about this deployment.
+ *
+ * Public, because the interview page shows the contact address to
+ * respondents who have no account.
+ */
+export type InstanceInfo = {
+    /**
+     * Contact Email
+     */
+    contact_email: string;
+    /**
+     * Website Url
+     */
+    website_url: string;
+    /**
+     * Docs Url
+     */
+    docs_url: string;
+};
+
+/**
  * InterviewConfig
  */
 export type InterviewConfig = {
@@ -15764,6 +15787,35 @@ export type GetUserDemoBudgetResponses = {
 };
 
 export type GetUserDemoBudgetResponse = GetUserDemoBudgetResponses[keyof GetUserDemoBudgetResponses];
+
+export type GetInstanceData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/instance';
+};
+
+export type GetInstanceErrors = {
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetInstanceError = GetInstanceErrors[keyof GetInstanceErrors];
+
+export type GetInstanceResponses = {
+    /**
+     * Successful Response
+     */
+    200: InstanceInfo;
+};
+
+export type GetInstanceResponse = GetInstanceResponses[keyof GetInstanceResponses];
 
 export type GetModelsData = {
     body?: never;

@@ -1035,6 +1035,20 @@ export const zImage = z.object({
 });
 
 /**
+ * InstanceInfo
+ *
+ * What the frontend needs to know about this deployment.
+ *
+ * Public, because the interview page shows the contact address to
+ * respondents who have no account.
+ */
+export const zInstanceInfo = z.object({
+    contact_email: z.string(),
+    website_url: z.string(),
+    docs_url: z.string()
+});
+
+/**
  * InterviewDurationStats
  *
  * Statistics about interview duration (active time spent).
@@ -6435,6 +6449,11 @@ export const zGetUserDemoBudgetPath = z.object({
  * Successful Response
  */
 export const zGetUserDemoBudgetResponse = zDemoBudget;
+
+/**
+ * Successful Response
+ */
+export const zGetInstanceResponse = zInstanceInfo;
 
 /**
  * Response Get Models

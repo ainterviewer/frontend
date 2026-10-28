@@ -25,6 +25,7 @@ export const load: LayoutServerLoad = async ({ cookies, depends, url }) => {
 		platformVer,
 		releases,
 		notificationsResponse,
+		instanceResponse,
 		projectResponse,
 		permissionsResponse
 	] = await Promise.all([
@@ -34,6 +35,9 @@ export const load: LayoutServerLoad = async ({ cookies, depends, url }) => {
 		// Badge counts for the account menu. In this fan-out rather than a
 		// client fetch so the dot is right on the first paint.
 		Me.getNotifications(),
+		// This deployment's contact address and docs, for the demo notice, the
+		// docs link and the "What's new" footer.
+		Default.getInstance(),
 		projectId
 			? Projects.getProject({
 					path: { project_id: projectId }
@@ -92,6 +96,8 @@ export const load: LayoutServerLoad = async ({ cookies, depends, url }) => {
 		permissions,
 		platformVersion: platformVer.data,
 		releases: releases.data ?? [],
-		notifications: notificationsResponse.data ?? null
+		notifications: notificationsResponse.data ?? null,
+		// Null on failure; the links and contact that need it are left out.
+		instance: instanceResponse.data ?? null
 	};
 };
