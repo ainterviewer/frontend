@@ -4,6 +4,13 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.11] - 2026-10-28
+
+### Internal
+
+- Document commit types and the Preview: trailer
+- (instance) Take contact address and docs links from the backend
+
 ## [0.9.10] - 2026-10-27
 
 ### Features
