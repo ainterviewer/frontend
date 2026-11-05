@@ -250,6 +250,8 @@
 						<input
 							autocomplete="off"
 							id="welcome-title"
+							lang={language}
+							spellcheck="true"
 							bind:value={welcome.title[language]}
 							placeholder={isUntranslated(welcome.title, language)
 								? title
@@ -310,6 +312,8 @@
 						<textarea
 							autocomplete="off"
 							id="welcome-text"
+							lang={language}
+							spellcheck="true"
 							bind:value={welcome.text[language]}
 							placeholder={isUntranslated(welcome.text, language)
 								? text

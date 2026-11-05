@@ -170,6 +170,8 @@
 						<input
 							autocomplete="off"
 							id="consent-title"
+							lang={language}
+							spellcheck="true"
 							bind:value={consent.title[language]}
 							placeholder={isUntranslated(consent.title, language)
 								? title
@@ -188,6 +190,8 @@
 						<textarea
 							autocomplete="off"
 							id="consent-text"
+							lang={language}
+							spellcheck="true"
 							bind:value={consent.text[language]}
 							placeholder={isUntranslated(consent.text, language)
 								? text
