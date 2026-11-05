@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.14] - 2026-11-05
+
+### Features
+
+- (guide) Preview survey items as respondents see them
+- (guide) Keep compatible settings when changing a survey item's type
+
+### Bug Fixes
+
+- (interview) Don't show text-less survey options as selected
+
 ## [0.9.13] - 2026-11-05
 
 ### Features
