@@ -9,6 +9,59 @@ You are able to use the Svelte MCP server, where you have access to comprehensiv
 - Server loads and endpoints authenticate SDK calls automatically: `hooks.server.ts` gives the client `auth: currentAccessToken` (`src/lib/server/auth.ts`), which sends the current request's `access_token` cookie. Don't pass a `cookie` header by hand, and never put a token in the client's global `headers` config — the client is shared by every user's requests on the server. This only covers operations whose OpenAPI declares the `access_token` security scheme; a backend route that reads `request.cookies` itself gets no token from a server load.
 - Use TailwindCSS, global theme and styles stored in `src/app.css`
 
+## Onboarding tours (driver.js)
+
+Guided tours are driver.js, built through `src/lib/onboarding.ts`. There are
+three: the dashboard (`src/routes/dashboard/+page.svelte`), the project
+layout (`projects/[project_id]/+layout.svelte`) and the interview guide
+(`setup/guide/+page.svelte`). Update the tour in the same change as the UI it
+describes: a new control gets a step, and a removed one loses its step.
+
+- **Steps have stable ids.** Each step is a `TourStep` with an `id`, passed
+  through `tourSteps(tour, steps, LEGACY_TOUR_STEPS)`. The ids a user has seen
+  are stored in localStorage under `<tour>-onboarded`. A first visit gets the
+  whole tour, and later visits only the unseen steps, behind a "What's new"
+  intro. So adding a step needs no other bookkeeping.
+- **Reworded steps get a new id** (`language` → `language-v2`) when the change
+  is big enough that returning users should see the step again. A step that
+  only works after the one before it changes id along with that step.
+- **`LEGACY_TOUR_STEPS` is frozen.** It lists the steps that users who took a
+  tour before ids existed have seen. Never add new ids to it, or nobody gets
+  shown the new step.
+- **Point at `data-tour` attributes**, not at classes or structure:
+  `element: '[data-tour="…"]'`. For a control that repeats (one per question
+  or section), only the first instance carries the attribute: the component
+  takes a `dataTour` prop, and the parent sets it on index 0 only. See
+  `SortableQuestion` → `TryFromHere`.
+- **A "What's new" tour can start at any step**, so a step must not depend on
+  an earlier step having run. Do setup for an element that is not rendered
+  yet (an open menu, a panel behind a toggle) in a tour-wide
+  `onHighlightStarted` that keys off the step's selector, and undo it in
+  `onDestroyed` (see the dashboard tour). The older pattern opens the panel
+  in the previous step's `onNextClick` and then calls `tour.moveNext()` once
+  the transition has settled (guide `question-settings`). That only works
+  when both steps change id together.
+- **Preview features:** include the step only for `with_preview_features`
+  users (`...(previewFeatures ? [step] : [])`), and mark it with
+  `PREVIEW_BADGE` after the title or the clause that mentions the feature. A
+  step left out is not marked as seen, so it shows up as new when the feature
+  graduates.
+- **Driver config:** every tour sets `showProgress: true` and
+  `onPopoverRender: (p) => addSkipOnboardingButton(p, tour)` (the "Don't show
+  any guided tours" link). It starts in `onMount` and returns early when
+  `tourSteps` gives an empty list, which happens when the user opted out or
+  has nothing new to see. Sidebar items are highlighted flush
+  (`stagePadding: 0, stageRadius: 0`). A final step without an element uses
+  `popoverClass: 'driver-centered'`, styled in the project layout.
+- **Sticky overlays hide elements from driver.js.** It only scrolls to an
+  element outside the viewport, so an element under a sticky bar counts as
+  visible and gets highlighted behind it. The guide tour scrolls any step
+  element the `[data-action-bar]` overlaps to the middle of the view, in a
+  tour-wide `onHighlightStarted` (`uncoverFromActionBar`). A tour on another
+  page with an action bar needs the same.
+- Popover text is HTML strings. Use `<u>` for the names of features. Keep each
+  step to what the control does and what the user must know before using it.
+
 ## Branching & Merging
 
 History on `main` is linear: no merge commits.
