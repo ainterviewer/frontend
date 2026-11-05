@@ -13,10 +13,12 @@ You are able to use the Svelte MCP server, where you have access to comprehensiv
 
 History on `main` is linear: no merge commits.
 
-- Work on a branch (`feat/…`, `fix/…`, `refactor/…`), never directly on `main`.
-  The exception is the release commit `just publish` makes, which lands on
-  `main` directly.
-- To land it, rebase onto `main` and fast-forward:
+- Smaller fixes and self-contained features, a commit that stands on its own,
+  may be committed straight to `main`. So does the release commit
+  `just publish` makes.
+- Anything larger, or spread over several commits, goes on a branch
+  (`feat/…`, `fix/…`, `refactor/…`).
+- To land a branch, rebase onto `main` and fast-forward:
   `git rebase main <branch> && git switch main && git merge --ff-only <branch>`.
   Several branches land one after another, each rebased onto the result of
   the last.
