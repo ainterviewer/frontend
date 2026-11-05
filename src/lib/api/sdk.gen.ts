@@ -3382,6 +3382,13 @@ export class Auth {
     
     /**
      * Request Access
+     *
+     * File a request for an account, for an admin to review.
+     *
+     * Answers the same whether the address is new, already has a request, or
+     * already has an account -- a 409 for a duplicate used to tell anyone which
+     * addresses had asked. A duplicate is dropped without notifying the admins
+     * again; an account holder is emailed that they already have one.
      */
     public static requestAccess<ThrowOnError extends boolean = false>(options: Options<RequestAccessData, ThrowOnError>): RequestResult<RequestAccessResponses, RequestAccessErrors, ThrowOnError> {
         return (options.client ?? client).post<RequestAccessResponses, RequestAccessErrors, ThrowOnError>({

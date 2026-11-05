@@ -760,7 +760,6 @@ export const zErrorCode = z.enum([
     'invite_required',
     'invite_invalid',
     'invite_expired',
-    'access_request_exists',
     'already_collaborator',
     'role_above_own',
     'last_admin',
@@ -950,7 +949,7 @@ export const zFolderUpdate = z.object({
  * ForgotPasswordRequest
  */
 export const zForgotPasswordRequest = z.object({
-    email: z.email()
+    email: z.string()
 });
 
 /**
@@ -2321,8 +2320,8 @@ export const zReference = z.object({
  */
 export const zRegisterRequest = z.object({
     email: z.email(),
-    first_name: z.string(),
-    last_name: z.string().nullish(),
+    first_name: z.string().min(1).max(100),
+    last_name: z.string().min(1).max(100).nullish(),
     invite_token: z.union([
         z.string(),
         z.string()
@@ -2460,7 +2459,7 @@ export const zReportReviewRequest = z.object({
  * ResendVerificationRequest
  */
 export const zResendVerificationRequest = z.object({
-    email: z.email()
+    email: z.string()
 });
 
 /**
@@ -3006,7 +3005,7 @@ export const zInvitationPublic = z.object({
  * InvitationUpdate
  */
 export const zInvitationUpdate = z.object({
-    email: z.string().nullish(),
+    email: z.email().nullish(),
     expires_at: z.iso.datetime().nullish(),
     reuseable: z.boolean().optional(),
     user_scope: zScope.optional(),
@@ -3693,8 +3692,8 @@ export const zFolderWithProjectsPublic = z.object({
  * Profile fields a user may change on their own account.
  */
 export const zUserSelfUpdate = z.object({
-    first_name: z.string().optional(),
-    last_name: z.string().nullish(),
+    first_name: z.string().min(1).max(100).optional(),
+    last_name: z.string().min(1).max(100).nullish(),
     organization: z.string().nullish()
 });
 
@@ -6398,6 +6397,11 @@ export const zResetPasswordBody = zResetPasswordRequest;
 export const zResetPasswordResponse = zActionResponse;
 
 export const zRequestAccessBody = zAccessRequestCreate;
+
+/**
+ * Successful Response
+ */
+export const zRequestAccessResponse = zActionResponse;
 
 /**
  * Successful Response
