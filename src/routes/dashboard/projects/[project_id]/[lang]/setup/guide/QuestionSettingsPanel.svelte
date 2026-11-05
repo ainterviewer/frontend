@@ -87,7 +87,9 @@
 <!-- Probes -->
 <div data-tour={dataTour ? 'probes' : undefined}>
 	<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase"
-		>Follow-up Probes</span
+		>Suggested Follow-up Probes <HoverInfo
+			text="Ideas the AInterviewer can draw on when it writes follow-up probes. Based on the conversation so far, it may use a suggestion as is, rephrase it, or ask something else entirely. Only used when Max Probes or Max Time is set, and those limits cap how many probes are asked."
+		/></span
 	>
 	{#if question.probes}
 		<div class="mb-2 space-y-2">
