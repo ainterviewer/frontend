@@ -231,7 +231,9 @@
 	}
 
 	function isChecked(value: string) {
-		if (surveyItem.type === 'radio' || surveyItem.type === 'likert') return radioValue === value;
+		// `''` is "nothing chosen", so an option without text is never it.
+		if (surveyItem.type === 'radio' || surveyItem.type === 'likert')
+			return radioValue !== '' && radioValue === value;
 		return selectedValues.has(value);
 	}
 
