@@ -117,7 +117,8 @@
 	// Modal States
 	let isCreateFolderModalOpen = $state(false);
 	let isDeleteFolderModalOpen = $state(false);
-	let isEditFolderModalOpen = $state(false);
+	let isRenameFolderModalOpen = $state(false);
+	let isCollaboratorsModalOpen = $state(false);
 
 	let isCreateProjectModalOpen = $state(false);
 	let isDeleteProjectModalOpen = $state(false);
@@ -127,9 +128,12 @@
 	let createFolderName = $state('');
 	let createFolderCollaborators: { email: string; role: CollaboratorRole }[] = $state([]);
 
-	// Folder Editing
-	// Collaborator changes are staged locally and only sent when "Save Changes"
-	// is clicked, so the whole modal behaves as one edit.
+	// Folder Renaming
+	let renameFolderName = $state('');
+
+	// Folder Collaborators
+	// Changes are staged locally and only sent when "Save Changes" is clicked,
+	// so the whole modal behaves as one edit.
 	type EditCollaborator = {
 		key: string;
 		userId: string | null;
@@ -137,7 +141,6 @@
 		role: CollaboratorRole;
 		originalRole: CollaboratorRole | null;
 	};
-	let editFolderName = $state('');
 	let editCollaborators: EditCollaborator[] = $state([]);
 	let editCollaboratorEmail = $state('');
 	let editCollaboratorRole: CollaboratorRole = $state('viewer');
@@ -284,6 +287,15 @@
 					}
 				},
 				{
+					id: 'folder-menu',
+					element: '[data-tour="folder-menu"]',
+					popover: {
+						title: 'Folder Menu',
+						description:
+							"A folder's menu is where you rename or delete it, and where you invite and manage its collaborators under <u>Collaborators</u>."
+					}
+				},
+				{
 					id: 'new-project',
 					element: '[data-tour="new-project"]',
 					popover: {
@@ -411,9 +423,33 @@
 		await loadData();
 	}
 
-	function openEditFolderModal(folder: FolderWithProjectsPublic) {
+	function openRenameFolderModal(folder: FolderWithProjectsPublic) {
 		selectedFolder = folder;
-		editFolderName = folder.title;
+		renameFolderName = folder.title;
+		isRenameFolderModalOpen = true;
+		activeDropdown = null;
+	}
+
+	async function handleRenameFolder() {
+		if (!selectedFolder) return;
+		const title = renameFolderName.trim();
+		if (!title || title === selectedFolder.title) return;
+		const { error } = await Folders.editFolder({
+			path: { folder_id: selectedFolder.id },
+			body: { title }
+		});
+		if (error) {
+			toastApiError(error, 'Failed to rename folder');
+			return;
+		}
+		renameFolderName = '';
+		isRenameFolderModalOpen = false;
+		selectedFolder = null;
+		await loadData();
+	}
+
+	function openCollaboratorsModal(folder: FolderWithProjectsPublic) {
+		selectedFolder = folder;
 		editCollaborators = (folder.collaborators ?? []).map((collaborator) => ({
 			key: collaborator.user.id,
 			userId: collaborator.user.id,
@@ -423,7 +459,7 @@
 		}));
 		editCollaboratorEmail = '';
 		editCollaboratorRole = 'viewer';
-		isEditFolderModalOpen = true;
+		isCollaboratorsModalOpen = true;
 		activeDropdown = null;
 	}
 
@@ -436,10 +472,9 @@
 		return { added, removed, roleChanged };
 	});
 
-	let hasEditFolderChanges = $derived.by(() => {
-		const titleChanged = editFolderName !== (selectedFolder?.title ?? '');
+	let hasCollaboratorChanges = $derived.by(() => {
 		const { added, removed, roleChanged } = editCollaboratorChanges;
-		return titleChanged || added.length > 0 || removed.length > 0 || roleChanged.length > 0;
+		return added.length > 0 || removed.length > 0 || roleChanged.length > 0;
 	});
 
 	function stageCollaborator() {
@@ -464,21 +499,10 @@
 		editCollaborators = editCollaborators.filter((c) => c.key !== key);
 	}
 
-	async function handleEditFolder() {
-		if (!selectedFolder || !hasEditFolderChanges) return;
+	async function handleSaveCollaborators() {
+		if (!selectedFolder || !hasCollaboratorChanges) return;
 		const folderId = selectedFolder.id;
 		const { added, removed, roleChanged } = editCollaboratorChanges;
-
-		if (editFolderName !== selectedFolder.title) {
-			const { error } = await Folders.editFolder({
-				path: { folder_id: folderId },
-				body: { title: editFolderName }
-			});
-			if (error) {
-				toastApiError(error, 'Failed to edit folder');
-				return;
-			}
-		}
 
 		for (const collaborator of removed) {
 			const { error } = await Folders.removeCollaborator({
@@ -517,10 +541,9 @@
 		}
 
 		// Reset and refresh
-		editFolderName = '';
 		editCollaborators = [];
 		editCollaboratorEmail = '';
-		isEditFolderModalOpen = false;
+		isCollaboratorsModalOpen = false;
 		selectedFolder = null;
 		await loadData();
 	}
@@ -862,19 +885,31 @@
 			{/if}
 			<div class="dropdown-container relative">
 				<button
+					data-tour={folderIndex === 0 ? 'folder-menu' : undefined}
 					class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
 					onclick={(e) => toggleDropdown(e, folder.id)}
-					aria-label="Project actions"
+					aria-label="Folder actions"
 				>
 					<i class="fa-solid fa-ellipsis-vertical"></i>
 				</button>
 				{#if activeDropdown === folder.id}
-					<div class="absolute left-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg">
+					<div class="absolute left-0 z-10 mt-2 w-52 rounded-md bg-white py-1 shadow-lg">
 						<button
 							class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-							onclick={() => openEditFolderModal(folder)}
+							onclick={() => openRenameFolderModal(folder)}
 						>
-							Edit
+							Rename
+						</button>
+						<button
+							class="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+							onclick={() => openCollaboratorsModal(folder)}
+						>
+							Collaborators
+							<span
+								class="flex h-5 min-w-5 items-center justify-center rounded-full bg-gray-100 px-1 text-xs leading-none font-semibold text-gray-500 tabular-nums"
+							>
+								{folder.collaborators?.length ?? 0}
+							</span>
 						</button>
 						{#if canArchive(folder)}
 							<button
@@ -1290,12 +1325,65 @@
 	</div>
 {/if}
 
-<!-- Edit Folder Modal -->
-{#if isEditFolderModalOpen && selectedFolder}
+<!-- Rename Folder Modal -->
+{#if isRenameFolderModalOpen && selectedFolder}
 	<div
 		class="fixed inset-0 z-1000 flex items-center justify-center overflow-auto bg-black/40"
-		onclick={() => (isEditFolderModalOpen = false)}
-		onkeydown={(e) => e.key === 'Escape' && (isEditFolderModalOpen = false)}
+		onclick={() => (isRenameFolderModalOpen = false)}
+		onkeydown={(e) => e.key === 'Escape' && (isRenameFolderModalOpen = false)}
+		role="presentation"
+	>
+		<div
+			class="relative m-auto w-1/2 max-w-lg rounded border border-[#888] bg-white p-10 shadow-xl"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+		>
+			<button
+				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
+				onclick={() => (isRenameFolderModalOpen = false)}>&times;</button
+			>
+			<h2 class="mt-0 mb-6 text-2xl font-bold">Rename Folder</h2>
+
+			<div class="mb-6">
+				<label class="mb-2 block font-medium" for="rename-folder-name"
+					>Folder title <span class="text-red-500">*</span></label
+				>
+				<input
+					type="text"
+					id="rename-folder-name"
+					class="box-border w-full rounded border border-gray-300 p-2"
+					bind:value={renameFolderName}
+					placeholder="Enter folder title"
+					onkeydown={(e) => e.key === 'Enter' && handleRenameFolder()}
+				/>
+			</div>
+
+			<div class="flex justify-end gap-2">
+				<button
+					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
+					onclick={() => (isRenameFolderModalOpen = false)}>Cancel</button
+				>
+				<button
+					class="rounded border-none bg-primary px-4 py-2 text-white hover:opacity-90 disabled:opacity-50"
+					onclick={handleRenameFolder}
+					disabled={!renameFolderName.trim() || renameFolderName.trim() === selectedFolder.title}
+				>
+					Rename
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Folder Collaborators Modal -->
+{#if isCollaboratorsModalOpen && selectedFolder}
+	<div
+		class="fixed inset-0 z-1000 flex items-center justify-center overflow-auto bg-black/40"
+		onclick={() => (isCollaboratorsModalOpen = false)}
+		onkeydown={(e) => e.key === 'Escape' && (isCollaboratorsModalOpen = false)}
 		role="presentation"
 	>
 		<div
@@ -1308,27 +1396,19 @@
 		>
 			<button
 				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
-				onclick={() => (isEditFolderModalOpen = false)}>&times;</button
+				onclick={() => (isCollaboratorsModalOpen = false)}>&times;</button
 			>
-			<h2 class="mt-0 mb-6 text-2xl font-bold">Edit Folder</h2>
+			<h2 class="mt-0 mb-2 text-2xl font-bold">Collaborators</h2>
+			<p class="mb-6 text-sm text-gray-600">
+				Everyone listed can access all projects in "<span class="font-semibold"
+					>{selectedFolder.title}</span
+				>", with the permissions of their role.
+			</p>
 
 			<div class="mb-4">
-				<label class="mb-2 block font-medium" for="edit-folder-name"
-					>Folder title <span class="text-red-500">*</span></label
-				>
-				<input
-					type="text"
-					id="edit-folder-name"
-					class="box-border w-full rounded border border-gray-300 p-2"
-					bind:value={editFolderName}
-					placeholder="Enter folder title"
-				/>
-			</div>
-
-			<div class="mt-6 mb-4">
-				<label class="mb-2 block font-bold" for="edit-folder-collaborators">Collaborators</label>
-
-				{#if editCollaborators.length > 0}
+				{#if editCollaborators.length === 0}
+					<p class="mb-2 px-1 text-sm text-gray-500">No collaborators yet.</p>
+				{:else}
 					<div
 						class="mb-2 grid grid-cols-[1fr_8rem_2rem] gap-2 px-1 text-sm font-bold text-gray-700"
 					>
@@ -1414,12 +1494,12 @@
 			<div class="flex justify-end gap-2">
 				<button
 					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
-					onclick={() => (isEditFolderModalOpen = false)}>Cancel</button
+					onclick={() => (isCollaboratorsModalOpen = false)}>Cancel</button
 				>
 				<button
 					class="rounded border-none bg-primary px-4 py-2 text-white hover:opacity-90 disabled:opacity-50"
-					onclick={handleEditFolder}
-					disabled={!editFolderName || !hasEditFolderChanges}
+					onclick={handleSaveCollaborators}
+					disabled={!hasCollaboratorChanges}
 				>
 					Save Changes
 				</button>
