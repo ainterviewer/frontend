@@ -4,6 +4,21 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.13] - 2026-11-05
+
+### Features
+
+- (guide) Try the interview from a section or question
+
+### Bug Fixes
+
+- (interview) Let an interview open on a question
+
+### Internal
+
+- (api) Regenerate the client for starting a test part-way
+- Note how the onboarding tours work
+
 ## [0.9.12] - 2026-11-05
 
 ### Features
