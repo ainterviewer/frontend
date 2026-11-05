@@ -11,6 +11,7 @@
 	import { newQuestion } from './normalize';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import TextField from './TextField.svelte';
+	import TryFromHere from './TryFromHere.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 
 	interface Props {
@@ -120,13 +121,18 @@
 				<i class="fa-solid fa-grip"></i>
 			</div>
 		</div>
-		<button
-			class="cursor-pointer rounded p-2 text-gray-700 transition hover:text-red-500"
-			onclick={onRemove}
-			aria-label="Remove section"
-		>
-			<i class="fa-solid fa-trash"></i>
-		</button>
+		<div class="flex items-center gap-1">
+			{#if source === 'guide' && !isOverlay && questions.length > 0}
+				<TryFromHere kind="section" id={section.id} />
+			{/if}
+			<button
+				class="cursor-pointer rounded p-2 text-gray-700 transition hover:text-red-500"
+				onclick={onRemove}
+				aria-label="Remove section"
+			>
+				<i class="fa-solid fa-trash"></i>
+			</button>
+		</div>
 	</div>
 
 	<div class="mb-4">

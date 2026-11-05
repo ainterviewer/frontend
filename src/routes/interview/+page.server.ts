@@ -4,6 +4,7 @@ import { Auth, Default, Interviews, type InterviewType, Projects } from '$lib/ap
 import { hasErrorCode } from '$lib/utils/errors';
 
 import type { PageServerLoad } from './$types';
+import type { StartPoint } from './chat.svelte';
 
 /**
  * The interview id inside an `interview_token` cookie, if it is for this
@@ -120,8 +121,21 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	// ends up in a URL that people forward.
 	const resumeInterviewId = resumableInterviewId(cookies.get('interview_token'), project_id);
 
+	// "Try from here" in the guide editor: a manual test that starts part-way
+	// through the guide. Only a manual test may; the backend refuses the rest.
+	const startSection = url.searchParams.get('start_section');
+	const startQuestion = url.searchParams.get('start_question');
+	const startPoint: StartPoint | null =
+		interviewType !== 'manual_test'
+			? null
+			: startQuestion
+				? { question_id: startQuestion }
+				: startSection
+					? { section_id: startSection }
+					: null;
+
 	// Collect extra query params (exclude known ones)
-	const knownParams = new Set(['id', 'interview_type', 'lang']);
+	const knownParams = new Set(['id', 'interview_type', 'lang', 'start_section', 'start_question']);
 	const externalParams: Record<string, string> = {};
 	for (const [key, value] of url.searchParams.entries()) {
 		if (!knownParams.has(key)) {
@@ -176,6 +190,7 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 		availableLanguages,
 		paramsInvalid,
 		resumeInterviewId,
-		notPublished
+		notPublished,
+		startPoint
 	};
 };

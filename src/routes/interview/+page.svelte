@@ -6,7 +6,12 @@
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
 
-	import { ChatClient, createInterview, parseInterviewIdFromToken } from './chat.svelte';
+	import {
+		ChatClient,
+		createInterview,
+		parseInterviewIdFromToken,
+		type StartPoint
+	} from './chat.svelte';
 	import { getModalText } from './modalText';
 
 	interface PageData {
@@ -24,6 +29,7 @@
 		paramsInvalid?: boolean;
 		referer?: string | null;
 		notPublished?: boolean;
+		startPoint?: StartPoint | null;
 	}
 
 	let { data }: { data: PageData } = $props();
@@ -85,6 +91,8 @@
 
 		if (existingInterviewId && !(interviewType === 'manual_test')) {
 			initializeChat(existingInterviewId);
+		} else if (data.startPoint) {
+			startPartWay();
 		} else if (availableLanguages.length > 1) {
 			showLanguagePicker = true;
 			isInitializing = false;
@@ -117,7 +125,8 @@
 			data.interviewType,
 			data.externalParams,
 			data.referer,
-			data.externalParams?.pid ?? null
+			data.externalParams?.pid ?? null,
+			data.startPoint ?? null
 		);
 
 		if (result.ok) {
@@ -200,6 +209,21 @@
 			} else {
 				isInitializing = false;
 			}
+		}
+	}
+
+	/**
+	 * A collaborator trying the guide from part-way through, from the editor.
+	 * Straight into the chosen question: the consent and welcome greet a
+	 * respondent at the start of an interview, and this one starts in the
+	 * middle. Only ever a manual test (see the load function).
+	 */
+	async function startPartWay() {
+		if (await createInterviewAndGetId()) {
+			startInterview();
+		} else {
+			loadError = true;
+			isInitializing = false;
 		}
 	}
 

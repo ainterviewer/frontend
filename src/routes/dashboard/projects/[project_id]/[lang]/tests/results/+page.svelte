@@ -533,6 +533,14 @@
 			{/if}
 		{:else if columnId === 'type'}
 			{InterviewTypeMap.get(interview.type) ?? ''}
+			{#if interview.start_question_id}
+				<span
+					class="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600"
+					title="Started part-way through the guide, from the editor: earlier questions were not asked"
+				>
+					Partial
+				</span>
+			{/if}
 		{:else if columnId === 'test_name'}
 			{#if interview.test_name}{interview.test_name}{:else}<span class="text-gray-300">&ndash;</span
 				>{/if}

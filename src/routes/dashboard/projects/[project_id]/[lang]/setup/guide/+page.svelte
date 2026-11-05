@@ -57,6 +57,30 @@
 		'done'
 	];
 
+	/**
+	 * Scroll a step's element out from under the sticky action bar.
+	 *
+	 * driver.js only scrolls to an element that is outside the viewport, and an
+	 * element under the action bar is still inside it. A control near the
+	 * bottom of the screen, such as the first question's ▶, would otherwise be
+	 * highlighted behind the bar. Scrolls instantly: this runs before driver.js
+	 * measures where to draw the highlight.
+	 */
+	function uncoverFromActionBar(element: Element | undefined) {
+		const bar = document.querySelector('[data-action-bar]');
+		if (!element || !bar || bar.contains(element)) return;
+		const target = element.getBoundingClientRect();
+		const covered = bar.getBoundingClientRect();
+		if (
+			target.bottom > covered.top &&
+			target.top < covered.bottom &&
+			target.right > covered.left &&
+			target.left < covered.right
+		) {
+			element.scrollIntoView({ block: 'center' });
+		}
+	}
+
 	function startOnboarding() {
 		const steps = tourSteps(
 			'guide',
@@ -130,6 +154,15 @@
 						title: 'Questions',
 						description:
 							'These are the questions the AInterviewer will ask. Each question consists of a description, which is helps the AInterviewer to formulate relevant follow-up probes, and a main question, which is a primary question of interest. Drag them to reorder, and expand the settings to fine-tune how each one behaves.'
+					}
+				},
+				{
+					id: 'try-from-here',
+					element: '[data-tour="try-from-here"]',
+					popover: {
+						title: 'Try From Here',
+						description:
+							'Test the interview from this question onward, without answering everything before it. The ▶ on a section starts at its first question. The introduction, consent and welcome are skipped, and earlier answers are missing: a condition or reference that depends on one is left out of the test.'
 					}
 				},
 				{
@@ -331,6 +364,9 @@
 		const tour = driver({
 			showProgress: true,
 			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
+			// Tour-wide, so it covers every step. A step's own `onHighlightStarted`
+			// replaces it rather than adding to it.
+			onHighlightStarted: (element) => uncoverFromActionBar(element),
 			steps
 		});
 		tour.drive();

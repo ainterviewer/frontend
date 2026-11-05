@@ -9,6 +9,7 @@
 	import QuestionSettingsPanel from './QuestionSettingsPanel.svelte';
 	import QuestionSurveyPanel from './QuestionSurveyPanel.svelte';
 	import TextField from './TextField.svelte';
+	import TryFromHere from './TryFromHere.svelte';
 	import type { GuideQuestion, GuideSection } from './types';
 
 	interface Props {
@@ -174,6 +175,13 @@
 				Settings
 				<i class="fa-solid fa-gear ml-1" class:text-primary={showSettings}></i>
 			</button>
+			{#if source === 'guide' && !isOverlay}
+				<TryFromHere
+					kind="question"
+					id={question.id}
+					dataTour={dataTour ? 'try-from-here' : undefined}
+				/>
+			{/if}
 			<button
 				class="cursor-pointer rounded-md p-1.5 text-gray-700 transition-colors hover:text-red-500"
 				onclick={onRemove}

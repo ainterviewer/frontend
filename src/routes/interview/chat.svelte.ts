@@ -83,6 +83,12 @@ export type CreateInterviewResult =
 	{ ok: true; token: string } | { ok: false; paramsInvalid?: boolean };
 
 /**
+ * Where a manual test starts when it is tried from part-way through the
+ * guide: at a section's first question, or at a question. One of the two.
+ */
+export type StartPoint = { section_id: string } | { question_id: string };
+
+/**
  * Create a new interview for the given project
  */
 export async function createInterview(
@@ -91,7 +97,8 @@ export async function createInterview(
 	interviewType: InterviewType | undefined,
 	externalParams: Record<string, unknown> | null | undefined,
 	referer: string | null | undefined,
-	pid: string | null | undefined
+	pid: string | null | undefined,
+	start: StartPoint | null = null
 ): Promise<CreateInterviewResult> {
 	try {
 		const { data, error, response } = await Interviews.createInterview({
@@ -103,7 +110,9 @@ export async function createInterview(
 				...(interviewType != null && { interview_type: interviewType }),
 				...(externalParams != null && { external_params: externalParams }),
 				...(referer != null && { referer }),
-				...(pid != null && { pid })
+				...(pid != null && { pid }),
+				...(start && 'section_id' in start && { start_section_id: start.section_id }),
+				...(start && 'question_id' in start && { start_question_id: start.question_id })
 			}
 		});
 		if (error || !response?.ok) {
