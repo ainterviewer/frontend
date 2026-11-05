@@ -1400,9 +1400,9 @@
 			>
 			<h2 class="mt-0 mb-2 text-2xl font-bold">Collaborators</h2>
 			<p class="mb-6 text-sm text-gray-600">
-				Everyone listed can access all projects in "<span class="font-semibold"
-					>{selectedFolder.title}</span
-				>", with the permissions of their role.
+				Use an existing user's email address to add them as a collaborator. Everyone listed can
+				access all projects in "<span class="font-semibold">{selectedFolder.title}</span>", with the
+				permissions of their role.
 			</p>
 
 			<div class="mb-4">
