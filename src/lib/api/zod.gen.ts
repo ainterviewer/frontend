@@ -1510,6 +1510,7 @@ export const zInterviewSummaryPublic = z.object({
     n_reports: z.int().optional().default(0),
     n_interventions: z.int().optional().default(0),
     test_name: z.string().nullish(),
+    start_question_id: z.string().nullish(),
     pid: z.string().nullish()
 });
 
@@ -2908,6 +2909,8 @@ export const zInterviewCreate = z.object({
     synthetic_test_type: zTestType.nullish(),
     participant_id: z.string().nullish(),
     pid: z.string().nullish(),
+    start_section_id: z.string().nullish(),
+    start_question_id: z.string().nullish(),
     external_params: z.record(z.string(), z.unknown()).nullish(),
     referer: z.string().nullish()
 });

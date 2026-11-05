@@ -2698,6 +2698,14 @@ export type InterviewCreate = {
      */
     pid?: string | null;
     /**
+     * Start Section Id
+     */
+    start_section_id?: string | null;
+    /**
+     * Start Question Id
+     */
+    start_question_id?: string | null;
+    /**
      * External Params
      *
      * Extra query parameters, can include external user-id or the like.
@@ -3148,6 +3156,10 @@ export type InterviewSummaryPublic = {
      * Test Name
      */
     test_name?: string | null;
+    /**
+     * Start Question Id
+     */
+    start_question_id?: string | null;
     /**
      * Pid
      */
