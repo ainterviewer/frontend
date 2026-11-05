@@ -4,6 +4,25 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.12] - 2026-11-05
+
+### Features
+
+- (dashboard) Manage folder collaborators from their own menu item
+- (guide) Explain how suggested follow-up probes are used
+- (dashboard) Explain who can be added as a folder collaborator
+- (folders) Invite collaborators by email, and let them leave
+- (guide) Spellcheck guide, welcome and consent text in the language being edited
+
+### Bug Fixes
+
+- (account) Confirm a new email address before switching to it
+
+### Internal
+
+- Allow small self-contained commits straight to main
+- (api) Regenerate the client for the account email fixes
+
 ## [0.9.11] - 2026-10-28
 
 ### Internal
