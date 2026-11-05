@@ -25,6 +25,63 @@
 		return { id: crypto.randomUUID(), text: {} };
 	}
 
+	// Switch the item to `type`, keeping what the new type can use: the
+	// options between the choice types (with their ids, so conditions naming
+	// them still hold), the range between slider and number, and the range
+	// between date and date & time, converted to the new format.
+	function changeType(type: string) {
+		const prev = $state.snapshot(question.survey_item);
+		if (!prev || prev.type === type) return;
+		// Booleans the API does not take as null are left out when unset: the
+		// guide document writes an undefined as null, and drops a key left out.
+		const base = prev.required == null ? {} : { required: prev.required };
+		const options = surveyItemOptions(prev);
+		const keptOptions = options?.length ? options : [option()];
+		const withOther =
+			'with_other' in prev && prev.with_other != null ? { with_other: prev.with_other } : {};
+		const range = prev.type === 'slider' || prev.type === 'number' ? prev : null;
+		const dates = prev.type === 'date' || prev.type === 'datetime' ? prev : null;
+		// `YYYY-MM-DD` and `YYYY-MM-DDTHH:MM`, the inputs' own formats.
+		const asDate = (v?: string | null) => v?.slice(0, 10) || null;
+		const asDatetime = (v?: string | null) =>
+			v ? `${v.slice(0, 10)}T${v.slice(11, 16) || '00:00'}` : null;
+
+		if (type === 'radio' || type === 'checkbox') {
+			question.survey_item = { type, ...base, options: keptOptions, ...withOther };
+		} else if (type === 'likert') {
+			question.survey_item = { type, ...base, options: keptOptions };
+		} else if (type === 'slider') {
+			question.survey_item = {
+				type,
+				...base,
+				min: range?.min ?? 0,
+				max: range?.max ?? 10,
+				step: range?.step ?? null,
+				min_label: {},
+				max_label: {}
+			};
+		} else if (type === 'number') {
+			question.survey_item = {
+				type,
+				...base,
+				min: range?.min,
+				max: range?.max,
+				step: range?.step
+			};
+		} else if (type === 'date') {
+			question.survey_item = { type, ...base, min: asDate(dates?.min), max: asDate(dates?.max) };
+		} else if (type === 'datetime') {
+			question.survey_item = {
+				type,
+				...base,
+				min: asDatetime(dates?.min),
+				max: asDatetime(dates?.max)
+			};
+		} else if (type === 'time') {
+			question.survey_item = { type, ...base };
+		}
+	}
+
 	const guideStore = getGuideStore();
 
 	// The item as a respondent in the language being edited would get it,
@@ -79,24 +136,7 @@
 					<select
 						class="mt-1 w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 						value={surveyItem.type}
-						onchange={(e) => {
-							const type = (e.target as HTMLSelectElement).value;
-							if (type === 'radio' || type === 'checkbox') {
-								question.survey_item = { type, options: [option()] };
-							} else if (type === 'likert') {
-								question.survey_item = { type, options: [option()] };
-							} else if (type === 'slider') {
-								question.survey_item = { type, min: 0, max: 10, min_label: {}, max_label: {} };
-							} else if (type === 'number') {
-								question.survey_item = { type };
-							} else if (type === 'date') {
-								question.survey_item = { type };
-							} else if (type === 'datetime') {
-								question.survey_item = { type };
-							} else if (type === 'time') {
-								question.survey_item = { type };
-							}
-						}}
+						onchange={(e) => changeType((e.target as HTMLSelectElement).value)}
 					>
 						<option value="radio">Single Choice</option>
 						<option value="checkbox">Multiple Choice</option>
