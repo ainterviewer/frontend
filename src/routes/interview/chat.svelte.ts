@@ -812,7 +812,10 @@ export class ChatClient {
 				// Logic for enabling input
 				if (data.survey_item) {
 					// Handled above
-				} else if (data.message_id != 1 && data.can_answer !== false) {
+				} else if (data.can_answer !== false) {
+					// Decided by the message, not by its position: the introduction
+					// is sent with `can_answer: false`, and an interview without
+					// one -- or a test started part-way -- opens on a question.
 					this.inputEnabled = true;
 				} else {
 					// More server messages are coming — keep the indicator visible

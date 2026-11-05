@@ -125,3 +125,35 @@ describe('SecurityInterventionModal', () => {
 		expect(onDismiss).toHaveBeenCalledOnce();
 	});
 });
+
+describe('ChatClient opening message', () => {
+	test('an interview may open on a question', async () => {
+		const { chat } = connectedClient();
+
+		await chat.processSingleMessage({
+			type: 'message',
+			content: 'Anything to add?',
+			role: 'assistant',
+			message_id: 1,
+			can_answer: true
+		});
+
+		expect(chat.inputEnabled).toBe(true);
+		expect(chat.showTypingIndicator).toBe(false);
+	});
+
+	test('an introduction waits for the first question', async () => {
+		const { chat } = connectedClient();
+
+		await chat.processSingleMessage({
+			type: 'message',
+			content: 'Welcome!',
+			role: 'assistant',
+			message_id: 1,
+			can_answer: false
+		});
+
+		expect(chat.inputEnabled).toBe(false);
+		expect(chat.showTypingIndicator).toBe(true);
+	});
+});
