@@ -828,14 +828,78 @@ export type CodingPublic = {
 };
 
 /**
- * CollaboratorCreate
+ * CollaboratorInviteCreate
  */
-export type CollaboratorCreate = {
+export type CollaboratorInviteCreate = {
     role: CollaboratorRole;
     /**
      * Email
      */
     email: string;
+};
+
+/**
+ * CollaboratorInviteDetails
+ *
+ * What an invite offers, shown to its recipient before they accept.
+ */
+export type CollaboratorInviteDetails = {
+    /**
+     * Folder Id
+     */
+    folder_id: string;
+    /**
+     * Folder Title
+     */
+    folder_title: string;
+    role: CollaboratorRole;
+    /**
+     * Invited By Name
+     */
+    invited_by_name: string | null;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+};
+
+/**
+ * CollaboratorInvitePublic
+ *
+ * A pending invite as the folder's editors see it. It says nothing about
+ * whether the email has an account.
+ */
+export type CollaboratorInvitePublic = {
+    role: CollaboratorRole;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Email
+     */
+    email: string;
+    invited_by: UserPublic | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+};
+
+/**
+ * CollaboratorInviteRequest
+ *
+ * The token from an invite email's link.
+ */
+export type CollaboratorInviteRequest = {
+    /**
+     * Token
+     */
+    token: string;
 };
 
 /**
@@ -2003,7 +2067,7 @@ export type EmbeddingTurn = {
  * Only errors a client handles differently carry one. Values are part of
  * the API -- the frontend matches on them -- so rename none without it.
  */
-export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'access_request_exists' | 'preview_features_required';
+export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'access_request_exists' | 'already_collaborator' | 'role_above_own' | 'last_admin' | 'preview_features_required';
 
 /**
  * ExperimentAllocation
@@ -2314,7 +2378,7 @@ export type FolderCreate = {
     /**
      * Folder Collaborations
      */
-    folder_collaborations?: Array<CollaboratorCreate>;
+    folder_collaborations?: Array<CollaboratorInviteCreate>;
 };
 
 /**
@@ -9667,8 +9731,8 @@ export type UpdateCollaboratorRoleResponses = {
 
 export type UpdateCollaboratorRoleResponse = UpdateCollaboratorRoleResponses[keyof UpdateCollaboratorRoleResponses];
 
-export type AddCollaboratorData = {
-    body: CollaboratorCreate;
+export type GetCollaboratorInvitesData = {
+    body?: never;
     path: {
         /**
          * Folder Id
@@ -9681,10 +9745,10 @@ export type AddCollaboratorData = {
          */
         project_id?: string | null;
     };
-    url: '/api/folders/{folder_id}/collaborators';
+    url: '/api/folders/{folder_id}/invites';
 };
 
-export type AddCollaboratorErrors = {
+export type GetCollaboratorInvitesErrors = {
     /**
      * Validation Error
      */
@@ -9699,16 +9763,244 @@ export type AddCollaboratorErrors = {
     '5XX': ApiError;
 };
 
-export type AddCollaboratorError = AddCollaboratorErrors[keyof AddCollaboratorErrors];
+export type GetCollaboratorInvitesError = GetCollaboratorInvitesErrors[keyof GetCollaboratorInvitesErrors];
 
-export type AddCollaboratorResponses = {
+export type GetCollaboratorInvitesResponses = {
+    /**
+     * Response Get Collaborator Invites
+     *
+     * Successful Response
+     */
+    200: Array<CollaboratorInvitePublic>;
+};
+
+export type GetCollaboratorInvitesResponse = GetCollaboratorInvitesResponses[keyof GetCollaboratorInvitesResponses];
+
+export type CreateCollaboratorInviteData = {
+    body: CollaboratorInviteCreate;
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+    };
+    query?: {
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}/invites';
+};
+
+export type CreateCollaboratorInviteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type CreateCollaboratorInviteError = CreateCollaboratorInviteErrors[keyof CreateCollaboratorInviteErrors];
+
+export type CreateCollaboratorInviteResponses = {
     /**
      * Successful Response
      */
-    200: CollaboratorPublic;
+    200: CollaboratorInvitePublic;
 };
 
-export type AddCollaboratorResponse = AddCollaboratorResponses[keyof AddCollaboratorResponses];
+export type CreateCollaboratorInviteResponse = CreateCollaboratorInviteResponses[keyof CreateCollaboratorInviteResponses];
+
+export type DeleteCollaboratorInviteData = {
+    body?: never;
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+        /**
+         * Invite Id
+         */
+        invite_id: string;
+    };
+    query?: {
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}/invites/{invite_id}';
+};
+
+export type DeleteCollaboratorInviteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type DeleteCollaboratorInviteError = DeleteCollaboratorInviteErrors[keyof DeleteCollaboratorInviteErrors];
+
+export type DeleteCollaboratorInviteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type InspectCollaboratorInviteData = {
+    body: CollaboratorInviteRequest;
+    path?: never;
+    query?: never;
+    url: '/api/collaborator-invites/inspect';
+};
+
+export type InspectCollaboratorInviteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type InspectCollaboratorInviteError = InspectCollaboratorInviteErrors[keyof InspectCollaboratorInviteErrors];
+
+export type InspectCollaboratorInviteResponses = {
+    /**
+     * Successful Response
+     */
+    200: CollaboratorInviteDetails;
+};
+
+export type InspectCollaboratorInviteResponse = InspectCollaboratorInviteResponses[keyof InspectCollaboratorInviteResponses];
+
+export type AcceptCollaboratorInviteData = {
+    body: CollaboratorInviteRequest;
+    path?: never;
+    query?: never;
+    url: '/api/collaborator-invites/accept';
+};
+
+export type AcceptCollaboratorInviteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type AcceptCollaboratorInviteError = AcceptCollaboratorInviteErrors[keyof AcceptCollaboratorInviteErrors];
+
+export type AcceptCollaboratorInviteResponses = {
+    /**
+     * Successful Response
+     */
+    200: FolderPublic;
+};
+
+export type AcceptCollaboratorInviteResponse = AcceptCollaboratorInviteResponses[keyof AcceptCollaboratorInviteResponses];
+
+export type DeclineCollaboratorInviteData = {
+    body: CollaboratorInviteRequest;
+    path?: never;
+    query?: never;
+    url: '/api/collaborator-invites/decline';
+};
+
+export type DeclineCollaboratorInviteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type DeclineCollaboratorInviteError = DeclineCollaboratorInviteErrors[keyof DeclineCollaboratorInviteErrors];
+
+export type DeclineCollaboratorInviteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type LeaveFolderData = {
+    body?: never;
+    path: {
+        /**
+         * Folder Id
+         */
+        folder_id: string | null;
+    };
+    query?: {
+        /**
+         * Project Id
+         */
+        project_id?: string | null;
+    };
+    url: '/api/folders/{folder_id}/leave';
+};
+
+export type LeaveFolderErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type LeaveFolderError = LeaveFolderErrors[keyof LeaveFolderErrors];
+
+export type LeaveFolderResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type CreateProjectData = {
     body: ProjectCreate;

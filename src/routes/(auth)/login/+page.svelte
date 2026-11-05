@@ -8,6 +8,7 @@
 	import RequestAccessModal from '$lib/components/RequestAccessModal.svelte';
 	import ResendVerification from '$lib/components/ResendVerification.svelte';
 	import { errorDetail, hasErrorCode } from '$lib/utils/errors';
+	import { loginNext } from '$lib/utils/urls';
 
 	type Step = 'credentials' | 'twoFactor' | 'notVerified';
 	let step = $state<Step>('credentials');
@@ -21,6 +22,9 @@
 	let email = $state('');
 	let extended = $state(false);
 	let code = $state('');
+
+	// Back to the dashboard page that sent the user here, such as an invite link.
+	const next = loginNext(page.url.searchParams.get('next'));
 
 	// Matches the backend's six-digit login codes.
 	const CODE_LENGTH = 6;
@@ -52,7 +56,8 @@
 				errorMessage = errorDetail(error, 'Invalid email or password');
 			} else {
 				// 200 + cookies: 2FA disabled, normal login.
-				await goto(resolve('/dashboard'));
+				// eslint-disable-next-line svelte/no-navigation-without-resolve -- loginNext only returns /dashboard paths
+				await goto(next);
 			}
 		} finally {
 			isLoading = false;
@@ -73,7 +78,8 @@
 				// An invalid or expired code, or too many attempts at one.
 				errorMessage = errorDetail(error, 'That code is invalid or has expired.');
 			} else {
-				await goto(resolve('/dashboard'));
+				// eslint-disable-next-line svelte/no-navigation-without-resolve -- loginNext only returns /dashboard paths
+				await goto(next);
 			}
 		} finally {
 			isLoading = false;

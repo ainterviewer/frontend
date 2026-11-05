@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { portableSubRoute } from './urls';
+import { loginNext, loginUrl, portableSubRoute } from './urls';
 
 const ROOT = '/dashboard/projects/[project_id]/[lang]';
 
@@ -36,5 +36,25 @@ describe('portableSubRoute', () => {
 	it('is empty without a route id or outside a project', () => {
 		expect(portableSubRoute('/dashboard/projects/abc/en/setup', null)).toBe('');
 		expect(portableSubRoute('/dashboard/settings/profile', '/dashboard/settings/profile')).toBe('');
+	});
+});
+
+describe('loginNext', () => {
+	it('returns to a dashboard page with its query', () => {
+		expect(loginNext('/dashboard/invites/accept?token=abc')).toBe(
+			'/dashboard/invites/accept?token=abc'
+		);
+	});
+
+	it('falls back to the dashboard', () => {
+		for (const next of [null, '', '/login', '//evil.example', '/dashboardx', '/dashboard/\\evil']) {
+			expect(loginNext(next)).toBe('/dashboard');
+		}
+	});
+
+	it('round-trips through loginUrl', () => {
+		const url = new URL('https://app.example/dashboard/invites/accept?token=a%2Bb');
+		const next = new URL(loginUrl(url), url).searchParams.get('next');
+		expect(loginNext(next)).toBe('/dashboard/invites/accept?token=a%2Bb');
 	});
 });

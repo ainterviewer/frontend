@@ -331,6 +331,15 @@ export const zCodingPublic = z.object({
 });
 
 /**
+ * CollaboratorInviteRequest
+ *
+ * The token from an invite email's link.
+ */
+export const zCollaboratorInviteRequest = z.object({
+    token: z.string()
+});
+
+/**
  * CollaboratorRole
  */
 export const zCollaboratorRole = z.enum([
@@ -341,11 +350,24 @@ export const zCollaboratorRole = z.enum([
 ]);
 
 /**
- * CollaboratorCreate
+ * CollaboratorInviteCreate
  */
-export const zCollaboratorCreate = z.object({
+export const zCollaboratorInviteCreate = z.object({
     role: zCollaboratorRole,
     email: z.email()
+});
+
+/**
+ * CollaboratorInviteDetails
+ *
+ * What an invite offers, shown to its recipient before they accept.
+ */
+export const zCollaboratorInviteDetails = z.object({
+    folder_id: z.string(),
+    folder_title: z.string(),
+    role: zCollaboratorRole,
+    invited_by_name: z.string().nullable(),
+    expires_at: z.iso.datetime()
 });
 
 /**
@@ -730,6 +752,9 @@ export const zErrorCode = z.enum([
     'invite_invalid',
     'invite_expired',
     'access_request_exists',
+    'already_collaborator',
+    'role_above_own',
+    'last_admin',
     'preview_features_required'
 ]);
 
@@ -902,7 +927,7 @@ export const zFilteredMessagesRequest = z.object({
  */
 export const zFolderCreate = z.object({
     title: z.string(),
-    folder_collaborations: z.array(zCollaboratorCreate).optional().default([])
+    folder_collaborations: z.array(zCollaboratorInviteCreate).optional().default([])
 });
 
 /**
@@ -3589,6 +3614,21 @@ export const zUserPublic = z.object({
 });
 
 /**
+ * CollaboratorInvitePublic
+ *
+ * A pending invite as the folder's editors see it. It says nothing about
+ * whether the email has an account.
+ */
+export const zCollaboratorInvitePublic = z.object({
+    role: zCollaboratorRole,
+    id: z.string(),
+    email: z.string(),
+    invited_by: zUserPublic.nullable(),
+    created_at: z.iso.datetime(),
+    expires_at: z.iso.datetime()
+});
+
+/**
  * CollaboratorPublic
  */
 export const zCollaboratorPublic = z.object({
@@ -4742,20 +4782,68 @@ export const zUpdateCollaboratorRoleQuery = z.object({
  */
 export const zUpdateCollaboratorRoleResponse = zCollaboratorPublic;
 
-export const zAddCollaboratorBody = zCollaboratorCreate;
-
-export const zAddCollaboratorPath = z.object({
+export const zGetCollaboratorInvitesPath = z.object({
     folder_id: z.string().nullable()
 });
 
-export const zAddCollaboratorQuery = z.object({
+export const zGetCollaboratorInvitesQuery = z.object({
+    project_id: z.string().nullish()
+});
+
+/**
+ * Response Get Collaborator Invites
+ *
+ * Successful Response
+ */
+export const zGetCollaboratorInvitesResponse = z.array(zCollaboratorInvitePublic);
+
+export const zCreateCollaboratorInviteBody = zCollaboratorInviteCreate;
+
+export const zCreateCollaboratorInvitePath = z.object({
+    folder_id: z.string().nullable()
+});
+
+export const zCreateCollaboratorInviteQuery = z.object({
     project_id: z.string().nullish()
 });
 
 /**
  * Successful Response
  */
-export const zAddCollaboratorResponse = zCollaboratorPublic;
+export const zCreateCollaboratorInviteResponse = zCollaboratorInvitePublic;
+
+export const zDeleteCollaboratorInvitePath = z.object({
+    folder_id: z.string().nullable(),
+    invite_id: z.string()
+});
+
+export const zDeleteCollaboratorInviteQuery = z.object({
+    project_id: z.string().nullish()
+});
+
+export const zInspectCollaboratorInviteBody = zCollaboratorInviteRequest;
+
+/**
+ * Successful Response
+ */
+export const zInspectCollaboratorInviteResponse = zCollaboratorInviteDetails;
+
+export const zAcceptCollaboratorInviteBody = zCollaboratorInviteRequest;
+
+/**
+ * Successful Response
+ */
+export const zAcceptCollaboratorInviteResponse = zFolderPublic;
+
+export const zDeclineCollaboratorInviteBody = zCollaboratorInviteRequest;
+
+export const zLeaveFolderPath = z.object({
+    folder_id: z.string().nullable()
+});
+
+export const zLeaveFolderQuery = z.object({
+    project_id: z.string().nullish()
+});
 
 export const zCreateProjectBody = zProjectCreate;
 

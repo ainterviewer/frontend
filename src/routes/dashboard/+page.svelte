@@ -9,6 +9,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import type {
+		CollaboratorInvitePublic,
 		CollaboratorRole,
 		FolderWithProjectsPublic,
 		ProjectLanguage,
@@ -117,6 +118,7 @@
 	// Modal States
 	let isCreateFolderModalOpen = $state(false);
 	let isDeleteFolderModalOpen = $state(false);
+	let isLeaveFolderModalOpen = $state(false);
 	let isRenameFolderModalOpen = $state(false);
 	let isCollaboratorsModalOpen = $state(false);
 
@@ -134,14 +136,20 @@
 	// Folder Collaborators
 	// Changes are staged locally and only sent when "Save Changes" is clicked,
 	// so the whole modal behaves as one edit.
+	// A row is a collaborator (`userId`), a pending invite (`invite`), or a new
+	// email staged to be invited (neither). Adding someone always sends an
+	// invite: they show as pending, whether or not they have an account, until
+	// they accept the emailed link.
 	type EditCollaborator = {
 		key: string;
 		userId: string | null;
+		invite: CollaboratorInvitePublic | null;
 		email: string;
 		role: CollaboratorRole;
 		originalRole: CollaboratorRole | null;
 	};
 	let editCollaborators: EditCollaborator[] = $state([]);
+	let folderInvites: CollaboratorInvitePublic[] = $state([]);
 	let editCollaboratorEmail = $state('');
 	let editCollaboratorRole: CollaboratorRole = $state('viewer');
 	const roles: CollaboratorRole[] = ['viewer', 'annotator', 'editor', 'admin'];
@@ -149,6 +157,13 @@
 		value: r,
 		label: r.charAt(0).toUpperCase() + r.slice(1)
 	}));
+
+	/** The reader's role on a folder; platform admins count as its admins. */
+	function folderRoleOf(folder: FolderWithProjectsPublic): CollaboratorRole {
+		const user = page.data.user;
+		if (user?.scope === 'admin') return 'admin';
+		return (folder.collaborators ?? []).find((c) => c.user.id === user?.id)?.role ?? 'viewer';
+	}
 
 	// Project Creation
 	let createProjectName = $state('');
@@ -160,6 +175,19 @@
 	// Folder Actions
 	let selectedFolder: FolderWithProjectsPublic | null = $state(null);
 	let deleteFolderConfirmation = $state('');
+
+	// Nobody manages collaborators above their own role (only admins touch
+	// admins). The API enforces it; this only keeps the dialog from offering it.
+	let myFolderRole = $derived(selectedFolder ? folderRoleOf(selectedFolder) : 'viewer');
+	let grantableRoleItems = $derived(
+		roleItems.map((item) => ({
+			...item,
+			disabled: roles.indexOf(item.value) > roles.indexOf(myFolderRole)
+		}))
+	);
+	function canManage(row: EditCollaborator): boolean {
+		return roles.indexOf(row.originalRole ?? row.role) <= roles.indexOf(myFolderRole);
+	}
 
 	// Move Project
 	let isMoveProjectModalOpen = $state(false);
@@ -448,34 +476,82 @@
 		await loadData();
 	}
 
-	function openCollaboratorsModal(folder: FolderWithProjectsPublic) {
+	function inviteRow(invite: CollaboratorInvitePublic): EditCollaborator {
+		return {
+			key: invite.id,
+			userId: null,
+			invite,
+			email: invite.email,
+			role: invite.role,
+			originalRole: invite.role
+		};
+	}
+
+	async function openCollaboratorsModal(folder: FolderWithProjectsPublic) {
 		selectedFolder = folder;
 		editCollaborators = (folder.collaborators ?? []).map((collaborator) => ({
 			key: collaborator.user.id,
 			userId: collaborator.user.id,
+			invite: null,
 			email: collaborator.user.email,
 			role: collaborator.role,
 			originalRole: collaborator.role
 		}));
+		folderInvites = [];
 		editCollaboratorEmail = '';
 		editCollaboratorRole = 'viewer';
 		isCollaboratorsModalOpen = true;
 		activeDropdown = null;
+
+		// Only editors may see a folder's invites; anyone else just sees none.
+		const { data: invites } = await Folders.getCollaboratorInvites({
+			path: { folder_id: folder.id }
+		});
+		if (invites && selectedFolder?.id === folder.id) {
+			folderInvites = invites;
+			editCollaborators.push(...invites.map(inviteRow));
+		}
+	}
+
+	function isExpired(invite: CollaboratorInvitePublic) {
+		return new Date(invite.expires_at) < new Date();
 	}
 
 	// Staged collaborator changes, compared against the folder as it was loaded.
 	let editCollaboratorChanges = $derived.by(() => {
 		const original = selectedFolder?.collaborators ?? [];
-		const added = editCollaborators.filter((c) => !c.userId);
 		const removed = original.filter((c) => !editCollaborators.some((e) => e.userId === c.user.id));
 		const roleChanged = editCollaborators.filter((c) => c.userId && c.originalRole !== c.role);
-		return { added, removed, roleChanged };
+		const revoked = folderInvites.filter(
+			(invite) => !editCollaborators.some((e) => e.invite?.id === invite.id)
+		);
+		// New emails, and pending invites whose role changed: both are (re)sent.
+		const invited = editCollaborators.filter(
+			(c) => !c.userId && (!c.invite || c.originalRole !== c.role)
+		);
+		return { removed, roleChanged, revoked, invited };
 	});
 
-	let hasCollaboratorChanges = $derived.by(() => {
-		const { added, removed, roleChanged } = editCollaboratorChanges;
-		return added.length > 0 || removed.length > 0 || roleChanged.length > 0;
-	});
+	let hasCollaboratorChanges = $derived.by(() =>
+		Object.values(editCollaboratorChanges).some((changes) => changes.length > 0)
+	);
+
+	async function resendInvite(row: EditCollaborator) {
+		if (!selectedFolder || !row.invite) return;
+		const { data: invite, error } = await Folders.createCollaboratorInvite({
+			path: { folder_id: selectedFolder.id },
+			body: { email: row.email, role: row.invite.role }
+		});
+		if (error) {
+			toastApiError(error, `Failed to resend the invitation to ${row.email}`);
+			return;
+		}
+		folderInvites = folderInvites.map((i) => (i.id === invite.id ? invite : i));
+		row.invite = invite;
+		row.originalRole = invite.role;
+		row.role = invite.role;
+		toast.success(`Invitation resent to ${row.email}`);
+	}
 
 	function stageCollaborator() {
 		const email = editCollaboratorEmail.trim();
@@ -487,6 +563,7 @@
 		editCollaborators.push({
 			key: crypto.randomUUID(),
 			userId: null,
+			invite: null,
 			email,
 			role: editCollaboratorRole,
 			originalRole: null
@@ -502,7 +579,7 @@
 	async function handleSaveCollaborators() {
 		if (!selectedFolder || !hasCollaboratorChanges) return;
 		const folderId = selectedFolder.id;
-		const { added, removed, roleChanged } = editCollaboratorChanges;
+		const { removed, roleChanged, revoked, invited } = editCollaboratorChanges;
 
 		for (const collaborator of removed) {
 			const { error } = await Folders.removeCollaborator({
@@ -528,16 +605,34 @@
 			}
 		}
 
-		for (const collaborator of added) {
-			const { error } = await Folders.addCollaborator({
+		for (const invite of revoked) {
+			const { error } = await Folders.deleteCollaboratorInvite({
+				path: { folder_id: folderId, invite_id: invite.id }
+			});
+			if (error) {
+				toastApiError(error, `Failed to revoke the invitation to ${invite.email}`);
+				await loadData();
+				return;
+			}
+		}
+
+		for (const collaborator of invited) {
+			const { error } = await Folders.createCollaboratorInvite({
 				path: { folder_id: folderId },
 				body: { email: collaborator.email, role: collaborator.role }
 			});
 			if (error) {
-				toastApiError(error, `Failed to add ${collaborator.email}`);
+				toastApiError(error, `Failed to invite ${collaborator.email}`);
 				await loadData();
 				return;
 			}
+		}
+		if (invited.length > 0) {
+			toast.success(
+				invited.length === 1
+					? `Invitation sent to ${invited[0].email}`
+					: `${invited.length} invitations sent`
+			);
 		}
 
 		// Reset and refresh
@@ -582,6 +677,33 @@
 				? `Archived "${project.title}". Show archived to find it again.`
 				: `${archived ? 'Archived' : 'Unarchived'} "${project.title}"`
 		);
+	}
+
+	/** Whether the reader collaborates on the folder, and so can leave it. */
+	function isCollaborator(folder: FolderWithProjectsPublic): boolean {
+		const user = page.data.user;
+		return (folder.collaborators ?? []).some((c) => c.user.id === user?.id);
+	}
+
+	function openLeaveFolderModal(folder: FolderWithProjectsPublic) {
+		selectedFolder = folder;
+		isLeaveFolderModalOpen = true;
+		activeDropdown = null;
+	}
+
+	async function handleLeaveFolder() {
+		if (!selectedFolder) return;
+		const folder = selectedFolder;
+		const { error } = await Folders.leaveFolder({ path: { folder_id: folder.id } });
+		if (error) {
+			// The only admin is refused (`last_admin`); the message says why.
+			toastApiError(error, 'Failed to leave folder');
+			return;
+		}
+		isLeaveFolderModalOpen = false;
+		selectedFolder = null;
+		await loadData();
+		toast.success(`You left "${folder.title}"`);
 	}
 
 	function openDeleteFolderModal(folder: FolderWithProjectsPublic) {
@@ -917,6 +1039,14 @@
 								onclick={() => setFolderArchived(folder, !folder.archived_at)}
 							>
 								{folder.archived_at ? 'Unarchive' : 'Archive'}
+							</button>
+						{/if}
+						{#if isCollaborator(folder)}
+							<button
+								class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
+								onclick={() => openLeaveFolderModal(folder)}
+							>
+								Leave
 							</button>
 						{/if}
 						<button
@@ -1268,6 +1398,47 @@
 	</div>
 {/if}
 
+<!-- Leave Folder Modal -->
+{#if isLeaveFolderModalOpen && selectedFolder}
+	<div
+		class="fixed inset-0 z-[1000] flex items-center justify-center overflow-auto bg-black/40"
+		onclick={() => (isLeaveFolderModalOpen = false)}
+		onkeydown={(e) => e.key === 'Escape' && (isLeaveFolderModalOpen = false)}
+		role="presentation"
+	>
+		<div
+			class="relative m-auto w-1/2 max-w-lg rounded border border-[#888] bg-white p-10 shadow-xl"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+		>
+			<button
+				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
+				onclick={() => (isLeaveFolderModalOpen = false)}>&times;</button
+			>
+			<h2 class="mt-0 mb-6 text-2xl font-bold">Leave Folder</h2>
+			<p class="mb-6">
+				Leave "<span class="font-bold">{selectedFolder.title}</span>"? You will lose access to its
+				projects until someone invites you again. The folder and its projects stay as they are.
+			</p>
+			<div class="flex justify-end gap-2">
+				<button
+					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
+					onclick={() => (isLeaveFolderModalOpen = false)}>Cancel</button
+				>
+				<button
+					class="rounded border-none bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+					onclick={handleLeaveFolder}
+				>
+					Leave
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
 <!-- Delete Folder Modal -->
 {#if isDeleteFolderModalOpen && selectedFolder}
 	<div
@@ -1400,9 +1571,10 @@
 			>
 			<h2 class="mt-0 mb-2 text-2xl font-bold">Collaborators</h2>
 			<p class="mb-6 text-sm text-gray-600">
-				Use an existing user's email address to add them as a collaborator. Everyone listed can
-				access all projects in "<span class="font-semibold">{selectedFolder.title}</span>", with the
-				permissions of their role.
+				Add people by email. They get an invitation and join once they accept it; people without an
+				account are asked to request one first. Collaborators can access all projects in "<span
+					class="font-semibold">{selectedFolder.title}</span
+				>", with the permissions of their role.
 			</p>
 
 			<div class="mb-4">
@@ -1446,20 +1618,44 @@
 								<span class="block truncate text-sm font-medium" title={collaborator.email}
 									>{collaborator.email}</span
 								>
-								{#if !collaborator.userId}
-									<span class="text-xs text-gray-500">Not saved yet</span>
+								{#if collaborator.invite}
+									<span class="text-xs text-gray-500">
+										{#if isExpired(collaborator.invite)}
+											<span class="text-red-600">Invitation expired</span>
+										{:else}
+											Invitation pending
+										{/if}
+										{#if canManage(collaborator)}
+											·
+											<button
+												class="cursor-pointer border-none bg-transparent p-0 text-xs text-primary underline hover:opacity-80"
+												onclick={() => resendInvite(collaborator)}>Resend</button
+											>
+										{/if}
+									</span>
+								{:else if !collaborator.userId}
+									<span class="text-xs text-gray-500">Invitation sent when you save</span>
 								{/if}
 							</div>
 							<div class="w-32">
-								<Select items={roleItems} bind:value={collaborator.role} class="text-md h-9 py-1" />
+								<Select
+									items={grantableRoleItems}
+									bind:value={collaborator.role}
+									disabled={!canManage(collaborator)}
+									class="text-md h-9 py-1"
+								/>
 							</div>
-							<button
-								class="flex h-9 items-center justify-center rounded text-red-500 hover:bg-red-200 hover:text-red-700"
-								onclick={() => unstageCollaborator(collaborator.key)}
-								aria-label="Remove collaborator"
-							>
-								<i class="fa-solid fa-trash"></i>
-							</button>
+							{#if canManage(collaborator)}
+								<button
+									class="flex h-9 items-center justify-center rounded text-red-500 hover:bg-red-200 hover:text-red-700"
+									onclick={() => unstageCollaborator(collaborator.key)}
+									aria-label={collaborator.invite ? 'Revoke invitation' : 'Remove collaborator'}
+								>
+									<i class="fa-solid fa-trash"></i>
+								</button>
+							{:else}
+								<span></span>
+							{/if}
 						</div>
 					{/each}
 				{/if}
@@ -1478,7 +1674,11 @@
 						}}
 					/>
 					<div class="w-32">
-						<Select items={roleItems} bind:value={editCollaboratorRole} class="text-md h-9 py-1" />
+						<Select
+							items={grantableRoleItems}
+							bind:value={editCollaboratorRole}
+							class="text-md h-9 py-1"
+						/>
 					</div>
 					<button
 						class="flex h-9 w-full items-center justify-center rounded bg-primary text-white hover:opacity-90 disabled:opacity-50"

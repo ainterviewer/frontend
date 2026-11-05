@@ -4,6 +4,7 @@ import { error, type Handle, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { client } from '$lib/api/client.gen';
 import { currentAccessToken } from '$lib/server/auth';
+import { loginUrl } from '$lib/utils/urls';
 
 const API_BASE = () => env.API_URL || 'http://localhost:8666';
 
@@ -103,7 +104,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const hasRefresh = event.cookies.get('refresh_token');
 
 		if (!accessToken && !hasRefresh) {
-			throw redirect(303, '/login');
+			throw redirect(303, loginUrl(event.url));
 		}
 
 		const needsRefresh = !accessToken || isTokenExpired(accessToken);
@@ -111,12 +112,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 			if (!hasRefresh) {
 				// Token expired and no refresh token — dead session
 				clearAuthCookies(event.cookies);
-				throw redirect(303, '/login');
+				throw redirect(303, loginUrl(event.url));
 			}
 			const refreshResult = await serverSideRefresh(event.fetch, event.cookies);
 			if (refreshResult === 'unauthorized') {
 				clearAuthCookies(event.cookies);
-				throw redirect(303, '/login');
+				throw redirect(303, loginUrl(event.url));
 			}
 			if (refreshResult === 'unavailable') {
 				throw error(503, 'Backend unavailable');

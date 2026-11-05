@@ -47,3 +47,19 @@ export function portableSubRoute(pathname: string, routeId: string | null | unde
 	}
 	return kept.join('/');
 }
+
+/**
+ * Where to send someone after they sign in: the dashboard page they were on
+ * when their session ran out (`/login?next=...`), or the dashboard itself.
+ * Anything outside `/dashboard` falls back to it, so a crafted link cannot use
+ * the login page to redirect to another site (`//evil.example`, `/\evil`).
+ */
+export function loginNext(next: string | null | undefined): string {
+	if (next && /^\/dashboard(?:[/?#]|$)/.test(next) && !next.includes('\\')) return next;
+	return '/dashboard';
+}
+
+/** The login page, carrying where to return to afterwards. */
+export function loginUrl(url: URL): string {
+	return `/login?next=${encodeURIComponent(url.pathname + url.search)}`;
+}
