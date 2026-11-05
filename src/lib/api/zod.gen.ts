@@ -482,6 +482,15 @@ export const zConditionEvaluation = z.object({
 export const zConditionTrigger = z.enum(['match', 'classification']);
 
 /**
+ * ConfirmEmailChangeRequest
+ *
+ * The token from an email-change confirmation link.
+ */
+export const zConfirmEmailChangeRequest = z.object({
+    token: z.string()
+});
+
+/**
  * Consent
  */
 export const zConsent = z.object({
@@ -6337,7 +6346,14 @@ export const zUpdateMyEmailBody = zUpdateEmailRequest;
 /**
  * Successful Response
  */
-export const zUpdateMyEmailResponse = zUserPublic;
+export const zUpdateMyEmailResponse = zActionResponse;
+
+export const zConfirmEmailChangeBody = zConfirmEmailChangeRequest;
+
+/**
+ * Successful Response
+ */
+export const zConfirmEmailChangeResponse = zActionResponse;
 
 export const zUpdateMyPasswordBody = zUpdatePasswordRequest;
 

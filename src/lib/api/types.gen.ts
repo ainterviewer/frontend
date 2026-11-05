@@ -1085,6 +1085,18 @@ export type Conditions = {
 };
 
 /**
+ * ConfirmEmailChangeRequest
+ *
+ * The token from an email-change confirmation link.
+ */
+export type ConfirmEmailChangeRequest = {
+    /**
+     * Token
+     */
+    token: string;
+};
+
+/**
  * Consent
  */
 export type Consent = {
@@ -14966,10 +14978,43 @@ export type UpdateMyEmailResponses = {
     /**
      * Successful Response
      */
-    200: UserPublic;
+    200: ActionResponse;
 };
 
 export type UpdateMyEmailResponse = UpdateMyEmailResponses[keyof UpdateMyEmailResponses];
+
+export type ConfirmEmailChangeData = {
+    body: ConfirmEmailChangeRequest;
+    path?: never;
+    query?: never;
+    url: '/api/confirm-email-change';
+};
+
+export type ConfirmEmailChangeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type ConfirmEmailChangeError = ConfirmEmailChangeErrors[keyof ConfirmEmailChangeErrors];
+
+export type ConfirmEmailChangeResponses = {
+    /**
+     * Successful Response
+     */
+    200: ActionResponse;
+};
+
+export type ConfirmEmailChangeResponse = ConfirmEmailChangeResponses[keyof ConfirmEmailChangeResponses];
 
 export type UpdateMyPasswordData = {
     body: UpdatePasswordRequest;

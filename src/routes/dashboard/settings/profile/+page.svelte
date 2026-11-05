@@ -28,6 +28,9 @@
 	let newEmail = $state('');
 	let emailPassword = $state('');
 	let isSavingEmail = $state(false);
+	// The address a confirmation link was last sent to; the email only changes
+	// once that link is followed.
+	let pendingEmail = $state('');
 
 	// Password
 	let currentPassword = $state('');
@@ -85,16 +88,16 @@
 		event.preventDefault();
 		isSavingEmail = true;
 		try {
-			const { error } = await Auth.updateMyEmail({
+			const { data: result, error } = await Auth.updateMyEmail({
 				body: { new_email: newEmail.trim(), password: emailPassword }
 			});
 			if (error) {
 				toastApiError(error, 'Failed to update email');
 			} else {
-				toast.success('Email updated');
+				toast.success(result.message);
+				pendingEmail = newEmail.trim();
 				newEmail = '';
 				emailPassword = '';
-				await invalidateAll();
 			}
 		} finally {
 			isSavingEmail = false;
@@ -188,8 +191,16 @@
 	<section>
 		<h2 class="text-lg font-semibold text-dark">Email</h2>
 		<p class="mt-1 text-sm text-gray-500">
-			Your current email is <span class="font-medium">{data.user?.email}</span>.
+			Your current email is <span class="font-medium">{data.user?.email}</span>. To change it, we'll
+			send a confirmation link to the new address; it changes once you follow the link, and you'll
+			be signed out everywhere else.
 		</p>
+		{#if pendingEmail}
+			<p class="mt-2 rounded-md bg-blue-50 p-3 text-sm text-blue-800">
+				We sent a confirmation link to <span class="font-medium">{pendingEmail}</span>. Check that
+				inbox to finish the change.
+			</p>
+		{/if}
 		<form onsubmit={saveEmail} class="mt-4 space-y-4">
 			<div>
 				<label for="new_email" class={labelClass}>New Email</label>
