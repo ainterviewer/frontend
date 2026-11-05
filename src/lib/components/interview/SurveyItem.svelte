@@ -7,12 +7,15 @@
 	let {
 		onAnswer,
 		readonly = false,
+		preview = false,
 		answer = '',
 		lang = 'EN',
 		...surveyItem
 	}: SurveyItemUnion & {
 		onAnswer?: (value: unknown) => void;
 		readonly?: boolean;
+		/** Interactive but never submitted: the guide editor's live preview. */
+		preview?: boolean;
 		answer?: string;
 		lang?: string;
 	} = $props();
@@ -120,6 +123,8 @@
 
 	const uid = $props.id();
 	const groupName = `survey-option-${uid}`;
+	const sliderTicksId = `slider-ticks-${uid}`;
+	const likertTicksId = `likert-ticks-${uid}`;
 
 	untrack(() => {
 		if (!readonly || !answer) return;
@@ -325,10 +330,10 @@
 					bind:value={sliderValue}
 					disabled={disabled && !readonly}
 					class="my-6 w-full cursor-pointer accent-primary disabled:cursor-not-allowed"
-					list="slider-ticks"
+					list={sliderTicksId}
 				/>
 				{#if sliderTicks.length <= 20}
-					<datalist id="slider-ticks">
+					<datalist id={sliderTicksId}>
 						{#each sliderTicks as tick (tick)}
 							<option value={tick}>{tick}</option>
 						{/each}
@@ -350,10 +355,10 @@
 					bind:value={sliderValue}
 					disabled={disabled && !readonly}
 					class="my-6 w-full cursor-pointer accent-primary disabled:cursor-not-allowed"
-					list="tickmarks"
+					list={likertTicksId}
 				/>
 
-				<datalist id="tickmarks">
+				<datalist id={likertTicksId}>
 					{#each likertOptions as opt, i (i)}
 						<option value={i} label={opt}></option>
 					{/each}
@@ -515,7 +520,7 @@
 		{/if}
 	</fieldset>
 
-	{#if !disabled && !readonly}
+	{#if !disabled && !readonly && !preview}
 		<div class="mt-2 flex justify-end">
 			<button
 				class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-98 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 disabled:hover:shadow-md"

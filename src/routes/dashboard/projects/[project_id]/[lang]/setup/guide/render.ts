@@ -23,7 +23,7 @@ import type {
 // is taken from the rest, in order. Mirrors `LocalizedInterviewGuide.render`
 // in the library.
 
-function renderSurveyItem(
+export function renderSurveyItem(
 	item: GuideQuestion['survey_item'],
 	languages: string[]
 ): RenderedQuestion['survey_item'] {
