@@ -157,3 +157,36 @@ describe('ChatClient opening message', () => {
 		expect(chat.showTypingIndicator).toBe(true);
 	});
 });
+
+describe('ChatClient transient failures', () => {
+	const BUSY = 'The interview service is busy. Trying again in a moment…';
+	const busyNotices = (chat: ChatClient) =>
+		chat.messages.filter((m) => m.type === 'system' && m.text === BUSY);
+
+	test('the busy notice goes once the interview resumes', async () => {
+		vi.useFakeTimers();
+		try {
+			const { chat } = connectedClient();
+
+			await chat.processSingleMessage({ type: 'data', error: 'InstanceInitializing' });
+			expect(busyNotices(chat)).toHaveLength(1);
+
+			// Another transient failure on the retry keeps it, once.
+			await chat.processSingleMessage({ type: 'data', error: 'InstanceInitializing' });
+			expect(busyNotices(chat)).toHaveLength(1);
+
+			await chat.processSingleMessage({
+				type: 'message',
+				content: 'How many hours did you work?',
+				role: 'assistant',
+				message_id: 2,
+				can_answer: true
+			});
+
+			expect(busyNotices(chat)).toEqual([]);
+			expect(chat.messages.at(-1)).toMatchObject({ text: 'How many hours did you work?' });
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+});

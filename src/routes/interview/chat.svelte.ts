@@ -429,6 +429,14 @@ export class ChatClient {
 		}, TRANSIENT_RETRY_MS);
 	}
 
+	/** Takes back the notice `handleTransientFailure` left in the chat. */
+	private clearTransientNotice() {
+		const index = this.messages.findIndex(
+			(m) => m.type === 'system' && m.text === TRANSIENT_FAILURE_TEXT
+		);
+		if (index !== -1) this.messages.splice(index, 1);
+	}
+
 	/** The server told us the interview cannot run. Unlike a dropped
 	 *  connection this is not worth retrying, so stop and say so. */
 	private handleServiceFailure() {
@@ -747,6 +755,13 @@ export class ChatClient {
 	async processSingleMessage(data: ServerMessage) {
 		// Server is speaking — drop any forced indicator from a prior send.
 		this.forceTypingIndicator = false;
+
+		// The interview is running again, so it is no longer waiting on the
+		// service. Only on what the interview says: the socket opening proves
+		// nothing, as the server may answer it with another transient failure.
+		if (data.type === 'message' || data.type === 'history') {
+			this.clearTransientNotice();
+		}
 
 		switch (data.type) {
 			case 'message':
