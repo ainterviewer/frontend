@@ -1,13 +1,20 @@
 <script lang="ts">
+	import { getUiText } from '$lib/respondentText';
+
 	import { createPcmCapture, type PcmCapture, TranscriptionClient } from './transcription';
 
 	let {
+		lang = 'EN',
 		onTranscript,
 		onCancel
 	}: {
+		/** The interview language the controls are labelled in. */
+		lang?: string;
 		onTranscript: (transcript: string, audioFilename: string | null) => void;
 		onCancel: () => void;
 	} = $props();
+
+	let t = $derived(getUiText(lang).speech);
 
 	// Rolling amplitude history rendered as a scrolling bar indicator.
 	const BAR_COUNT = 32;
@@ -104,23 +111,23 @@
 		class="flex size-8 shrink-0 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400"
 		onclick={cancel}
 		disabled={isTranscribing}
-		title="Discard recording"
+		title={t.discard}
 	>
 		<i class="fas fa-trash"></i>
 	</button>
 
 	{#if failed}
-		<p class="flex-1 text-center text-sm text-red-500">Could not start recording.</p>
+		<p class="flex-1 text-center text-sm text-red-500">{t.could_not_start}</p>
 	{:else if isTranscribing}
 		<div class="flex flex-1 items-center justify-center gap-2 text-gray-600">
 			<div
 				class="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"
 			></div>
-			<span class="text-sm">Transcribing...</span>
+			<span class="text-sm">{t.transcribing}</span>
 		</div>
 	{:else}
 		<span class="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500"></span>
-		<div class="flex h-10 flex-1 items-center justify-center gap-[2px]" aria-label="Recording">
+		<div class="flex h-10 flex-1 items-center justify-center gap-[2px]" aria-label={t.recording}>
 			{#each bars as amplitude, i (i)}
 				<div
 					class="w-1 rounded-full bg-primary/70 transition-[height] duration-75"
@@ -129,7 +136,7 @@
 			{/each}
 		</div>
 		{#if transcriptionUnavailable}
-			<span class="shrink-0 text-xs text-yellow-600">Transcription unavailable</span>
+			<span class="shrink-0 text-xs text-yellow-600">{t.transcription_unavailable}</span>
 		{/if}
 	{/if}
 
@@ -142,7 +149,7 @@
 		class:bg-gray-300={failed}
 		onclick={send}
 		disabled={isTranscribing || failed}
-		title="Send recording"
+		title={t.send}
 	>
 		<i class="fas fa-paper-plane"></i>
 	</button>

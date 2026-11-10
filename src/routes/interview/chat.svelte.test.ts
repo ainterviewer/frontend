@@ -26,8 +26,8 @@ function intervention(
 }
 
 /** A client on an open socket, recording what it sends. */
-function connectedClient() {
-	const chat = new ChatClient('project');
+function connectedClient(lang?: string) {
+	const chat = new ChatClient('project', 'respondent', lang);
 	const send = vi.fn();
 	chat.ws = { readyState: WebSocket.OPEN, send } as unknown as WebSocket;
 	const sent = () => send.mock.calls.map(([frame]) => JSON.parse(frame));
@@ -185,6 +185,31 @@ describe('ChatClient transient failures', () => {
 
 			expect(busyNotices(chat)).toEqual([]);
 			expect(chat.messages.at(-1)).toMatchObject({ text: 'How many hours did you work?' });
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	test('the busy notice is in the interview language, and still goes', async () => {
+		vi.useFakeTimers();
+		try {
+			const { chat } = connectedClient('DA');
+			const notices = () => chat.messages.filter((m) => m.type === 'system');
+
+			await chat.processSingleMessage({ type: 'data', error: 'InstanceInitializing' });
+			expect(notices()).toEqual([
+				{ type: 'system', text: 'Interviewtjenesten er optaget. Prøver igen om et øjeblik…' }
+			]);
+
+			await chat.processSingleMessage({
+				type: 'message',
+				content: 'Hvor mange timer arbejdede du?',
+				role: 'assistant',
+				message_id: 2,
+				can_answer: true
+			});
+
+			expect(notices()).toEqual([]);
 		} finally {
 			vi.useRealTimers();
 		}

@@ -54,6 +54,7 @@
 	let reportingMessageId = $state<string | number | null>(null);
 	const reportText = $derived(getReportText(lang));
 	const chatText = $derived(getUiText(lang).chat);
+	const connectionText = $derived(getUiText(lang).connection);
 
 	/**
 	 * The index of the message that offers "Skip", or -1 for none.
@@ -389,7 +390,7 @@
 		<div
 			class="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"
 		></div>
-		Reconnecting...
+		{connectionText.reconnecting}
 	</div>
 {/if}
 
@@ -419,12 +420,10 @@
 				</div>
 				<div>
 					<h2 id="service-unavailable-title" class="text-lg font-semibold text-gray-900">
-						The interview cannot continue
+						{connectionText.unavailable_title}
 					</h2>
 					<p class="mt-2 text-sm text-gray-600">
-						Something on our side is preventing the interview from running. Your answers so far have
-						been saved. Please try again later, or contact the person who shared this interview with
-						you.
+						{connectionText.unavailable_text}
 					</p>
 				</div>
 			</div>
@@ -437,13 +436,13 @@
 	<div
 		class="fixed top-2 right-1/2 z-50 flex translate-x-[50%] items-center gap-3 rounded-lg bg-red-600/95 px-4 py-2 text-sm font-medium text-white shadow-xl backdrop-blur-md lg:right-4 lg:translate-x-0"
 	>
-		<span>Connection lost. Unable to reconnect.</span>
+		<span>{connectionText.lost}</span>
 		<button
 			type="button"
 			class="rounded bg-white/15 px-2 py-1 text-xs font-semibold transition-colors hover:bg-white/25"
 			onclick={() => chat.manualReconnect()}
 		>
-			Retry
+			{connectionText.retry}
 		</button>
 	</div>
 {/if}
@@ -466,11 +465,10 @@
 			class="relative z-10 w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl ring-1 ring-black/5"
 		>
 			<h2 id="session-expired-title" class="text-lg font-semibold text-gray-900">
-				Your session has expired
+				{connectionText.expired_title}
 			</h2>
 			<p class="mt-3 text-sm text-gray-600">
-				We could not resume your interview — this can happen if too much time has passed or if your
-				browser cleared its data. Your previous answers cannot be continued from here.
+				{connectionText.expired_text}
 			</p>
 			<div class="mt-6 flex justify-end">
 				<button
@@ -478,7 +476,7 @@
 					class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
 					onclick={() => chat.startOver()}
 				>
-					Start a new interview
+					{connectionText.start_over}
 				</button>
 			</div>
 		</div>
@@ -509,7 +507,7 @@
 					class="flex h-7.5 w-7.5 items-center justify-center bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-100 disabled:opacity-50"
 					onclick={triggerCamera}
 					disabled={!chat.inputEnabled}
-					title="Upload Image"
+					title={chatText.upload_image}
 				>
 					<i class="fa-regular fa-image text-lg text-gray-600"></i>
 				</button>
@@ -527,7 +525,7 @@
 				class="flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
 				class:hidden={!interviewConfig.with_audio}
 				onclick={toggleAutoPlay}
-				title={autoPlayAudio ? 'Stop reading questions aloud' : 'Read questions aloud'}
+				title={autoPlayAudio ? chatText.stop_reading_aloud : chatText.read_aloud}
 			>
 				{#if autoPlayAudio}
 					<i class="fa-solid fa-volume-high text-lg text-primary"></i>
@@ -539,7 +537,7 @@
 				type="button"
 				class="flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
 				onclick={() => (showHelp = true)}
-				title="Show help"
+				title={chatText.show_help}
 			>
 				<i class="fa-regular fa-circle-question text-lg text-gray-600"></i>
 			</button>
@@ -547,7 +545,7 @@
 				type="button"
 				class="flex size-8 items-center justify-center rounded-md bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-200"
 				onclick={() => (showExit = true)}
-				title="End interview"
+				title={chatText.end_interview}
 			>
 				<i class="fa-solid fa-door-open text-lg text-gray-600"></i>
 			</button>
@@ -555,7 +553,7 @@
 
 		<!-- Textarea / speech indicator while recording -->
 		{#if isRecording}
-			<SpeechInput onTranscript={handleTranscript} onCancel={() => (isRecording = false)} />
+			<SpeechInput {lang} onTranscript={handleTranscript} onCancel={() => (isRecording = false)} />
 		{:else}
 			<textarea
 				bind:this={textarea}
@@ -604,7 +602,7 @@
           "
 					onclick={() => (isRecording = true)}
 					disabled={!chat.inputEnabled || isRecording}
-					title="Record audio"
+					title={chatText.record_audio}
 				>
 					<i class="fas fa-microphone-lines text-lg"></i>
 				</button>

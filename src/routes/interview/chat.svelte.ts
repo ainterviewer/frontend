@@ -17,6 +17,7 @@ import {
 	type SurveyItemUnion,
 	WS_UNAUTHORIZED
 } from '$lib/components/interview/types';
+import { getUiText } from '$lib/respondentText';
 import { hasErrorCode } from '$lib/utils/errors';
 
 const SKIP_QUESTION = '<|skipquestion|>';
@@ -70,8 +71,8 @@ const MAX_CONNECTS_PER_WINDOW = 6;
 // upstream timeout. That is worth waiting out rather than reconnecting into
 // immediately, but not forever: after this many waits we stop and say so.
 // One line covering every transient cause, because the respondent can act on
-// none of them and the backend deliberately does not say which it was.
-const TRANSIENT_FAILURE_TEXT = 'The interview service is busy. Trying again in a moment…';
+// none of them and the backend deliberately does not say which it was. Its
+// text is `connection.busy` in `$lib/respondentText`.
 
 const TRANSIENT_RETRY_MS = 30_000;
 const MAX_TRANSIENT_RETRIES = 3;
@@ -421,8 +422,9 @@ export class ChatClient {
 		this.reconnectFailed = false;
 		this.isReconnecting = true;
 
-		if (!this.messages.some((m) => m.type === 'system' && m.text === TRANSIENT_FAILURE_TEXT)) {
-			this.messages.push({ type: 'system', text: TRANSIENT_FAILURE_TEXT });
+		const busy = this.transientNoticeText();
+		if (!this.messages.some((m) => m.type === 'system' && m.text === busy)) {
+			this.messages.push({ type: 'system', text: busy });
 		}
 
 		this.reconnectTimeout = setTimeout(() => {
@@ -435,11 +437,15 @@ export class ChatClient {
 		}, TRANSIENT_RETRY_MS);
 	}
 
+	/** The notice `handleTransientFailure` leaves in the chat, in this interview's language. */
+	private transientNoticeText() {
+		return getUiText(this.lang).connection.busy;
+	}
+
 	/** Takes back the notice `handleTransientFailure` left in the chat. */
 	private clearTransientNotice() {
-		const index = this.messages.findIndex(
-			(m) => m.type === 'system' && m.text === TRANSIENT_FAILURE_TEXT
-		);
+		const busy = this.transientNoticeText();
+		const index = this.messages.findIndex((m) => m.type === 'system' && m.text === busy);
 		if (index !== -1) this.messages.splice(index, 1);
 	}
 
@@ -609,7 +615,7 @@ export class ChatClient {
 			}
 		} catch (error) {
 			console.error('Error uploading image', error);
-			this.messages.push({ type: 'system', text: 'Error uploading image.' });
+			this.messages.push({ type: 'system', text: getUiText(this.lang).chat.image_upload_failed });
 			this.inputEnabled = true;
 		}
 	}

@@ -27,6 +27,37 @@ export interface UiText {
 		message_placeholder: string;
 		skip: string;
 		skip_title: string;
+		upload_image: string;
+		/** Posted into the conversation when an image upload fails. */
+		image_upload_failed: string;
+		read_aloud: string;
+		stop_reading_aloud: string;
+		show_help: string;
+		end_interview: string;
+		record_audio: string;
+	};
+	/** The interview's connection, and the screens shown when it cannot go on. */
+	connection: {
+		reconnecting: string;
+		lost: string;
+		retry: string;
+		unavailable_title: string;
+		unavailable_text: string;
+		expired_title: string;
+		expired_text: string;
+		start_over: string;
+		/** Posted into the conversation while the server asks us to wait. */
+		busy: string;
+	};
+	/** Answering by voice, in place of the message box. */
+	speech: {
+		discard: string;
+		send: string;
+		could_not_start: string;
+		transcribing: string;
+		/** Accessible name of the level meter. */
+		recording: string;
+		transcription_unavailable: string;
 	};
 	survey: {
 		pickValue: string;
@@ -66,7 +97,35 @@ const UI: Record<Lang, UiText> = {
 			send_title: (shortcut) => `Send message (${shortcut})`,
 			message_placeholder: 'Message',
 			skip: 'Skip',
-			skip_title: 'Skip this question'
+			skip_title: 'Skip this question',
+			upload_image: 'Upload image',
+			image_upload_failed: 'The image could not be uploaded.',
+			read_aloud: 'Read questions aloud',
+			stop_reading_aloud: 'Stop reading questions aloud',
+			show_help: 'Show help',
+			end_interview: 'End interview',
+			record_audio: 'Record audio'
+		},
+		connection: {
+			reconnecting: 'Reconnecting...',
+			lost: 'Connection lost. Unable to reconnect.',
+			retry: 'Retry',
+			unavailable_title: 'The interview cannot continue',
+			unavailable_text:
+				'Something on our side is preventing the interview from running. Your answers so far have been saved. Please try again later, or contact the person who shared this interview with you.',
+			expired_title: 'Your session has expired',
+			expired_text:
+				'We could not resume your interview — this can happen if too much time has passed or if your browser cleared its data. Your previous answers cannot be continued from here.',
+			start_over: 'Start a new interview',
+			busy: 'The interview service is busy. Trying again in a moment…'
+		},
+		speech: {
+			discard: 'Discard recording',
+			send: 'Send recording',
+			could_not_start: 'Could not start recording.',
+			transcribing: 'Transcribing...',
+			recording: 'Recording',
+			transcription_unavailable: 'Transcription unavailable'
 		},
 		survey: {
 			pickValue: 'Pick a value',
@@ -99,7 +158,35 @@ const UI: Record<Lang, UiText> = {
 			send_title: (shortcut) => `Send besked (${shortcut})`,
 			message_placeholder: 'Besked',
 			skip: 'Spring over',
-			skip_title: 'Spring dette spørgsmål over'
+			skip_title: 'Spring dette spørgsmål over',
+			upload_image: 'Upload billede',
+			image_upload_failed: 'Billedet kunne ikke uploades.',
+			read_aloud: 'Læs spørgsmål højt',
+			stop_reading_aloud: 'Stop oplæsning af spørgsmål',
+			show_help: 'Vis hjælp',
+			end_interview: 'Afslut interview',
+			record_audio: 'Optag lyd'
+		},
+		connection: {
+			reconnecting: 'Genopretter forbindelsen...',
+			lost: 'Forbindelsen blev afbrudt og kunne ikke genoprettes.',
+			retry: 'Prøv igen',
+			unavailable_title: 'Interviewet kan ikke fortsætte',
+			unavailable_text:
+				'En fejl hos os forhindrer interviewet i at køre. Dine svar indtil nu er gemt. Prøv igen senere, eller kontakt den person, der delte interviewet med dig.',
+			expired_title: 'Din session er udløbet',
+			expired_text:
+				'Vi kunne ikke genoptage dit interview — det kan ske, hvis der er gået for lang tid, eller hvis din browser har slettet sine data. Dine tidligere svar kan ikke fortsættes herfra.',
+			start_over: 'Start et nyt interview',
+			busy: 'Interviewtjenesten er optaget. Prøver igen om et øjeblik…'
+		},
+		speech: {
+			discard: 'Kassér optagelse',
+			send: 'Send optagelse',
+			could_not_start: 'Optagelsen kunne ikke startes.',
+			transcribing: 'Transskriberer...',
+			recording: 'Optager',
+			transcription_unavailable: 'Transskription ikke tilgængelig'
 		},
 		survey: {
 			pickValue: 'Vælg en værdi',
@@ -132,7 +219,35 @@ const UI: Record<Lang, UiText> = {
 			send_title: (shortcut) => `Nachricht senden (${shortcut})`,
 			message_placeholder: 'Nachricht',
 			skip: 'Überspringen',
-			skip_title: 'Diese Frage überspringen'
+			skip_title: 'Diese Frage überspringen',
+			upload_image: 'Bild hochladen',
+			image_upload_failed: 'Das Bild konnte nicht hochgeladen werden.',
+			read_aloud: 'Fragen vorlesen',
+			stop_reading_aloud: 'Vorlesen beenden',
+			show_help: 'Hilfe anzeigen',
+			end_interview: 'Interview beenden',
+			record_audio: 'Audio aufnehmen'
+		},
+		connection: {
+			reconnecting: 'Verbindung wird wiederhergestellt...',
+			lost: 'Verbindung unterbrochen. Sie konnte nicht wiederhergestellt werden.',
+			retry: 'Erneut versuchen',
+			unavailable_title: 'Das Interview kann nicht fortgesetzt werden',
+			unavailable_text:
+				'Ein Problem auf unserer Seite verhindert die Durchführung des Interviews. Ihre bisherigen Antworten wurden gespeichert. Bitte versuchen Sie es später erneut oder wenden Sie sich an die Person, die dieses Interview mit Ihnen geteilt hat.',
+			expired_title: 'Ihre Sitzung ist abgelaufen',
+			expired_text:
+				'Wir konnten Ihr Interview nicht fortsetzen – das kann passieren, wenn zu viel Zeit vergangen ist oder Ihr Browser seine Daten gelöscht hat. Ihre bisherigen Antworten können von hier aus nicht fortgesetzt werden.',
+			start_over: 'Neues Interview starten',
+			busy: 'Der Interviewdienst ist ausgelastet. Neuer Versuch in Kürze…'
+		},
+		speech: {
+			discard: 'Aufnahme verwerfen',
+			send: 'Aufnahme senden',
+			could_not_start: 'Die Aufnahme konnte nicht gestartet werden.',
+			transcribing: 'Wird transkribiert...',
+			recording: 'Aufnahme läuft',
+			transcription_unavailable: 'Transkription nicht verfügbar'
 		},
 		survey: {
 			pickValue: 'Wert auswählen',
@@ -170,7 +285,35 @@ const UI: Record<Lang, UiText> = {
 			send_title: (shortcut) => `Enviar mensaje (${shortcut})`,
 			message_placeholder: 'Mensaje',
 			skip: 'Omitir',
-			skip_title: 'Omitir esta pregunta'
+			skip_title: 'Omitir esta pregunta',
+			upload_image: 'Subir imagen',
+			image_upload_failed: 'No se pudo subir la imagen.',
+			read_aloud: 'Leer las preguntas en voz alta',
+			stop_reading_aloud: 'Dejar de leer las preguntas en voz alta',
+			show_help: 'Mostrar ayuda',
+			end_interview: 'Finalizar la entrevista',
+			record_audio: 'Grabar audio'
+		},
+		connection: {
+			reconnecting: 'Reconectando...',
+			lost: 'Se perdió la conexión. No se pudo volver a conectar.',
+			retry: 'Reintentar',
+			unavailable_title: 'La entrevista no puede continuar',
+			unavailable_text:
+				'Un problema por nuestra parte impide que la entrevista funcione. Tus respuestas hasta ahora se han guardado. Inténtalo de nuevo más tarde o ponte en contacto con la persona que compartió esta entrevista contigo.',
+			expired_title: 'Tu sesión ha caducado',
+			expired_text:
+				'No hemos podido reanudar tu entrevista: esto puede ocurrir si ha pasado demasiado tiempo o si tu navegador ha borrado sus datos. Tus respuestas anteriores no se pueden continuar desde aquí.',
+			start_over: 'Comenzar una nueva entrevista',
+			busy: 'El servicio de entrevistas está ocupado. Se volverá a intentar en un momento…'
+		},
+		speech: {
+			discard: 'Descartar grabación',
+			send: 'Enviar grabación',
+			could_not_start: 'No se pudo iniciar la grabación.',
+			transcribing: 'Transcribiendo...',
+			recording: 'Grabando',
+			transcription_unavailable: 'Transcripción no disponible'
 		},
 		survey: {
 			pickValue: 'Elige un valor',
@@ -208,7 +351,35 @@ const UI: Record<Lang, UiText> = {
 			send_title: (shortcut) => `Envoyer le message (${shortcut})`,
 			message_placeholder: 'Message',
 			skip: 'Passer',
-			skip_title: 'Passer cette question'
+			skip_title: 'Passer cette question',
+			upload_image: 'Envoyer une image',
+			image_upload_failed: "L'image n'a pas pu être envoyée.",
+			read_aloud: 'Lire les questions à voix haute',
+			stop_reading_aloud: 'Arrêter la lecture des questions',
+			show_help: "Afficher l'aide",
+			end_interview: "Terminer l'entretien",
+			record_audio: 'Enregistrer un message audio'
+		},
+		connection: {
+			reconnecting: 'Reconnexion...',
+			lost: 'Connexion perdue. Impossible de se reconnecter.',
+			retry: 'Réessayer',
+			unavailable_title: "L'entretien ne peut pas continuer",
+			unavailable_text:
+				"Un problème de notre côté empêche le déroulement de l'entretien. Vos réponses jusqu'à présent ont été enregistrées. Veuillez réessayer plus tard ou contacter la personne qui vous a transmis cet entretien.",
+			expired_title: 'Votre session a expiré',
+			expired_text:
+				"Nous n'avons pas pu reprendre votre entretien — cela peut arriver si trop de temps s'est écoulé ou si votre navigateur a effacé ses données. Vos réponses précédentes ne peuvent pas être reprises à partir d'ici.",
+			start_over: 'Commencer un nouvel entretien',
+			busy: "Le service d'entretien est occupé. Nouvel essai dans un instant…"
+		},
+		speech: {
+			discard: "Supprimer l'enregistrement",
+			send: "Envoyer l'enregistrement",
+			could_not_start: "Impossible de démarrer l'enregistrement.",
+			transcribing: 'Transcription...',
+			recording: 'Enregistrement en cours',
+			transcription_unavailable: 'Transcription indisponible'
 		},
 		survey: {
 			pickValue: 'Choisissez une valeur',
