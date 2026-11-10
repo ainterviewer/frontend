@@ -1088,9 +1088,9 @@
 						}
 					}}
 				>
-					<div class="grow p-4">
+					<div class="flex grow flex-col p-4">
 						<div class="flex">
-							<h3 class="mb-1 w-full text-lg font-semibold">
+							<h3 class="mb-1 w-full text-lg leading-snug font-semibold">
 								{project.title}
 								{#if project.archived_at}
 									<span
@@ -1104,7 +1104,7 @@
 							<i class="fas fa-clipboard-list ml-1 text-xl"></i>
 						</div>
 
-						<div class="flex flex-col gap-1 text-sm text-gray-500">
+						<div class="mt-auto flex flex-col gap-1 text-sm text-gray-500">
 							<p>
 								Created: {formatDay(project.created_at)}
 							</p>
