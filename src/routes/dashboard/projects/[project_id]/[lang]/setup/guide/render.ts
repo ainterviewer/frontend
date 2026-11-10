@@ -28,6 +28,13 @@ export function renderSurveyItem(
 	languages: string[]
 ): RenderedQuestion['survey_item'] {
 	if (!item) return null;
+	if (item.type === 'likert_grid') {
+		return {
+			...item,
+			options: item.options.map((option) => pick(option.text, languages)),
+			rows: item.rows.map((row) => ({ ...row, text: pick(row.text, languages) }))
+		};
+	}
 	if ('options' in item) {
 		return { ...item, options: item.options.map((option) => pick(option.text, languages)) };
 	}

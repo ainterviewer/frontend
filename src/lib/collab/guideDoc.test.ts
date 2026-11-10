@@ -206,3 +206,48 @@ describe('orderKeys', () => {
 		expect(new Set(keys).size).toBe(4);
 	});
 });
+
+describe('likert grids', () => {
+	const ROW_A = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+	const ROW_B = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+
+	function withGrid() {
+		const g = guide();
+		g.question_sections![0].questions![1].survey_item = {
+			type: 'likert_grid',
+			options: [
+				{ id: '00000000-0000-4000-8000-000000000001', text: { EN: 'Bad' } },
+				{ id: '00000000-0000-4000-8000-000000000002', text: { EN: 'Good' } }
+			],
+			rows: [
+				{ id: ROW_A, text: { EN: 'Cleanliness' }, required: true },
+				{ id: ROW_B, text: { EN: 'Signage' }, required: false }
+			]
+		};
+		const doc = new Y.Doc();
+		applyGuide(doc, g, ['EN']);
+		return { doc, g };
+	}
+
+	function rowText(doc: Y.Doc, row: string) {
+		const entry = roots(doc).questions.get(Q2) as Y.Map<Y.Map<Y.Map<Y.Map<Y.Map<Y.Text>>>>>;
+		return entry.get('survey_item')!.get('rows')!.get(row)!.get('text')!.get('EN')!;
+	}
+
+	it('reads rows back with their ids, order and required flag', () => {
+		const { doc, g } = withGrid();
+		expect(readGuide(doc).question_sections![0].questions![1].survey_item).toEqual(
+			g.question_sections![0].questions![1].survey_item
+		);
+	});
+
+	it('merges two people typing in one row', () => {
+		const { doc: a } = withGrid();
+		const b = copy(a);
+		rowText(a, ROW_A).insert(0, 'Overall ');
+		rowText(b, ROW_A).insert('Cleanliness'.length, ' of toilets');
+		sync(a, b);
+		expect(rowText(a, ROW_A).toString()).toBe('Overall Cleanliness of toilets');
+		expect(readGuide(a)).toEqual(readGuide(b));
+	});
+});

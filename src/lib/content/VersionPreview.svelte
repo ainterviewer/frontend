@@ -60,6 +60,7 @@
 		radio: 'Single choice',
 		checkbox: 'Multiple choice',
 		likert: 'Likert scale',
+		likert_grid: 'Likert grid',
 		slider: 'Slider',
 		number: 'Number',
 		date: 'Date',
@@ -319,7 +320,21 @@
 												<p class="text-xs font-medium text-gray-500">
 													{SURVEY_LABEL[item.type ?? ''] ?? item.type}
 												</p>
-												{#if options(question).length}
+												{#if item.type === 'likert_grid'}
+													<ul class="mt-1 flex flex-col gap-0.5">
+														{#each item.rows as row, r (row.id ?? r)}
+															<li class="flex items-center gap-2 text-gray-700">
+																<i class="fa-solid fa-grip-lines text-xs text-gray-400"></i>
+																{@render text(row.text)}
+															</li>
+														{/each}
+													</ul>
+													<p class="mt-1 text-xs text-gray-500">
+														{#each item.options as option, o (option.id ?? o)}{#if o > 0}
+																·
+															{/if}{@render text(option.text)}{/each}
+													</p>
+												{:else if options(question).length}
 													<ul class="mt-1 flex flex-col gap-0.5">
 														{#each options(question) as option, o (option.id ?? o)}
 															<li class="flex items-center gap-2 text-gray-700">

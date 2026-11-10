@@ -1491,7 +1491,7 @@ export type DistributionBucket = {
  * way, and a question with no survey item still has a distribution -- the
  * length of its free-text answers.
  */
-export type DistributionKind = 'categorical' | 'numeric' | 'temporal' | 'text' | 'statement';
+export type DistributionKind = 'categorical' | 'numeric' | 'temporal' | 'text' | 'grid' | 'statement';
 
 /**
  * DropoutPoint
@@ -2498,6 +2498,54 @@ export type GitHashes = {
 };
 
 /**
+ * GridRow
+ *
+ * One statement of a Likert grid, rated on the grid's scale.
+ */
+export type GridRow = {
+    /**
+     * Id
+     *
+     * Stable identity of the row; the answer is keyed by it.
+     */
+    id?: string;
+    /**
+     * Text
+     */
+    text: string;
+    /**
+     * Required
+     *
+     * Whether the row must be rated to submit the grid.
+     */
+    required?: boolean;
+};
+
+/**
+ * GridRowDistribution
+ *
+ * One row of a Likert grid: how its ratings fell across the scale.
+ */
+export type GridRowDistribution = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Counts
+     */
+    counts: Array<CategoryCount>;
+    /**
+     * N Answered
+     */
+    n_answered: number;
+};
+
+/**
  * GroupKind
  *
  * What a cluster map's points are grouped by.
@@ -3464,6 +3512,8 @@ export type ItemDistribution = {
     } & CheckboxItem) | ({
         type: 'likert';
     } & LikertItem) | ({
+        type: 'likert_grid';
+    } & LikertGridItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';
@@ -3520,6 +3570,10 @@ export type ItemDistribution = {
      * N Other Hidden Count
      */
     n_other_hidden_count?: number;
+    /**
+     * Rows
+     */
+    rows?: Array<GridRowDistribution>;
 };
 
 /**
@@ -3570,6 +3624,36 @@ export type LanguageDict = {
      */
     name: string;
     code: LanguageCode;
+};
+
+/**
+ * LikertGridItem
+ *
+ * Several statements rated on one shared Likert scale, answered together
+ * as one answer.
+ *
+ * The answer is a JSON object from row id to the chosen option's text
+ * (`encode_answer`); a row left blank is absent from it. It is stored and
+ * sent as that JSON, and read back with `parse_answer` -- or as text a
+ * person or model can read with `describe_answer`.
+ */
+export type LikertGridItem = {
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'likert_grid';
+    /**
+     * Options
+     */
+    options: Array<string>;
+    /**
+     * Rows
+     */
+    rows: Array<GridRow>;
 };
 
 /**
@@ -3689,6 +3773,23 @@ export type LocalizedConsent = {
 };
 
 /**
+ * LocalizedGridRow
+ *
+ * One statement of a Likert grid. See `GridRow`.
+ */
+export type LocalizedGridRow = {
+    /**
+     * Id
+     */
+    id?: string;
+    text?: LocalizedText;
+    /**
+     * Required
+     */
+    required?: boolean;
+};
+
+/**
  * LocalizedImage
  *
  * An image to show the interviewee. The file is shared; what is said
@@ -3745,6 +3846,28 @@ export type LocalizedInterviewGuide = {
      * Ai Generated Sections
      */
     ai_generated_sections?: number;
+};
+
+/**
+ * LocalizedLikertGridItem
+ */
+export type LocalizedLikertGridItem = {
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'likert_grid';
+    /**
+     * Options
+     */
+    options: Array<LocalizedOption>;
+    /**
+     * Rows
+     */
+    rows: Array<LocalizedGridRow>;
 };
 
 /**
@@ -3822,6 +3945,8 @@ export type LocalizedQuestion = {
     } & LocalizedCheckboxItem) | ({
         type: 'likert';
     } & LocalizedLikertItem) | ({
+        type: 'likert_grid';
+    } & LocalizedLikertGridItem) | ({
         type: 'slider';
     } & LocalizedSliderItem) | ({
         type: 'number';
@@ -4229,6 +4354,8 @@ export type MessagePublic = {
     } & CheckboxItem) | ({
         type: 'likert';
     } & LikertItem) | ({
+        type: 'likert_grid';
+    } & LikertGridItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';
@@ -5272,6 +5399,8 @@ export type Question = {
     } & CheckboxItem) | ({
         type: 'likert';
     } & LikertItem) | ({
+        type: 'likert_grid';
+    } & LikertGridItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';
@@ -6351,6 +6480,8 @@ export type TranscriptTurn = {
     } & CheckboxItem) | ({
         type: 'likert';
     } & LikertItem) | ({
+        type: 'likert_grid';
+    } & LikertGridItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';
@@ -6872,6 +7003,8 @@ export type OutgoingHistoryMessage = {
     } & CheckboxItem) | ({
         type: 'likert';
     } & LikertItem) | ({
+        type: 'likert_grid';
+    } & LikertGridItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';
@@ -6917,6 +7050,8 @@ export type OutgoingMessage = {
     } & CheckboxItem) | ({
         type: 'likert';
     } & LikertItem) | ({
+        type: 'likert_grid';
+    } & LikertGridItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';

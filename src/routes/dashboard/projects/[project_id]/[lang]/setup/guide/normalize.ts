@@ -37,6 +37,17 @@ function normalizeImage(image: LocalizedQuestion['image']): GuideImage | null {
 // Every text in a survey item present: option texts and slider labels.
 function normalizeSurveyItem(item: LocalizedQuestion['survey_item']): GuideQuestion['survey_item'] {
 	if (!item) return null;
+	if (item.type === 'likert_grid') {
+		return {
+			...item,
+			options: item.options.map((o) => ({
+				...o,
+				id: o.id ?? crypto.randomUUID(),
+				text: o.text ?? {}
+			})),
+			rows: item.rows.map((r) => ({ ...r, id: r.id ?? crypto.randomUUID(), text: r.text ?? {} }))
+		};
+	}
 	if ('options' in item) {
 		return {
 			...item,
@@ -207,7 +218,17 @@ export function localizeRenderedQuestion(
 ): GuideQuestion {
 	const survey = q.survey_item;
 	let survey_item: GuideQuestion['survey_item'] = null;
-	if (survey && 'options' in survey) {
+	if (survey?.type === 'likert_grid') {
+		survey_item = {
+			...survey,
+			options: survey.options.map((o) => ({ id: crypto.randomUUID(), text: textIn(language, o) })),
+			rows: survey.rows.map((r) => ({
+				...r,
+				id: crypto.randomUUID(),
+				text: textIn(language, r.text)
+			}))
+		};
+	} else if (survey && 'options' in survey) {
 		survey_item = {
 			...survey,
 			options: survey.options.map((o) => ({ id: crypto.randomUUID(), text: textIn(language, o) }))

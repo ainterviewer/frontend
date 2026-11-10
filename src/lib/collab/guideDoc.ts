@@ -9,7 +9,8 @@ import type { LocalizedInterviewGuide } from '$lib/api/types.gen';
 // shape is what it is. In short:
 //
 // - every text is a `Y.Map` from language to `Y.Text`;
-// - sections, questions and survey options are `Y.Map`s keyed by id, each
+// - sections, questions, survey options and grid rows are `Y.Map`s keyed by
+//   id, each
 //   entry carrying an `order` key (fractional indexing); questions are flat,
 //   with a `section_id`, so a move never loses a concurrent edit;
 // - probes, alternative wordings and timed messages are `Y.Array`s, matched
@@ -30,6 +31,8 @@ const SECTION_TEXTS = ['description'];
 const QUESTION_TEXTS = ['main_question', 'description'];
 const QUESTION_TEXT_LISTS = ['probes', 'alternative_main_questions'];
 const SURVEY_TEXTS = ['min_label', 'max_label'];
+/** A survey item's lists of things with ids: a choice's options, a grid's rows. */
+const SURVEY_KEYED = ['options', 'rows'];
 const IMAGE_TEXTS = ['primer', 'description', 'alt'];
 const TIMED_TEXTS = ['message'];
 
@@ -349,18 +352,20 @@ const writeOption: Writer = (entry, data, ctx) =>
 	setFields(entry, data, ctx, { texts: ['text'], skip: ['id', ORDER] });
 
 const writeSurveyItem: Writer = (target, data, ctx) => {
-	setFields(target, data, ctx, { texts: SURVEY_TEXTS, skip: ['options'] });
-	const options = data.options as Json[] | undefined | null;
-	if (options == null) {
-		if (target.has('options')) target.delete('options');
-		return;
+	setFields(target, data, ctx, { texts: SURVEY_TEXTS, skip: SURVEY_KEYED });
+	for (const key of SURVEY_KEYED) {
+		const entries = data[key] as Json[] | undefined | null;
+		if (entries == null) {
+			if (target.has(key)) target.delete(key);
+			continue;
+		}
+		setKeyed(
+			child(target, key),
+			entries.map((e) => [String(e.id), e]),
+			writeOption,
+			ctx
+		);
 	}
-	setKeyed(
-		child(target, 'options'),
-		options.map((o) => [String(o.id), o]),
-		writeOption,
-		ctx
-	);
 };
 
 const writeImage: Writer = (target, data, ctx) =>
@@ -474,17 +479,22 @@ function sorted(collection: Y.Map<unknown>): [string, Y.Map<unknown>][] {
 		.map(([id, entry]) => [id, entry]);
 }
 
+/** An option or a grid row: its text, and any plain fields (`required`). */
+function readKeyed([id, entry]: readonly [string, Y.Map<unknown>]): Json {
+	const data = readEntity(entry, []);
+	delete data[ORDER];
+	return { id, ...data, text: readTexts(entry.get('text')) };
+}
+
 function readQuestion(id: string, entry: Y.Map<unknown>): Json {
 	const data = readEntity(entry, QUESTION_TEXTS);
 	delete data[ORDER];
 	delete data[SECTION_ID];
 	if (data.survey_item instanceof Y.Map) {
 		const survey = readEntity(data.survey_item, SURVEY_TEXTS);
-		if (survey.options instanceof Y.Map) {
-			survey.options = sorted(survey.options).map(([optionId, option]) => ({
-				id: optionId,
-				text: readTexts(option.get('text'))
-			}));
+		for (const key of SURVEY_KEYED) {
+			const entries = survey[key];
+			if (entries instanceof Y.Map) survey[key] = sorted(entries).map(readKeyed);
 		}
 		data.survey_item = survey;
 	}

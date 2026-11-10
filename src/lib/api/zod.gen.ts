@@ -636,6 +636,7 @@ export const zDistributionKind = z.enum([
     'numeric',
     'temporal',
     'text',
+    'grid',
     'statement'
 ]);
 
@@ -968,6 +969,17 @@ export const zGitHashes = z.object({
     core_lib: z.string(),
     backend: z.string(),
     frontend: z.string()
+});
+
+/**
+ * GridRow
+ *
+ * One statement of a Likert grid, rated on the grid's scale.
+ */
+export const zGridRow = z.object({
+    id: z.uuid().optional(),
+    text: z.string(),
+    required: z.boolean().optional().default(true)
 });
 
 /**
@@ -1491,6 +1503,18 @@ export const zEmbeddingStatus = z.object({
 });
 
 /**
+ * GridRowDistribution
+ *
+ * One row of a Likert grid: how its ratings fell across the scale.
+ */
+export const zGridRowDistribution = z.object({
+    id: z.uuid(),
+    label: z.string(),
+    counts: z.array(zCategoryCount),
+    n_answered: z.int()
+});
+
+/**
  * InterviewSummaryPublic
  *
  * One row of the interview list. Deliberately carries no messages: the
@@ -1550,6 +1574,24 @@ export const zLanguageDict = z.object({
 });
 
 /**
+ * LikertGridItem
+ *
+ * Several statements rated on one shared Likert scale, answered together
+ * as one answer.
+ *
+ * The answer is a JSON object from row id to the chosen option's text
+ * (`encode_answer`); a row left blank is absent from it. It is stored and
+ * sent as that JSON, and read back with `parse_answer` -- or as text a
+ * person or model can read with `describe_answer`.
+ */
+export const zLikertGridItem = z.object({
+    required: z.boolean().optional().default(true),
+    type: z.literal('likert_grid').optional().default('likert_grid'),
+    options: z.array(z.string()),
+    rows: z.array(zGridRow)
+});
+
+/**
  * LikertItem
  */
 export const zLikertItem = z.object({
@@ -1597,6 +1639,17 @@ export const zLocalizedConsent = z.object({
 });
 
 /**
+ * LocalizedGridRow
+ *
+ * One statement of a Likert grid. See `GridRow`.
+ */
+export const zLocalizedGridRow = z.object({
+    id: z.uuid().optional(),
+    text: zLocalizedText.optional(),
+    required: z.boolean().optional().default(true)
+});
+
+/**
  * LocalizedImage
  *
  * An image to show the interviewee. The file is shared; what is said
@@ -1633,6 +1686,16 @@ export const zLocalizedCheckboxItem = z.object({
     type: z.literal('checkbox').optional().default('checkbox'),
     options: z.array(zLocalizedOption),
     with_other: z.boolean().optional().default(false)
+});
+
+/**
+ * LocalizedLikertGridItem
+ */
+export const zLocalizedLikertGridItem = z.object({
+    required: z.boolean().optional().default(true),
+    type: z.literal('likert_grid').optional().default('likert_grid'),
+    options: z.array(zLocalizedOption),
+    rows: z.array(zLocalizedGridRow)
 });
 
 /**
@@ -3047,6 +3110,7 @@ export const zItemDistribution = z.object({
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
+        zLikertGridItem,
         zSliderItem,
         zNumberItem,
         zDateItem,
@@ -3065,7 +3129,8 @@ export const zItemDistribution = z.object({
     stats: zNumericStats.nullable(),
     samples: z.array(zAnswerSample).optional(),
     n_other_hidden: z.int().optional().default(0),
-    n_other_hidden_count: z.int().optional().default(0)
+    n_other_hidden_count: z.int().optional().default(0),
+    rows: z.array(zGridRowDistribution).optional()
 });
 
 /**
@@ -3097,6 +3162,7 @@ export const zLocalizedQuestion = z.object({
         zLocalizedRadioItem,
         zLocalizedCheckboxItem,
         zLocalizedLikertItem,
+        zLocalizedLikertGridItem,
         zLocalizedSliderItem,
         zNumberItem,
         zDateItem,
@@ -3181,6 +3247,7 @@ export const zMessagePublic = z.object({
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
+        zLikertGridItem,
         zSliderItem,
         zNumberItem,
         zDateItem,
@@ -3223,6 +3290,7 @@ export const zQuestion = z.object({
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
+        zLikertGridItem,
         zSliderItem,
         zNumberItem,
         zDateItem,
@@ -3488,6 +3556,7 @@ export const zTranscriptTurn = z.object({
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
+        zLikertGridItem,
         zSliderItem,
         zNumberItem,
         zDateItem,
@@ -3880,6 +3949,7 @@ export const zOutgoingHistoryMessage = z.object({
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
+        zLikertGridItem,
         zSliderItem,
         zNumberItem,
         zDateItem,
@@ -3906,6 +3976,7 @@ export const zOutgoingMessage = z.object({
         zRadioItem,
         zCheckboxItem,
         zLikertItem,
+        zLikertGridItem,
         zSliderItem,
         zNumberItem,
         zDateItem,

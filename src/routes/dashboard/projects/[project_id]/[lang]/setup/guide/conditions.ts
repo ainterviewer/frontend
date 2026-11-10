@@ -153,6 +153,9 @@ export function isConditionTargetValid(
 	// Target must still exist somewhere in the guide.
 	const { sectionIndex: s, questionIndex: q } = resolveConditionTarget(ctx, sections, questionsMap);
 	if (s < 0 || q < 0) return false;
+	// A grid's answer is a rating per row, which conditions cannot read (yet);
+	// the library refuses it too.
+	if (questionsMap[sections[s].id]?.[q]?.survey_item?.type === 'likert_grid') return false;
 	// No forward references (same question is allowed).
 	if (s > ownSectionIndex) return false;
 	if (s === ownSectionIndex && q > ownQuestionIndex) return false;

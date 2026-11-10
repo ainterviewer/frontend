@@ -61,6 +61,9 @@ export function questionTexts(q: GuideQuestion): LocalizedText[] {
 	const texts = [q.main_question, q.description, ...q.probes];
 	texts.push(...(q.alternative_main_questions ?? []));
 	for (const option of surveyItemOptions(q.survey_item) ?? []) texts.push(option.text ?? {});
+	if (q.survey_item?.type === 'likert_grid') {
+		for (const row of q.survey_item.rows) texts.push(row.text ?? {});
+	}
 	if (q.survey_item?.type === 'slider') {
 		texts.push(q.survey_item.min_label ?? {}, q.survey_item.max_label ?? {});
 	}

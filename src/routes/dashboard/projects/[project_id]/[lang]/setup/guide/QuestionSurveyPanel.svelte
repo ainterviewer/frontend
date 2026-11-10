@@ -25,6 +25,12 @@
 		return { id: crypto.randomUUID(), text: {} };
 	}
 
+	// A fresh row of a grid. Rows keep their id across languages and
+	// reordering; the answer is keyed by it.
+	function row() {
+		return { id: crypto.randomUUID(), text: {}, required: true };
+	}
+
 	// Switch the item to `type`, keeping what the new type can use: the
 	// options between the choice types (with their ids, so conditions naming
 	// them still hold), the range between slider and number, and the range
@@ -50,6 +56,10 @@
 			question.survey_item = { type, ...base, options: keptOptions, ...withOther };
 		} else if (type === 'likert') {
 			question.survey_item = { type, ...base, options: keptOptions };
+		} else if (type === 'likert_grid') {
+			// The scale is the options; the rows start empty, two of them, since
+			// a grid of one is a Likert item.
+			question.survey_item = { type, ...base, options: keptOptions, rows: [row(), row()] };
 		} else if (type === 'slider') {
 			question.survey_item = {
 				type,
@@ -96,6 +106,10 @@
 		() => surveyItemOptions(question.survey_item),
 		'[data-option-row]'
 	);
+	const rowReorder = createListReorder(
+		() => (question.survey_item?.type === 'likert_grid' ? question.survey_item.rows : undefined),
+		'[data-grid-row]'
+	);
 </script>
 
 {#if question.survey_item}
@@ -118,13 +132,15 @@
 			<div class="min-w-0 flex-1 text-left">
 				<div class="font-medium text-gray-700">Survey Item</div>
 				<div class="text-xs text-gray-500">
-					{surveyItem.type === 'number' ||
-					surveyItem.type === 'date' ||
-					surveyItem.type === 'datetime' ||
-					surveyItem.type === 'time' ||
-					surveyItem.type === 'slider'
-						? surveyItem.type
-						: `${surveyItemOptions(surveyItem)?.length ?? 0} options (${surveyItem.type})`}
+					{surveyItem.type === 'likert_grid'
+						? `${surveyItem.rows.length} rows · ${surveyItem.options.length}-point scale (grid)`
+						: surveyItem.type === 'number' ||
+							  surveyItem.type === 'date' ||
+							  surveyItem.type === 'datetime' ||
+							  surveyItem.type === 'time' ||
+							  surveyItem.type === 'slider'
+							? surveyItem.type
+							: `${surveyItemOptions(surveyItem)?.length ?? 0} options (${surveyItem.type})`}
 				</div>
 			</div>
 		{/snippet}
@@ -141,6 +157,7 @@
 						<option value="radio">Single Choice</option>
 						<option value="checkbox">Multiple Choice</option>
 						<option value="likert">Likert Scale</option>
+						<option value="likert_grid">Likert Grid</option>
 						<option value="slider">Slider</option>
 						<option value="number">Number</option>
 						<option value="date">Date</option>
@@ -148,9 +165,72 @@
 						<option value="time">Time</option>
 					</select>
 				</label>
-				{#if surveyItem.type === 'radio' || surveyItem.type === 'checkbox' || surveyItem.type === 'likert'}
+				{#if surveyItem.type === 'likert_grid'}
 					<div>
-						<span class="mb-2 block text-gray-500">Options</span>
+						<span class="mb-2 flex items-center gap-1 text-gray-500">
+							Rows
+							<HoverInfo
+								iconColor="gray-500"
+								text="The statements rated on the scale below. The main question is the grid's prompt; the respondent answers every row at once."
+							></HoverInfo>
+						</span>
+						<div class="space-y-1">
+							{#each surveyItem.rows as gridRow, rIdx (gridRow.id ?? rIdx)}
+								<div
+									data-grid-row
+									class="flex items-center gap-1 transition-opacity"
+									class:opacity-40={rowReorder.draggedIndex === rIdx}
+									ondragover={(e) => rowReorder.dragOver(e, rIdx)}
+									role="listitem"
+								>
+									<div
+										class="cursor-grab rounded p-1 text-gray-400 outline-none hover:bg-gray-100 hover:text-gray-600"
+										title="Reorder row"
+										draggable="true"
+										ondragstart={(e) => rowReorder.dragStart(e, rIdx)}
+										ondragend={rowReorder.dragEnd}
+										role="button"
+										tabindex="-1"
+										aria-label="Reorder row"
+									>
+										<i class="fa-solid fa-grip-vertical"></i>
+									</div>
+									<TextField
+										class="flex-1 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+										text={gridRow.text!}
+										placeholder={`Row ${rIdx + 1}`}
+									/>
+									<button
+										class="px-1 {gridRow.required !== false
+											? 'text-red-500'
+											: 'text-gray-300 hover:text-gray-500'}"
+										onclick={() => (gridRow.required = gridRow.required === false)}
+										title={gridRow.required !== false
+											? 'Required: click to make optional'
+											: 'Optional: click to make required'}
+										aria-label="Toggle required"
+										aria-pressed={gridRow.required !== false}
+										><i class="fa-solid fa-asterisk"></i></button
+									>
+									<button
+										class="px-1 text-gray-400 hover:text-red-500"
+										onclick={() => surveyItem.rows.splice(rIdx, 1)}
+										title="Remove row"><i class="fa-solid fa-trash"></i></button
+									>
+								</div>
+							{/each}
+							<button
+								class="mt-1 text-sm font-medium text-primary hover:underline"
+								onclick={() => surveyItem.rows.push(row())}>+ Add Row</button
+							>
+						</div>
+					</div>
+				{/if}
+				{#if surveyItem.type === 'radio' || surveyItem.type === 'checkbox' || surveyItem.type === 'likert' || surveyItem.type === 'likert_grid'}
+					<div>
+						<span class="mb-2 block text-gray-500"
+							>{surveyItem.type === 'likert_grid' ? 'Scale' : 'Options'}</span
+						>
 						<div class="space-y-1">
 							{#each surveyItem.options as surveyOption, oIdx (surveyOption.id ?? oIdx)}
 								<div
@@ -380,7 +460,7 @@
 							/>
 						</div>
 					{/if}
-					<div class="ml-auto w-full max-w-md">
+					<div class="ml-auto w-full {previewItem.type === 'likert_grid' ? '' : 'max-w-md'}">
 						<!-- Re-mount on a type change: the answer state of one type is
 					     meaningless, and can be out of range, for another. -->
 						{#key `${previewItem.type}-${'ui' in previewItem ? previewItem.ui : ''}`}

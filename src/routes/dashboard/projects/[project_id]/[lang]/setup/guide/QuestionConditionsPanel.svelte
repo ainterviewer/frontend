@@ -216,7 +216,7 @@
 									{#each allSections as sec, sIdx (sec.id)}
 										{#if sIdx <= sectionIndex}
 											{#each allQuestions[sec.id] || [] as q, qIdx (q.id)}
-												{#if sIdx < sectionIndex || qIdx <= index}
+												{#if (sIdx < sectionIndex || qIdx <= index) && q.survey_item?.type !== 'likert_grid'}
 													<option value={`${sec.id}|${q.id}`}>
 														Section {sIdx + 1} > Question {qIdx + 1}
 														{pick(q.main_question, guideStore.languages)
