@@ -4,6 +4,34 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.15] - 2026-11-10
+
+### Features
+
+- (survey) Add Likert grid questions
+- (interview) Show answered survey items when an interview resumes
+- (interview) Translate the welcome notice and interview buttons
+- (interview) Translate connection notices and chat controls
+
+### Bug Fixes
+
+- (interview) Clear the busy notice once the interview resumes
+- (survey) Keep a checkbox option that contains a comma whole
+- (interview) Refine respondent interface translations
+- (setup) Let clicks through beside the action bar
+- (email) Keep the action bar at the foot of the page while it loads
+- (ui) Keep the action bar the same distance from the bottom on every page
+- (ui) Highlight the hovered row in the project switcher
+- (ui) Tighten spacing between questions in the guide sidebar
+
+### Preview
+
+- [report] Break a Likert grid down by row
+
+### Internal
+
+- (ui) Share one action bar component across pages
+
 ## [0.9.14] - 2026-11-05
 
 ### Features
