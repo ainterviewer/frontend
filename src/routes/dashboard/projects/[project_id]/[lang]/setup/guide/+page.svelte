@@ -316,13 +316,14 @@
 					}
 				},
 				{
-					id: 'version-history',
+					id: 'version-history-v2',
 					element: '[data-tour="version-history"]',
 					popover: {
 						title: 'Version History',
 						description:
-							'Shows the version respondents see now. A dot means the draft has changes they do not see yet. Open it to browse earlier versions and restore one.'
-					}
+							'Shows the version respondents see now. A dot means the draft has changes they do not see yet. Open it to browse earlier versions, compare one with the draft to see what changed, and restore one.'
+					},
+					whatsNew: 'compare any version with the draft to see exactly what changed.'
 				},
 				{
 					id: 'try-interview',

@@ -3834,20 +3834,11 @@ export const zAgentConfigs = z.object({
 });
 
 /**
- * ContentVersionPublic
+ * ContentDraftPublic
  *
- * A version with its content, for previewing it read-only.
+ * The draft's content, for comparing a version against it.
  */
-export const zContentVersionPublic = z.object({
-    id: z.string(),
-    version_no: z.int(),
-    kind: zContentVersionKind,
-    semver: z.string().nullable(),
-    label: z.string().nullable(),
-    created_at: z.iso.datetime(),
-    created_by_id: z.string().nullable(),
-    created_by_name: z.string().nullable(),
-    is_published: z.boolean(),
+export const zContentDraftPublic = z.object({
     languages: z.array(zLanguageCode),
     default_language: zLanguageCode,
     languages_in_progress: z.array(zLanguageCode),
@@ -3856,7 +3847,34 @@ export const zContentVersionPublic = z.object({
     welcome: zLocalizedWelcome.nullable(),
     emails: zParticipantEmails,
     agent_configs: zAgentConfigs,
-    prompt_overrides: z.record(z.string(), z.string())
+    prompt_overrides: z.record(z.string(), z.string()),
+    revision: z.int()
+});
+
+/**
+ * ContentVersionPublic
+ *
+ * A version with its content, for previewing it read-only.
+ */
+export const zContentVersionPublic = z.object({
+    languages: z.array(zLanguageCode),
+    default_language: zLanguageCode,
+    languages_in_progress: z.array(zLanguageCode),
+    guide: zLocalizedInterviewGuide,
+    consent: zLocalizedConsent.nullable(),
+    welcome: zLocalizedWelcome.nullable(),
+    emails: zParticipantEmails,
+    agent_configs: zAgentConfigs,
+    prompt_overrides: z.record(z.string(), z.string()),
+    id: z.string(),
+    version_no: z.int(),
+    kind: zContentVersionKind,
+    semver: z.string().nullable(),
+    label: z.string().nullable(),
+    created_at: z.iso.datetime(),
+    created_by_id: z.string().nullable(),
+    created_by_name: z.string().nullable(),
+    is_published: z.boolean()
 });
 
 /**
@@ -6268,6 +6286,19 @@ export const zSaveContentVersionQuery = z.object({
  * Successful Response
  */
 export const zSaveContentVersionResponse = zContentVersionSummaryPublic;
+
+export const zGetContentDraftPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zGetContentDraftQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetContentDraftResponse = zContentDraftPublic;
 
 export const zGetContentVersionPath = z.object({
     project_id: z.string().nullable(),

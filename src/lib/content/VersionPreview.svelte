@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type {
-		ContentVersionKind,
 		ContentVersionPublic,
 		LocalizedQuestion,
 		LocalizedText,
@@ -11,6 +10,8 @@
 	import WelcomePreview from '$lib/components/preview/WelcomePreview.svelte';
 	import { portal } from '$lib/utils/portal';
 	import { sanitizeMarkup } from '$lib/utils/sanitize';
+
+	import { AGENT_LABEL, KIND_LABEL, SURVEY_LABEL } from './labels';
 
 	let {
 		version,
@@ -47,37 +48,6 @@
 			] as [Tab, string, boolean][]
 		).filter(([, , shown]) => shown)
 	);
-
-	const KIND_LABEL: Record<ContentVersionKind, string> = {
-		publish: 'Published',
-		manual: 'Saved',
-		test: 'Tested',
-		restore: 'Before a restore',
-		auto: 'Autosave'
-	};
-
-	const SURVEY_LABEL: Record<string, string> = {
-		radio: 'Single choice',
-		checkbox: 'Multiple choice',
-		likert: 'Likert scale',
-		likert_grid: 'Likert grid',
-		slider: 'Slider',
-		number: 'Number',
-		date: 'Date',
-		datetime: 'Date and time',
-		time: 'Time'
-	};
-
-	const AGENT_LABEL: Record<string, string> = {
-		probing: 'Probing',
-		classification: 'Classification',
-		guide: 'Guide',
-		history: 'History',
-		security: 'Security',
-		answering: 'Answering',
-		reformulation: 'Reformulation',
-		visual: 'Visual'
-	};
 
 	// Model and temperature per agent, in the order the agents page lists them.
 	const agents = $derived(

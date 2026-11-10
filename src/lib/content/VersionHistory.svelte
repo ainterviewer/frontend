@@ -3,7 +3,6 @@
 
 	import { Versions } from '$lib/api';
 	import type {
-		ContentVersionKind,
 		ContentVersionPublic,
 		ContentVersionSummaryPublic,
 		ProjectLanguage
@@ -12,19 +11,24 @@
 	import { portal } from '$lib/utils/portal';
 	import { toastApiError } from '$lib/utils/toast';
 
+	import { KIND_LABEL } from './labels';
 	import { contentRevision, saveWithRevision } from './revision.svelte';
+	import VersionCompare from './VersionCompare.svelte';
 	import VersionPreview from './VersionPreview.svelte';
 
 	let {
 		open = $bindable(),
 		projectId,
 		lang,
-		availableLanguages = []
+		availableLanguages = [],
+		published = null
 	}: {
 		open: boolean;
 		projectId: string;
 		lang: string;
 		availableLanguages?: ProjectLanguage[];
+		/** What respondents get, for comparing the draft with it. */
+		published?: ContentVersionSummaryPublic | null;
 	} = $props();
 
 	const PAGE = 20;
@@ -35,14 +39,8 @@
 	let saving = $state(false);
 	let label = $state('');
 	let preview = $state<ContentVersionPublic | null>(null);
-
-	const KIND_LABEL: Record<ContentVersionKind, string> = {
-		publish: 'Published',
-		manual: 'Saved',
-		test: 'Tested',
-		restore: 'Before a restore',
-		auto: 'Autosave'
-	};
+	/** The version being compared with the draft. */
+	let comparing = $state<string | null>(null);
 
 	async function load(offset = 0) {
 		loading = true;
@@ -122,8 +120,8 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		// The preview closes itself on Escape.
-		if (e.key === 'Escape' && !preview) open = false;
+		// The preview and the comparison close themselves on Escape.
+		if (e.key === 'Escape' && !preview && !comparing) open = false;
 	}
 
 	// On opening, and again when a save here moves the draft: the list may
@@ -190,6 +188,17 @@
 				</button>
 			</form>
 
+			{#if published}
+				<button
+					type="button"
+					class="flex items-center gap-2 border-b border-gray-100 px-5 py-2.5 text-left text-sm text-primary hover:bg-gray-50"
+					onclick={() => (comparing = published.id)}
+				>
+					<i class="fa-solid fa-code-compare"></i>
+					See what changed since the live version, v{published.semver}
+				</button>
+			{/if}
+
 			<ul class="flex-1 divide-y divide-gray-100 overflow-y-auto">
 				{#each versions as version (version.id)}
 					<li class="flex flex-col gap-1 px-5 py-3">
@@ -225,8 +234,16 @@
 							<button
 								type="button"
 								class="text-primary hover:underline"
+								onclick={() => (comparing = version.id)}
+							>
+								Compare with draft
+							</button>
+							<button
+								type="button"
+								class="ml-auto text-gray-500 hover:text-gray-800 hover:underline"
 								onclick={() => restore(version)}
 							>
+								<i class="fa-solid fa-rotate-left mr-0.5 text-xs"></i>
 								Restore to draft
 							</button>
 						</div>
@@ -259,5 +276,15 @@
 		{lang}
 		{availableLanguages}
 		onClose={() => (preview = null)}
+	/>
+{/if}
+
+{#if comparing}
+	<VersionCompare
+		versionId={comparing}
+		{projectId}
+		{lang}
+		{availableLanguages}
+		onClose={() => (comparing = null)}
 	/>
 {/if}

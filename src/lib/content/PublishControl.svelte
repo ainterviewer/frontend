@@ -20,6 +20,7 @@
 
 	import { contentRevision, saveWithRevision } from './revision.svelte';
 	import { allowedBumps, type Bump, BUMP_MEANING, nextVersion } from './semver';
+	import VersionCompare from './VersionCompare.svelte';
 	import VersionHistory from './VersionHistory.svelte';
 
 	let {
@@ -48,6 +49,7 @@
 	let status = $state<ContentStatus | null>(lastStatus[projectId] ?? null);
 	let dialogOpen = $state(false);
 	let historyOpen = $state(false);
+	let comparing = $state(false);
 	let publishing = $state(false);
 	let label = $state('');
 	let bump = $state<Bump>('patch');
@@ -112,7 +114,8 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') dialogOpen = false;
+		// The comparison closes itself on Escape.
+		if (e.key === 'Escape' && !comparing) dialogOpen = false;
 	}
 </script>
 
@@ -228,6 +231,15 @@
 				{/if}
 
 				{#if status.published && status.has_unpublished_changes}
+					<button
+						type="button"
+						class="self-start text-sm text-primary hover:underline"
+						onclick={() => (comparing = true)}
+					>
+						<i class="fa-solid fa-code-compare mr-1"></i>
+						Review what changed since v{status.published.semver}
+					</button>
+
 					<fieldset class="flex flex-col gap-2">
 						<legend class="mb-1 text-sm font-medium text-gray-700">Kind of change</legend>
 						{#each choices as choice (choice)}
@@ -282,4 +294,20 @@
 	</div>
 {/if}
 
-<VersionHistory bind:open={historyOpen} {projectId} {lang} {availableLanguages} />
+<VersionHistory
+	bind:open={historyOpen}
+	{projectId}
+	{lang}
+	{availableLanguages}
+	published={status?.published}
+/>
+
+{#if comparing && status?.published}
+	<VersionCompare
+		versionId={status.published.id}
+		{projectId}
+		{lang}
+		{availableLanguages}
+		onClose={() => (comparing = false)}
+	/>
+{/if}

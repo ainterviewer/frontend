@@ -1111,6 +1111,38 @@ export type Consent = {
 };
 
 /**
+ * ContentDraftPublic
+ *
+ * The draft's content, for comparing a version against it.
+ */
+export type ContentDraftPublic = {
+    /**
+     * Languages
+     */
+    languages: Array<LanguageCode>;
+    default_language: LanguageCode;
+    /**
+     * Languages In Progress
+     */
+    languages_in_progress: Array<LanguageCode>;
+    guide: LocalizedInterviewGuide;
+    consent: LocalizedConsent | null;
+    welcome: LocalizedWelcome | null;
+    emails: ParticipantEmails;
+    agent_configs: AgentConfigs;
+    /**
+     * Prompt Overrides
+     */
+    prompt_overrides: {
+        [key: string]: string;
+    };
+    /**
+     * Revision
+     */
+    revision: number;
+};
+
+/**
  * ContentPart
  *
  * A part of a project's content that is edited, and revisioned, on its
@@ -1199,6 +1231,26 @@ export type ContentVersionKind = 'publish' | 'manual' | 'test' | 'restore' | 'au
  */
 export type ContentVersionPublic = {
     /**
+     * Languages
+     */
+    languages: Array<LanguageCode>;
+    default_language: LanguageCode;
+    /**
+     * Languages In Progress
+     */
+    languages_in_progress: Array<LanguageCode>;
+    guide: LocalizedInterviewGuide;
+    consent: LocalizedConsent | null;
+    welcome: LocalizedWelcome | null;
+    emails: ParticipantEmails;
+    agent_configs: AgentConfigs;
+    /**
+     * Prompt Overrides
+     */
+    prompt_overrides: {
+        [key: string]: string;
+    };
+    /**
      * Id
      */
     id: string;
@@ -1231,26 +1283,6 @@ export type ContentVersionPublic = {
      * Is Published
      */
     is_published: boolean;
-    /**
-     * Languages
-     */
-    languages: Array<LanguageCode>;
-    default_language: LanguageCode;
-    /**
-     * Languages In Progress
-     */
-    languages_in_progress: Array<LanguageCode>;
-    guide: LocalizedInterviewGuide;
-    consent: LocalizedConsent | null;
-    welcome: LocalizedWelcome | null;
-    emails: ParticipantEmails;
-    agent_configs: AgentConfigs;
-    /**
-     * Prompt Overrides
-     */
-    prompt_overrides: {
-        [key: string]: string;
-    };
 };
 
 /**
@@ -14499,6 +14531,49 @@ export type SaveContentVersionResponses = {
 };
 
 export type SaveContentVersionResponse = SaveContentVersionResponses[keyof SaveContentVersionResponses];
+
+export type GetContentDraftData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/versions/draft';
+};
+
+export type GetContentDraftErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetContentDraftError = GetContentDraftErrors[keyof GetContentDraftErrors];
+
+export type GetContentDraftResponses = {
+    /**
+     * Successful Response
+     */
+    200: ContentDraftPublic;
+};
+
+export type GetContentDraftResponse = GetContentDraftResponses[keyof GetContentDraftResponses];
 
 export type GetContentVersionData = {
     body?: never;
