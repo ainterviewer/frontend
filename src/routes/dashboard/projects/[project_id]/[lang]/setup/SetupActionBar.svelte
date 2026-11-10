@@ -36,16 +36,17 @@
 
 <svelte:window onclick={closeMenusOnWindowClick} />
 
-<div class="@container sticky bottom-0 w-full">
+<div class="@container pointer-events-none sticky bottom-0 w-full">
 	<!-- The bar sizes its labels off its own available width, not the viewport: the
 	     page's side panel makes the viewport a poor proxy for the room left here.
 	     Too little room and every label drops at once, leaving icon-only pills -- the
 	     bar never wraps, so it stays one row at any width. A comment must not lead
 	     this template: as a second root node it breaks hydration where the component
-	     sits next to siblings. -->
+	     sits next to siblings. The wrapper spans the full width for the container
+	     query, so it lets clicks through to the page; only the bar takes them. -->
 	<div
 		data-action-bar
-		class="ml-auto flex w-fit max-w-full flex-nowrap items-center justify-end gap-2 rounded-full border border-gray-200 bg-white/90 p-2 shadow-lg backdrop-blur @3xl:gap-4 @3xl:p-4"
+		class="pointer-events-auto ml-auto flex w-fit max-w-full flex-nowrap items-center justify-end gap-2 rounded-full border border-gray-200 bg-white/90 p-2 shadow-lg backdrop-blur @3xl:gap-4 @3xl:p-4"
 	>
 		<div data-tour="language" class="flex">
 			<ProjectLanguagePicker {projectId} currentLang={lang} {availableLanguages} />
