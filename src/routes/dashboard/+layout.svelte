@@ -58,10 +58,10 @@
 <div class="bg-dark">
 	<!-- How tall a table card may grow before it scrolls its own rows instead of
 	     pushing the page down; DataTable reads this. Derived from this element:
-	     the viewport less the header above it (mt-11), its own py-10, and the
-	     trailing spacer an action bar brings with it (2.5rem -- the worst case,
-	     since a table page may sit above one), leaving roughly a page heading's
-	     worth of room so the card still ends inside the viewport. -->
+	     the viewport less the header above it (mt-11), its own py-10, 2.5rem of
+	     slack (the worst case, since a table page may sit above an action bar),
+	     and roughly a page heading's worth of room, so the card still ends inside
+	     the viewport. -->
 	<main
 		style="--table-max-h: calc(100vh - 2.75rem - 5rem - 2.5rem - 3.5rem)"
 		class={[
@@ -69,22 +69,18 @@
 			sidebar.collapsed ? 'ml-[70px]' : 'ml-[250px]'
 		].join(' ')}
 	>
-		<!-- The spacer keeps a route's sticky action bar clear of the container's
-		     bottom edge, and has to live out here: inside the route's own
-		     min-h-full column it would push the bar up instead of adding scroll
-		     below it. It collapses on routes that render no bar, which would
-		     otherwise end in dead whitespace. -->
 		<!-- shrink-0: as a flex item of the scrolling <main> it would otherwise
 		     shrink to min-h-full and let a long page overflow it, which drops
-		     <main>'s bottom padding from the scroll area.
+		     <main>'s bottom padding from the scroll area. That padding is also the
+		     gap under a route's action bar: sticky, the bar pins inside it, and at
+		     rest at the foot of the page it sits on it, so the two match.
 		     A page that fills the viewport and scrolls inside its own panels
 		     (explore, codebook) marks its root `data-fill-viewport` and gets the
 		     shrink back: held to the viewport, the column has a definite height
 		     for the page's `flex-1 min-h-0` panels to divide, where grown to its
 		     content it would hand them their full height and scroll the page. -->
-		<div class="group flex min-h-full w-[90%] shrink-0 flex-col has-[[data-fill-viewport]]:shrink">
+		<div class="flex min-h-full w-[90%] shrink-0 flex-col has-[[data-fill-viewport]]:shrink">
 			{@render children()}
-			<div aria-hidden="true" class="h-0 shrink-0 group-has-[[data-action-bar]]:h-10"></div>
 		</div>
 	</main>
 </div>
