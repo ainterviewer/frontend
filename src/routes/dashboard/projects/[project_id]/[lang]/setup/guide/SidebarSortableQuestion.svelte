@@ -39,7 +39,7 @@
 	{@attach ref}
 >
 	<div
-		class="cursor-grab px-1.5 py-1 text-gray-300 opacity-0 transition-opacity group-hover/question:opacity-100"
+		class="cursor-grab px-1.5 py-0.5 text-gray-300 opacity-0 transition-opacity group-hover/question:opacity-100"
 		title="Drag to reorder"
 		{@attach handleRef}
 	>
@@ -48,7 +48,7 @@
 	<a
 		href="#{question.id}"
 		draggable="false"
-		class="block min-w-0 flex-1 truncate py-1 pr-2 text-xs text-gray-500 transition-colors
+		class="block min-w-0 flex-1 truncate py-0.5 pr-2 text-xs text-gray-500 transition-colors
 			{activeId === question.id ? 'text-primary' : ''}"
 		title={plainMarkup(mainQuestion) || `Question ${questionIndex + 1}`}
 	>

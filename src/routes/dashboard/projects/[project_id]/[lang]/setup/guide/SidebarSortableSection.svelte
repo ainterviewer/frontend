@@ -61,7 +61,7 @@
 	</div>
 
 	<!-- Questions (always rendered so empty sections are valid drop targets) -->
-	<div class="ml-2 min-h-3 space-y-0.5 border-l border-gray-200 pl-3">
+	<div class="ml-2 min-h-3 space-y-0.5 border-l border-gray-200 py-0.5 pl-3">
 		{#each questions as question, qIdx (question.id)}
 			<SidebarSortableQuestion {question} questionIndex={qIdx} sectionId={section.id} {activeId} />
 		{/each}
