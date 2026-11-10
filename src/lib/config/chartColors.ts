@@ -113,3 +113,30 @@ export function mapColor(index: number | null): string {
 	if (index === null || index < 0) return OUTLIER_COLOR;
 	return CLUSTER_COLORS[index % CLUSTER_COLORS.length];
 }
+
+/**
+ * The points of an ordered answer scale -- a Likert grid's columns -- light to
+ * dark in one hue.
+ *
+ * Sequential rather than diverging: the guide does not say which end of a
+ * scale is the good one ("Strongly agree" comes first as often as last), and
+ * two opposed hues would claim a polarity the data does not carry. Violet,
+ * because it is the one hue family `LANGUAGE_COLORS` and the answer states
+ * leave free, so a scale segment never reads as a language. Lightness rises
+ * monotonically; the lightest steps sit under 3:1 against white, so every
+ * segment is labelled (legend, and its share where it fits).
+ */
+export const SCALE_RAMP = ['#d6ccf7', '#b9a7ef', '#9c84e3', '#8064d2', '#6648b8', '#4b3292'];
+
+/** `n` colours spread evenly over `SCALE_RAMP`, first point lightest. */
+export function scaleColors(n: number): string[] {
+	if (n <= 0) return [];
+	if (n === 1) return [SCALE_RAMP[3]];
+	const last = SCALE_RAMP.length - 1;
+	return Array.from({ length: n }, (_, i) => SCALE_RAMP[Math.round((i * last) / (n - 1))]);
+}
+
+/** Whether text on a `SCALE_RAMP` colour should be light. */
+export function isDarkScaleColor(color: string): boolean {
+	return SCALE_RAMP.indexOf(color) >= 3;
+}

@@ -14,6 +14,7 @@
 	import AnswerRateBar from './AnswerRateBar.svelte';
 	import ConditionNote from './ConditionNote.svelte';
 	import DistributionChart, { type Bar } from './DistributionChart.svelte';
+	import GridBars from './GridBars.svelte';
 	import { badgeFor } from './itemTypes';
 	import OptionBars from './OptionBars.svelte';
 	import SampleDots from './SampleDots.svelte';
@@ -141,7 +142,9 @@
 	let hasData = $derived(
 		item.kind === 'categorical'
 			? item.counts.length > 0
-			: (showDots || bars.length > 0) && item.n_answered > 0
+			: item.kind === 'grid'
+				? (item.rows ?? []).length > 0 && item.n_answered > 0
+				: (showDots || bars.length > 0) && item.n_answered > 0
 	);
 
 	function round(value: number) {
@@ -225,6 +228,8 @@
 				hiddenValues={item.n_other_hidden ?? 0}
 				hiddenCount={item.n_other_hidden_count ?? 0}
 			/>
+		{:else if item.kind === 'grid'}
+			<GridBars rows={item.rows ?? []} />
 		{:else if showDots}
 			<SampleDots {samples} {languages} {colorFor} {unit} {axisLabel} />
 		{:else}
