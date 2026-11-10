@@ -2,10 +2,12 @@
 //
 // Owned by the frontend (there is no i18n framework in this repo). Select the
 // right language with `getModalText(lang, models, contactEmail)`; unknown
-// languages fall back to English. The languages mirror those supported by
-// SurveyItem.svelte. The contact email is the deployment's own
+// languages fall back to English. The languages are those in
+// `lang.ts`. The contact email is the deployment's own
 // (`/api/instance`), and the underlying model name(s) are interpolated from
 // `InterviewConfig.models` (the backend returns at least one).
+
+import { type Lang, toLang } from './lang';
 
 export interface ModalText {
 	help_title: string;
@@ -14,8 +16,6 @@ export interface ModalText {
 	exit_text: string;
 	exit_button: string;
 }
-
-type Lang = 'EN' | 'DA' | 'DE' | 'ES' | 'FR';
 
 // Model identifiers can be namespaced, e.g. "openrouter:google/gemma-4-26b-a4b-it".
 // Respondents should only see the final segment ("gemma-4-26b-a4b-it").
@@ -117,7 +117,7 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		help_title: 'Hjælp',
 		help_text: [
 			'<p>Du svarer på hvert spørgsmål ved at skrive dit svar i tekstboksen og trykke på "Send"-knappen eller ved at bruge den viste tastaturgenvej.</p>',
-			'<p>Hvis du ønsker at springe et spørgsmål over, holder du musen over interviewerens spørgsmål og klikker på "Skip"-knappen, der kommer frem.</p>',
+			'<p>Hvis du ønsker at springe et spørgsmål over, holder du musen over interviewerens spørgsmål og klikker på "Spring over"-knappen, der kommer frem.</p>',
 			'<p>Hvis et spørgsmål virker upassende, krænkende eller irrelevant, kan du rapportere det: hold musen over spørgsmålet og klik på flag-knappen. Du kan fortælle os, hvad der er galt, og derefter får du tilbudt at springe spørgsmålet over.</p>',
 			'<p>Du kan sætte interviewet på pause og fortsætte på et senere tidspunkt — dine svar gemmes automatisk. Hvis du ønsker at afslutte interviewet permanent, kan du klikke på exit-knappen i nederste venstre hjørne.</p>',
 			modelHtml,
@@ -192,9 +192,7 @@ export function getModalText(
 	models: string[] = [],
 	contactEmail: string | null = null
 ): ModalText {
-	// Language codes come from the backend already uppercased (EN/DA/DE/ES/FR);
-	// fall back to English for anything unknown or missing.
-	const l: Lang = lang && lang in MODAL ? (lang as Lang) : 'EN';
+	const l = toLang(lang);
 	// No address if /api/instance failed: better no paragraph than a wrong one.
 	return MODAL[l](modelSection(models, l), contactEmail ? CONTACT[l](contactEmail) : '');
 }

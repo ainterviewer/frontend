@@ -384,7 +384,13 @@
 
 				<!-- Modal Preview Container -->
 				<div class="rounded-lg border border-gray-200 bg-gray-100 p-4 shadow-inner">
-					<WelcomePreview {title} {text} videoUrl={videoPreviewUrl} email={welcome.email} />
+					<WelcomePreview
+						{title}
+						{text}
+						videoUrl={videoPreviewUrl}
+						email={welcome.email}
+						lang={language}
+					/>
 				</div>
 
 				<p class="mt-3 text-center text-xs text-gray-500">
@@ -423,6 +429,7 @@
 	{text}
 	videoUrl={videoPreviewUrl}
 	email={welcome.email}
+	lang={language}
 	onProceed={() => (showFullscreenModal = false)}
 	onClose={() => (showFullscreenModal = false)}
 	isPreview={true}

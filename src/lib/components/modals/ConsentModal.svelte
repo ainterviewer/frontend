@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
 
+	import { getUiText } from '$lib/respondentText';
+
 	interface Props {
 		show: boolean;
 		title: string;
@@ -8,6 +10,8 @@
 		onAccept: () => void;
 		onDecline: () => void;
 		accepting?: boolean;
+		/** The project language the fixed text is shown in. */
+		lang?: string;
 		onClose?: () => void;
 		isPreview?: boolean;
 		animate?: boolean;
@@ -20,10 +24,13 @@
 		onAccept,
 		onDecline,
 		accepting = false,
+		lang = 'EN',
 		onClose,
 		isPreview = false,
 		animate = true
 	}: Props = $props();
+
+	let t = $derived(getUiText(lang).consent);
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape' && show && onClose) {
@@ -115,14 +122,14 @@
 						{#if accepting}
 							<i class="fa-solid fa-spinner fa-spin mr-2"></i>
 						{/if}
-						Accept
+						{t.accept}
 					</button>
 					<button
 						onclick={handleDecline}
 						disabled={accepting}
 						class="rounded-md bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
 					>
-						Decline
+						{t.decline}
 					</button>
 				</div>
 			</div>

@@ -1,20 +1,28 @@
 <script lang="ts">
 	// The welcome screen as participants see it, drawn inline: the welcome
 	// page's live preview and the version history's preview of a saved one.
+	import { getUiText, splitWithdraw } from '$lib/respondentText';
+
 	let {
 		title,
 		text,
 		videoUrl = null,
 		email = null,
+		lang = 'EN',
 		scroll = true
 	}: {
 		title: string;
 		text: string;
 		videoUrl?: string | null;
 		email?: string | null;
+		/** The project language the fixed text is shown in. */
+		lang?: string;
 		/** Scroll inside a capped height; off where the container scrolls. */
 		scroll?: boolean;
 	} = $props();
+
+	let t = $derived(getUiText(lang).welcome);
+	let withdraw = $derived(splitWithdraw(t.withdraw));
 </script>
 
 <div class="preview overflow-hidden rounded-lg border border-gray-300 bg-white shadow-xl">
@@ -27,7 +35,7 @@
 			<div class="mb-4 overflow-hidden rounded-lg bg-black">
 				<video controls class="w-full">
 					<source src={videoUrl} type="video/mp4" />
-					Your browser does not support the video tag.
+					{t.video_unsupported}
 				</video>
 			</div>
 		{/if}
@@ -45,15 +53,10 @@
 
 		<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
 			<p class="mb-2">
-				If you wish to withdraw your consent or change your answers, please contact
-				{#if email}
-					<a href="mailto:{email}" class="font-medium text-primary hover:underline">
-						{email}
-					</a>
-				{:else}
-					<span class="text-gray-400">[contact email]</span>
-				{/if}
-				with a reference to the following code:
+				{withdraw[0]}{#if email}<a
+						href="mailto:{email}"
+						class="font-medium text-primary hover:underline">{email}</a
+					>{:else}<span class="text-gray-400">[contact email]</span>{/if}{withdraw[1]}
 			</p>
 
 			<div
@@ -64,7 +67,7 @@
 			</div>
 
 			<p class="text-xs text-gray-500">
-				It is your own responsibility to store this code securely before starting the interview.
+				{t.store_code}
 			</p>
 		</div>
 
@@ -73,7 +76,7 @@
 				class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm"
 				disabled
 			>
-				Start Interview
+				{t.start}
 			</button>
 		</div>
 	</div>

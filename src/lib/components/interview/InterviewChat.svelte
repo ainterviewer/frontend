@@ -3,9 +3,9 @@
 
 	import { Auth, type InterviewConfig, type InterviewType, type ReportReason } from '$lib/api';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
+	import { getReportText, getUiText } from '$lib/respondentText';
 
 	import { type ChatClient } from '../../../routes/interview/chat.svelte';
-	import { getReportText } from '../../../routes/interview/reportText';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
 	import ReportDialog from './ReportDialog.svelte';
@@ -53,6 +53,7 @@
 	// and mounting one per message would put dozens of them on the page.
 	let reportingMessageId = $state<string | number | null>(null);
 	const reportText = $derived(getReportText(lang));
+	const chatText = $derived(getUiText(lang).chat);
 
 	/**
 	 * The index of the message that offers "Skip", or -1 for none.
@@ -561,7 +562,7 @@
 				bind:value={messageInput}
 				disabled={!chat.inputEnabled}
 				rows="1"
-				placeholder="Message"
+				placeholder={chatText.message_placeholder}
 				{lang}
 				class="
 					w-full resize-none rounded border border-gray-300 p-2.5 shadow-sm transition-all
@@ -586,9 +587,9 @@
 					hover:bg-dark
 					disabled:cursor-not-allowed disabled:bg-[#cccccc] disabled:text-[#666666]
 				"
-				title={isMac ? 'Send message (⌘+Enter)' : 'Send message (Ctrl+Enter)'}
+				title={chatText.send_title(isMac ? '⌘+Enter' : 'Ctrl+Enter')}
 			>
-				Send
+				{chatText.send}
 			</button>
 			<div class="mt-1 hidden text-center text-xs text-gray-400 sm:block">
 				<span class="font-sans">{isMac ? '⌘' : 'ctrl'}</span>+<span class="font-bold">↵</span>

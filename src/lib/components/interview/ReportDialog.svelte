@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ReportReason } from '$lib/api';
+	import { REPORT_REASONS, type ReportText } from '$lib/respondentText';
 
-	import { REPORT_REASONS, type ReportText } from '../../../routes/interview/reportText';
 	import Modal from './Modal.svelte';
 
 	/**

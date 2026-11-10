@@ -233,7 +233,7 @@
 
 				<!-- Modal Preview Container -->
 				<div class="rounded-lg border border-gray-200 bg-gray-100 p-4 shadow-inner">
-					<ConsentPreview {title} {text} />
+					<ConsentPreview {title} {text} lang={language} />
 				</div>
 
 				<p class="mt-3 text-center text-xs text-gray-500">
@@ -270,6 +270,7 @@
 	show={showFullscreenModal}
 	{title}
 	{text}
+	lang={language}
 	onAccept={() => (showFullscreenModal = false)}
 	onDecline={() => (showFullscreenModal = false)}
 	onClose={() => (showFullscreenModal = false)}

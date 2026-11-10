@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
 
+	import { getUiText, splitWithdraw } from '$lib/respondentText';
+
 	interface Props {
 		show: boolean;
 		title: string;
@@ -8,6 +10,8 @@
 		videoUrl?: string | null;
 		email?: string | null;
 		interviewId?: string | null;
+		/** The project language the fixed text is shown in. */
+		lang?: string;
 		buttonText?: string;
 		onProceed: () => void;
 		onClose?: () => void;
@@ -22,12 +26,16 @@
 		videoUrl = null,
 		email = null,
 		interviewId = null,
-		buttonText = 'Start Interview',
+		lang = 'EN',
+		buttonText,
 		onProceed,
 		onClose,
 		isPreview = false,
 		animate = true
 	}: Props = $props();
+
+	let t = $derived(getUiText(lang).welcome);
+	let withdraw = $derived(splitWithdraw(t.withdraw));
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape' && show && onClose) {
@@ -99,7 +107,7 @@
 					<div class="mt-4 overflow-hidden rounded-lg bg-black">
 						<video controls class="w-full">
 							<source src={videoUrl} type="video/mp4" />
-							Your browser does not support the video tag.
+							{t.video_unsupported}
 						</video>
 					</div>
 				{/if}
@@ -117,14 +125,12 @@
 					<hr class="my-6 border-gray-200" />
 					<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
 						<p class="mb-2">
-							If you wish to withdraw your consent or change your answers, please contact
-							<a
+							{withdraw[0]}<a
 								href="mailto:{email}"
 								class="font-medium text-primary! hover:underline hover:brightness-80"
 							>
-								{email}
-							</a>
-							with a reference to the following code:
+								{email}</a
+							>{withdraw[1]}
 						</p>
 						<div
 							class="my-2 flex w-fit max-w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
@@ -135,8 +141,7 @@
 							<i class="fa-solid fa-fingerprint shrink-0 text-gray-400"></i>
 						</div>
 						<p class="text-xs text-gray-500">
-							It is your own responsibility to store this code securely before starting the
-							interview. It is the only way for us to identify and modify or delete your data.
+							{t.store_code}
 						</p>
 					</div>
 				{/if}
@@ -147,7 +152,7 @@
 						disabled={isPreview ? false : undefined}
 						class="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
 					>
-						{buttonText}
+						{buttonText ?? t.start}
 					</button>
 				</div>
 			</div>

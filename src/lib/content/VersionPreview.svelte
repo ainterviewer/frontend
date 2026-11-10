@@ -417,6 +417,7 @@
 				<ConsentPreview
 					title={read(version.consent.title).value}
 					text={read(version.consent.text).value}
+					lang={language}
 					scroll={false}
 				/>
 			{:else if tab === 'welcome' && version.welcome}
@@ -428,6 +429,7 @@
 						? `/assets/videos/${version.welcome.video_file_name}`
 						: null}
 					email={version.welcome.email}
+					lang={language}
 					scroll={false}
 				/>
 			{:else if tab === 'emails'}

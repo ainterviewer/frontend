@@ -6,7 +6,8 @@
 
 import type { SecurityIntervention } from '$lib/api';
 
-type Lang = 'EN' | 'DA' | 'DE' | 'ES' | 'FR';
+import { type Lang, toLang } from './lang';
+
 type Action = SecurityIntervention['action'];
 
 export interface SecurityText {
@@ -92,7 +93,5 @@ const TEXT: Record<Lang, SecurityText> = {
 };
 
 export function getSecurityText(lang: string | undefined): SecurityText {
-	// Language codes come from the backend already uppercased (EN/DA/DE/ES/FR).
-	const l: Lang = lang && lang in TEXT ? (lang as Lang) : 'EN';
-	return TEXT[l];
+	return TEXT[toLang(lang)];
 }

@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
+	import { getUiText } from '$lib/respondentText';
 	import { CHECKBOX_SEPARATOR, splitCheckboxAnswer } from '$lib/survey/checkbox';
 
 	import SurveyGrid from './SurveyGrid.svelte';
@@ -23,94 +24,7 @@
 		lang?: string;
 	} = $props();
 
-	type StringKey =
-		| 'pickValue'
-		| 'chooseOne'
-		| 'enterNumber'
-		| 'pickDate'
-		| 'pickDateTime'
-		| 'pickTime'
-		| 'selectMultiple'
-		| 'other'
-		| 'pleaseSpecify'
-		| 'mustBeAtLeast'
-		| 'mustBeAtMost'
-		| 'pleaseProvideValue';
-
-	const TRANSLATIONS: Record<string, Record<StringKey, string>> = {
-		EN: {
-			pickValue: 'Pick a value',
-			chooseOne: 'Choose one',
-			enterNumber: 'Enter a number',
-			pickDate: 'Pick a date',
-			pickDateTime: 'Pick a date and time',
-			pickTime: 'Pick a time',
-			selectMultiple: 'Select multiple',
-			other: 'Other',
-			pleaseSpecify: 'Please specify...',
-			mustBeAtLeast: 'Must be at least',
-			mustBeAtMost: 'Must be at most',
-			pleaseProvideValue: 'Please provide a value'
-		},
-		DA: {
-			pickValue: 'Vælg en værdi',
-			chooseOne: 'Vælg én',
-			enterNumber: 'Indtast et tal',
-			pickDate: 'Vælg en dato',
-			pickDateTime: 'Vælg dato og tid',
-			pickTime: 'Vælg et tidspunkt',
-			selectMultiple: 'Vælg flere',
-			other: 'Andet',
-			pleaseSpecify: 'Angiv venligst...',
-			mustBeAtLeast: 'Skal mindst være',
-			mustBeAtMost: 'Må højst være',
-			pleaseProvideValue: 'Angiv venligst en værdi'
-		},
-		DE: {
-			pickValue: 'Wert auswählen',
-			chooseOne: 'Wähle eine Option',
-			enterNumber: 'Zahl eingeben',
-			pickDate: 'Datum auswählen',
-			pickDateTime: 'Datum und Uhrzeit auswählen',
-			pickTime: 'Uhrzeit auswählen',
-			selectMultiple: 'Mehrere auswählen',
-			other: 'Andere',
-			pleaseSpecify: 'Bitte angeben...',
-			mustBeAtLeast: 'Muss mindestens sein',
-			mustBeAtMost: 'Darf höchstens sein',
-			pleaseProvideValue: 'Bitte einen Wert angeben'
-		},
-		ES: {
-			pickValue: 'Elige un valor',
-			chooseOne: 'Elige una opción',
-			enterNumber: 'Introduce un número',
-			pickDate: 'Elige una fecha',
-			pickDateTime: 'Elige fecha y hora',
-			pickTime: 'Elige una hora',
-			selectMultiple: 'Selecciona varias',
-			other: 'Otro',
-			pleaseSpecify: 'Por favor, especifica...',
-			mustBeAtLeast: 'Debe ser al menos',
-			mustBeAtMost: 'Debe ser como máximo',
-			pleaseProvideValue: 'Por favor, introduce un valor'
-		},
-		FR: {
-			pickValue: 'Choisissez une valeur',
-			chooseOne: 'Choisissez une option',
-			enterNumber: 'Entrez un nombre',
-			pickDate: 'Choisissez une date',
-			pickDateTime: 'Choisissez une date et une heure',
-			pickTime: 'Choisissez une heure',
-			selectMultiple: 'Sélectionnez plusieurs',
-			other: 'Autre',
-			pleaseSpecify: 'Veuillez préciser...',
-			mustBeAtLeast: 'Doit être au moins',
-			mustBeAtMost: 'Doit être au plus',
-			pleaseProvideValue: 'Veuillez fournir une valeur'
-		}
-	};
-
-	let t = $derived(TRANSLATIONS[lang] ?? TRANSLATIONS.EN);
+	let t = $derived(getUiText(lang).survey);
 
 	let sliderValue = $state(0);
 	const selectedValues = new SvelteSet<string>();

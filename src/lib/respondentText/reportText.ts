@@ -2,7 +2,7 @@
 //
 // Owned by the frontend and selected by language, exactly like `modalText.ts`
 // (there is no i18n framework in this repo); unknown languages fall back to
-// English. The languages mirror those supported by `SurveyItem.svelte`.
+// English. The languages are those in `lang.ts`.
 //
 // The reason keys are the generated `ReportReason` union, so a reason added on
 // the backend fails to type-check here until it has copy in every language --
@@ -10,6 +10,8 @@
 // be shown an untranslated label.
 
 import type { ReportReason } from '$lib/api';
+
+import { type Lang, toLang } from './lang';
 
 export interface ReportText {
 	/** Tooltip and accessible name of the flag button beside a question. */
@@ -34,8 +36,6 @@ export interface ReportText {
 	/** Dismisses the acknowledgement when there is no skip to offer. */
 	close: string;
 }
-
-type Lang = 'EN' | 'DA' | 'DE' | 'ES' | 'FR';
 
 const REPORT: Record<Lang, ReportText> = {
 	EN: {
@@ -169,8 +169,5 @@ const REPORT: Record<Lang, ReportText> = {
 export const REPORT_REASONS: ReportReason[] = ['irrelevant', 'inappropriate', 'offensive', 'other'];
 
 export function getReportText(lang: string | undefined): ReportText {
-	// Language codes come from the backend already uppercased (EN/DA/DE/ES/FR);
-	// fall back to English for anything unknown or missing.
-	const l: Lang = lang && lang in REPORT ? (lang as Lang) : 'EN';
-	return REPORT[l];
+	return REPORT[toLang(lang)];
 }

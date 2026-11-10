@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { getUiText } from '$lib/respondentText';
+
 	import AudioMessage from './AudioMessage.svelte';
 	import FeedbackToggle from './FeedbackToggle.svelte';
 	import MessageBubble from './MessageBubble.svelte';
@@ -28,6 +30,8 @@
 		reportLabel = 'Report this question',
 		onSurveyAnswer
 	} = $props();
+
+	let chatText = $derived(getUiText(lang).chat);
 
 	let isReceived = $derived(message.type === 'received');
 	// Only show controls for received messages that are not the intro (id > 1)
@@ -99,7 +103,7 @@
 					/>
 					<ReportButton label={reportLabel} onReport={() => onReport(message.message_id)} />
 					{#if skippable}
-						<SkipButton {onSkip} />
+						<SkipButton {onSkip} label={chatText.skip} title={chatText.skip_title} />
 					{/if}
 				{/if}
 			</div>

@@ -1,16 +1,23 @@
 <script lang="ts">
 	// The consent dialog as participants see it, drawn inline: the consent
 	// page's live preview and the version history's preview of a saved one.
+	import { getUiText } from '$lib/respondentText';
+
 	let {
 		title,
 		text,
+		lang = 'EN',
 		scroll = true
 	}: {
 		title: string;
 		text: string;
+		/** The project language the fixed text is shown in. */
+		lang?: string;
 		/** Scroll inside a capped height; off where the container scrolls. */
 		scroll?: boolean;
 	} = $props();
+
+	let t = $derived(getUiText(lang).consent);
 </script>
 
 <div class="preview overflow-hidden rounded-lg border border-gray-300 bg-white shadow-xl">
@@ -31,13 +38,13 @@
 				class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm"
 				disabled
 			>
-				Accept
+				{t.accept}
 			</button>
 			<button
 				class="rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300"
 				disabled
 			>
-				Decline
+				{t.decline}
 			</button>
 		</div>
 	</div>

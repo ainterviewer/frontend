@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 
 	import type { GridRow } from '$lib/api';
+	import { getUiText } from '$lib/respondentText';
 	import { encodeGridAnswer, parseGridAnswer } from '$lib/survey/grid';
 
 	/**
@@ -35,32 +36,7 @@
 		onAnswer?: (answer: string) => void;
 	} = $props();
 
-	type StringKey = 'rateEach' | 'required' | 'submit' | 'clear';
-
-	const TRANSLATIONS: Record<string, Record<StringKey, string>> = {
-		EN: { rateEach: 'Rate each', required: 'Required', submit: 'Submit answers', clear: 'Clear' },
-		DA: { rateEach: 'Vurder hver', required: 'Påkrævet', submit: 'Send svar', clear: 'Ryd' },
-		DE: {
-			rateEach: 'Bewerte jede',
-			required: 'Erforderlich',
-			submit: 'Antworten senden',
-			clear: 'Zurücksetzen'
-		},
-		ES: {
-			rateEach: 'Valora cada una',
-			required: 'Obligatorio',
-			submit: 'Enviar respuestas',
-			clear: 'Borrar'
-		},
-		FR: {
-			rateEach: 'Évaluez chacun',
-			required: 'Obligatoire',
-			submit: 'Envoyer les réponses',
-			clear: 'Effacer'
-		}
-	};
-
-	let t = $derived(TRANSLATIONS[lang.toUpperCase()] ?? TRANSLATIONS.EN);
+	let t = $derived(getUiText(lang).grid);
 
 	// Chosen option per row id, seeded once from a submitted answer.
 	let chosen = $state<Record<string, string>>(

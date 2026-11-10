@@ -5,6 +5,7 @@
 	import { type Consent, Projects } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
+	import { getModalText } from '$lib/respondentText';
 
 	import {
 		ChatClient,
@@ -12,7 +13,6 @@
 		parseInterviewIdFromToken,
 		type StartPoint
 	} from './chat.svelte';
-	import { getModalText } from './modalText';
 
 	interface PageData {
 		project_id: string;
@@ -382,6 +382,7 @@
 		onAccept={acceptConsent}
 		onDecline={declineConsent}
 		accepting={consentAccepting}
+		{lang}
 		animate={false}
 	/>
 
@@ -392,6 +393,7 @@
 		videoUrl={welcomeData?.video_file_name ? `/assets/videos/${welcomeData.video_file_name}` : null}
 		email={welcomeData?.email ?? null}
 		{interviewId}
+		{lang}
 		onProceed={proceedFromWelcome}
 		animate={false}
 	/>
