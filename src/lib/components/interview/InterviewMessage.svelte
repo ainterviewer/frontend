@@ -40,6 +40,10 @@
 	// drawn into the conversation the respondent is reading.
 	let reports = $derived(message.reports ?? []);
 	let showReportIndicator = $derived(readonly && reports.length > 0);
+
+	// A survey answered before -- replayed on resuming -- shows the answer it
+	// was given and takes no other; one answered just now keeps its own.
+	let locked = $derived(readonly || message.skipped === true || message.answer !== undefined);
 </script>
 
 <MessageBubble
@@ -52,7 +56,7 @@
 	condition={message.condition ?? null}
 	time={message.created_at ?? null}
 	skipped={message.skipped_by_condition ?? false}
-	readonly={readonly || message.skipped === true}
+	readonly={locked}
 	{lang}
 	onSurveyAnswer={(given: unknown) => onSurveyAnswer(given, message.message_id)}
 >

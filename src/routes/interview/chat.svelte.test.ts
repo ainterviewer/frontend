@@ -190,3 +190,56 @@ describe('ChatClient transient failures', () => {
 		}
 	});
 });
+
+describe('ChatClient replayed surveys', () => {
+	const grid: NonNullable<OutgoingHistoryMessage['survey_item']> = {
+		type: 'likert_grid',
+		options: ['Bad', 'Good'],
+		rows: [{ id: '00000000-0000-0000-0000-000000000001', text: 'Food' }]
+	};
+	const answer = '{"00000000-0000-0000-0000-000000000001": "Good"}';
+
+	function history(
+		role: 'assistant' | 'user',
+		content: string,
+		message_id: number,
+		survey_item?: OutgoingHistoryMessage['survey_item']
+	): OutgoingHistoryMessage {
+		return { type: 'history', role, content, message_id, survey_item };
+	}
+
+	test('an answered survey comes back as the item with its answer', async () => {
+		const { chat } = connectedClient();
+
+		await chat.processSingleMessage(history('assistant', 'Rate:', 4, grid));
+		await chat.processSingleMessage(history('user', answer, 5));
+
+		expect(chat.messages).toEqual([
+			{ type: 'received', text: 'Rate:', message_id: 4, feedback: undefined },
+			{ type: 'sent', survey_item: grid, message_id: 4, answered: true, answer }
+		]);
+	});
+
+	test('a skipped survey comes back faded, followed by the skip', async () => {
+		const { chat } = connectedClient();
+
+		await chat.processSingleMessage(history('assistant', 'Rate:', 4, grid));
+		await chat.processSingleMessage(history('user', '<|skipquestion|>', 5));
+
+		expect(chat.messages.slice(1)).toEqual([
+			{ type: 'sent', survey_item: grid, message_id: 4, answered: true, skipped: true },
+			{ type: 'sent', text: '<|skipquestion|>', message_id: 5 }
+		]);
+	});
+
+	test('only the answer to the survey question is drawn as one', async () => {
+		const { chat } = connectedClient();
+
+		await chat.processSingleMessage(history('assistant', 'Rate:', 4, grid));
+		await chat.processSingleMessage(history('user', answer, 5));
+		await chat.processSingleMessage(history('assistant', 'Why?', 6));
+		await chat.processSingleMessage(history('user', 'Tasty', 7));
+
+		expect(chat.messages.at(-1)).toEqual({ type: 'sent', text: 'Tasty', message_id: 7 });
+	});
+});

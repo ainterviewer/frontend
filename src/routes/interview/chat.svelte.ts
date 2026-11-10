@@ -12,8 +12,14 @@ import {
 	type SecurityIntervention,
 	type SecurityOverride
 } from '$lib/api';
-import { type Message, WS_UNAUTHORIZED } from '$lib/components/interview/types';
+import {
+	type Message,
+	type SurveyItemUnion,
+	WS_UNAUTHORIZED
+} from '$lib/components/interview/types';
 import { hasErrorCode } from '$lib/utils/errors';
+
+const SKIP_QUESTION = '<|skipquestion|>';
 
 // Messages arriving over the interview WebSocket. `OutgoingData` is extended
 // with the session identifiers the server includes on `data` frames.
@@ -644,7 +650,7 @@ export class ChatClient {
 
 	sendSkip() {
 		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
-		this.ws.send(JSON.stringify({ type: 'message', content: '<|skipquestion|>' }));
+		this.ws.send(JSON.stringify({ type: 'message', content: SKIP_QUESTION }));
 
 		this.markHealthy();
 
@@ -658,7 +664,7 @@ export class ChatClient {
 		// Add to local UI
 		this.messages.push({
 			type: 'sent',
-			text: '<|skipquestion|>',
+			text: SKIP_QUESTION,
 			message_id: Date.now()
 		});
 
@@ -693,6 +699,36 @@ export class ChatClient {
 		if (!this.securityIntervention) return;
 		this.messages.push({ type: 'system', text: this.securityIntervention.text });
 		this.securityIntervention = null;
+	}
+
+	/** The survey question last replayed from the history, until its answer
+	 *  arrives. */
+	private replayedSurvey: { item: SurveyItemUnion; message_id: number } | null = null;
+
+	/**
+	 * A replayed answer. One to a survey question is drawn the way it was
+	 * left: the item, read-only, with the answer in it -- or faded, followed
+	 * by the skip, if it was skipped. Under the question's id, as live.
+	 */
+	private replayAnswer(data: OutgoingHistoryMessage) {
+		const survey = this.replayedSurvey;
+		this.replayedSurvey = null;
+		const skipped = data.content === SKIP_QUESTION;
+		if (survey) {
+			this.messages.push({
+				type: 'sent',
+				survey_item: survey.item,
+				message_id: survey.message_id,
+				answered: true,
+				...(skipped ? { skipped: true } : { answer: data.content })
+			});
+			if (!skipped) return;
+		}
+		this.messages.push({
+			type: 'sent',
+			text: data.content,
+			message_id: data.message_id
+		});
 	}
 
 	sendSurveyResponse(response: unknown, originalMessageId: string | number) {
@@ -846,11 +882,7 @@ export class ChatClient {
 					// respondent is replayed as a live message instead.
 					this.messages.push({ type: 'system', text: data.content });
 				} else if (data.role === 'user') {
-					this.messages.push({
-						type: 'sent',
-						text: data.content,
-						message_id: data.message_id
-					});
+					this.replayAnswer(data);
 				} else {
 					if (data.image) {
 						this.messages.push({
@@ -867,6 +899,10 @@ export class ChatClient {
 							feedback: data.feedback
 						});
 					}
+					// Drawn with the answer that follows it, as it was left.
+					this.replayedSurvey = data.survey_item
+						? { item: data.survey_item, message_id: data.message_id }
+						: null;
 				}
 				break;
 
