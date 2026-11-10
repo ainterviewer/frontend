@@ -115,7 +115,7 @@ const UI: Record<Lang, UiText> = {
 				'Something on our side is preventing the interview from running. Your answers so far have been saved. Please try again later, or contact the person who shared this interview with you.',
 			expired_title: 'Your session has expired',
 			expired_text:
-				'We could not resume your interview — this can happen if too much time has passed or if your browser cleared its data. Your previous answers cannot be continued from here.',
+				'We could not resume your interview — this can happen if too much time has passed or if your browser cleared its data. You cannot continue this interview from where you left off.',
 			start_over: 'Start a new interview',
 			busy: 'The interview service is busy. Trying again in a moment…'
 		},
@@ -176,7 +176,7 @@ const UI: Record<Lang, UiText> = {
 				'En fejl hos os forhindrer interviewet i at køre. Dine svar indtil nu er gemt. Prøv igen senere, eller kontakt den person, der delte interviewet med dig.',
 			expired_title: 'Din session er udløbet',
 			expired_text:
-				'Vi kunne ikke genoptage dit interview — det kan ske, hvis der er gået for lang tid, eller hvis din browser har slettet sine data. Dine tidligere svar kan ikke fortsættes herfra.',
+				'Vi kunne ikke genoptage dit interview — det kan ske, hvis der er gået for lang tid, eller hvis din browser har slettet sine data. Du kan ikke fortsætte interviewet, hvor du slap.',
 			start_over: 'Start et nyt interview',
 			busy: 'Interviewtjenesten er optaget. Prøver igen om et øjeblik…'
 		},
@@ -237,7 +237,7 @@ const UI: Record<Lang, UiText> = {
 				'Ein Problem auf unserer Seite verhindert die Durchführung des Interviews. Ihre bisherigen Antworten wurden gespeichert. Bitte versuchen Sie es später erneut oder wenden Sie sich an die Person, die dieses Interview mit Ihnen geteilt hat.',
 			expired_title: 'Ihre Sitzung ist abgelaufen',
 			expired_text:
-				'Wir konnten Ihr Interview nicht fortsetzen – das kann passieren, wenn zu viel Zeit vergangen ist oder Ihr Browser seine Daten gelöscht hat. Ihre bisherigen Antworten können von hier aus nicht fortgesetzt werden.',
+				'Wir konnten Ihr Interview nicht fortsetzen – das kann passieren, wenn zu viel Zeit vergangen ist oder Ihr Browser seine Daten gelöscht hat. Sie können dieses Interview nicht an der Stelle fortsetzen, an der Sie aufgehört haben.',
 			start_over: 'Neues Interview starten',
 			busy: 'Der Interviewdienst ist ausgelastet. Neuer Versuch in Kürze…'
 		},
@@ -251,7 +251,7 @@ const UI: Record<Lang, UiText> = {
 		},
 		survey: {
 			pickValue: 'Wert auswählen',
-			chooseOne: 'Wähle eine Option',
+			chooseOne: 'Wählen Sie eine Option',
 			enterNumber: 'Zahl eingeben',
 			pickDate: 'Datum auswählen',
 			pickDateTime: 'Datum und Uhrzeit auswählen',
@@ -264,7 +264,7 @@ const UI: Record<Lang, UiText> = {
 			pleaseProvideValue: 'Bitte einen Wert angeben'
 		},
 		grid: {
-			rateEach: 'Bewerte jede',
+			rateEach: 'Bewerten Sie jede Aussage',
 			required: 'Erforderlich',
 			submit: 'Antworten senden',
 			clear: 'Zurücksetzen'
@@ -303,7 +303,7 @@ const UI: Record<Lang, UiText> = {
 				'Un problema por nuestra parte impide que la entrevista funcione. Tus respuestas hasta ahora se han guardado. Inténtalo de nuevo más tarde o ponte en contacto con la persona que compartió esta entrevista contigo.',
 			expired_title: 'Tu sesión ha caducado',
 			expired_text:
-				'No hemos podido reanudar tu entrevista: esto puede ocurrir si ha pasado demasiado tiempo o si tu navegador ha borrado sus datos. Tus respuestas anteriores no se pueden continuar desde aquí.',
+				'No hemos podido reanudar tu entrevista: esto puede ocurrir si ha pasado demasiado tiempo o si tu navegador ha borrado sus datos. No puedes continuar esta entrevista desde donde la dejaste.',
 			start_over: 'Comenzar una nueva entrevista',
 			busy: 'El servicio de entrevistas está ocupado. Se volverá a intentar en un momento…'
 		},
@@ -369,7 +369,7 @@ const UI: Record<Lang, UiText> = {
 				"Un problème de notre côté empêche le déroulement de l'entretien. Vos réponses jusqu'à présent ont été enregistrées. Veuillez réessayer plus tard ou contacter la personne qui vous a transmis cet entretien.",
 			expired_title: 'Votre session a expiré',
 			expired_text:
-				"Nous n'avons pas pu reprendre votre entretien — cela peut arriver si trop de temps s'est écoulé ou si votre navigateur a effacé ses données. Vos réponses précédentes ne peuvent pas être reprises à partir d'ici.",
+				"Nous n'avons pas pu reprendre votre entretien — cela peut arriver si trop de temps s'est écoulé ou si votre navigateur a effacé ses données. Vous ne pouvez pas reprendre cet entretien là où vous l'avez laissé.",
 			start_over: 'Commencer un nouvel entretien',
 			busy: "Le service d'entretien est occupé. Nouvel essai dans un instant…"
 		},
@@ -388,7 +388,7 @@ const UI: Record<Lang, UiText> = {
 			pickDate: 'Choisissez une date',
 			pickDateTime: 'Choisissez une date et une heure',
 			pickTime: 'Choisissez une heure',
-			selectMultiple: 'Sélectionnez plusieurs',
+			selectMultiple: 'Sélectionnez plusieurs options',
 			other: 'Autre',
 			pleaseSpecify: 'Veuillez préciser...',
 			mustBeAtLeast: 'Doit être au moins',
@@ -396,7 +396,7 @@ const UI: Record<Lang, UiText> = {
 			pleaseProvideValue: 'Veuillez fournir une valeur'
 		},
 		grid: {
-			rateEach: 'Évaluez chacun',
+			rateEach: 'Évaluez chaque élément',
 			required: 'Obligatoire',
 			submit: 'Envoyer les réponses',
 			clear: 'Effacer'
