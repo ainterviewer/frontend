@@ -212,10 +212,10 @@
 												aria-selected={project.id === projectId}
 												onclick={() => select(project)}
 												onmouseenter={() => (highlighted = index)}
-												class="flex w-full cursor-pointer items-center gap-2 border-none bg-transparent py-1.5 pr-3 pl-3 text-left text-sm text-gray-700 {highlighted ===
+												class="flex w-full cursor-pointer items-center gap-2 border-none py-1.5 pr-3 pl-3 text-left text-sm text-gray-700 {highlighted ===
 												index
 													? 'bg-gray-100'
-													: ''}"
+													: 'bg-transparent'}"
 											>
 												<span class="w-3.5 shrink-0 text-xs text-primary">
 													{#if project.id === projectId}
