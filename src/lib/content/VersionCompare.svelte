@@ -305,8 +305,14 @@
 					{/each}
 				</div>
 				<div class="mb-1.5 flex flex-wrap items-center gap-3">
-					<label class="flex items-center gap-1.5 text-xs text-gray-600">
-						<input type="checkbox" bind:checked={showUnchanged} />
+					<label
+						class="flex cursor-pointer items-center gap-1.5 text-xs text-gray-600 select-none hover:text-gray-800"
+					>
+						<input
+							type="checkbox"
+							class="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 text-primary focus:ring-primary focus:ring-offset-0"
+							bind:checked={showUnchanged}
+						/>
 						Show unchanged
 					</label>
 					{#if languages.length > 1}
