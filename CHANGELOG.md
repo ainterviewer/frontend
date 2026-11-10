@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.16] - 2026-11-10
+
+### Features
+
+- (onboarding) Say what is new in a reworded tour step
+- (guide) Compare a version with the draft in the version history
+
+### Bug Fixes
+
+- (ui) Tighten project card titles and align their metadata rows
+
 ## [0.9.15] - 2026-11-10
 
 ### Features
