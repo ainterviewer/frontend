@@ -6,6 +6,8 @@
 // question is "changed" rather than removed and added. Everything else is
 // flattened to labelled leaves and compared leaf by leaf.
 
+import { diffArrays, diffWordsWithSpace } from 'diff';
+
 import type {
 	ContentDraftPublic,
 	LocalizedQuestion,
@@ -493,4 +495,157 @@ export function plainText(markup: string): string {
 		.replace(/&amp;/g, '&')
 		.replace(/\n{3,}/g, '\n\n')
 		.trim();
+}
+
+/** A run of prose text, as in both versions, or only before or after. */
+export type Segment = {
+	kind: 'same' | 'removed' | 'added';
+	text: string;
+	/** Whole lines replaced by others: shown on lines of their own. */
+	block?: boolean;
+};
+
+export type ProseDiff = {
+	parts: Segment[];
+	/**
+	 * Too little is left of the old text for a diff to read: the compare view
+	 * shows the new text, with the old one on request.
+	 */
+	rewritten: boolean;
+};
+
+/**
+ * Changed lines get a word diff when at least this share of their text is
+ * kept, or when the edits are few enough to read (one per line at most).
+ * Otherwise they show as the old lines, then the new.
+ */
+const LINES_KEPT = 0.5;
+/** Below this share of text kept, the whole value counts as rewritten. */
+const TEXT_KEPT = 0.1;
+
+const letters = (text: string) => text.replace(/\s/g, '').length;
+
+/** How much of the longer side the unchanged parts make up, from 0 to 1. */
+function kept(parts: Segment[]): number {
+	let same = 0;
+	let before = 0;
+	let after = 0;
+	for (const p of parts) {
+		const n = letters(p.text);
+		if (p.kind !== 'added') before += n;
+		if (p.kind !== 'removed') after += n;
+		if (p.kind === 'same') same += n;
+	}
+	const longer = Math.max(before, after);
+	return longer ? same / longer : 1;
+}
+
+/**
+ * A word or two left in place between two edits ("og", "i", a comma) is
+ * counted as removed and added, so the edits read as one phrase replaced by
+ * another instead of alternating fragments.
+ */
+function joinEdits(parts: Segment[]): Segment[] {
+	const out: Segment[] = [];
+	let removed = '';
+	let added = '';
+	const flush = () => {
+		if (removed) out.push({ kind: 'removed', text: removed });
+		if (added) out.push({ kind: 'added', text: added });
+		removed = added = '';
+	};
+	parts.forEach((p, i) => {
+		if (p.kind === 'removed') removed += p.text;
+		else if (p.kind === 'added') added += p.text;
+		else if ((removed || added) && i < parts.length - 1 && isSmall(p.text)) {
+			removed += p.text;
+			added += p.text;
+		} else {
+			flush();
+			out.push(p);
+		}
+	});
+	flush();
+	return out;
+}
+
+/** How many separate places the text was edited in. */
+function edits(parts: Segment[]): number {
+	return parts.filter((p, i) => p.kind !== 'same' && (i === 0 || parts[i - 1].kind === 'same'))
+		.length;
+}
+
+function isSmall(text: string): boolean {
+	const words = text.trim().split(/\s+/).filter(Boolean);
+	return words.length <= 2 && text.trim().length <= 12;
+}
+
+function words(before: string, after: string): Segment[] {
+	return joinEdits(
+		diffWordsWithSpace(before, after).map((p) => ({
+			kind: p.added ? 'added' : p.removed ? 'removed' : 'same',
+			text: p.value
+		}))
+	);
+}
+
+function push(out: Segment[], kind: Segment['kind'], text: string) {
+	if (!text) return;
+	const last = out.at(-1);
+	if (last?.kind === kind && !last.block) last.text += text;
+	else out.push({ kind, text });
+}
+
+/**
+ * A readable diff of two texts. Lines are matched first; where lines changed,
+ * a word diff is shown when enough of them is kept, and otherwise the old
+ * lines followed by the new ones.
+ */
+export function diffProse(before: string, after: string): ProseDiff {
+	const out: Segment[] = [];
+	let removed: string[] = [];
+	let added: string[] = [];
+
+	// Every block ends its last line. Old lines replaced by new ones each end
+	// their own, so each side reads back with its own line breaks.
+	const flush = () => {
+		if (!removed.length && !added.length) return;
+		const old = removed.join('\n');
+		const now = added.join('\n');
+		const inline = old && now ? words(old, now) : [];
+		const share = inline.length ? kept(inline) : 0;
+		const readable =
+			share >= LINES_KEPT || (share > 0 && edits(inline) <= Math.max(removed.length, added.length));
+		if (readable) {
+			for (const p of inline) push(out, p.kind, p.text);
+			push(out, 'same', '\n');
+		} else {
+			if (removed.length) out.push({ kind: 'removed', text: old + '\n', block: true });
+			if (added.length) out.push({ kind: 'added', text: now + '\n', block: true });
+		}
+		removed = [];
+		added = [];
+	};
+
+	const lines = (text: string) => (text ? text.split('\n') : []);
+	for (const run of diffArrays(lines(before), lines(after))) {
+		if (run.removed) removed.push(...run.value);
+		else if (run.added) added.push(...run.value);
+		else {
+			flush();
+			push(out, 'same', run.value.join('\n') + '\n');
+		}
+	}
+	flush();
+
+	// The last line on each side has no line break after it.
+	const lastBefore = out.findLast((p) => p.kind !== 'added');
+	const lastAfter = out.findLast((p) => p.kind !== 'removed');
+	for (const p of new Set([lastBefore, lastAfter])) if (p) p.text = p.text.slice(0, -1);
+	const parts = out.filter((p) => p.text);
+
+	return {
+		parts,
+		rewritten: letters(before) > 0 && letters(after) > 0 && kept(parts) < TEXT_KEPT
+	};
 }

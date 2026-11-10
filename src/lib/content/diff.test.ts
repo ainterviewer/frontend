@@ -5,6 +5,7 @@ import type { LocalizedQuestionSection } from '$lib/api/types.gen';
 import {
 	type Content,
 	diffContent,
+	diffProse,
 	guideChangeCount,
 	mergeOrder,
 	movedKeys,
@@ -167,5 +168,92 @@ describe('diffContent', () => {
 describe('plainText', () => {
 	it('reads markup as text', () => {
 		expect(plainText('<p>Hi <b>there</b> &amp; you</p><p>Bye</p>')).toBe('Hi there & you\nBye');
+	});
+});
+
+describe('diffProse', () => {
+	const text = (d: ReturnType<typeof diffProse>, kind: string) =>
+		d.parts
+			.filter((p) => p.kind === 'same' || p.kind === kind)
+			.map((p) => p.text)
+			.join('');
+
+	it('rebuilds both sides', () => {
+		const before = 'Intro line\n\nAsk about phones.\nAsk about travel.';
+		const after = 'Intro line\n\nAsk about mobile phones.\nNew line\nAsk about travel.';
+		const d = diffProse(before, after);
+		expect(text(d, 'removed')).toBe(before);
+		expect(text(d, 'added')).toBe(after);
+		const rewrite = diffProse('Keep\nOld words here', 'Keep\nTotally different thing\nMore');
+		expect(text(rewrite, 'removed')).toBe('Keep\nOld words here');
+		expect(text(rewrite, 'added')).toBe('Keep\nTotally different thing\nMore');
+		expect(text(d, 'added')).toBe(after);
+		expect(d.rewritten).toBe(false);
+	});
+
+	it('word-diffs a lightly edited line', () => {
+		const d = diffProse('Ask about the phones they bought', 'Ask about the phone they bought');
+		expect(d.parts).toEqual([
+			{ kind: 'same', text: 'Ask about the ' },
+			{ kind: 'removed', text: 'phones' },
+			{ kind: 'added', text: 'phone' },
+			{ kind: 'same', text: ' they bought' }
+		]);
+	});
+
+	it('joins edits around a small kept word into one phrase', () => {
+		const d = diffProse(
+			'In this interview we ask about cars and the trips taken in the last year',
+			'In this interview we ask about food and the meals eaten in the last year'
+		);
+		expect(d.parts).toContainEqual({ kind: 'removed', text: 'cars and the trips taken' });
+		expect(d.parts).toContainEqual({ kind: 'added', text: 'food and the meals eaten' });
+	});
+
+	it('word-diffs a line with one long edit after a kept start', () => {
+		const d = diffProse(
+			'Tak for at dele! Vi går nu over til at tale om mad og måltider i dit hverdagsliv.',
+			'Tak for at dele! Vi vil nu gerne høre mere om dine madvaner.'
+		);
+		expect(d.parts).toEqual([
+			{ kind: 'same', text: 'Tak for at dele! Vi ' },
+			{ kind: 'removed', text: 'går nu over til at tale om mad og måltider i dit hverdagsliv' },
+			{ kind: 'added', text: 'vil nu gerne høre mere om dine madvaner' },
+			{ kind: 'same', text: '.' }
+		]);
+		expect(d.rewritten).toBe(false);
+	});
+
+	it('shows a rewritten line as old, then new', () => {
+		const d = diffProse(
+			'Keep this line, which is long enough to count\nWrite about framing, maybe inspired by the below',
+			'Keep this line, which is long enough to count\nInterviewet handler om respondentens forbrug og hverdagsliv'
+		);
+		expect(d.parts).toEqual([
+			{ kind: 'same', text: 'Keep this line, which is long enough to count\n' },
+			{ kind: 'removed', text: 'Write about framing, maybe inspired by the below', block: true },
+			{
+				kind: 'added',
+				text: 'Interviewet handler om respondentens forbrug og hverdagsliv',
+				block: true
+			}
+		]);
+		expect(d.rewritten).toBe(false);
+	});
+
+	it('marks a text with almost nothing kept as rewritten', () => {
+		const d = diffProse(
+			'TODO: Write framing\n---\nThe interview covers criteria for deserving help',
+			'Interviewet handler om respondentens forbrug i hverdagen\nVi er særligt interesserede i klima'
+		);
+		expect(d.rewritten).toBe(true);
+	});
+
+	it('does not call an added or emptied text rewritten', () => {
+		expect(diffProse('', 'New text')).toEqual({
+			parts: [{ kind: 'added', text: 'New text', block: true }],
+			rewritten: false
+		});
+		expect(diffProse('Old text', '').rewritten).toBe(false);
 	});
 });

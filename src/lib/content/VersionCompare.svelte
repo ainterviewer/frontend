@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { diffWordsWithSpace } from 'diff';
 	import { onMount } from 'svelte';
 
 	import { Versions } from '$lib/api';
@@ -14,6 +13,7 @@
 	import {
 		type Change,
 		diffContent,
+		diffProse,
 		guideChangeCount,
 		isChanged,
 		plainText,
@@ -132,6 +132,14 @@
 		return questions.map((q) => (q.status === 'removed' ? null : ++n));
 	}
 
+	/** A changed prose value's text diff; null when it reads the same. */
+	function proseDiff(c: Change) {
+		if (!c.prose || c.opaque || c.status === 'same') return null;
+		const before = plainText(c.before ?? '');
+		const after = plainText(c.after ?? '');
+		return before === after ? null : { before, after, ...diffProse(before, after) };
+	}
+
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') onClose();
 	}
@@ -152,25 +160,45 @@
 	{/if}
 {/snippet}
 
-{#snippet value(c: Change)}
+{#snippet rewrittenBadge()}
+	<span class="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">
+		Rewritten
+	</span>
+{/snippet}
+
+{#snippet value(c: Change, pd: ReturnType<typeof proseDiff>)}
 	{#if c.opaque}
 		<span class="text-gray-600 italic">
 			{c.status === 'added' ? 'Added' : c.status === 'removed' ? 'Removed' : 'Changed'}
 		</span>
+	{:else if pd?.rewritten}
+		<div class="whitespace-pre-wrap">{pd.after}</div>
+		<details class="group mt-1.5">
+			<summary class="cursor-pointer text-xs text-gray-500 select-none hover:text-gray-700">
+				<span class="group-open:hidden">Show the previous text</span>
+				<span class="hidden group-open:inline">Hide the previous text</span>
+			</summary>
+			<div class="mt-1 border-l-2 border-red-200 pl-3 whitespace-pre-wrap text-gray-500">
+				{pd.before}
+			</div>
+		</details>
+	{:else if pd}
+		<div class="whitespace-pre-wrap">
+			{#each pd.parts as part, i (i)}{#if part.kind === 'added'}<ins
+						class={[
+							'rounded-sm bg-green-100 text-green-900 no-underline',
+							part.block && 'block px-0.5'
+						]}>{part.text}</ins
+					>{:else if part.kind === 'removed'}<del
+						class={['rounded-sm bg-red-100 text-red-800', part.block && 'block px-0.5']}
+						>{part.text}</del
+					>{:else}{part.text}{/if}{/each}
+		</div>
 	{:else if c.prose}
-		{@const before = plainText(c.before ?? '')}
-		{@const after = plainText(c.after ?? '')}
-		{#if c.status !== 'same' && before === after}
-			<span class="whitespace-pre-wrap">{after}</span>
+		{@const text = plainText(c.after ?? c.before ?? '')}
+		<span class="whitespace-pre-wrap">{text}</span>
+		{#if c.status !== 'same'}
 			<span class="ml-1 text-xs text-gray-500 italic">(formatting changed)</span>
-		{:else}
-			<span class="whitespace-pre-wrap"
-				>{#each diffWordsWithSpace(before, after) as part, i (i)}{#if part.added}<ins
-							class="rounded-sm bg-green-100 text-green-900 no-underline">{part.value}</ins
-						>{:else if part.removed}<del class="rounded-sm bg-red-100 text-red-800"
-							>{part.value}</del
-						>{:else}{part.value}{/if}{/each}</span
-			>
 		{/if}
 	{:else if c.status === 'same'}
 		{c.after}
@@ -188,14 +216,16 @@
 	{#if changes.length}
 		<dl class="flex flex-col gap-2 text-sm">
 			{#each changes as c (c.key)}
+				{@const pd = proseDiff(c)}
 				<div class={[c.status === 'same' && 'text-gray-500']}>
 					<dt class="flex items-center gap-2 text-xs font-medium text-gray-500">
 						{c.label}
 						{#if c.status === 'added' || c.status === 'removed'}
 							{@render badge(c.status)}
 						{/if}
+						{#if pd?.rewritten}{@render rewrittenBadge()}{/if}
 					</dt>
-					<dd class="mt-0.5 text-gray-800">{@render value(c)}</dd>
+					<dd class="mt-0.5 text-gray-800">{@render value(c, pd)}</dd>
 				</div>
 			{/each}
 		</dl>
@@ -373,6 +403,7 @@
 							{#each section.questions as question, i (question.id)}
 								{#if showUnchanged || isChanged(question)}
 									{@const main = question.changes.find((c) => c.key === 'main_question')}
+									{@const pd = main ? proseDiff(main) : null}
 									{@const rest = shown(
 										question.status,
 										question.changes.filter((c) => c !== main)
@@ -391,18 +422,19 @@
 										</span>
 										<div class="flex min-w-0 flex-1 flex-col gap-2">
 											<div class="flex flex-wrap items-start gap-2">
-												<p
+												<div
 													class={[
 														'min-w-0 flex-1 text-sm',
 														question.status === 'same' ? 'text-gray-500' : 'text-gray-900'
 													]}
 												>
-													{#if main}{@render value(main)}{:else}<span class="text-gray-400 italic"
-															>No question text</span
+													{#if main}{@render value(main, pd)}{:else}<span
+															class="text-gray-400 italic">No question text</span
 														>{/if}
-												</p>
+												</div>
 												<span class="flex shrink-0 gap-1">
 													{@render badge(question.status, question.moved, question.fromSection)}
+													{#if pd?.rewritten}{@render rewrittenBadge()}{/if}
 												</span>
 											</div>
 											{#if rest.length}
