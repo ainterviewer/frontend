@@ -2,6 +2,8 @@
 	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
+	import { CHECKBOX_SEPARATOR, splitCheckboxAnswer } from '$lib/survey/checkbox';
+
 	import type { SurveyItemUnion } from './types';
 
 	let {
@@ -151,10 +153,7 @@
 		} else if (surveyItem.type === 'time') {
 			timeValue = answer;
 		} else if (surveyItem.type === 'checkbox') {
-			const parts = answer
-				.split(',')
-				.map((s: string) => s.trim())
-				.filter(Boolean);
+			const parts = splitCheckboxAnswer(answer, surveyItem.options);
 			const opts = new Set<string>(surveyItem.options);
 			for (const p of parts) {
 				if (opts.has(p)) {
@@ -285,7 +284,7 @@
 		}
 
 		submitted = true;
-		onAnswer?.(answer.join(', '));
+		onAnswer?.(answer.join(CHECKBOX_SEPARATOR));
 	}
 
 	function getLegendText() {
