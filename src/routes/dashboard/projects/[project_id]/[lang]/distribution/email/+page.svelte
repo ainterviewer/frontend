@@ -376,7 +376,7 @@
 
 <AutosavePill savers={Object.values(savers)} />
 
-<div class="">
+<div class="flex flex-1 flex-col">
 	<div class="mb-2">
 		<h1 class="page-title">Email templates</h1>
 	</div>
@@ -638,7 +638,11 @@
 		</div>
 	</div>
 
-	<ActionBar class="mt-4">
+	<!-- The spacer keeps the bar at the foot of the page while the templates load
+	     and the page is still short; mt-4 alone would leave it floating under the
+	     content until the page grows past the viewport. -->
+	<div aria-hidden="true" class="mt-auto h-4 shrink-0"></div>
+	<ActionBar>
 		<ProjectLanguagePicker
 			projectId={project_id}
 			currentLang={language}
