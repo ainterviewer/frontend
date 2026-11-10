@@ -88,6 +88,15 @@
 		vertical-align: middle;
 		white-space: nowrap;
 	}
+	/* What changed about a tour step, above its text when a returning user
+	   gets it as "What's new" (`TourStep.whatsNew` in onboarding.ts). */
+	.tour-whats-new {
+		margin-bottom: 0.5rem;
+		padding: 0.25rem 0.5rem;
+		border-radius: 0.25rem;
+		background-color: var(--color-green-50);
+		color: var(--color-green-900);
+	}
 	/* A bar that grows out of its left edge once its card has been reached.
 	   Set on the filled part, inside a `reveal()` container; a bar that is
 	   never scrolled to simply never animates. Transform rather than width so

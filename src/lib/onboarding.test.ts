@@ -42,6 +42,29 @@ describe('tourSteps', () => {
 		expect(JSON.parse(store.get('guide-onboarded')!)).toEqual([...legacy, 'language-v2']);
 	});
 
+	it("notes what is new about a step only when it is shown as what's new", () => {
+		const noted = [
+			...steps,
+			{
+				id: 'history-v2',
+				popover: { title: 'History', description: 'Browse.' },
+				whatsNew: 'compare.'
+			}
+		];
+
+		const first = tourSteps('guide', noted, legacy);
+		expect(first.at(-1)).toEqual({
+			id: 'history-v2',
+			popover: { title: 'History', description: 'Browse.' }
+		});
+
+		store.set('guide-onboarded', JSON.stringify(steps.map((step) => step.id)));
+		const returning = tourSteps('guide', noted, legacy);
+		expect(returning.at(-1)?.popover?.description).toBe(
+			'<p class="tour-whats-new"><strong>New:</strong> compare.</p>Browse.'
+		);
+	});
+
 	it('shows nothing when tours are turned off', () => {
 		store.set('onboarding-disabled', 'true');
 		expect(tourSteps('guide', steps, legacy)).toEqual([]);

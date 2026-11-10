@@ -22,7 +22,16 @@ export const PREVIEW_BADGE =
  * that returning users should see it again. A step that only works after the
  * one before it (say, a panel the previous step opens) must change id with it.
  */
-export type TourStep = DriveStep & { id: string };
+export type TourStep = DriveStep & {
+	id: string;
+	/**
+	 * What is new about the step, put above its text when it is shown as
+	 * "What's new" to a user who took the tour before. A step's own text
+	 * describes the control as a whole, so without this a reworded step reads
+	 * like one they have seen. First visits do not show it.
+	 */
+	whatsNew?: string;
+};
 
 /**
  * The step ids a tour's stored guard says were seen: none when the user never
@@ -62,7 +71,7 @@ export function tourSteps(
 	const ids = new Set([...seen, ...steps.map((step) => step.id)]);
 	localStorage.setItem(key, JSON.stringify([...ids]));
 
-	if (unseen.length === steps.length) return [...steps];
+	if (unseen.length === steps.length) return steps.map(withoutNote);
 	return [
 		{
 			popover: {
@@ -70,8 +79,24 @@ export function tourSteps(
 				description: 'A few things have changed here since your last tour.'
 			}
 		},
-		...unseen
+		...unseen.map(withNote)
 	];
+}
+
+function withoutNote({ whatsNew: _, ...step }: TourStep): DriveStep {
+	return step;
+}
+
+function withNote(step: TourStep): DriveStep {
+	const { whatsNew, ...rest } = step;
+	if (!whatsNew || !rest.popover) return rest;
+	return {
+		...rest,
+		popover: {
+			...rest.popover,
+			description: `<p class="tour-whats-new"><strong>New:</strong> ${whatsNew}</p>${rest.popover.description ?? ''}`
+		}
+	};
 }
 
 /** Whether the user has opted out of all onboarding tours. */

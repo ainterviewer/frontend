@@ -24,7 +24,11 @@ describes: a new control gets a step, and a removed one loses its step.
   intro. So adding a step needs no other bookkeeping.
 - **Reworded steps get a new id** (`language` → `language-v2`) when the change
   is big enough that returning users should see the step again. A step that
-  only works after the one before it changes id along with that step.
+  only works after the one before it changes id along with that step. Give
+  the reworded step a `whatsNew` note ("compare any version with the
+  draft…"): returning users get it above the text, marked "New:", so they
+  can tell what changed in a step that otherwise looks familiar. First
+  visits don't show it.
 - **`LEGACY_TOUR_STEPS` is frozen.** It lists the steps that users who took a
   tour before ids existed have seen. Never add new ids to it, or nobody gets
   shown the new step.
