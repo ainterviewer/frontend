@@ -128,7 +128,7 @@
 	<aside
 		bind:this={asideEl}
 		style="max-height: {maxHeight}"
-		class="sticky top-6 mb-5 hidden w-55 shrink-0 space-y-8 overflow-y-auto pr-4 {visibilityClass}"
+		class="sticky top-below-banner mb-5 hidden w-55 shrink-0 space-y-8 overflow-y-auto pr-4 {visibilityClass}"
 	>
 		<nav class="space-y-1">
 			<a

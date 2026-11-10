@@ -23,6 +23,22 @@
 	--color-on-secondary: #1c2826; /* text on secondary */
 }
 
+/* A setup page's sticky panels (guide sidebar, consent and welcome preview)
+   pin 1.5rem below the TranslationBanner, which publishes its height on its
+   parent as --translation-banner-h. The banner pins flush under the header,
+   2.5rem above the scrolling <main>'s padding edge that `top` counts from;
+   without a banner they pin at the usual 1.5rem. */
+@utility top-below-banner {
+	top: max(1.5rem, calc(var(--translation-banner-h, 0px) - 2.5rem + 1.5rem));
+}
+
+/* The save/presence pills, fixed 1.5rem under the 2.75rem header, move down
+   to sit 0.5rem below the banner while it is stuck flush under the header
+   (--translation-banner-stuck-h is 0 otherwise). */
+@utility fixed-top-below-banner {
+	top: max(4.25rem, calc(2.75rem + var(--translation-banner-stuck-h, 0px) + 0.5rem));
+}
+
 /* Base  */
 
 @layer base {

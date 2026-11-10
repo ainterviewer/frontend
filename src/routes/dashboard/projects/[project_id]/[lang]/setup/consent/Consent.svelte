@@ -223,7 +223,7 @@
 
 		<!-- Live Preview Panel -->
 		<div id="preview" class="w-[420px] shrink-0">
-			<div class="sticky top-6">
+			<div class="sticky top-below-banner">
 				<div class="mb-3 flex items-center justify-between">
 					<h3 class="text-sm font-medium text-gray-500">
 						<i class="fa-solid fa-eye mr-1.5"></i>
