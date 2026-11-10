@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { AgentConfigs, ProbingAgentConfig, ProbingPromptSlots } from '$lib/api/types.gen';
+	import ActionBar from '$lib/components/ActionBar.svelte';
 	import { Autosaver, saveContent } from '$lib/content/autosave.svelte';
 	import AutosavePill from '$lib/content/AutosavePill.svelte';
 	import PublishControl from '$lib/content/PublishControl.svelte';
@@ -632,10 +633,7 @@
 		/>
 	{/if}
 
-	<div
-		data-action-bar
-		class="sticky bottom-0 ml-auto flex w-fit items-center gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
-	>
+	<ActionBar>
 		<div class="flex rounded-full bg-gray-100 p-1">
 			<button
 				type="button"
@@ -665,5 +663,5 @@
 			primary
 			onBeforePublish={() => saver.flush()}
 		/>
-	</div>
+	</ActionBar>
 </div>

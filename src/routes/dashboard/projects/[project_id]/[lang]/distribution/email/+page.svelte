@@ -11,6 +11,7 @@
 		ProjectLanguage,
 		TemplatePlaceholder
 	} from '$lib/api/types.gen';
+	import ActionBar from '$lib/components/ActionBar.svelte';
 	import PlaceholderInput from '$lib/components/editor/PlaceholderInput.svelte';
 	import { EditorLinkModal } from '$lib/components/modals';
 	import EmailPreview from '$lib/components/preview/EmailPreview.svelte';
@@ -637,10 +638,7 @@
 		</div>
 	</div>
 
-	<div
-		data-action-bar
-		class="sticky bottom-0 mt-4 ml-auto flex w-fit gap-4 rounded-full border border-gray-200 bg-white/90 p-4 shadow-lg backdrop-blur"
-	>
+	<ActionBar class="mt-4">
 		<ProjectLanguagePicker
 			projectId={project_id}
 			currentLang={language}
@@ -686,7 +684,7 @@
 			<i class="fa-solid fa-paper-plane"></i>
 			{current.sending ? sendingLabel : sendLabel}
 		</button>
-	</div>
+	</ActionBar>
 </div>
 
 <EditorLinkModal
