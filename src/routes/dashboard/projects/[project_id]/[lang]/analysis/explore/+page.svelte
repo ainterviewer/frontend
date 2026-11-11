@@ -56,11 +56,17 @@
 		type Unit,
 		unitQuery
 	} from './explore';
-	import { ExploreState, type ExploreView } from './exploreState.svelte';
+	import {
+		ExploreState,
+		type ExploreView,
+		type ListGrouping,
+		type ListOrder
+	} from './exploreState.svelte';
 	import { exploreUrlSearch, readExploreUrl } from './exploreUrl';
 	import KeywordInput from './KeywordInput.svelte';
 	import type { KeywordProblem } from './keywordQuery';
 	import ListView from './ListView.svelte';
+	import { PagedQuery } from './pagedQuery.svelte';
 	import ScatterPlot from './ScatterPlot.svelte';
 	import StatusStrip from './StatusStrip.svelte';
 	import SweepBar from './SweepBar.svelte';
@@ -285,19 +291,6 @@
 	// it is would put a request behind every letter.
 	let queryText = $state(opened.query);
 	let submitted = $state(opened.query);
-	/**
-	 * The envelope of the most recent page — the query it was run for, how many
-	 * chunks were scored, how many there are in all. The hits themselves are
-	 * held separately because they accumulate: a second page is appended to the
-	 * list rather than swapped in for it, so a ranked list is read downwards
-	 * the way it is written.
-	 */
-	let searchResponse = $state<EmbeddingSearchResponse | null>(null);
-	let searchHits = $state<EmbeddingSearchHit[]>([]);
-	let searchLoading = $state(false);
-	let searchError = $state<string | null>(null);
-	let searchMoreLoading = $state(false);
-	let searchMoreError = $state<string | null>(null);
 
 	/**
 	 * The score below which a hit is not shown, applied to whichever ranked list
@@ -323,12 +316,6 @@
 	let transcriptOf = $state<EmbeddingSearchHit | null>(null);
 
 	let selectedId = $state<string | null>(null);
-	let detail = $state<EmbeddingSimilarResponse | null>(null);
-	let detailHits = $state<EmbeddingSearchHit[]>([]);
-	let detailLoading = $state(false);
-	let detailError = $state<string | null>(null);
-	let detailMoreLoading = $state(false);
-	let detailMoreError = $state<string | null>(null);
 
 	/**
 	 * The code the list is being read outward from, if any.
@@ -343,12 +330,6 @@
 	 * from without the page having to hold a codebook of its own.
 	 */
 	let codeAnchor = $state<{ id: string; name: string; subtree: boolean } | null>(null);
-	let codeLike = $state<EmbeddingCodeSimilarResponse | null>(null);
-	let codeLikeHits = $state<EmbeddingSearchHit[]>([]);
-	let codeLikeLoading = $state(false);
-	let codeLikeError = $state<string | null>(null);
-	let codeLikeMoreLoading = $state(false);
-	let codeLikeMoreError = $state<string | null>(null);
 
 	let focusedGroup = $state<string | null>(null);
 	let hoveredId = $state<string | null>(null);
@@ -756,143 +737,6 @@
 	// -- search ---------------------------------------------------------------
 
 	/**
-	 * Which request a page belongs to.
-	 *
-	 * "Load more" runs outside the effect that owns the search, so it has no
-	 * abort signal to be cancelled by. The counter is what a late page checks
-	 * itself against before appending to a list that has since been replaced by
-	 * a different query, unit or filter.
-	 */
-	let searchRun = 0;
-
-	$effect(() => {
-		const projectId = data.project_id;
-		const query = submitted.trim();
-		const currentKind = kind;
-		const currentFilters = filterQuery(filters);
-		const currentWhole = wholeInterviews;
-
-		searchRun += 1;
-		searchMoreLoading = false;
-		searchMoreError = null;
-
-		if (!query) {
-			searchResponse = null;
-			searchHits = [];
-			searchError = null;
-			searchLoading = false;
-			return;
-		}
-
-		searchLoading = true;
-		let disposed = false;
-		const controller = new AbortController();
-
-		(async () => {
-			const {
-				data: body,
-				error,
-				response
-			} = await Analysis.searchEmbeddings({
-				path: { project_id: projectId },
-				query: {
-					query,
-					...unitQuery(currentKind),
-					task: DEFAULT_TASK,
-					limit: PAGE_SIZE,
-					offset: 0,
-					whole_interviews: currentWhole,
-					...currentFilters
-				},
-				signal: controller.signal
-			});
-			if (disposed) return;
-
-			searchLoading = false;
-			if (error || !body) {
-				searchResponse = null;
-				searchHits = [];
-				searchError = describeError(response?.status, 'The search could not be run.', error);
-				keywordServerProblem = keywordProblemOf(error) ?? keywordServerProblem;
-				return;
-			}
-
-			searchResponse = body;
-			searchHits = body.items ?? [];
-			searchError = null;
-			keywordServerProblem = null;
-		})();
-
-		return () => {
-			disposed = true;
-			controller.abort();
-		};
-	});
-
-	/**
-	 * The next page of results, appended.
-	 *
-	 * Costs another inference call — the server re-embeds the query to score the
-	 * next slice — which is the reason this is a button rather than something
-	 * the scroller does on the reader's behalf.
-	 */
-	async function loadMoreSearch() {
-		const query = submitted.trim();
-		if (searchMoreLoading || !searchResponse || !query) return;
-
-		const run = searchRun;
-		searchMoreLoading = true;
-		searchMoreError = null;
-
-		const {
-			data: body,
-			error,
-			response
-		} = await Analysis.searchEmbeddings({
-			path: { project_id: data.project_id },
-			query: {
-				query,
-				...unitQuery(kind),
-				task: DEFAULT_TASK,
-				limit: PAGE_SIZE,
-				offset: searchHits.length,
-				whole_interviews: wholeInterviews,
-				...filterQuery(filters)
-			}
-		});
-		if (run !== searchRun) return;
-
-		searchMoreLoading = false;
-		if (error || !body) {
-			// The list already on screen is untouched and still correct, so this
-			// says so beside the button rather than replacing the results.
-			searchMoreError = describeError(response?.status, 'Could not load more results.');
-			return;
-		}
-
-		searchResponse = body;
-		searchHits = [...searchHits, ...(body.items ?? [])];
-	}
-
-	// -- browsing -------------------------------------------------------------
-
-	/**
-	 * The list's resting state: the corpus in guide order, with no query behind
-	 * it.
-	 *
-	 * Only fetched for the list, and only while nothing is being searched — a
-	 * semantic query ranks the same filtered corpus, so the search above already
-	 * answers that case and browsing it too would be a second request for a list
-	 * nobody is looking at.
-	 *
-	 * Needs no vectors at all, which is the point: keyword search and structural
-	 * filtering work on a project the day it finishes collecting, rather than
-	 * after somebody remembers to run a backfill.
-	 */
-	let browseResponse = $state<EmbeddingBrowseResponse | null>(null);
-	let browseHits = $state<EmbeddingSearchHit[]>([]);
-	let browseLoading = $state(false);
-	/**
 	 * A keyword problem only the server could find, or null.
 	 *
 	 * `explore.keywordProblem` is everything a parser catches without a project;
@@ -907,15 +751,11 @@
 	 */
 	let keywordServerProblem = $state<KeywordProblem | null>(null);
 
-	let browseError = $state<string | null>(null);
-	let browseMoreLoading = $state(false);
-	let browseMoreError = $state<string | null>(null);
-	// The same guard as `searchRun`, and deliberately not `$state`: the effect
-	// below both reads and writes it, which for reactive state is an effect that
-	// retriggers itself until Svelte gives up with `effect_update_depth_exceeded`.
-	// Nothing renders it either — it only ever decides whether a late page still
-	// belongs to the list it was fetched for.
-	let browseRun = 0;
+	function noteKeywordProblem(outcome: { ok: true } | { ok: false; error: unknown }) {
+		keywordServerProblem = outcome.ok
+			? null
+			: (keywordProblemOf(outcome.error) ?? keywordServerProblem);
+	}
 
 	/**
 	 * Whether the list should carry whole transcripts rather than windows.
@@ -930,331 +770,178 @@
 	/** Whether a semantic query is ordering the list rather than the guide. */
 	let ranked = $derived(submitted.trim().length > 0);
 
-	$effect(() => {
-		const projectId = data.project_id;
-		const currentKind = kind;
-		const currentFilters = filterQuery(filters);
-		// Read here rather than at the call below, so changing the order refetches
-		// — the list is ordered in SQL, and page one of a shuffle is not something
-		// the client could re-derive from the page it is holding.
-		const currentOrder = explore.listOrder;
-		// Read here for the same reason: the blocks are cut in SQL, so a page one
-		// grouped by the guide is a different scan and not a re-sort of this one.
-		const currentGrouping = explore.listGrouping;
-		const currentWhole = wholeInterviews;
-		const wanted = listing && !ranked && selectedId === null;
+	/** What every list request is filtered by, read once per run. */
+	type Scope = {
+		projectId: string;
+		kind: Unit;
+		filters: ReturnType<typeof filterQuery>;
+		whole: boolean;
+	};
 
-		browseRun += 1;
-		browseMoreLoading = false;
-		browseMoreError = null;
-
-		if (!wanted) {
-			browseResponse = null;
-			browseHits = [];
-			browseError = null;
-			browseLoading = false;
-			return;
-		}
-
-		browseLoading = true;
-		let disposed = false;
-		const controller = new AbortController();
-
-		(async () => {
-			const {
-				data: body,
-				error,
-				response
-			} = await Analysis.browseEmbeddings({
-				path: { project_id: projectId },
-				query: {
-					...unitQuery(currentKind),
-					limit: PAGE_SIZE,
-					offset: 0,
-					order: currentOrder,
-					group_by: currentGrouping,
-					seed: explore.seed,
-					whole_interviews: currentWhole,
-					...currentFilters
-				},
-				signal: controller.signal
-			});
-			if (disposed) return;
-
-			browseLoading = false;
-			if (error || !body) {
-				browseResponse = null;
-				browseHits = [];
-				browseError = describeError(response?.status, 'The corpus could not be read.', error);
-				keywordServerProblem = keywordProblemOf(error) ?? keywordServerProblem;
-				return;
-			}
-
-			browseResponse = body;
-			browseHits = body.items ?? [];
-			browseError = null;
-			keywordServerProblem = null;
-		})();
-
-		return () => {
-			disposed = true;
-			controller.abort();
+	function scope(): Scope {
+		return {
+			projectId: data.project_id,
+			kind,
+			filters: filterQuery(filters),
+			whole: wholeInterviews
 		};
+	}
+
+	/**
+	 * The search results. Every page, the first and each "load more", costs an
+	 * inference call: the server re-embeds the query to score the next slice,
+	 * which is the reason more is a button rather than something the scroller
+	 * does on the reader's behalf.
+	 */
+	const searchQuery = new PagedQuery<Scope & { query: string }, EmbeddingSearchResponse>({
+		fetch: (p, offset, signal) =>
+			Analysis.searchEmbeddings({
+				path: { project_id: p.projectId },
+				query: {
+					query: p.query,
+					...unitQuery(p.kind),
+					task: DEFAULT_TASK,
+					limit: PAGE_SIZE,
+					offset,
+					whole_interviews: p.whole,
+					...p.filters
+				},
+				signal
+			}),
+		failure: () => 'The search could not be run.',
+		moreFailure: 'Could not load more results.',
+		onsettled: noteKeywordProblem
 	});
 
-	/** The next page, appended. Costs no inference: nothing here is scored. */
-	async function loadMoreBrowse() {
-		if (browseMoreLoading || !browseResponse) return;
+	$effect(() => {
+		const query = submitted.trim();
+		return searchQuery.run(query ? { ...scope(), query } : null);
+	});
 
-		const run = browseRun;
-		browseMoreLoading = true;
-		browseMoreError = null;
+	// -- browsing -------------------------------------------------------------
 
-		const {
-			data: body,
-			error,
-			response
-		} = await Analysis.browseEmbeddings({
-			path: { project_id: data.project_id },
-			query: {
-				...unitQuery(kind),
-				limit: PAGE_SIZE,
-				offset: browseHits.length,
-				// The same seed as the page above it, so this continues that shuffle
-				// rather than dealing a second one over the same corpus.
-				order: explore.listOrder,
-				group_by: explore.listGrouping,
-				seed: explore.seed,
-				whole_interviews: wholeInterviews,
-				...filterQuery(filters)
-			}
-		});
+	/**
+	 * The list's resting state: the corpus in guide order, with no query behind
+	 * it.
+	 *
+	 * Only fetched for the list, and only while nothing is being searched — a
+	 * semantic query ranks the same filtered corpus, so the search above already
+	 * answers that case and browsing it too would be a second request for a list
+	 * nobody is looking at.
+	 *
+	 * Needs no vectors at all, which is the point: keyword search and structural
+	 * filtering work on a project the day it finishes collecting, rather than
+	 * after somebody remembers to run a backfill. Nothing is scored, so a page
+	 * costs no inference either.
+	 */
+	const browseQuery = new PagedQuery<
+		Scope & { order: ListOrder; grouping: ListGrouping; seed: string },
+		EmbeddingBrowseResponse
+	>({
+		fetch: (p, offset, signal) =>
+			Analysis.browseEmbeddings({
+				path: { project_id: p.projectId },
+				query: {
+					...unitQuery(p.kind),
+					limit: PAGE_SIZE,
+					offset,
+					// The same seed for every page, so "load more" continues the
+					// shuffle rather than dealing a second one over the same corpus.
+					order: p.order,
+					group_by: p.grouping,
+					seed: p.seed,
+					whole_interviews: p.whole,
+					...p.filters
+				},
+				signal
+			}),
+		failure: () => 'The corpus could not be read.',
+		moreFailure: 'That page could not be loaded.',
+		onsettled: noteKeywordProblem
+	});
 
-		// The filters may have moved while this was in flight, in which case the
-		// effect above has already replaced the list this was a page of.
-		if (run !== browseRun) return;
-
-		browseMoreLoading = false;
-		if (error || !body) {
-			browseMoreError = describeError(response?.status, 'That page could not be loaded.');
-			return;
-		}
-
-		browseHits = [...browseHits, ...(body.items ?? [])];
-	}
+	$effect(() => {
+		const wanted = listing && !ranked && selectedId === null;
+		return browseQuery.run(
+			wanted
+				? {
+						...scope(),
+						// Part of the run rather than read at the call, so changing the
+						// order refetches — the list is ordered in SQL, and page one of a
+						// shuffle is not something the client could re-derive from the
+						// page it is holding. The grouping likewise: the blocks are cut in
+						// SQL, so a page grouped by the guide is a different scan and not
+						// a re-sort of this one.
+						order: explore.listOrder,
+						grouping: explore.listGrouping,
+						seed: explore.seed
+					}
+				: null
+		);
+	});
 
 	// -- chunk detail ---------------------------------------------------------
 
-	/** The same guard as `searchRun`, for the neighbours list. */
-	let detailRun = 0;
-
-	$effect(() => {
-		const projectId = data.project_id;
-		const id = selectedId;
-		const currentFilters = filterQuery(filters);
-		const currentWhole = wholeInterviews;
-
-		detailRun += 1;
-		detailMoreLoading = false;
-		detailMoreError = null;
-
-		if (!id) {
-			detail = null;
-			detailHits = [];
-			detailError = null;
-			detailLoading = false;
-			return;
-		}
-
-		detailLoading = true;
-		let disposed = false;
-		const controller = new AbortController();
-
-		(async () => {
-			// Costs no inference at all: the chunk's vector is already stored, so
-			// this keeps working while the embedding server is down.
-			const {
-				data: body,
-				error,
-				response
-			} = await Analysis.findSimilarEmbeddings({
-				path: { project_id: projectId, embedding_id: id },
+	/**
+	 * A chunk's neighbours. Costs no inference at all: the chunk's vector is
+	 * already stored, so this keeps working while the embedding server is down.
+	 */
+	const neighbourQuery = new PagedQuery<Scope & { id: string }, EmbeddingSimilarResponse>({
+		fetch: (p, offset, signal) =>
+			Analysis.findSimilarEmbeddings({
+				path: { project_id: p.projectId, embedding_id: p.id },
 				query: {
 					limit: PAGE_SIZE,
-					offset: 0,
-					whole_interviews: currentWhole,
+					offset,
+					whole_interviews: p.whole,
 					// The neighbours of a main answer are other main answers.
-					main_answers_only: unitQuery(kind).main_answers_only,
-					...currentFilters
+					main_answers_only: unitQuery(p.kind).main_answers_only,
+					...p.filters
 				},
-				signal: controller.signal
-			});
-			if (disposed) return;
-
-			detailLoading = false;
-			if (error || !body) {
-				detail = null;
-				detailHits = [];
-				detailError = describeError(response?.status, 'Could not load this chunk.', error);
-				keywordServerProblem = keywordProblemOf(error) ?? keywordServerProblem;
-				return;
-			}
-
-			detail = body;
-			detailHits = body.items ?? [];
-			detailError = null;
-			keywordServerProblem = null;
-		})();
-
-		return () => {
-			disposed = true;
-			controller.abort();
-		};
+				signal
+			}),
+		failure: () => 'Could not load this chunk.',
+		moreFailure: 'Could not load more neighbours.',
+		onsettled: noteKeywordProblem
 	});
-
-	/** The same guard again, for the list read outward from a code. */
-	let codeLikeRun = 0;
 
 	$effect(() => {
-		const projectId = data.project_id;
-		const anchor = codeAnchor;
-		const currentKind = kind;
-		const currentFilters = filterQuery(filters);
-		const currentWhole = wholeInterviews;
-
-		codeLikeRun += 1;
-		codeLikeMoreLoading = false;
-		codeLikeMoreError = null;
-
-		if (!anchor) {
-			codeLike = null;
-			codeLikeHits = [];
-			codeLikeError = null;
-			codeLikeLoading = false;
-			return;
-		}
-
-		codeLikeLoading = true;
-		let disposed = false;
-		const controller = new AbortController();
-
-		(async () => {
-			// Costs no inference either: the centroid is averaged from vectors
-			// already stored, so this works with the embedding server down --
-			// unlike searching by definition, which has to encode the words.
-			const {
-				data: body,
-				error,
-				response
-			} = await Analysis.findEmbeddingsLikeCode({
-				path: { project_id: projectId, code_id: anchor.id },
-				query: {
-					...unitQuery(currentKind),
-					subtree: anchor.subtree,
-					limit: PAGE_SIZE,
-					offset: 0,
-					whole_interviews: currentWhole,
-					...currentFilters
-				},
-				signal: controller.signal
-			});
-			if (disposed) return;
-
-			codeLikeLoading = false;
-			if (error || !body) {
-				codeLike = null;
-				codeLikeHits = [];
-				codeLikeError = describeError(
-					response?.status,
-					`Could not read the corpus against “${anchor.name}”.`,
-					error
-				);
-				keywordServerProblem = keywordProblemOf(error) ?? keywordServerProblem;
-				return;
-			}
-
-			codeLike = body;
-			codeLikeHits = body.items ?? [];
-			codeLikeError = null;
-			keywordServerProblem = null;
-		})();
-
-		return () => {
-			disposed = true;
-			controller.abort();
-		};
+		const id = selectedId;
+		return neighbourQuery.run(id ? { ...scope(), id } : null);
 	});
 
-	/** The next page of what a code is near. Stored vectors, so also cheap. */
-	async function loadMoreLikeCode() {
+	/**
+	 * The corpus read outward from a code. Costs no inference either: the
+	 * centroid is averaged from vectors already stored, so this works with the
+	 * embedding server down -- unlike searching by definition, which has to
+	 * encode the words.
+	 */
+	const codeLikeQuery = new PagedQuery<
+		Scope & { anchor: NonNullable<typeof codeAnchor> },
+		EmbeddingCodeSimilarResponse
+	>({
+		fetch: (p, offset, signal) =>
+			Analysis.findEmbeddingsLikeCode({
+				path: { project_id: p.projectId, code_id: p.anchor.id },
+				query: {
+					...unitQuery(p.kind),
+					subtree: p.anchor.subtree,
+					limit: PAGE_SIZE,
+					offset,
+					whole_interviews: p.whole,
+					...p.filters
+				},
+				signal
+			}),
+		failure: (p) => `Could not read the corpus against “${p.anchor.name}”.`,
+		moreFailure: 'Could not load more.',
+		onsettled: noteKeywordProblem
+	});
+
+	$effect(() => {
 		const anchor = codeAnchor;
-		if (codeLikeMoreLoading || !codeLike || !anchor) return;
-
-		const run = codeLikeRun;
-		codeLikeMoreLoading = true;
-		codeLikeMoreError = null;
-
-		const {
-			data: body,
-			error,
-			response
-		} = await Analysis.findEmbeddingsLikeCode({
-			path: { project_id: data.project_id, code_id: anchor.id },
-			query: {
-				...unitQuery(kind),
-				subtree: anchor.subtree,
-				limit: PAGE_SIZE,
-				offset: codeLikeHits.length,
-				whole_interviews: wholeInterviews,
-				...filterQuery(filters)
-			}
-		});
-		if (run !== codeLikeRun) return;
-
-		codeLikeMoreLoading = false;
-		if (error || !body) {
-			codeLikeMoreError = describeError(response?.status, 'Could not load more.');
-			return;
-		}
-
-		codeLike = body;
-		codeLikeHits = [...codeLikeHits, ...(body.items ?? [])];
-	}
-
-	/** The next page of neighbours. Stored vectors, so this one is cheap. */
-	async function loadMoreNeighbours() {
-		const id = selectedId;
-		if (detailMoreLoading || !detail || !id) return;
-
-		const run = detailRun;
-		detailMoreLoading = true;
-		detailMoreError = null;
-
-		const {
-			data: body,
-			error,
-			response
-		} = await Analysis.findSimilarEmbeddings({
-			path: { project_id: data.project_id, embedding_id: id },
-			query: {
-				limit: PAGE_SIZE,
-				offset: detailHits.length,
-				whole_interviews: wholeInterviews,
-				main_answers_only: unitQuery(kind).main_answers_only,
-				...filterQuery(filters)
-			}
-		});
-		if (run !== detailRun) return;
-
-		detailMoreLoading = false;
-		if (error || !body) {
-			detailMoreError = describeError(response?.status, 'Could not load more neighbours.');
-			return;
-		}
-
-		detail = body;
-		detailHits = [...detailHits, ...(body.items ?? [])];
-	}
+		return codeLikeQuery.run(anchor ? { ...scope(), anchor } : null);
+	});
 
 	// -- the score cut-off ----------------------------------------------------
 
@@ -1286,14 +973,15 @@
 		return last.score === null || last.score === undefined || last.score >= scoreCutoff;
 	}
 
-	function paging(
-		hits: EmbeddingSearchHit[],
-		total: number | null | undefined,
-		moreLoading: boolean,
-		moreError: string | null,
-		onmore: () => void
-	): ListPaging {
-		const counted = total ?? null;
+	function paging(query: {
+		hits: EmbeddingSearchHit[];
+		response: { total?: number } | null;
+		moreLoading: boolean;
+		moreError: string | null;
+		loadMore: () => Promise<void>;
+	}): ListPaging {
+		const { hits, moreLoading, moreError } = query;
+		const counted = query.response?.total ?? null;
 		return {
 			loaded: hits.length,
 			total: counted,
@@ -1301,13 +989,13 @@
 			more: moreWorthOffering(hits, counted),
 			moreLoading,
 			moreError,
-			onmore
+			onmore: () => query.loadMore()
 		};
 	}
 
 	/** The results as the panel and the map see them: fetched, then filtered. */
 	let visibleSearch = $derived.by((): EmbeddingSearchResponse | null =>
-		searchResponse ? { ...searchResponse, items: aboveCutoff(searchHits) } : null
+		searchQuery.response ? { ...searchQuery.response, items: aboveCutoff(searchQuery.hits) } : null
 	);
 
 	/**
@@ -1315,24 +1003,18 @@
 	 * the chunk the reader anchored on, not a result they are ranking.
 	 */
 	let visibleDetail = $derived.by((): EmbeddingSimilarResponse | null =>
-		detail ? { ...detail, items: aboveCutoff(detailHits) } : null
+		neighbourQuery.response
+			? { ...neighbourQuery.response, items: aboveCutoff(neighbourQuery.hits) }
+			: null
 	);
 
-	let searchPaging = $derived(
-		paging(searchHits, searchResponse?.total, searchMoreLoading, searchMoreError, loadMoreSearch)
-	);
+	let searchPaging = $derived(paging(searchQuery));
 
-	let browsePaging = $derived(
-		paging(browseHits, browseResponse?.total, browseMoreLoading, browseMoreError, loadMoreBrowse)
-	);
+	let browsePaging = $derived(paging(browseQuery));
 
-	let neighbourPaging = $derived(
-		paging(detailHits, detail?.total, detailMoreLoading, detailMoreError, loadMoreNeighbours)
-	);
+	let neighbourPaging = $derived(paging(neighbourQuery));
 
-	let codeLikePaging = $derived(
-		paging(codeLikeHits, codeLike?.total, codeLikeMoreLoading, codeLikeMoreError, loadMoreLikeCode)
-	);
+	let codeLikePaging = $derived(paging(codeLikeQuery));
 
 	/**
 	 * What the list shows, from whichever of four requests answers it.
@@ -1354,14 +1036,14 @@
 	let walking = $derived(listing && !tracing && selectedId !== null);
 
 	let listHits = $derived.by(() => {
-		if (tracing) return aboveCutoff(codeLikeHits);
-		if (walking) return aboveCutoff(detailHits);
-		return ranked ? aboveCutoff(searchHits) : browseHits;
+		if (tracing) return aboveCutoff(codeLikeQuery.hits);
+		if (walking) return aboveCutoff(neighbourQuery.hits);
+		return ranked ? aboveCutoff(searchQuery.hits) : browseQuery.hits;
 	});
 	let listTotal = $derived.by(() => {
-		if (tracing) return codeLike?.total ?? null;
-		if (walking) return detail?.total ?? null;
-		return ranked ? (searchResponse?.total ?? null) : (browseResponse?.total ?? null);
+		if (tracing) return codeLikeQuery.response?.total ?? null;
+		if (walking) return neighbourQuery.response?.total ?? null;
+		return ranked ? (searchQuery.response?.total ?? null) : (browseQuery.response?.total ?? null);
 	});
 	/**
 	 * How many interviews the list is drawn from, as the server counted them.
@@ -1373,22 +1055,23 @@
 	 * rather than saying zero.
 	 */
 	let listInterviews = $derived.by(() => {
-		if (tracing) return codeLike?.interviews ?? null;
-		if (walking) return detail?.interviews ?? null;
-		return ranked ? (searchResponse?.interviews ?? null) : (browseResponse?.interviews ?? null);
+		if (tracing) return codeLikeQuery.response?.interviews ?? null;
+		if (walking) return neighbourQuery.response?.interviews ?? null;
+		return ranked
+			? (searchQuery.response?.interviews ?? null)
+			: (browseQuery.response?.interviews ?? null);
 	});
-	let listLoading = $derived(
-		tracing ? codeLikeLoading : walking ? detailLoading : ranked ? searchLoading : browseLoading
+	let listQuery = $derived(
+		tracing ? codeLikeQuery : walking ? neighbourQuery : ranked ? searchQuery : browseQuery
 	);
-	let listError = $derived(
-		tracing ? codeLikeError : walking ? detailError : ranked ? searchError : browseError
-	);
+	let listLoading = $derived(listQuery.loading);
+	let listError = $derived(listQuery.error);
 	let listPaging = $derived(
 		tracing ? codeLikePaging : walking ? neighbourPaging : ranked ? searchPaging : browsePaging
 	);
 
 	/** The chunk being walked from, once its neighbours have landed. */
-	let listAnchor = $derived(walking ? (detail?.source ?? null) : null);
+	let listAnchor = $derived(walking ? (neighbourQuery.response?.source ?? null) : null);
 
 	/**
 	 * The code being read outward from, once its ranking has landed.
@@ -1399,8 +1082,12 @@
 	 * it.
 	 */
 	let listCodeAnchor = $derived(
-		tracing && codeLike && codeAnchor
-			? { name: codeAnchor.name, subtree: codeAnchor.subtree, seeds: codeLike.seeds ?? 0 }
+		tracing && codeLikeQuery.response && codeAnchor
+			? {
+					name: codeAnchor.name,
+					subtree: codeAnchor.subtree,
+					seeds: codeLikeQuery.response.seeds ?? 0
+				}
 			: null
 	);
 
@@ -1906,7 +1593,7 @@
 				keyword={explore.searchableKeyword}
 				anchor={listAnchor}
 				codeAnchor={listCodeAnchor}
-				anchorLoading={walking && detail === null}
+				anchorLoading={walking && neighbourQuery.response === null}
 				onanchor={(hit) => (selectedId = selectedId === hit.id ? null : hit.id)}
 				ontranscript={(hit) => (transcriptOf = hit)}
 				{railOpen}
@@ -2213,12 +1900,12 @@
 							{multilingual}
 							clustersLoading={clusterLoading && clusters === null}
 							search={visibleSearch}
-							{searchLoading}
-							{searchError}
+							searchLoading={searchQuery.loading}
+							searchError={searchQuery.error}
 							{searchPaging}
 							detail={visibleDetail}
-							{detailLoading}
-							{detailError}
+							detailLoading={neighbourQuery.loading}
+							detailError={neighbourQuery.error}
 							{neighbourPaging}
 							{selectedId}
 							{focusedGroup}
