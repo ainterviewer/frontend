@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { SecurityOverride } from '$lib/api';
+	import type { PendingIntervention } from '$lib/interview/chat.svelte';
 	import { getSecurityText } from '$lib/respondentText';
-
-	import type { PendingIntervention } from '../../../routes/interview/chat.svelte';
 
 	interface Props {
 		intervention: PendingIntervention;

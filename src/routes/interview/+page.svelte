@@ -5,14 +5,13 @@
 	import { type Consent, Projects } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
-	import { getModalText } from '$lib/respondentText';
-
 	import {
 		ChatClient,
 		createInterview,
 		parseInterviewIdFromToken,
 		type StartPoint
-	} from './chat.svelte';
+	} from '$lib/interview/chat.svelte';
+	import { getModalText } from '$lib/respondentText';
 
 	interface PageData {
 		project_id: string;

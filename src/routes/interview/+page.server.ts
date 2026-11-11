@@ -1,10 +1,10 @@
 import { error, redirect } from '@sveltejs/kit';
 
 import { Auth, Default, Interviews, type InterviewType, Projects } from '$lib/api';
+import type { StartPoint } from '$lib/interview/chat.svelte';
 import { hasErrorCode } from '$lib/utils/errors';
 
 import type { PageServerLoad } from './$types';
-import type { StartPoint } from './chat.svelte';
 
 /**
  * The interview id inside an `interview_token` cookie, if it is for this

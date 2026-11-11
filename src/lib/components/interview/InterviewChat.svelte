@@ -3,9 +3,9 @@
 
 	import { Auth, type InterviewConfig, type InterviewType, type ReportReason } from '$lib/api';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
+	import { type ChatClient } from '$lib/interview/chat.svelte';
 	import { getReportText, getUiText } from '$lib/respondentText';
 
-	import { type ChatClient } from '../../../routes/interview/chat.svelte';
 	import GradientProgressBar from './GradientProgressBar.svelte';
 	import Modal from './Modal.svelte';
 	import ReportDialog from './ReportDialog.svelte';
