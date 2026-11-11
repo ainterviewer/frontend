@@ -1,30 +1,24 @@
 <script lang="ts">
-	import 'driver.js/dist/driver.css';
-
-	import { driver } from 'driver.js';
 	import { onMount, untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import type {
-		CollaboratorInvitePublic,
-		CollaboratorRole,
-		FolderWithProjectsPublic,
-		ProjectLanguage,
-		ProjectPublic
-	} from '$lib/api';
+	import type { FolderWithProjectsPublic, ProjectLanguage, ProjectPublic } from '$lib/api';
 	import { Folders, Projects } from '$lib/api';
-	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
-	import { addSkipOnboardingButton, PREVIEW_BADGE, tourSteps } from '$lib/onboarding';
 	import { formatDate, formatDay } from '$lib/utils/datetime';
 	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
+	import CollaboratorsModal from './CollaboratorsModal.svelte';
+	import ConfirmDeleteModal from './ConfirmDeleteModal.svelte';
+	import CreateFolderModal from './CreateFolderModal.svelte';
+	import CreateProjectModal from './CreateProjectModal.svelte';
+	import { startDashboardTour } from './dashboardTour';
 	import {
 		type DashboardView,
 		NATURAL_DIRECTION,
@@ -33,6 +27,10 @@
 		type SortKey,
 		sortProjects
 	} from './dashboardView';
+	import { canArchive, isCollaborator } from './folderAccess';
+	import LeaveFolderModal from './LeaveFolderModal.svelte';
+	import MoveProjectModal from './MoveProjectModal.svelte';
+	import RenameFolderModal from './RenameFolderModal.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -102,97 +100,28 @@
 	);
 
 	/**
-	 * Whether the reader may archive in this folder: its admins, and platform
-	 * admins, who pass every role check. Only to leave the action out -- the API
-	 * checks for itself.
+	 * The dialog that is open, if any, and what it acts on. Each dialog keeps
+	 * its own form state, and is mounted afresh every time it opens.
 	 */
-	function canArchive(folder: FolderWithProjectsPublic): boolean {
-		const user = page.data.user;
-		if (!user) return false;
-		if (user.scope === 'admin') return true;
-		return (folder.collaborators ?? []).some(
-			(collaborator) => collaborator.user.id === user.id && collaborator.role === 'admin'
-		);
+	type Dialog =
+		| { kind: 'create-folder' }
+		| {
+				kind: 'rename-folder' | 'collaborators' | 'leave-folder' | 'delete-folder';
+				folder: FolderWithProjectsPublic;
+		  }
+		| { kind: 'create-project'; folder: FolderWithProjectsPublic }
+		| { kind: 'move-project'; project: ProjectPublic; folderId: string }
+		| { kind: 'delete-project'; project: ProjectPublic };
+	let dialog = $state.raw<Dialog | null>(null);
+
+	function openDialog(next: Dialog) {
+		dialog = next;
+		activeDropdown = null;
 	}
 
-	// Modal States
-	let isCreateFolderModalOpen = $state(false);
-	let isDeleteFolderModalOpen = $state(false);
-	let isLeaveFolderModalOpen = $state(false);
-	let isRenameFolderModalOpen = $state(false);
-	let isCollaboratorsModalOpen = $state(false);
-
-	let isCreateProjectModalOpen = $state(false);
-	let isDeleteProjectModalOpen = $state(false);
-
-	// Form Data
-	// Folder Creation
-	let createFolderName = $state('');
-	let createFolderCollaborators: { email: string; role: CollaboratorRole }[] = $state([]);
-
-	// Folder Renaming
-	let renameFolderName = $state('');
-
-	// Folder Collaborators
-	// Changes are staged locally and only sent when "Save Changes" is clicked,
-	// so the whole modal behaves as one edit.
-	// A row is a collaborator (`userId`), a pending invite (`invite`), or a new
-	// email staged to be invited (neither). Adding someone always sends an
-	// invite: they show as pending, whether or not they have an account, until
-	// they accept the emailed link.
-	type EditCollaborator = {
-		key: string;
-		userId: string | null;
-		invite: CollaboratorInvitePublic | null;
-		email: string;
-		role: CollaboratorRole;
-		originalRole: CollaboratorRole | null;
-	};
-	let editCollaborators: EditCollaborator[] = $state([]);
-	let folderInvites: CollaboratorInvitePublic[] = $state([]);
-	let editCollaboratorEmail = $state('');
-	let editCollaboratorRole: CollaboratorRole = $state('viewer');
-	const roles: CollaboratorRole[] = ['viewer', 'annotator', 'editor', 'admin'];
-	const roleItems = roles.map((r) => ({
-		value: r,
-		label: r.charAt(0).toUpperCase() + r.slice(1)
-	}));
-
-	/** The reader's role on a folder; platform admins count as its admins. */
-	function folderRoleOf(folder: FolderWithProjectsPublic): CollaboratorRole {
-		const user = page.data.user;
-		if (user?.scope === 'admin') return 'admin';
-		return (folder.collaborators ?? []).find((c) => c.user.id === user?.id)?.role ?? 'viewer';
+	function closeDialog() {
+		dialog = null;
 	}
-
-	// Project Creation
-	let createProjectName = $state('');
-	let createProjectLanguage = $state('EN');
-	let selectedProject: ProjectPublic | null = $state(null);
-	let deleteConfirmation = $state('');
-	let createProjectFolderId: string | null = $state(null);
-
-	// Folder Actions
-	let selectedFolder: FolderWithProjectsPublic | null = $state(null);
-	let deleteFolderConfirmation = $state('');
-
-	// Nobody manages collaborators above their own role (only admins touch
-	// admins). The API enforces it; this only keeps the dialog from offering it.
-	let myFolderRole = $derived(selectedFolder ? folderRoleOf(selectedFolder) : 'viewer');
-	let grantableRoleItems = $derived(
-		roleItems.map((item) => ({
-			...item,
-			disabled: roles.indexOf(item.value) > roles.indexOf(myFolderRole)
-		}))
-	);
-	function canManage(row: EditCollaborator): boolean {
-		return roles.indexOf(row.originalRole ?? row.role) <= roles.indexOf(myFolderRole);
-	}
-
-	// Move Project
-	let isMoveProjectModalOpen = $state(false);
-	let moveSourceFolderId: string | null = $state(null);
-	let moveTargetFolderId = $state('');
 
 	// UI State
 	let activeDropdown: string | null = $state(null);
@@ -201,195 +130,10 @@
 	let draggedProject: { id: string; folderId: string } | null = $state(null);
 	let dragOverFolderId: string | null = $state(null);
 
-	async function loadData() {
-		await invalidateAll();
-	}
-
-	// The steps a user who took the tour before steps had ids has seen.
-	const LEGACY_TOUR_STEPS = [
-		'welcome',
-		'header-menu',
-		'header-profile',
-		'home',
-		'experiments',
-		'new-folder',
-		'new-project',
-		'documentation',
-		'done'
-	];
-
-	function setHeaderMenuOpen(open: boolean) {
-		const visible = !!document.querySelector('[data-tour="header-menu-dropdown"].visible');
-		if (visible !== open) {
-			(document.querySelector('[data-tour="header-menu"]') as HTMLElement | null)?.click();
-		}
-	}
-
-	function startOnboarding() {
-		// The safety check is a preview feature; only mention it to those who have it.
-		const safetyCheck = !!page.data.user?.with_preview_features;
-		const steps = tourSteps(
-			'dashboard',
-			[
-				{
-					id: 'welcome',
-					popover: {
-						title: 'Welcome to the AInterviewer Platform 👋',
-						description:
-							"This interactive tour will guide you through the platform's features, and help you get started. Navigate the tour with the buttons below or with the arrow keys on your keyboard."
-					}
-				},
-				{
-					id: 'header-menu',
-					element: '[data-tour="header-menu-container"]',
-					popover: {
-						title: 'Global Menu',
-						description: 'In the global dropdown menu you can logout at any time.'
-					}
-				},
-				{
-					id: 'header-profile',
-					element: '[data-tour="header-profile"]',
-					popover: {
-						title: 'Your Profile',
-						description:
-							'In <u>Your profile</u> you can edit your user information, and manage how you see these interactive tours.',
-						side: 'left'
-					}
-				},
-				{
-					id: 'header-flagged',
-					element: '[data-tour="header-flagged"]',
-					popover: {
-						title: 'Flagged Messages',
-						description:
-							"Counts the flagged messages you haven't read yet. While there are any, a dot shows on your avatar.",
-						side: 'left'
-					}
-				},
-				{
-					id: 'header-whats-new',
-					element: '[data-tour="header-whats-new"]',
-					popover: {
-						title: "What's New",
-						description:
-							'Read about recent changes to the platform. A dot here, and on your avatar, means there is a release you have not seen yet.',
-						side: 'left'
-					}
-				},
-				{
-					id: 'home',
-					element: '[data-tour="sidebar-home"]',
-					popover: {
-						title: 'Home',
-						description:
-							'<u>Home</u> is where your projects live. Organize your projects under folders and see the status of individual each project.'
-					}
-				},
-				{
-					id: 'experiments',
-					element: '[data-tour="sidebar-experiments"]',
-					popover: {
-						title: 'Experiments',
-						description:
-							'The <u>Experiments</u> tab is for an advanced feature, only useful when you have two or more projects created under the same folder. The feature allows you to assign respondents to different existing interview projects at random.'
-					}
-				},
-				{
-					id: 'flagged',
-					element: '[data-tour="sidebar-flagged"]',
-					popover: {
-						title: 'Flagged',
-						description: `<u>Flagged</u> collects the messages respondents reported${
-							safetyCheck ? `, and the answers the safety check ${PREVIEW_BADGE} acted on,` : ''
-						} across all your projects. Review them here, and mark them read or resolved.`
-					}
-				},
-				{
-					id: 'new-folder',
-					element: '[data-tour="new-folder"]',
-					popover: {
-						title: 'Create a Folder',
-						description:
-							'Folders group related projects and let you invite and manage collaborators.'
-					}
-				},
-				{
-					id: 'folder-menu',
-					element: '[data-tour="folder-menu"]',
-					popover: {
-						title: 'Folder Menu',
-						description:
-							"A folder's menu is where you rename or delete it, and where you invite and manage its collaborators under <u>Collaborators</u>."
-					}
-				},
-				{
-					id: 'new-project',
-					element: '[data-tour="new-project"]',
-					popover: {
-						title: 'Add a Project',
-						description:
-							'Inside a folder, you can create interview projects to get started on your interview guide and setup.'
-					}
-				},
-				{
-					id: 'organize-projects',
-					element: '[data-tour="organize-projects"]',
-					popover: {
-						title: 'Sort and Archive',
-						description:
-							'Order the projects in every folder by when they were last updated, created, or by name, and flip the arrow to reverse it. Folder admins can archive a folder or project from its menu to put it away; <u>Archived</u> shows them again.'
-					}
-				},
-				{
-					id: 'documentation',
-					element: '[data-tour="documentation"]',
-					popover: {
-						title: 'Read the Documentation',
-						description:
-							'Consult our documentation site for more elaborate descriptions of the platform features and best practices.',
-						side: 'top'
-					}
-				},
-				{
-					id: 'done',
-					popover: {
-						title: "That's it for the Main Dashboard! 🎉",
-						description: 'Create and view a project to get started with your own AI-led interviews.'
-					}
-				}
-			],
-			LEGACY_TOUR_STEPS
-		);
-		if (steps.length === 0) return;
-		const tour = driver({
-			showProgress: true,
-			onPopoverRender: (popover) => addSkipOnboardingButton(popover, tour),
-			// One hook for every step rather than one on each, so a "what's new"
-			// tour that starts midway through still opens the menu and sizes the
-			// highlight.
-			onHighlightStarted: (_element, step, { driver }) => {
-				const selector = typeof step.element === 'string' ? step.element : '';
-				setHeaderMenuOpen(selector.startsWith('[data-tour="header-'));
-				// Sidebar items fill the sidebar's width, so pad them as the project
-				// sidebar tour does: flush, with square corners.
-				const sidebar = selector.startsWith('[data-tour="sidebar-');
-				driver.setConfig({
-					...driver.getConfig(),
-					stagePadding: sidebar ? 0 : 10,
-					stageRadius: sidebar ? 0 : 5
-				});
-			},
-			onDestroyed: () => setHeaderMenuOpen(false),
-			steps
-		});
-		tour.drive();
-	}
-
 	onMount(() => {
 		// The whole tour on a first visit, then only steps added since; nothing
 		// if the user opted out of all tours.
-		startOnboarding();
+		startDashboardTour(!!page.data.user?.with_preview_features);
 
 		// Close dropdowns when clicking outside
 		const handleClickOutside = (e: MouseEvent) => {
@@ -401,248 +145,6 @@
 		return () => window.removeEventListener('click', handleClickOutside);
 	});
 
-	function addCollaborator() {
-		createFolderCollaborators.push({ email: '', role: 'viewer' });
-	}
-
-	async function handleCreateProject() {
-		if (!createProjectFolderId) {
-			console.error('No folder selected for project creation.');
-			toast.error('Please select a folder to create a project in');
-			return;
-		}
-		const { error } = await Folders.createProject({
-			path: {
-				folder_id: createProjectFolderId
-			},
-			body: {
-				title: createProjectName,
-				default_language: createProjectLanguage
-			}
-		});
-		if (error) {
-			toastApiError(error, 'Failed to create project');
-			return;
-		}
-		// Reset and refresh
-		createProjectName = '';
-		createProjectLanguage = 'EN';
-		isCreateProjectModalOpen = false;
-		createProjectFolderId = null;
-		await loadData();
-	}
-
-	async function handleCreateFolder() {
-		const { error } = await Folders.createFolder({
-			body: {
-				title: createFolderName,
-				// The API only accepts the `folder_collaborations` alias, not `collaborators`.
-				folder_collaborations: createFolderCollaborators.filter((c) => c.email.trim() !== '')
-			}
-		});
-		if (error) {
-			toastApiError(error, 'Failed to create folder');
-			return;
-		}
-		// Reset and refresh
-		createFolderName = '';
-		createFolderCollaborators = [];
-		isCreateFolderModalOpen = false;
-		await loadData();
-	}
-
-	function openRenameFolderModal(folder: FolderWithProjectsPublic) {
-		selectedFolder = folder;
-		renameFolderName = folder.title;
-		isRenameFolderModalOpen = true;
-		activeDropdown = null;
-	}
-
-	async function handleRenameFolder() {
-		if (!selectedFolder) return;
-		const title = renameFolderName.trim();
-		if (!title || title === selectedFolder.title) return;
-		const { error } = await Folders.editFolder({
-			path: { folder_id: selectedFolder.id },
-			body: { title }
-		});
-		if (error) {
-			toastApiError(error, 'Failed to rename folder');
-			return;
-		}
-		renameFolderName = '';
-		isRenameFolderModalOpen = false;
-		selectedFolder = null;
-		await loadData();
-	}
-
-	function inviteRow(invite: CollaboratorInvitePublic): EditCollaborator {
-		return {
-			key: invite.id,
-			userId: null,
-			invite,
-			email: invite.email,
-			role: invite.role,
-			originalRole: invite.role
-		};
-	}
-
-	async function openCollaboratorsModal(folder: FolderWithProjectsPublic) {
-		selectedFolder = folder;
-		editCollaborators = (folder.collaborators ?? []).map((collaborator) => ({
-			key: collaborator.user.id,
-			userId: collaborator.user.id,
-			invite: null,
-			email: collaborator.user.email,
-			role: collaborator.role,
-			originalRole: collaborator.role
-		}));
-		folderInvites = [];
-		editCollaboratorEmail = '';
-		editCollaboratorRole = 'viewer';
-		isCollaboratorsModalOpen = true;
-		activeDropdown = null;
-
-		// Only editors may see a folder's invites; anyone else just sees none.
-		const { data: invites } = await Folders.getCollaboratorInvites({
-			path: { folder_id: folder.id }
-		});
-		if (invites && selectedFolder?.id === folder.id) {
-			folderInvites = invites;
-			editCollaborators.push(...invites.map(inviteRow));
-		}
-	}
-
-	function isExpired(invite: CollaboratorInvitePublic) {
-		return new Date(invite.expires_at) < new Date();
-	}
-
-	// Staged collaborator changes, compared against the folder as it was loaded.
-	let editCollaboratorChanges = $derived.by(() => {
-		const original = selectedFolder?.collaborators ?? [];
-		const removed = original.filter((c) => !editCollaborators.some((e) => e.userId === c.user.id));
-		const roleChanged = editCollaborators.filter((c) => c.userId && c.originalRole !== c.role);
-		const revoked = folderInvites.filter(
-			(invite) => !editCollaborators.some((e) => e.invite?.id === invite.id)
-		);
-		// New emails, and pending invites whose role changed: both are (re)sent.
-		const invited = editCollaborators.filter(
-			(c) => !c.userId && (!c.invite || c.originalRole !== c.role)
-		);
-		return { removed, roleChanged, revoked, invited };
-	});
-
-	let hasCollaboratorChanges = $derived.by(() =>
-		Object.values(editCollaboratorChanges).some((changes) => changes.length > 0)
-	);
-
-	async function resendInvite(row: EditCollaborator) {
-		if (!selectedFolder || !row.invite) return;
-		const { data: invite, error } = await Folders.createCollaboratorInvite({
-			path: { folder_id: selectedFolder.id },
-			body: { email: row.email, role: row.invite.role }
-		});
-		if (error) {
-			toastApiError(error, `Failed to resend the invitation to ${row.email}`);
-			return;
-		}
-		folderInvites = folderInvites.map((i) => (i.id === invite.id ? invite : i));
-		row.invite = invite;
-		row.originalRole = invite.role;
-		row.role = invite.role;
-		toast.success(`Invitation resent to ${row.email}`);
-	}
-
-	function stageCollaborator() {
-		const email = editCollaboratorEmail.trim();
-		if (!email) return;
-		if (editCollaborators.some((c) => c.email.toLowerCase() === email.toLowerCase())) {
-			toast.error('That collaborator is already on the list');
-			return;
-		}
-		editCollaborators.push({
-			key: crypto.randomUUID(),
-			userId: null,
-			invite: null,
-			email,
-			role: editCollaboratorRole,
-			originalRole: null
-		});
-		editCollaboratorEmail = '';
-		editCollaboratorRole = 'viewer';
-	}
-
-	function unstageCollaborator(key: string) {
-		editCollaborators = editCollaborators.filter((c) => c.key !== key);
-	}
-
-	async function handleSaveCollaborators() {
-		if (!selectedFolder || !hasCollaboratorChanges) return;
-		const folderId = selectedFolder.id;
-		const { removed, roleChanged, revoked, invited } = editCollaboratorChanges;
-
-		for (const collaborator of removed) {
-			const { error } = await Folders.removeCollaborator({
-				path: { folder_id: folderId },
-				query: { user_id: collaborator.user.id }
-			});
-			if (error) {
-				toastApiError(error, `Failed to remove ${collaborator.user.email}`);
-				await loadData();
-				return;
-			}
-		}
-
-		for (const collaborator of roleChanged) {
-			const { error } = await Folders.updateCollaboratorRole({
-				path: { folder_id: folderId },
-				query: { user_id: collaborator.userId!, role: collaborator.role }
-			});
-			if (error) {
-				toastApiError(error, `Failed to update the role of ${collaborator.email}`);
-				await loadData();
-				return;
-			}
-		}
-
-		for (const invite of revoked) {
-			const { error } = await Folders.deleteCollaboratorInvite({
-				path: { folder_id: folderId, invite_id: invite.id }
-			});
-			if (error) {
-				toastApiError(error, `Failed to revoke the invitation to ${invite.email}`);
-				await loadData();
-				return;
-			}
-		}
-
-		for (const collaborator of invited) {
-			const { error } = await Folders.createCollaboratorInvite({
-				path: { folder_id: folderId },
-				body: { email: collaborator.email, role: collaborator.role }
-			});
-			if (error) {
-				toastApiError(error, `Failed to invite ${collaborator.email}`);
-				await loadData();
-				return;
-			}
-		}
-		if (invited.length > 0) {
-			toast.success(
-				invited.length === 1
-					? `Invitation sent to ${invited[0].email}`
-					: `${invited.length} invitations sent`
-			);
-		}
-
-		// Reset and refresh
-		editCollaborators = [];
-		editCollaboratorEmail = '';
-		isCollaboratorsModalOpen = false;
-		selectedFolder = null;
-		await loadData();
-	}
-
 	async function setFolderArchived(folder: FolderWithProjectsPublic, archived: boolean) {
 		activeDropdown = null;
 		const { error } = await Folders.setFolderArchived({
@@ -653,7 +155,7 @@
 			toastApiError(error, archived ? 'Failed to archive folder' : 'Failed to unarchive folder');
 			return;
 		}
-		await loadData();
+		await invalidateAll();
 		toast.success(
 			archived && !view.showArchived
 				? `Archived "${folder.title}". Show archived to find it again.`
@@ -671,83 +173,12 @@
 			toastApiError(error, archived ? 'Failed to archive project' : 'Failed to unarchive project');
 			return;
 		}
-		await loadData();
+		await invalidateAll();
 		toast.success(
 			archived && !view.showArchived
 				? `Archived "${project.title}". Show archived to find it again.`
 				: `${archived ? 'Archived' : 'Unarchived'} "${project.title}"`
 		);
-	}
-
-	/** Whether the reader collaborates on the folder, and so can leave it. */
-	function isCollaborator(folder: FolderWithProjectsPublic): boolean {
-		const user = page.data.user;
-		return (folder.collaborators ?? []).some((c) => c.user.id === user?.id);
-	}
-
-	function openLeaveFolderModal(folder: FolderWithProjectsPublic) {
-		selectedFolder = folder;
-		isLeaveFolderModalOpen = true;
-		activeDropdown = null;
-	}
-
-	async function handleLeaveFolder() {
-		if (!selectedFolder) return;
-		const folder = selectedFolder;
-		const { error } = await Folders.leaveFolder({ path: { folder_id: folder.id } });
-		if (error) {
-			// The only admin is refused (`last_admin`); the message says why.
-			toastApiError(error, 'Failed to leave folder');
-			return;
-		}
-		isLeaveFolderModalOpen = false;
-		selectedFolder = null;
-		await loadData();
-		toast.success(`You left "${folder.title}"`);
-	}
-
-	function openDeleteFolderModal(folder: FolderWithProjectsPublic) {
-		selectedFolder = folder;
-		deleteFolderConfirmation = '';
-		isDeleteFolderModalOpen = true;
-		activeDropdown = null;
-	}
-
-	async function handleDeleteFolder() {
-		if (!selectedFolder || deleteFolderConfirmation !== selectedFolder.title) return;
-
-		const { error } = await Folders.deleteFolder({
-			path: { folder_id: selectedFolder.id }
-		});
-		if (error) {
-			toastApiError(error, 'Failed to delete folder');
-			return;
-		}
-		isDeleteFolderModalOpen = false;
-		selectedFolder = null;
-		await loadData();
-	}
-
-	function openDeleteModal(project: ProjectPublic) {
-		selectedProject = project;
-		deleteConfirmation = '';
-		isDeleteProjectModalOpen = true;
-		activeDropdown = null;
-	}
-
-	async function handleDeleteProject() {
-		if (!selectedProject || deleteConfirmation !== selectedProject.title) return;
-
-		const { error } = await Projects.deleteProject({
-			path: { project_id: selectedProject.id }
-		});
-		if (error) {
-			toastApiError(error, 'Failed to delete project');
-			return;
-		}
-		isDeleteProjectModalOpen = false;
-		selectedProject = null;
-		await loadData();
 	}
 
 	async function handleCloneProject(project: ProjectPublic) {
@@ -759,15 +190,7 @@
 			return;
 		}
 		activeDropdown = null;
-		await loadData();
-	}
-
-	function openMoveProjectModal(project: ProjectPublic, folderId: string) {
-		selectedProject = project;
-		moveSourceFolderId = folderId;
-		moveTargetFolderId = visibleFolders.find((f) => f.id !== folderId)?.id ?? '';
-		isMoveProjectModalOpen = true;
-		activeDropdown = null;
+		await invalidateAll();
 	}
 
 	async function moveProject(projectId: string, sourceFolderId: string, targetFolderId: string) {
@@ -790,21 +213,14 @@
 			return;
 		}
 
-		await loadData();
+		await invalidateAll();
 		pendingMoves = remaining;
 		toast.success(`Moved project to "${targetTitle}"`);
 	}
 
-	async function handleMoveProject() {
-		if (!selectedProject || !moveSourceFolderId || !moveTargetFolderId) return;
-		isMoveProjectModalOpen = false;
-		const { id } = selectedProject;
-		const source = moveSourceFolderId;
-		const target = moveTargetFolderId;
-		selectedProject = null;
-		moveSourceFolderId = null;
-		moveTargetFolderId = '';
-		await moveProject(id, source, target);
+	async function handleMoveProject(project: ProjectPublic, source: string, target: string) {
+		closeDialog();
+		await moveProject(project.id, source, target);
 	}
 
 	function handleDragStart(e: DragEvent, projectId: string, folderId: string) {
@@ -969,7 +385,7 @@
 		<button
 			data-tour="new-folder"
 			class="flex h-10 items-center rounded-full border-none bg-secondary px-4 text-sm font-medium text-dark hover:brightness-95"
-			onclick={() => (isCreateFolderModalOpen = true)}
+			onclick={() => openDialog({ kind: 'create-folder' })}
 			title="Create new folder"
 			aria-label="Create new folder"
 		>
@@ -1018,13 +434,13 @@
 					<div class="absolute left-0 z-10 mt-2 w-52 rounded-md bg-white py-1 shadow-lg">
 						<button
 							class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-							onclick={() => openRenameFolderModal(folder)}
+							onclick={() => openDialog({ kind: 'rename-folder', folder })}
 						>
 							Rename
 						</button>
 						<button
 							class="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-							onclick={() => openCollaboratorsModal(folder)}
+							onclick={() => openDialog({ kind: 'collaborators', folder })}
 						>
 							Collaborators
 							<span
@@ -1033,7 +449,7 @@
 								{folder.collaborators?.length ?? 0}
 							</span>
 						</button>
-						{#if canArchive(folder)}
+						{#if canArchive(folder, page.data.user)}
 							<button
 								class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
 								onclick={() => setFolderArchived(folder, !folder.archived_at)}
@@ -1041,17 +457,17 @@
 								{folder.archived_at ? 'Unarchive' : 'Archive'}
 							</button>
 						{/if}
-						{#if isCollaborator(folder)}
+						{#if isCollaborator(folder, page.data.user)}
 							<button
 								class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
-								onclick={() => openLeaveFolderModal(folder)}
+								onclick={() => openDialog({ kind: 'leave-folder', folder })}
 							>
 								Leave
 							</button>
 						{/if}
 						<button
 							class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
-							onclick={() => openDeleteFolderModal(folder)}
+							onclick={() => openDialog({ kind: 'delete-folder', folder })}
 						>
 							Delete
 						</button>
@@ -1141,7 +557,7 @@
 											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
 											onclick={(e) => {
 												e.stopPropagation();
-												openMoveProjectModal(project, folder.id);
+												openDialog({ kind: 'move-project', project, folderId: folder.id });
 											}}
 										>
 											Move to folder
@@ -1155,7 +571,7 @@
 									>
 										Settings
 									</a>
-									{#if canArchive(folder)}
+									{#if canArchive(folder, page.data.user)}
 										<button
 											class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
 											onclick={(e) => {
@@ -1170,7 +586,7 @@
 										class="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
 										onclick={(e) => {
 											e.stopPropagation();
-											openDeleteModal(project);
+											openDialog({ kind: 'delete-project', project });
 										}}
 									>
 										Delete
@@ -1190,14 +606,10 @@
 				]}
 				role="button"
 				tabindex="0"
-				onclick={() => {
-					isCreateProjectModalOpen = true;
-					createProjectFolderId = folder.id; // Assign the current folder's ID
-				}}
+				onclick={() => openDialog({ kind: 'create-project', folder })}
 				onkeydown={(e) => {
 					if (e.key === 'Enter' || e.key === ' ') {
-						isCreateProjectModalOpen = true;
-						createProjectFolderId = folder.id;
+						openDialog({ kind: 'create-project', folder });
 					}
 				}}
 			>
@@ -1222,609 +634,46 @@
 	</div>
 {/if}
 
-<!-- Create Project Modal -->
-{#if isCreateProjectModalOpen}
-	<div
-		class="fixed inset-0 z-[1000] flex items-center justify-center overflow-auto bg-black/40"
-		onclick={() => (isCreateProjectModalOpen = false)}
-		onkeydown={(e) => e.key === 'Escape' && (isCreateProjectModalOpen = false)}
-		role="presentation"
-	>
-		<div
-			class="relative m-auto w-1/2 max-w-lg rounded border border-[#888] bg-white p-10 shadow-xl"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<button
-				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
-				onclick={() => (isCreateProjectModalOpen = false)}>&times;</button
-			>
-			<h2 class="mt-0 mb-6 text-2xl font-bold">Create New Project</h2>
-
-			<div class="mb-4">
-				<label class="mb-2 block font-medium" for="project-name"
-					>Project title <span class="text-red-500">*</span></label
-				>
-				<input
-					type="text"
-					id="project-name"
-					class="box-border w-full rounded border border-gray-300 p-2"
-					bind:value={createProjectName}
-					placeholder="Enter project title"
-				/>
-			</div>
-
-			<div class="mb-6">
-				<label class="mb-2 block font-medium" for="language">Language</label>
-				<select
-					id="language"
-					class="box-border w-full rounded border border-gray-300 bg-white p-2"
-					bind:value={createProjectLanguage}
-				>
-					{#each languages as lang (lang.code)}
-						<option value={lang.code}>{lang.name}</option>
-					{/each}
-				</select>
-			</div>
-
-			<div class="flex justify-end gap-2">
-				<button
-					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
-					onclick={() => (isCreateProjectModalOpen = false)}>Cancel</button
-				>
-				<button
-					class="rounded border-none bg-primary px-4 py-2 text-white hover:opacity-90 disabled:opacity-50"
-					onclick={handleCreateProject}
-					disabled={!createProjectName}
-				>
-					Create
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Move Project Modal -->
-{#if isMoveProjectModalOpen && selectedProject}
-	<div
-		class="fixed inset-0 z-[1000] flex items-center justify-center overflow-auto bg-black/40"
-		onclick={() => (isMoveProjectModalOpen = false)}
-		onkeydown={(e) => e.key === 'Escape' && (isMoveProjectModalOpen = false)}
-		role="presentation"
-	>
-		<div
-			class="relative m-auto w-1/2 max-w-lg rounded border border-[#888] bg-white p-10 shadow-xl"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<button
-				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
-				onclick={() => (isMoveProjectModalOpen = false)}>&times;</button
-			>
-			<h2 class="mt-0 mb-6 text-2xl font-bold">Move Project</h2>
-
-			<div class="mb-6">
-				<p class="mb-4">
-					Move "<span class="font-bold">{selectedProject.title}</span>" to another folder.
-				</p>
-				<div class="mb-2 block font-medium">Destination folder</div>
-				<Select
-					items={visibleFolders
-						.filter((f) => f.id !== moveSourceFolderId)
-						.map((f) => ({ value: f.id, label: f.title }))}
-					bind:value={moveTargetFolderId}
-				/>
-			</div>
-
-			<div class="flex justify-end gap-2">
-				<button
-					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
-					onclick={() => (isMoveProjectModalOpen = false)}>Cancel</button
-				>
-				<button
-					class="rounded border-none bg-primary px-4 py-2 text-white hover:opacity-90 disabled:opacity-50"
-					onclick={handleMoveProject}
-					disabled={!moveTargetFolderId}
-				>
-					Move
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Delete Project Modal -->
-{#if isDeleteProjectModalOpen && selectedProject}
-	<div
-		class="fixed inset-0 z-[1000] flex items-center justify-center overflow-auto bg-black/40"
-		onclick={() => (isDeleteProjectModalOpen = false)}
-		onkeydown={(e) => e.key === 'Escape' && (isDeleteProjectModalOpen = false)}
-		role="presentation"
-	>
-		<div
-			class="relative m-auto w-1/2 max-w-lg rounded border border-[#888] bg-white p-10 shadow-xl"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<button
-				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
-				onclick={() => (isDeleteProjectModalOpen = false)}>&times;</button
-			>
-			<h2 class="mt-0 mb-6 text-2xl font-bold">Delete Project</h2>
-
-			<div class="mb-4">
-				<p class="mb-4">
-					Are you sure you want to delete this project?
-					<br />
-					This action cannot be undone.
-				</p>
-
-				<label class="mb-2 block font-medium" for="confirm-name">
-					To confirm, type "<span class="font-bold">{selectedProject.title}</span>" in the box below
-				</label>
-				<input
-					type="text"
-					id="confirm-name"
-					class="box-border w-full rounded border border-gray-300 p-2"
-					bind:value={deleteConfirmation}
-				/>
-			</div>
-
-			<div class="flex justify-end gap-2">
-				<button
-					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
-					onclick={() => (isDeleteProjectModalOpen = false)}>Cancel</button
-				>
-				<button
-					class="rounded border-none bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
-					onclick={handleDeleteProject}
-					disabled={deleteConfirmation !== selectedProject.title}
-				>
-					Delete
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Leave Folder Modal -->
-{#if isLeaveFolderModalOpen && selectedFolder}
-	<div
-		class="fixed inset-0 z-[1000] flex items-center justify-center overflow-auto bg-black/40"
-		onclick={() => (isLeaveFolderModalOpen = false)}
-		onkeydown={(e) => e.key === 'Escape' && (isLeaveFolderModalOpen = false)}
-		role="presentation"
-	>
-		<div
-			class="relative m-auto w-1/2 max-w-lg rounded border border-[#888] bg-white p-10 shadow-xl"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<button
-				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
-				onclick={() => (isLeaveFolderModalOpen = false)}>&times;</button
-			>
-			<h2 class="mt-0 mb-6 text-2xl font-bold">Leave Folder</h2>
-			<p class="mb-6">
-				Leave "<span class="font-bold">{selectedFolder.title}</span>"? You will lose access to its
-				projects until someone invites you again. The folder and its projects stay as they are.
-			</p>
-			<div class="flex justify-end gap-2">
-				<button
-					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
-					onclick={() => (isLeaveFolderModalOpen = false)}>Cancel</button
-				>
-				<button
-					class="rounded border-none bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-					onclick={handleLeaveFolder}
-				>
-					Leave
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Delete Folder Modal -->
-{#if isDeleteFolderModalOpen && selectedFolder}
-	<div
-		class="fixed inset-0 z-[1000] flex items-center justify-center overflow-auto bg-black/40"
-		onclick={() => (isDeleteFolderModalOpen = false)}
-		onkeydown={(e) => e.key === 'Escape' && (isDeleteFolderModalOpen = false)}
-		role="presentation"
-	>
-		<div
-			class="relative m-auto w-1/2 max-w-lg rounded border border-[#888] bg-white p-10 shadow-xl"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<button
-				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
-				onclick={() => (isDeleteFolderModalOpen = false)}>&times;</button
-			>
-			<h2 class="mt-0 mb-6 text-2xl font-bold">Delete Folder</h2>
-
-			<div class="mb-4">
-				<p class="mb-4">
-					Are you sure you want to delete this folder?
-					<br />
-					This action cannot be undone.
-				</p>
-
-				<label class="mb-2 block font-medium" for="confirm-folder-name">
-					To confirm, type "<span class="font-bold">{selectedFolder.title}</span>" in the box below
-				</label>
-				<input
-					type="text"
-					id="confirm-folder-name"
-					class="box-border w-full rounded border border-gray-300 p-2"
-					bind:value={deleteFolderConfirmation}
-				/>
-			</div>
-
-			<div class="flex justify-end gap-2">
-				<button
-					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
-					onclick={() => (isDeleteFolderModalOpen = false)}>Cancel</button
-				>
-				<button
-					class="rounded border-none bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
-					onclick={handleDeleteFolder}
-					disabled={deleteFolderConfirmation !== selectedFolder.title}
-				>
-					Delete
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Rename Folder Modal -->
-{#if isRenameFolderModalOpen && selectedFolder}
-	<div
-		class="fixed inset-0 z-1000 flex items-center justify-center overflow-auto bg-black/40"
-		onclick={() => (isRenameFolderModalOpen = false)}
-		onkeydown={(e) => e.key === 'Escape' && (isRenameFolderModalOpen = false)}
-		role="presentation"
-	>
-		<div
-			class="relative m-auto w-1/2 max-w-lg rounded border border-[#888] bg-white p-10 shadow-xl"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<button
-				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
-				onclick={() => (isRenameFolderModalOpen = false)}>&times;</button
-			>
-			<h2 class="mt-0 mb-6 text-2xl font-bold">Rename Folder</h2>
-
-			<div class="mb-6">
-				<label class="mb-2 block font-medium" for="rename-folder-name"
-					>Folder title <span class="text-red-500">*</span></label
-				>
-				<input
-					type="text"
-					id="rename-folder-name"
-					class="box-border w-full rounded border border-gray-300 p-2"
-					bind:value={renameFolderName}
-					placeholder="Enter folder title"
-					onkeydown={(e) => e.key === 'Enter' && handleRenameFolder()}
-				/>
-			</div>
-
-			<div class="flex justify-end gap-2">
-				<button
-					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
-					onclick={() => (isRenameFolderModalOpen = false)}>Cancel</button
-				>
-				<button
-					class="rounded border-none bg-primary px-4 py-2 text-white hover:opacity-90 disabled:opacity-50"
-					onclick={handleRenameFolder}
-					disabled={!renameFolderName.trim() || renameFolderName.trim() === selectedFolder.title}
-				>
-					Rename
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Folder Collaborators Modal -->
-{#if isCollaboratorsModalOpen && selectedFolder}
-	<div
-		class="fixed inset-0 z-1000 flex items-center justify-center overflow-auto bg-black/40"
-		onclick={() => (isCollaboratorsModalOpen = false)}
-		onkeydown={(e) => e.key === 'Escape' && (isCollaboratorsModalOpen = false)}
-		role="presentation"
-	>
-		<div
-			class="relative m-auto w-1/2 max-w-2xl rounded border border-[#888] bg-white p-10 shadow-xl"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<button
-				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
-				onclick={() => (isCollaboratorsModalOpen = false)}>&times;</button
-			>
-			<h2 class="mt-0 mb-2 text-2xl font-bold">Collaborators</h2>
-			<p class="mb-6 text-sm text-gray-600">
-				Add people by email. They get an invitation and join once they accept it; people without an
-				account are asked to request one first. Collaborators can access all projects in "<span
-					class="font-semibold">{selectedFolder.title}</span
-				>", with the permissions of their role.
-			</p>
-
-			<div class="mb-4">
-				{#if editCollaborators.length === 0}
-					<p class="mb-2 px-1 text-sm text-gray-500">No collaborators yet.</p>
-				{:else}
-					<div
-						class="mb-2 grid grid-cols-[1fr_8rem_2rem] gap-2 px-1 text-sm font-bold text-gray-700"
-					>
-						<span>Email</span>
-						<span
-							>Role
-							<Info>
-								<div>
-									<div class="mb-2 font-bold">Collaborator Role</div>
-									<div class="text-sm">
-										<div class="mb-2">
-											<span class="font-bold text-gray-800">Viewer:</span> Can only view the project information
-											and interviews but do no further action
-										</div>
-										<div class="mb-2">
-											<span class="font-bold text-gray-800">Annotator:</span> Can view the project information
-											and view and annotate interviews
-										</div>
-										<div class="mb-2">
-											<span class="font-bold text-gray-800">Editor:</span> Can view and edit the interview
-											guide and basic configuration
-										</div>
-										<div>
-											<span class="font-bold text-gray-800">Admin:</span> Can change projects status from
-											active to inactive and delete projects all together.
-										</div>
-									</div>
-								</div>
-							</Info>
-						</span>
-					</div>
-					{#each editCollaborators as collaborator (collaborator.key)}
-						<div class="mb-2 grid grid-cols-[1fr_8rem_2rem] items-center gap-2 px-1">
-							<div class="overflow-hidden">
-								<span class="block truncate text-sm font-medium" title={collaborator.email}
-									>{collaborator.email}</span
-								>
-								{#if collaborator.invite}
-									<span class="text-xs text-gray-500">
-										{#if isExpired(collaborator.invite)}
-											<span class="text-red-600">Invitation expired</span>
-										{:else}
-											Invitation pending
-										{/if}
-										{#if canManage(collaborator)}
-											·
-											<button
-												class="cursor-pointer border-none bg-transparent p-0 text-xs text-primary underline hover:opacity-80"
-												onclick={() => resendInvite(collaborator)}>Resend</button
-											>
-										{/if}
-									</span>
-								{:else if !collaborator.userId}
-									<span class="text-xs text-gray-500">Invitation sent when you save</span>
-								{/if}
-							</div>
-							<div class="w-32">
-								<Select
-									items={grantableRoleItems}
-									bind:value={collaborator.role}
-									disabled={!canManage(collaborator)}
-									class="text-md h-9 py-1"
-								/>
-							</div>
-							{#if canManage(collaborator)}
-								<button
-									class="flex h-9 items-center justify-center rounded text-red-500 hover:bg-red-200 hover:text-red-700"
-									onclick={() => unstageCollaborator(collaborator.key)}
-									aria-label={collaborator.invite ? 'Revoke invitation' : 'Remove collaborator'}
-								>
-									<i class="fa-solid fa-trash"></i>
-								</button>
-							{:else}
-								<span></span>
-							{/if}
-						</div>
-					{/each}
-				{/if}
-
-				<div class="mt-4 grid grid-cols-[1fr_8rem_2rem] items-center gap-2 px-1">
-					<input
-						type="text"
-						class="w-full rounded border border-gray-300 p-2"
-						placeholder="Add collaborator email"
-						bind:value={editCollaboratorEmail}
-						onkeydown={(e) => {
-							if (e.key === 'Enter') {
-								e.preventDefault();
-								stageCollaborator();
-							}
-						}}
-					/>
-					<div class="w-32">
-						<Select
-							items={grantableRoleItems}
-							bind:value={editCollaboratorRole}
-							class="text-md h-9 py-1"
-						/>
-					</div>
-					<button
-						class="flex h-9 w-full items-center justify-center rounded bg-primary text-white hover:opacity-90 disabled:opacity-50"
-						onclick={stageCollaborator}
-						disabled={!editCollaboratorEmail.trim()}
-						aria-label="Add collaborator to the list"
-					>
-						<i class="fa-solid fa-plus"></i>
-					</button>
-				</div>
-			</div>
-
-			<div class="flex justify-end gap-2">
-				<button
-					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
-					onclick={() => (isCollaboratorsModalOpen = false)}>Cancel</button
-				>
-				<button
-					class="rounded border-none bg-primary px-4 py-2 text-white hover:opacity-90 disabled:opacity-50"
-					onclick={handleSaveCollaborators}
-					disabled={!hasCollaboratorChanges}
-				>
-					Save Changes
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Create Folder Modal -->
-{#if isCreateFolderModalOpen}
-	<div
-		class="fixed inset-0 z-1000 flex items-center justify-center overflow-auto bg-black/40"
-		onclick={() => (isCreateFolderModalOpen = false)}
-		onkeydown={(e) => e.key === 'Escape' && (isCreateFolderModalOpen = false)}
-		role="presentation"
-	>
-		<div
-			class="relative m-auto w-1/2 max-w-2xl rounded border border-[#888] bg-white p-10 shadow-xl"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-		>
-			<button
-				class="absolute top-2 right-4 border-none bg-transparent text-2xl font-bold text-[#aaa] hover:text-black"
-				onclick={() => (isCreateFolderModalOpen = false)}>&times;</button
-			>
-			<h2 class="mt-0 mb-6 text-2xl font-bold">Create New Folder</h2>
-
-			<div class="mb-4">
-				<label class="mb-2 block font-medium" for="folder-name"
-					>Folder title <span class="text-red-500">*</span></label
-				>
-				<input
-					type="text"
-					id="folder-name"
-					class="box-border w-full rounded border border-gray-300 p-2"
-					bind:value={createFolderName}
-					placeholder="Enter folder title"
-				/>
-			</div>
-
-			<div class="mt-6 mb-4">
-				<label class="mb-2 block font-bold" for="create-folder-collaborators">Collaborators</label>
-
-				{#if createFolderCollaborators.length > 0}
-					<div
-						class="mb-2 grid grid-cols-[1fr_8rem_2rem] gap-2 px-1 text-sm font-bold text-gray-700"
-					>
-						<span>Email</span>
-						<span
-							>Role
-							<Info>
-								<div>
-									<div class="mb-2 font-bold">Collaborator Role</div>
-									<div class="text-sm">
-										<div class="mb-2">
-											<span class="font-bold text-gray-800">Viewer:</span> Can only view the project information
-											and interviews but do no further action
-										</div>
-										<div class="mb-2">
-											<span class="font-bold text-gray-800">Annotator:</span> Can view the project information
-											and view and annotate interviews
-										</div>
-										<div class="mb-2">
-											<span class="font-bold text-gray-800">Editor:</span> Can view and edit the interview
-											guide and basic configuration
-										</div>
-										<div>
-											<span class="font-bold text-gray-800">Admin:</span> Can change projects status from
-											active to inactive and delete projects all together.
-										</div>
-									</div>
-								</div>
-							</Info>
-						</span>
-					</div>
-					{#each createFolderCollaborators as collaborator, i (i)}
-						<div class="mb-2 grid grid-cols-[1fr_8rem_2rem] items-center gap-2 px-1">
-							<input
-								type="text"
-								class="w-full rounded border border-gray-300 p-2"
-								bind:value={collaborator.email}
-								placeholder="Email"
-							/>
-							<div class="w-32">
-								<Select items={roleItems} bind:value={collaborator.role} class="text-md h-9 py-1" />
-							</div>
-							<button
-								class="flex h-9 items-center justify-center rounded text-red-500 hover:bg-red-200 hover:text-red-700"
-								onclick={() => createFolderCollaborators.splice(i, 1)}
-								aria-label="Remove collaborator"
-							>
-								<i class="fa-solid fa-trash"></i>
-							</button>
-						</div>
-					{/each}
-				{/if}
-
-				<div class="mt-4 flex w-fit rounded-lg transition-shadow hover:shadow-lg">
-					<button
-						class="flex border-none bg-transparent px-4 py-2
-            transition-transform active:translate-y-[2px]"
-						onclick={addCollaborator}
-					>
-						<i class="fa-solid fa-plus pr-2 text-xl"></i>
-						Add collaborator
-					</button>
-				</div>
-			</div>
-
-			<div class="flex justify-end gap-2">
-				<button
-					class="rounded border-none bg-gray-200 px-4 py-2 hover:bg-gray-300"
-					onclick={() => (isCreateFolderModalOpen = false)}>Cancel</button
-				>
-				<button
-					class="rounded border-none bg-primary px-4 py-2 text-white hover:opacity-90 disabled:opacity-50"
-					onclick={handleCreateFolder}
-					disabled={!createFolderName}
-				>
-					Create
-				</button>
-			</div>
-		</div>
-	</div>
+{#if dialog?.kind === 'create-folder'}
+	<CreateFolderModal onClose={closeDialog} />
+{:else if dialog?.kind === 'rename-folder'}
+	<RenameFolderModal folder={dialog.folder} onClose={closeDialog} />
+{:else if dialog?.kind === 'collaborators'}
+	<CollaboratorsModal folder={dialog.folder} onClose={closeDialog} />
+{:else if dialog?.kind === 'leave-folder'}
+	<LeaveFolderModal folder={dialog.folder} onClose={closeDialog} />
+{:else if dialog?.kind === 'delete-folder'}
+	{@const folder = dialog.folder}
+	<ConfirmDeleteModal
+		noun="folder"
+		name={folder.title}
+		remove={() => Folders.deleteFolder({ path: { folder_id: folder.id } })}
+		onClose={closeDialog}
+	/>
+{:else if dialog?.kind === 'create-project'}
+	<CreateProjectModal
+		folderId={dialog.folder.id}
+		folderTitle={dialog.folder.title}
+		{languages}
+		onClose={closeDialog}
+	/>
+{:else if dialog?.kind === 'move-project'}
+	{@const { project, folderId } = dialog}
+	<MoveProjectModal
+		{project}
+		sourceFolderId={folderId}
+		folders={visibleFolders}
+		onMove={(target) => handleMoveProject(project, folderId, target)}
+		onClose={closeDialog}
+	/>
+{:else if dialog?.kind === 'delete-project'}
+	{@const project = dialog.project}
+	<ConfirmDeleteModal
+		noun="project"
+		name={project.title}
+		remove={() => Projects.deleteProject({ path: { project_id: project.id } })}
+		onClose={closeDialog}
+	/>
 {/if}
 
 <style>
