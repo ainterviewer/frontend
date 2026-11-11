@@ -260,8 +260,8 @@
 								{@const held = applied.get(code.id) === value}
 								<button
 									type="button"
-									role="menuitem"
-									aria-pressed={held}
+									role="menuitemradio"
+									aria-checked={held}
 									class="flex h-7 w-7 cursor-pointer items-center justify-center rounded text-xs font-medium text-gray-700 transition-colors"
 									style={held ? `background-color: ${code.color}; color: #fff` : ''}
 									onmouseenter={(event) => {

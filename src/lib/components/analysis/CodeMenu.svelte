@@ -399,8 +399,8 @@
 										<!-- The same marked number the cascade's scale draws. -->
 										<button
 											type="button"
-											role="menuitem"
-											aria-pressed={held}
+											role="menuitemradio"
+											aria-checked={held}
 											class="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-xs transition-colors {held
 												? 'text-white'
 												: 'bg-gray-50 text-gray-700 hover:bg-gray-200'}"
