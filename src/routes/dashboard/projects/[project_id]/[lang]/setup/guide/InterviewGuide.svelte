@@ -30,6 +30,7 @@
 	import BulkSettingsModal from './BulkSettingsModal.svelte';
 	import { validateGuideConditions } from './conditions';
 	import GenerateModal from './GenerateModal.svelte';
+	import InsertHere from './InsertHere.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
 	import { countUntranslated, pick } from './localized';
 	import { addLocalSections, localQuestion, mapToLocal, newSection } from './normalize';
@@ -223,10 +224,10 @@
 		guideStore.top.timed_messages.splice(index, 1);
 	}
 
-	function addSection() {
+	function addSection(at = guideStore.localSections.length) {
 		const section = newSection();
-		guideStore.localSections.push(section);
 		guideStore.localQuestions[section.id] = [];
+		guideStore.localSections.splice(at, 0, section);
 	}
 
 	function removeSection(index: number) {
@@ -457,6 +458,11 @@
 
 					<div class="space-y-6">
 						{#each guideStore.localSections as section, sIdx (section.id)}
+							<InsertHere
+								label="Add section"
+								gap={sIdx === 0 ? 1 : 1.5}
+								onclick={() => addSection(sIdx)}
+							/>
 							<SortableSection
 								{section}
 								dataTour={sIdx === 0 ? 'section' : undefined}
@@ -476,7 +482,7 @@
 					<div class="mt-6 grid grid-cols-2 gap-4">
 						<button
 							class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-gray-300 bg-gray-50 py-4 font-medium text-gray-600 hover:bg-gray-100"
-							onclick={addSection}
+							onclick={() => addSection()}
 						>
 							<i class="fa-solid fa-plus"></i> Add Section
 						</button>

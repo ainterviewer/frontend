@@ -7,6 +7,7 @@
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
 	import { dragState } from './dragState.svelte';
+	import InsertHere from './InsertHere.svelte';
 	import { pick } from './localized';
 	import { newQuestion } from './normalize';
 	import SortableQuestion from './SortableQuestion.svelte';
@@ -62,8 +63,8 @@
 		dragState.chatDropTarget?.id === section.id ? dragState.chatDropTarget : null
 	);
 
-	function addQuestion() {
-		questions.push(newQuestion());
+	function addQuestion(at = questions.length) {
+		questions.splice(at, 0, newQuestion());
 	}
 
 	function removeQuestion(idx: number) {
@@ -157,9 +158,12 @@
 		</label>
 	</div>
 
-	<h4 class="mb-2 font-medium">Questions</h4>
+	<h4 class="mb-4 font-medium">Questions</h4>
 	<div class="min-h-[50px] space-y-4 pl-4">
 		{#each questions as question, qIdx (question.id)}
+			{#if source === 'guide' && !isOverlay}
+				<InsertHere label="Add question" gap={1} onclick={() => addQuestion(qIdx)} />
+			{/if}
 			<SortableQuestion
 				{question}
 				dataTour={qIdx === 0 ? 'question' : undefined}
@@ -174,7 +178,7 @@
 		<div class="grid grid-cols-2 gap-4">
 			<button
 				class="flex w-[calc(100%-0.5rem)] cursor-pointer items-center justify-center gap-2 rounded border-2 border-gray-500 py-2 text-gray-700 transition hover:border-primary hover:bg-white/30 hover:text-primary"
-				onclick={addQuestion}
+				onclick={() => addQuestion()}
 			>
 				<i class="fa-solid fa-plus"></i> Add Question
 			</button>
