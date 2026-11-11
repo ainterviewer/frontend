@@ -26,7 +26,7 @@
      points at the row, since its step covers both. -->
 <div
 	data-tour="sync-state"
-	class="fixed fixed-top-below-banner right-7.5 z-30 flex items-center gap-2 transition-[top] duration-200 print:hidden"
+	class="fixed fixed-top-below-banner right-7.5 z-30 flex items-center gap-2 transition-[top] duration-200 select-none print:hidden"
 >
 	{#if session.peers.length > 0}
 		<div

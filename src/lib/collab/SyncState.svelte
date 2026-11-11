@@ -1,4 +1,6 @@
 <script lang="ts">
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
+
 	import type { ContentSession } from './contentSession.svelte';
 
 	/**
@@ -57,13 +59,22 @@
 		Not connected. Reload the page to try again.
 	</span>
 {:else if session.status === 'offline'}
-	<span
-		class="flex h-4 items-center gap-1.5 text-xs leading-none text-amber-700"
-		title="Your changes are kept in this tab and saved when the connection is back. Do not close it."
+	<HoverInfo
+		side="bottom"
+		sideOffset={12}
+		text="Your changes are kept in this tab and saved when the connection is back. Do not close it."
+		asChild
 	>
-		<i class="fas fa-plug-circle-xmark w-3 text-center"></i>
-		Offline, reconnecting…
-	</span>
+		{#snippet children({ props })}
+			<span
+				{...props}
+				class="flex h-4 cursor-default items-center gap-1.5 text-xs leading-none text-amber-700"
+			>
+				<i class="fas fa-plug-circle-xmark w-3 text-center"></i>
+				Offline, reconnecting…
+			</span>
+		{/snippet}
+	</HoverInfo>
 {:else if session.status === 'connecting'}
 	<span class="flex h-4 items-center gap-1.5 text-xs leading-none text-gray-400">
 		<i class="fas fa-circle-notch w-3 animate-spin text-center"></i>
@@ -84,14 +95,27 @@
 		</span>
 	</span>
 {:else}
-	<span
-		class="flex h-4 items-center gap-1.5 text-xs leading-none text-red-600"
-		title={[
-			"Your changes are kept, but they won't be used in tests or published until this is fixed.",
-			...session.errors
-		].join('\n')}
-	>
-		<i class="fas fa-triangle-exclamation w-3 text-center"></i>
-		{invalidLabel}
-	</span>
+	<HoverInfo side="bottom" sideOffset={12} asChild>
+		{#snippet content()}
+			<p>
+				Your changes are kept, but they won't be used in tests or published until this is fixed.
+			</p>
+			{#if session.errors.length > 0}
+				<ul class="mt-1.5 list-disc space-y-0.5 pl-4 text-red-600">
+					{#each session.errors as error, i (i)}
+						<li>{error}</li>
+					{/each}
+				</ul>
+			{/if}
+		{/snippet}
+		{#snippet children({ props })}
+			<span
+				{...props}
+				class="flex h-4 cursor-default items-center gap-1.5 text-xs leading-none text-red-600"
+			>
+				<i class="fas fa-triangle-exclamation w-3 text-center"></i>
+				{invalidLabel}
+			</span>
+		{/snippet}
+	</HoverInfo>
 {/if}

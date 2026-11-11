@@ -1,4 +1,6 @@
 <script lang="ts">
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
+
 	import type { Peer } from './contentSession.svelte';
 
 	/**
@@ -26,37 +28,53 @@
 {#if peers.length > 0}
 	<div class="flex items-center -space-x-1.5" aria-label="Also editing">
 		{#each shown as peer (peer.id)}
-			{#if onselect && peer.block}
-				<button
-					type="button"
-					class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none p-0 text-[11px] font-semibold text-white ring-2 ring-white transition-transform hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-					style:background-color={peer.color}
-					title={`Go to where ${peer.name} is`}
-					aria-label={`Go to where ${peer.name} is`}
-					onclick={() => onselect(peer)}
-				>
-					{initials(peer.name) || '?'}
-				</button>
-			{:else}
-				<span
-					class="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white ring-2 ring-white"
-					style:background-color={peer.color}
-					title={`${peer.name} is here`}
-				>
-					{initials(peer.name) || '?'}
-				</span>
-			{/if}
+			{@const clickable = !!(onselect && peer.block)}
+			<HoverInfo side="bottom" sideOffset={8} asChild>
+				{#snippet content()}
+					{clickable ? `Go to where ${peer.name} is` : `${peer.name} is here`}
+				{/snippet}
+				{#snippet children({ props })}
+					{#if clickable}
+						<button
+							{...props}
+							type="button"
+							class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none p-0 text-[11px] font-semibold text-white ring-2 ring-white transition-transform hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+							style:background-color={peer.color}
+							aria-label={`Go to where ${peer.name} is`}
+							onclick={() => onselect?.(peer)}
+						>
+							{initials(peer.name) || '?'}
+						</button>
+					{:else}
+						<span
+							{...props}
+							class="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white ring-2 ring-white"
+							style:background-color={peer.color}
+							aria-label={`${peer.name} is here`}
+						>
+							{initials(peer.name) || '?'}
+						</span>
+					{/if}
+				{/snippet}
+			</HoverInfo>
 		{/each}
 		{#if more > 0}
-			<span
-				class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold text-gray-700 ring-2 ring-white"
-				title={peers
-					.slice(max)
-					.map((p) => p.name)
-					.join(', ')}
-			>
-				+{more}
-			</span>
+			<HoverInfo side="bottom" sideOffset={8} asChild>
+				{#snippet content()}
+					{peers
+						.slice(max)
+						.map((p) => p.name)
+						.join(', ')}
+				{/snippet}
+				{#snippet children({ props })}
+					<span
+						{...props}
+						class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold text-gray-700 ring-2 ring-white"
+					>
+						+{more}
+					</span>
+				{/snippet}
+			</HoverInfo>
 		{/if}
 	</div>
 {/if}
