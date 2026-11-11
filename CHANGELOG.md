@@ -4,6 +4,26 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.20] - 2026-11-11
+
+### Features
+
+- (dashboard) Redesign the folder and project dialogs
+
+### Bug Fixes
+
+- (dashboard) Keep project menus above the next folder in archived folders
+
+### Internal
+
+- (sidebar) Reorder admin sidebar items
+- (guide) Move the guide model and collab binding into $lib
+- (guide) Move the guide tour out of the page
+- (interview) Move the interview chat client into $lib
+- (auth) Move clearAuthCookies into $lib/server/auth
+- (explore) Share the paged-list logic between the four list queries
+- (deps) Update @dnd-kit-svelte/svelte to 0.2.0
+
 ## [0.9.19] - 2026-11-11
 
 ### Features
