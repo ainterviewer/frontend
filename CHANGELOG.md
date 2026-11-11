@@ -4,6 +4,18 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.19] - 2026-11-11
+
+### Features
+
+- (interviews) Redirect respondents when an interview ends
+- (guide) Add sections and questions between existing ones
+
+### Bug Fixes
+
+- Remove native button title on sidebar manifest
+- (collab) Show pill tooltips as popovers and make pill text unselectable
+
 ## [0.9.18] - 2026-11-10
 
 ### Bug Fixes
