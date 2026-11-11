@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { move } from '@dnd-kit/helpers';
 	import {
-		type DragDropEvents,
 		DragDropProvider,
+		type DragEndEvent,
+		type DragOverEvent,
 		DragOverlay,
+		type DragStartEvent,
 		KeyboardSensor,
 		PointerSensor
 	} from '@dnd-kit-svelte/svelte';
@@ -51,10 +53,6 @@
 
 	const sensors = [KeyboardSensor, PointerSensor];
 
-	type DragEventOf<K extends 'dragover' | 'dragstart' | 'dragend'> = Parameters<
-		DragDropEvents[K]
-	>[0];
-
 	let activeItem = $state<GuideSection | GuideQuestion | null>(null);
 	let activeDragType = $state<'section' | 'question' | null>(null);
 	let isChatMaximized = $state(false);
@@ -70,7 +68,7 @@
 		return newArray;
 	}
 
-	function handleDragOver(event: DragEventOf<'dragover'>) {
+	function handleDragOver(event: DragOverEvent) {
 		const { source, target } = event.operation;
 		if (!source) return;
 
@@ -118,15 +116,10 @@
 			return;
 		}
 
-		// @dnd-kit/helpers ships its own copy of @dnd-kit/abstract, so its event
-		// type is nominally incompatible with ours despite being identical.
-		guideStore.localQuestions = move(
-			guideStore.localQuestions,
-			event as unknown as Parameters<typeof move>[1]
-		);
+		guideStore.localQuestions = move(guideStore.localQuestions, event);
 	}
 
-	function handleDragStart(event: DragEventOf<'dragstart'>) {
+	function handleDragStart(event: DragStartEvent) {
 		const source = event.operation.source;
 		const data = source?.data;
 		const type = source?.type as 'section' | 'question' | undefined;
@@ -145,7 +138,7 @@
 		}
 	}
 
-	async function handleDragEnd(event: DragEventOf<'dragend'>) {
+	async function handleDragEnd(event: DragEndEvent) {
 		const { source, target } = event.operation;
 
 		// Track the id of the element to scroll to after the drop.

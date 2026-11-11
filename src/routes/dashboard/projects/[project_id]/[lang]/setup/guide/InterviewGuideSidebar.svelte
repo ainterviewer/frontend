@@ -1,7 +1,7 @@
 <script lang="ts">
 	import {
-		type DragDropEvents,
 		DragDropProvider,
+		type DragOverEvent,
 		KeyboardSensor,
 		PointerSensor
 	} from '@dnd-kit-svelte/svelte';
@@ -61,7 +61,7 @@
 		return result;
 	}
 
-	function handleDragOver(event: Parameters<DragDropEvents['dragover']>[0]) {
+	function handleDragOver(event: DragOverEvent) {
 		const { source, target } = event.operation;
 		if (!source || !target) return;
 
