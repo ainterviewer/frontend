@@ -4,16 +4,16 @@
 	import { untrack } from 'svelte';
 
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { pick } from '$lib/guide/localized';
+	import { newQuestion } from '$lib/guide/normalize';
+	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
 	import { dragState } from './dragState.svelte';
 	import InsertHere from './InsertHere.svelte';
-	import { pick } from './localized';
-	import { newQuestion } from './normalize';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import TextField from './TextField.svelte';
 	import TryFromHere from './TryFromHere.svelte';
-	import type { GuideQuestion, GuideSection } from './types';
 
 	interface Props {
 		section: GuideSection;

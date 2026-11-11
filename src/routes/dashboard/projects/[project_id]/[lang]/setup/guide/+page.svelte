@@ -13,6 +13,7 @@
 	import { onMount, tick } from 'svelte';
 
 	import AssistanceChat from '$lib/components/AssistanceChat.svelte';
+	import { renderLocal } from '$lib/guide/render';
 	import { addSkipOnboardingButton, tourSteps } from '$lib/onboarding';
 	import {
 		createGuideStore,
@@ -23,7 +24,6 @@
 
 	import { dragState } from './dragState.svelte';
 	import InterviewGuide from './InterviewGuide.svelte';
-	import { renderLocal } from './render';
 	import SortableQuestion from './SortableQuestion.svelte';
 	import SortableSection from './SortableSection.svelte';
 

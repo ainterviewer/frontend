@@ -1,13 +1,12 @@
 import type { Consent, Image, InterviewGuide, TimedMessage, Welcome } from '$lib/api/types.gen';
-import { formatDay } from '$lib/utils/datetime';
-
-import { resolveConditionTarget } from './guide/conditions';
+import { resolveConditionTarget } from '$lib/guide/conditions';
 import type {
 	RenderedCondition as LocalCondition,
 	RenderedConditionSet as LocalConditionSet,
 	RenderedQuestion as GuideQuestion,
 	RenderedSection as GuideSection
-} from './guide/types';
+} from '$lib/guide/types';
+import { formatDay } from '$lib/utils/datetime';
 
 // pdfmake doesn't ship type declarations — use a generic record type for doc nodes.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

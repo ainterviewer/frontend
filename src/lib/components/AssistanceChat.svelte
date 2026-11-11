@@ -4,13 +4,9 @@
 
 	import { Assistance } from '$lib/api/sdk.gen';
 	import type { ChatMessage, InterviewGuide, Question } from '$lib/api/types.gen';
+	import { textIn } from '$lib/guide/localized';
+	import { localizeRenderedQuestion, normalizeGeneratedQuestions } from '$lib/guide/normalize';
 	import type { GuideQuestion, GuideSection } from '$lib/stores/guideStore.svelte';
-
-	import { textIn } from '../../routes/dashboard/projects/[project_id]/[lang]/setup/guide/localized';
-	import {
-		localizeRenderedQuestion,
-		normalizeGeneratedQuestions
-	} from '../../routes/dashboard/projects/[project_id]/[lang]/setup/guide/normalize';
 
 	interface Props {
 		project_id: string;

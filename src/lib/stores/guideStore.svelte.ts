@@ -3,11 +3,7 @@ import { createContext } from 'svelte';
 // Single source of truth for the editor's local models lives with the guide
 // route; re-export so existing `$lib/stores/guideStore.svelte` importers keep
 // working while both refer to the same types.
-import type {
-	GuideQuestion,
-	GuideSection,
-	GuideTop
-} from '../../routes/dashboard/projects/[project_id]/[lang]/setup/guide/types';
+import type { GuideQuestion, GuideSection, GuideTop } from '$lib/guide/types';
 
 export type { GuideQuestion, GuideSection, GuideTop };
 

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
+	import { pick } from '$lib/guide/localized';
+	import type { GuideQuestion } from '$lib/guide/types';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { toastApiError } from '$lib/utils/toast';
 
 	import AccordionPanel from './AccordionPanel.svelte';
-	import { pick } from './localized';
 	import TextField from './TextField.svelte';
-	import type { GuideQuestion } from './types';
 
 	interface Props {
 		question: GuideQuestion;

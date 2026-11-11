@@ -3,6 +3,8 @@
 	import { untrack } from 'svelte';
 	import { slide } from 'svelte/transition';
 
+	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
+
 	import { dragState } from './dragState.svelte';
 	import QuestionConditionsPanel from './QuestionConditionsPanel.svelte';
 	import QuestionImagePanel from './QuestionImagePanel.svelte';
@@ -10,7 +12,6 @@
 	import QuestionSurveyPanel from './QuestionSurveyPanel.svelte';
 	import TextField from './TextField.svelte';
 	import TryFromHere from './TryFromHere.svelte';
-	import type { GuideQuestion, GuideSection } from './types';
 
 	interface Props {
 		question: GuideQuestion;

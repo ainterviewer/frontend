@@ -4,9 +4,8 @@ import type { ExternalParam } from '$lib/api/types.gen';
 import { type ContentSession, LOCAL_ORIGIN } from '$lib/collab/contentSession.svelte';
 import { applyGuide, readGuide } from '$lib/collab/guideDoc';
 import { CaretKeeper, reconcile, reconcileList, reconcileRecord } from '$lib/collab/reconcile';
+import { localGuide, mapToLocal } from '$lib/guide/normalize';
 import type { GuideStore } from '$lib/stores/guideStore.svelte';
-
-import { localGuide, mapToLocal } from './normalize';
 
 // Ties the guide editor's store to the shared doc, both ways, so the editor
 // itself stays as it was: components edit the store; this writes the store

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import type { GuideQuestion } from '$lib/guide/types';
 
 	import { createListReorder } from './listReorder.svelte';
 	import TextField from './TextField.svelte';
-	import type { GuideQuestion } from './types';
 
 	interface Props {
 		question: GuideQuestion;

@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { getGuideStore } from '$lib/stores/guideStore.svelte';
-
-	import AccordionPanel from './AccordionPanel.svelte';
 	import {
 		isConditionOptionValid,
 		isConditionTargetValid,
 		mayGoUnasked,
 		resolveConditionTarget
-	} from './conditions';
-	import { pick, surveyItemOptions } from './localized';
-	import type { GuideQuestion, GuideSection, LocalCondition } from './types';
+	} from '$lib/guide/conditions';
+	import { pick, surveyItemOptions } from '$lib/guide/localized';
+	import type { GuideQuestion, GuideSection, LocalCondition } from '$lib/guide/types';
+	import { getGuideStore } from '$lib/stores/guideStore.svelte';
+
+	import AccordionPanel from './AccordionPanel.svelte';
 
 	interface Props {
 		question: GuideQuestion;

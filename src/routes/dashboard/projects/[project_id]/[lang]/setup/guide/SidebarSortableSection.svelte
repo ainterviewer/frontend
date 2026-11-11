@@ -3,11 +3,11 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
 
+	import { pick } from '$lib/guide/localized';
+	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
-	import { pick } from './localized';
 	import SidebarSortableQuestion from './SidebarSortableQuestion.svelte';
-	import type { GuideQuestion, GuideSection } from './types';
 
 	interface Props {
 		section: GuideSection;

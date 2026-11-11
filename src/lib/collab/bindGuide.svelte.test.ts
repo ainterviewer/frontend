@@ -4,10 +4,10 @@ import * as Y from 'yjs';
 
 import type { ContentSession } from '$lib/collab/contentSession.svelte';
 import { applyGuide, readGuide, roots } from '$lib/collab/guideDoc';
+import { mapToLocal } from '$lib/guide/normalize';
 import { createGuideStore } from '$lib/stores/guideStore.svelte';
 
 import { bindGuide } from './bindGuide.svelte';
-import { mapToLocal } from './normalize';
 
 // The binding with a real, reactive store: what the editor holds is $state
 // proxies, which plain-object tests of the doc mapping never see.

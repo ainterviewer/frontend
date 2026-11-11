@@ -5,10 +5,16 @@
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type { ExternalParam, LocalizedInterviewGuide, ProjectLanguage } from '$lib/api/types.gen';
+	import { bindGuide } from '$lib/collab/bindGuide.svelte';
 	import CollabPill from '$lib/collab/CollabPill.svelte';
 	import { acquireContentSession, presenceUser } from '$lib/collab/contentSession.svelte';
 	import { presence } from '$lib/collab/presence.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { validateGuideConditions } from '$lib/guide/conditions';
+	import { countUntranslated, pick } from '$lib/guide/localized';
+	import { addLocalSections, localQuestion, mapToLocal, newSection } from '$lib/guide/normalize';
+	import { renderLocal } from '$lib/guide/render';
+	import type { GuideQuestion } from '$lib/guide/types';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { hasErrorCode } from '$lib/utils/errors';
 	import { toastApiError } from '$lib/utils/toast';
@@ -26,18 +32,12 @@
 	import ExportPdfModal from '../ExportPdfModal.svelte';
 	import SetupActionBar from '../SetupActionBar.svelte';
 	import TranslationBanner from '../TranslationBanner.svelte';
-	import { bindGuide } from './bindGuide.svelte';
 	import BulkSettingsModal from './BulkSettingsModal.svelte';
-	import { validateGuideConditions } from './conditions';
 	import GenerateModal from './GenerateModal.svelte';
 	import InsertHere from './InsertHere.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
-	import { countUntranslated, pick } from './localized';
-	import { addLocalSections, localQuestion, mapToLocal, newSection } from './normalize';
-	import { renderLocal } from './render';
 	import SortableSection from './SortableSection.svelte';
 	import TextField from './TextField.svelte';
-	import type { GuideQuestion } from './types';
 
 	let {
 		guide: initialGuide,

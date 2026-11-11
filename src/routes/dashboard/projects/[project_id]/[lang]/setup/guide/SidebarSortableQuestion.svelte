@@ -2,11 +2,10 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
 
+	import { pick } from '$lib/guide/localized';
+	import type { GuideQuestion } from '$lib/guide/types';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { plainMarkup, sanitizeMarkup } from '$lib/utils/sanitize';
-
-	import { pick } from './localized';
-	import type { GuideQuestion } from './types';
 
 	interface Props {
 		question: GuideQuestion;

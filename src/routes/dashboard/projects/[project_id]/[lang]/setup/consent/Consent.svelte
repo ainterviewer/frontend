@@ -9,6 +9,7 @@
 	import { presence } from '$lib/collab/presence.svelte';
 	import { ConsentModal } from '$lib/components/modals';
 	import ConsentPreview from '$lib/components/preview/ConsentPreview.svelte';
+	import { isUntranslated, pick } from '$lib/guide/localized';
 
 	import {
 		draftWelcome,
@@ -21,7 +22,6 @@
 	} from '../editorActions';
 	import type { PdfToggles } from '../exportPdf';
 	import ExportPdfModal from '../ExportPdfModal.svelte';
-	import { isUntranslated, pick } from '../guide/localized';
 	import SetupActionBar from '../SetupActionBar.svelte';
 	import TranslationBanner from '../TranslationBanner.svelte';
 

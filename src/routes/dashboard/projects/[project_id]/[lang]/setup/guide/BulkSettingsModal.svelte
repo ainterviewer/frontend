@@ -1,7 +1,6 @@
 <script lang="ts">
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-
-	import type { GuideQuestion } from './types';
+	import type { GuideQuestion } from '$lib/guide/types';
 
 	let {
 		open = $bindable(),

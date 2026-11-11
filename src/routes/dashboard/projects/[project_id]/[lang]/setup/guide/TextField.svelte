@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { LocalizedText } from '$lib/api/types.gen';
+	import { isUntranslated, pick } from '$lib/guide/localized';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
-
-	import { isUntranslated, pick } from './localized';
 
 	// One piece of text in the language being edited. `text` is the shared
 	// `{language: text}` map and is edited in place; only `text[lang]` changes.

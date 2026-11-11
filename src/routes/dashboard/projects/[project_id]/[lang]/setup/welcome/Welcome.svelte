@@ -11,6 +11,7 @@
 	import { presence } from '$lib/collab/presence.svelte';
 	import { WelcomeModal } from '$lib/components/modals';
 	import WelcomePreview from '$lib/components/preview/WelcomePreview.svelte';
+	import { isUntranslated, pick } from '$lib/guide/localized';
 	import { toastApiError } from '$lib/utils/toast';
 
 	import {
@@ -24,7 +25,6 @@
 	} from '../editorActions';
 	import type { PdfToggles } from '../exportPdf';
 	import ExportPdfModal from '../ExportPdfModal.svelte';
-	import { isUntranslated, pick } from '../guide/localized';
 	import SetupActionBar from '../SetupActionBar.svelte';
 	import TranslationBanner from '../TranslationBanner.svelte';
 

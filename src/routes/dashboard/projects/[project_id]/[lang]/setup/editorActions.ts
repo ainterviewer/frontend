@@ -3,11 +3,11 @@ import { toast } from 'svelte-sonner';
 import { Projects } from '$lib/api';
 import type { Consent, Welcome } from '$lib/api/types.gen';
 import type { ContentSession } from '$lib/collab/contentSession.svelte';
+import { renderSaved } from '$lib/guide/render';
 import { toastApiError } from '$lib/utils/toast';
 
 import { downloadUnifiedSetupJson } from './exportJson';
 import { downloadGuidePdf, type PdfToggles } from './exportPdf';
-import { renderSaved } from './guide/render';
 
 // What the three setup editors -- guide, consent, welcome -- do alike. Each
 // edits one part live and reads the other two from the server for an export.

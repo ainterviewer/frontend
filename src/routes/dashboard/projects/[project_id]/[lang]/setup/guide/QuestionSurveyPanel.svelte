@@ -3,14 +3,14 @@
 	import MessageBubble from '$lib/components/interview/MessageBubble.svelte';
 	import SurveyItem from '$lib/components/interview/SurveyItem.svelte';
 	import type { SurveyItemUnion } from '$lib/components/interview/types';
+	import { pick, surveyItemOptions } from '$lib/guide/localized';
+	import { renderSurveyItem } from '$lib/guide/render';
+	import type { GuideQuestion } from '$lib/guide/types';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
 	import AccordionPanel from './AccordionPanel.svelte';
 	import { createListReorder } from './listReorder.svelte';
-	import { pick, surveyItemOptions } from './localized';
-	import { renderSurveyItem } from './render';
 	import TextField from './TextField.svelte';
-	import type { GuideQuestion } from './types';
 
 	interface Props {
 		question: GuideQuestion;
