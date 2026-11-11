@@ -14,7 +14,7 @@ You are able to use the Svelte MCP server, where you have access to comprehensiv
 Guided tours are driver.js, built through `src/lib/onboarding.ts`. There are
 three: the dashboard (`src/routes/dashboard/+page.svelte`), the project
 layout (`projects/[project_id]/+layout.svelte`) and the interview guide
-(`setup/guide/+page.svelte`). Update the tour in the same change as the UI it
+(`setup/guide/guideTour.ts`). Update the tour in the same change as the UI it
 describes: a new control gets a step, and a removed one loses its step.
 
 - **Steps have stable ids.** Each step is a `TourStep` with an `id`, passed
