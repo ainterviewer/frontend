@@ -147,7 +147,6 @@
 						type="button"
 						onclick={() => whatsNew.open(newsworthyVersion(page.data.releases))}
 						class="cursor-pointer border-none bg-transparent p-0 font-normal whitespace-nowrap text-light/60 hover:text-light"
-						title="What's new"
 					>
 						{collapsed
 							? platformVersion.platform_version?.slice(2)
