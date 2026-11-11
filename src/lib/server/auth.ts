@@ -1,3 +1,5 @@
+import type { Cookies } from '@sveltejs/kit';
+
 import { getRequestEvent } from '$app/server';
 
 /**
@@ -25,4 +27,10 @@ export function currentAccessToken(): string | undefined {
 		return undefined;
 	}
 	return event.cookies.get('access_token');
+}
+
+/** Log the browser out of the server side: drop both auth cookies. */
+export function clearAuthCookies(cookies: Cookies) {
+	cookies.delete('access_token', { path: '/' });
+	cookies.delete('refresh_token', { path: '/' });
 }

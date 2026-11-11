@@ -3,7 +3,7 @@ import { error, type Handle, redirect } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
 import { client } from '$lib/api/client.gen';
-import { currentAccessToken } from '$lib/server/auth';
+import { clearAuthCookies, currentAccessToken } from '$lib/server/auth';
 import { loginUrl } from '$lib/utils/urls';
 
 const API_BASE = () => env.API_URL || 'http://localhost:8666';
@@ -75,13 +75,6 @@ async function serverSideRefresh(fetchFn: typeof fetch, cookies: Cookies): Promi
 
 	return 'ok';
 }
-
-function clearAuthCookies(cookies: Cookies) {
-	cookies.delete('access_token', { path: '/' });
-	cookies.delete('refresh_token', { path: '/' });
-}
-
-export { clearAuthCookies };
 
 // How long before its expiry a token counts as expired. It still has to reach
 // the backend and pass its check there, possibly by a clock a little ahead of
