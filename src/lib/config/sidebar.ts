@@ -45,19 +45,9 @@ export const mainSidebarItems: SidebarItem[] = [
 				icon: 'fas fa-chart-line'
 			},
 			{
-				label: 'AWS',
-				href: '/dashboard/admin/aws',
-				icon: 'fas fa-server'
-			},
-			{
 				label: 'Access Requests',
 				href: '/dashboard/admin/access-requests',
 				icon: 'fas fa-user-plus'
-			},
-			{
-				label: 'Flagged',
-				href: '/dashboard/admin/reports',
-				icon: 'fas fa-flag'
 			},
 			{
 				label: 'Invitations',
@@ -68,6 +58,16 @@ export const mainSidebarItems: SidebarItem[] = [
 				label: 'Users',
 				href: '/dashboard/admin/users',
 				icon: 'fas fa-users'
+			},
+			{
+				label: 'Flagged',
+				href: '/dashboard/admin/reports',
+				icon: 'fas fa-flag'
+			},
+			{
+				label: 'AWS',
+				href: '/dashboard/admin/aws',
+				icon: 'fas fa-server'
 			}
 		]
 	}
