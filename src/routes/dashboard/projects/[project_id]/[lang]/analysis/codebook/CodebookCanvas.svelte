@@ -129,6 +129,10 @@
 	}
 </script>
 
+<!-- deleteKey is [] rather than null: Svelte Flow turns null into an empty
+     key, which @svelte-put/shortcut warns about on every keypress. An empty
+     list registers no trigger at all. Deletion goes through the workspace's
+     own keydown handler, which knows to undo it. -->
 <SvelteFlow
 	bind:nodes={tree.nodes}
 	bind:edges={tree.edges}
@@ -140,7 +144,7 @@
 	nodesConnectable
 	elevateNodesOnSelect
 	connectionRadius={CONNECTION_RADIUS}
-	deleteKey={null}
+	deleteKey={[]}
 	proOptions={{ hideAttribution: true }}
 	onnodeclick={({ node }) => (tree.selectedId = node.id)}
 	onpaneclick={() => (tree.selectedId = null)}
