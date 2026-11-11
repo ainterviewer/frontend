@@ -1059,23 +1059,18 @@
 				{/if}
 			</div>
 		</div>
-		<!-- An archived folder's projects are faded with it, not tagged one by one. -->
-		<div
-			class={[
-				'mb-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4',
-				folder.archived_at && 'opacity-60'
-			]}
-		>
+		<!-- An archived folder's projects are faded with it, not tagged one by one.
+		     The fade goes on what a card shows, never on the grid or the card: an
+		     opacity below 1 makes its own stacking context, which would trap the
+		     card's menu underneath the next folder. -->
+		<div class="mb-12 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 			{#each folder.projects as project (project.id)}
+				{@const faded = !!(folder.archived_at || project.archived_at)}
 				<div
 					class="flex min-h-[190px] cursor-grab flex-col rounded-lg bg-white shadow-md transition-shadow hover:shadow-xl {activeDropdown !==
 					project.id
 						? 'hover:scale-101'
-						: ''} {draggedProject?.id === project.id
-						? 'opacity-40'
-						: project.archived_at && !folder.archived_at
-							? 'opacity-60'
-							: ''}"
+						: ''} {draggedProject?.id === project.id ? 'opacity-40' : ''}"
 					role="button"
 					tabindex="0"
 					draggable="true"
@@ -1088,7 +1083,7 @@
 						}
 					}}
 				>
-					<div class="flex grow flex-col p-4">
+					<div class={['flex grow flex-col p-4', faded && 'opacity-60']}>
 						<div class="flex">
 							<h3 class="mb-1 w-full text-lg leading-snug font-semibold">
 								{project.title}
@@ -1117,7 +1112,7 @@
 						</div>
 					</div>
 					<div class="flex items-center justify-between border-t border-gray-200 px-4 py-2">
-						<p class="text-sm text-gray-500">
+						<p class={['text-sm text-gray-500', faded && 'opacity-60']}>
 							Status: <span class="{getStatusColor(project.status)} font-medium"
 								>{project.status || 'N/A'}</span
 							>
@@ -1189,7 +1184,10 @@
 
 			<div
 				data-tour={folderIndex === 0 ? 'new-project' : undefined}
-				class="flex min-h-[190px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-primary hover:text-primary"
+				class={[
+					'flex min-h-[190px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-primary hover:text-primary',
+					folder.archived_at && 'opacity-60'
+				]}
 				role="button"
 				tabindex="0"
 				onclick={() => {
