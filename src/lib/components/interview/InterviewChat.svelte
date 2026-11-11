@@ -147,7 +147,7 @@
 	let following = false;
 
 	$effect(() => {
-		const _ = [chat.messages.length, chat.showTypingIndicator, surveyUnanswered];
+		const _ = [chat.messages.length, chat.showTypingIndicator, surveyUnanswered, !!chat.redirect];
 		startFollowing();
 	});
 
@@ -378,6 +378,31 @@
 
 		{#if chat.showTypingIndicator}
 			<TypingIndicator />
+		{/if}
+
+		<!--
+			The project sends respondents on when the interview ends, e.g. back to
+			the survey panel they came from. Under the end of the conversation, so
+			the outro stays readable above it and nothing covers the page; the
+			button is for whoever has read it and does not want to wait.
+		-->
+		{#if chat.redirect}
+			<div
+				class="mb-4 flex flex-col items-center gap-2 text-center text-sm text-gray-500"
+				role="status"
+				aria-live="polite"
+			>
+				<span>{connectionText.redirecting(chat.redirect.remaining)}</span>
+				<!-- A button, not a link: leaving goes through `location.replace`, so
+				     the back button does not return into the finished interview. -->
+				<button
+					type="button"
+					class="rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+					onclick={() => chat.continueRedirect()}
+				>
+					{connectionText.continue_now}
+				</button>
+			</div>
 		{/if}
 	</div>
 </div>

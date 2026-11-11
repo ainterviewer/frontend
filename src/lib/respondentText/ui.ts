@@ -48,6 +48,9 @@ export interface UiText {
 		start_over: string;
 		/** Posted into the conversation while the server asks us to wait. */
 		busy: string;
+		/** Shown after the interview while counting down to the redirect. */
+		redirecting: (seconds: number) => string;
+		continue_now: string;
 	};
 	/** Answering by voice, in place of the message box. */
 	speech: {
@@ -117,7 +120,9 @@ const UI: Record<Lang, UiText> = {
 			expired_text:
 				'We could not resume your interview — this can happen if too much time has passed or if your browser cleared its data. You cannot continue this interview from where you left off.',
 			start_over: 'Start a new interview',
-			busy: 'The interview service is busy. Trying again in a moment…'
+			busy: 'The interview service is busy. Trying again in a moment…',
+			redirecting: (s) => `You will be redirected in ${s} ${s === 1 ? 'second' : 'seconds'}.`,
+			continue_now: 'Continue now'
 		},
 		speech: {
 			discard: 'Discard recording',
@@ -178,7 +183,9 @@ const UI: Record<Lang, UiText> = {
 			expired_text:
 				'Vi kunne ikke genoptage dit interview — det kan ske, hvis der er gået for lang tid, eller hvis din browser har slettet sine data. Du kan ikke fortsætte interviewet, hvor du slap.',
 			start_over: 'Start et nyt interview',
-			busy: 'Interviewtjenesten er optaget. Prøver igen om et øjeblik…'
+			busy: 'Interviewtjenesten er optaget. Prøver igen om et øjeblik…',
+			redirecting: (s) => `Du bliver sendt videre om ${s} ${s === 1 ? 'sekund' : 'sekunder'}.`,
+			continue_now: 'Fortsæt nu'
 		},
 		speech: {
 			discard: 'Kassér optagelse',
@@ -239,7 +246,9 @@ const UI: Record<Lang, UiText> = {
 			expired_text:
 				'Wir konnten Ihr Interview nicht fortsetzen – das kann passieren, wenn zu viel Zeit vergangen ist oder Ihr Browser seine Daten gelöscht hat. Sie können dieses Interview nicht an der Stelle fortsetzen, an der Sie aufgehört haben.',
 			start_over: 'Neues Interview starten',
-			busy: 'Der Interviewdienst ist ausgelastet. Neuer Versuch in Kürze…'
+			busy: 'Der Interviewdienst ist ausgelastet. Neuer Versuch in Kürze…',
+			redirecting: (s) => `Sie werden in ${s} ${s === 1 ? 'Sekunde' : 'Sekunden'} weitergeleitet.`,
+			continue_now: 'Jetzt fortfahren'
 		},
 		speech: {
 			discard: 'Aufnahme verwerfen',
@@ -305,7 +314,9 @@ const UI: Record<Lang, UiText> = {
 			expired_text:
 				'No hemos podido reanudar tu entrevista: esto puede ocurrir si ha pasado demasiado tiempo o si tu navegador ha borrado sus datos. No puedes continuar esta entrevista desde donde la dejaste.',
 			start_over: 'Comenzar una nueva entrevista',
-			busy: 'El servicio de entrevistas está ocupado. Se volverá a intentar en un momento…'
+			busy: 'El servicio de entrevistas está ocupado. Se volverá a intentar en un momento…',
+			redirecting: (s) => `Te redirigiremos en ${s} ${s === 1 ? 'segundo' : 'segundos'}.`,
+			continue_now: 'Continuar ahora'
 		},
 		speech: {
 			discard: 'Descartar grabación',
@@ -371,7 +382,9 @@ const UI: Record<Lang, UiText> = {
 			expired_text:
 				"Nous n'avons pas pu reprendre votre entretien — cela peut arriver si trop de temps s'est écoulé ou si votre navigateur a effacé ses données. Vous ne pouvez pas reprendre cet entretien là où vous l'avez laissé.",
 			start_over: 'Commencer un nouvel entretien',
-			busy: "Le service d'entretien est occupé. Nouvel essai dans un instant…"
+			busy: "Le service d'entretien est occupé. Nouvel essai dans un instant…",
+			redirecting: (s) => `Vous allez être redirigé dans ${s} ${s === 1 ? 'seconde' : 'secondes'}.`,
+			continue_now: 'Continuer maintenant'
 		},
 		speech: {
 			discard: "Supprimer l'enregistrement",

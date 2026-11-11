@@ -27,7 +27,14 @@ const SKIP_QUESTION = '<|skipquestion|>';
 type ServerMessage =
 	| OutgoingMessage
 	| OutgoingHistoryMessage
-	| (OutgoingData & { interview_id?: string; project_id?: string });
+	| (OutgoingData & { interview_id?: string; project_id?: string })
+	| RedirectFrame;
+
+/** Sent after the end of a distributed interview whose project sends
+ *  respondents on, e.g. to a survey panel's return link. The backend's own
+ *  frame (`RedirectFrame` in its `app/schemas/interviews.py`), so it is not in
+ *  the generated client. */
+type RedirectFrame = { type: 'redirect'; url: string; delay_seconds: number };
 
 // The server schema allows a list of images, but interview messages carry at
 // most one. Over the WebSocket the image data is always a base64/URL string.
@@ -162,6 +169,10 @@ export class ChatClient {
 	/** A security intervention the respondent has not closed yet. While it is
 	 *  set, the chat sits behind its modal. */
 	securityIntervention = $state<PendingIntervention | null>(null);
+	/** Where the respondent is about to be sent now the interview has ended,
+	 *  and the seconds left before they are. */
+	redirect = $state<{ url: string; remaining: number } | null>(null);
+	private redirectTimer: ReturnType<typeof setInterval> | null = null;
 
 	// Show the typing indicator whenever we're waiting on the server. The chat
 	// is turn-based: the last message being a user `sent` means a reply is
@@ -620,7 +631,29 @@ export class ChatClient {
 		}
 	}
 
+	/** Leave for the redirect now. `replace` so the back button does not
+	 *  return the respondent into a finished interview. */
+	continueRedirect() {
+		if (!this.redirect) return;
+		if (this.redirectTimer) clearInterval(this.redirectTimer);
+		this.redirectTimer = null;
+		window.location.replace(this.redirect.url);
+	}
+
+	private startRedirect({ url, delay_seconds }: RedirectFrame) {
+		if (this.redirectTimer) clearInterval(this.redirectTimer);
+		this.redirect = { url, remaining: Math.max(0, delay_seconds) };
+		if (this.redirect.remaining === 0) return this.continueRedirect();
+		this.redirectTimer = setInterval(() => {
+			if (!this.redirect) return;
+			this.redirect.remaining -= 1;
+			if (this.redirect.remaining <= 0) this.continueRedirect();
+		}, 1000);
+	}
+
 	disconnect() {
+		if (this.redirectTimer) clearInterval(this.redirectTimer);
+		this.redirectTimer = null;
 		this.disableReconnect();
 		if (this.ws) {
 			this.ws.close();
@@ -910,6 +943,11 @@ export class ChatClient {
 						? { item: data.survey_item, message_id: data.message_id }
 						: null;
 				}
+				break;
+
+			case 'redirect':
+				// After the end frame, which has already cleared the session.
+				this.startRedirect(data);
 				break;
 
 			case 'data':

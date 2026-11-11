@@ -5,7 +5,12 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { ExternalParam, InterviewConfig, ProbingStrategy } from '$lib/api/types.gen';
+	import type {
+		CompletionRedirects,
+		ExternalParam,
+		InterviewConfig,
+		ProbingStrategy
+	} from '$lib/api/types.gen';
 	import PreviewBadge from '$lib/components/PreviewBadge.svelte';
 	import { toastApiError } from '$lib/utils/toast';
 
@@ -134,6 +139,45 @@
 			);
 		}
 		savingExperimentOnly = false;
+	}
+
+	// How an interview ended, and where its respondent goes. The security
+	// check's endings are never redirected, so they have no field.
+	const REDIRECT_OUTCOMES = [
+		{
+			key: 'complete',
+			label: 'Completed',
+			help: 'The respondent went through the whole interview.'
+		},
+		{
+			key: 'screened',
+			label: 'Screened out',
+			help: 'A condition in the guide ended the interview early, including declined consent.'
+		}
+	] as const;
+
+	function redirectsFrom(stored: CompletionRedirects | null | undefined): CompletionRedirects {
+		return { complete: null, screened: null, delay_seconds: 5, ...stored };
+	}
+
+	// svelte-ignore state_referenced_locally
+	let redirects: CompletionRedirects = $state(redirectsFrom(data.redirects));
+	let savingRedirects = $state(false);
+
+	async function saveRedirects() {
+		savingRedirects = true;
+		const { error } = await Projects.replaceRedirects({
+			path: { project_id: projectId },
+			body: redirects
+		});
+		if (error) {
+			toastApiError(error, 'Failed to save the redirects');
+		} else {
+			await invalidateAll();
+			redirects = redirectsFrom(data.redirects);
+			toast.success('Redirects saved');
+		}
+		savingRedirects = false;
 	}
 
 	async function saveExternalParams() {
@@ -548,6 +592,67 @@
 						type="button"
 						onclick={saveExternalParams}
 						disabled={savingParams}
+						class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-dark disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						Save
+					</button>
+				</div>
+
+				<hr class="my-6 border-gray-200" />
+
+				<h3 class="text-sm font-semibold text-gray-900">Redirect when the interview ends</h3>
+				<p class="mt-1 mb-4 text-sm text-gray-600">
+					Send respondents on to another page when their interview ends, such as the return links a
+					survey panel gives you. Use <code class="rounded bg-gray-100 px-1">{'{{ name }}'}</code> to
+					put an external parameter's value in the URL. Only distributed interviews are redirected, never
+					tests, and changes apply at once, to interviews already running too.
+				</p>
+
+				<div class="space-y-3">
+					{#each REDIRECT_OUTCOMES as outcome (outcome.key)}
+						<div>
+							<label
+								for="redirect-{outcome.key}"
+								class="mb-1 block text-xs font-medium text-gray-600">{outcome.label}</label
+							>
+							<input
+								id="redirect-{outcome.key}"
+								type="url"
+								value={redirects[outcome.key] ?? ''}
+								oninput={(e) => {
+									const val = e.currentTarget.value.trim();
+									redirects[outcome.key] = val === '' ? null : val;
+								}}
+								placeholder={'https://panel.example.com/' + outcome.key + '?id={{ respondent_id }}'}
+								class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+							/>
+							<p class="mt-1 text-xs text-gray-500">{outcome.help}</p>
+						</div>
+					{/each}
+
+					<div class="max-w-xs">
+						<label for="redirect-delay" class="mb-1 block text-xs font-medium text-gray-600"
+							>Delay (seconds)</label
+						>
+						<input
+							id="redirect-delay"
+							type="number"
+							min="0"
+							max="60"
+							bind:value={redirects.delay_seconds}
+							class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+						/>
+						<p class="mt-1 text-xs text-gray-500">
+							How long the closing message stays up before the redirect.
+						</p>
+					</div>
+				</div>
+
+				<div class="mt-4 flex justify-end">
+					<button
+						type="button"
+						onclick={saveRedirects}
+						disabled={savingRedirects}
 						class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-dark disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						Save

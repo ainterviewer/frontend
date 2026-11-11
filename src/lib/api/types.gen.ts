@@ -976,6 +976,30 @@ export type CommunicationTraits = {
 };
 
 /**
+ * CompletionRedirects
+ *
+ * Where a respondent is sent when a distributed interview ends, by how it
+ * ended -- the return links a survey panel hands out.
+ *
+ * Unset outcomes send nobody anywhere: the respondent stays on the outro.
+ * Interviews ended by the security check never redirect, whatever is set.
+ */
+export type CompletionRedirects = {
+    /**
+     * Complete
+     */
+    complete?: string | null;
+    /**
+     * Screened
+     */
+    screened?: string | null;
+    /**
+     * Delay Seconds
+     */
+    delay_seconds?: number;
+};
+
+/**
  * ComponentChange
  *
  * One component release that landed in a platform release.
@@ -5320,6 +5344,7 @@ export type ProjectPublic = {
      * External Params
      */
     external_params?: Array<ExternalParam> | null;
+    redirects?: CompletionRedirects | null;
     /**
      * Owner Id
      */
@@ -12633,6 +12658,49 @@ export type UpdateExternalParamsResponses = {
      */
     200: unknown;
 };
+
+export type ReplaceRedirectsData = {
+    body: CompletionRedirects;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/redirects';
+};
+
+export type ReplaceRedirectsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type ReplaceRedirectsError = ReplaceRedirectsErrors[keyof ReplaceRedirectsErrors];
+
+export type ReplaceRedirectsResponses = {
+    /**
+     * Successful Response
+     */
+    200: CompletionRedirects;
+};
+
+export type ReplaceRedirectsResponse = ReplaceRedirectsResponses[keyof ReplaceRedirectsResponses];
 
 export type GetPromptDefaultsData = {
     body?: never;

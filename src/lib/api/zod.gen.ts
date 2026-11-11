@@ -419,6 +419,21 @@ export const zBackgroundInfoOptions = z.object({
 });
 
 /**
+ * CompletionRedirects
+ *
+ * Where a respondent is sent when a distributed interview ends, by how it
+ * ended -- the return links a survey panel hands out.
+ *
+ * Unset outcomes send nobody anywhere: the respondent stays on the outro.
+ * Interviews ended by the security check never redirect, whatever is set.
+ */
+export const zCompletionRedirects = z.object({
+    complete: z.string().max(2048).nullish(),
+    screened: z.string().max(2048).nullish(),
+    delay_seconds: z.int().gte(0).lte(60).optional().default(5)
+});
+
+/**
  * ComponentChange
  *
  * One component release that landed in a platform release.
@@ -3741,6 +3756,7 @@ export const zProjectPublic = z.object({
     experiment_only: z.boolean().optional().default(false),
     config: zInterviewConfig,
     external_params: z.array(zExternalParam).nullish(),
+    redirects: zCompletionRedirects.nullish(),
     owner_id: z.string(),
     n_interviews: z.int().nullish(),
     available_languages: z.array(zProjectLanguage).nullish(),
@@ -5713,6 +5729,21 @@ export const zUpdateExternalParamsPath = z.object({
 export const zUpdateExternalParamsQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+export const zReplaceRedirectsBody = zCompletionRedirects;
+
+export const zReplaceRedirectsPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zReplaceRedirectsQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zReplaceRedirectsResponse = zCompletionRedirects;
 
 /**
  * Successful Response
