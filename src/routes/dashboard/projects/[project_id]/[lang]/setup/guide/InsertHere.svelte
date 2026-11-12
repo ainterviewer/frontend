@@ -4,8 +4,10 @@
 	// An "add here" control sitting in the gap above the item that follows it in
 	// a `space-y-*` list. It takes no room of its own: the zero-height wrapper
 	// drops the list's margin so the gap stays as it was, and the control is
-	// laid over the gap (and a little of each neighbour), shown on hover or
-	// keyboard focus.
+	// laid over the gap, shown on hover or
+	// keyboard focus. Only the gap itself and the pill are clickable: the pill
+	// is a child of the button, so where it overflows the gap onto the items on
+	// either side it still hovers and clicks, but their edges do not.
 	let {
 		label,
 		gap,
@@ -16,10 +18,6 @@
 		gap: number;
 		onclick: () => void;
 	} = $props();
-
-	// How far (rem) the hover zone reaches into the items on either side, so the
-	// control is easy to find, and the pill has room to sit over their edges.
-	const OVERLAP = 0.375;
 </script>
 
 {#if !dragState.draggingType}
@@ -27,8 +25,8 @@
 		<button
 			type="button"
 			class="absolute inset-x-0 z-10 flex cursor-pointer items-center opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 disabled:hidden"
-			style:top="-{gap + OVERLAP}rem"
-			style:height="{gap + 2 * OVERLAP}rem"
+			style:top="-{gap}rem"
+			style:height="{gap}rem"
 			aria-label={label}
 			{onclick}
 		>
