@@ -2,6 +2,7 @@
 	import {
 		isConditionOptionValid,
 		isConditionTargetValid,
+		isOrdinalItem,
 		mayGoUnasked,
 		resolveConditionTarget
 	} from '$lib/guide/conditions';
@@ -173,6 +174,8 @@
 						referencedQuestion?.survey_item?.type === 'datetime' ||
 						referencedQuestion?.survey_item?.type === 'time' ||
 						referencedQuestion?.survey_item?.type === 'slider'}
+					{@const isOrdinal = isOrdinalItem(referencedQuestion)}
+					{@const allowsAnd = referencedQuestion?.survey_item?.type === 'checkbox' || isOrdinal}
 					{@const hasSurveyOptions = surveyItemOptions(referencedQuestion?.survey_item)?.length}
 					{@const targetValid =
 						isBlockValid(condition.question_context) && !hasMissingOption(condition)}
@@ -276,6 +279,22 @@
 															<option value=">=">Greater than or equal (&gt;=)</option>
 														</select>
 													</label>
+												{:else if isOrdinal}
+													<!-- Compared by place on the scale: an option listed earlier
+													     is lower. -->
+													<label class="mb-1 block text-sm text-gray-400">
+														Operator
+														<select
+															class="mt-1 w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+															bind:value={evaluation.comparison_operator}
+														>
+															<option value="==">Is (==)</option>
+															<option value="<">Before on the scale (&lt;)</option>
+															<option value="<=">At or before (&lt;=)</option>
+															<option value=">">After on the scale (&gt;)</option>
+															<option value=">=">At or after (&gt;=)</option>
+														</select>
+													</label>
 												{/if}
 
 												<div>
@@ -308,10 +327,14 @@
 													{:else if hasSurveyOptions}
 														<!-- An option is named by id, so the condition holds in every
 														     language and survives the option being reworded. -->
-														{@const selectedIds = condition.evaluation
-															.filter((_, i) => i !== evalIdx)
-															.map((e) => e.option_id)
-															.filter(Boolean)}
+														<!-- On a scale, one option can bound a range from
+														     both sides ("> Neutral AND <= Agree"). -->
+														{@const selectedIds = isOrdinal
+															? []
+															: condition.evaluation
+																	.filter((_, i) => i !== evalIdx)
+																	.map((e) => e.option_id)
+																	.filter(Boolean)}
 														<select
 															class="w-full rounded border-gray-200 bg-gray-50 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
 															bind:value={evaluation.option_id}
@@ -367,8 +390,7 @@
 										{:else if evalIdx === condition.evaluation.length - 1}
 											<div class="flex items-center justify-center gap-2 pt-1">
 												<button
-													class="rounded border px-2 py-0.5 text-sm font-medium transition-colors {referencedQuestion
-														?.survey_item?.type === 'checkbox'
+													class="rounded border px-2 py-0.5 text-sm font-medium transition-colors {allowsAnd
 														? 'border-gray-300 text-gray-600 hover:border-primary hover:bg-primary/5 hover:text-primary'
 														: 'cursor-not-allowed border-gray-200 text-gray-300'}"
 													onclick={() => {
@@ -379,7 +401,7 @@
 															comparison_operator: '=='
 														});
 													}}
-													disabled={referencedQuestion?.survey_item?.type !== 'checkbox'}
+													disabled={!allowsAnd}
 												>
 													+ AND
 												</button>

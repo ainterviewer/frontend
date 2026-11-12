@@ -141,6 +141,65 @@ describe('renderLocal', () => {
 	});
 });
 
+// The guide with its radio question turned into a Likert scale, and the gated
+// question's condition comparing the answer with "Never" by `operator`.
+function likertGuide(operator: '==' | '<' | '<=' | '>' | '>=', type = 'likert') {
+	const { top, sections, questions } = mapToLocal(guide());
+	const [scale, gated] = questions[SECTION];
+	if (scale.survey_item && 'options' in scale.survey_item) {
+		scale.survey_item = {
+			...scale.survey_item,
+			type
+		} as typeof scale.survey_item;
+	}
+	gated.conditions!.conditions[0].evaluation[0].comparison_operator = operator;
+	return { top, sections, questions };
+}
+
+describe('Likert order comparisons', () => {
+	it('render the scale in the language', () => {
+		const { top, sections, questions } = likertGuide('>=');
+		const { guide: rendered } = renderLocal(top, sections, questions, ['DA', 'EN']);
+		const evaluation =
+			rendered.question_sections![0].questions![1].conditions!.conditions[0].evaluation[0];
+
+		expect(evaluation).toMatchObject({
+			trigger_value: 'Aldrig',
+			comparison_operator: '>=',
+			scale: ['Ofte', 'Aldrig']
+		});
+	});
+
+	it('render no scale for a match', () => {
+		const { top, sections, questions } = likertGuide('==');
+		const { guide: rendered } = renderLocal(top, sections, questions, ['EN']);
+		const evaluation =
+			rendered.question_sections![0].questions![1].conditions!.conditions[0].evaluation[0];
+
+		expect(evaluation.scale).toBeNull();
+	});
+
+	it('are kept on save', () => {
+		const { top, sections, questions } = likertGuide('>');
+		const [, gated] = localGuide(top, sections, questions).question_sections![0].questions!;
+
+		expect(gated.conditions!.conditions[0].evaluation[0]).toMatchObject({
+			option_id: NEVER,
+			comparison_operator: '>'
+		});
+	});
+
+	it('fall back to a match when the target is a radio question', () => {
+		const { top, sections, questions } = likertGuide('>', 'radio');
+		const [, gated] = localGuide(top, sections, questions).question_sections![0].questions!;
+
+		expect(gated.conditions!.conditions[0].evaluation[0]).toMatchObject({
+			option_id: NEVER,
+			comparison_operator: '=='
+		});
+	});
+});
+
 describe('validateGuideConditions', () => {
 	it('flags a condition whose option was deleted', () => {
 		const { sections, questions } = mapToLocal(guide());

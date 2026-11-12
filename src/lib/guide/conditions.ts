@@ -106,15 +106,29 @@ export function localizeConditions(
 // An evaluation names an option when its target has a choice item, and holds a
 // `trigger_value` otherwise -- a number, a date or a classification
 // instruction, shared by every language. Picking another target leaves the
-// other field behind, so the one the target does not use is dropped here.
+// other field behind, so the one the target does not use is dropped here. So
+// is an order comparison left over from a number or a Likert scale: the
+// options of a radio or checkbox item have no order, and only match with '=='.
 function evaluationFor(
 	evaluation: LocalizedConditionEvaluation,
 	target: GuideQuestion | null
 ): LocalizedConditionEvaluation {
 	const { option_id, trigger_value, ...rest } = evaluation;
-	return surveyItemOptions(target?.survey_item)
-		? { ...rest, option_id, trigger_value: null }
-		: { ...rest, option_id: null, trigger_value: trigger_value ?? '' };
+	if (!surveyItemOptions(target?.survey_item)) {
+		return { ...rest, option_id: null, trigger_value: trigger_value ?? '' };
+	}
+	return {
+		...rest,
+		option_id,
+		trigger_value: null,
+		comparison_operator: isOrdinalItem(target) ? rest.comparison_operator : '=='
+	};
+}
+
+// A Likert scale's options are ordered, so a condition can compare an answer
+// with one of them ("at least Agree") as well as match it.
+export function isOrdinalItem(target: GuideQuestion | null | undefined): boolean {
+	return target?.survey_item?.type === 'likert';
 }
 
 // Inverse of localizeConditions, for saving. A missing target is blocked

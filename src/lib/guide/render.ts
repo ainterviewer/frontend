@@ -5,7 +5,7 @@ import type {
 	Question as ApiQuestion
 } from '$lib/api/types.gen';
 
-import { locateContext, resolveConditionTarget } from './conditions';
+import { isOrdinalItem, locateContext, resolveConditionTarget } from './conditions';
 import { pick, surveyItemOptions } from './localized';
 import { mapToLocal } from './normalize';
 import type {
@@ -49,7 +49,9 @@ export function renderSurveyItem(
 	return item as RenderedQuestion['survey_item'];
 }
 
-// A condition naming an option matches that option's text in the language.
+// A condition naming an option matches that option's text in the language. One
+// comparing a Likert option by order also carries the scale, the item's options
+// in order, which the answer is compared on.
 function renderConditions(
 	conditions: LocalConditionSet | null | undefined,
 	sections: GuideSection[],
@@ -62,13 +64,17 @@ function renderConditions(
 		conditions: conditions.conditions.map((cond) => {
 			const target = resolveConditionTarget(cond.question_context, sections, questionsMap);
 			const options = surveyItemOptions(target.question?.survey_item) ?? [];
+			const scale = isOrdinalItem(target.question)
+				? options.map((o) => pick(o.text, languages))
+				: null;
 			return {
 				...cond,
 				evaluation: cond.evaluation.map(({ option_id, trigger_value, ...rest }) => ({
 					...rest,
 					trigger_value: option_id
 						? pick(options.find((o) => o.id === option_id)?.text, languages)
-						: (trigger_value ?? '')
+						: (trigger_value ?? ''),
+					scale: option_id && (rest.comparison_operator ?? '==') !== '==' ? scale : null
 				}))
 			};
 		})

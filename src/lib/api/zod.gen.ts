@@ -474,6 +474,14 @@ export const zConditionAction = z.enum([
  *
  * For numeric comparisons (e.g., age >= 18):
  * ConditionEvaluation(trigger_value="18", comparison_operator=">=")
+ *
+ * For a Likert answer compared by its place on the scale (e.g., at least
+ * "Agree"), give the scale's options in order:
+ * ConditionEvaluation(
+ * trigger_value="Agree",
+ * comparison_operator=">=",
+ * scale=["Disagree", "Neutral", "Agree", "Strongly agree"],
+ * )
  */
 export const zConditionEvaluation = z.object({
     trigger_value: z.union([
@@ -488,6 +496,7 @@ export const zConditionEvaluation = z.object({
         '>',
         '>='
     ]).optional().default('=='),
+    scale: z.array(z.string()).nullish(),
     combine_next: z.enum(['AND', 'OR']).nullish()
 });
 
@@ -1624,7 +1633,8 @@ export const zLikertItem = z.object({
  * Exactly one of `option_id` and `trigger_value` is set. A classification
  * instruction, a pattern or a number to compare against is a `trigger_value`
  * shared by every language: the classifier reads answers in any language,
- * and a number is a number.
+ * and a number is a number. An option is matched with '==', except a Likert
+ * option, which may also be compared by its place on the scale.
  */
 export const zLocalizedConditionEvaluation = z.object({
     option_id: z.uuid().nullish(),

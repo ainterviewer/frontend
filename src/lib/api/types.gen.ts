@@ -1070,6 +1070,14 @@ export type ConditionAction = 'end_interview' | 'skip_section' | 'skip_question'
  *
  * For numeric comparisons (e.g., age >= 18):
  * ConditionEvaluation(trigger_value="18", comparison_operator=">=")
+ *
+ * For a Likert answer compared by its place on the scale (e.g., at least
+ * "Agree"), give the scale's options in order:
+ * ConditionEvaluation(
+ * trigger_value="Agree",
+ * comparison_operator=">=",
+ * scale=["Disagree", "Neutral", "Agree", "Strongly agree"],
+ * )
  */
 export type ConditionEvaluation = {
     /**
@@ -1081,9 +1089,15 @@ export type ConditionEvaluation = {
     /**
      * Comparison Operator
      *
-     * Comparison operator. '==' for pattern matching, others for numeric/date comparison.
+     * Comparison operator. '==' for pattern matching, others for numeric/date comparison, or for comparing places on `scale`.
      */
     comparison_operator?: '==' | '<' | '<=' | '>' | '>=';
+    /**
+     * Scale
+     *
+     * The Likert item's options in order, first to last. Set, the answer and `trigger_value` are compared by their place on it rather than as numbers.
+     */
+    scale?: Array<string> | null;
     /**
      * Combine Next
      *
@@ -3784,7 +3798,8 @@ export type LocalizedCondition = {
  * Exactly one of `option_id` and `trigger_value` is set. A classification
  * instruction, a pattern or a number to compare against is a `trigger_value`
  * shared by every language: the classifier reads answers in any language,
- * and a number is a number.
+ * and a number is a number. An option is matched with '==', except a Likert
+ * option, which may also be compared by its place on the scale.
  */
 export type LocalizedConditionEvaluation = {
     /**

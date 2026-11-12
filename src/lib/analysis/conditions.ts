@@ -148,7 +148,9 @@ function describeEvaluation(evaluation: ConditionEvaluation, classifying: boolea
 	if (classifying) return `“${value}”`;
 
 	const operator = evaluation.comparison_operator ?? '==';
-	return operator === '==' ? `“${value}”` : `${COMPARISONS[operator]} ${value}`;
+	if (operator === '==') return `“${value}”`;
+	// A place on a Likert scale is an option's wording, quoted like a match.
+	return `${COMPARISONS[operator]} ${evaluation.scale ? `“${value}”` : value}`;
 }
 
 function join(parts: string[], operators: (string | null | undefined)[]): string {
