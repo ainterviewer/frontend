@@ -30,6 +30,8 @@ export interface LikertLayout {
 	ticks: string[];
 	/** Empty when the scale is not a numbered one, and every label sits in its column. */
 	anchors: LikertAnchor[];
+	/** Every option is a number, worded or not: the columns hold only numbers. */
+	numbered: boolean;
 }
 
 export function likertLayout(options: readonly string[]): LikertLayout {
@@ -41,10 +43,12 @@ export function likertLayout(options: readonly string[]): LikertLayout {
 		return null;
 	});
 
-	const indices = parsed.flatMap((p, i) => (p?.text ? [i] : []));
-	if (parsed.some((p) => p === null) || indices.length === 0) {
-		return { ticks: [...options], anchors: [] };
+	if (parsed.some((p) => p === null)) {
+		return { ticks: [...options], anchors: [], numbered: false };
 	}
+	const ticks = parsed.map((p) => p!.tick);
+	const indices = parsed.flatMap((p, i) => (p!.text ? [i] : []));
+	if (indices.length === 0) return { ticks, anchors: [], numbered: true };
 
 	const n = options.length;
 	const last = n - 1;
@@ -83,5 +87,41 @@ export function likertLayout(options: readonly string[]): LikertLayout {
 			: { index: i, text, from: split, to: last, align };
 	});
 
-	return { ticks: parsed.map((p) => p!.tick), anchors };
+	return { ticks, anchors, numbered: true };
+}
+
+/** Rough width of a character of a label (0.75rem, medium) and of the parts around it. */
+const CHAR_PX = 6.5;
+const NUMBER_COLUMN_PX = 28; // `w-7`
+const LABEL_PADDING_PX = 8; // `px-1`
+const GAP_PX = 4; // `gap-x-1`
+const FIELDSET_PADDING_PX = 32; // `p-4`
+
+/**
+ * A label's words as the browser may wrap them: at spaces, and after a slash
+ * ("Hverken/eller"), which the item marks with a `<wbr>` since browsers do
+ * not break there on their own.
+ */
+export function labelWords(label: string): string[] {
+	return label.split(/\s+|(?<=\/)/).filter(Boolean);
+}
+
+/**
+ * About the narrowest the scale can be laid out in columns without breaking
+ * a word. The columns are equal, as a scale's points should be, so all are as
+ * wide as the longest word on the scale needs.
+ *
+ * An estimate from character counts rather than a measurement, so it is the
+ * same on the server as in the browser and the layout never changes after
+ * the page appears.
+ */
+export function likertMinWidth(layout: LikertLayout): number {
+	const column = layout.numbered
+		? NUMBER_COLUMN_PX
+		: Math.max(
+				0,
+				...layout.ticks.flatMap(labelWords).map((word) => word.length * CHAR_PX + LABEL_PADDING_PX)
+			);
+	const n = layout.ticks.length;
+	return n * column + Math.max(0, n - 1) * GAP_PX + FIELDSET_PADDING_PX;
 }

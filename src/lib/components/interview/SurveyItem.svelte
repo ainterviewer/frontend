@@ -4,7 +4,7 @@
 
 	import { getUiText } from '$lib/respondentText';
 	import { CHECKBOX_SEPARATOR, splitCheckboxAnswer } from '$lib/survey/checkbox';
-	import { likertLayout } from '$lib/survey/likert';
+	import { likertLayout, likertMinWidth } from '$lib/survey/likert';
 
 	import SurveyGrid from './SurveyGrid.svelte';
 	import type { SurveyItemUnion } from './types';
@@ -116,18 +116,27 @@
 	/**
 	 * When a likert scale becomes a list of rows instead of a row of columns.
 	 *
-	 * On a phone more than five options leave each column too narrow to tap,
-	 * let alone to hold a label, so the scale is stacked like a radio list
-	 * there. Done in CSS rather than measured, so the server renders the right
-	 * layout and nothing jumps once the page hydrates.
+	 * Columns are kept only while each can hold its longest word whole, since
+	 * a label broken mid-word ("Overve / jende") is unreadable, and only while
+	 * a column is wide enough to tap: at most five on a phone. The answer
+	 * bubble is about 300px wide on a phone, and on a computer from about
+	 * 380px in a window just over `sm` to 480px from `md` up, so a scale that
+	 * needs more than the narrow end is stacked below `md`. Decided from the
+	 * text rather than measured, so the server renders the right layout and
+	 * nothing jumps once the page hydrates.
 	 */
-	let likertStack = $derived<'never' | 'phone' | 'always'>(
-		likertOptions.length <= 5 ? 'never' : phone ? 'always' : 'phone'
-	);
-	// A column wants 1.75rem, still a comfortable tap target, which is what sizes the
-	// answer bubble (it is as wide as its content), but gives way to a narrow one.
-	const COLUMN =
-		'w-7 max-w-full justify-self-center flex-col items-center gap-2 px-1 text-center text-xs';
+	const PHONE_BUBBLE_PX = 300;
+	const NARROW_BUBBLE_PX = 380;
+	const WIDE_BUBBLE_PX = 480;
+	let likertStack = $derived.by((): 'never' | 'phone' | 'narrow' | 'always' => {
+		const width = likertMinWidth(likert);
+		if (width > WIDE_BUBBLE_PX) return 'always';
+		if (phone) return likertOptions.length <= 5 && width <= PHONE_BUBBLE_PX ? 'never' : 'always';
+		if (width > NARROW_BUBBLE_PX) return 'narrow';
+		if (likertOptions.length > 5 || width > PHONE_BUBBLE_PX) return 'phone';
+		return 'never';
+	});
+	const COLUMN = 'flex-col items-center gap-2 px-1 text-center text-xs';
 	const LIKERT_STACK = {
 		never: { list: 'grid', option: COLUMN, column: '', row: 'hidden', anchors: '' },
 		phone: {
@@ -136,6 +145,13 @@
 			column: 'max-sm:hidden',
 			row: 'hidden max-sm:inline',
 			anchors: 'max-sm:hidden'
+		},
+		narrow: {
+			list: 'grid max-md:flex max-md:flex-col max-md:gap-1.5',
+			option: `${COLUMN} max-md:w-full max-md:flex-row max-md:gap-3 max-md:border max-md:border-gray-200 max-md:bg-white max-md:px-3 max-md:text-left max-md:text-sm max-md:shadow-sm`,
+			column: 'max-md:hidden',
+			row: 'hidden max-md:inline',
+			anchors: 'max-md:hidden'
 		},
 		always: {
 			list: 'flex flex-col gap-1.5',
@@ -147,6 +163,23 @@
 		}
 	} as const;
 	let stack = $derived(LIKERT_STACK[likertStack]);
+
+	/**
+	 * How a column is sized, and how its label breaks.
+	 *
+	 * A column of a number wants 1.75rem, still a comfortable tap target,
+	 * which is what sizes the answer bubble (it is as wide as its content),
+	 * and gives way when the bubble is narrower. A column of words fills its
+	 * share of the row and wraps between words; `likertStack` keeps columns
+	 * only where every word fits whole. Should one not (a computer's narrower
+	 * window), a word of ten letters or more may hyphenate, and any word
+	 * breaks rather than spill into the next column.
+	 */
+	let likertColumn = $derived(
+		likert.numbered
+			? `[hyphens:manual] ${likertStack === 'always' ? '' : 'w-7 max-w-full justify-self-center'}`
+			: 'w-full hyphens-auto [hyphenate-limit-chars:10_5_4]'
+	);
 
 	let selectOptions = $derived(
 		surveyItem.type === 'radio' || surveyItem.type === 'checkbox'
@@ -355,7 +388,7 @@
 						{#each likertOptions as opt, i (i)}
 							{@const tick = likert.ticks[i]}
 							<label
-								class="flex rounded-xl py-2 font-medium break-words [hyphens:manual] text-gray-700 transition-all {stack.option}
+								class="flex rounded-xl py-2 font-medium break-words text-gray-700 transition-all {likertColumn} {stack.option}
                   {disabled && !readonly
 									? 'cursor-not-allowed opacity-60 grayscale'
 									: disabled
@@ -374,10 +407,14 @@
 									class="h-4 w-4 shrink-0 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
 								/>
 								{#if tick === opt}
-									<span>{opt}</span>
+									<!-- A break allowed after a slash; see `labelWords`. -->
+									<span class="max-w-full"
+										>{#each opt.split('/') as part, k (k)}{#if k > 0}/<wbr
+												/>{/if}{part}{/each}</span
+									>
 								{:else}
-									<span class={stack.column}>{tick}</span>
-									<span class={stack.row}>{opt}</span>
+									<span class="max-w-full {stack.column}">{tick}</span>
+									<span class="max-w-full {stack.row}">{opt}</span>
 								{/if}
 							</label>
 						{/each}

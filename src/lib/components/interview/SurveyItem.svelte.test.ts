@@ -66,4 +66,47 @@ describe('likert labels', () => {
 		await expect.element(screen.getByText('High', { exact: true })).toBeVisible();
 		await expect.element(screen.getByText('5. High', { exact: true })).not.toBeVisible();
 	});
+
+	test('the words of a worded scale never run into each other', async () => {
+		for (const width of [1024, 375]) {
+			await page.viewport(width, 700);
+			const screen = await likert([
+				'Meget enig',
+				'Overvejende enig',
+				'Hverken/eller',
+				'Overvejende uenig',
+				'Meget uenig'
+			]);
+			const words = [...screen.container.querySelectorAll('label > span')].map((span) =>
+				span.getBoundingClientRect()
+			);
+			for (let i = 1; i < words.length; i++) {
+				const [a, b] = [words[i - 1], words[i]];
+				expect(b.left >= a.right || b.top >= a.bottom).toBe(true);
+			}
+			screen.unmount();
+		}
+	});
+
+	test('a scale that only fits a wide window stacks in a narrow one', async () => {
+		const agree = [
+			'Meget enig',
+			'Overvejende enig',
+			'Hverken/eller',
+			'Overvejende uenig',
+			'Meget uenig'
+		];
+		await page.viewport(700, 700);
+		let screen = await likert(agree);
+		let words = [...screen.container.querySelectorAll('label > span')];
+		expect(words[1].getBoundingClientRect().top).toBeGreaterThan(
+			words[0].getBoundingClientRect().bottom
+		);
+		screen.unmount();
+
+		await page.viewport(1024, 700);
+		screen = await likert(agree);
+		words = [...screen.container.querySelectorAll('label > span')];
+		expect(words[1].getBoundingClientRect().top).toBe(words[0].getBoundingClientRect().top);
+	});
 });
