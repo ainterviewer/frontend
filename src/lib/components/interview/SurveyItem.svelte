@@ -4,6 +4,7 @@
 
 	import { getUiText } from '$lib/respondentText';
 	import { CHECKBOX_SEPARATOR, splitCheckboxAnswer } from '$lib/survey/checkbox';
+	import { likertLayout } from '$lib/survey/likert';
 
 	import SurveyGrid from './SurveyGrid.svelte';
 	import type { SurveyItemUnion } from './types';
@@ -14,6 +15,7 @@
 		preview = false,
 		answer = '',
 		lang = 'EN',
+		phone = false,
 		...surveyItem
 	}: SurveyItemUnion & {
 		onAnswer?: (value: unknown) => void;
@@ -22,6 +24,8 @@
 		preview?: boolean;
 		answer?: string;
 		lang?: string;
+		/** Lay out as on a phone whatever the screen: the editor's phone preview. */
+		phone?: boolean;
 	} = $props();
 
 	let t = $derived(getUiText(lang).survey);
@@ -104,6 +108,45 @@
 	});
 
 	let likertOptions = $derived(surveyItem.type === 'likert' ? surveyItem.options : []);
+	let likert = $derived(likertLayout(likertOptions));
+	let likertColumns = $derived(
+		`grid-template-columns: repeat(${likertOptions.length}, minmax(0, 1fr))`
+	);
+
+	/**
+	 * When a likert scale becomes a list of rows instead of a row of columns.
+	 *
+	 * On a phone more than five options leave each column too narrow to tap,
+	 * let alone to hold a label, so the scale is stacked like a radio list
+	 * there. Done in CSS rather than measured, so the server renders the right
+	 * layout and nothing jumps once the page hydrates.
+	 */
+	let likertStack = $derived<'never' | 'phone' | 'always'>(
+		likertOptions.length <= 5 ? 'never' : phone ? 'always' : 'phone'
+	);
+	// A column wants 1.75rem, still a comfortable tap target, which is what sizes the
+	// answer bubble (it is as wide as its content), but gives way to a narrow one.
+	const COLUMN =
+		'w-7 max-w-full justify-self-center flex-col items-center gap-2 px-1 text-center text-xs';
+	const LIKERT_STACK = {
+		never: { list: 'grid', option: COLUMN, column: '', row: 'hidden', anchors: '' },
+		phone: {
+			list: 'grid max-sm:flex max-sm:flex-col max-sm:gap-1.5',
+			option: `${COLUMN} max-sm:w-full max-sm:flex-row max-sm:gap-3 max-sm:border max-sm:border-gray-200 max-sm:bg-white max-sm:px-3 max-sm:text-left max-sm:text-sm max-sm:shadow-sm`,
+			column: 'max-sm:hidden',
+			row: 'hidden max-sm:inline',
+			anchors: 'max-sm:hidden'
+		},
+		always: {
+			list: 'flex flex-col gap-1.5',
+			option:
+				'flex-row items-center gap-3 border border-gray-200 bg-white px-3 text-left text-sm shadow-sm',
+			column: 'hidden',
+			row: '',
+			anchors: 'hidden'
+		}
+	} as const;
+	let stack = $derived(LIKERT_STACK[likertStack]);
 
 	let selectOptions = $derived(
 		surveyItem.type === 'radio' || surveyItem.type === 'checkbox'
@@ -303,28 +346,76 @@
 					</div>
 				</div>
 			{:else if surveyItem.type === 'likert'}
-				<div class="flex w-full items-stretch justify-start pb-1">
-					{#each likertOptions as opt, i (i)}
-						<label
-							class="flex flex-1 basis-0 flex-col items-center gap-2 rounded-xl px-1 py-2 text-center text-xs font-medium break-words text-gray-700 transition-all
+				<!-- The words of a numbered scale ("1. Not at all worried") go in
+				     a row of their own under it, where they can span the columns
+				     beside them; see `likertLayout`. Hyphenation is off: a label
+				     split into syllables reads worse than one that wraps. -->
+				<div class="w-full pb-1">
+					<div class="gap-x-1 {stack.list}" style={likertColumns}>
+						{#each likertOptions as opt, i (i)}
+							{@const tick = likert.ticks[i]}
+							<label
+								class="flex rounded-xl py-2 font-medium break-words [hyphens:manual] text-gray-700 transition-all {stack.option}
                   {disabled && !readonly
-								? 'cursor-not-allowed opacity-60 grayscale'
-								: disabled
-									? 'cursor-default'
-									: 'cursor-pointer hover:border-primary/50 hover:bg-gray-300'}"
+									? 'cursor-not-allowed opacity-60 grayscale'
+									: disabled
+										? 'cursor-default'
+										: 'cursor-pointer hover:border-primary/50 hover:bg-gray-300'}"
+							>
+								<input
+									type="radio"
+									id="{groupName}-{i}"
+									name={groupName}
+									value={opt}
+									aria-label={tick === opt ? undefined : opt}
+									checked={isChecked(opt)}
+									onchange={() => toggleOption(opt)}
+									disabled={disabled && !readonly}
+									class="h-4 w-4 shrink-0 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
+								/>
+								{#if tick === opt}
+									<span>{opt}</span>
+								{:else}
+									<span class={stack.column}>{tick}</span>
+									<span class={stack.row}>{opt}</span>
+								{/if}
+							</label>
+						{/each}
+					</div>
+					{#if likert.anchors.length > 0}
+						<!-- Hidden from screen readers: each radio already carries
+						     its option's full text. Still a click target.
+						     A tick drops from each worded number to its words, and
+						     the words are kept narrow and balanced ("Slet ikke /
+						     bekymret") so they stay by the end they name instead of
+						     reading as a caption for the whole row. -->
+						<div
+							class="-mt-1.5 grid gap-x-1 text-xs leading-tight font-medium break-words [hyphens:manual] text-gray-600 {stack.anchors}"
+							style={likertColumns}
+							aria-hidden="true"
 						>
-							<input
-								type="radio"
-								name={groupName}
-								value={opt}
-								checked={isChecked(opt)}
-								onchange={() => toggleOption(opt)}
-								disabled={disabled && !readonly}
-								class="h-4 w-4 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
-							/>
-							<span>{opt}</span>
-						</label>
-					{/each}
+							{#each likert.anchors as anchor (anchor.index)}
+								<span
+									class="h-2 w-px justify-self-center bg-gray-400"
+									style="grid-row: 1; grid-column: {anchor.index + 1}"
+									data-likert-tick
+								></span>
+								<label
+									for="{groupName}-{anchor.index}"
+									class="mt-1 min-w-min text-balance {anchor.align === 'left'
+										? 'max-w-[6em] justify-self-start text-left'
+										: anchor.align === 'right'
+											? 'max-w-[6em] justify-self-end text-right'
+											: 'max-w-[8em] justify-self-center text-center'} {disabled
+										? ''
+										: 'cursor-pointer'}"
+									style="grid-row: 2; grid-column: {anchor.from + 1} / {anchor.to + 2}"
+								>
+									{anchor.text}
+								</label>
+							{/each}
+						</div>
+					{/if}
 				</div>
 			{:else if surveyItem.type === 'number'}
 				<div class="w-full px-2">
