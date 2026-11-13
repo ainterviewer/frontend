@@ -4,6 +4,18 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.22] - 2026-11-13
+
+### Features
+
+- (guide) Colour version history pills by kind
+- (guide) Link guide errors to the question they are in
+- (guide) Show "Same as draft" instead of compare and restore on matching versions
+
+### Preview
+
+- [participants] (email) Download attachments from the attachments list
+
 ## [0.9.21] - 2026-11-13
 
 ### Features
