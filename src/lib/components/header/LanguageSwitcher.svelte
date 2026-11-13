@@ -2,7 +2,6 @@
 	import { Popover } from 'bits-ui';
 	import { fly } from 'svelte/transition';
 
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Projects } from '$lib/api';
 	import type { ProjectLanguage } from '$lib/api/types.gen';
@@ -48,19 +47,24 @@
 		});
 	}
 
-	function select(language: ProjectLanguage) {
-		open = false;
+	function languageHref(language: ProjectLanguage) {
 		// Stay on the page you are on. `subRoute` has already been trimmed of any
 		// dynamic segment, so what is left exists for every language.
 		//
 		// Resolved whole, in both branches, rather than appended to a resolved
 		// base: appending widens the result back to a plain string, losing the
 		// `ResolvedPathname` that says this path has been through `resolve`.
-		goto(
-			subRoute
-				? resolve(`/dashboard/projects/${projectId}/${language.code}/${subRoute}`)
-				: resolve(`/dashboard/projects/${projectId}/${language.code}`)
-		);
+		return subRoute
+			? resolve(`/dashboard/projects/${projectId}/${language.code}/${subRoute}`)
+			: resolve(`/dashboard/projects/${projectId}/${language.code}`);
+	}
+
+	// The rows are links, so ctrl/cmd/shift-click and middle-click open a new
+	// tab or window. Only a plain click navigates this tab, and only then does
+	// the menu close; SvelteKit's router handles the navigation itself.
+	function onLinkClick(event: MouseEvent) {
+		if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey)
+			open = false;
 	}
 </script>
 
@@ -86,14 +90,13 @@
 							<div class="border-b border-gray-200 px-3 py-2 text-sm font-semibold">
 								Switch language
 							</div>
-							<div class="py-1" role="listbox" aria-label="Languages">
+							<nav class="py-1" aria-label="Languages">
 								{#each list as language (language.code)}
-									<button
-										type="button"
-										role="option"
-										aria-selected={language.code === languageCode}
-										onclick={() => select(language)}
-										class="flex w-full cursor-pointer items-center gap-2 border-none bg-transparent px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+									<a
+										href={languageHref(language)}
+										aria-current={language.code === languageCode ? 'page' : undefined}
+										onclick={onLinkClick}
+										class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-gray-700 no-underline hover:bg-gray-100"
 									>
 										<span class="w-3.5 shrink-0 text-xs text-primary">
 											{#if language.code === languageCode}
@@ -104,9 +107,9 @@
 										{#if language.is_default}
 											<span class="ml-auto text-[0.65rem] text-gray-400 uppercase">default</span>
 										{/if}
-									</button>
+									</a>
 								{/each}
-							</div>
+							</nav>
 						</div>
 					</div>
 				{/if}

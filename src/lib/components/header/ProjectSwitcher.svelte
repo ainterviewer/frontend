@@ -106,9 +106,18 @@
 			: resolve(`/dashboard/projects/${project.id}/${lang}`);
 	}
 
+	// Enter in the search box; a click goes through the row's own link.
 	function select(project: ProjectPublic) {
 		open = false;
 		goto(projectHref(project));
+	}
+
+	// The rows are links, so ctrl/cmd/shift-click and middle-click open a new
+	// tab or window. Only a plain click navigates this tab, and only then does
+	// the menu close; SvelteKit's router handles the navigation itself.
+	function onLinkClick(event: MouseEvent) {
+		if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey)
+			open = false;
 	}
 
 	// Attached to every folder heading; the one holding the current project pulls
@@ -183,7 +192,7 @@
 									/>
 								</div>
 							</div>
-							<div class="max-h-80 overflow-y-auto py-1" role="listbox" aria-label="Projects">
+							<nav class="max-h-80 overflow-y-auto py-1" aria-label="Projects">
 								{#if failed}
 									<p class="px-3 py-4 text-center text-sm text-gray-500">
 										Could not load projects.
@@ -202,17 +211,16 @@
 										</div>
 										{#each group.projects as project (project.id)}
 											{@const index = flat.indexOf(project)}
-											<button
+											<a
 												{@attach (node) => {
 													rows.set(project.id, node);
 													return () => rows.delete(project.id);
 												}}
-												type="button"
-												role="option"
-												aria-selected={project.id === projectId}
-												onclick={() => select(project)}
+												href={projectHref(project)}
+												aria-current={project.id === projectId ? 'page' : undefined}
+												onclick={onLinkClick}
 												onmouseenter={() => (highlighted = index)}
-												class="flex w-full cursor-pointer items-center gap-2 border-none py-1.5 pr-3 pl-3 text-left text-sm text-gray-700 {highlighted ===
+												class="flex w-full items-center gap-2 py-1.5 pr-3 pl-3 text-left text-sm text-gray-700 no-underline {highlighted ===
 												index
 													? 'bg-gray-100'
 													: 'bg-transparent'}"
@@ -223,11 +231,11 @@
 													{/if}
 												</span>
 												<span class="truncate">{project.title}</span>
-											</button>
+											</a>
 										{/each}
 									{/each}
 								{/if}
-							</div>
+							</nav>
 							<div class="border-t border-gray-200">
 								<a
 									href={resolve('/dashboard')}
