@@ -24,7 +24,6 @@ export interface UiText {
 		send: string;
 		/** Tooltip on Send, given the keyboard shortcut. */
 		send_title: (shortcut: string) => string;
-		message_placeholder: string;
 		skip: string;
 		skip_title: string;
 		upload_image: string;
@@ -98,7 +97,6 @@ const UI: Record<Lang, UiText> = {
 		chat: {
 			send: 'Send',
 			send_title: (shortcut) => `Send message (${shortcut})`,
-			message_placeholder: 'Message',
 			skip: 'Skip',
 			skip_title: 'Skip this question',
 			upload_image: 'Upload image',
@@ -161,7 +159,6 @@ const UI: Record<Lang, UiText> = {
 		chat: {
 			send: 'Send',
 			send_title: (shortcut) => `Send besked (${shortcut})`,
-			message_placeholder: 'Besked',
 			skip: 'Spring over',
 			skip_title: 'Spring dette spørgsmål over',
 			upload_image: 'Upload billede',
@@ -224,7 +221,6 @@ const UI: Record<Lang, UiText> = {
 		chat: {
 			send: 'Senden',
 			send_title: (shortcut) => `Nachricht senden (${shortcut})`,
-			message_placeholder: 'Nachricht',
 			skip: 'Überspringen',
 			skip_title: 'Diese Frage überspringen',
 			upload_image: 'Bild hochladen',
@@ -292,7 +288,6 @@ const UI: Record<Lang, UiText> = {
 		chat: {
 			send: 'Enviar',
 			send_title: (shortcut) => `Enviar mensaje (${shortcut})`,
-			message_placeholder: 'Mensaje',
 			skip: 'Omitir',
 			skip_title: 'Omitir esta pregunta',
 			upload_image: 'Subir imagen',
@@ -360,7 +355,6 @@ const UI: Record<Lang, UiText> = {
 		chat: {
 			send: 'Envoyer',
 			send_title: (shortcut) => `Envoyer le message (${shortcut})`,
-			message_placeholder: 'Message',
 			skip: 'Passer',
 			skip_title: 'Passer cette question',
 			upload_image: 'Envoyer une image',

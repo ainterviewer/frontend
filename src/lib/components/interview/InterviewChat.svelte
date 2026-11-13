@@ -585,7 +585,7 @@
 				bind:value={messageInput}
 				disabled={!chat.inputEnabled}
 				rows="1"
-				placeholder={chatText.message_placeholder}
+				placeholder="Aa"
 				{lang}
 				class="
 					w-full resize-none rounded border border-gray-300 p-2.5 shadow-sm transition-all
