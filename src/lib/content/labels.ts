@@ -11,6 +11,16 @@ export const KIND_LABEL: Record<ContentVersionKind, string> = {
 	auto: 'Autosave'
 };
 
+// Pill colours per kind. Autosaves are the bulk of the list, so they stay
+// grey and the deliberate snapshots stand out. Green is kept for "Live".
+export const KIND_PILL: Record<ContentVersionKind, string> = {
+	publish: 'bg-blue-100 text-blue-800',
+	manual: 'bg-violet-100 text-violet-800',
+	test: 'bg-amber-100 text-amber-800',
+	restore: 'bg-gray-100 text-gray-600',
+	auto: 'bg-gray-100 text-gray-500'
+};
+
 export const SURVEY_LABEL: Record<string, string> = {
 	radio: 'Single choice',
 	checkbox: 'Multiple choice',

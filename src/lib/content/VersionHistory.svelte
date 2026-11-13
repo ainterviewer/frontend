@@ -11,7 +11,7 @@
 	import { portal } from '$lib/utils/portal';
 	import { toastApiError } from '$lib/utils/toast';
 
-	import { KIND_LABEL } from './labels';
+	import { KIND_LABEL, KIND_PILL } from './labels';
 	import { contentRevision, saveWithRevision } from './revision.svelte';
 	import VersionCompare from './VersionCompare.svelte';
 	import VersionPreview from './VersionPreview.svelte';
@@ -206,7 +206,7 @@
 							<span class="font-mono text-sm font-semibold text-gray-900">
 								{version.semver ? `v${version.semver}` : `#${version.version_no}`}
 							</span>
-							<span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
+							<span class="rounded {KIND_PILL[version.kind]} px-1.5 py-0.5 text-xs">
 								{KIND_LABEL[version.kind]}
 							</span>
 							{#if version.is_published}

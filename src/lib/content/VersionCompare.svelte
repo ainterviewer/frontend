@@ -20,7 +20,7 @@
 		type QuestionDiff,
 		type Status
 	} from './diff';
-	import { KIND_LABEL } from './labels';
+	import { KIND_LABEL, KIND_PILL } from './labels';
 
 	let {
 		versionId,
@@ -278,7 +278,7 @@
 					>
 						{#if version}
 							<span class="font-mono">{versionName(version)}</span>
-							<span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-normal text-gray-600">
+							<span class="rounded {KIND_PILL[version.kind]} px-1.5 py-0.5 text-xs font-normal">
 								{KIND_LABEL[version.kind]}
 							</span>
 							{#if version.is_published}

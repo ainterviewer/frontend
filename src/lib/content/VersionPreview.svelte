@@ -11,7 +11,7 @@
 	import { portal } from '$lib/utils/portal';
 	import { sanitizeMarkup } from '$lib/utils/sanitize';
 
-	import { AGENT_LABEL, KIND_LABEL, SURVEY_LABEL } from './labels';
+	import { AGENT_LABEL, KIND_LABEL, KIND_PILL, SURVEY_LABEL } from './labels';
 
 	let {
 		version,
@@ -175,7 +175,7 @@
 						<h3 id="version-preview-title" class="text-base font-semibold text-gray-900">
 							{version.semver ? `Version ${version.semver}` : `Snapshot #${version.version_no}`}
 						</h3>
-						<span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
+						<span class="rounded {KIND_PILL[version.kind]} px-1.5 py-0.5 text-xs">
 							{KIND_LABEL[version.kind]}
 						</span>
 						{#if version.is_published}
