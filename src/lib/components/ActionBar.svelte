@@ -5,13 +5,13 @@
 		class: className = '',
 		children
 	}: {
-		/** Placement classes for the sticky wrapper, e.g. `mt-auto` or `z-20`. */
+		/** Placement classes for the sticky wrapper, e.g. `mt-auto`. It sits at `z-20`, above in-page overlays such as the guide's add question/section bar. */
 		class?: string;
 		children: Snippet;
 	} = $props();
 </script>
 
-<div class="@container pointer-events-none sticky bottom-0 w-full {className}">
+<div class="@container pointer-events-none sticky bottom-0 z-20 w-full {className}">
 	<!-- The floating pill pinned to the foot of a page. Its contents can size off
 	     the bar's own available width with `@3xl:` variants, not the viewport: the
 	     page's side panel makes the viewport a poor proxy for the room left here.

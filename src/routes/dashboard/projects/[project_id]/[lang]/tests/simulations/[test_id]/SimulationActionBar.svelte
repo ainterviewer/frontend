@@ -11,7 +11,7 @@
 	const testId = $derived(page.params.test_id);
 </script>
 
-<ActionBar class="z-20 mt-auto">
+<ActionBar class="mt-auto">
 	<!-- mt-auto keeps the bar at the foot of the page when the content is too short
 	     to fill the viewport; sticky keeps it in view when it is not. z-20 keeps it
 	     above a DataTable's sticky header cells (z-10). -->
