@@ -229,11 +229,18 @@
 		}[givesWay(sliderLabelsMinWidth(likertOptions), false, phone)]
 	);
 
-	let selectOptions = $derived(
-		surveyItem.type === 'radio' || surveyItem.type === 'checkbox'
-			? surveyItem.options.map((opt: string) => ({ label: opt, value: opt }))
-			: []
-	);
+	/**
+	 * The options in the order this interview shows them: `option_order`,
+	 * drawn when the interview started, where the item shuffles its options.
+	 * `options` itself stays as authored.
+	 */
+	let selectOptions = $derived.by(() => {
+		if (surveyItem.type !== 'radio' && surveyItem.type !== 'checkbox') return [];
+		const { options, option_order } = surveyItem;
+		const shown =
+			option_order?.length === options.length ? option_order.map((n) => options[n]) : options;
+		return shown.map((opt: string) => ({ label: opt, value: opt }));
+	});
 
 	let hasAnswer = $derived.by(() => {
 		if (surveyItem.type === 'slider') return true;

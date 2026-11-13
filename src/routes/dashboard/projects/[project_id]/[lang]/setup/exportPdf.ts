@@ -96,6 +96,14 @@ function buildSurveyItemContent(item: SurveyItem): PdfNode[] {
 				margin: [12, 0, 0, 4]
 			});
 		}
+		if ('shuffle_options' in item && item.shuffle_options) {
+			content.push({
+				text: 'Options shown in a random order',
+				fontSize: 9,
+				italics: true,
+				margin: [12, 0, 0, 4]
+			});
+		}
 		if ('ui' in item && item.ui) {
 			content.push({
 				text: `Display: ${item.ui}`,

@@ -241,3 +241,44 @@ describe('slider', () => {
 		expect(given).toBe('1');
 	});
 });
+
+describe('shuffled options', () => {
+	const shownLabels = (container: HTMLElement) =>
+		Array.from(container.querySelectorAll('label'), (label) => label.textContent?.trim());
+
+	test('show in the order drawn for the interview, "Other" last', async () => {
+		const screen = await render(SurveyItem, {
+			type: 'radio',
+			options: ['a', 'b', 'c'],
+			shuffle_options: true,
+			option_order: [2, 0, 1],
+			with_other: true,
+			preview: true
+		});
+		expect(shownLabels(screen.container)).toEqual(['c', 'a', 'b', 'Other']);
+	});
+
+	test('show as authored when no order was drawn', async () => {
+		const screen = await render(SurveyItem, {
+			type: 'checkbox',
+			options: ['a', 'b', 'c'],
+			shuffle_options: true,
+			preview: true
+		});
+		expect(shownLabels(screen.container)).toEqual(['a', 'b', 'c']);
+	});
+
+	test('a read-only answer is marked wherever its option is shown', async () => {
+		const screen = await render(SurveyItem, {
+			type: 'checkbox',
+			options: ['a', 'b', 'c'],
+			option_order: [1, 2, 0],
+			answer: 'a, c',
+			readonly: true
+		});
+		expect(shownLabels(screen.container)).toEqual(['b', 'c', 'a']);
+		await expect.element(screen.getByRole('checkbox', { name: 'a' })).toBeChecked();
+		await expect.element(screen.getByRole('checkbox', { name: 'c' })).toBeChecked();
+		await expect.element(screen.getByRole('checkbox', { name: 'b' })).not.toBeChecked();
+	});
+});

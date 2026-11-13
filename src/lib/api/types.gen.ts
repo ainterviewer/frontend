@@ -522,13 +522,25 @@ export type CheckboxItem = {
      */
     required?: boolean;
     /**
-     * Type
-     */
-    type?: 'checkbox';
-    /**
      * Options
      */
     options: Array<string>;
+    /**
+     * Shuffle Options
+     *
+     * Show the options in a random order, drawn once per interview.
+     */
+    shuffle_options?: boolean;
+    /**
+     * Option Order
+     *
+     * The order the options are shown in, as positions in `options`. Set per interview when `shuffle_options` is on; unset, they are shown as authored.
+     */
+    option_order?: Array<number> | null;
+    /**
+     * Type
+     */
+    type?: 'checkbox';
     /**
      * With Other
      */
@@ -3816,6 +3828,12 @@ export type LocalizedCheckboxItem = {
      * With Other
      */
     with_other?: boolean;
+    /**
+     * Shuffle Options
+     *
+     * Show the options in a random order, drawn once per interview.
+     */
+    shuffle_options?: boolean;
 };
 
 /**
@@ -4159,6 +4177,12 @@ export type LocalizedRadioItem = {
      * With Other
      */
     with_other?: boolean;
+    /**
+     * Shuffle Options
+     *
+     * Show the options in a random order, drawn once per interview.
+     */
+    shuffle_options?: boolean;
 };
 
 /**
@@ -5707,13 +5731,25 @@ export type RadioItem = {
      */
     required?: boolean;
     /**
-     * Type
-     */
-    type?: 'radio';
-    /**
      * Options
      */
     options: Array<string>;
+    /**
+     * Shuffle Options
+     *
+     * Show the options in a random order, drawn once per interview.
+     */
+    shuffle_options?: boolean;
+    /**
+     * Option Order
+     *
+     * The order the options are shown in, as positions in `options`. Set per interview when `shuffle_options` is on; unset, they are shown as authored.
+     */
+    option_order?: Array<number> | null;
+    /**
+     * Type
+     */
+    type?: 'radio';
     /**
      * With Other
      */

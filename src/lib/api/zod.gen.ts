@@ -180,8 +180,10 @@ export const zBodyUploadWelcomeVideo = z.object({
  */
 export const zCheckboxItem = z.object({
     required: z.boolean().optional().default(true),
-    type: z.literal('checkbox').optional().default('checkbox'),
     options: z.array(z.string()),
+    shuffle_options: z.boolean().optional().default(false),
+    option_order: z.array(z.int()).nullish(),
+    type: z.literal('checkbox').optional().default('checkbox'),
     with_other: z.boolean().optional().default(false)
 });
 
@@ -1726,7 +1728,8 @@ export const zLocalizedCheckboxItem = z.object({
     required: z.boolean().optional().default(true),
     type: z.literal('checkbox').optional().default('checkbox'),
     options: z.array(zLocalizedOption),
-    with_other: z.boolean().optional().default(false)
+    with_other: z.boolean().optional().default(false),
+    shuffle_options: z.boolean().optional().default(false)
 });
 
 /**
@@ -1756,7 +1759,8 @@ export const zLocalizedRadioItem = z.object({
     required: z.boolean().optional().default(true),
     type: z.literal('radio').optional().default('radio'),
     options: z.array(zLocalizedOption),
-    with_other: z.boolean().optional().default(false)
+    with_other: z.boolean().optional().default(false),
+    shuffle_options: z.boolean().optional().default(false)
 });
 
 /**
@@ -2397,8 +2401,10 @@ export const zQuestionSectionGenerationRequest = z.object({
  */
 export const zRadioItem = z.object({
     required: z.boolean().optional().default(true),
-    type: z.literal('radio').optional().default('radio'),
     options: z.array(z.string()),
+    shuffle_options: z.boolean().optional().default(false),
+    option_order: z.array(z.int()).nullish(),
+    type: z.literal('radio').optional().default('radio'),
     with_other: z.boolean().optional().default(false)
 });
 

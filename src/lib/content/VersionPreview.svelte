@@ -320,6 +320,11 @@
 															<li class="text-gray-500 italic">Other…</li>
 														{/if}
 													</ul>
+													{#if 'shuffle_options' in item && item.shuffle_options}
+														<p class="mt-1 text-xs text-gray-500">
+															<i class="fa-solid fa-shuffle"></i> options shuffled
+														</p>
+													{/if}
 												{:else if item.type === 'slider'}
 													<p class="mt-1 text-gray-700">
 														{item.min}{hasText(item.min_label)

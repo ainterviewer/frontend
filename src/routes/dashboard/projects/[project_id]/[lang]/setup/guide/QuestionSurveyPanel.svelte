@@ -45,6 +45,10 @@
 		const keptOptions = options?.length ? options : [option()];
 		const withOther =
 			'with_other' in prev && prev.with_other != null ? { with_other: prev.with_other } : {};
+		const shuffleOptions =
+			'shuffle_options' in prev && prev.shuffle_options != null
+				? { shuffle_options: prev.shuffle_options }
+				: {};
 		const range = prev.type === 'slider' || prev.type === 'number' ? prev : null;
 		const dates = prev.type === 'date' || prev.type === 'datetime' ? prev : null;
 		// `YYYY-MM-DD` and `YYYY-MM-DDTHH:MM`, the inputs' own formats.
@@ -53,7 +57,13 @@
 			v ? `${v.slice(0, 10)}T${v.slice(11, 16) || '00:00'}` : null;
 
 		if (type === 'radio' || type === 'checkbox') {
-			question.survey_item = { type, ...base, options: keptOptions, ...withOther };
+			question.survey_item = {
+				type,
+				...base,
+				options: keptOptions,
+				...withOther,
+				...shuffleOptions
+			};
 		} else if (type === 'likert') {
 			question.survey_item = { type, ...base, options: keptOptions };
 		} else if (type === 'likert_grid') {
@@ -299,6 +309,20 @@
 						<HoverInfo
 							iconColor="gray-500"
 							text="Include and 'Other' option that allows the user to input their own answer."
+						></HoverInfo>
+					</label>
+					<label
+						class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+					>
+						<input
+							type="checkbox"
+							class="rounded border-gray-300 text-primary focus:ring-primary"
+							bind:checked={surveyItem.shuffle_options}
+						/>
+						Shuffle options
+						<HoverInfo
+							iconColor="gray-500"
+							text="Show the options in a random order, drawn once for each interview, so that no option gains from always coming first. The 'Other' option stays last."
 						></HoverInfo>
 					</label>
 				{/if}
