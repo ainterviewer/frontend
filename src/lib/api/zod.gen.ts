@@ -1467,6 +1467,7 @@ export const zContentVersionSummaryPublic = z.object({
     created_by_id: z.string().nullable(),
     created_by_name: z.string().nullable(),
     is_published: z.boolean(),
+    matches_draft: z.boolean(),
     languages: z.array(zLanguageCode),
     default_language: zLanguageCode,
     languages_in_progress: z.array(zLanguageCode)
@@ -3915,7 +3916,8 @@ export const zContentVersionPublic = z.object({
     created_at: z.iso.datetime(),
     created_by_id: z.string().nullable(),
     created_by_name: z.string().nullable(),
-    is_published: z.boolean()
+    is_published: z.boolean(),
+    matches_draft: z.boolean()
 });
 
 /**

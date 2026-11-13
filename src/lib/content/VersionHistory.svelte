@@ -188,7 +188,7 @@
 				</button>
 			</form>
 
-			{#if published}
+			{#if published && !published.matches_draft}
 				<button
 					type="button"
 					class="flex items-center gap-2 border-b border-gray-100 px-5 py-2.5 text-left text-sm text-primary hover:bg-gray-50"
@@ -231,21 +231,31 @@
 							>
 								Preview
 							</button>
-							<button
-								type="button"
-								class="text-primary hover:underline"
-								onclick={() => (comparing = version.id)}
-							>
-								Compare with draft
-							</button>
-							<button
-								type="button"
-								class="ml-auto text-gray-500 hover:text-gray-800 hover:underline"
-								onclick={() => restore(version)}
-							>
-								<i class="fa-solid fa-rotate-left mr-0.5 text-xs"></i>
-								Restore to draft
-							</button>
+							{#if version.matches_draft}
+								<span
+									class="ml-auto text-gray-500"
+									title="Holds the same content as the draft, so comparing or restoring it would change nothing."
+								>
+									<i class="fa-solid fa-equals mr-0.5 text-xs"></i>
+									Same as draft
+								</span>
+							{:else}
+								<button
+									type="button"
+									class="text-primary hover:underline"
+									onclick={() => (comparing = version.id)}
+								>
+									Compare with draft
+								</button>
+								<button
+									type="button"
+									class="ml-auto text-gray-500 hover:text-gray-800 hover:underline"
+									onclick={() => restore(version)}
+								>
+									<i class="fa-solid fa-rotate-left mr-0.5 text-xs"></i>
+									Restore to draft
+								</button>
+							{/if}
 						</div>
 					</li>
 				{:else}

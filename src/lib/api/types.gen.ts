@@ -1361,6 +1361,10 @@ export type ContentVersionPublic = {
      * Is Published
      */
     is_published: boolean;
+    /**
+     * Matches Draft
+     */
+    matches_draft: boolean;
 };
 
 /**
@@ -1402,6 +1406,10 @@ export type ContentVersionSummaryPublic = {
      * Is Published
      */
     is_published: boolean;
+    /**
+     * Matches Draft
+     */
+    matches_draft: boolean;
     /**
      * Languages
      */
