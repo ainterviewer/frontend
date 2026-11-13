@@ -11006,6 +11006,57 @@ export type DeleteParticipantEmailAttachmentResponses = {
 
 export type DeleteParticipantEmailAttachmentResponse = DeleteParticipantEmailAttachmentResponses[keyof DeleteParticipantEmailAttachmentResponses];
 
+export type DownloadParticipantEmailAttachmentData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+        /**
+         * Filename
+         */
+        filename: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-email-attachments/{filename}';
+};
+
+export type DownloadParticipantEmailAttachmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type DownloadParticipantEmailAttachmentError = DownloadParticipantEmailAttachmentErrors[keyof DownloadParticipantEmailAttachmentErrors];
+
+export type DownloadParticipantEmailAttachmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type DownloadParticipantEmailAttachmentResponse = DownloadParticipantEmailAttachmentResponses[keyof DownloadParticipantEmailAttachmentResponses];
+
 export type SendParticipantEmailsData = {
     body: SendParticipantEmailRequest;
     path: {
@@ -11303,6 +11354,57 @@ export type DeleteParticipantReminderEmailAttachmentResponses = {
 };
 
 export type DeleteParticipantReminderEmailAttachmentResponse = DeleteParticipantReminderEmailAttachmentResponses[keyof DeleteParticipantReminderEmailAttachmentResponses];
+
+export type DownloadParticipantReminderEmailAttachmentData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+        /**
+         * Filename
+         */
+        filename: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments/{filename}';
+};
+
+export type DownloadParticipantReminderEmailAttachmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type DownloadParticipantReminderEmailAttachmentError = DownloadParticipantReminderEmailAttachmentErrors[keyof DownloadParticipantReminderEmailAttachmentErrors];
+
+export type DownloadParticipantReminderEmailAttachmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type DownloadParticipantReminderEmailAttachmentResponse = DownloadParticipantReminderEmailAttachmentResponses[keyof DownloadParticipantReminderEmailAttachmentResponses];
 
 export type SendParticipantReminderEmailsData = {
     body: SendParticipantEmailRequest;

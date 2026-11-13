@@ -5218,6 +5218,21 @@ export const zDeleteParticipantEmailAttachmentQuery = z.object({
  */
 export const zDeleteParticipantEmailAttachmentResponse = z.array(zParticipantEmailAttachmentPublic);
 
+export const zDownloadParticipantEmailAttachmentPath = z.object({
+    project_id: z.string().nullable(),
+    language: z.string().length(2),
+    filename: z.string()
+});
+
+export const zDownloadParticipantEmailAttachmentQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zDownloadParticipantEmailAttachmentResponse = z.string();
+
 export const zSendParticipantEmailsBody = zSendParticipantEmailRequest;
 
 export const zSendParticipantEmailsPath = z.object({
@@ -5317,6 +5332,21 @@ export const zDeleteParticipantReminderEmailAttachmentQuery = z.object({
  * Successful Response
  */
 export const zDeleteParticipantReminderEmailAttachmentResponse = z.array(zParticipantEmailAttachmentPublic);
+
+export const zDownloadParticipantReminderEmailAttachmentPath = z.object({
+    project_id: z.string().nullable(),
+    language: z.string().length(2),
+    filename: z.string()
+});
+
+export const zDownloadParticipantReminderEmailAttachmentQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zDownloadParticipantReminderEmailAttachmentResponse = z.string();
 
 export const zSendParticipantReminderEmailsBody = zSendParticipantEmailRequest;
 

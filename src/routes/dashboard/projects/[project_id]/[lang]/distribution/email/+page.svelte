@@ -310,6 +310,29 @@
 		toast.success(`Uploaded ${files.length} attachment${files.length === 1 ? '' : 's'}`);
 	}
 
+	async function downloadAttachment(filename: string) {
+		const options = {
+			path: { project_id, language, filename },
+			parseAs: 'blob' as const
+		};
+		const res =
+			kind === 'reminder'
+				? await Participants.downloadParticipantReminderEmailAttachment(options)
+				: await Participants.downloadParticipantEmailAttachment(options);
+		if (res.error || !res.data) {
+			toastApiError(res.error, 'Failed to download attachment');
+			return;
+		}
+		const url = window.URL.createObjectURL(res.data);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = filename;
+		document.body.appendChild(a);
+		a.click();
+		window.URL.revokeObjectURL(url);
+		document.body.removeChild(a);
+	}
+
 	async function deleteAttachment(filename: string) {
 		const k = kind;
 		states[k].deletingAttachment = filename;
@@ -621,16 +644,27 @@
 									<span class="shrink-0 text-xs text-gray-400">{attachment.content_type}</span>
 								{/if}
 							</div>
-							<button
-								type="button"
-								class="ml-3 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-								onclick={() => deleteAttachment(attachment.filename)}
-								disabled={isDemo || current.deletingAttachment === attachment.filename}
-								title="Remove attachment"
-								aria-label="Remove attachment"
-							>
-								<i class="fa-solid fa-trash text-xs"></i>
-							</button>
+							<div class="ml-3 flex shrink-0 items-center gap-1">
+								<button
+									type="button"
+									class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+									onclick={() => downloadAttachment(attachment.filename)}
+									title="Download attachment"
+									aria-label="Download attachment"
+								>
+									<i class="fa-solid fa-download text-xs"></i>
+								</button>
+								<button
+									type="button"
+									class="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+									onclick={() => deleteAttachment(attachment.filename)}
+									disabled={isDemo || current.deletingAttachment === attachment.filename}
+									title="Remove attachment"
+									aria-label="Remove attachment"
+								>
+									<i class="fa-solid fa-trash text-xs"></i>
+								</button>
+							</div>
 						</li>
 					{/each}
 				</ul>
