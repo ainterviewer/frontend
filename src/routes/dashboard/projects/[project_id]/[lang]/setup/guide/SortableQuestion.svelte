@@ -3,6 +3,7 @@
 	import { untrack } from 'svelte';
 	import { slide } from 'svelte/transition';
 
+	import { onReveal } from '$lib/collab/reveal';
 	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
 
 	import { dragState } from './dragState.svelte';
@@ -45,6 +46,13 @@
 	let expandedCondition = $state(false);
 
 	let settingsPanel = $state<HTMLDivElement | null>(null);
+
+	/** Taken here to a problem in one of its fields: open the panel it is in. */
+	function openField(field: string | null) {
+		if (field === 'conditions') expandedCondition = true;
+		else if (field === 'survey_item') expandedSurvey = true;
+		else if (field === 'image') expandedImage = true;
+	}
 
 	function toggleSettings() {
 		showSettings = !showSettings;
@@ -134,6 +142,7 @@
 <div
 	data-tour={dataTour}
 	id={question.id}
+	{@attach onReveal(openField)}
 	class="group relative scroll-mt-24 rounded-lg border border-black bg-secondary p-5 brightness-105 transition-all duration-200 hover:shadow-md"
 	style:transition={(dragState.draggingType || dragState.keepTransitionsDisabled) && !isOverlay
 		? 'opacity 200ms, transform 200ms, box-shadow 200ms'

@@ -523,6 +523,21 @@ export const zConsent = z.object({
 });
 
 /**
+ * ContentError
+ *
+ * Why what editors wrote in a co-edited part (guide, consent, welcome)
+ * is not valid. Guide errors say where they are (`GuideError`); the other
+ * parts' leave that empty.
+ */
+export const zContentError = z.object({
+    message: z.string(),
+    fix: z.string().nullish(),
+    question_id: z.uuid().nullish(),
+    section_id: z.uuid().nullish(),
+    field: z.string().nullish()
+});
+
+/**
  * ContentPart
  *
  * A part of a project's content that is edited, and revisioned, on its
@@ -1475,7 +1490,7 @@ export const zContentStatus = z.object({
     next_semver: z.string(),
     languages_in_progress: z.array(zLanguageCode),
     missing: z.record(z.string(), z.array(z.string())),
-    doc_errors: z.record(z.string(), z.array(z.string())).optional().default({})
+    doc_errors: z.record(z.string(), z.array(zContentError)).optional().default({})
 });
 
 /**

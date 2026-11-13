@@ -3,10 +3,12 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
 
+	import type { ContentError } from '$lib/api';
 	import { pick } from '$lib/guide/localized';
 	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
+	import OutlineErrorMark from './OutlineErrorMark.svelte';
 	import SidebarSortableQuestion from './SidebarSortableQuestion.svelte';
 
 	interface Props {
@@ -14,9 +16,15 @@
 		sectionIndex: number;
 		questions: GuideQuestion[];
 		activeId: string;
+		errors: ContentError[];
 	}
 
-	let { section, sectionIndex, questions, activeId }: Props = $props();
+	let { section, sectionIndex, questions, activeId, errors }: Props = $props();
+
+	/** Those in the section itself, not in one of its questions. */
+	let ownErrors = $derived(
+		errors.filter((error) => error.section_id === section.id && !error.question_id)
+	);
 
 	const { ref, handleRef, isDragging } = useSortable(
 		untrack(() => ({
@@ -50,7 +58,8 @@
 		<a
 			href="#{section.id}"
 			draggable="false"
-			class="min-w-0 flex-1 py-1.5 pr-2 text-sm font-medium text-gray-600
+			class="min-w-0 flex-1 py-1.5 text-sm font-medium text-gray-600
+				{ownErrors.length ? '' : 'pr-2'}
 				{activeId === section.id ? 'text-primary' : ''}"
 		>
 			Section {sectionIndex + 1}
@@ -58,12 +67,19 @@
 				<span class="block truncate text-xs text-gray-400">{description}</span>
 			{/if}
 		</a>
+		<OutlineErrorMark id={section.id} errors={ownErrors} />
 	</div>
 
 	<!-- Questions (always rendered so empty sections are valid drop targets) -->
 	<div class="ml-2 min-h-3 space-y-0.5 border-l border-gray-200 py-0.5 pl-3">
 		{#each questions as question, qIdx (question.id)}
-			<SidebarSortableQuestion {question} questionIndex={qIdx} sectionId={section.id} {activeId} />
+			<SidebarSortableQuestion
+				{question}
+				questionIndex={qIdx}
+				sectionId={section.id}
+				{activeId}
+				errors={errors.filter((error) => error.question_id === question.id)}
+			/>
 		{/each}
 	</div>
 </div>

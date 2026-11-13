@@ -407,6 +407,7 @@
 			{activeId}
 			localSections={guideStore.localSections}
 			localQuestions={guideStore.localQuestions}
+			errors={session.errors}
 		/>
 
 		<div class="min-w-0 flex-1 space-y-8">

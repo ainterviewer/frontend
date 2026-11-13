@@ -3,6 +3,7 @@ import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 
 import { browser } from '$app/environment';
+import type { ContentError } from '$lib/api';
 
 import { docId } from './guideDoc';
 import { settleColors } from './presenceColors';
@@ -44,7 +45,7 @@ type ServerState = {
 	server: true;
 	doc_id: string;
 	revision: number;
-	errors: string[];
+	errors: ContentError[];
 	saved_at: number;
 };
 
@@ -78,7 +79,7 @@ export class ContentSession {
 	loaded = $state(false);
 	/** The part's revision the server last saved, and why it could not. */
 	revision = $state<number | null>(null);
-	errors = $state<string[]>([]);
+	errors = $state<ContentError[]>([]);
 	peers = $state<Peer[]>([]);
 	/** Local changes the server has not saved yet: made since the server
 	 * last announced a save (both timed by this tab's clock). */

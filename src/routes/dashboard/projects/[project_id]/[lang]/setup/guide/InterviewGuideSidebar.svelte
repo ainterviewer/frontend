@@ -6,6 +6,7 @@
 		PointerSensor
 	} from '@dnd-kit-svelte/svelte';
 
+	import type { ContentError } from '$lib/api';
 	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
@@ -17,11 +18,14 @@
 	let {
 		activeId,
 		localSections,
-		localQuestions
+		localQuestions,
+		errors
 	}: {
 		activeId: string;
 		localSections: GuideSection[];
 		localQuestions: Record<string, GuideQuestion[]>;
+		/** Why the guide is invalid, if it is: marked on the lines they are in. */
+		errors: ContentError[];
 	} = $props();
 
 	const sensors = [PointerSensor, KeyboardSensor];
@@ -160,6 +164,7 @@
 						sectionIndex={i}
 						questions={localQuestions[section.id] || []}
 						{activeId}
+						{errors}
 					/>
 				{/each}
 			</div>

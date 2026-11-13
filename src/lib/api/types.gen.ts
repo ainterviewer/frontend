@@ -1181,6 +1181,46 @@ export type ContentDraftPublic = {
 };
 
 /**
+ * ContentError
+ *
+ * Why what editors wrote in a co-edited part (guide, consent, welcome)
+ * is not valid. Guide errors say where they are (`GuideError`); the other
+ * parts' leave that empty.
+ */
+export type ContentError = {
+    /**
+     * Message
+     *
+     * What is wrong, in a sentence.
+     */
+    message: string;
+    /**
+     * Fix
+     *
+     * How to fix it, if not obvious.
+     */
+    fix?: string | null;
+    /**
+     * Question Id
+     *
+     * The question it is in, if it is in one.
+     */
+    question_id?: string | null;
+    /**
+     * Section Id
+     *
+     * The section it is in, if it is in one.
+     */
+    section_id?: string | null;
+    /**
+     * Field
+     *
+     * The field of the question (or section) it is in, e.g. `conditions`, if it is in one.
+     */
+    field?: string | null;
+};
+
+/**
  * ContentPart
  *
  * A part of a project's content that is edited, and revisioned, on its
@@ -1227,7 +1267,7 @@ export type ContentStatus = {
      * Doc Errors
      */
     doc_errors?: {
-        [key in ContentPart]?: Array<string>;
+        [key in ContentPart]?: Array<ContentError>;
     };
 };
 
