@@ -4,6 +4,13 @@
 	import type { GridRow } from '$lib/api';
 	import { getUiText } from '$lib/respondentText';
 	import { encodeGridAnswer, parseGridAnswer } from '$lib/survey/grid';
+	import {
+		givesWay,
+		gridCardMinWidth,
+		gridStatementShare,
+		gridTableMinWidth,
+		likertLayout
+	} from '$lib/survey/likert';
 
 	/**
 	 * A Likert grid: several statements rated on one scale, answered as one.
@@ -12,9 +19,12 @@
 	 * (`encodeGridAnswer`), a row left blank absent from it -- the library's
 	 * `LikertGridItem.encode_answer`.
 	 *
-	 * A table from `sm` up, columns for the scale as on paper; below it, where
-	 * five columns of radio buttons do not fit, each row is a card of its own
-	 * with the scale as buttons.
+	 * A table, columns for the scale as on paper, where its headings fit with
+	 * every word whole; elsewhere, and always on a phone, each row is a card
+	 * of its own. A card has the scale's points side by side where their words
+	 * fit across it, a long one hyphenated, and stacked as rows, like a single
+	 * Likert item's, where they do not. See `givesWay`: decided from the text, so the server
+	 * renders the layout the browser keeps.
 	 */
 	let {
 		rows,
@@ -23,6 +33,7 @@
 		readonly = false,
 		preview = false,
 		lang = 'EN',
+		phone = false,
 		onAnswer
 	}: {
 		rows: GridRow[];
@@ -33,10 +44,55 @@
 		/** Interactive but never submitted: the guide editor's live preview. */
 		preview?: boolean;
 		lang?: string;
+		/** Lay out as on a phone whatever the screen: the editor's phone preview. */
+		phone?: boolean;
 		onAnswer?: (answer: string) => void;
 	} = $props();
 
 	let t = $derived(getUiText(lang).grid);
+
+	let tableGivesWay = $derived(givesWay(gridTableMinWidth(options), true, phone));
+	const TABLE = {
+		never: { table: '', cards: 'hidden' },
+		sm: { table: 'hidden sm:block', cards: 'sm:hidden' },
+		md: { table: 'hidden md:block', cards: 'md:hidden' },
+		always: { table: 'hidden', cards: '' }
+	} as const;
+	let layout = $derived(TABLE[tableGivesWay]);
+
+	// A numbered scale, or one worded on a few points only, puts its words
+	// under the card's points as anchors, as a single Likert item does
+	// (`likertLayout`); each point then shows only its number, if any.
+	let scale = $derived(likertLayout(options));
+	let cardStack = $derived(givesWay(gridCardMinWidth(options), false, phone));
+	const CARD_COLUMN =
+		'flex-1 basis-0 flex-col items-center gap-1.5 px-0.5 py-2 text-center text-[0.6875rem] leading-tight';
+	const CARD_STACK = {
+		never: { list: 'flex', option: CARD_COLUMN, column: '', row: 'hidden', anchors: '' },
+		sm: {
+			list: 'flex max-sm:flex-col max-sm:gap-0.5 max-sm:pt-1.5',
+			option: `${CARD_COLUMN} max-sm:flex-none max-sm:flex-row max-sm:gap-3 max-sm:py-1.5 max-sm:border max-sm:border-gray-200 max-sm:px-3 max-sm:text-left max-sm:text-sm`,
+			column: 'max-sm:hidden',
+			row: 'hidden max-sm:inline',
+			anchors: 'max-sm:hidden'
+		},
+		md: {
+			list: 'flex max-md:flex-col max-md:gap-0.5 max-md:pt-1.5',
+			option: `${CARD_COLUMN} max-md:flex-none max-md:flex-row max-md:gap-3 max-md:py-1.5 max-md:border max-md:border-gray-200 max-md:px-3 max-md:text-left max-md:text-sm`,
+			column: 'max-md:hidden',
+			row: 'hidden max-md:inline',
+			anchors: 'max-md:hidden'
+		},
+		always: {
+			list: 'flex flex-col gap-0.5 pt-1.5',
+			option:
+				'flex-none flex-row items-center gap-3 border border-gray-200 px-3 py-1.5 text-left text-sm',
+			column: 'hidden',
+			row: '',
+			anchors: 'hidden'
+		}
+	} as const;
+	let card = $derived(CARD_STACK[cardStack]);
 
 	// Chosen option per row id, seeded once from a submitted answer.
 	let chosen = $state<Record<string, string>>(
@@ -80,6 +136,10 @@
 	}
 </script>
 
+<!-- A break allowed after a slash ("Hverken/eller"); see `labelWords`. -->
+{#snippet label(text: string)}{#each text.split('/') as part, k (k)}{#if k > 0}/<wbr
+			/>{/if}{part}{/each}{/snippet}
+
 {#snippet clearButton(row: GridRow)}
 	<button
 		type="button"
@@ -92,10 +152,11 @@
 	</button>
 {/snippet}
 
-<!-- `lang` so the scale's headings hyphenate by the respondent's language. -->
-<div class="w-full max-w-full min-w-60" lang={lang.toLowerCase()}>
+<!-- `lang` so the scale's headings hyphenate by the respondent's language,
+     and only a word of seven letters or more ("bli-ver" reads badly). -->
+<div class="w-full max-w-full min-w-60 [hyphenate-limit-chars:7_3_3]" lang={lang.toLowerCase()}>
 	<fieldset
-		class="rounded-2xl border border-gray-100 bg-gray-200 p-3 sm:p-4 {locked
+		class="rounded-2xl border border-gray-100 bg-gray-200 p-3 {phone ? '' : 'sm:p-4'} {locked
 			? 'pointer-events-none'
 			: ''}"
 	>
@@ -106,15 +167,15 @@
 		</legend>
 
 		<!-- Wide: one table, the scale across the top. -->
-		<div class="hidden overflow-x-auto sm:block">
-			<!-- Fixed layout: the statement column gets a set share and the scale
+		<div class="overflow-x-auto {layout.table}">
+			<!-- Fixed layout: the statement column gets its share (`gridStatementShare`) and the scale
 			     points split the rest evenly, so a short label is never squeezed
 			     into a hyphenated sliver and the columns line up under their
 			     headings. The white is on the cells, not the row: a table row
 			     cannot take rounded corners. -->
 			<table class="w-full table-fixed border-separate border-spacing-y-1.5 text-sm">
 				<colgroup>
-					<col class="w-[30%]" />
+					<col style:width="{gridStatementShare(options) * 100}%" />
 					{#each options as _, o (o)}
 						<col />
 					{/each}
@@ -125,9 +186,9 @@
 						{#each options as option, o (o)}
 							<th
 								scope="col"
-								class="px-1 pb-1 text-center align-bottom text-xs leading-tight font-medium break-words hyphens-auto text-gray-600"
+								class="px-1 pb-1 text-center align-bottom text-xs leading-tight font-medium break-words hyphens-auto text-gray-600 [hyphenate-limit-chars:10_5_4]"
 							>
-								{option}
+								{@render label(option)}
 							</th>
 						{/each}
 					</tr>
@@ -182,7 +243,7 @@
 		     single Likert item's own row of radios, each point named under its
 		     circle, so a grid on a phone reads like the Likert questions around
 		     it. -->
-		<div class="flex flex-col gap-2 sm:hidden">
+		<div class="flex flex-col gap-2 {layout.cards}">
 			{#each rows as row, r (row.id ?? r)}
 				{@const answered = !!chosen[row.id ?? '']}
 				<div
@@ -200,25 +261,61 @@
 							{@render clearButton(row)}
 						{/if}
 					</p>
-					<div class="flex w-full items-stretch">
+					<div class="w-full items-stretch {card.list}">
 						{#each options as option, o (o)}
 							<label
-								class="flex flex-1 basis-0 cursor-pointer flex-col items-center gap-1.5 rounded-lg px-0.5 py-2 text-center text-[0.6875rem] leading-tight font-medium break-words hyphens-auto text-gray-600 transition-colors hover:bg-gray-100"
+								class="flex cursor-pointer rounded-lg font-medium break-words hyphens-auto text-gray-600 transition-colors [hyphenate-limit-chars:7_3_3] hover:bg-gray-100 {card.option}"
 							>
 								<input
 									type="radio"
+									id="grid-m-{uid}-{r}-{o}"
 									name="grid-m-{uid}-{r}"
 									value={option}
 									checked={chosen[row.id ?? ''] === option}
 									onclick={() => toggle(row, option)}
 									onchange={() => choose(row, option)}
 									disabled={submitted && !readonly}
-									class="h-[1.125rem] w-[1.125rem] border-gray-400 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
+									class="h-[1.125rem] w-[1.125rem] shrink-0 border-gray-400 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
 								/>
-								<span>{option}</span>
+								{#if scale.ticks[o] === option}
+									<span class="max-w-full">{@render label(option)}</span>
+								{:else}
+									<span class="max-w-full {card.column}">{scale.ticks[o]}</span>
+									<span class="max-w-full {card.row}">{@render label(option)}</span>
+								{/if}
 							</label>
 						{/each}
 					</div>
+					{#if scale.anchors.length > 0}
+						<!-- As the single Likert item's: hidden from screen readers,
+						     since each radio is named in full, but still a click
+						     target, and a tick from each point to its words. -->
+						<div
+							class="-mt-1 grid pb-1.5 text-[0.6875rem] leading-tight font-medium break-words [hyphens:manual] text-gray-600 {card.anchors}"
+							style:grid-template-columns="repeat({options.length}, minmax(0, 1fr))"
+							aria-hidden="true"
+						>
+							{#each scale.anchors as anchor (anchor.index)}
+								<span
+									class="h-1.5 w-px justify-self-center bg-gray-400"
+									style:grid-row="1"
+									style:grid-column={anchor.index + 1}
+								></span>
+								<label
+									for="grid-m-{uid}-{r}-{anchor.index}"
+									class="mt-0.5 min-w-min cursor-pointer text-balance {anchor.align === 'left'
+										? 'max-w-[6em] justify-self-start text-left'
+										: anchor.align === 'right'
+											? 'max-w-[6em] justify-self-end text-right'
+											: 'max-w-[8em] justify-self-center text-center'}"
+									style:grid-row="2"
+									style:grid-column="{anchor.from + 1} / {anchor.to + 2}"
+								>
+									{anchor.text}
+								</label>
+							{/each}
+						</div>
+					{/if}
 				</div>
 			{/each}
 		</div>

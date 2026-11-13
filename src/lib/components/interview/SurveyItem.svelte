@@ -4,7 +4,14 @@
 
 	import { getUiText } from '$lib/respondentText';
 	import { CHECKBOX_SEPARATOR, splitCheckboxAnswer } from '$lib/survey/checkbox';
-	import { likertLayout, likertMinWidth } from '$lib/survey/likert';
+	import type { GivesWay } from '$lib/survey/likert';
+	import {
+		givesWay,
+		likertCompactMinWidth,
+		likertLayout,
+		likertMinWidth,
+		sliderLabelsMinWidth
+	} from '$lib/survey/likert';
 
 	import SurveyGrid from './SurveyGrid.svelte';
 	import type { SurveyItemUnion } from './types';
@@ -29,6 +36,8 @@
 	} = $props();
 
 	let t = $derived(getUiText(lang).survey);
+	/** The roomier option rows a screen from `sm` up gets, unless previewing a phone. */
+	let roomy = $derived(phone ? '' : 'sm:px-4 sm:py-3');
 
 	let sliderValue = $state(0);
 	const selectedValues = new SvelteSet<string>();
@@ -46,6 +55,13 @@
 	const groupName = `survey-option-${uid}`;
 	const sliderTicksId = `slider-ticks-${uid}`;
 	const likertTicksId = `likert-ticks-${uid}`;
+
+	// A range input shows its thumb at `min` when its value is below it, but
+	// the bound value stays where it was: start it there, or an untouched
+	// slider submits a value outside its own range.
+	untrack(() => {
+		if (surveyItem.type === 'slider') sliderValue = surveyItem.min ?? 0;
+	});
 
 	untrack(() => {
 		if (!readonly || !answer) return;
@@ -109,54 +125,73 @@
 
 	let likertOptions = $derived(surveyItem.type === 'likert' ? surveyItem.options : []);
 	let likert = $derived(likertLayout(likertOptions));
+	// Equal columns. One of words is never narrower than its longest word:
+	// should `likertStack` misjudge the room by a little, a column takes a
+	// few pixels from its neighbours rather than break a word mid-way.
 	let likertColumns = $derived(
-		`grid-template-columns: repeat(${likertOptions.length}, minmax(0, 1fr))`
+		`grid-template-columns: repeat(${likertOptions.length}, minmax(${likert.narrow ? '0' : 'min-content'}, 1fr))`
 	);
 
 	/**
-	 * When a likert scale becomes a list of rows instead of a row of columns.
+	 * When a likert scale's columns get compact, and when they become a list
+	 * of rows.
 	 *
-	 * Columns are kept only while each can hold its longest word whole, since
-	 * a label broken mid-word ("Overve / jende") is unreadable, and only while
-	 * a column is wide enough to tap: at most five on a phone. The answer
-	 * bubble is about 300px wide on a phone, and on a computer from about
-	 * 380px in a window just over `sm` to 480px from `md` up, so a scale that
-	 * needs more than the narrow end is stacked below `md`. Decided from the
-	 * text rather than measured, so the server renders the right layout and
-	 * nothing jumps once the page hydrates.
+	 * Columns keep each label's words whole while they fit, since a label
+	 * broken mid-word ("Overve / jende") is unreadable. Where they do not,
+	 * the columns get compact, as a Likert grid's cards on a phone: smaller
+	 * text, less padding, and a long word may hyphenate ("Hver-ken"). Only a
+	 * scale that does not fit even so becomes rows. The answer bubble is
+	 * about 300px wide on a phone, and on a computer from about 380px in a
+	 * window just over `sm` to 480px from `md` up (`givesWay`). Decided from
+	 * the text rather than measured, so the server renders the right layout
+	 * and nothing jumps once the page hydrates.
 	 */
-	const PHONE_BUBBLE_PX = 300;
-	const NARROW_BUBBLE_PX = 380;
-	const WIDE_BUBBLE_PX = 480;
-	let likertStack = $derived.by((): 'never' | 'phone' | 'narrow' | 'always' => {
-		const width = likertMinWidth(likert);
-		if (width > WIDE_BUBBLE_PX) return 'always';
-		if (phone) return likertOptions.length <= 5 && width <= PHONE_BUBBLE_PX ? 'never' : 'always';
-		if (width > NARROW_BUBBLE_PX) return 'narrow';
-		if (likertOptions.length > 5 || width > PHONE_BUBBLE_PX) return 'phone';
-		return 'never';
+	let likertStack = $derived(givesWay(likertCompactMinWidth(likert), false, phone));
+	let likertCompact = $derived.by((): GivesWay | 'rows' => {
+		// Rows everywhere: they size themselves.
+		if (likertStack === 'always') return 'rows';
+		const whole = likert.narrow ? likertStack : givesWay(likertMinWidth(likert), false, phone);
+		// Where the rows take over, the compact step is moot.
+		return whole === likertStack ? 'never' : whole;
 	});
-	const COLUMN = 'flex-col items-center gap-2 px-1 text-center text-xs';
+	// The columns' size, set here once per width so that no two classes set
+	// the same property at the same width; the rows' own (`LIKERT_STACK`)
+	// carry a breakpoint, and win where they apply.
+	const COMPACT = {
+		rows: { list: '', option: '' },
+		never: { list: 'gap-x-1', option: 'px-1 text-xs' },
+		sm: {
+			list: 'gap-x-1 max-sm:gap-x-0',
+			option: 'px-1 text-xs max-sm:px-0.5 max-sm:text-[0.6875rem]'
+		},
+		md: {
+			list: 'gap-x-1 max-md:gap-x-0',
+			option: 'px-1 text-xs max-md:px-0.5 max-md:text-[0.6875rem]'
+		},
+		always: { list: 'gap-x-0', option: 'px-0.5 text-[0.6875rem]' }
+	} as const;
+	let compact = $derived(COMPACT[likertCompact]);
+	const COLUMN = 'flex-col items-center gap-2 py-2 text-center';
 	const LIKERT_STACK = {
 		never: { list: 'grid', option: COLUMN, column: '', row: 'hidden', anchors: '' },
-		phone: {
-			list: 'grid max-sm:flex max-sm:flex-col max-sm:gap-1.5',
-			option: `${COLUMN} max-sm:w-full max-sm:flex-row max-sm:gap-3 max-sm:border max-sm:border-gray-200 max-sm:bg-white max-sm:px-3 max-sm:text-left max-sm:text-sm max-sm:shadow-sm`,
+		sm: {
+			list: 'grid max-sm:flex max-sm:flex-col max-sm:gap-1',
+			option: `${COLUMN} max-sm:w-full max-sm:flex-row max-sm:gap-3 max-sm:py-1.5 max-sm:border max-sm:border-gray-200 max-sm:bg-white max-sm:px-3 max-sm:text-left max-sm:text-sm max-sm:shadow-sm`,
 			column: 'max-sm:hidden',
 			row: 'hidden max-sm:inline',
 			anchors: 'max-sm:hidden'
 		},
-		narrow: {
-			list: 'grid max-md:flex max-md:flex-col max-md:gap-1.5',
-			option: `${COLUMN} max-md:w-full max-md:flex-row max-md:gap-3 max-md:border max-md:border-gray-200 max-md:bg-white max-md:px-3 max-md:text-left max-md:text-sm max-md:shadow-sm`,
+		md: {
+			list: 'grid max-md:flex max-md:flex-col max-md:gap-1',
+			option: `${COLUMN} max-md:w-full max-md:flex-row max-md:gap-3 max-md:py-1.5 max-md:border max-md:border-gray-200 max-md:bg-white max-md:px-3 max-md:text-left max-md:text-sm max-md:shadow-sm`,
 			column: 'max-md:hidden',
 			row: 'hidden max-md:inline',
 			anchors: 'max-md:hidden'
 		},
 		always: {
-			list: 'flex flex-col gap-1.5',
+			list: 'flex flex-col gap-1',
 			option:
-				'flex-row items-center gap-3 border border-gray-200 bg-white px-3 text-left text-sm shadow-sm',
+				'flex-row items-center gap-3 border border-gray-200 bg-white px-3 py-1.5 text-left text-sm shadow-sm',
 			column: 'hidden',
 			row: '',
 			anchors: 'hidden'
@@ -171,14 +206,27 @@
 	 * which is what sizes the answer bubble (it is as wide as its content),
 	 * and gives way when the bubble is narrower. A column of words fills its
 	 * share of the row and wraps between words; `likertStack` keeps columns
-	 * only where every word fits whole. Should one not (a computer's narrower
-	 * window), a word of ten letters or more may hyphenate, and any word
-	 * breaks rather than spill into the next column.
+	 * only where every word fits whole, or compact ones where a word of seven
+	 * letters or more may hyphenate.
 	 */
 	let likertColumn = $derived(
-		likert.numbered
+		likert.narrow
 			? `[hyphens:manual] ${likertStack === 'always' ? '' : 'w-7 max-w-full justify-self-center'}`
-			: 'w-full hyphens-auto [hyphenate-limit-chars:10_5_4]'
+			: 'w-full hyphens-auto [hyphenate-limit-chars:7_3_3]'
+	);
+
+	/**
+	 * A Likert slider names every point under the track where the words fit
+	 * whole, and only its two ends where they do not; the chosen point is
+	 * named above the track either way.
+	 */
+	let sliderLabels = $derived(
+		{
+			never: { all: 'grid', ends: 'hidden' },
+			sm: { all: 'grid max-sm:hidden', ends: 'hidden max-sm:flex' },
+			md: { all: 'grid max-md:hidden', ends: 'hidden max-md:flex' },
+			always: { all: 'hidden', ends: 'flex' }
+		}[givesWay(sliderLabelsMinWidth(likertOptions), false, phone)]
 	);
 
 	let selectOptions = $derived(
@@ -308,12 +356,15 @@
 		{readonly}
 		{preview}
 		{lang}
+		{phone}
 		{onAnswer}
 	/>
 {:else}
 	<div class="w-full max-w-full min-w-60">
 		<fieldset
-			class="flex flex-wrap gap-1.5 rounded-2xl border border-gray-100 bg-gray-200 p-4 sm:gap-2
+			class="flex flex-wrap gap-1.5 rounded-2xl border border-gray-100 bg-gray-200 p-4 {phone
+				? ''
+				: 'sm:gap-2'}
             {surveyItem.type === 'radio' || surveyItem.type === 'checkbox' ? 'flex-col' : ''}
             {readonly ? 'pointer-events-none' : ''}"
 		>
@@ -325,6 +376,9 @@
 
 			{#if surveyItem.type === 'slider'}
 				<div class="w-full px-2">
+					<output class="block text-center text-sm font-semibold text-gray-800"
+						>{sliderValue}</output
+					>
 					<input
 						type="range"
 						min={sliderMin}
@@ -332,7 +386,7 @@
 						step={sliderStep}
 						bind:value={sliderValue}
 						disabled={disabled && !readonly}
-						class="my-6 w-full cursor-pointer accent-primary disabled:cursor-not-allowed"
+						class="mt-2 mb-4 w-full cursor-pointer accent-primary disabled:cursor-not-allowed"
 						list={sliderTicksId}
 					/>
 					{#if sliderTicks.length <= 20}
@@ -342,14 +396,20 @@
 							{/each}
 						</datalist>
 					{/if}
-					<div class="flex justify-between text-xs font-medium text-gray-600">
-						<span>{surveyItem.min_label ?? sliderMin}</span>
-						<span class="font-semibold text-gray-800">{sliderValue}</span>
-						<span>{surveyItem.max_label ?? sliderMax}</span>
+					<div
+						class="flex justify-between gap-4 text-xs font-medium break-words text-gray-600 [hyphenate-limit-chars:7_3_3]"
+					>
+						<span class="max-w-[45%] text-left">{surveyItem.min_label ?? sliderMin}</span>
+						<span class="max-w-[45%] text-right">{surveyItem.max_label ?? sliderMax}</span>
 					</div>
 				</div>
 			{:else if surveyItem.type === 'likert' && surveyItem.ui === 'slider'}
+				<!-- The track runs from the middle of the first label's column to
+				     the middle of the last's, so each point sits over its label. -->
 				<div class="w-full px-2">
+					<output class="block min-h-5 text-center text-sm font-semibold text-primary"
+						>{likertOptions[sliderValue] ?? ''}</output
+					>
 					<input
 						type="range"
 						min="0"
@@ -357,7 +417,10 @@
 						step="1"
 						bind:value={sliderValue}
 						disabled={disabled && !readonly}
-						class="my-6 w-full cursor-pointer accent-primary disabled:cursor-not-allowed"
+						aria-valuetext={likertOptions[sliderValue]}
+						class="mt-2 mb-4 cursor-pointer accent-primary disabled:cursor-not-allowed"
+						style:margin-inline="calc(50% / {likertOptions.length})"
+						style:width="calc(100% - 100% / {likertOptions.length})"
 						list={likertTicksId}
 					/>
 
@@ -366,29 +429,37 @@
 							<option value={i} label={opt}></option>
 						{/each}
 					</datalist>
-					<div class="flex justify-between gap-4 text-xs font-medium text-gray-600">
+					<div
+						class="gap-x-1 text-xs font-medium break-words hyphens-auto text-gray-600 [hyphenate-limit-chars:7_3_3] {sliderLabels.all}"
+						style:grid-template-columns="repeat({likertOptions.length}, minmax(0, 1fr))"
+						aria-hidden="true"
+					>
 						{#each likertOptions as opt, i (i)}
-							<span
-								class="flex-1 text-center first:text-left last:text-right {i === sliderValue
-									? 'font-bold text-primary'
-									: ''}"
+							<span class="text-center {i === sliderValue ? 'font-bold text-primary' : ''}"
+								>{opt}</span
 							>
-								{opt}
-							</span>
 						{/each}
+					</div>
+					<div
+						class="justify-between gap-4 text-xs font-medium break-words text-gray-600 {sliderLabels.ends}"
+						aria-hidden="true"
+					>
+						<span class="max-w-[45%] text-left">{likertOptions[0]}</span>
+						<span class="max-w-[45%] text-right">{likertOptions.at(-1)}</span>
 					</div>
 				</div>
 			{:else if surveyItem.type === 'likert'}
-				<!-- The words of a numbered scale ("1. Not at all worried") go in
-				     a row of their own under it, where they can span the columns
-				     beside them; see `likertLayout`. Hyphenation is off: a label
+				<!-- The words of a scale worded only on some points ("1. Not at all
+				     worried", "2", …, or "Disagree", "", …) go in a row of their
+				     own under it, where they can span the columns of the
+				     unlabelled points beside them; see `likertLayout`. Hyphenation is off: a label
 				     split into syllables reads worse than one that wraps. -->
 				<div class="w-full pb-1">
-					<div class="gap-x-1 {stack.list}" style={likertColumns}>
+					<div class="{stack.list} {compact.list}" style={likertColumns}>
 						{#each likertOptions as opt, i (i)}
 							{@const tick = likert.ticks[i]}
 							<label
-								class="flex rounded-xl py-2 font-medium break-words text-gray-700 transition-all {likertColumn} {stack.option}
+								class="flex rounded-xl font-medium break-words text-gray-700 transition-all {likertColumn} {stack.option} {compact.option}
                   {disabled && !readonly
 									? 'cursor-not-allowed opacity-60 grayscale'
 									: disabled
@@ -511,7 +582,7 @@
 					<div class="relative max-w-full min-w-min">
 						<label
 							class="flex w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-primary/50 hover:bg-gray-200
-                   sm:px-4 sm:py-3
+                   {roomy}
                    {isChecked(opt.value)
 								? 'border-primary bg-primary/10 text-dark ring-1 ring-primary'
 								: ''}
@@ -538,7 +609,7 @@
 					<div class="relative max-w-full min-w-min">
 						<label
 							class="flex w-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-primary/50 hover:bg-gray-200
-                   sm:px-4 sm:py-3
+                   {roomy}
                    {otherSelected
 								? 'border-primary bg-primary/10 text-dark ring-1 ring-primary'
 								: ''}
@@ -566,7 +637,7 @@
 								type="text"
 								bind:value={otherText}
 								disabled={disabled && !readonly}
-								class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-3"
+								class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60 {roomy}"
 								placeholder={t.pleaseSpecify}
 							/>
 						</div>
