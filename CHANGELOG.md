@@ -4,6 +4,34 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.21] - 2026-11-13
+
+### Features
+
+- (guide) Offer less/greater-than conditions on Likert items
+- (survey) Show likert scale labels under the scale and stack long scales on phones
+- (guide) Preview survey items at respondent width, on a computer or a phone
+- (header) Open projects and languages in a new tab from the switchers
+- (guide) Preview every survey item type at phone width, and scale the preview down instead of squeezing it
+
+### Bug Fixes
+
+- (coding) Announce the selected score value in the code menu
+- (survey) Stack likert scales whose labels don't fit whole instead of breaking words
+- (guide) Stop question and section edges from triggering add question/section
+- (sidebar) Group the project sidebar with dashed separators, and never show two in a row
+- (collab) Give everyone in a shared editor a different colour
+- (guide) Keep the add question/section bar from covering the action bar
+- (survey) Lay out likert scales, grids and sliders to fit every screen without breaking words
+- (interview) Word the Danish redirect button as finishing the interview
+- (interview) Use "Aa" as the message box placeholder in every language
+
+### Internal
+
+- (deps) Update dependencies to latest minor and patch versions
+- (codebook) Stop Svelte Flow's empty delete key warning
+- (survey) Audit every survey item's layout on each screen size, with screenshots on demand
+
 ## [0.9.20] - 2026-11-11
 
 ### Features
