@@ -5,6 +5,7 @@ import * as Y from 'yjs';
 import { browser } from '$app/environment';
 
 import { docId } from './guideDoc';
+import { settleColors } from './presenceColors';
 
 // A connection to one of a project's rooms on the server -- the guide, the
 // consent or the welcome page (`/ws/content/{id}/{part}`,
@@ -29,10 +30,12 @@ const LINGER_MS = 10_000;
 /** Origin of the transactions this tab makes, as opposed to what the server sends. */
 export const LOCAL_ORIGIN = Symbol('local');
 
-export type PresenceUser = { id: string; name: string; color: string };
+export type PresenceUser = { id: string; name: string };
 
 export type Peer = PresenceUser & {
 	clientId: number;
+	/** Settled among everyone present, so no two share one: see `settleColors`. */
+	color: string;
 	/** The block (question, section, `framing`, ...) they are in, if any. */
 	block: string | null;
 };
@@ -53,15 +56,6 @@ export type SessionStatus =
 	| 'offline'
 	/** The server refused us (signed out, no access): no retries. */
 	| 'refused';
-
-// Hues for avatars and rings, distinct enough side by side.
-const COLORS = ['#0f766e', '#b45309', '#4338ca', '#be185d', '#0369a1', '#4d7c0f', '#7c3aed'];
-
-function colorFor(id: string): string {
-	let hash = 0;
-	for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
-	return COLORS[Math.abs(hash) % COLORS.length];
-}
 
 function serverUrl(projectId: string): string {
 	const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
@@ -174,8 +168,11 @@ export class ContentSession {
 				continue;
 			}
 			seen.add(user.id);
-			peers.push({ ...user, clientId, block });
+			peers.push({ id: user.id, name: user.name, clientId, block, color: '' });
 		}
+		// This person counts too: the others see them, and must settle alike.
+		const colors = settleColors([this.user.id, ...seen]);
+		for (const peer of peers) peer.color = colors.get(peer.id)!;
 		this.peers = peers;
 	}
 
@@ -238,7 +235,6 @@ export function presenceUser(user: {
 }): PresenceUser {
 	return {
 		id: user.id,
-		name: [user.first_name, user.last_name].filter(Boolean).join(' '),
-		color: colorFor(user.id)
+		name: [user.first_name, user.last_name].filter(Boolean).join(' ')
 	};
 }
