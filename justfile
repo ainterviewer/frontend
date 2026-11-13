@@ -34,6 +34,22 @@ release VERSION:
 bump TYPE: && publish
     npm version {{ TYPE }} --no-git-tag-version
 
+[doc("Audit every survey item's layout on a computer, a narrow window, a phone and
+the guide editor's phone preview (SurveyLayout.svelte.test.ts), and save a
+screenshot of each case to survey-shots/, with a contact sheet per screen
+when ImageMagick's montage is installed. Run it after changing how survey
+items render, and look through the sheets.")]
+[group("Frontend")]
+survey-layout:
+    rm -rf survey-shots && mkdir -p survey-shots
+    VITE_SURVEY_SHOTS=1 vitest run src/lib/components/interview/SurveyLayout.svelte.test.ts
+    @if command -v montage >/dev/null; then \
+        for screen in desktop narrow phone preview; do \
+            montage -label '%t' -pointsize 11 survey-shots/$screen--*.png -tile 4x -geometry +6+6 -background '#ccc' survey-shots/sheet-$screen.png; \
+        done; \
+        echo "Contact sheets: survey-shots/sheet-*.png"; \
+    fi
+
 # Install this clone's git hooks (pre-commit + commit-msg).
 [group("Frontend")]
 install-hooks:

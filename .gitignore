@@ -31,3 +31,5 @@ vite.config.ts.timestamp-*
 
 # Build artifacts from scripts/build-error-page.ts
 /scripts/.tmp
+# Screenshots from `just survey-layout`
+survey-shots
