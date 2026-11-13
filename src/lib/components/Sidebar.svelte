@@ -23,6 +23,21 @@
 		return true;
 	}
 
+	// The items this user sees. Hiding one (a preview feature, an admin page)
+	// can leave the separators either side of it touching, or one at an end:
+	// a separator only shows between two groups that are both there.
+	let visibleItems = $derived.by(() => {
+		const shown: SidebarItem[] = [];
+		for (const item of items) {
+			if (!canShow(item)) continue;
+			const isSeparator = item.type === 'separator';
+			if (isSeparator && (shown.length === 0 || shown.at(-1)?.type === 'separator')) continue;
+			shown.push(item);
+		}
+		if (shown.at(-1)?.type === 'separator') shown.pop();
+		return shown;
+	});
+
 	// Extract projectId from the current URL
 	let { projectId, languageCode } = $derived(parseProjectRoute(page.url.pathname));
 
@@ -102,13 +117,13 @@
 
 	<div class="h-full overflow-x-hidden overflow-y-auto pb-12">
 		<ul class="m-0 list-none p-0">
-			{#each items as item (item.label || item.href || item)}
-				{#if canShow(item)}
-					{#if item.type === 'separator'}
-						<hr class="mx-auto my-2.5 w-[90%] border-0 border-t border-primary" />
-					{:else}
-						{@render listItem(item)}
-					{/if}
+			{#each visibleItems as item (item.label || item.href || item)}
+				{#if item.type === 'separator'}
+					<hr
+						class={item.separatorClass ?? 'mx-auto my-2.5 w-[90%] border-0 border-t border-primary'}
+					/>
+				{:else}
+					{@render listItem(item)}
 				{/if}
 			{/each}
 		</ul>

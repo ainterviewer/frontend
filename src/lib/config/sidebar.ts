@@ -8,7 +8,12 @@ export type SidebarItem = {
 	project_id?: string;
 	previewFeature?: boolean;
 	dataTour?: string;
+	/** Tailwind classes for a separator; replaces the default line style. */
+	separatorClass?: string;
 };
+
+export const dashedSeparator =
+	'mx-auto my-1.5 w-[80%] border-0 border-t border-dashed border-primary';
 
 export const mainSidebarItems: SidebarItem[] = [
 	{
@@ -127,6 +132,7 @@ export const projectSidebarItems: SidebarItem[] = [
 			}
 		]
 	},
+	{ type: 'separator', separatorClass: dashedSeparator },
 	{
 		label: 'Distribute',
 		href: '/dashboard/projects/{projectId}/{languageCode}/distribution',
@@ -158,6 +164,7 @@ export const projectSidebarItems: SidebarItem[] = [
 		icon: 'fas fa-comments',
 		dataTour: 'interview-data'
 	},
+	{ type: 'separator', separatorClass: dashedSeparator },
 	{
 		label: 'Analysis',
 		href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
@@ -187,6 +194,7 @@ export const projectSidebarItems: SidebarItem[] = [
 			}
 		]
 	},
+	{ type: 'separator', separatorClass: dashedSeparator },
 	{
 		label: 'Settings',
 		href: '/dashboard/projects/{projectId}/{languageCode}/settings',
