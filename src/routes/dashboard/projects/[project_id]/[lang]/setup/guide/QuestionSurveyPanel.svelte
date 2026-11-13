@@ -106,11 +106,16 @@
 	 * The preview at the width a respondent's screen gives the item: the widest
 	 * the interview's answer bubble gets on a computer, or a typical phone.
 	 * The phone also gets the phone layout, which the editor's own (wide)
-	 * screen would otherwise never show. A grid lays itself out by screen
-	 * width alone, so it has no phone preview.
+	 * screen would otherwise never show.
 	 */
 	let previewDevice = $state<'desktop' | 'phone'>('desktop');
-	let previewPhone = $derived(previewDevice === 'phone' && previewItem?.type !== 'likert_grid');
+	let previewPhone = $derived(previewDevice === 'phone');
+	// The respondent's bubble: `max-w-76` on a phone, `max-w-120` on a computer.
+	let previewBubblePx = $derived(previewPhone ? 304 : 480);
+	let previewPaneWidth = $state(0);
+	let previewScale = $derived(
+		previewPaneWidth > 0 ? Math.min(1, previewPaneWidth / previewBubblePx) : 1
+	);
 
 	const optionReorder = createListReorder(
 		() => surveyItemOptions(question.survey_item),
@@ -459,28 +464,26 @@
 							Preview
 							<span class="font-normal tracking-normal normal-case"> — as respondents see it</span>
 						</div>
-						{#if previewItem.type !== 'likert_grid'}
-							<div
-								class="flex shrink-0 rounded-md border border-gray-200 bg-white p-0.5 text-xs text-gray-500"
-								role="group"
-								aria-label="Preview screen size"
-							>
-								{#each [{ device: 'desktop', icon: 'fa-desktop', label: 'Computer' }, { device: 'phone', icon: 'fa-mobile-screen-button', label: 'Phone' }] as const as option (option.device)}
-									<button
-										type="button"
-										class="rounded px-2 py-1 transition-colors {previewDevice === option.device
-											? 'bg-gray-100 text-gray-800'
-											: 'hover:text-gray-700'}"
-										aria-pressed={previewDevice === option.device}
-										title={option.label}
-										onclick={() => (previewDevice = option.device)}
-									>
-										<i class="fa-solid {option.icon}" aria-hidden="true"></i>
-										<span class="sr-only">{option.label}</span>
-									</button>
-								{/each}
-							</div>
-						{/if}
+						<div
+							class="flex shrink-0 rounded-md border border-gray-200 bg-white p-0.5 text-xs text-gray-500"
+							role="group"
+							aria-label="Preview screen size"
+						>
+							{#each [{ device: 'desktop', icon: 'fa-desktop', label: 'Computer' }, { device: 'phone', icon: 'fa-mobile-screen-button', label: 'Phone' }] as const as option (option.device)}
+								<button
+									type="button"
+									class="rounded px-2 py-1 transition-colors {previewDevice === option.device
+										? 'bg-gray-100 text-gray-800'
+										: 'hover:text-gray-700'}"
+									aria-pressed={previewDevice === option.device}
+									title={option.label}
+									onclick={() => (previewDevice = option.device)}
+								>
+									<i class="fa-solid {option.icon}" aria-hidden="true"></i>
+									<span class="sr-only">{option.label}</span>
+								</button>
+							{/each}
+						</div>
 					</div>
 					<!-- Laid out like the respondent's chat: the question from the
 					     interviewer on the left, the item to answer on the right. -->
@@ -498,23 +501,29 @@
 					     (`MessageBubble`): as wide as its content up to the bubble's
 					     cap, not the full cap, and with the text settings the item
 					     inherits — language and hyphenation decide where labels
-					     break. -->
-					<div
-						class="ml-auto text-sm break-words hyphens-auto {previewItem.type === 'likert_grid'
-							? 'w-full'
-							: `w-fit ${previewPhone ? 'max-w-76' : 'max-w-120'}`}"
-						lang={guideStore.lang}
-					>
-						<!-- Re-mount on a type change: the answer state of one type is
-					     meaningless, and can be out of range, for another. -->
-						{#key `${previewItem.type}-${'ui' in previewItem ? previewItem.ui : ''}`}
-							<SurveyItem
-								{...previewItem}
-								lang={guideStore.lang.toUpperCase()}
-								phone={previewPhone}
-								preview
-							/>
-						{/key}
+					     break.
+					     A pane narrower than the bubble would squeeze the labels
+					     into breaks a respondent never sees, so the bubble keeps
+					     its width and the whole preview is scaled down instead. -->
+					<div class="w-full" bind:clientWidth={previewPaneWidth}>
+						<div
+							class="ml-auto text-sm break-words hyphens-auto {previewItem.type === 'likert_grid'
+								? 'w-full'
+								: 'w-fit'} {previewPhone ? 'max-w-76' : 'max-w-120'}"
+							style:zoom={previewScale < 1 ? previewScale : null}
+							lang={guideStore.lang}
+						>
+							<!-- Re-mount on a type change: the answer state of one type is
+						     meaningless, and can be out of range, for another. -->
+							{#key `${previewItem.type}-${'ui' in previewItem ? previewItem.ui : ''}`}
+								<SurveyItem
+									{...previewItem}
+									lang={guideStore.lang.toUpperCase()}
+									phone={previewPhone}
+									preview
+								/>
+							{/key}
+						</div>
 					</div>
 				</div>
 			{/if}
