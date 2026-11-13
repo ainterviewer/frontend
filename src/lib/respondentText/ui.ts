@@ -185,7 +185,7 @@ const UI: Record<Lang, UiText> = {
 			start_over: 'Start et nyt interview',
 			busy: 'Interviewtjenesten er optaget. Prøver igen om et øjeblik…',
 			redirecting: (s) => `Du bliver sendt videre om ${s} ${s === 1 ? 'sekund' : 'sekunder'}.`,
-			continue_now: 'Fortsæt nu'
+			continue_now: 'Afslut nu'
 		},
 		speech: {
 			discard: 'Kassér optagelse',
