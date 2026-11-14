@@ -5,6 +5,7 @@
 	import { Assistance } from '$lib/api/sdk.gen';
 	import type { ChatMessage, InterviewGuide, Question } from '$lib/api/types.gen';
 	import { continuesReply } from '$lib/assistance/frames';
+	import { renderAssistantMarkdown } from '$lib/assistance/markdown';
 	import { textIn } from '$lib/guide/localized';
 	import { localizeRenderedQuestion, normalizeGeneratedQuestions } from '$lib/guide/normalize';
 	import type { GuideQuestion, GuideSection } from '$lib/stores/guideStore.svelte';
@@ -274,8 +275,8 @@
 {#if isOpen}
 	<div
 		class="fixed z-50 flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 transition-all duration-300 ease-in-out {isMaximized
-			? 'right-4 bottom-4 h-200 w-300'
-			: 'right-6 bottom-24 h-125 w-100'}"
+			? 'right-4 bottom-4 h-[min(60rem,calc(100dvh-2rem))] w-[min(75rem,calc(100vw-2rem))] 2xl:w-[min(90rem,calc(100vw-2rem))]'
+			: 'right-6 bottom-24 h-[min(40rem,calc(100dvh-8rem))] w-[min(30rem,calc(100vw-3rem))] 2xl:h-[min(48rem,calc(100dvh-8rem))] 2xl:w-xl'}"
 		transition:fly={{ y: 16, duration: 200 }}
 	>
 		<!-- Header -->
@@ -347,9 +348,8 @@
 						{:else}
 							<div class="flex {msg.role === 'user' ? 'justify-end' : 'justify-start'}">
 								<div
-									class="max-w-[80%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap {msg.role ===
-									'user'
-										? 'rounded-tr-sm bg-primary text-white'
+									class="max-w-[85%] rounded-2xl px-3 py-2 text-sm {msg.role === 'user'
+										? 'rounded-tr-sm bg-primary whitespace-pre-wrap text-white'
 										: 'rounded-tl-sm bg-gray-100 text-gray-800'}"
 								>
 									{#if msg.role === 'model' && msg.content === '' && isStreaming}
@@ -357,6 +357,14 @@
 											<span class="typing-dot"></span>
 											<span class="typing-dot" style="animation-delay: 0.15s"></span>
 											<span class="typing-dot" style="animation-delay: 0.3s"></span>
+										</div>
+									{:else if msg.role === 'model'}
+										<div
+											class="prose prose-sm max-w-none text-gray-800 prose-gray *:first:mt-0 *:last:mb-0 prose-headings:mt-3 prose-headings:mb-1 prose-p:my-1.5 prose-a:text-primary prose-pre:my-2 prose-ol:my-1.5 prose-ul:my-1.5 prose-li:my-0.5 [&_li]:marker:text-gray-600"
+										>
+											<!-- Raw HTML is escaped and links are scheme-checked in renderAssistantMarkdown -->
+											<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+											{@html renderAssistantMarkdown(msg.content)}
 										</div>
 									{:else}
 										{msg.content}

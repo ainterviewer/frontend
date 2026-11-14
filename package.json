@@ -83,6 +83,7 @@
 		"driver.js": "^1.11.0",
 		"fractional-indexing": "^4.0.0",
 		"layerchart": "^2.10.0",
+		"marked": "^18.2.0",
 		"pdfmake": "^0.3.14",
 		"svelte-sonner": "^1.2.3",
 		"y-protocols": "^1.0.7",
