@@ -13,9 +13,11 @@
 		project_id: string;
 		lang: string;
 		guide: InterviewGuide | null;
-		questionMessage?: Snippet<[item: GuideQuestion, index: number]>;
+		/** `ordinal` counts the suggested questions before this one, from 0. */
+		questionMessage?: Snippet<[item: GuideQuestion, index: number, ordinal: number]>;
+		/** `ordinal` counts the suggested sections before this one, from 0. */
 		sectionMessage?: Snippet<
-			[item: { section: GuideSection; questions: GuideQuestion[] }, index: number]
+			[item: { section: GuideSection; questions: GuideQuestion[] }, index: number, ordinal: number]
 		>;
 		isMaximized?: boolean;
 	}
@@ -83,6 +85,19 @@
 					// Ignore unparseable content
 				}
 			}
+		});
+	});
+
+	// For each message, how many messages of its type come before it, so a
+	// suggested section can be numbered among the suggestions rather than by
+	// its position in the chat.
+	let ordinals = $derived.by(() => {
+		const seen: Record<string, number> = {};
+		return messages.map((msg) => {
+			const type = msg.type ?? 'message';
+			const n = seen[type] ?? 0;
+			seen[type] = n + 1;
+			return n;
 		});
 	});
 
@@ -308,7 +323,8 @@
 		</div>
 
 		<!-- Messages -->
-		<div bind:this={messagesEl} class="flex-1 overflow-y-auto px-4 py-4">
+		<!-- A named container, so suggested items can lay out compactly in the small view -->
+		<div bind:this={messagesEl} class="@container/chat flex-1 overflow-y-auto px-4 py-4">
 			{#if messages.length === 0}
 				<p class="mt-8 text-center text-sm text-gray-400">
 					Ask me anything about your interview project.
@@ -318,13 +334,14 @@
 					{#each messages as msg, i (i)}
 						{#if msg.type === 'question' && questionMessage && parsedItems[i]}
 							<div class="w-full">
-								{@render questionMessage(parsedItems[i] as GuideQuestion, i)}
+								{@render questionMessage(parsedItems[i] as GuideQuestion, i, ordinals[i])}
 							</div>
 						{:else if msg.type === 'section' && sectionMessage && parsedItems[i]}
 							<div class="w-full">
 								{@render sectionMessage(
 									parsedItems[i] as { section: GuideSection; questions: GuideQuestion[] },
-									i
+									i,
+									ordinals[i]
 								)}
 							</div>
 						{:else}

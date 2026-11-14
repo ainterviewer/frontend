@@ -19,6 +19,8 @@
 		sectionId: string;
 		sectionIndex: number;
 		index: number;
+		/** Replaces the numbered heading, for a suggestion not yet in a section. */
+		heading?: string;
 		allSections?: GuideSection[];
 		allQuestions?: Record<string, GuideQuestion[]>;
 		onRemove: () => void;
@@ -32,6 +34,7 @@
 		sectionId,
 		sectionIndex,
 		index,
+		heading,
 		allSections = [],
 		allQuestions = {},
 		onRemove,
@@ -143,7 +146,7 @@
 	data-tour={dataTour}
 	id={question.id}
 	{@attach onReveal(openField)}
-	class="group relative scroll-mt-24 rounded-lg border border-black bg-secondary p-5 brightness-105 transition-all duration-200 hover:shadow-md"
+	class="group relative scroll-mt-24 rounded-lg border border-black bg-secondary p-5 brightness-105 transition-all duration-200 hover:shadow-md @max-2xl/chat:p-3"
 	style:transition={(dragState.draggingType || dragState.keepTransitionsDisabled) && !isOverlay
 		? 'opacity 200ms, transform 200ms, box-shadow 200ms'
 		: undefined}
@@ -163,9 +166,11 @@
 	{@attach ref}
 >
 	<!-- Header with Drag Handle and Actions -->
-	<div class="mb-4 flex items-start justify-between">
+	<div class="mb-2 flex items-center justify-between">
 		<div class="flex items-center gap-2">
-			<span class="font-bold text-black">Question {sectionIndex + 1}.{index + 1}</span>
+			<span class="font-bold text-black"
+				>{heading ?? `Question ${sectionIndex + 1}.${index + 1}`}</span
+			>
 			<div
 				class="cursor-grab rounded p-1 text-gray-800 outline-none hover:bg-white/50"
 				title="Move Question"
@@ -182,7 +187,7 @@
 				onclick={toggleSettings}
 				title={showSettings ? 'Hide Settings' : 'Show Settings'}
 			>
-				Settings
+				<span class="@max-md/chat:sr-only">Settings</span>
 				<i class="fa-solid fa-gear ml-1" class:text-primary={showSettings}></i>
 			</button>
 			{#if source === 'guide' && !isOverlay}
@@ -250,7 +255,7 @@
 				bind:this={settingsPanel}
 				data-tour={dataTour ? 'question-settings-menu' : undefined}
 				transition:slide={{ duration: 200 }}
-				class="-mx-5 space-y-6 border-t border-gray-100 bg-gray-50/30 px-5 pt-4 pb-4"
+				class="-mx-5 space-y-6 border-t border-gray-100 bg-gray-50/30 px-5 pt-4 pb-4 @max-2xl/chat:-mx-3 @max-2xl/chat:px-3"
 			>
 				<QuestionSettingsPanel
 					{question}

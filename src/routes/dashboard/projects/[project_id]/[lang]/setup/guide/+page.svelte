@@ -279,6 +279,7 @@
 			{#snippet questionMessage(item: GuideQuestion, msgIndex: number)}
 				<SortableQuestion
 					question={item}
+					heading="Suggested question"
 					sectionId="chat"
 					sectionIndex={0}
 					index={msgIndex}
@@ -291,12 +292,14 @@
 
 			{#snippet sectionMessage(
 				item: { section: GuideSection; questions: GuideQuestion[] },
-				msgIndex: number
+				msgIndex: number,
+				ordinal: number
 			)}
 				<SortableSection
 					section={item.section}
 					questions={item.questions}
 					sectionIndex={msgIndex}
+					displayIndex={guideStore.localSections.length + ordinal}
 					source="chat"
 					allSections={guideStore.localSections}
 					allQuestions={guideStore.localQuestions}

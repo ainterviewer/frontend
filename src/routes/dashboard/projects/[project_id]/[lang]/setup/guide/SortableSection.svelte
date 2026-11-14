@@ -19,6 +19,12 @@
 		section: GuideSection;
 		questions: GuideQuestion[];
 		sectionIndex: number;
+		/**
+		 * The index shown in the heading, when it differs from the sortable
+		 * index: a suggestion in the assistant chat is numbered where it would
+		 * land if appended to the guide.
+		 */
+		displayIndex?: number;
 		allSections?: GuideSection[];
 		allQuestions?: Record<string, GuideQuestion[]>;
 		onRemove: () => void;
@@ -33,6 +39,7 @@
 		questions,
 		dataTour,
 		sectionIndex,
+		displayIndex,
 		allSections = [],
 		allQuestions = {},
 		onRemove,
@@ -59,6 +66,8 @@
 
 	const guideStore = getGuideStore();
 
+	let shownIndex = $derived(displayIndex ?? sectionIndex);
+
 	let chatDropTarget = $derived(
 		dragState.chatDropTarget?.id === section.id ? dragState.chatDropTarget : null
 	);
@@ -81,7 +90,7 @@
 
 		if (
 			confirm(
-				`Are you sure you want to delete ${label} in section ${sectionIndex + 1}? It is removed in every language.`
+				`Are you sure you want to delete ${label} in section ${shownIndex + 1}? It is removed in every language.`
 			)
 		) {
 			questions.splice(idx, 1);
@@ -92,7 +101,7 @@
 <div
 	data-tour={dataTour}
 	id={section.id}
-	class="group relative rounded-lg border border-black bg-secondary p-4 transition-all duration-200"
+	class="group relative rounded-lg border border-black bg-secondary p-4 transition-all duration-200 @max-2xl/chat:p-3"
 	style:transition={(dragState.draggingType || dragState.keepTransitionsDisabled) && !isOverlay
 		? 'opacity 200ms, transform 200ms, box-shadow 200ms'
 		: undefined}
@@ -111,9 +120,9 @@
 	{@attach ref}
 >
 	<!-- Section Header/Controls -->
-	<div class="mb-4 flex items-start justify-between">
+	<div class="mb-2 flex items-center justify-between">
 		<div class="flex items-center gap-2">
-			<span class="font-bold text-black">Section {sectionIndex + 1}</span>
+			<span class="font-bold text-black">Section {shownIndex + 1}</span>
 			<div
 				class="cursor-grab rounded px-1 text-gray-800 outline-none hover:bg-white/50"
 				title="Move Section"
@@ -159,7 +168,7 @@
 	</div>
 
 	<h4 class="mb-4 font-medium">Questions</h4>
-	<div class="min-h-[50px] space-y-4 pl-4">
+	<div class="min-h-[50px] space-y-4 pl-4 @max-2xl/chat:pl-0">
 		{#each questions as question, qIdx (question.id)}
 			{#if source === 'guide' && !isOverlay}
 				<InsertHere label="Add question" gap={1} onclick={() => addQuestion(qIdx)} />
@@ -169,31 +178,34 @@
 				dataTour={qIdx === 0 ? 'question' : undefined}
 				index={qIdx}
 				sectionId={section.id}
-				{sectionIndex}
+				sectionIndex={shownIndex}
 				{allSections}
 				{allQuestions}
 				onRemove={() => removeQuestion(qIdx)}
 			/>
 		{/each}
-		<div class="grid grid-cols-2 gap-4">
-			<button
-				class="flex w-[calc(100%-0.5rem)] cursor-pointer items-center justify-center gap-2 rounded border-2 border-gray-500 py-2 text-gray-700 transition hover:border-primary hover:bg-white/30 hover:text-primary"
-				onclick={() => addQuestion()}
-			>
-				<i class="fa-solid fa-plus"></i> Add Question
-			</button>
-			<button
-				class="-ml-2 flex w-[calc(100%+0.5rem)] cursor-pointer items-center justify-center gap-2 rounded border-2 border-gray-500 py-2 text-gray-700 transition hover:border-primary hover:bg-white/30 hover:text-primary"
-				onclick={onGenerateQuestion}
-			>
-				<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Question
-			</button>
-		</div>
+		<!-- Adding to a suggestion is done once it is in the guide -->
+		{#if source === 'guide'}
+			<div class="grid grid-cols-2 gap-4">
+				<button
+					class="flex w-[calc(100%-0.5rem)] cursor-pointer items-center justify-center gap-2 rounded border-2 border-gray-500 py-2 text-gray-700 transition hover:border-primary hover:bg-white/30 hover:text-primary"
+					onclick={() => addQuestion()}
+				>
+					<i class="fa-solid fa-plus"></i> Add Question
+				</button>
+				<button
+					class="-ml-2 flex w-[calc(100%+0.5rem)] cursor-pointer items-center justify-center gap-2 rounded border-2 border-gray-500 py-2 text-gray-700 transition hover:border-primary hover:bg-white/30 hover:text-primary"
+					onclick={onGenerateQuestion}
+				>
+					<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Question
+				</button>
+			</div>
+		{/if}
 	</div>
 
 	<div
 		data-tour={dataTour ? 'ai-generated-questions' : undefined}
-		class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 pl-4"
+		class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 pl-4 @max-2xl/chat:pl-0"
 	>
 		<div class="flex items-center gap-3">
 			<label class="text-sm font-medium text-gray-700" for="ai-generated-questions-{section.id}">
