@@ -4,6 +4,18 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.24] - 2026-11-14
+
+### Features
+
+- (assistance) Render assistant replies as markdown and enlarge the chat window
+
+### Bug Fixes
+
+- (assistance) Show every question and section the assistant generates in a turn
+- (assistance) Number suggested sections where they would land and fit them in the small chat
+- (guide) Say that the introduction and outro cannot hold questions
+
 ## [0.9.23] - 2026-11-13
 
 ### Features
