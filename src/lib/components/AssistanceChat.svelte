@@ -4,6 +4,7 @@
 
 	import { Assistance } from '$lib/api/sdk.gen';
 	import type { ChatMessage, InterviewGuide, Question } from '$lib/api/types.gen';
+	import { continuesReply } from '$lib/assistance/frames';
 	import { textIn } from '$lib/guide/localized';
 	import { localizeRenderedQuestion, normalizeGeneratedQuestions } from '$lib/guide/normalize';
 	import type { GuideQuestion, GuideSection } from '$lib/stores/guideStore.svelte';
@@ -162,7 +163,6 @@
 			let buffer = '';
 			let firstChunk = true;
 			let seenFirstModelChunk = false;
-			let currentMsgType: string | undefined;
 
 			while (true) {
 				const { done, value } = await reader.read();
@@ -182,16 +182,15 @@
 							continue;
 						}
 						if (msg.role === 'model') {
-							if (seenFirstModelChunk && msg.type !== currentMsgType) {
-								// New distinct message — append a new slot rather than overwriting
+							// The first frame fills the placeholder; after that, only a
+							// growing reply replaces a message.
+							if (!seenFirstModelChunk || continuesReply(messages[modelIdx], msg)) {
+								messages[modelIdx] = msg;
+							} else {
 								messages.push(msg);
 								modelIdx = messages.length - 1;
-							} else {
-								// Same message, accumulating — replace in place
-								messages[modelIdx] = msg;
 							}
 							seenFirstModelChunk = true;
-							currentMsgType = msg.type;
 							await tick();
 							scrollToBottom();
 						}
