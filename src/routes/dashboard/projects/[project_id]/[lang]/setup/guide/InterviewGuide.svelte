@@ -441,7 +441,8 @@
 					<h3 class="mb-2 text-lg font-medium">Introduction</h3>
 					<p class="mb-4 text-sm text-gray-500">
 						Write an introduction to your interview. This is the first message the interviewee will
-						see in the chat and cannot be answered.
+						see in the chat. It cannot be answered, so don't ask anything in it: questions belong in
+						the sections.
 					</p>
 					<TextField
 						multiline
@@ -525,7 +526,9 @@
 					class="scroll-mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
 				>
 					<h3 class="mb-2 text-lg font-medium">Outro</h3>
-					<p class="mb-4 text-sm text-gray-500">Last message in the interview.</p>
+					<p class="mb-4 text-sm text-gray-500">
+						Last message in the interview. It cannot be answered, so don't ask anything in it.
+					</p>
 					<TextField
 						multiline
 						class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
