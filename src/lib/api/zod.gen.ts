@@ -805,7 +805,8 @@ export const zErrorCode = z.enum([
     'already_collaborator',
     'role_above_own',
     'last_admin',
-    'preview_features_required'
+    'preview_features_required',
+    'demo_restricted'
 ]);
 
 /**

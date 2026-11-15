@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 
 import { Experiments, Folders } from '$lib/api/sdk.gen';
+import { isDemoRestricted } from '$lib/utils/errors';
 
 import type { PageServerLoad } from './$types';
 
@@ -18,7 +19,9 @@ export const load: PageServerLoad = async () => {
 	}
 
 	if (experimentsResponse.error) {
-		if (experimentsResponse.response?.status === 403) {
+		// Refused to a demo account: no experiments, for the page's
+		// restriction overlay to cover. See `isDemoRestricted`.
+		if (isDemoRestricted(experimentsResponse.error)) {
 			return {
 				folders: foldersResponse.data || [],
 				experiments: []

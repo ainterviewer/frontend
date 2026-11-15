@@ -12,6 +12,7 @@
 	import type { Snippet } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
+	import { page } from '$app/state';
 	import { Versions } from '$lib/api';
 	import type { ProjectLanguage } from '$lib/api/types.gen';
 	import { hasErrorCode } from '$lib/utils/errors';
@@ -51,6 +52,9 @@
 	let historyOpen = $state(false);
 	let comparing = $state(false);
 	let publishing = $state(false);
+	// The backend refuses demo accounts a publish; saving and restoring
+	// versions stay open to them.
+	const isDemo = $derived(page.data.user?.scope === 'demo');
 	let label = $state('');
 	let bump = $state<Bump>('patch');
 
@@ -156,8 +160,10 @@
 			primary ? 'bg-primary text-white shadow-sm hover:bg-dark' : 'text-primary hover:bg-primary/10'
 		]}
 		onclick={openDialog}
-		disabled={publishing}
-		title="Publish the draft to respondents"
+		disabled={publishing || isDemo}
+		title={isDemo
+			? 'You cannot publish with your current demo access'
+			: 'Publish the draft to respondents'}
 		aria-label="Publish"
 	>
 		<i class="fa-solid fa-upload"></i>

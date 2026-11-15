@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '$lib/api-extra/refresh-interceptor';
 	import '$lib/api-extra/toast-interceptor';
+	import '$lib/api-extra/demo-interceptor';
 	import '../app.css';
 
 	import { Toaster } from 'svelte-sonner';

@@ -9,6 +9,29 @@ You are able to use the Svelte MCP server, where you have access to comprehensiv
 - Server loads and endpoints authenticate SDK calls automatically: `hooks.server.ts` gives the client `auth: currentAccessToken` (`src/lib/server/auth.ts`), which sends the current request's `access_token` cookie. Don't pass a `cookie` header by hand, and never put a token in the client's global `headers` config — the client is shared by every user's requests on the server. This only covers operations whose OpenAPI declares the `access_token` security scheme; a backend route that reads `request.cookies` itself gets no token from a server load.
 - Use TailwindCSS, global theme and styles stored in `src/app.css`
 
+## Demo accounts
+
+The backend refuses demo accounts (`scope === 'demo'`) what they may not do
+with a 403 carrying `code: demo_restricted`; test for it with
+`isDemoRestricted` (`src/lib/utils/errors.ts`).
+
+- **Restricted sections** (analysis, distribution, interviews) show
+  `DemoRestrictionOverlay` from their `+layout.svelte`, with the page
+  mounted beneath it. `src/lib/api-extra/demo-interceptor.ts` holds every
+  `demo_restricted` response in those sections -- the call never settles
+  until it is aborted -- so each page stays on its own skeletons with no
+  demo checks of its own. A new section needs its layout's overlay and an
+  entry in `DEMO_RESTRICTED_SECTIONS`.
+- **A `load` in a restricted section must never await a request demo
+  accounts are refused**: navigation would wait on it forever. Return the
+  promise for the page to apply, as explore and report do.
+- **Server loads cannot be held**, the interceptor being browser-only. One
+  that demo accounts can be refused returns its page's empty data on
+  `isDemoRestricted` for the overlay to cover (the interview transcript,
+  experiments).
+- Outside those sections a refusal is an ordinary error. Disable the
+  control for demo accounts instead (the Publish button).
+
 ## Onboarding tours (driver.js)
 
 Guided tours are driver.js, built through `src/lib/onboarding.ts`. There are

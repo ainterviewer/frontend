@@ -38,6 +38,20 @@ export function hasErrorCode(error: unknown, code: ErrorCode): boolean {
 }
 
 /**
+ * Whether `error` is the backend refusing a demo account something it may
+ * not do with demo access, as opposed to any other refusal.
+ *
+ * In the browser, `demo-interceptor` holds these in the sections demo
+ * accounts may not use, so the page stays on its skeletons behind the
+ * restriction overlay. A server `load` cannot be held -- the render would
+ * wait forever -- so one that can be refused returns its page's empty data
+ * on this instead, for the overlay to cover.
+ */
+export function isDemoRestricted(error: unknown): boolean {
+	return hasErrorCode(error, 'demo_restricted');
+}
+
+/**
  * The revision to overwrite with, when a content write was refused because
  * someone saved in between (412 `stale_revision`); null for any other error.
  */

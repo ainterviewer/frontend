@@ -745,6 +745,8 @@ export class Report {
 export class Assistance {
     /**
      * Reset Session
+     *
+     * Start a new conversation; the next read of the chat shows it.
      */
     public static resetSession<ThrowOnError extends boolean = false>(options: Options<ResetSessionData, ThrowOnError>): RequestResult<ResetSessionResponses, ResetSessionErrors, ThrowOnError> {
         return (options.client ?? client).post<ResetSessionResponses, ResetSessionErrors, ThrowOnError>({
@@ -760,6 +762,9 @@ export class Assistance {
     
     /**
      * Get Chat
+     *
+     * The user's current conversation in this project, started if they have
+     * none yet.
      */
     public static getChat<ThrowOnError extends boolean = false>(options: Options<GetChatData, ThrowOnError>): RequestResult<GetChatResponses, GetChatErrors, ThrowOnError> {
         return (options.client ?? client).get<GetChatResponses, GetChatErrors, ThrowOnError>({

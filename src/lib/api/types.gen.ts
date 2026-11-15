@@ -2209,7 +2209,7 @@ export type EmbeddingTurn = {
  * Only errors a client handles differently carry one. Values are part of
  * the API -- the frontend matches on them -- so rename none without it.
  */
-export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'already_collaborator' | 'role_above_own' | 'last_admin' | 'preview_features_required';
+export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'already_collaborator' | 'role_above_own' | 'last_admin' | 'preview_features_required' | 'demo_restricted';
 
 /**
  * ExperimentAllocation
@@ -3028,7 +3028,7 @@ export type InterviewGuide = {
     /**
      * Introduction
      *
-     * An introduction to the interview. Displayed to the interviewee as the first message. They whon't be able to respond to this message.
+     * An introduction to the interview. Displayed to the interviewee as the first message. They won't be able to respond to this message, so it must not ask them anything: the first question comes from the first section.
      */
     introduction?: string;
     /**
@@ -3040,7 +3040,7 @@ export type InterviewGuide = {
     /**
      * Outro
      *
-     * An outro message for the interview. Displayed to the interviewee as the last message they will see. They will not be able to answer this message.
+     * An outro message for the interview. Displayed to the interviewee as the last message they will see. They will not be able to answer this message, so it must not ask them anything.
      */
     outro?: string | null;
     /**

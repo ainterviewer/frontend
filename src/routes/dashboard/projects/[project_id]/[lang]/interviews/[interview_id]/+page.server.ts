@@ -1,5 +1,6 @@
 import { Analysis, Projects } from '$lib/api';
 import { codesFromApi } from '$lib/coding/codebookApi';
+import { isDemoRestricted } from '$lib/utils/errors';
 
 import type { PageServerLoad } from './$types';
 
@@ -27,6 +28,12 @@ export const load: PageServerLoad = async ({ params }) => {
 			path: { project_id, lang }
 		})
 	]);
+
+	// A distributed interview, refused to a demo account: an empty transcript
+	// for the layout's restriction overlay to cover. See `isDemoRestricted`.
+	if (isDemoRestricted(messagesRes.error)) {
+		return { messages: [], codes: [], guide: null, project_id, interview_id, lang, error: null };
+	}
 
 	if (messagesRes.error) {
 		console.error('Error fetching interview messages:', messagesRes.error);

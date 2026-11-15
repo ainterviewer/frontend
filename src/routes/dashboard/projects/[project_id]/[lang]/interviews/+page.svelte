@@ -20,7 +20,6 @@
 		InterviewStatus,
 		InterviewSummaryPublic
 	} from '$lib/api/types.gen';
-	import DemoRestrictionOverlay from '$lib/components/DemoRestrictionOverlay.svelte';
 	import { downloadInterviews, type InterviewSelection } from '$lib/components/interview/download';
 	import DownloadDialog from '$lib/components/interview/DownloadDialog.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
@@ -38,8 +37,6 @@
 	import { toastApiError } from '$lib/utils/toast';
 
 	import ResumeLinkModal from './ResumeLinkModal.svelte';
-
-	let isDemo = $derived(page.data.user?.scope === 'demo');
 
 	let interviews = $state<InterviewSummaryPublic[]>([]);
 	let loading = $state(false);
@@ -449,13 +446,6 @@
 		};
 	});
 </script>
-
-{#if isDemo}
-	<DemoRestrictionOverlay
-		title="Interviews unavailable"
-		description="You cannot view interviews with your current demo access."
-	/>
-{/if}
 
 <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
 	<h1 class="page-title mb-0">Interviews</h1>
