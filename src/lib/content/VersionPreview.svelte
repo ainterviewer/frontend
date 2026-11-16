@@ -304,6 +304,11 @@
 																·
 															{/if}{@render text(option.text)}{/each}
 													</p>
+													{#if item.shuffle_rows}
+														<p class="mt-1 text-xs text-gray-500">
+															<i class="fa-solid fa-shuffle"></i> rows shuffled
+														</p>
+													{/if}
 												{:else if options(question).length}
 													<ul class="mt-1 flex flex-col gap-0.5">
 														{#each options(question) as option, o (option.id ?? o)}

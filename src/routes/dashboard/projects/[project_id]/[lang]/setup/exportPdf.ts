@@ -104,6 +104,14 @@ function buildSurveyItemContent(item: SurveyItem): PdfNode[] {
 				margin: [12, 0, 0, 4]
 			});
 		}
+		if (item.type === 'likert_grid' && item.shuffle_rows) {
+			content.push({
+				text: 'Rows shown in a random order',
+				fontSize: 9,
+				italics: true,
+				margin: [12, 0, 0, 4]
+			});
+		}
 		if ('ui' in item && item.ui) {
 			content.push({
 				text: `Display: ${item.ui}`,

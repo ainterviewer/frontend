@@ -249,6 +249,20 @@
 								onclick={() => surveyItem.rows.push(row())}>+ Add Row</button
 							>
 						</div>
+						<label
+							class="mt-2 flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+						>
+							<input
+								type="checkbox"
+								class="rounded border-gray-300 text-primary focus:ring-primary"
+								bind:checked={surveyItem.shuffle_rows}
+							/>
+							Shuffle rows
+							<HoverInfo
+								iconColor="gray-500"
+								text="Show the rows in a random order, drawn once for each interview, so that no statement gains from always coming first."
+							></HoverInfo>
+						</label>
 					</div>
 				{/if}
 				{#if surveyItem.type === 'radio' || surveyItem.type === 'checkbox' || surveyItem.type === 'likert' || surveyItem.type === 'likert_grid'}

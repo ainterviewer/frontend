@@ -28,6 +28,7 @@
 	 */
 	let {
 		rows,
+		rowOrder = null,
 		options,
 		answer = '',
 		readonly = false,
@@ -36,7 +37,13 @@
 		phone = false,
 		onAnswer
 	}: {
+		/** As authored: the answer is encoded in this order. */
 		rows: GridRow[];
+		/**
+		 * The order this interview shows the rows in, as positions in `rows`:
+		 * drawn when the interview started, where the grid shuffles its rows.
+		 */
+		rowOrder?: number[] | null;
 		options: string[];
 		/** The submitted answer, shown read-only. */
 		answer?: string;
@@ -50,6 +57,8 @@
 	} = $props();
 
 	let t = $derived(getUiText(lang).grid);
+
+	let shownRows = $derived(rowOrder?.length === rows.length ? rowOrder.map((n) => rows[n]) : rows);
 
 	let tableGivesWay = $derived(givesWay(gridTableMinWidth(options), true, phone));
 	const TABLE = {
@@ -194,7 +203,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each rows as row, r (row.id ?? r)}
+					{#each shownRows as row, r (row.id ?? r)}
 						{@const answered = !!chosen[row.id ?? '']}
 						<tr class="group">
 							<th
@@ -244,7 +253,7 @@
 		     circle, so a grid on a phone reads like the Likert questions around
 		     it. -->
 		<div class="flex flex-col gap-2 {layout.cards}">
-			{#each rows as row, r (row.id ?? r)}
+			{#each shownRows as row, r (row.id ?? r)}
 				{@const answered = !!chosen[row.id ?? '']}
 				<div
 					class="rounded-xl border-l-4 bg-white px-2 pt-2.5 pb-1 transition-colors {answered

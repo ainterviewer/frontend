@@ -104,6 +104,7 @@ const LABELS: Record<string, string> = {
 	rows: 'Rows',
 	with_other: 'With an "Other" option',
 	shuffle_options: 'Shuffled options',
+	shuffle_rows: 'Shuffled rows',
 	ui: 'Shown as',
 	min: 'Min',
 	max: 'Max',

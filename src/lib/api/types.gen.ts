@@ -3808,6 +3808,18 @@ export type LikertGridItem = {
      * Rows
      */
     rows: Array<GridRow>;
+    /**
+     * Shuffle Rows
+     *
+     * Show the rows in a random order, drawn once per interview.
+     */
+    shuffle_rows?: boolean;
+    /**
+     * Row Order
+     *
+     * The order the rows are shown in, as positions in `rows`. Set per interview when `shuffle_rows` is on; unset, they are shown as authored.
+     */
+    row_order?: Array<number> | null;
 };
 
 /**
@@ -4029,6 +4041,12 @@ export type LocalizedLikertGridItem = {
      * Rows
      */
     rows: Array<LocalizedGridRow>;
+    /**
+     * Shuffle Rows
+     *
+     * Show the rows in a random order, drawn once per interview.
+     */
+    shuffle_rows?: boolean;
 };
 
 /**

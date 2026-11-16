@@ -1638,7 +1638,9 @@ export const zLikertGridItem = z.object({
     required: z.boolean().optional().default(true),
     type: z.literal('likert_grid').optional().default('likert_grid'),
     options: z.array(z.string()),
-    rows: z.array(zGridRow)
+    rows: z.array(zGridRow),
+    shuffle_rows: z.boolean().optional().default(false),
+    row_order: z.array(z.int()).nullish()
 });
 
 /**
@@ -1747,7 +1749,8 @@ export const zLocalizedLikertGridItem = z.object({
     required: z.boolean().optional().default(true),
     type: z.literal('likert_grid').optional().default('likert_grid'),
     options: z.array(zLocalizedOption),
-    rows: z.array(zLocalizedGridRow)
+    rows: z.array(zLocalizedGridRow),
+    shuffle_rows: z.boolean().optional().default(false)
 });
 
 /**

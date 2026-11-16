@@ -282,3 +282,52 @@ describe('shuffled options', () => {
 		await expect.element(screen.getByRole('checkbox', { name: 'b' })).not.toBeChecked();
 	});
 });
+
+describe('shuffled grid rows', () => {
+	const rows = [
+		{ id: 'a', text: 'smag' },
+		{ id: 'b', text: 'lugt' },
+		{ id: 'c', text: 'farve' }
+	];
+	const shownRows = (container: HTMLElement) =>
+		Array.from(container.querySelectorAll('tbody th'), (th) =>
+			th.textContent?.replace('*', '').trim()
+		);
+
+	beforeEach(async () => {
+		await page.viewport(1024, 768);
+	});
+
+	test('show in the order drawn for the interview, answered in authored order', async () => {
+		let given = '';
+		const screen = await render(SurveyItem, {
+			type: 'likert_grid',
+			rows,
+			options: ['Nej', 'Ja'],
+			shuffle_rows: true,
+			row_order: [2, 0, 1],
+			onAnswer: (answer: unknown) => {
+				given = answer as string;
+			}
+		});
+		expect(shownRows(screen.container)).toEqual(['farve', 'smag', 'lugt']);
+		for (const row of ['farve', 'smag', 'lugt'])
+			await screen
+				.getByRole('radio', { name: `${row}: Ja` })
+				.first()
+				.click();
+		await screen.getByRole('button').click();
+		expect(Object.keys(JSON.parse(given))).toEqual(['a', 'b', 'c']);
+	});
+
+	test('show as authored when no order was drawn', async () => {
+		const screen = await render(SurveyItem, {
+			type: 'likert_grid',
+			rows,
+			options: ['Nej', 'Ja'],
+			shuffle_rows: true,
+			preview: true
+		});
+		expect(shownRows(screen.container)).toEqual(['smag', 'lugt', 'farve']);
+	});
+});

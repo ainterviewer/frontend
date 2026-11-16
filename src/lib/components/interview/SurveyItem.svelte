@@ -358,6 +358,7 @@
 {#if surveyItem.type === 'likert_grid'}
 	<SurveyGrid
 		rows={surveyItem.rows}
+		rowOrder={surveyItem.row_order}
 		options={surveyItem.options}
 		{answer}
 		{readonly}
