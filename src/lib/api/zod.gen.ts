@@ -1578,7 +1578,10 @@ export const zInterviewSummaryPublic = z.object({
     n_interventions: z.int().optional().default(0),
     test_name: z.string().nullish(),
     start_question_id: z.string().nullish(),
-    pid: z.string().nullish()
+    pid: z.string().nullish(),
+    version_no: z.int().nullish(),
+    semver: z.string().nullish(),
+    version_label: z.string().nullish()
 });
 
 /**

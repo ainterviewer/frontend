@@ -3342,6 +3342,18 @@ export type InterviewSummaryPublic = {
      * Pid
      */
     pid?: string | null;
+    /**
+     * Version No
+     */
+    version_no?: number | null;
+    /**
+     * Semver
+     */
+    semver?: string | null;
+    /**
+     * Version Label
+     */
+    version_label?: string | null;
 };
 
 /**

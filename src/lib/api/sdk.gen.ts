@@ -2956,7 +2956,8 @@ export class Versions {
      * `If-Match` is the revision the caller is looking at: publishing what
      * someone else changed since would release work nobody reviewed (412).
      * Publishing is refused (409) while a language lacks text, or for a bump
-     * lower than the changes need.
+     * lower than the changes need. Demo accounts may save versions but not
+     * publish one: what is published is what respondents get.
      */
     public static saveContentVersion<ThrowOnError extends boolean = false>(options: Options<SaveContentVersionData, ThrowOnError>): RequestResult<SaveContentVersionResponses, SaveContentVersionErrors, ThrowOnError> {
         return (options.client ?? client).post<SaveContentVersionResponses, SaveContentVersionErrors, ThrowOnError>({

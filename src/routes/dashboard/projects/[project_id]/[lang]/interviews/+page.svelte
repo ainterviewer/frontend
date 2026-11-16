@@ -22,6 +22,7 @@
 	} from '$lib/api/types.gen';
 	import { downloadInterviews, type InterviewSelection } from '$lib/components/interview/download';
 	import DownloadDialog from '$lib/components/interview/DownloadDialog.svelte';
+	import GuideVersion from '$lib/components/interview/GuideVersion.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import DateRangeFilter from '$lib/components/table/DateRangeFilter.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
@@ -135,6 +136,10 @@
 			meta: { align: 'right', class: 'tabular-nums' }
 		}),
 		helper.accessor('language', { header: 'Language', meta: { class: 'text-gray-600' } }),
+		helper.accessor('version_no', {
+			header: 'Version',
+			meta: { class: 'whitespace-nowrap text-gray-600' }
+		}),
 		helper.accessor('status', { header: 'Status' }),
 		helper.display({
 			id: 'actions',
@@ -260,6 +265,7 @@
 		n_messages: 'Messages',
 		n_reports: 'Flagged',
 		language: 'Language',
+		version_no: 'Version',
 		status: 'Status'
 	};
 
@@ -568,6 +574,8 @@
 			{/if}
 		{:else if columnId === 'language'}
 			{interview.language}
+		{:else if columnId === 'version_no'}
+			<GuideVersion {interview} />
 		{:else if columnId === 'status'}
 			{#if interview.status === 'completed'}
 				<span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
