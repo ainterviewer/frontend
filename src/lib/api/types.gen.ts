@@ -1621,7 +1621,7 @@ export type DistributionBucket = {
  * way, and a question with no survey item still has a distribution -- the
  * length of its free-text answers.
  */
-export type DistributionKind = 'categorical' | 'numeric' | 'temporal' | 'text' | 'grid' | 'statement';
+export type DistributionKind = 'categorical' | 'numeric' | 'temporal' | 'text' | 'grid' | 'ranking' | 'list' | 'statement';
 
 /**
  * DropoutPoint
@@ -3668,6 +3668,10 @@ export type ItemDistribution = {
     } & LikertItem) | ({
         type: 'likert_grid';
     } & LikertGridItem) | ({
+        type: 'list';
+    } & ListItem) | ({
+        type: 'ranking';
+    } & RankingItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';
@@ -3728,6 +3732,10 @@ export type ItemDistribution = {
      * Rows
      */
     rows?: Array<GridRowDistribution>;
+    /**
+     * Ranking
+     */
+    ranking?: Array<RankingOptionDistribution>;
 };
 
 /**
@@ -3842,6 +3850,40 @@ export type LikertItem = {
      * Ui
      */
     ui?: 'radio' | 'slider';
+};
+
+/**
+ * ListItem
+ *
+ * Several answers of the respondent's own, given together as one answer:
+ * "name the apps you use daily".
+ *
+ * `min_entries` and `max_entries` bound how many; set them equal for a fixed
+ * number of entries. The answer is a JSON array of the entries, in the order
+ * given, blanks left out (`encode_answer`), read back with `parse_answer` --
+ * or as text a person or model can read with `describe_answer`.
+ */
+export type ListItem = {
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'list';
+    /**
+     * Min Entries
+     *
+     * The fewest entries the answer may hold; unset, one when the item is required.
+     */
+    min_entries?: number | null;
+    /**
+     * Max Entries
+     *
+     * The most entries the answer may hold; unset, no limit. Equal to `min_entries`, the respondent fills a fixed number.
+     */
+    max_entries?: number | null;
 };
 
 /**
@@ -4126,6 +4168,10 @@ export type LocalizedQuestion = {
     } & LocalizedLikertItem) | ({
         type: 'likert_grid';
     } & LocalizedLikertGridItem) | ({
+        type: 'ranking';
+    } & LocalizedRankingItem) | ({
+        type: 'list';
+    } & ListItem) | ({
         type: 'slider';
     } & LocalizedSliderItem) | ({
         type: 'number';
@@ -4219,6 +4265,36 @@ export type LocalizedRadioItem = {
      * With Other
      */
     with_other?: boolean;
+    /**
+     * Shuffle Options
+     *
+     * Show the options in a random order, drawn once per interview.
+     */
+    shuffle_options?: boolean;
+};
+
+/**
+ * LocalizedRankingItem
+ */
+export type LocalizedRankingItem = {
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Type
+     */
+    type?: 'ranking';
+    /**
+     * Options
+     */
+    options: Array<LocalizedOption>;
+    /**
+     * Top N
+     *
+     * Rank only the first this many options; unset, rank all.
+     */
+    top_n?: number | null;
     /**
      * Shuffle Options
      *
@@ -4541,6 +4617,10 @@ export type MessagePublic = {
     } & LikertItem) | ({
         type: 'likert_grid';
     } & LikertGridItem) | ({
+        type: 'list';
+    } & ListItem) | ({
+        type: 'ranking';
+    } & RankingItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';
@@ -5587,6 +5667,10 @@ export type Question = {
     } & LikertItem) | ({
         type: 'likert_grid';
     } & LikertGridItem) | ({
+        type: 'list';
+    } & ListItem) | ({
+        type: 'ranking';
+    } & RankingItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';
@@ -5796,6 +5880,79 @@ export type RadioItem = {
      * With Other
      */
     with_other?: boolean;
+};
+
+/**
+ * RankingItem
+ *
+ * The options put in order of preference, answered as one answer.
+ *
+ * With `top_n` set, only that many are ranked: the answer is the respondent's
+ * first `top_n` choices, and the rest are left unranked. The answer is a JSON
+ * array of the ranked options' texts, first choice first (`encode_answer`),
+ * read back with `parse_answer`, as positions in `options` with
+ * `ranked_positions` (which is how one choice counts as one across
+ * languages), or as text with `describe_answer`.
+ */
+export type RankingItem = {
+    /**
+     * Required
+     */
+    required?: boolean;
+    /**
+     * Options
+     */
+    options: Array<string>;
+    /**
+     * Shuffle Options
+     *
+     * Show the options in a random order, drawn once per interview.
+     */
+    shuffle_options?: boolean;
+    /**
+     * Option Order
+     *
+     * The order the options are shown in, as positions in `options`. Set per interview when `shuffle_options` is on; unset, they are shown as authored.
+     */
+    option_order?: Array<number> | null;
+    /**
+     * Type
+     */
+    type?: 'ranking';
+    /**
+     * Top N
+     *
+     * Rank only the first this many options; unset, rank all.
+     */
+    top_n?: number | null;
+};
+
+/**
+ * RankingOptionDistribution
+ *
+ * One option of a ranking: how often it was given each rank.
+ */
+export type RankingOptionDistribution = {
+    /**
+     * Position
+     */
+    position: number;
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Counts
+     */
+    counts: Array<CategoryCount>;
+    /**
+     * N Ranked
+     */
+    n_ranked: number;
+    /**
+     * Mean Rank
+     */
+    mean_rank: number | null;
 };
 
 /**
@@ -6680,6 +6837,10 @@ export type TranscriptTurn = {
     } & LikertItem) | ({
         type: 'likert_grid';
     } & LikertGridItem) | ({
+        type: 'list';
+    } & ListItem) | ({
+        type: 'ranking';
+    } & RankingItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';
@@ -7203,6 +7364,10 @@ export type OutgoingHistoryMessage = {
     } & LikertItem) | ({
         type: 'likert_grid';
     } & LikertGridItem) | ({
+        type: 'list';
+    } & ListItem) | ({
+        type: 'ranking';
+    } & RankingItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';
@@ -7250,6 +7415,10 @@ export type OutgoingMessage = {
     } & LikertItem) | ({
         type: 'likert_grid';
     } & LikertGridItem) | ({
+        type: 'list';
+    } & ListItem) | ({
+        type: 'ranking';
+    } & RankingItem) | ({
         type: 'slider';
     } & SliderItem) | ({
         type: 'number';

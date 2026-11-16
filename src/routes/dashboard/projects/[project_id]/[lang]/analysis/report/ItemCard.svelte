@@ -17,6 +17,7 @@
 	import GridBars from './GridBars.svelte';
 	import { badgeFor } from './itemTypes';
 	import OptionBars from './OptionBars.svelte';
+	import RankingBars from './RankingBars.svelte';
 	import SampleDots from './SampleDots.svelte';
 
 	let {
@@ -142,9 +143,13 @@
 	let hasData = $derived(
 		item.kind === 'categorical'
 			? item.counts.length > 0
-			: item.kind === 'grid'
-				? (item.rows ?? []).length > 0 && item.n_answered > 0
-				: (showDots || bars.length > 0) && item.n_answered > 0
+			: item.kind === 'list'
+				? item.counts.length > 0 && item.n_answered > 0
+				: item.kind === 'grid'
+					? (item.rows ?? []).length > 0 && item.n_answered > 0
+					: item.kind === 'ranking'
+						? (item.ranking ?? []).length > 0 && item.n_answered > 0
+						: (showDots || bars.length > 0) && item.n_answered > 0
 	);
 
 	function round(value: number) {
@@ -228,8 +233,22 @@
 				hiddenValues={item.n_other_hidden ?? 0}
 				hiddenCount={item.n_other_hidden_count ?? 0}
 			/>
+		{:else if item.kind === 'list'}
+			<!-- The entries respondents gave most often, each bar the share of
+			     respondents who listed it; typed in, so they have no order but
+			     their counts. -->
+			<OptionBars
+				counts={item.counts}
+				total={item.n_answered}
+				{languages}
+				{colorFor}
+				hiddenValues={item.n_other_hidden ?? 0}
+				hiddenCount={item.n_other_hidden_count ?? 0}
+			/>
 		{:else if item.kind === 'grid'}
 			<GridBars rows={item.rows ?? []} />
+		{:else if item.kind === 'ranking'}
+			<RankingBars options={item.ranking ?? []} answered={item.n_answered} />
 		{:else if showDots}
 			<SampleDots {samples} {languages} {colorFor} {unit} {axisLabel} />
 		{:else}
@@ -245,7 +264,13 @@
 
 		<div class="flex flex-wrap gap-x-3 text-xs text-gray-500">
 			<span>n = {item.n_answered}</span>
-			{#if item.stats}
+			{#if item.stats && item.kind === 'list'}
+				<span>
+					Entries per answer: min {round(item.stats.min)} · median {round(item.stats.median)} · max {round(
+						item.stats.max
+					)}
+				</span>
+			{:else if item.stats}
 				<span>
 					Min {round(item.stats.min)} · Median {round(item.stats.median)} · Max {round(
 						item.stats.max

@@ -35,8 +35,10 @@ export function trimmed(text: LocalizedText): LocalizedText {
 	);
 }
 
-// Survey items are a discriminated union; only the choice-based variants
-// (radio/checkbox/likert) carry an `options` array. Returns it when present.
+// Survey items are a discriminated union; only the option-based variants
+// (radio, checkbox, likert, likert grid, ranking) carry an `options` array.
+// Returns it when present. Conditions name options of fewer items: see
+// `conditionOptions`.
 export function surveyItemOptions(
 	item: GuideQuestion['survey_item'] | null | undefined
 ): LocalizedOption[] | undefined {

@@ -81,6 +81,28 @@ export interface UiText {
 		submit: string;
 		clear: string;
 	};
+	list: {
+		/** The legend when the respondent may give a varying number. */
+		legend: string;
+		/** The legend when the list asks for exactly `n`. */
+		legendExactly: (n: number) => string;
+		/** Placeholder and accessible name of the `n`th field, from 1. */
+		entry: (n: number) => string;
+		add: string;
+		remove: string;
+		submit: string;
+	};
+	ranking: {
+		/** The legend when every option is ranked. */
+		legend: string;
+		/** The legend when only the first `n` are. */
+		legendTop: (n: number) => string;
+		moveUp: string;
+		moveDown: string;
+		/** Above the options past the top `n`. */
+		notRanked: string;
+		submit: string;
+	};
 }
 
 const UI: Record<Lang, UiText> = {
@@ -144,7 +166,23 @@ const UI: Record<Lang, UiText> = {
 			mustBeAtMost: 'Must be at most',
 			pleaseProvideValue: 'Please provide a value'
 		},
-		grid: { rateEach: 'Rate each', required: 'Required', submit: 'Submit answers', clear: 'Clear' }
+		grid: { rateEach: 'Rate each', required: 'Required', submit: 'Submit answers', clear: 'Clear' },
+		list: {
+			legend: 'List your answers',
+			legendExactly: (n) => `Give ${n} answers`,
+			entry: (n) => `Answer ${n}`,
+			add: 'Add another',
+			remove: 'Remove',
+			submit: 'Submit answers'
+		},
+		ranking: {
+			legend: 'Drag into order',
+			legendTop: (n) => `Drag your top ${n} to the top`,
+			moveUp: 'Move up',
+			moveDown: 'Move down',
+			notRanked: 'Not ranked',
+			submit: 'Submit ranking'
+		}
 	},
 	DA: {
 		welcome: {
@@ -206,7 +244,23 @@ const UI: Record<Lang, UiText> = {
 			mustBeAtMost: 'Må højst være',
 			pleaseProvideValue: 'Angiv venligst en værdi'
 		},
-		grid: { rateEach: 'Vurder hver', required: 'Påkrævet', submit: 'Send svar', clear: 'Ryd' }
+		grid: { rateEach: 'Vurder hver', required: 'Påkrævet', submit: 'Send svar', clear: 'Ryd' },
+		list: {
+			legend: 'Skriv dine svar',
+			legendExactly: (n) => `Giv ${n} svar`,
+			entry: (n) => `Svar ${n}`,
+			add: 'Tilføj endnu et',
+			remove: 'Fjern',
+			submit: 'Send svar'
+		},
+		ranking: {
+			legend: 'Træk i rækkefølge',
+			legendTop: (n) => `Træk dine ${n} foretrukne øverst`,
+			moveUp: 'Flyt op',
+			moveDown: 'Flyt ned',
+			notRanked: 'Ikke rangeret',
+			submit: 'Send rangering'
+		}
 	},
 	DE: {
 		welcome: {
@@ -273,6 +327,22 @@ const UI: Record<Lang, UiText> = {
 			required: 'Erforderlich',
 			submit: 'Antworten senden',
 			clear: 'Zurücksetzen'
+		},
+		list: {
+			legend: 'Geben Sie Ihre Antworten ein',
+			legendExactly: (n) => `Geben Sie ${n} Antworten`,
+			entry: (n) => `Antwort ${n}`,
+			add: 'Weitere hinzufügen',
+			remove: 'Entfernen',
+			submit: 'Antworten senden'
+		},
+		ranking: {
+			legend: 'In Reihenfolge ziehen',
+			legendTop: (n) => `Ziehen Sie Ihre Top ${n} nach oben`,
+			moveUp: 'Nach oben',
+			moveDown: 'Nach unten',
+			notRanked: 'Nicht eingestuft',
+			submit: 'Rangfolge senden'
 		}
 	},
 	ES: {
@@ -340,6 +410,22 @@ const UI: Record<Lang, UiText> = {
 			required: 'Obligatorio',
 			submit: 'Enviar respuestas',
 			clear: 'Borrar'
+		},
+		list: {
+			legend: 'Escribe tus respuestas',
+			legendExactly: (n) => `Da ${n} respuestas`,
+			entry: (n) => `Respuesta ${n}`,
+			add: 'Añadir otra',
+			remove: 'Quitar',
+			submit: 'Enviar respuestas'
+		},
+		ranking: {
+			legend: 'Arrastra para ordenar',
+			legendTop: (n) => `Arrastra tus ${n} primeras opciones arriba`,
+			moveUp: 'Subir',
+			moveDown: 'Bajar',
+			notRanked: 'Sin clasificar',
+			submit: 'Enviar clasificación'
 		}
 	},
 	FR: {
@@ -407,6 +493,22 @@ const UI: Record<Lang, UiText> = {
 			required: 'Obligatoire',
 			submit: 'Envoyer les réponses',
 			clear: 'Effacer'
+		},
+		list: {
+			legend: 'Saisissez vos réponses',
+			legendExactly: (n) => `Donnez ${n} réponses`,
+			entry: (n) => `Réponse ${n}`,
+			add: 'Ajouter une autre',
+			remove: 'Retirer',
+			submit: 'Envoyer les réponses'
+		},
+		ranking: {
+			legend: 'Faites glisser pour classer',
+			legendTop: (n) => `Placez vos ${n} premiers choix en haut`,
+			moveUp: 'Monter',
+			moveDown: 'Descendre',
+			notRanked: 'Non classé',
+			submit: 'Envoyer le classement'
 		}
 	}
 };

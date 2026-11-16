@@ -5,8 +5,13 @@ import type {
 	Question as ApiQuestion
 } from '$lib/api/types.gen';
 
-import { isOrdinalItem, locateContext, resolveConditionTarget } from './conditions';
-import { pick, surveyItemOptions } from './localized';
+import {
+	conditionOptions,
+	isOrdinalItem,
+	locateContext,
+	resolveConditionTarget
+} from './conditions';
+import { pick } from './localized';
 import { mapToLocal } from './normalize';
 import type {
 	GuideQuestion,
@@ -63,7 +68,7 @@ function renderConditions(
 		action: conditions.action,
 		conditions: conditions.conditions.map((cond) => {
 			const target = resolveConditionTarget(cond.question_context, sections, questionsMap);
-			const options = surveyItemOptions(target.question?.survey_item) ?? [];
+			const options = conditionOptions(target.question?.survey_item) ?? [];
 			const scale = isOrdinalItem(target.question)
 				? options.map((o) => pick(o.text, languages))
 				: null;

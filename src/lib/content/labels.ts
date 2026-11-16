@@ -26,6 +26,8 @@ export const SURVEY_LABEL: Record<string, string> = {
 	checkbox: 'Multiple choice',
 	likert: 'Likert scale',
 	likert_grid: 'Likert grid',
+	ranking: 'Ranking',
+	list: 'List',
 	slider: 'Slider',
 	number: 'Number',
 	date: 'Date',

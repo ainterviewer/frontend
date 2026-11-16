@@ -14,6 +14,8 @@
 	} from '$lib/survey/likert';
 
 	import SurveyGrid from './SurveyGrid.svelte';
+	import SurveyList from './SurveyList.svelte';
+	import SurveyRanking from './SurveyRanking.svelte';
 	import type { SurveyItemUnion } from './types';
 
 	let {
@@ -360,6 +362,30 @@
 		rows={surveyItem.rows}
 		rowOrder={surveyItem.row_order}
 		options={surveyItem.options}
+		{answer}
+		{readonly}
+		{preview}
+		{lang}
+		{phone}
+		{onAnswer}
+	/>
+{:else if surveyItem.type === 'ranking'}
+	<SurveyRanking
+		options={surveyItem.options}
+		optionOrder={surveyItem.option_order}
+		topN={surveyItem.top_n}
+		{answer}
+		{readonly}
+		{preview}
+		{lang}
+		{phone}
+		{onAnswer}
+	/>
+{:else if surveyItem.type === 'list'}
+	<SurveyList
+		min_entries={surveyItem.min_entries}
+		max_entries={surveyItem.max_entries}
+		required={surveyItem.required ?? true}
 		{answer}
 		{readonly}
 		{preview}

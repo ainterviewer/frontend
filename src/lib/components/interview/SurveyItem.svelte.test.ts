@@ -1,7 +1,7 @@
 import '/src/app.css';
 
 import { beforeEach, describe, expect, test } from 'vitest';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 
 import SurveyItem from './SurveyItem.svelte';
@@ -329,5 +329,140 @@ describe('shuffled grid rows', () => {
 			preview: true
 		});
 		expect(shownRows(screen.container)).toEqual(['smag', 'lugt', 'farve']);
+	});
+});
+
+describe('list', () => {
+	async function list(props: Record<string, unknown>) {
+		let given = '';
+		const screen = await render(SurveyItem, {
+			type: 'list',
+			onAnswer: (answer: unknown) => {
+				given = answer as string;
+			},
+			...props
+		});
+		return { screen, given: () => given };
+	}
+
+	test('a fixed list shows that many fields and nothing to add or remove', async () => {
+		const { screen } = await list({ min_entries: 3, max_entries: 3 });
+		await expect.element(screen.getByText('Give 3 answers')).toBeVisible();
+		expect(screen.getByRole('textbox').all()).toHaveLength(3);
+		await expect
+			.element(screen.getByRole('button', { name: 'Add another' }))
+			.not.toBeInTheDocument();
+		await expect
+			.element(screen.getByRole('button', { name: /^Remove/ }).first())
+			.not.toBeInTheDocument();
+	});
+
+	test('adds fields up to the maximum and submits the filled ones', async () => {
+		const { screen, given } = await list({ min_entries: 2, max_entries: 3 });
+		expect(screen.getByRole('textbox').all()).toHaveLength(2);
+		const submit = screen.getByRole('button', { name: 'Submit answers' });
+		await screen.getByRole('textbox', { name: 'Answer 1' }).fill('Slack');
+		await expect.element(submit).toBeDisabled();
+		await screen.getByRole('button', { name: 'Add another' }).click();
+		await expect
+			.element(screen.getByRole('button', { name: 'Add another' }))
+			.not.toBeInTheDocument();
+		await screen.getByRole('textbox', { name: 'Answer 3' }).fill(' Figma ');
+		await submit.click();
+		expect(JSON.parse(given())).toEqual(['Slack', 'Figma']);
+	});
+
+	test('a submitted answer is shown read-only', async () => {
+		const { screen } = await list({ readonly: true, answer: JSON.stringify(['Slack', 'Figma']) });
+		await expect.element(screen.getByRole('textbox', { name: 'Answer 2' })).toHaveValue('Figma');
+		await expect.element(screen.getByRole('textbox', { name: 'Answer 2' })).toBeDisabled();
+	});
+});
+
+describe('ranking', () => {
+	const options = ['Pris', 'Kvalitet', 'Levering'];
+
+	function ranked(container: HTMLElement) {
+		return [...container.querySelectorAll('li span.flex-1')].map((el) => el.textContent?.trim());
+	}
+
+	async function ranking(props: Record<string, unknown>) {
+		let given = '';
+		const screen = await render(SurveyItem, {
+			type: 'ranking',
+			options,
+			onAnswer: (answer: unknown) => {
+				given = answer as string;
+			},
+			...props
+		});
+		return { screen, given: () => given };
+	}
+
+	test('starts in the drawn order and submits the order the arrows leave', async () => {
+		const { screen, given } = await ranking({ shuffle_options: true, option_order: [2, 0, 1] });
+		expect(ranked(screen.container)).toEqual(['Levering', 'Pris', 'Kvalitet']);
+		await screen.getByRole('button', { name: 'Move up: Kvalitet' }).click();
+		expect(ranked(screen.container)).toEqual(['Levering', 'Kvalitet', 'Pris']);
+		await screen.getByRole('button', { name: 'Submit ranking' }).click();
+		expect(JSON.parse(given())).toEqual(['Levering', 'Kvalitet', 'Pris']);
+	});
+
+	test('an option dragged by its handle moves to where it is dropped', async () => {
+		const { screen } = await ranking({});
+		const handles = screen.container.querySelectorAll<HTMLElement>('li > span.cursor-grab');
+		const rows = screen.container.querySelectorAll<HTMLElement>('li');
+		const from = handles[2].getBoundingClientRect();
+		const to = rows[0].getBoundingClientRect();
+		await userEvent.dragAndDrop(page.elementLocator(handles[2]), page.elementLocator(rows[0]), {
+			sourcePosition: { x: from.width / 2, y: from.height / 2 },
+			targetPosition: { x: to.width / 2, y: 2 }
+		});
+		await expect.poll(() => ranked(screen.container)).toEqual(['Levering', 'Pris', 'Kvalitet']);
+	});
+
+	test('the options step aside while one is dragged, and Escape puts them back', async () => {
+		const { screen } = await ranking({});
+		const handle = screen.container.querySelectorAll<HTMLElement>('li > span.cursor-grab')[2];
+		const top = screen.container.querySelectorAll<HTMLElement>('li')[0].getBoundingClientRect();
+		const start = handle.getBoundingClientRect();
+		const at = (x: number, y: number) => ({
+			bubbles: true,
+			isPrimary: true,
+			pointerId: 1,
+			button: 0,
+			buttons: 1,
+			clientX: x,
+			clientY: y
+		});
+		const x = start.left + start.width / 2;
+		handle.dispatchEvent(new PointerEvent('pointerdown', at(x, start.top + start.height / 2)));
+		for (let y = start.top; y >= top.top; y -= 10) {
+			document.dispatchEvent(new PointerEvent('pointermove', at(x, y)));
+			await new Promise((resolve) => requestAnimationFrame(resolve));
+		}
+		// Not dropped yet: the others have already made room.
+		await expect.poll(() => ranked(screen.container)[0]).toBe('Levering');
+		// The sensor listens for it on the element being dragged.
+		handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		await expect.poll(() => ranked(screen.container)).toEqual(['Pris', 'Kvalitet', 'Levering']);
+	});
+
+	test('a top-N ranking submits only its first N', async () => {
+		const { screen, given } = await ranking({ top_n: 2 });
+		await expect.element(screen.getByText('Drag your top 2 to the top')).toBeVisible();
+		await expect.element(screen.getByText('Not ranked')).toBeVisible();
+		await screen.getByRole('button', { name: 'Move up: Levering' }).click();
+		await screen.getByRole('button', { name: 'Submit ranking' }).click();
+		expect(JSON.parse(given())).toEqual(['Pris', 'Levering']);
+	});
+
+	test('a submitted answer is shown in its order, without controls', async () => {
+		const { screen } = await ranking({
+			readonly: true,
+			answer: JSON.stringify(['Levering', 'Pris'])
+		});
+		expect(ranked(screen.container)).toEqual(['Levering', 'Pris', 'Kvalitet']);
+		await expect.element(screen.getByRole('button').first()).not.toBeInTheDocument();
 	});
 });

@@ -1,10 +1,10 @@
 import type {
 	LocalizedConditionEvaluation,
 	LocalizedConditions,
+	LocalizedOption,
 	QuestionContext
 } from '$lib/api/types.gen';
 
-import { surveyItemOptions } from './localized';
 import type { GuideQuestion, GuideSection, LocalConditionSet, LocalQuestionContext } from './types';
 
 // Resolves an id-based condition target to where it currently lives. The stored
@@ -103,6 +103,17 @@ export function localizeConditions(
 	};
 }
 
+// The options a condition reading `item` names one of: a radio, checkbox or
+// Likert item's. A ranking has options too, but its answer is an order, which
+// a condition reads as text (a classification instruction), like the library.
+export function conditionOptions(
+	item: GuideQuestion['survey_item'] | null | undefined
+): LocalizedOption[] | undefined {
+	return item?.type === 'radio' || item?.type === 'checkbox' || item?.type === 'likert'
+		? item.options
+		: undefined;
+}
+
 // An evaluation names an option when its target has a choice item, and holds a
 // `trigger_value` otherwise -- a number, a date or a classification
 // instruction, shared by every language. Picking another target leaves the
@@ -114,7 +125,7 @@ function evaluationFor(
 	target: GuideQuestion | null
 ): LocalizedConditionEvaluation {
 	const { option_id, trigger_value, ...rest } = evaluation;
-	if (!surveyItemOptions(target?.survey_item)) {
+	if (!conditionOptions(target?.survey_item)) {
 		return { ...rest, option_id: null, trigger_value: trigger_value ?? '' };
 	}
 	return {
@@ -213,7 +224,7 @@ export function isConditionOptionValid(
 	evaluation: LocalizedConditionEvaluation,
 	target: GuideQuestion | null
 ): boolean {
-	const options = surveyItemOptions(target?.survey_item);
+	const options = conditionOptions(target?.survey_item);
 	if (!options) return true;
 	return options.some((option) => option.id === evaluation.option_id);
 }

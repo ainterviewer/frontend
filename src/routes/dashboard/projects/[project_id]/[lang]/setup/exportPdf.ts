@@ -6,6 +6,7 @@ import type {
 	RenderedQuestion as GuideQuestion,
 	RenderedSection as GuideSection
 } from '$lib/guide/types';
+import { describeListBounds } from '$lib/survey/list';
 import { formatDay } from '$lib/utils/datetime';
 
 // pdfmake doesn't ship type declarations — use a generic record type for doc nodes.
@@ -104,6 +105,17 @@ function buildSurveyItemContent(item: SurveyItem): PdfNode[] {
 				margin: [12, 0, 0, 4]
 			});
 		}
+		if (item.type === 'ranking') {
+			content.push({
+				text:
+					item.top_n != null
+						? `Respondents rank their top ${item.top_n}`
+						: 'Respondents rank every option',
+				fontSize: 9,
+				italics: true,
+				margin: [12, 0, 0, 4]
+			});
+		}
 		if (item.type === 'likert_grid' && item.shuffle_rows) {
 			content.push({
 				text: 'Rows shown in a random order',
@@ -120,6 +132,15 @@ function buildSurveyItemContent(item: SurveyItem): PdfNode[] {
 				margin: [12, 0, 0, 4]
 			});
 		}
+	}
+
+	if (item.type === 'list') {
+		content.push({
+			text: `Respondents give ${describeListBounds(item)}`,
+			fontSize: 9,
+			italics: true,
+			margin: [12, 0, 0, 4]
+		});
 	}
 
 	if ('min' in item && item.min !== undefined && item.min !== null) {

@@ -39,6 +39,8 @@ export const BY_ITEM_TYPE: Record<string, ItemTypeBadge> = {
 	checkbox: { label: 'Multiple choice', icon: 'fa-solid fa-square-check', tone: CHOICE },
 	likert: { label: 'Likert', icon: 'fa-solid fa-signal', tone: CHOICE },
 	likert_grid: { label: 'Likert grid', icon: 'fa-solid fa-table-cells', tone: CHOICE },
+	ranking: { label: 'Ranking', icon: 'fa-solid fa-arrow-down-1-9', tone: CHOICE },
+	list: { label: 'List', icon: 'fa-solid fa-list-ol', tone: TEXT },
 	slider: { label: 'Slider', icon: 'fa-solid fa-sliders', tone: NUMERIC },
 	number: { label: 'Number', icon: 'fa-solid fa-hashtag', tone: NUMERIC },
 	date: { label: 'Date', icon: 'fa-solid fa-calendar-day', tone: TEMPORAL },

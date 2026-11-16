@@ -8,6 +8,7 @@
 	import ConsentPreview from '$lib/components/preview/ConsentPreview.svelte';
 	import EmailPreview from '$lib/components/preview/EmailPreview.svelte';
 	import WelcomePreview from '$lib/components/preview/WelcomePreview.svelte';
+	import { describeListBounds } from '$lib/survey/list';
 	import { portal } from '$lib/utils/portal';
 	import { sanitizeMarkup } from '$lib/utils/sanitize';
 
@@ -314,9 +315,11 @@
 														{#each options(question) as option, o (option.id ?? o)}
 															<li class="flex items-center gap-2 text-gray-700">
 																<i
-																	class="fa-regular {item.type === 'checkbox'
-																		? 'fa-square'
-																		: 'fa-circle'} text-xs text-gray-400"
+																	class="{item.type === 'checkbox'
+																		? 'fa-regular fa-square'
+																		: item.type === 'ranking'
+																			? 'fa-solid fa-grip-vertical'
+																			: 'fa-regular fa-circle'} text-xs text-gray-400"
 																></i>
 																{@render text(option.text)}
 															</li>
@@ -325,11 +328,18 @@
 															<li class="text-gray-500 italic">Other…</li>
 														{/if}
 													</ul>
+													{#if item.type === 'ranking' && item.top_n != null}
+														<p class="mt-1 text-xs text-gray-500">
+															<i class="fa-solid fa-ranking-star"></i> top {item.top_n} ranked
+														</p>
+													{/if}
 													{#if 'shuffle_options' in item && item.shuffle_options}
 														<p class="mt-1 text-xs text-gray-500">
 															<i class="fa-solid fa-shuffle"></i> options shuffled
 														</p>
 													{/if}
+												{:else if item.type === 'list'}
+													<p class="mt-1 text-gray-700">{describeListBounds(item)}</p>
 												{:else if item.type === 'slider'}
 													<p class="mt-1 text-gray-700">
 														{item.min}{hasText(item.min_label)

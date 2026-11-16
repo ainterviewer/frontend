@@ -7,6 +7,7 @@
 	import { renderSurveyItem } from '$lib/guide/render';
 	import type { GuideQuestion } from '$lib/guide/types';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
+	import { describeListBounds } from '$lib/survey/list';
 
 	import AccordionPanel from './AccordionPanel.svelte';
 	import { createListReorder } from './listReorder.svelte';
@@ -66,6 +67,18 @@
 			};
 		} else if (type === 'likert') {
 			question.survey_item = { type, ...base, options: keptOptions };
+		} else if (type === 'ranking') {
+			// Ranking one option is no ranking, so a single kept option gets a
+			// second beside it.
+			question.survey_item = {
+				type,
+				...base,
+				options: keptOptions.length > 1 ? keptOptions : [...keptOptions, option()],
+				...shuffleOptions,
+				top_n: null
+			};
+		} else if (type === 'list') {
+			question.survey_item = { type, ...base, min_entries: null, max_entries: null };
 		} else if (type === 'likert_grid') {
 			// The scale is the options; the rows start empty, two of them, since
 			// a grid of one is a Likert item.
@@ -104,11 +117,46 @@
 
 	const guideStore = getGuideStore();
 
+	// A list asks for exactly so many entries when its bounds are equal, and
+	// otherwise for between them. Read off the bounds rather than kept apart,
+	// so a collaborator's edit to them moves the control too.
+	function listMode(item: { min_entries?: number | null; max_entries?: number | null }) {
+		return item.min_entries != null && item.min_entries === item.max_entries
+			? 'exactly'
+			: 'between';
+	}
+
+	function setListMode(
+		item: { min_entries?: number | null; max_entries?: number | null },
+		mode: string
+	) {
+		if (mode === 'exactly') {
+			const n = item.max_entries ?? item.min_entries ?? 3;
+			item.min_entries = n;
+			item.max_entries = n;
+		} else {
+			item.max_entries = null;
+		}
+	}
+
 	// The item as a respondent in the language being edited would get it,
 	// untranslated text falling back to the default language like the server's.
 	let previewItem = $derived(
 		renderSurveyItem(question.survey_item, guideStore.languages) as SurveyItemUnion | null
 	);
+
+	// What the preview re-mounts on: its answer state is set up once, so a
+	// change to what shapes it -- the type, a Likert's display, a list's
+	// bounds, a ranking's options -- starts it afresh. The state of one type
+	// is meaningless, and can be out of range, for another.
+	let previewKey = $derived.by(() => {
+		const item = previewItem;
+		if (!item) return '';
+		if (item.type === 'likert') return `likert-${item.ui}`;
+		if (item.type === 'list') return `list-${item.min_entries}-${item.max_entries}`;
+		if (item.type === 'ranking') return `ranking-${item.options.length}-${item.top_n}`;
+		return item.type ?? '';
+	});
 
 	let previewQuestion = $derived(pick(question.main_question, guideStore.languages));
 
@@ -123,8 +171,13 @@
 	// The respondent's bubble: `max-w-76` on a phone, `max-w-120` on a computer.
 	let previewBubblePx = $derived(previewPhone ? 304 : 480);
 	let previewPaneWidth = $state(0);
+	// A ranking is never scaled: its options wrap like any text, so it has no
+	// labels to squeeze, and dnd-kit places the option being dragged without
+	// regard to `zoom`, which throws it up and to the left of the pointer.
 	let previewScale = $derived(
-		previewPaneWidth > 0 ? Math.min(1, previewPaneWidth / previewBubblePx) : 1
+		previewPaneWidth > 0 && question.survey_item?.type !== 'ranking'
+			? Math.min(1, previewPaneWidth / previewBubblePx)
+			: 1
 	);
 
 	const optionReorder = createListReorder(
@@ -159,13 +212,17 @@
 				<div class="text-xs text-gray-500">
 					{surveyItem.type === 'likert_grid'
 						? `${surveyItem.rows.length} rows · ${surveyItem.options.length}-point scale (grid)`
-						: surveyItem.type === 'number' ||
-							  surveyItem.type === 'date' ||
-							  surveyItem.type === 'datetime' ||
-							  surveyItem.type === 'time' ||
-							  surveyItem.type === 'slider'
-							? surveyItem.type
-							: `${surveyItemOptions(surveyItem)?.length ?? 0} options (${surveyItem.type})`}
+						: surveyItem.type === 'list'
+							? `list · ${describeListBounds(surveyItem)}`
+							: surveyItem.type === 'ranking' && surveyItem.top_n != null
+								? `top ${surveyItem.top_n} of ${surveyItem.options.length} options (ranking)`
+								: surveyItem.type === 'number' ||
+									  surveyItem.type === 'date' ||
+									  surveyItem.type === 'datetime' ||
+									  surveyItem.type === 'time' ||
+									  surveyItem.type === 'slider'
+									? surveyItem.type
+									: `${surveyItemOptions(surveyItem)?.length ?? 0} options (${surveyItem.type})`}
 				</div>
 			</div>
 		{/snippet}
@@ -183,6 +240,8 @@
 						<option value="checkbox">Multiple Choice</option>
 						<option value="likert">Likert Scale</option>
 						<option value="likert_grid">Likert Grid</option>
+						<option value="ranking">Ranking</option>
+						<option value="list">List</option>
 						<option value="slider">Slider</option>
 						<option value="number">Number</option>
 						<option value="date">Date</option>
@@ -265,7 +324,7 @@
 						</label>
 					</div>
 				{/if}
-				{#if surveyItem.type === 'radio' || surveyItem.type === 'checkbox' || surveyItem.type === 'likert' || surveyItem.type === 'likert_grid'}
+				{#if surveyItem.type === 'radio' || surveyItem.type === 'checkbox' || surveyItem.type === 'likert' || surveyItem.type === 'likert_grid' || surveyItem.type === 'ranking'}
 					<div>
 						<span class="mb-2 block text-gray-500"
 							>{surveyItem.type === 'likert_grid' ? 'Scale' : 'Options'}</span
@@ -308,6 +367,118 @@
 								onclick={() => surveyItem.options.push(option())}>+ Add Option</button
 							>
 						</div>
+					</div>
+				{/if}
+				{#if surveyItem.type === 'ranking'}
+					<div class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+						<span class="flex items-center gap-1">
+							Rank
+							<HoverInfo
+								iconColor="gray-500"
+								text="Respondents drag the options into order. With a top N, only their first N choices are recorded; the rest are left unranked."
+							></HoverInfo>
+						</span>
+						<select
+							class="rounded border-gray-200 bg-gray-50 py-1.5 pr-8 pl-2 text-sm focus:border-primary focus:ring-primary/20"
+							value={surveyItem.top_n == null ? 'all' : 'top'}
+							onchange={(e) => {
+								surveyItem.top_n =
+									(e.target as HTMLSelectElement).value === 'all'
+										? null
+										: Math.min(3, Math.max(1, surveyItem.options.length - 1));
+							}}
+						>
+							<option value="all">All options</option>
+							<option value="top">Only the top</option>
+						</select>
+						{#if surveyItem.top_n != null}
+							<input
+								type="number"
+								min="1"
+								max={surveyItem.options.length}
+								class="w-16 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+								aria-label="How many to rank"
+								bind:value={surveyItem.top_n}
+							/>
+						{/if}
+					</div>
+					{#if surveyItem.top_n != null && surveyItem.top_n > surveyItem.options.length}
+						<p class="text-xs text-amber-700">
+							There are only {surveyItem.options.length} options, so all of them are ranked.
+						</p>
+					{/if}
+					<label
+						class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+					>
+						<input
+							type="checkbox"
+							class="rounded border-gray-300 text-primary focus:ring-primary"
+							bind:checked={surveyItem.shuffle_options}
+						/>
+						Shuffle options
+						<HoverInfo
+							iconColor="gray-500"
+							text="Start the options in a random order, drawn once for each interview, so that no option gains from starting at the top."
+						></HoverInfo>
+					</label>
+				{/if}
+				{#if surveyItem.type === 'list'}
+					{@const mode = listMode(surveyItem)}
+					<div class="space-y-2">
+						<div class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+							<span class="flex items-center gap-1">
+								Entries
+								<HoverInfo
+									iconColor="gray-500"
+									text="How many answers the respondent gives, each in a field of its own. Exactly shows that many fields; between lets them add fields up to the maximum."
+								></HoverInfo>
+							</span>
+							<select
+								class="rounded border-gray-200 bg-gray-50 py-1.5 pr-8 pl-2 text-sm focus:border-primary focus:ring-primary/20"
+								value={mode}
+								onchange={(e) => setListMode(surveyItem, (e.target as HTMLSelectElement).value)}
+							>
+								<option value="between">Between</option>
+								<option value="exactly">Exactly</option>
+							</select>
+							{#if mode === 'exactly'}
+								<input
+									type="number"
+									min="1"
+									class="w-16 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+									aria-label="Number of entries"
+									value={surveyItem.min_entries}
+									oninput={(e) => {
+										const n = (e.target as HTMLInputElement).valueAsNumber;
+										if (Number.isInteger(n) && n >= 1) {
+											surveyItem.min_entries = n;
+											surveyItem.max_entries = n;
+										}
+									}}
+								/>
+							{:else}
+								<input
+									type="number"
+									min="1"
+									class="w-16 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+									aria-label="Fewest entries"
+									placeholder={surveyItem.required === false ? '0' : '1'}
+									bind:value={surveyItem.min_entries}
+								/>
+								<span>and</span>
+								<input
+									type="number"
+									min="1"
+									class="w-20 rounded border-gray-200 p-1.5 text-sm focus:border-primary focus:ring-primary/20"
+									aria-label="Most entries"
+									placeholder="No limit"
+									bind:value={surveyItem.max_entries}
+								/>
+							{/if}
+						</div>
+						{#if surveyItem.min_entries != null && surveyItem.max_entries != null && surveyItem.min_entries > surveyItem.max_entries}
+							<p class="text-xs text-red-600">The fewest entries can't be more than the most.</p>
+						{/if}
 					</div>
 				{/if}
 				{#if surveyItem.type === 'radio' || surveyItem.type === 'checkbox'}
@@ -545,15 +716,14 @@
 					     its width and the whole preview is scaled down instead. -->
 					<div class="w-full" bind:clientWidth={previewPaneWidth}>
 						<div
-							class="ml-auto text-sm break-words hyphens-auto {previewItem.type === 'likert_grid'
+							class="ml-auto text-sm break-words hyphens-auto {previewItem.type === 'likert_grid' ||
+							previewItem.type === 'list'
 								? 'w-full'
 								: 'w-fit'} {previewPhone ? 'max-w-76' : 'max-w-120'}"
 							style:zoom={previewScale < 1 ? previewScale : null}
 							lang={guideStore.lang}
 						>
-							<!-- Re-mount on a type change: the answer state of one type is
-						     meaningless, and can be out of range, for another. -->
-							{#key `${previewItem.type}-${'ui' in previewItem ? previewItem.ui : ''}`}
+							{#key previewKey}
 								<SurveyItem
 									{...previewItem}
 									lang={guideStore.lang.toUpperCase()}

@@ -678,6 +678,8 @@ export const zDistributionKind = z.enum([
     'temporal',
     'text',
     'grid',
+    'ranking',
+    'list',
     'statement'
 ]);
 
@@ -1654,6 +1656,24 @@ export const zLikertItem = z.object({
 });
 
 /**
+ * ListItem
+ *
+ * Several answers of the respondent's own, given together as one answer:
+ * "name the apps you use daily".
+ *
+ * `min_entries` and `max_entries` bound how many; set them equal for a fixed
+ * number of entries. The answer is a JSON array of the entries, in the order
+ * given, blanks left out (`encode_answer`), read back with `parse_answer` --
+ * or as text a person or model can read with `describe_answer`.
+ */
+export const zListItem = z.object({
+    required: z.boolean().optional().default(true),
+    type: z.literal('list').optional().default('list'),
+    min_entries: z.int().gte(1).nullish(),
+    max_entries: z.int().gte(1).nullish()
+});
+
+/**
  * LocalizedConditionEvaluation
  *
  * `ConditionEvaluation` with the trigger named by option where it is one.
@@ -1771,6 +1791,17 @@ export const zLocalizedRadioItem = z.object({
     type: z.literal('radio').optional().default('radio'),
     options: z.array(zLocalizedOption),
     with_other: z.boolean().optional().default(false),
+    shuffle_options: z.boolean().optional().default(false)
+});
+
+/**
+ * LocalizedRankingItem
+ */
+export const zLocalizedRankingItem = z.object({
+    required: z.boolean().optional().default(true),
+    type: z.literal('ranking').optional().default('ranking'),
+    options: z.array(zLocalizedOption),
+    top_n: z.int().gte(1).nullish(),
     shuffle_options: z.boolean().optional().default(false)
 });
 
@@ -2417,6 +2448,40 @@ export const zRadioItem = z.object({
     option_order: z.array(z.int()).nullish(),
     type: z.literal('radio').optional().default('radio'),
     with_other: z.boolean().optional().default(false)
+});
+
+/**
+ * RankingItem
+ *
+ * The options put in order of preference, answered as one answer.
+ *
+ * With `top_n` set, only that many are ranked: the answer is the respondent's
+ * first `top_n` choices, and the rest are left unranked. The answer is a JSON
+ * array of the ranked options' texts, first choice first (`encode_answer`),
+ * read back with `parse_answer`, as positions in `options` with
+ * `ranked_positions` (which is how one choice counts as one across
+ * languages), or as text with `describe_answer`.
+ */
+export const zRankingItem = z.object({
+    required: z.boolean().optional().default(true),
+    options: z.array(z.string()),
+    shuffle_options: z.boolean().optional().default(false),
+    option_order: z.array(z.int()).nullish(),
+    type: z.literal('ranking').optional().default('ranking'),
+    top_n: z.int().gte(1).nullish()
+});
+
+/**
+ * RankingOptionDistribution
+ *
+ * One option of a ranking: how often it was given each rank.
+ */
+export const zRankingOptionDistribution = z.object({
+    position: z.int(),
+    label: z.string(),
+    counts: z.array(zCategoryCount),
+    n_ranked: z.int(),
+    mean_rank: z.number().nullable()
 });
 
 /**
@@ -3169,6 +3234,8 @@ export const zItemDistribution = z.object({
         zCheckboxItem,
         zLikertItem,
         zLikertGridItem,
+        zListItem,
+        zRankingItem,
         zSliderItem,
         zNumberItem,
         zDateItem,
@@ -3188,7 +3255,8 @@ export const zItemDistribution = z.object({
     samples: z.array(zAnswerSample).optional(),
     n_other_hidden: z.int().optional().default(0),
     n_other_hidden_count: z.int().optional().default(0),
-    rows: z.array(zGridRowDistribution).optional()
+    rows: z.array(zGridRowDistribution).optional(),
+    ranking: z.array(zRankingOptionDistribution).optional()
 });
 
 /**
@@ -3221,6 +3289,8 @@ export const zLocalizedQuestion = z.object({
         zLocalizedCheckboxItem,
         zLocalizedLikertItem,
         zLocalizedLikertGridItem,
+        zLocalizedRankingItem,
+        zListItem,
         zLocalizedSliderItem,
         zNumberItem,
         zDateItem,
@@ -3306,6 +3376,8 @@ export const zMessagePublic = z.object({
         zCheckboxItem,
         zLikertItem,
         zLikertGridItem,
+        zListItem,
+        zRankingItem,
         zSliderItem,
         zNumberItem,
         zDateItem,
@@ -3349,6 +3421,8 @@ export const zQuestion = z.object({
         zCheckboxItem,
         zLikertItem,
         zLikertGridItem,
+        zListItem,
+        zRankingItem,
         zSliderItem,
         zNumberItem,
         zDateItem,
@@ -3615,6 +3689,8 @@ export const zTranscriptTurn = z.object({
         zCheckboxItem,
         zLikertItem,
         zLikertGridItem,
+        zListItem,
+        zRankingItem,
         zSliderItem,
         zNumberItem,
         zDateItem,
@@ -4028,6 +4104,8 @@ export const zOutgoingHistoryMessage = z.object({
         zCheckboxItem,
         zLikertItem,
         zLikertGridItem,
+        zListItem,
+        zRankingItem,
         zSliderItem,
         zNumberItem,
         zDateItem,
@@ -4055,6 +4133,8 @@ export const zOutgoingMessage = z.object({
         zCheckboxItem,
         zLikertItem,
         zLikertGridItem,
+        zListItem,
+        zRankingItem,
         zSliderItem,
         zNumberItem,
         zDateItem,

@@ -1,12 +1,13 @@
 <script lang="ts">
 	import {
+		conditionOptions,
 		isConditionOptionValid,
 		isConditionTargetValid,
 		isOrdinalItem,
 		mayGoUnasked,
 		resolveConditionTarget
 	} from '$lib/guide/conditions';
-	import { pick, surveyItemOptions } from '$lib/guide/localized';
+	import { pick } from '$lib/guide/localized';
 	import type { GuideQuestion, GuideSection, LocalCondition } from '$lib/guide/types';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
@@ -176,7 +177,7 @@
 						referencedQuestion?.survey_item?.type === 'slider'}
 					{@const isOrdinal = isOrdinalItem(referencedQuestion)}
 					{@const allowsAnd = referencedQuestion?.survey_item?.type === 'checkbox' || isOrdinal}
-					{@const hasSurveyOptions = surveyItemOptions(referencedQuestion?.survey_item)?.length}
+					{@const hasSurveyOptions = conditionOptions(referencedQuestion?.survey_item)?.length}
 					{@const targetValid =
 						isBlockValid(condition.question_context) && !hasMissingOption(condition)}
 
@@ -340,7 +341,7 @@
 															bind:value={evaluation.option_id}
 														>
 															<option value={null}>Select an option...</option>
-															{#each surveyItemOptions(referencedQuestion?.survey_item) || [] as option, oIdx (option.id)}
+															{#each conditionOptions(referencedQuestion?.survey_item) || [] as option, oIdx (option.id)}
 																<option value={option.id} disabled={selectedIds.includes(option.id)}
 																	>{pick(option.text, guideStore.languages) ||
 																		`Option ${oIdx + 1}`}</option
