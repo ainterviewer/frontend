@@ -2469,6 +2469,10 @@ export type FacetCount = {
      * Count
      */
     count: number;
+    /**
+     * Label
+     */
+    label?: string | null;
 };
 
 /**
@@ -2956,6 +2960,10 @@ export type InterviewFacets = {
      * Intervened
      */
     intervened?: Array<FacetCount>;
+    /**
+     * Version
+     */
+    version?: Array<FacetCount>;
 };
 
 /**
@@ -3013,6 +3021,10 @@ export type InterviewFilterParams = {
      * Intervened
      */
     intervened?: boolean | null;
+    /**
+     * Versions
+     */
+    versions?: Array<number> | null;
 };
 
 /**
@@ -13426,6 +13438,10 @@ export type GetInterviewsData = {
          * Intervened
          */
         intervened?: boolean | null;
+        /**
+         * Versions
+         */
+        versions?: Array<number> | null;
         /**
          * Folder Id
          */

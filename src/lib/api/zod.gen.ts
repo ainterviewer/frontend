@@ -953,7 +953,8 @@ export const zExternalParamsReplace = z.object({
  */
 export const zFacetCount = z.object({
     value: z.string(),
-    count: z.int()
+    count: z.int(),
+    label: z.string().nullish()
 });
 
 /**
@@ -1164,7 +1165,8 @@ export const zInterviewFacets = z.object({
     language: z.array(zFacetCount).optional().default([]),
     type: z.array(zFacetCount).optional().default([]),
     reported: z.array(zFacetCount).optional().default([]),
-    intervened: z.array(zFacetCount).optional().default([])
+    intervened: z.array(zFacetCount).optional().default([]),
+    version: z.array(zFacetCount).optional().default([])
 });
 
 /**
@@ -1320,7 +1322,8 @@ export const zInterviewFilterParams = z.object({
     search: z.string().max(200).nullish(),
     pid: z.string().max(200).nullish(),
     reported: z.boolean().nullish(),
-    intervened: z.boolean().nullish()
+    intervened: z.boolean().nullish(),
+    versions: z.array(z.int()).nullish()
 });
 
 /**
@@ -1597,7 +1600,8 @@ export const zInterviewListResponse = z.object({
         language: [],
         type: [],
         reported: [],
-        intervened: []
+        intervened: [],
+        version: []
     })
 });
 
@@ -5969,6 +5973,7 @@ export const zGetInterviewsQuery = z.object({
     pid: z.string().max(200).nullish(),
     reported: z.boolean().nullish(),
     intervened: z.boolean().nullish(),
+    versions: z.array(z.int()).nullish(),
     folder_id: z.string().nullish()
 });
 

@@ -81,7 +81,7 @@ export function matchesSelection(
 }
 
 /** One value a server-side facet offers, as the API returns it. */
-export type Facet = { value: string; count: number };
+export type Facet = { value: string; count: number; label?: string | null };
 
 /** A server facet as the `counts` map `FacetedFilter` takes. */
 export function facetCounts(facet: Facet[] | undefined): Record<string, number> {
@@ -89,7 +89,8 @@ export function facetCounts(facet: Facet[] | undefined): Record<string, number> 
 }
 
 /**
- * A server facet as `FacetedFilter` choices, optionally relabelled.
+ * A server facet as `FacetedFilter` choices, optionally relabelled. Without a
+ * label of its own, a value reads as the server named it, or else as itself.
  *
  * Deriving the options from the facet rather than from the enum means the
  * dropdown only ever lists values the data actually contains.
@@ -98,7 +99,10 @@ export function facetOptions(
 	facet: Facet[] | undefined,
 	labels: Record<string, string> = {}
 ): { value: string; label: string }[] {
-	return (facet ?? []).map(({ value }) => ({ value, label: labels[value] ?? value }));
+	return (facet ?? []).map(({ value, label }) => ({
+		value,
+		label: labels[value] ?? label ?? value
+	}));
 }
 
 /**

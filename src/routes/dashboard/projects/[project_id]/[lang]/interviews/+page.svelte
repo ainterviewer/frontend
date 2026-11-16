@@ -283,6 +283,7 @@
 			// boolean, and asking for reported *and* unreported interviews is
 			// asking for all of them.
 			reported: reportedFilter(),
+			versions: selection('version_no')?.map(Number),
 			...dateRangeQuery(
 				columnFilters.find((filter) => filter.id === 'created_at')?.value as DateRange | undefined
 			)
@@ -519,6 +520,12 @@
 			column={table.getColumn('language')!}
 			options={facetOptions(facets.language)}
 			counts={facetCounts(facets.language)}
+		/>
+		<FacetedFilter
+			title="Version"
+			column={table.getColumn('version_no')!}
+			options={facetOptions(facets.version)}
+			counts={facetCounts(facets.version)}
 		/>
 		<FacetedFilter
 			title="Flagged"
