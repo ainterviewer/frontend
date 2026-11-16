@@ -13,11 +13,13 @@
 	import {
 		type Change,
 		diffContent,
+		diffLines,
 		diffProse,
 		guideChangeCount,
 		isChanged,
 		plainText,
 		type QuestionDiff,
+		type Segment,
 		type Status
 	} from './diff';
 	import { KIND_LABEL, KIND_PILL } from './labels';
@@ -166,37 +168,61 @@
 	</span>
 {/snippet}
 
+{#snippet segments(parts: Segment[], blocks = true)}
+	{#each parts as part, i (i)}{#if part.kind === 'added'}<ins
+				class={[
+					'rounded-sm bg-green-100 text-green-900 no-underline',
+					blocks && part.block && 'block px-0.5'
+				]}>{part.text}</ins
+			>{:else if part.kind === 'removed'}<del
+				class={['rounded-sm bg-red-100 text-red-800', blocks && part.block && 'block px-0.5']}
+				>{part.text}</del
+			>{:else}{part.text}{/if}{/each}
+{/snippet}
+
+<!-- A list's items, a bullet each. -->
+{#snippet items(lines: Segment[][])}
+	<ul class="list-disc pl-5 marker:text-gray-400">
+		{#each lines as line, i (i)}
+			<li>{@render segments(line, false)}</li>
+		{/each}
+	</ul>
+{/snippet}
+
+<!-- Text as it is on one side: a list's items get a bullet each. -->
+{#snippet plain(c: Change, value: string, cls = '')}
+	{#if c.list}
+		<div class={cls}>{@render items(diffLines([{ kind: 'same', text: value }]))}</div>
+	{:else}
+		<div class={['whitespace-pre-wrap', cls]}>{value}</div>
+	{/if}
+{/snippet}
+
 {#snippet value(c: Change, pd: ReturnType<typeof proseDiff>)}
 	{#if c.opaque}
 		<span class="text-gray-600 italic">
 			{c.status === 'added' ? 'Added' : c.status === 'removed' ? 'Removed' : 'Changed'}
 		</span>
 	{:else if pd?.rewritten}
-		<div class="whitespace-pre-wrap">{pd.after}</div>
+		{@render plain(c, pd.after)}
 		<details class="group mt-1.5">
 			<summary class="cursor-pointer text-xs text-gray-500 select-none hover:text-gray-700">
 				<span class="group-open:hidden">Show the previous text</span>
 				<span class="hidden group-open:inline">Hide the previous text</span>
 			</summary>
-			<div class="mt-1 border-l-2 border-red-200 pl-3 whitespace-pre-wrap text-gray-500">
-				{pd.before}
-			</div>
+			{@render plain(c, pd.before, 'mt-1 border-l-2 border-red-200 pl-3 text-gray-500')}
 		</details>
+	{:else if pd && c.list}
+		{@render items(diffLines(pd.parts))}
 	{:else if pd}
-		<div class="whitespace-pre-wrap">
-			{#each pd.parts as part, i (i)}{#if part.kind === 'added'}<ins
-						class={[
-							'rounded-sm bg-green-100 text-green-900 no-underline',
-							part.block && 'block px-0.5'
-						]}>{part.text}</ins
-					>{:else if part.kind === 'removed'}<del
-						class={['rounded-sm bg-red-100 text-red-800', part.block && 'block px-0.5']}
-						>{part.text}</del
-					>{:else}{part.text}{/if}{/each}
-		</div>
+		<div class="whitespace-pre-wrap">{@render segments(pd.parts)}</div>
 	{:else if c.prose}
-		{@const text = plainText(c.after ?? c.before ?? '')}
-		<span class="whitespace-pre-wrap">{text}</span>
+		{@const prose = plainText(c.after ?? c.before ?? '')}
+		{#if c.list}
+			{@render items(diffLines([{ kind: 'same', text: prose }]))}
+		{:else}
+			<span class="whitespace-pre-wrap">{prose}</span>
+		{/if}
 		{#if c.status !== 'same'}
 			<span class="ml-1 text-xs text-gray-500 italic">(formatting changed)</span>
 		{/if}

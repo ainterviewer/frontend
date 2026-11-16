@@ -5,6 +5,7 @@ import type { LocalizedQuestionSection } from '$lib/api/types.gen';
 import {
 	type Content,
 	diffContent,
+	diffLines,
 	diffProse,
 	guideChangeCount,
 	mergeOrder,
@@ -255,5 +256,65 @@ describe('diffProse', () => {
 			rewritten: false
 		});
 		expect(diffProse('Old text', '').rewritten).toBe(false);
+	});
+});
+
+describe('diffLines', () => {
+	it('gives each item a line, also where only one side breaks it', () => {
+		const lines = diffLines(
+			diffProse('Why this phone?\nWho decided?', 'Why this phone?\nWho paid?').parts
+		);
+		expect(lines).toEqual([
+			[{ kind: 'same', text: 'Why this phone?' }],
+			[
+				{ kind: 'same', text: 'Who ' },
+				{ kind: 'removed', text: 'decided' },
+				{ kind: 'added', text: 'paid' },
+				{ kind: 'same', text: '?' }
+			]
+		]);
+		expect(
+			diffLines([
+				{ kind: 'removed', text: 'Old one\nOld two\n', block: true },
+				{ kind: 'added', text: 'New one', block: true }
+			])
+		).toEqual([
+			[{ kind: 'removed', text: 'Old one' }],
+			[{ kind: 'removed', text: 'Old two' }],
+			[{ kind: 'added', text: 'New one' }]
+		]);
+	});
+});
+
+describe('list items', () => {
+	it('keeps an edit at the end of one item off the next', () => {
+		const d = diffProse(
+			'Which one? (too evaluative)\nOthers?',
+			'Which one? (too evaluative?)\n1. Others?'
+		);
+		expect(diffLines(d.parts)).toEqual([
+			[
+				{ kind: 'same', text: 'Which one? (too evaluative' },
+				{ kind: 'added', text: '?' },
+				{ kind: 'same', text: ')' }
+			],
+			[
+				{ kind: 'added', text: '1. ' },
+				{ kind: 'same', text: 'Others?' }
+			]
+		]);
+	});
+});
+
+describe('list values', () => {
+	it('marks a list of texts as a list', () => {
+		const before = content([{ id: 's', questions: [q('a', 'Q', { probes: [{ EN: 'Why?' }] })] }]);
+		const after = content([
+			{ id: 's', questions: [q('a', 'Q', { probes: [{ EN: 'Why?' }, { EN: 'How?' }] })] }
+		]);
+		const change = diffContent(before, after, 'EN').sections[0].questions[0].changes.find(
+			(c) => c.label === 'Probes'
+		);
+		expect(change).toMatchObject({ list: true, before: 'Why?', after: 'Why?\nHow?' });
 	});
 });

@@ -34,6 +34,8 @@ export type Change = {
 	prose: boolean;
 	/** Too technical to show (conditions, media data): only that it changed. */
 	opaque: boolean;
+	/** A list of texts (probes), one item per line of `before` and `after`. */
+	list: boolean;
 };
 
 export type QuestionDiff = {
@@ -75,7 +77,7 @@ type Side = {
 	codes: Set<string>;
 };
 
-type Leaf = { label: string; value: string; prose: boolean; opaque: boolean };
+type Leaf = { label: string; value: string; prose: boolean; opaque: boolean; list?: boolean };
 
 const LABELS: Record<string, string> = {
 	// Guide
@@ -239,7 +241,8 @@ function flatten(
 				label: name,
 				value: lines.join(prose ? '\n' : ', '),
 				prose,
-				opaque: false
+				opaque: false,
+				list: prose
 			});
 			return out;
 		}
@@ -331,7 +334,8 @@ function compareLeaves(before: Map<string, Leaf>, after: Map<string, Leaf>): Cha
 			before: b?.value ?? null,
 			after: a?.value ?? null,
 			prose: !!(a?.prose || b?.prose),
-			opaque: !!(a?.opaque || b?.opaque)
+			opaque: !!(a?.opaque || b?.opaque),
+			list: !!(a?.list || b?.list)
 		};
 	});
 }
@@ -545,7 +549,9 @@ function kept(parts: Segment[]): number {
 /**
  * A word or two left in place between two edits ("og", "i", a comma) is
  * counted as removed and added, so the edits read as one phrase replaced by
- * another instead of alternating fragments.
+ * another instead of alternating fragments. Never across a line break: edits
+ * on two lines (two probes) are not one phrase, and the break would end up on
+ * one side only.
  */
 function joinEdits(parts: Segment[]): Segment[] {
 	const out: Segment[] = [];
@@ -559,7 +565,12 @@ function joinEdits(parts: Segment[]): Segment[] {
 	parts.forEach((p, i) => {
 		if (p.kind === 'removed') removed += p.text;
 		else if (p.kind === 'added') added += p.text;
-		else if ((removed || added) && i < parts.length - 1 && isSmall(p.text)) {
+		else if (
+			(removed || added) &&
+			i < parts.length - 1 &&
+			isSmall(p.text) &&
+			!p.text.includes('\n')
+		) {
 			removed += p.text;
 			added += p.text;
 		} else {
@@ -650,4 +661,20 @@ export function diffProse(before: string, after: string): ProseDiff {
 		parts,
 		rewritten: letters(before) > 0 && letters(after) > 0 && kept(parts) < TEXT_KEPT
 	};
+}
+
+/**
+ * A diff split at its line breaks, for a list shown an item per line. A line
+ * break only one side has ends the line too, so a removed item and the item
+ * added in its place read as lines of their own.
+ */
+export function diffLines(parts: Segment[]): Segment[][] {
+	const lines: Segment[][] = [[]];
+	for (const p of parts) {
+		p.text.split('\n').forEach((text, i) => {
+			if (i > 0) lines.push([]);
+			if (text) lines.at(-1)!.push({ kind: p.kind, text });
+		});
+	}
+	return lines.filter((line) => line.length);
 }
