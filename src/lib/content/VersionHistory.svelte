@@ -203,7 +203,13 @@
 				{#each versions as version (version.id)}
 					<li class="flex flex-col gap-1 px-5 py-3">
 						<div class="flex items-center gap-2">
-							<span class="font-mono text-sm font-semibold text-gray-900">
+							<!-- Published versions are the milestones; snapshot numbers
+							     only tell them apart, so they recede. -->
+							<span
+								class="font-mono text-sm {version.semver
+									? 'font-semibold text-gray-900'
+									: 'text-gray-700'}"
+							>
 								{version.semver ? `v${version.semver}` : `#${version.version_no}`}
 							</span>
 							<span class="rounded {KIND_PILL[version.kind]} px-1.5 py-0.5 text-xs">
