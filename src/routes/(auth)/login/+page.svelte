@@ -10,6 +10,10 @@
 	import { errorDetail, hasErrorCode } from '$lib/utils/errors';
 	import { loginNext } from '$lib/utils/urls';
 
+	import { saveRememberMe } from './rememberMe';
+
+	let { data } = $props();
+
 	type Step = 'credentials' | 'twoFactor' | 'notVerified';
 	let step = $state<Step>('credentials');
 
@@ -200,6 +204,8 @@
 								id="remember-me"
 								name="remember-me"
 								type="checkbox"
+								checked={data.rememberMe}
+								onchange={(event) => saveRememberMe(event.currentTarget.checked)}
 								class="h-4 w-4 rounded border-gray-300 text-primary transition-colors focus:ring-primary"
 							/>
 							<label for="remember-me" class="ml-2 block text-sm text-gray-900">
