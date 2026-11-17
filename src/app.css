@@ -39,6 +39,15 @@
 	top: max(4.25rem, calc(2.75rem + var(--translation-banner-stuck-h, 0px) + 0.5rem));
 }
 
+/* A thin, muted scrollbar for scroll areas on a dark background. The page's
+   `color-scheme: light` (below) otherwise gives them the light native one,
+   which Chromium on Linux and Windows draws ~15px wide with arrow buttons.
+   The standard properties drop the arrows in Chromium 121+ and Firefox. */
+@utility scrollbar-dark {
+	scrollbar-width: thin;
+	scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+}
+
 /* Base  */
 
 @layer base {

@@ -115,7 +115,7 @@
 		<i class={collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'}></i>
 	</button>
 
-	<div class="h-full overflow-x-hidden overflow-y-auto pb-12">
+	<div class="h-full scrollbar-dark overflow-x-hidden overflow-y-auto pb-12">
 		<ul class="m-0 list-none p-0">
 			{#each visibleItems as item (item.label || item.href || item)}
 				{#if item.type === 'separator'}
