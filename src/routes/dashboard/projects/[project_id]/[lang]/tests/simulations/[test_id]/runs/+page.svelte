@@ -3,10 +3,17 @@
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Me, Synthesize } from '$lib/api';
-	import type { DemoBudget, DemoBudgetItem, SynthesizeRequest } from '$lib/api/types.gen';
+	import type {
+		DemoBudget,
+		DemoBudgetItem,
+		SynthesizeRequest,
+		TestRunPublic
+	} from '$lib/api/types.gen';
+	import ModelPicker from '$lib/components/ModelPicker.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
@@ -17,6 +24,7 @@
 		sortableText,
 		sortableTime
 	} from '$lib/components/table/features';
+	import { describeModel } from '$lib/content/models';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 	import { toastApiError } from '$lib/utils/toast';
 
@@ -68,16 +76,10 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// getTestStatus has no response model in the OpenAPI schema; this mirrors
-	// the backend's test run rows.
-	type TestRun = {
-		id: string;
-		status: string;
-		created_at: string;
-		language?: string | null;
-		n_interviews?: number | null;
-		answering_model?: string | null;
-	};
+	type TestRun = TestRunPublic;
+
+	/** How many interviewer models one request may compare. */
+	const MAX_COMPARED = 5;
 
 	let testRuns = $state<TestRun[]>([]);
 	let loading = $state(false);
@@ -90,6 +92,10 @@
 	let delayBeforeAnswers = $state(initialTest.delay_before_answers?.[0] ?? 0);
 	let delayBeforeAnswersRandom = $state(initialTest.delay_before_answers?.[1] ?? 0);
 	let answeringModel = $state(initialTest.answering_model ?? '');
+	// Empty for one run on the project's own agent models; otherwise one run
+	// per model, interviewing the same synthetic people, to compare.
+	let interviewerModels = $state<string[]>([]);
+	let runCount = $derived(Math.max(1, interviewerModels.length));
 	let language = $state(initialTest.language ?? page.params.lang);
 
 	// `max` on a number input only limits the spinner, so typed values are
@@ -98,9 +104,13 @@
 		if (!Number.isInteger(nInterviews) || nInterviews < 1) {
 			return 'Enter a whole number of at least 1.';
 		}
-		const exceeded = demoBudgetItems.find((item) => nInterviews > item.remaining);
+		// Every compared model runs them all, and the budget counts each.
+		const total = nInterviews * runCount;
+		const exceeded = demoBudgetItems.find((item) => total > item.remaining);
 		if (isDemo && exceeded) {
-			return demoBudgetError(exceeded);
+			return runCount > 1
+				? `${demoBudgetError(exceeded)} Comparing ${runCount} models runs ${total}.`
+				: demoBudgetError(exceeded);
 		}
 		if (nInterviews > maxInterviews) {
 			return `A test can run at most ${maxInterviews} synthetic interviews.`;
@@ -147,13 +157,14 @@
 		const body: SynthesizeRequest = {
 			n_interviews: nInterviews,
 			answering_model: answeringModel || null,
+			interviewer_models: interviewerModels,
 			language,
 			delay_before_answers: delayBeforeAnswers
 				? [delayBeforeAnswers, delayBeforeAnswersRandom]
 				: null
 		};
 
-		const { error: runError } = await Synthesize.runSyntheticTest({
+		const { data: started, error: runError } = await Synthesize.runSyntheticTest({
 			path: { project_id: projectId, test_id: testId },
 			body
 		});
@@ -166,6 +177,19 @@
 
 		await loadTestRuns();
 		running = false;
+		// A comparison's runs come selected, ready for "Compare".
+		const ids = started?.test_run_ids ?? [];
+		if (ids.length > 1) table.setRowSelection(Object.fromEntries(ids.map((id) => [id, true])));
+	}
+
+	function compareSelected() {
+		const ids = table.getSelectedRowIds();
+		const query = new URLSearchParams(ids.map((id) => ['run', id]));
+		goto(
+			resolve(
+				`/dashboard/projects/${projectId}/${lang}/tests/simulations/${testId}/runs/compare?${query}`
+			)
+		);
 	}
 
 	function getStatusClass(status: string) {
@@ -197,7 +221,6 @@
 	$effect(() => {
 		loadTestRuns();
 		startAutoRefresh();
-		console.log(answeringModel);
 		return () => {
 			if (refreshInterval) clearInterval(refreshInterval);
 		};
@@ -229,9 +252,11 @@
 			sortFn: 'basic',
 			meta: { class: 'tabular-nums text-gray-600' }
 		}),
-		helper.display({
+		helper.accessor((r) => sortableText(r.interviewer_model), {
 			id: 'question_model',
-			header: 'Question model',
+			header: 'Interviewer model',
+			sortFn: 'text',
+			sortUndefined: 'last',
 			meta: { class: 'text-gray-600' }
 		}),
 		helper.accessor((r) => sortableText(r.answering_model), {
@@ -264,7 +289,7 @@
 		created_at: 'Created',
 		language: 'Language',
 		n_interviews: 'N interviews',
-		question_model: 'Question model',
+		question_model: 'Interviewer model',
 		answering_model: 'Answering model',
 		status: 'Status'
 	};
@@ -380,19 +405,36 @@
 				</div>
 			{/if}
 			{#if data.models && data.models.length > 0}
-				<div>
+				<div class="w-96 max-w-full">
 					<label for="answering-model" class="mb-1 block text-sm font-medium text-gray-700"
-						>Language model</label
+						>Answering model</label
 					>
-					<select
+					<p class="mb-2 text-xs text-gray-500">Plays the synthetic interviewees.</p>
+					<ModelPicker
 						id="answering-model"
+						models={data.models}
 						bind:value={answeringModel}
-						class="w-fit rounded border-gray-300 bg-white focus:border-primary focus:ring-primary"
+						label="Answering model"
+					/>
+				</div>
+
+				<div class="w-96 max-w-full">
+					<label for="interviewer-models" class="mb-1 block text-sm font-medium text-gray-700"
+						>Interviewer models</label
 					>
-						{#each data.models as model (model.id)}
-							<option value={model.id}>{model.id}</option>
-						{/each}
-					</select>
+					<p class="mb-2 text-xs text-gray-500">
+						Leave empty to use the project's agent models. Choose several to compare them: each runs
+						its own interviews with the same synthetic interviewees.
+					</p>
+					<ModelPicker
+						id="interviewer-models"
+						models={data.models}
+						multiple
+						max={MAX_COMPARED}
+						bind:values={interviewerModels}
+						label="Interviewer models"
+						placeholder="The project's agent models"
+					/>
 				</div>
 			{/if}
 
@@ -418,6 +460,8 @@
 			>
 				{#if running}
 					<i class="fas fa-spinner fa-spin mr-2"></i> Running...
+				{:else if runCount > 1}
+					Run on {runCount} models
 				{:else}
 					Run test
 				{/if}
@@ -431,11 +475,24 @@
 			{columnLabels}
 			{loading}
 			{hasLoaded}
-			selectable={false}
 			rowLabel="test run"
 			emptyTitle="No test runs yet"
 			emptyDescription="Run the test above to create one."
 		>
+			{#snippet selectionActions()}
+				<button
+					type="button"
+					class="rounded px-2 py-0.5 text-sm font-medium whitespace-nowrap text-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+					disabled={table.getSelectedRowIds().length > MAX_COMPARED}
+					title={table.getSelectedRowIds().length > MAX_COMPARED
+						? `Compare at most ${MAX_COMPARED} runs`
+						: 'Read the selected runs side by side'}
+					onclick={compareSelected}
+				>
+					<i class="fa-solid fa-table-columns mr-1"></i> Compare
+				</button>
+			{/snippet}
+
 			{#snippet filters()}
 				{#if table.getColumn('status')}
 					<FacetedFilter title="Status" column={table.getColumn('status')!} />
@@ -453,7 +510,12 @@
 				{:else if columnId === 'n_interviews'}
 					{testRun.n_interviews}
 				{:else if columnId === 'question_model'}
-					<span class="text-gray-300">&ndash;</span>
+					{#if testRun.interviewer_model}
+						{@const { provider, name } = describeModel(testRun.interviewer_model)}
+						{name} <span class="text-xs text-gray-400">&middot; {provider}</span>
+					{:else}
+						<span class="text-gray-400">The project's</span>
+					{/if}
 				{:else if columnId === 'answering_model'}
 					{#if testRun.answering_model}{testRun.answering_model}{:else}<span class="text-gray-300"
 							>&ndash;</span
