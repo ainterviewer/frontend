@@ -12,15 +12,19 @@
 	import type { Snippet } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
+	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Versions } from '$lib/api';
-	import type { ProjectLanguage } from '$lib/api/types.gen';
+	import { Default, Versions } from '$lib/api';
+	import type { ModelOption, ProjectLanguage } from '$lib/api/types.gen';
+	import ModelPicker from '$lib/components/ModelPicker.svelte';
 	import { hasErrorCode } from '$lib/utils/errors';
 	import { portal } from '$lib/utils/portal';
 	import { toastApiError } from '$lib/utils/toast';
 
+	import { SPEECH, testOnlyUseLabel } from './models';
 	import { contentRevision, saveWithRevision } from './revision.svelte';
-	import { allowedBumps, type Bump, BUMP_MEANING, nextVersion } from './semver';
+	import { allowedBumps, type Bump, BUMP_MEANING, maxBump, nextVersion } from './semver';
 	import VersionCompare from './VersionCompare.svelte';
 	import VersionHistory from './VersionHistory.svelte';
 
@@ -57,6 +61,10 @@
 	const isDemo = $derived(page.data.user?.scope === 'demo');
 	let label = $state('');
 	let bump = $state<Bump>('patch');
+	// The model the agents on test-only ones move to as part of the publish,
+	// chosen in the dialog; '' until the researcher picks one.
+	let switchTo = $state('');
+	let models = $state<ModelOption[]>([]);
 
 	// The status's `ETag` is the whole content's revision, which publishing
 	// writes against: publishing anything changed after the dialog showed it
@@ -78,11 +86,40 @@
 		loadStatus();
 	});
 
-	const pending = $derived<Bump>(status?.pending_bump ?? 'major');
-	const choices = $derived(allowedBumps(pending === 'none' ? 'patch' : pending));
-	const target = $derived(nextVersion(status?.next_semver ?? '1.0.0', pending, bump));
 	const missing = $derived(Object.entries(status?.missing ?? {}));
-	const blocked = $derived(missing.length > 0);
+	// What the draft would send respondents' answers to that is for test
+	// interviews only (app/distribution.py), and the same for what is live:
+	// then no distributed interview can start on it. Agents can be switched
+	// to another model as part of the publish; speech cannot.
+	const testOnly = $derived(Object.entries(status?.test_only ?? {}));
+	const agentTestOnly = $derived(testOnly.filter(([key]) => key !== SPEECH));
+	const speechTestOnly = $derived(testOnly.some(([key]) => key === SPEECH));
+	const liveTestOnly = $derived(Object.keys(status?.published_test_only ?? {}));
+	const switching = $derived(!!switchTo && agentTestOnly.length > 0);
+	const allowedModels = $derived(models.filter((m) => !m.test_only));
+	const blocked = $derived(
+		missing.length > 0 || speechTestOnly || (agentTestOnly.length > 0 && !switching)
+	);
+	// Switching models changes the draft even when it was what is published.
+	const publishable = $derived(!!status?.has_unpublished_changes || switching);
+
+	const pending = $derived<Bump>(status?.pending_bump ?? 'major');
+	// A model change is a settings change, so at least minor: the server
+	// refuses a bump lower than the switched draft needs.
+	const floor = $derived<Bump>(
+		switching ? maxBump(pending, 'minor') : pending === 'none' ? 'patch' : pending
+	);
+	const choices = $derived(allowedBumps(floor));
+	const target = $derived(nextVersion(status?.next_semver ?? '1.0.0', pending, bump));
+	$effect(() => {
+		if (!choices.includes(bump)) bump = floor;
+	});
+	const agentsHref = $derived(
+		resolve('/dashboard/projects/[project_id]/[lang]/agents', { project_id: projectId, lang })
+	);
+	const setupHref = $derived(
+		resolve('/dashboard/projects/[project_id]/[lang]/setup', { project_id: projectId, lang })
+	);
 
 	function languageName(code: string) {
 		return availableLanguages.find((l) => l.code === code)?.name ?? code;
@@ -94,7 +131,12 @@
 		await loadStatus();
 		bump = pending === 'none' ? 'patch' : pending;
 		label = '';
+		switchTo = '';
 		dialogOpen = true;
+		if (agentTestOnly.length && !models.length) {
+			const { data } = await Default.getModels();
+			models = data ?? [];
+		}
 	}
 
 	async function publish() {
@@ -102,7 +144,12 @@
 		const result = await saveWithRevision(projectId, 'content', 'the publish dialog', (headers) =>
 			Versions.saveContentVersion({
 				path: { project_id: projectId },
-				body: { publish: true, label: label.trim() || null, bump },
+				body: {
+					publish: true,
+					label: label.trim() || null,
+					bump,
+					switch_models_to: switching ? switchTo : null
+				},
 				headers
 			})
 		);
@@ -114,6 +161,8 @@
 		}
 		dialogOpen = false;
 		toast.success(`Published version ${result.data.semver}`);
+		// The switch rewrote the draft's agents: pages showing them reload.
+		if (switching) await invalidateAll();
 		await loadStatus();
 	}
 
@@ -143,6 +192,14 @@
 			<span class="hidden @3xl:inline">v{status.published.semver}</span>
 		{:else if status}
 			<span class="hidden @3xl:inline">Not published</span>
+		{/if}
+		{#if liveTestOnly.length}
+			<span
+				class="h-2 w-2 rounded-full bg-red-500"
+				title="Closed to respondents: the published version uses {liveTestOnly
+					.map(testOnlyUseLabel)
+					.join(', ')} for test interviews only"
+			></span>
 		{/if}
 		{#if status?.has_unpublished_changes}
 			<span
@@ -207,11 +264,11 @@
 			</div>
 
 			<div class="flex flex-col gap-4 overflow-y-auto px-6 pb-4">
-				{#if !status.has_unpublished_changes}
+				{#if !publishable && !agentTestOnly.length}
 					<p class="rounded-lg bg-gray-50 p-3 text-sm text-gray-600">
 						Respondents already see the current draft; there is nothing to publish.
 					</p>
-				{:else if blocked}
+				{:else if missing.length}
 					<div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
 						<p class="font-medium">Translate everything before publishing.</p>
 						<ul class="mt-1 list-disc pl-5">
@@ -222,6 +279,65 @@
 								</li>
 							{/each}
 						</ul>
+					</div>
+				{/if}
+
+				{#if liveTestOnly.length}
+					<p class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+						<i class="fa-solid fa-ban mr-1"></i>
+						Closed to respondents: the published version uses
+						{liveTestOnly.map(testOnlyUseLabel).join(', ')} for test interviews only, so new interviews
+						are refused until a version without {liveTestOnly.length === 1 ? 'it' : 'them'} is published.
+					</p>
+				{/if}
+				{#if testOnly.length}
+					<div
+						class={[
+							'rounded-lg border p-3 text-sm',
+							switching && !speechTestOnly
+								? 'border-amber-200 bg-amber-50 text-amber-900'
+								: 'border-red-200 bg-red-50 text-red-800'
+						]}
+					>
+						<p class="font-medium">
+							{#if switching && !speechTestOnly}
+								Publishing switches these to {switchTo}, in the draft too:
+							{:else}
+								Respondents' answers may not be sent to models for test interviews only.
+							{/if}
+						</p>
+						<ul class="mt-1 list-disc pl-5">
+							{#each testOnly as [key, model] (key)}
+								<li>
+									{testOnlyUseLabel(key)}: {model}
+									{#if key === SPEECH}
+										&mdash; <a class="underline" href={setupHref}>turn off audio answers</a>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+						{#if agentTestOnly.length}
+							{#if allowedModels.length}
+								<div class="mt-3 flex flex-col gap-1">
+									<span class="font-medium">
+										Switch {agentTestOnly.length === 1 ? 'it' : 'them'} to
+									</span>
+									<ModelPicker
+										models={allowedModels}
+										bind:value={switchTo}
+										label="Model for respondents"
+									/>
+								</div>
+								{#if switching}
+									<p class="mt-2 text-xs">
+										Your test interviews ran on the models above. Respondents will be interviewed by {switchTo},
+										which may probe differently; consider a simulation on it first.
+									</p>
+								{/if}
+							{:else}
+								<a class="mt-1 inline-block underline" href={agentsHref}>Choose other models</a>
+							{/if}
+						{/if}
 					</div>
 				{/if}
 
@@ -236,7 +352,7 @@
 					</p>
 				{/if}
 
-				{#if status.published && status.has_unpublished_changes}
+				{#if status.published && publishable}
 					<button
 						type="button"
 						class="self-start text-sm text-primary hover:underline"
@@ -291,9 +407,13 @@
 					type="button"
 					class="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-dark disabled:opacity-50"
 					onclick={publish}
-					disabled={publishing || blocked || !status.has_unpublished_changes}
+					disabled={publishing || blocked || !publishable}
 				>
-					{publishing ? 'Publishing…' : `Publish ${target}`}
+					{publishing
+						? 'Publishing…'
+						: switching
+							? `Switch and publish ${target}`
+							: `Publish ${target}`}
 				</button>
 			</div>
 		</div>

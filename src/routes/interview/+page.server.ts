@@ -59,8 +59,11 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	// draft, which the backend serves only to the project's collaborators.
 	const draft = interviewType !== 'distributed';
 
+	// Versioned like the guide: respondents get the published version's, a
+	// test the draft's.
 	const { data: interviewConfig, error: configError } = await Projects.getInterviewConfig({
-		path: { project_id }
+		path: { project_id },
+		query: { draft }
 	});
 
 	const { data: interviewModels, error: modelsError } = await Projects.getInterviewModels({
@@ -162,14 +165,20 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	// whenever the URL didn't carry them again — which a resume link never does.
 	// This only skips the pre-flight; `create_interview` validates server-side
 	// before any *new* interview can be created.
+	//
+	// The same call answers `not_distributable` when the published version
+	// uses a model or speech this deployment allows in test interviews only:
+	// nothing could be started, so say so before the consent screen too.
 	let paramsInvalid = false;
+	let notDistributable = false;
 	if (interviewType === 'distributed' && !resumeInterviewId) {
 		const { error: paramsError } = await Interviews.validateInterviewParams({
 			path: { project_id },
 			body: { external_params: Object.keys(externalParams).length > 0 ? externalParams : null }
 		});
 		paramsInvalid = hasErrorCode(paramsError, 'invalid_link_params');
-		if (paramsError && !paramsInvalid) {
+		notDistributable = hasErrorCode(paramsError, 'not_distributable');
+		if (paramsError && !paramsInvalid && !notDistributable && !notPublished) {
 			console.error('Failed to validate external params', paramsError);
 		}
 	}
@@ -191,6 +200,7 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 		paramsInvalid,
 		resumeInterviewId,
 		notPublished,
+		notDistributable,
 		startPoint
 	};
 };

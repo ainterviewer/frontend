@@ -471,7 +471,9 @@ export type BodyUploadWelcomeVideo = {
 /**
  * CannotPublishError
  *
- * 409 `cannot_publish`: the paths each offered language still lacks.
+ * 409 `cannot_publish`: the paths each offered language still lacks, and
+ * what uses a model or speech for test interviews only (agent name, or
+ * "speech", to its model).
  */
 export type CannotPublishError = {
     /**
@@ -484,6 +486,12 @@ export type CannotPublishError = {
      */
     missing: {
         [key in LanguageCode]?: Array<string>;
+    };
+    /**
+     * Test Only
+     */
+    test_only?: {
+        [key: string]: string;
     };
 };
 
@@ -988,6 +996,47 @@ export type CommunicationTraits = {
 };
 
 /**
+ * ComparisonInterview
+ */
+export type ComparisonInterview = {
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    status: InterviewStatus;
+    /**
+     * Persona
+     */
+    persona: InterviewSubjectOutput | string | null;
+    /**
+     * Turns
+     */
+    turns: Array<ComparisonTurn>;
+};
+
+/**
+ * ComparisonTurn
+ *
+ * One message of a compared interview, as much of it as a side-by-side
+ * reading needs.
+ */
+export type ComparisonTurn = {
+    role: MessageRole;
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Main Question
+     */
+    main_question?: number | null;
+    /**
+     * Sub Question
+     */
+    sub_question?: number | null;
+};
+
+/**
  * CompletionRedirects
  *
  * Where a respondent is sent when a distributed interview ends, by how it
@@ -1240,7 +1289,7 @@ export type ContentError = {
  * a save to one never conflicts with a save to another. See
  * `ContentColumns.PART_FIELDS` for the columns each part covers.
  */
-export type ContentPart = 'guide' | 'consent' | 'welcome' | 'agents' | 'emails' | 'languages';
+export type ContentPart = 'guide' | 'consent' | 'welcome' | 'agents' | 'emails' | 'languages' | 'settings';
 
 /**
  * ContentStatus
@@ -1281,6 +1330,18 @@ export type ContentStatus = {
     doc_errors?: {
         [key in ContentPart]?: Array<ContentError>;
     };
+    /**
+     * Test Only
+     */
+    test_only?: {
+        [key: string]: string;
+    };
+    /**
+     * Published Test Only
+     */
+    published_test_only?: {
+        [key: string]: string;
+    };
 };
 
 /**
@@ -1299,6 +1360,10 @@ export type ContentVersionCreate = {
      * Bump
      */
     bump?: 'none' | 'patch' | 'minor' | 'major' | null;
+    /**
+     * Switch Models To
+     */
+    switch_models_to?: string | null;
 };
 
 /**
@@ -2209,7 +2274,7 @@ export type EmbeddingTurn = {
  * Only errors a client handles differently carry one. Values are part of
  * the API -- the frontend matches on them -- so rename none without it.
  */
-export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'already_collaborator' | 'role_above_own' | 'last_admin' | 'preview_features_required' | 'demo_restricted';
+export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'not_distributable' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'already_collaborator' | 'role_above_own' | 'last_admin' | 'preview_features_required' | 'demo_restricted';
 
 /**
  * ExperimentAllocation
@@ -2830,6 +2895,10 @@ export type InstanceInfo = {
      * Docs Url
      */
     docs_url: string;
+    /**
+     * Speech Test Only
+     */
+    speech_test_only?: boolean;
 };
 
 /**
@@ -4908,6 +4977,22 @@ export type MessageRole = 'system' | 'assistant' | 'user';
 export type MessageType = 'text' | 'image' | 'audio' | 'custom_token' | 'survey_item' | 'security_override';
 
 /**
+ * ModelOption
+ *
+ * A model a project's agents may be configured with.
+ */
+export type ModelOption = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Test Only
+     */
+    test_only: boolean;
+};
+
+/**
  * MonitoringStats
  *
  * Aggregated monitoring statistics for a project.
@@ -5548,7 +5633,6 @@ export type ProjectPublic = {
      * Experiment Only
      */
     experiment_only?: boolean;
-    config: InterviewConfig;
     /**
      * External Params
      */
@@ -6183,6 +6267,27 @@ export type RetentionWeek = {
 };
 
 /**
+ * RunComparison
+ */
+export type RunComparison = {
+    run: TestRunPublic;
+    /**
+     * Interviews
+     */
+    interviews: Array<ComparisonInterview>;
+};
+
+/**
+ * RunComparisonResponse
+ */
+export type RunComparisonResponse = {
+    /**
+     * Runs
+     */
+    runs: Array<RunComparison>;
+};
+
+/**
  * SafetyFlag
  *
  * What the safety check decided, kept on the report it raised.
@@ -6516,6 +6621,10 @@ export type SynthesizeRequest = {
         number,
         number
     ] | null;
+    /**
+     * Interviewer Models
+     */
+    interviewer_models?: Array<string>;
 };
 
 /**
@@ -6534,6 +6643,10 @@ export type SynthesizeResponse = {
      * Status
      */
     status: string;
+    /**
+     * Test Run Ids
+     */
+    test_run_ids?: Array<string>;
 };
 
 /**
@@ -6552,7 +6665,11 @@ export type TestRunPublic = {
     /**
      * Answering Model
      */
-    answering_model: string;
+    answering_model?: string | null;
+    /**
+     * Interviewer Model
+     */
+    interviewer_model?: string | null;
     /**
      * Delay Before Answers
      */
@@ -7508,6 +7625,25 @@ export type CommunicationTraitOutputWritable = {
 };
 
 /**
+ * ComparisonInterview
+ */
+export type ComparisonInterviewWritable = {
+    /**
+     * Interview Id
+     */
+    interview_id: string;
+    status: InterviewStatus;
+    /**
+     * Persona
+     */
+    persona: InterviewSubjectOutputWritable | string | null;
+    /**
+     * Turns
+     */
+    turns: Array<ComparisonTurn>;
+};
+
+/**
  * DemoBudget
  *
  * A demo user's synthetic-interview budgets and how much of each is spent.
@@ -7657,6 +7793,27 @@ export type InvitationPublicWritable = {
 
 export type LocalizedTextWritable = {
     [key in LanguageCode]?: string;
+};
+
+/**
+ * RunComparison
+ */
+export type RunComparisonWritable = {
+    run: TestRunPublic;
+    /**
+     * Interviews
+     */
+    interviews: Array<ComparisonInterviewWritable>;
+};
+
+/**
+ * RunComparisonResponse
+ */
+export type RunComparisonResponseWritable = {
+    /**
+     * Runs
+     */
+    runs: Array<RunComparisonWritable>;
 };
 
 export type GetCodebookData = {
@@ -12914,7 +13071,12 @@ export type GetInterviewConfigData = {
          */
         project_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Draft
+         */
+        draft?: boolean;
+    };
     url: '/api/projects/{project_id}/config';
 };
 
@@ -12946,6 +13108,12 @@ export type GetInterviewConfigResponse = GetInterviewConfigResponses[keyof GetIn
 
 export type CreateInterviewConfigData = {
     body: InterviewConfig;
+    headers?: {
+        /**
+         * If-Match
+         */
+        'if-match'?: string | null;
+    };
     path: {
         /**
          * Project Id
@@ -12962,6 +13130,10 @@ export type CreateInterviewConfigData = {
 };
 
 export type CreateInterviewConfigErrors = {
+    /**
+     * Stale revision
+     */
+    412: StaleRevisionError;
     /**
      * Validation Error
      */
@@ -14850,6 +15022,57 @@ export type RunSyntheticTestResponses = {
 };
 
 export type RunSyntheticTestResponse = RunSyntheticTestResponses[keyof RunSyntheticTestResponses];
+
+export type CompareTestRunsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Test Id
+         */
+        test_id: string;
+    };
+    query: {
+        /**
+         * Run Id
+         */
+        run_id: Array<string>;
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/tests/{test_id}/runs/compare';
+};
+
+export type CompareTestRunsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type CompareTestRunsError = CompareTestRunsErrors[keyof CompareTestRunsErrors];
+
+export type CompareTestRunsResponses = {
+    /**
+     * Successful Response
+     */
+    200: RunComparisonResponse;
+};
+
+export type CompareTestRunsResponse = CompareTestRunsResponses[keyof CompareTestRunsResponses];
 
 export type GetContentStatusData = {
     body?: never;
@@ -16888,7 +17111,7 @@ export type GetModelsResponses = {
      *
      * Successful Response
      */
-    200: Array<string>;
+    200: Array<ModelOption>;
 };
 
 export type GetModelsResponse = GetModelsResponses[keyof GetModelsResponses];

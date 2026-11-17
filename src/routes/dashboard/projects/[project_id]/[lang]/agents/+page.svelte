@@ -3,10 +3,17 @@
 
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { AgentConfigs, ProbingAgentConfig, ProbingPromptSlots } from '$lib/api/types.gen';
+	import type {
+		AgentConfigs,
+		ModelOption,
+		ProbingAgentConfig,
+		ProbingPromptSlots
+	} from '$lib/api/types.gen';
 	import ActionBar from '$lib/components/ActionBar.svelte';
+	import ModelPicker from '$lib/components/ModelPicker.svelte';
 	import { Autosaver, saveContent } from '$lib/content/autosave.svelte';
 	import AutosavePill from '$lib/content/AutosavePill.svelte';
+	import { isTestOnly, testOnlyUseLabel } from '$lib/content/models';
 	import PublishControl from '$lib/content/PublishControl.svelte';
 	import { contentRevision } from '$lib/content/revision.svelte';
 
@@ -23,7 +30,7 @@
 	// The revision the configuration on screen was loaded at; later ones come
 	// only from this page's own saves.
 	onMount(() => contentRevision.set(page.params.project_id ?? '', 'agents', data.revision));
-	let models = $state<string[]>(untrack(() => data.models));
+	let models = $state<ModelOption[]>(untrack(() => data.models));
 	let promptDefaults = $state<ProbingPromptSlots>(untrack(() => data.promptDefaults));
 
 	// Editable text mirrors of each prompt slot. List slots use one item per line.
@@ -98,7 +105,9 @@
 		promptDefaults = data.promptDefaults;
 		untrack(() => {
 			seedSlotEditors();
-			// What was loaded is what is saved.
+			// What was loaded is what is saved, at the revision it was loaded
+			// at: a publish that switched models reloads the page data.
+			contentRevision.set(page.params.project_id ?? '', 'agents', data.revision);
 			saver.reset();
 		});
 	});
@@ -121,15 +130,19 @@
 		return configs.every((c) => c.model === first) ? first : '';
 	});
 
-	// The shared model may not be in the fetched list (e.g. a model that was
-	// removed since it was configured); include it so the picker can show its name.
-	let basicModelOptions = $derived(modelOptions(sharedModel));
-
-	// The same for one agent's picker: without its current model among the
-	// options, a select bound to it renders blank.
-	function modelOptions(current: string | null | undefined): string[] {
-		return current && !models.includes(current) ? [current, ...models] : models;
-	}
+	// The agents that would send respondents' answers to a model for test
+	// interviews only, which keeps the project from being published. As the
+	// backend counts them (app/distribution.py): the answering agent only runs
+	// in simulations, and an optional agent left out runs on nothing.
+	let testOnlyAgents = $derived(
+		Object.entries(agents)
+			.filter(([key, config]) => {
+				if (!config || key === 'answering') return false;
+				if ((key === 'security' || key === 'visual') && !config.include) return false;
+				return isTestOnly(models, config.model);
+			})
+			.map(([key]) => key)
+	);
 
 	// A list slot stores null (stays linked to the default) when it matches the
 	// default, otherwise the edited list.
@@ -268,20 +281,29 @@
 			</p>
 		</div>
 
+		{#if testOnlyAgents.length}
+			<p class="w-fit rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+				<i class="fa-solid fa-flask mr-1"></i>
+				{testOnlyAgents.length === 1 ? 'The' : ''}
+				{testOnlyAgents.map(testOnlyUseLabel).join(', ')}
+				{testOnlyAgents.length === 1 ? 'uses a model' : 'use models'} for test interviews only. Respondents'
+				answers may not be sent there, so the project cannot be published until
+				{testOnlyAgents.length === 1 ? 'it uses' : 'they use'} one listed under
+				<em>For respondents</em>.
+			</p>
+		{/if}
+
 		{#if mode === 'basic'}
 			<div class="w-fit">
 				<label for="all-models" class="mb-1 block text-sm font-medium text-gray-700">Model</label>
-				<select
+				<ModelPicker
 					id="all-models"
-					onchange={(e) => setAllModels((e.currentTarget as HTMLSelectElement).value)}
-					class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+					{models}
 					value={sharedModel}
-				>
-					<option value="">---</option>
-					{#each basicModelOptions as model (model)}
-						<option value={model}>{model}</option>
-					{/each}
-				</select>
+					onchange={setAllModels}
+					label="Model for every agent"
+					placeholder="Different per agent"
+				/>
 			</div>
 		{:else}
 			<div class="w-fit space-y-8">
@@ -289,17 +311,14 @@
 					<label for="all-models-advanced" class="mb-1 block text-sm font-medium text-gray-700"
 						>Set all agent models at once</label
 					>
-					<select
+					<ModelPicker
 						id="all-models-advanced"
-						onchange={(e) => setAllModels((e.currentTarget as HTMLSelectElement).value)}
-						class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+						{models}
 						value={sharedModel}
-					>
-						<option value="">---</option>
-						{#each basicModelOptions as model (model)}
-							<option value={model}>{model}</option>
-						{/each}
-					</select>
+						onchange={setAllModels}
+						label="Model for every agent"
+						placeholder="Different per agent"
+					/>
 				</div>
 
 				<!-- Probing Agent -->
@@ -310,15 +329,12 @@
 							<label for="probing-model" class="mb-1 block text-sm font-medium text-gray-700"
 								>Model</label
 							>
-							<select
+							<ModelPicker
 								id="probing-model"
+								{models}
 								bind:value={agents.probing!.model}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-							>
-								{#each modelOptions(agents.probing!.model) as model (model)}
-									<option value={model}>{model}</option>
-								{/each}
-							</select>
+								label="Probing agent model"
+							/>
 						</div>
 						<div>
 							<label for="probing-temperature" class="mb-1 block text-sm font-medium text-gray-700"
@@ -345,15 +361,12 @@
 							<label for="classification-model" class="mb-1 block text-sm font-medium text-gray-700"
 								>Model</label
 							>
-							<select
+							<ModelPicker
 								id="classification-model"
+								{models}
 								bind:value={agents.classification!.model}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-							>
-								{#each modelOptions(agents.classification!.model) as model (model)}
-									<option value={model}>{model}</option>
-								{/each}
-							</select>
+								label="Classification agent model"
+							/>
 						</div>
 						<div>
 							<label
@@ -381,15 +394,12 @@
 							<label for="reformulation-model" class="mb-1 block text-sm font-medium text-gray-700"
 								>Model</label
 							>
-							<select
+							<ModelPicker
 								id="reformulation-model"
+								{models}
 								bind:value={agents.reformulation!.model}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-							>
-								{#each modelOptions(agents.reformulation!.model) as model (model)}
-									<option value={model}>{model}</option>
-								{/each}
-							</select>
+								label="Reformulation agent model"
+							/>
 						</div>
 						<div>
 							<label
@@ -417,15 +427,12 @@
 							<label for="guide-model" class="mb-1 block text-sm font-medium text-gray-700"
 								>Model</label
 							>
-							<select
+							<ModelPicker
 								id="guide-model"
+								{models}
 								bind:value={agents.guide!.model}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-							>
-								{#each modelOptions(agents.guide!.model) as model (model)}
-									<option value={model}>{model}</option>
-								{/each}
-							</select>
+								label="Guide agent model"
+							/>
 						</div>
 						<div>
 							<label for="guide-temperature" class="mb-1 block text-sm font-medium text-gray-700"

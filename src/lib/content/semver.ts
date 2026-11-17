@@ -49,3 +49,8 @@ export const BUMP_MEANING: Record<Bump, string> = {
 	patch: 'Only text changed: wording, translations, consent, welcome or emails.',
 	none: 'Nothing changed since the last publish.'
 };
+
+/** The larger of two bumps. */
+export function maxBump(a: Bump, b: Bump): Bump {
+	return RANK[a] >= RANK[b] ? a : b;
+}

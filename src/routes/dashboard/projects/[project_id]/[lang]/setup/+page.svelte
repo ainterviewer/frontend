@@ -12,6 +12,8 @@
 		ProbingStrategy
 	} from '$lib/api/types.gen';
 	import PreviewBadge from '$lib/components/PreviewBadge.svelte';
+	import { contentRevision, saveWithRevision } from '$lib/content/revision.svelte';
+	import { hasErrorCode } from '$lib/utils/errors';
 	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
@@ -21,6 +23,9 @@
 	let projectId = $derived(page.params.project_id as string);
 	let lang = $derived(page.params.lang);
 	let hasPreviewFeatures = $derived(!!page.data.user?.with_preview_features);
+	// Speech goes somewhere this deployment allows in test interviews only:
+	// with audio on, the project cannot be published (app/distribution.py).
+	let speechTestOnly = $derived(!!page.data.instance?.speech_test_only);
 
 	// Advanced settings state
 	let advancedOpen = $state(false);
@@ -63,6 +68,8 @@
 	];
 
 	let savingConfig = $state(false);
+	// The revision the settings on screen were loaded at, for the save's If-Match.
+	$effect(() => contentRevision.set(projectId, 'settings', data.configRevision));
 	// svelte-ignore state_referenced_locally
 	let config: InterviewConfig = $state(structuredClone(data.config ?? {}));
 
@@ -77,11 +84,18 @@
 
 	async function saveConfig() {
 		savingConfig = true;
-		const { error } = await Projects.createInterviewConfig({
-			path: { project_id: projectId },
-			body: config
-		});
-		if (error) {
+		// A draft change like the rest of the setup: it reaches respondents
+		// when published.
+		const { error } = await saveWithRevision(projectId, 'settings', 'the settings', (headers) =>
+			Projects.createInterviewConfig({
+				path: { project_id: projectId },
+				body: config,
+				headers
+			})
+		);
+		if (hasErrorCode(error, 'stale_revision')) {
+			// Left to the overwrite/reload prompt saveWithRevision showed.
+		} else if (error) {
 			toastApiError(error, 'Failed to save interview configuration');
 		} else {
 			await invalidateAll();
@@ -368,6 +382,14 @@
 										{#if toggle.is_preview_feature}<PreviewBadge />{/if}</span
 									>
 									<span class="block text-xs text-gray-500">{toggle.description}</span>
+									{#if toggle.key === 'with_audio' && speechTestOnly}
+										<span class="mt-1 block text-xs text-amber-800">
+											<i class="fa-solid fa-flask mr-1"></i>
+											For test interviews only: recordings may not be sent to the speech service from
+											respondents' interviews. Test interviews can use it, but the project cannot be published
+											while it is on.
+										</span>
+									{/if}
 								</span>
 							</label>
 						{/if}

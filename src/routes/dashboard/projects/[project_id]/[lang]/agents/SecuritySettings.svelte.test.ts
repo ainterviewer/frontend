@@ -28,7 +28,12 @@ function renderSettings() {
 		temperature: 0.7,
 		policy: structuredClone(defaultPolicy)
 	});
-	render(SecuritySettings, { security, models: ['model'], mode: 'basic', defaultPolicy });
+	render(SecuritySettings, {
+		security,
+		models: [{ id: 'model', test_only: false }],
+		mode: 'basic',
+		defaultPolicy
+	});
 	return security;
 }
 

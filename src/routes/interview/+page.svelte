@@ -28,6 +28,7 @@
 		paramsInvalid?: boolean;
 		referer?: string | null;
 		notPublished?: boolean;
+		notDistributable?: boolean;
 		startPoint?: StartPoint | null;
 	}
 
@@ -72,12 +73,16 @@
 	// report a failure if the schema changed between landing and consent.
 	let createParamsInvalid = $state(false);
 	const paramsInvalid = $derived(createParamsInvalid || data.paramsInvalid === true);
+	// Closed to respondents: the published version uses something this
+	// deployment allows in test interviews only (`not_distributable`).
+	let createNotDistributable = $state(false);
+	const notDistributable = $derived(createNotDistributable || data.notDistributable === true);
 	// Set when the interview can't be prepared. Never start an interview in
 	// this state: the consent screen may not be skipped because of an error.
 	let loadError = $state(false);
 
 	onMount(() => {
-		if (isDemoBlocked || isAuthBlocked || paramsInvalid || notPublished) {
+		if (isDemoBlocked || isAuthBlocked || paramsInvalid || notPublished || notDistributable) {
 			isInitializing = false;
 			return;
 		}
@@ -140,6 +145,9 @@
 		} else {
 			if (result.paramsInvalid) {
 				createParamsInvalid = true;
+			}
+			if (result.notDistributable) {
+				createNotDistributable = true;
 			}
 			console.error('Failed to create interview');
 			return null;
@@ -317,6 +325,16 @@
 				<p class="text-sm text-gray-600">
 					It has not been published. Please try the link again later, or contact the person who
 					shared it with you.
+				</p>
+			</div>
+		</div>
+	{:else if notDistributable}
+		<div class="flex flex-1 items-center justify-center px-6">
+			<div class="max-w-md text-center">
+				<h2 class="mb-2 text-lg font-semibold text-gray-900">This study is not open right now</h2>
+				<p class="text-sm text-gray-600">
+					It is not taking new responses at the moment. Please try the link again later, or contact
+					the person who shared it with you.
 				</p>
 			</div>
 		</div>

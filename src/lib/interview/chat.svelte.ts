@@ -94,7 +94,7 @@ const SHORT_LIVED_OPENS_FOR_SERVICE_FAILURE = 2;
 export type PendingIntervention = SecurityIntervention & { text: string };
 
 export type CreateInterviewResult =
-	{ ok: true; token: string } | { ok: false; paramsInvalid?: boolean };
+	{ ok: true; token: string } | { ok: false; paramsInvalid?: boolean; notDistributable?: boolean };
 
 /**
  * Where a manual test starts when it is tried from part-way through the
@@ -135,6 +135,11 @@ export async function createInterview(
 			// the backend's `validate_external_params`.
 			if (hasErrorCode(error, 'invalid_link_params')) {
 				return { ok: false, paramsInvalid: true };
+			}
+			// `not_distributable`: the published version uses a model or speech
+			// this deployment allows in test interviews only.
+			if (hasErrorCode(error, 'not_distributable')) {
+				return { ok: false, notDistributable: true };
 			}
 			console.error('Failed to create interview');
 			return { ok: false };

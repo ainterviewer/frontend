@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 
 import { Projects } from '$lib/api';
+import { etagOf } from '$lib/content/revision.svelte';
 
 import type { PageServerLoad } from './$types';
 
@@ -20,8 +21,10 @@ export const load: PageServerLoad = async ({ params }) => {
 		Projects.getGuide({
 			path: { project_id, lang }
 		}),
+		// The draft's, with the revision a save writes against.
 		Projects.getInterviewConfig({
-			path: { project_id }
+			path: { project_id },
+			query: { draft: true }
 		}),
 		Projects.getProject({
 			path: { project_id }
@@ -50,6 +53,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		welcome: welcomeRes.data ?? null,
 		guide: guideRes.data ?? null,
 		config: configRes.data ?? null,
+		configRevision: etagOf(configRes.response),
 		external_params: projectRes.data?.external_params ?? [],
 		redirects: projectRes.data?.redirects ?? null,
 		experiment_only: projectRes.data?.experiment_only ?? false

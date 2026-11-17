@@ -389,8 +389,8 @@
 						bind:value={answeringModel}
 						class="w-fit rounded border-gray-300 bg-white focus:border-primary focus:ring-primary"
 					>
-						{#each data.models as model (model)}
-							<option value={model}>{model}</option>
+						{#each data.models as model (model.id)}
+							<option value={model.id}>{model.id}</option>
 						{/each}
 					</select>
 				</div>

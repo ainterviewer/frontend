@@ -553,7 +553,8 @@ export const zContentPart = z.enum([
     'welcome',
     'agents',
     'emails',
-    'languages'
+    'languages',
+    'settings'
 ]);
 
 /**
@@ -567,7 +568,8 @@ export const zContentVersionCreate = z.object({
         'patch',
         'minor',
         'major'
-    ]).nullish()
+    ]).nullish(),
+    switch_models_to: z.string().nullish()
 });
 
 /**
@@ -786,6 +788,7 @@ export const zErrorCode = z.enum([
     'internal',
     'not_published',
     'cannot_publish',
+    'not_distributable',
     'stale_revision',
     'revision_required',
     'project_language',
@@ -1135,7 +1138,8 @@ export const zImage = z.object({
 export const zInstanceInfo = z.object({
     contact_email: z.string(),
     website_url: z.string(),
-    docs_url: z.string()
+    docs_url: z.string(),
+    speech_test_only: z.boolean().optional().default(false)
 });
 
 /**
@@ -1440,12 +1444,15 @@ export const zBodyAddProjectLanguage = z.object({
 /**
  * CannotPublishError
  *
- * 409 `cannot_publish`: the paths each offered language still lacks.
+ * 409 `cannot_publish`: the paths each offered language still lacks, and
+ * what uses a model or speech for test interviews only (agent name, or
+ * "speech", to its model).
  */
 export const zCannotPublishError = z.object({
     detail: z.string(),
     code: zErrorCode.nullable(),
-    missing: z.record(z.string(), z.array(z.string()))
+    missing: z.record(z.string(), z.array(z.string())),
+    test_only: z.record(z.string(), z.string()).optional().default({})
 });
 
 /**
@@ -1499,7 +1506,9 @@ export const zContentStatus = z.object({
     next_semver: z.string(),
     languages_in_progress: z.array(zLanguageCode),
     missing: z.record(z.string(), z.array(z.string())),
-    doc_errors: z.record(z.string(), z.array(zContentError)).optional().default({})
+    doc_errors: z.record(z.string(), z.array(zContentError)).optional().default({}),
+    test_only: z.record(z.string(), z.string()).optional().default({}),
+    published_test_only: z.record(z.string(), z.string()).optional().default({})
 });
 
 /**
@@ -1946,6 +1955,32 @@ export const zMessageRole = z.enum([
 ]);
 
 /**
+ * ComparisonTurn
+ *
+ * One message of a compared interview, as much of it as a side-by-side
+ * reading needs.
+ */
+export const zComparisonTurn = z.object({
+    role: zMessageRole,
+    content: z.string(),
+    main_question: z.int().nullish(),
+    sub_question: z.int().nullish()
+});
+
+/**
+ * ComparisonInterview
+ */
+export const zComparisonInterview = z.object({
+    interview_id: z.string(),
+    status: zInterviewStatus,
+    persona: z.union([
+        zInterviewSubjectOutput,
+        z.string()
+    ]).nullable(),
+    turns: z.array(zComparisonTurn)
+});
+
+/**
  * MessageType
  */
 export const zMessageType = z.enum([
@@ -1956,6 +1991,16 @@ export const zMessageType = z.enum([
     'survey_item',
     'security_override'
 ]);
+
+/**
+ * ModelOption
+ *
+ * A model a project's agents may be configured with.
+ */
+export const zModelOption = z.object({
+    id: z.string(),
+    test_only: z.boolean()
+});
 
 /**
  * MonitoringStats
@@ -3039,7 +3084,8 @@ export const zSynthesizeRequest = z.object({
     answering_model: z.string().nullish(),
     n_interviews: z.int().gte(1).lte(100),
     language: zLanguageCode.optional().default('EN'),
-    delay_before_answers: z.tuple([z.number(), z.number()]).nullish()
+    delay_before_answers: z.tuple([z.number(), z.number()]).nullish(),
+    interviewer_models: z.array(z.string()).max(5).optional()
 });
 
 /**
@@ -3048,7 +3094,8 @@ export const zSynthesizeRequest = z.object({
 export const zSynthesizeResponse = z.object({
     project_id: z.string(),
     message: z.string(),
-    status: z.string()
+    status: z.string(),
+    test_run_ids: z.array(z.string()).optional().default([])
 });
 
 /**
@@ -3068,12 +3115,28 @@ export const zTestRunPublic = z.object({
     test_setup_id: z.string(),
     language: zLanguageCode.optional().default('EN'),
     n_interviews: z.int(),
-    answering_model: z.string(),
+    answering_model: z.string().nullish(),
+    interviewer_model: z.string().nullish(),
     delay_before_answers: z.tuple([z.number(), z.number()]).nullish(),
     id: z.string(),
     created_at: z.iso.datetime(),
     last_updated: z.iso.datetime().nullish(),
     status: zTestRunStatus
+});
+
+/**
+ * RunComparison
+ */
+export const zRunComparison = z.object({
+    run: zTestRunPublic,
+    interviews: z.array(zComparisonInterview)
+});
+
+/**
+ * RunComparisonResponse
+ */
+export const zRunComparisonResponse = z.object({
+    runs: z.array(zRunComparison)
 });
 
 /**
@@ -3873,7 +3936,6 @@ export const zProjectPublic = z.object({
     status: zProjectStatus.optional().default('active'),
     archived_at: z.iso.datetime().nullish(),
     experiment_only: z.boolean().optional().default(false),
-    config: zInterviewConfig,
     external_params: z.array(zExternalParam).nullish(),
     redirects: zCompletionRedirects.nullish(),
     owner_id: z.string(),
@@ -4236,6 +4298,19 @@ export const zInterviewSubjectOutputWritable = z.object({
 });
 
 /**
+ * ComparisonInterview
+ */
+export const zComparisonInterviewWritable = z.object({
+    interview_id: z.string(),
+    status: zInterviewStatus,
+    persona: z.union([
+        zInterviewSubjectOutputWritable,
+        z.string()
+    ]).nullable(),
+    turns: z.array(zComparisonTurn)
+});
+
+/**
  * IntervieweePublic
  */
 export const zIntervieweePublicWritable = z.object({
@@ -4270,6 +4345,21 @@ export const zInvitationPublicWritable = z.object({
 });
 
 export const zLocalizedTextWritable = z.record(z.string(), z.string());
+
+/**
+ * RunComparison
+ */
+export const zRunComparisonWritable = z.object({
+    run: zTestRunPublic,
+    interviews: z.array(zComparisonInterviewWritable)
+});
+
+/**
+ * RunComparisonResponse
+ */
+export const zRunComparisonResponseWritable = z.object({
+    runs: z.array(zRunComparisonWritable)
+});
 
 export const zGetCodebookPath = z.object({
     project_id: z.string().nullable()
@@ -5844,12 +5934,20 @@ export const zGetInterviewConfigPath = z.object({
     project_id: z.string()
 });
 
+export const zGetInterviewConfigQuery = z.object({
+    draft: z.boolean().optional().default(false)
+});
+
 /**
  * Successful Response
  */
 export const zGetInterviewConfigResponse = zInterviewConfig;
 
 export const zCreateInterviewConfigBody = zInterviewConfig;
+
+export const zCreateInterviewConfigHeaders = z.object({
+    'if-match': z.string().nullish()
+});
 
 export const zCreateInterviewConfigPath = z.object({
     project_id: z.string().nullable()
@@ -6424,6 +6522,21 @@ export const zRunSyntheticTestQuery = z.object({
  */
 export const zRunSyntheticTestResponse = zSynthesizeResponse;
 
+export const zCompareTestRunsPath = z.object({
+    project_id: z.string().nullable(),
+    test_id: z.string()
+});
+
+export const zCompareTestRunsQuery = z.object({
+    run_id: z.array(z.string()).min(1).max(5),
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zCompareTestRunsResponse = zRunComparisonResponse;
+
 export const zGetContentStatusPath = z.object({
     project_id: z.string().nullable()
 });
@@ -6859,7 +6972,7 @@ export const zGetInstanceResponse = zInstanceInfo;
  *
  * Successful Response
  */
-export const zGetModelsResponse = z.array(z.string());
+export const zGetModelsResponse = z.array(zModelOption);
 
 /**
  * Response Get Languages

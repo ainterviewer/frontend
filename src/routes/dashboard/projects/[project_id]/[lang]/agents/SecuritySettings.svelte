@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { SecurityAction, SecurityConfig, SecurityPolicy } from '$lib/api';
+	import type { ModelOption, SecurityAction, SecurityConfig, SecurityPolicy } from '$lib/api';
+	import ModelPicker from '$lib/components/ModelPicker.svelte';
 	import PreviewBadge from '$lib/components/PreviewBadge.svelte';
 
 	import { ACTION_LABELS, newDecision, policyErrors } from './securityPolicy';
@@ -7,7 +8,7 @@
 	interface Props {
 		/** Edited in place; saved with the rest of the agent configuration. */
 		security: SecurityConfig;
-		models: string[];
+		models: ModelOption[];
 		mode: 'basic' | 'advanced';
 		defaultPolicy: SecurityPolicy;
 	}
@@ -62,11 +63,12 @@
 				<label for="security-model" class="mb-1 block text-sm font-medium text-gray-700"
 					>Model</label
 				>
-				<select id="security-model" bind:value={security.model} class={inputClass}>
-					{#each models as model (model)}
-						<option value={model}>{model}</option>
-					{/each}
-				</select>
+				<ModelPicker
+					id="security-model"
+					{models}
+					bind:value={security.model}
+					label="Security agent model"
+				/>
 			</div>
 			<div>
 				<label for="security-temperature" class="mb-1 block text-sm font-medium text-gray-700"
