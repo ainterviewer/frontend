@@ -63,6 +63,7 @@
 
 		function traverse(list: SidebarItem[]) {
 			for (const item of list) {
+				if (!canShow(item)) continue;
 				if (item.href) {
 					const resolved = getResolvedHref(item.href);
 					if (resolved) {
@@ -91,6 +92,8 @@
 		return bestMatch;
 	}
 
+	// Matched over what this user sees, so a hidden item can't win the match
+	// and leave nothing visible highlighted.
 	let activeItemHref = $derived(getActiveHref(items, page.url.pathname));
 
 	function isActive(href?: string) {
@@ -193,7 +196,8 @@
 
 {#snippet listItem(item: SidebarItem, level = 0, isLast = false)}
 	{@const active = isActive(item.href)}
-	{@const hasChildren = !!item.children?.length}
+	{@const visibleChildren = item.children?.filter(canShow) ?? []}
+	{@const hasChildren = visibleChildren.length > 0}
 
 	<li
 		data-tour={item.dataTour}
@@ -247,7 +251,6 @@
 		</a>
 
 		{#if hasChildren}
-			{@const visibleChildren = item.children!.filter(canShow)}
 			<ul class="m-0 list-none p-0">
 				{#each visibleChildren as child, i (child.label || child.href || child)}
 					{@render listItem(child, level + 1, i === visibleChildren.length - 1)}
