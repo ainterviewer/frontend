@@ -162,6 +162,7 @@
 				return parsedId;
 			} else {
 				console.error('Failed to parse interview ID from token');
+				loadError = true;
 				return null;
 			}
 		} else {
@@ -173,6 +174,11 @@
 			}
 			if (result.shareInvalid) {
 				createShareInvalid = true;
+			}
+			// A failure without a screen of its own gets the generic one, never
+			// a blank page.
+			if (!result.paramsInvalid && !result.notDistributable && !result.shareInvalid) {
+				loadError = true;
 			}
 			console.error('Failed to create interview');
 			return null;
@@ -254,7 +260,6 @@
 		if (await createInterviewAndGetId()) {
 			startInterview();
 		} else {
-			loadError = true;
 			isInitializing = false;
 		}
 	}
@@ -277,35 +282,14 @@
 	async function acceptConsent() {
 		consentAccepting = true;
 
-		// Create interview after consent is accepted
-		const newInterviewId = await createInterviewAndGetId();
-		if (!newInterviewId) {
-			consentAccepting = false;
-			isInitializing = false;
-			return;
-		}
-
-		const { data: welcome, error: welcomeError } = await Projects.getWelcome({
-			path: {
-				project_id: projectId,
-				language: lang
-			},
-			query: contentQuery
-		});
-
-		if (welcomeError) {
-			console.error('Error loading welcome', welcomeError);
-			startInterview();
-			showConsent = false;
-		} else if (welcome && (welcome.title || welcome.text)) {
-			welcomeData = welcome;
-			showWelcome = true;
-			showConsent = false;
+		// Create interview after consent is accepted. The consent stays up until
+		// what follows it is ready, or until the error screen replaces it.
+		if (await createInterviewAndGetId()) {
+			await loadWelcome();
 		} else {
-			startInterview();
-			showConsent = false;
+			isInitializing = false;
 		}
-
+		showConsent = false;
 		consentAccepting = false;
 	}
 
