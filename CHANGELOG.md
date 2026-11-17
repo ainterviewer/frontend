@@ -4,6 +4,27 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.25] - 2026-11-17
+
+### Features
+
+- (interviews) Show the guide version in the interview and test result tables
+- (guide) Dim snapshot numbers in the version history
+- (interviews) Filter interviews by guide version
+- (guide) Shuffle a Likert grid's rows
+- (auth) Remember the "Remember me" choice on the login page
+- (guide) Mark each probe with a bullet in the version comparison
+- (survey) Add list and ranking questions
+
+### Bug Fixes
+
+- (auth) Hold demo refusals behind the restriction overlay
+
+### Internal
+
+- Delete gemini folder
+- Remove outdated drag-and-drop docs
+
 ## [0.9.24] - 2026-11-14
 
 ### Features
