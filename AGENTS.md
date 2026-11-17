@@ -137,10 +137,14 @@ git -C ../backend worktree add -b feat/my-change \
 - **A worktree starts with tracked files only.** There is no `node_modules`,
   `.svelte-kit` or `.env`: run `bun install` in it, and copy `.env` from the
   main checkout if the dev server needs it.
-- **Two dev servers at once** need different ports:
-  `bun run dev -- --port 5175`. `just generate-sdk` reads whichever backend is
-  running, so start the backend from the worktree of the same change when its
-  API changed too.
+- **Pair a worktree with its own backend.** Start the backend worktree of
+  the same change on a free port
+  (`uv run -m fastapi dev app/main.py --port 8667`) and set
+  `BACKEND_PORT=8667` in this worktree's `.env`. The `/api`
+  proxy, the websockets (`backendWsUrl`, `src/lib/utils/urls.ts`) and
+  `just generate-sdk` all follow it, so the SDK comes from that change's API.
+  `OPENAPI_URL` still overrides the SDK's source on its own. Give the dev
+  server its own port too: `bun run dev --port 5175`.
 - **Landing.** `main` stays checked out in the main checkout, and git does not
   let two worktrees check out the same branch, so rebase in the worktree
   (`git rebase main`), then fast-forward from the main checkout
