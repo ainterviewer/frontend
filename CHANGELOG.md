@@ -4,6 +4,29 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.26] - 2026-11-17
+
+### Features
+
+- (publish) Keep respondents' answers off test-only models
+- (simulations) Compare interviewer models
+- (tests) Share a test link from the setup pages
+- (interview) Mark test interviews in the chat
+
+### Bug Fixes
+
+- (setup) Show an error instead of empty content when loading fails
+- (setup) Redirect a project language the URL names but the project lacks
+- (interview) Show an error instead of a blank page when an interview can't be created
+- (survey) Require interaction before slider submission
+
+### Internal
+
+- Work on each branch in its own worktree
+- (dev) Let BACKEND_PORT point the dev server at any backend
+- Pair a frontend worktree with its own backend
+- (deps) Install build-time-only packages as devDependencies
+
 ## [0.9.25] - 2026-11-17
 
 ### Features
