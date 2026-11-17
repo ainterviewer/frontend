@@ -39,6 +39,11 @@
 	top: max(4.25rem, calc(2.75rem + var(--translation-banner-stuck-h, 0px) + 0.5rem));
 }
 
+/* A window with room for the auth pages' circle around even the tallest
+   form, sign-up. Only decides the first paint, before the layout measures
+   the form it actually holds. */
+@custom-variant roomy (@media (min-width: 720px) and (min-height: 720px));
+
 /* A thin, muted scrollbar for scroll areas on a dark background. The page's
    `color-scheme: light` (below) otherwise gives them the light native one,
    which Chromium on Linux and Windows draws ~15px wide with arrow buttons.
