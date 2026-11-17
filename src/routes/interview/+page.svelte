@@ -30,6 +30,8 @@
 		notPublished?: boolean;
 		notDistributable?: boolean;
 		startPoint?: StartPoint | null;
+		shareToken?: string | null;
+		shareInvalid?: boolean;
 	}
 
 	let { data }: { data: PageData } = $props();
@@ -41,8 +43,13 @@
 	const isDemoBlocked = $derived(data.isProjectOwnerDemoUser && interviewType === 'distributed');
 	const isAuthBlocked = $derived(data.authError === true);
 	const notPublished = $derived(data.notPublished === true);
-	// A test runs the draft of the consent and welcome, like its guide.
-	const draft = $derived(interviewType !== 'distributed');
+	// A test runs the draft of the consent and welcome, like its guide. From a
+	// shared test link, the link's token is what lets it read the draft.
+	const shareToken = $derived(data.shareToken ?? null);
+	const contentQuery = $derived({
+		draft: interviewType !== 'distributed',
+		...(shareToken && { share: shareToken })
+	});
 
 	// Help/Exit modal text — owned by the frontend, selected by language and
 	// interpolated with the underlying model(s) returned by the interview config.
@@ -77,12 +84,23 @@
 	// deployment allows in test interviews only (`not_distributable`).
 	let createNotDistributable = $state(false);
 	const notDistributable = $derived(createNotDistributable || data.notDistributable === true);
+	// The shared test link expired, was revoked, or is not for this project:
+	// found on landing, or when it ran out before the interview was created.
+	let createShareInvalid = $state(false);
+	const shareInvalid = $derived(createShareInvalid || data.shareInvalid === true);
 	// Set when the interview can't be prepared. Never start an interview in
 	// this state: the consent screen may not be skipped because of an error.
 	let loadError = $state(false);
 
 	onMount(() => {
-		if (isDemoBlocked || isAuthBlocked || paramsInvalid || notPublished || notDistributable) {
+		if (
+			isDemoBlocked ||
+			isAuthBlocked ||
+			paramsInvalid ||
+			notPublished ||
+			notDistributable ||
+			shareInvalid
+		) {
 			isInitializing = false;
 			return;
 		}
@@ -93,7 +111,10 @@
 		forgetStoredSessions();
 		const existingInterviewId = data.resumeInterviewId;
 
-		if (existingInterviewId && !(interviewType === 'manual_test')) {
+		// A collaborator's own manual test always starts afresh, but someone
+		// trying a shared test link picks up where they left off, as a
+		// respondent would.
+		if (existingInterviewId && (interviewType !== 'manual_test' || shareToken)) {
 			initializeChat(existingInterviewId);
 		} else if (data.startPoint) {
 			startPartWay();
@@ -130,7 +151,8 @@
 			data.externalParams,
 			data.referer,
 			data.externalParams?.pid ?? null,
-			data.startPoint ?? null
+			data.startPoint ?? null,
+			shareToken
 		);
 
 		if (result.ok) {
@@ -149,6 +171,9 @@
 			if (result.notDistributable) {
 				createNotDistributable = true;
 			}
+			if (result.shareInvalid) {
+				createShareInvalid = true;
+			}
 			console.error('Failed to create interview');
 			return null;
 		}
@@ -166,7 +191,7 @@
 				project_id: projectId,
 				language: lang
 			},
-			query: { draft }
+			query: contentQuery
 		});
 
 		if (welcomeError) {
@@ -190,7 +215,7 @@
 				project_id: projectId,
 				language: lang
 			},
-			query: { draft }
+			query: contentQuery
 		});
 
 		if (consentError) {
@@ -265,7 +290,7 @@
 				project_id: projectId,
 				language: lang
 			},
-			query: { draft }
+			query: contentQuery
 		});
 
 		if (welcomeError) {
@@ -313,6 +338,16 @@
 	{#if isDemoBlocked}
 		<div class="flex flex-1 items-center justify-center px-6">
 			<p class="text-center text-gray-600">This interview is not available for demo projects.</p>
+		</div>
+	{:else if shareInvalid}
+		<div class="flex flex-1 items-center justify-center px-6">
+			<div class="max-w-md text-center">
+				<h2 class="mb-2 text-lg font-semibold text-gray-900">This test link is no longer valid</h2>
+				<p class="text-sm text-gray-600">
+					It may have expired or been withdrawn. Please ask the person who shared it with you for a
+					new link.
+				</p>
+			</div>
 		</div>
 	{:else if isAuthBlocked}
 		<div class="flex flex-1 items-center justify-center px-6">

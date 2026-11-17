@@ -794,6 +794,7 @@ export const zErrorCode = z.enum([
     'project_language',
     'section_not_found',
     'invalid_link_params',
+    'test_share_invalid',
     'invalid_codebook',
     'invalid_coding',
     'invalid_comment_thread',
@@ -1592,6 +1593,7 @@ export const zInterviewSummaryPublic = z.object({
     n_interventions: z.int().optional().default(0),
     test_name: z.string().nullish(),
     start_question_id: z.string().nullish(),
+    via_share_link: z.boolean().optional().default(false),
     pid: z.string().nullish(),
     version_no: z.int().nullish(),
     semver: z.string().nullish(),
@@ -3140,6 +3142,17 @@ export const zRunComparisonResponse = z.object({
 });
 
 /**
+ * TestShareLinkResponse
+ *
+ * A freshly minted shared test link: anyone who opens it can try the
+ * project's draft, without an account, until `expires_at` or a revoke.
+ */
+export const zTestShareLinkResponse = z.object({
+    url: z.string(),
+    expires_at: z.iso.datetime()
+});
+
+/**
  * TestType
  */
 export const zTestType = z.enum([
@@ -3160,6 +3173,7 @@ export const zInterviewCreate = z.object({
     pid: z.string().nullish(),
     start_section_id: z.string().nullish(),
     start_question_id: z.string().nullish(),
+    share_token: z.string().nullish(),
     external_params: z.record(z.string(), z.unknown()).nullish(),
     referer: z.string().nullish()
 });
@@ -5637,7 +5651,8 @@ export const zGetProjectLanguagesPath = z.object({
 });
 
 export const zGetProjectLanguagesQuery = z.object({
-    draft: z.boolean().optional().default(false)
+    draft: z.boolean().optional().default(false),
+    share: z.string().nullish()
 });
 
 /**
@@ -5935,7 +5950,8 @@ export const zGetInterviewConfigPath = z.object({
 });
 
 export const zGetInterviewConfigQuery = z.object({
-    draft: z.boolean().optional().default(false)
+    draft: z.boolean().optional().default(false),
+    share: z.string().nullish()
 });
 
 /**
@@ -5962,7 +5978,8 @@ export const zGetInterviewModelsPath = z.object({
 });
 
 export const zGetInterviewModelsQuery = z.object({
-    draft: z.boolean().optional().default(false)
+    draft: z.boolean().optional().default(false),
+    share: z.string().nullish()
 });
 
 /**
@@ -6013,7 +6030,8 @@ export const zGetConsentPath = z.object({
 });
 
 export const zGetConsentQuery = z.object({
-    draft: z.boolean().optional().default(false)
+    draft: z.boolean().optional().default(false),
+    share: z.string().nullish()
 });
 
 /**
@@ -6063,7 +6081,8 @@ export const zGetWelcomePath = z.object({
 });
 
 export const zGetWelcomeQuery = z.object({
-    draft: z.boolean().optional().default(false)
+    draft: z.boolean().optional().default(false),
+    share: z.string().nullish()
 });
 
 /**
@@ -6208,6 +6227,32 @@ export const zCreateInterviewResumeLinkQuery = z.object({
  * Successful Response
  */
 export const zCreateInterviewResumeLinkResponse = zInterviewResumeLinkResponse;
+
+export const zRevokeTestShareLinksPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zRevokeTestShareLinksQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zRevokeTestShareLinksResponse = z.void();
+
+export const zCreateTestShareLinkPath = z.object({
+    project_id: z.string().nullable()
+});
+
+export const zCreateTestShareLinkQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zCreateTestShareLinkResponse = zTestShareLinkResponse;
 
 export const zGetMessagePath = z.object({
     project_id: z.string().nullable(),

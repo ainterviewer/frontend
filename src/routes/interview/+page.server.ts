@@ -39,9 +39,14 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	const interviewType: InterviewType =
 		(url.searchParams.get('interview_type') as InterviewType) || 'distributed';
 
+	// A shared test link: someone a collaborator shared the draft with, who
+	// needs no account. Only ever a manual test; the backend checks the token
+	// on every draft read and refuses the rest.
+	const shareToken = interviewType === 'manual_test' ? url.searchParams.get('share') : null;
+
 	// Auth check for test interview types
 	let authError = false;
-	if (interviewType === 'manual_test' || interviewType === 'synthetic_test') {
+	if ((interviewType === 'manual_test' || interviewType === 'synthetic_test') && !shareToken) {
 		if (!cookies.get('access_token') && !cookies.get('refresh_token')) {
 			authError = true;
 		} else {
@@ -57,18 +62,20 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 
 	// Respondents get the published version of the project; a test runs the
 	// draft, which the backend serves only to the project's collaborators.
+	// A shared test link reads it with the link's token in place of a session.
 	const draft = interviewType !== 'distributed';
+	const contentQuery = { draft, ...(shareToken && { share: shareToken }) };
 
 	// Versioned like the guide: respondents get the published version's, a
 	// test the draft's.
 	const { data: interviewConfig, error: configError } = await Projects.getInterviewConfig({
 		path: { project_id },
-		query: { draft }
+		query: contentQuery
 	});
 
 	const { data: interviewModels, error: modelsError } = await Projects.getInterviewModels({
 		path: { project_id },
-		query: { draft }
+		query: contentQuery
 	});
 
 	const { data: isProjectOwnerDemoUser } = await Projects.checkProjectOwner({
@@ -98,10 +105,12 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	// English localization.
 	const { data: projectLanguages, error: languagesError } = await Projects.getProjectLanguages({
 		path: { project_id },
-		query: { draft }
+		query: contentQuery
 	});
 	// Nothing has been published yet, so there is nothing to answer.
 	const notPublished = hasErrorCode(languagesError, 'not_published');
+	// The shared test link expired, was revoked, or is not for this project.
+	const shareInvalid = hasErrorCode(languagesError, 'test_share_invalid');
 	const languages = projectLanguages ?? [];
 
 	const requested = langParam
@@ -138,7 +147,14 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 					: null;
 
 	// Collect extra query params (exclude known ones)
-	const knownParams = new Set(['id', 'interview_type', 'lang', 'start_section', 'start_question']);
+	const knownParams = new Set([
+		'id',
+		'interview_type',
+		'lang',
+		'start_section',
+		'start_question',
+		'share'
+	]);
 	const externalParams: Record<string, string> = {};
 	for (const [key, value] of url.searchParams.entries()) {
 		if (!knownParams.has(key)) {
@@ -201,6 +217,8 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 		resumeInterviewId,
 		notPublished,
 		notDistributable,
-		startPoint
+		startPoint,
+		shareToken,
+		shareInvalid
 	};
 };

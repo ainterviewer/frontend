@@ -2274,7 +2274,7 @@ export type EmbeddingTurn = {
  * Only errors a client handles differently carry one. Values are part of
  * the API -- the frontend matches on them -- so rename none without it.
  */
-export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'not_distributable' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'already_collaborator' | 'role_above_own' | 'last_admin' | 'preview_features_required' | 'demo_restricted';
+export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'not_distributable' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'test_share_invalid' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'already_collaborator' | 'role_above_own' | 'last_admin' | 'preview_features_required' | 'demo_restricted';
 
 /**
  * ExperimentAllocation
@@ -2957,6 +2957,10 @@ export type InterviewCreate = {
      */
     start_question_id?: string | null;
     /**
+     * Share Token
+     */
+    share_token?: string | null;
+    /**
      * External Params
      *
      * Extra query parameters, can include external user-id or the like.
@@ -3419,6 +3423,10 @@ export type InterviewSummaryPublic = {
      * Start Question Id
      */
     start_question_id?: string | null;
+    /**
+     * Via Share Link
+     */
+    via_share_link?: boolean;
     /**
      * Pid
      */
@@ -6788,6 +6796,23 @@ export type TestSetupPublic = {
      * Fixed Personas
      */
     fixed_personas?: Array<string> | null;
+};
+
+/**
+ * TestShareLinkResponse
+ *
+ * A freshly minted shared test link: anyone who opens it can try the
+ * project's draft, without an account, until `expires_at` or a revoke.
+ */
+export type TestShareLinkResponse = {
+    /**
+     * Url
+     */
+    url: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
 };
 
 /**
@@ -12127,6 +12152,10 @@ export type GetProjectLanguagesData = {
          * Draft
          */
         draft?: boolean;
+        /**
+         * Share
+         */
+        share?: string | null;
     };
     url: '/api/projects/{project_id}/available_languages';
 };
@@ -13076,6 +13105,10 @@ export type GetInterviewConfigData = {
          * Draft
          */
         draft?: boolean;
+        /**
+         * Share
+         */
+        share?: string | null;
     };
     url: '/api/projects/{project_id}/config';
 };
@@ -13170,6 +13203,10 @@ export type GetInterviewModelsData = {
          * Draft
          */
         draft?: boolean;
+        /**
+         * Share
+         */
+        share?: string | null;
     };
     url: '/api/projects/{project_id}/models';
 };
@@ -13361,6 +13398,10 @@ export type GetConsentData = {
          * Draft
          */
         draft?: boolean;
+        /**
+         * Share
+         */
+        share?: string | null;
     };
     url: '/api/projects/{project_id}/guide/consent/{language}';
 };
@@ -13508,6 +13549,10 @@ export type GetWelcomeData = {
          * Draft
          */
         draft?: boolean;
+        /**
+         * Share
+         */
+        share?: string | null;
     };
     url: '/api/projects/{project_id}/guide/welcome/{language}';
 };
@@ -13979,6 +14024,92 @@ export type CreateInterviewResumeLinkResponses = {
 };
 
 export type CreateInterviewResumeLinkResponse = CreateInterviewResumeLinkResponses[keyof CreateInterviewResumeLinkResponses];
+
+export type RevokeTestShareLinksData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/test_share';
+};
+
+export type RevokeTestShareLinksErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type RevokeTestShareLinksError = RevokeTestShareLinksErrors[keyof RevokeTestShareLinksErrors];
+
+export type RevokeTestShareLinksResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type RevokeTestShareLinksResponse = RevokeTestShareLinksResponses[keyof RevokeTestShareLinksResponses];
+
+export type CreateTestShareLinkData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/test_share';
+};
+
+export type CreateTestShareLinkErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type CreateTestShareLinkError = CreateTestShareLinkErrors[keyof CreateTestShareLinkErrors];
+
+export type CreateTestShareLinkResponses = {
+    /**
+     * Successful Response
+     */
+    200: TestShareLinkResponse;
+};
+
+export type CreateTestShareLinkResponse = CreateTestShareLinkResponses[keyof CreateTestShareLinkResponses];
 
 export type GetMessageData = {
     body?: never;

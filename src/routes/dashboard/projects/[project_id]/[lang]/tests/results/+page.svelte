@@ -554,6 +554,14 @@
 					Partial
 				</span>
 			{/if}
+			{#if interview.via_share_link}
+				<span
+					class="ml-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800"
+					title="Started from a shared test link, by someone who need not be a collaborator"
+				>
+					Shared
+				</span>
+			{/if}
 		{:else if columnId === 'test_name'}
 			{#if interview.test_name}{interview.test_name}{:else}<span class="text-gray-300">&ndash;</span
 				>{/if}

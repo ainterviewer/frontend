@@ -94,7 +94,8 @@ const SHORT_LIVED_OPENS_FOR_SERVICE_FAILURE = 2;
 export type PendingIntervention = SecurityIntervention & { text: string };
 
 export type CreateInterviewResult =
-	{ ok: true; token: string } | { ok: false; paramsInvalid?: boolean; notDistributable?: boolean };
+	| { ok: true; token: string }
+	| { ok: false; paramsInvalid?: boolean; notDistributable?: boolean; shareInvalid?: boolean };
 
 /**
  * Where a manual test starts when it is tried from part-way through the
@@ -112,7 +113,9 @@ export async function createInterview(
 	externalParams: Record<string, unknown> | null | undefined,
 	referer: string | null | undefined,
 	pid: string | null | undefined,
-	start: StartPoint | null = null
+	start: StartPoint | null = null,
+	/** A shared test link's token, in place of a collaborator's session. */
+	shareToken: string | null = null
 ): Promise<CreateInterviewResult> {
 	try {
 		const { data, error, response } = await Interviews.createInterview({
@@ -126,7 +129,8 @@ export async function createInterview(
 				...(referer != null && { referer }),
 				...(pid != null && { pid }),
 				...(start && 'section_id' in start && { start_section_id: start.section_id }),
-				...(start && 'question_id' in start && { start_question_id: start.question_id })
+				...(start && 'question_id' in start && { start_question_id: start.question_id }),
+				...(shareToken != null && { share_token: shareToken })
 			}
 		});
 		if (error || !response?.ok) {
@@ -140,6 +144,11 @@ export async function createInterview(
 			// this deployment allows in test interviews only.
 			if (hasErrorCode(error, 'not_distributable')) {
 				return { ok: false, notDistributable: true };
+			}
+			// `test_share_invalid`: the shared test link expired or was revoked
+			// between landing on the page and starting.
+			if (hasErrorCode(error, 'test_share_invalid')) {
+				return { ok: false, shareInvalid: true };
 			}
 			console.error('Failed to create interview');
 			return { ok: false };

@@ -5,6 +5,8 @@
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
 	import PublishControl from '$lib/content/PublishControl.svelte';
 
+	import ShareTestLink from './ShareTestLink.svelte';
+
 	let {
 		projectId,
 		lang,
@@ -93,6 +95,7 @@
 		<!-- Try Interview beside Publish: test the draft, then send it out. -->
 		<PublishControl {projectId} {lang} {availableLanguages} {onBeforePublish} primary>
 			{#snippet beside()}
+				<ShareTestLink {projectId} dataTour="share-test" />
 				<a
 					data-tour="try-interview"
 					class="rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 @3xl:px-6"

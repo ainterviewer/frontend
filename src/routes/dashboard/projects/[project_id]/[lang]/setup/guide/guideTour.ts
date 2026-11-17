@@ -308,6 +308,15 @@ export function startGuideTour() {
 				whatsNew: 'compare any version with the draft to see exactly what changed.'
 			},
 			{
+				id: 'share-test',
+				element: '[data-tour="share-test"]',
+				popover: {
+					title: 'Share Test',
+					description:
+						'Create a link that lets anyone try the draft, without an account: to pilot the guide with colleagues or test participants before you publish. Their interviews show up under <u>Tests</u>, marked as shared. Links expire after 14 days, and you can revoke them all at once.'
+				}
+			},
+			{
 				id: 'try-interview',
 				element: '[data-tour="try-interview"]',
 				popover: {
