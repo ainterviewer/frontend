@@ -42,6 +42,7 @@
 	let roomy = $derived(phone ? '' : 'sm:px-4 sm:py-3');
 
 	let sliderValue = $state(0);
+	let sliderTouched = $state(false);
 	const selectedValues = new SvelteSet<string>();
 	let radioValue = $state('');
 	let numberValue = $state<number | null>(null);
@@ -59,10 +60,15 @@
 	const likertTicksId = `likert-ticks-${uid}`;
 
 	// A range input shows its thumb at `min` when its value is below it, but
-	// the bound value stays where it was: start it there, or an untouched
-	// slider submits a value outside its own range.
+	// the bound value stays where it was. Start midway through the available
+	// steps instead, without treating that initial position as an answer.
 	untrack(() => {
-		if (surveyItem.type === 'slider') sliderValue = surveyItem.min ?? 0;
+		if (surveyItem.type === 'slider') {
+			const min = surveyItem.min ?? 0;
+			const max = surveyItem.max ?? 100;
+			const step = surveyItem.step ?? 1;
+			sliderValue = min + Math.round((max - min) / (2 * step)) * step;
+		}
 	});
 
 	untrack(() => {
@@ -245,7 +251,7 @@
 	});
 
 	let hasAnswer = $derived.by(() => {
-		if (surveyItem.type === 'slider') return true;
+		if (surveyItem.type === 'slider') return sliderTouched;
 		if (surveyItem.type === 'likert') {
 			if (surveyItem.ui === 'slider') return true;
 			return radioValue !== '';
@@ -335,6 +341,10 @@
 		onAnswer?.(answer.join(CHECKBOX_SEPARATOR));
 	}
 
+	function touchSlider() {
+		sliderTouched = true;
+	}
+
 	function getLegendText() {
 		switch (surveyItem.type) {
 			case 'slider':
@@ -419,8 +429,12 @@
 						max={sliderMax}
 						step={sliderStep}
 						bind:value={sliderValue}
+						onpointerdown={touchSlider}
+						oninput={touchSlider}
 						disabled={disabled && !readonly}
-						class="mt-2 mb-4 w-full cursor-pointer accent-primary disabled:cursor-not-allowed"
+						class="mt-2 mb-4 w-full cursor-pointer {surveyItem.min_label
+							? ''
+							: 'accent-primary'} disabled:cursor-not-allowed"
 						list={sliderTicksId}
 					/>
 					{#if sliderTicks.length <= 20}

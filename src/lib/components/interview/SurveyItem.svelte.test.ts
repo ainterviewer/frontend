@@ -227,7 +227,7 @@ describe('likert grid layout', () => {
 });
 
 describe('slider', () => {
-	test('an untouched slider answers its minimum, not a value outside its range', async () => {
+	test('a slider starts in the middle and only answers after interaction', async () => {
 		let given: unknown;
 		const screen = await render(SurveyItem, {
 			type: 'slider',
@@ -236,9 +236,24 @@ describe('slider', () => {
 			step: 1,
 			onAnswer: (value: unknown) => (given = value)
 		});
-		await expect.element(screen.getByRole('status')).toHaveTextContent('1');
-		await screen.getByRole('button').click();
-		expect(given).toBe('1');
+		await expect.element(screen.getByRole('status')).toHaveTextContent('3');
+		const submit = screen.getByRole('button');
+		await expect.element(submit).toBeDisabled();
+		await screen.getByRole('slider').click();
+		await expect.element(submit).toBeEnabled();
+		await submit.click();
+		expect(given).toBe('3');
+	});
+
+	test('a slider with a minimum label has a neutral thumb', async () => {
+		const screen = await render(SurveyItem, {
+			type: 'slider',
+			min: 1,
+			max: 5,
+			step: 1,
+			min_label: 'Not at all'
+		});
+		expect(screen.getByRole('slider').element().className).not.toContain('accent-primary');
 	});
 });
 
