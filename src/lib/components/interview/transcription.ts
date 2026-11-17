@@ -5,6 +5,8 @@
 // client only streams audio, commits the buffer, and collects transcripts.
 // The final transcript is submitted through the normal interview message path.
 
+import { backendWsUrl } from '$lib/utils/urls';
+
 import { WS_UNAUTHORIZED } from './types';
 
 // Backend + OpenAI expect 24 kHz mono PCM16.
@@ -15,15 +17,6 @@ const CHUNK_SAMPLES = 2_400;
 const FINISH_TIMEOUT_MS = 20_000;
 // How long to wait for the backend's `recording` frame before giving up.
 const CONNECT_TIMEOUT_MS = 10_000;
-
-function getTranscribeUrl(): string {
-	const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-	let host = window.location.host;
-	if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-		host = `${window.location.hostname}:8666`;
-	}
-	return `${wsScheme}://${host}/ws/transcribe`;
-}
 
 export class TranscriptionClient {
 	private ws: WebSocket | null = null;
@@ -59,7 +52,7 @@ export class TranscriptionClient {
 	 *  it carries the filename we need regardless. */
 	connect(): Promise<void> {
 		return new Promise((resolve, reject) => {
-			const ws = new WebSocket(getTranscribeUrl());
+			const ws = new WebSocket(backendWsUrl('/ws/transcribe'));
 			ws.binaryType = 'arraybuffer';
 
 			const timer = window.setTimeout(() => {

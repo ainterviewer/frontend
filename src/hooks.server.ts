@@ -6,7 +6,7 @@ import { client } from '$lib/api/client.gen';
 import { clearAuthCookies, currentAccessToken } from '$lib/server/auth';
 import { loginUrl } from '$lib/utils/urls';
 
-const API_BASE = () => env.API_URL || 'http://localhost:8666';
+const API_BASE = () => env.API_URL || `http://localhost:${env.BACKEND_PORT || '8666'}`;
 
 // Configure the API client for server-side requests
 // This ensures that calls made from load functions or form actions

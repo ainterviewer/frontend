@@ -4,6 +4,7 @@ import * as Y from 'yjs';
 
 import { browser } from '$app/environment';
 import type { ContentError } from '$lib/api';
+import { backendWsUrl } from '$lib/utils/urls';
 
 import { docId } from './guideDoc';
 import { settleColors } from './presenceColors';
@@ -59,14 +60,8 @@ export type SessionStatus =
 	| 'refused';
 
 function serverUrl(projectId: string): string {
-	const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-	let host = window.location.host;
-	// The dev server runs apart from the backend, as for the interview socket.
-	if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-		host = `${window.location.hostname}:8666`;
-	}
 	// y-websocket appends the room name: the part.
-	return `${scheme}://${host}/ws/content/${projectId}`;
+	return backendWsUrl(`/ws/content/${projectId}`);
 }
 
 export class ContentSession {

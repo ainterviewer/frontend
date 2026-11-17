@@ -1,7 +1,10 @@
 set dotenv-load
 
 export PATH := "./node_modules/.bin:" + env('PATH')
-export OPENAPI_URL := env('OPENAPI_URL', 'http://localhost:8666/api/openapi.json')
+# The backend dev server's port, which vite.config.ts also reads for the /api
+# proxy and the websockets: set it to point a worktree at its own backend.
+export BACKEND_PORT := env('BACKEND_PORT', '8666')
+export OPENAPI_URL := env('OPENAPI_URL', 'http://localhost:' + BACKEND_PORT + '/api/openapi.json')
 export SDK_OUTPUT_PATH := "src/lib/api"
 
 [private]

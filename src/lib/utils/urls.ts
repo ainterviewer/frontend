@@ -63,3 +63,22 @@ export function loginNext(next: string | null | undefined): string {
 export function loginUrl(url: URL): string {
 	return `/login?next=${encodeURIComponent(url.pathname + url.search)}`;
 }
+
+/**
+ * The websocket URL for a backend `path` (`/ws/...`, query included).
+ *
+ * Deployed, the backend sits behind the same host as the app. In development
+ * the Vite server proxies `/api` but not websockets, so a page served from
+ * localhost connects to the backend directly, on `BACKEND_PORT` (8666 unless
+ * set; see vite.config.ts).
+ */
+export function backendWsUrl(
+	path: string,
+	location: Pick<Location, 'protocol' | 'host' | 'hostname'> = window.location,
+	port: string = __BACKEND_PORT__
+): string {
+	const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+	const local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+	const host = local ? `${location.hostname}:${port}` : location.host;
+	return `${scheme}://${host}${path}`;
+}

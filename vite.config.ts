@@ -1,9 +1,20 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { playwright } from '@vitest/browser-playwright';
+import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
-export default defineConfig(({ isSsrBuild }) => ({
+/**
+ * The backend dev server's port, from BACKEND_PORT (8666 unless set). The /api
+ * proxy, the websockets (`backendWsUrl`) and the justfile's OPENAPI_URL all
+ * follow it, so a worktree can run its own backend beside the main checkout's.
+ */
+function backendPort(mode: string): string {
+	return loadEnv(mode, process.cwd(), '').BACKEND_PORT || '8666';
+}
+
+export default defineConfig(({ isSsrBuild, mode }) => ({
+	define: { __BACKEND_PORT__: JSON.stringify(backendPort(mode)) },
 	plugins: [tailwindcss(), sveltekit()],
 	build: {
 		rolldownOptions: {
@@ -21,7 +32,7 @@ export default defineConfig(({ isSsrBuild }) => ({
 		proxy: {
 			// forward /api requests to FastAPI dev server
 			'/api': {
-				target: 'http://localhost:8666',
+				target: `http://localhost:${backendPort(mode)}`,
 				changeOrigin: true,
 				secure: false
 			}

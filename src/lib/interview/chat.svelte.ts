@@ -19,6 +19,7 @@ import {
 } from '$lib/components/interview/types';
 import { getUiText } from '$lib/respondentText';
 import { hasErrorCode } from '$lib/utils/errors';
+import { backendWsUrl } from '$lib/utils/urls';
 
 const SKIP_QUESTION = '<|skipquestion|>';
 
@@ -353,19 +354,13 @@ export class ChatClient {
 
 	getWsUrl() {
 		let path;
-		const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
 		if (this.ws_path) {
 			path = this.ws_path;
 		} else {
 			path = '/ws/ai?';
 		}
 
-		let host = window.location.host;
-		if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-			host = `${window.location.hostname}:8666`;
-		}
-
-		let ws_url = `${wsScheme}://${host}${path}`;
+		let ws_url = backendWsUrl(path);
 
 		if (this.isInitialized) {
 			ws_url += (ws_url.includes('?') ? '&' : '?') + 'initialized=true';

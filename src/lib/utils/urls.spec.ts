@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { loginNext, loginUrl, portableSubRoute } from './urls';
+import { backendWsUrl, loginNext, loginUrl, portableSubRoute } from './urls';
 
 const ROOT = '/dashboard/projects/[project_id]/[lang]';
 
@@ -56,5 +56,28 @@ describe('loginNext', () => {
 		const url = new URL('https://app.example/dashboard/invites/accept?token=a%2Bb');
 		const next = new URL(loginUrl(url), url).searchParams.get('next');
 		expect(loginNext(next)).toBe('/dashboard/invites/accept?token=a%2Bb');
+	});
+});
+
+describe('backendWsUrl', () => {
+	const at = (protocol: string, host: string) => ({
+		protocol,
+		host,
+		hostname: host.split(':')[0]
+	});
+
+	it('connects to the backend port directly in development', () => {
+		expect(backendWsUrl('/ws/ai?x=1', at('http:', 'localhost:5173'), '8667')).toBe(
+			'ws://localhost:8667/ws/ai?x=1'
+		);
+		expect(backendWsUrl('/ws/transcribe', at('http:', '127.0.0.1:5173'), '8666')).toBe(
+			'ws://127.0.0.1:8666/ws/transcribe'
+		);
+	});
+
+	it('stays on the page host when deployed', () => {
+		expect(backendWsUrl('/ws/content/p1', at('https:', 'app.example.org'), '8666')).toBe(
+			'wss://app.example.org/ws/content/p1'
+		);
 	});
 });
