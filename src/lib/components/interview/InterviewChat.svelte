@@ -339,6 +339,20 @@
 	}
 </script>
 
+<!--
+	A test interview -- a collaborator trying the draft, or someone they shared
+	a test link with -- says so, so nobody takes it for the study itself.
+-->
+{#if interviewType && interviewType !== 'distributed'}
+	<p
+		role="note"
+		class="mx-auto mt-1 mb-2 flex w-fit max-w-[90%] items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-center text-xs font-medium text-amber-800 ring-1 ring-amber-200 lg:mt-4"
+	>
+		<i class="fa-solid fa-flask" aria-hidden="true"></i>
+		{chatText.test_banner}
+	</p>
+{/if}
+
 <!-- Chat Area -->
 <!--
 	One scroll container, not two: with `overflow-y-auto` on both this element
@@ -352,7 +366,7 @@
 	<div
 		id="messages"
 		bind:this={messagesContainer}
-		class="w-full flex-1 px-2.5 sm:w-[90%] sm:max-w-175 sm:min-w-125 sm:px-0"
+		class="w-full flex-1 px-2.5 pt-1 sm:w-[90%] sm:max-w-175 sm:min-w-125 sm:px-0 lg:pt-4"
 	>
 		{#each chat.messages as msg, i (i)}
 			<div

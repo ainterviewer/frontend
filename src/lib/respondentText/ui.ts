@@ -34,6 +34,8 @@ export interface UiText {
 		show_help: string;
 		end_interview: string;
 		record_audio: string;
+		/** Above the conversation in a test interview, so nobody takes it for the study. */
+		test_banner: string;
 	};
 	/** The interview's connection, and the screens shown when it cannot go on. */
 	connection: {
@@ -127,7 +129,8 @@ const UI: Record<Lang, UiText> = {
 			stop_reading_aloud: 'Stop reading questions aloud',
 			show_help: 'Show help',
 			end_interview: 'End interview',
-			record_audio: 'Record audio'
+			record_audio: 'Record audio',
+			test_banner: "Test interview — your answers will not be part of the study's results."
 		},
 		connection: {
 			reconnecting: 'Reconnecting...',
@@ -205,7 +208,8 @@ const UI: Record<Lang, UiText> = {
 			stop_reading_aloud: 'Stop oplæsning af spørgsmål',
 			show_help: 'Vis hjælp',
 			end_interview: 'Afslut interview',
-			record_audio: 'Optag lyd'
+			record_audio: 'Optag lyd',
+			test_banner: 'Testinterview – dine svar indgår ikke i undersøgelsens resultater.'
 		},
 		connection: {
 			reconnecting: 'Genopretter forbindelsen...',
@@ -283,7 +287,8 @@ const UI: Record<Lang, UiText> = {
 			stop_reading_aloud: 'Vorlesen beenden',
 			show_help: 'Hilfe anzeigen',
 			end_interview: 'Interview beenden',
-			record_audio: 'Audio aufnehmen'
+			record_audio: 'Audio aufnehmen',
+			test_banner: 'Testinterview – Ihre Antworten fließen nicht in die Ergebnisse der Studie ein.'
 		},
 		connection: {
 			reconnecting: 'Verbindung wird wiederhergestellt...',
@@ -366,7 +371,9 @@ const UI: Record<Lang, UiText> = {
 			stop_reading_aloud: 'Dejar de leer las preguntas en voz alta',
 			show_help: 'Mostrar ayuda',
 			end_interview: 'Finalizar la entrevista',
-			record_audio: 'Grabar audio'
+			record_audio: 'Grabar audio',
+			test_banner:
+				'Entrevista de prueba: tus respuestas no formarán parte de los resultados del estudio.'
 		},
 		connection: {
 			reconnecting: 'Reconectando...',
@@ -449,7 +456,8 @@ const UI: Record<Lang, UiText> = {
 			stop_reading_aloud: 'Arrêter la lecture des questions',
 			show_help: "Afficher l'aide",
 			end_interview: "Terminer l'entretien",
-			record_audio: 'Enregistrer un message audio'
+			record_audio: 'Enregistrer un message audio',
+			test_banner: "Entretien test : vos réponses ne feront pas partie des résultats de l'étude."
 		},
 		connection: {
 			reconnecting: 'Reconnexion...',
