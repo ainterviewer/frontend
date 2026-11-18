@@ -421,127 +421,129 @@
 		{@const edit = ensureEdit(user)}
 		{@const dirty = isDirty(user)}
 		{@const saving = savingUser.has(user.id)}
-		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-			<div>
-				<h4 class="text-sm font-semibold text-gray-700">Access Request Message</h4>
-				<p class="mt-1 text-sm text-gray-600">
-					{user.access_request_message ?? 'No message provided'}
-				</p>
+		<div class="max-w-5xl">
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<div>
+					<h4 class="text-sm font-semibold text-gray-700">Access Request Message</h4>
+					<p class="mt-1 text-sm text-gray-600">
+						{user.access_request_message ?? 'No message provided'}
+					</p>
+				</div>
+				<div>
+					<div class="flex items-center gap-2">
+						<h4 class="text-sm font-semibold text-gray-700">Admin Note</h4>
+						{#if savingNote.has(user.id)}
+							<span class="text-xs text-gray-400">Saving...</span>
+						{:else if user.admin_note_updated_at}
+							<span class="text-xs text-gray-400">
+								Updated {formatDate(user.admin_note_updated_at)}
+							</span>
+						{/if}
+					</div>
+					<textarea
+						class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+						rows="2"
+						placeholder="Add a note..."
+						value={user.admin_note ?? ''}
+						onclick={(e) => e.stopPropagation()}
+						onblur={(e) => saveAdminNote(user, e.currentTarget.value)}
+						onkeydown={(e) => {
+							if (e.key === 'Enter' && !e.shiftKey) {
+								e.preventDefault();
+								e.currentTarget.blur();
+							}
+						}}></textarea>
+				</div>
 			</div>
-			<div>
-				<div class="flex items-center gap-2">
-					<h4 class="text-sm font-semibold text-gray-700">Admin Note</h4>
-					{#if savingNote.has(user.id)}
-						<span class="text-xs text-gray-400">Saving...</span>
-					{:else if user.admin_note_updated_at}
-						<span class="text-xs text-gray-400">
-							Updated {formatDate(user.admin_note_updated_at)}
-						</span>
+			<div class="mt-4 border-t border-gray-200 pt-4">
+				<h4 class="mb-2 text-sm font-semibold text-gray-700">Edit User</h4>
+				<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+					<label class="block text-sm">
+						<span class="text-xs font-medium text-gray-600">Scope</span>
+						<select
+							class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+							bind:value={edit.scope}
+							onclick={(e) => e.stopPropagation()}
+						>
+							{#each SCOPES as s (s)}
+								<option value={s}>{s}</option>
+							{/each}
+						</select>
+					</label>
+					<label class="block text-sm">
+						<span class="text-xs font-medium text-gray-600">Organization</span>
+						<input
+							type="text"
+							class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+							placeholder="-"
+							bind:value={edit.organization}
+							onclick={(e) => e.stopPropagation()}
+						/>
+					</label>
+					<label class="block text-sm">
+						<span class="text-xs font-medium text-gray-600">Expires At</span>
+						<input
+							type="datetime-local"
+							class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
+							bind:value={edit.expires_at}
+							onclick={(e) => e.stopPropagation()}
+						/>
+					</label>
+				</div>
+				<div class="mt-5 mb-1 flex flex-wrap gap-x-6 gap-y-2">
+					<label class="flex items-center gap-2 text-sm">
+						<input
+							type="checkbox"
+							class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+							bind:checked={edit.with_preview_features}
+							onclick={(e) => e.stopPropagation()}
+						/>
+						<span class="text-xs font-medium text-gray-600">Preview features enabled</span>
+					</label>
+					<label class="flex items-center gap-2 text-sm">
+						<input
+							type="checkbox"
+							class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+							bind:checked={edit.two_factor_enabled}
+							onclick={(e) => e.stopPropagation()}
+						/>
+						<span class="text-xs font-medium text-gray-600">Two-factor authentication enabled</span>
+					</label>
+				</div>
+				{#if edit.scope === 'demo'}
+					<div class="mt-4 md:w-1/2">
+						<DemoLimitFields
+							defaults={data.demoLimitDefaults}
+							usage={demoUsage[user.id]}
+							bind:concurrent={edit.demo_concurrent_limit}
+							bind:daily={edit.demo_daily_limit}
+							bind:lifetime={edit.demo_lifetime_limit}
+						/>
+					</div>
+				{/if}
+				<div class="mt-4 flex items-center justify-end gap-2">
+					{#if dirty && !saving}
+						<button
+							onclick={(e) => {
+								e.stopPropagation();
+								resetEdit(user);
+							}}
+							class="rounded px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
+						>
+							Reset
+						</button>
 					{/if}
-				</div>
-				<textarea
-					class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-					rows="2"
-					placeholder="Add a note..."
-					value={user.admin_note ?? ''}
-					onclick={(e) => e.stopPropagation()}
-					onblur={(e) => saveAdminNote(user, e.currentTarget.value)}
-					onkeydown={(e) => {
-						if (e.key === 'Enter' && !e.shiftKey) {
-							e.preventDefault();
-							e.currentTarget.blur();
-						}
-					}}></textarea>
-			</div>
-		</div>
-		<div class="mt-4 border-t border-gray-200 pt-4">
-			<h4 class="mb-2 text-sm font-semibold text-gray-700">Edit User</h4>
-			<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-				<label class="block text-sm">
-					<span class="text-xs font-medium text-gray-600">Scope</span>
-					<select
-						class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-						bind:value={edit.scope}
-						onclick={(e) => e.stopPropagation()}
-					>
-						{#each SCOPES as s (s)}
-							<option value={s}>{s}</option>
-						{/each}
-					</select>
-				</label>
-				<label class="block text-sm">
-					<span class="text-xs font-medium text-gray-600">Organization</span>
-					<input
-						type="text"
-						class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-						placeholder="-"
-						bind:value={edit.organization}
-						onclick={(e) => e.stopPropagation()}
-					/>
-				</label>
-				<label class="block text-sm">
-					<span class="text-xs font-medium text-gray-600">Expires At</span>
-					<input
-						type="datetime-local"
-						class="mt-1 w-full rounded border border-gray-300 p-2 text-sm focus:border-primary focus:ring-primary"
-						bind:value={edit.expires_at}
-						onclick={(e) => e.stopPropagation()}
-					/>
-				</label>
-			</div>
-			<div class="mt-5 mb-1 flex flex-wrap gap-x-6 gap-y-2">
-				<label class="flex items-center gap-2 text-sm">
-					<input
-						type="checkbox"
-						class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-						bind:checked={edit.with_preview_features}
-						onclick={(e) => e.stopPropagation()}
-					/>
-					<span class="text-xs font-medium text-gray-600">Preview features enabled</span>
-				</label>
-				<label class="flex items-center gap-2 text-sm">
-					<input
-						type="checkbox"
-						class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-						bind:checked={edit.two_factor_enabled}
-						onclick={(e) => e.stopPropagation()}
-					/>
-					<span class="text-xs font-medium text-gray-600">Two-factor authentication enabled</span>
-				</label>
-			</div>
-			{#if edit.scope === 'demo'}
-				<div class="mt-4 md:w-1/2">
-					<DemoLimitFields
-						defaults={data.demoLimitDefaults}
-						usage={demoUsage[user.id]}
-						bind:concurrent={edit.demo_concurrent_limit}
-						bind:daily={edit.demo_daily_limit}
-						bind:lifetime={edit.demo_lifetime_limit}
-					/>
-				</div>
-			{/if}
-			<div class="mt-4 flex items-center justify-end gap-2">
-				{#if dirty && !saving}
 					<button
+						disabled={!dirty || saving}
 						onclick={(e) => {
 							e.stopPropagation();
-							resetEdit(user);
+							saveUser(user);
 						}}
-						class="rounded px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200"
+						class="rounded bg-primary px-3 py-1.5 text-xs font-medium text-on-primary transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
 					>
-						Reset
+						{saving ? 'Saving...' : 'Save'}
 					</button>
-				{/if}
-				<button
-					disabled={!dirty || saving}
-					onclick={(e) => {
-						e.stopPropagation();
-						saveUser(user);
-					}}
-					class="rounded bg-primary px-3 py-1.5 text-xs font-medium text-on-primary transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					{saving ? 'Saving...' : 'Save'}
-				</button>
+				</div>
 			</div>
 		</div>
 	{/snippet}

@@ -315,7 +315,9 @@
 		</div>
 	{/if}
 
-	<div class="min-h-0 grow overflow-auto {hasControls ? 'border-t border-gray-200' : ''}">
+	<div
+		class="@container min-h-0 grow overflow-auto {hasControls ? 'border-t border-gray-200' : ''}"
+	>
 		<table class="min-w-full">
 			<thead>
 				{#each table.getHeaderGroups() as headerGroup, groupIndex (headerGroup.id)}
@@ -474,8 +476,12 @@
 						</tr>
 						{#if expandedRow && isExpanded?.(row)}
 							<tr class="border-b border-gray-100 bg-gray-50/70">
-								<td colspan={visibleColumnCount} class="px-4 py-4">
-									{@render expandedRow(row)}
+								<td colspan={visibleColumnCount} class="py-4">
+									<!-- Pinned to the visible width of the scroll area, so a table
+									     wider than the viewport doesn't push the panel off-screen. -->
+									<div class="sticky left-0 w-[100cqw] px-4">
+										{@render expandedRow(row)}
+									</div>
 								</td>
 							</tr>
 						{/if}
