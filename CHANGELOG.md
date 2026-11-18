@@ -4,6 +4,25 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.28] - 2026-11-18
+
+### Features
+
+- (setup) Don't let an invalid setup be tried, shared or published
+- (welcome) Choose whether to show the contact and ID box
+- (welcome) Make the contact email optional while the contact box is hidden
+
+### Bug Fixes
+
+- (admin) Keep failed EC2 starts on screen until dismissed
+- (dashboard) Open folder and project menus upwards near the bottom
+- (dashboard) Keep the dashboard's scroll position
+- (guide) Highlight a question's empty main question, and add placeholders
+- (setup) Draw the version status with the page
+- (setup) Open the setup editors on the guide being edited
+- (guide) Mark the outline entry being read
+- (admin) Keep an instance's state pills apart when they wrap
+
 ## [0.9.27] - 2026-11-18
 
 ### Features
