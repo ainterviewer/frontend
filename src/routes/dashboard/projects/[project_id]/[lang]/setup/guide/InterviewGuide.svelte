@@ -429,6 +429,7 @@
 					<TextField
 						multiline
 						class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
+						placeholder="What the interview is about, for the AIinterviewer's background..."
 						text={guideStore.top.framing}
 					/>
 				</div>
@@ -448,6 +449,7 @@
 					<TextField
 						multiline
 						class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
+						placeholder="Welcome the interviewee and tell them what to expect..."
 						text={guideStore.top.introduction}
 					/>
 				</div>
@@ -473,6 +475,7 @@
 								sectionIndex={sIdx}
 								allSections={guideStore.localSections}
 								allQuestions={guideStore.localQuestions}
+								errors={session.errors}
 								onRemove={() => removeSection(sIdx)}
 								onGenerateQuestion={() => {
 									generatingQuestionSectionId = section.id;
@@ -533,6 +536,7 @@
 					<TextField
 						multiline
 						class="h-32 w-full rounded-md border border-gray-300 p-3 focus:border-primary focus:ring-2 focus:ring-primary"
+						placeholder="Thank the interviewee for taking part..."
 						text={guideStore.top.outro}
 					/>
 				</div>
@@ -575,6 +579,7 @@
 											multiline
 											id="tm-message-{i}"
 											class="h-20 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary"
+											placeholder="What to tell the interviewee at this point..."
 											text={tm.message}
 										/>
 									</div>

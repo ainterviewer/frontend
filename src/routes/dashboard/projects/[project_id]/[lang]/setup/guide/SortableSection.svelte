@@ -3,6 +3,7 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { untrack } from 'svelte';
 
+	import type { ContentError } from '$lib/api';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { pick } from '$lib/guide/localized';
 	import { newQuestion } from '$lib/guide/normalize';
@@ -32,12 +33,15 @@
 		isOverlay?: boolean;
 		source?: 'guide' | 'chat';
 		dataTour?: string;
+		/** The guide's errors, of which this section shows its questions'. */
+		errors?: ContentError[];
 	}
 
 	let {
 		section,
 		questions,
 		dataTour,
+		errors = [],
 		sectionIndex,
 		displayIndex,
 		allSections = [],
@@ -151,6 +155,7 @@
 			<TextField
 				multiline
 				class="h-22 w-full resize-y rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
+				placeholder="What this section is about..."
 				text={section.description}
 			/>
 		</label>
@@ -181,6 +186,7 @@
 				sectionIndex={shownIndex}
 				{allSections}
 				{allQuestions}
+				errors={errors.filter((error) => error.question_id === question.id)}
 				onRemove={() => removeQuestion(qIdx)}
 			/>
 		{/each}

@@ -3,6 +3,7 @@
 	import { untrack } from 'svelte';
 	import { slide } from 'svelte/transition';
 
+	import type { ContentError } from '$lib/api';
 	import { onReveal } from '$lib/collab/reveal';
 	import { newCondition } from '$lib/guide/conditions';
 	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
@@ -28,6 +29,8 @@
 		isOverlay?: boolean;
 		source?: 'guide' | 'chat';
 		dataTour?: string;
+		/** The guide's errors in this question. */
+		errors?: ContentError[];
 	}
 
 	let {
@@ -41,8 +44,17 @@
 		onRemove,
 		isOverlay = false,
 		source = 'guide',
-		dataTour
+		dataTour,
+		errors = []
 	}: Props = $props();
+
+	/** Errors in a field shown on the card itself, as its text field's tooltip. */
+	function fieldError(field: string): string | undefined {
+		const found = errors.filter((error) => error.field === field);
+		return found.length
+			? found.map((error) => [error.message, error.fix].filter(Boolean).join(' ')).join('\n')
+			: undefined;
+	}
 
 	let showSettings = $state(false);
 	let expandedImage = $state(false);
@@ -204,6 +216,7 @@
 					multiline
 					class="mt-1 h-18 w-full resize-y rounded-md border-gray-200 bg-gray-50 p-3 text-sm font-medium tracking-normal normal-case transition-colors focus:border-primary focus:bg-white focus:ring-primary/20"
 					placeholder="What would you like to ask?"
+					error={fieldError('main_question')}
 					text={question.main_question}
 				/>
 			</label>
