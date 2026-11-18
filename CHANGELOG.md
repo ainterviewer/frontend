@@ -4,6 +4,15 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.29] - 2026-11-18
+
+### Internal
+
+- (deps) Update dependencies
+- Reformat with prettier-plugin-svelte 4.2
+- (deps) Update @xyflow/svelte to v2
+- (deps) Update diff to v9
+
 ## [0.9.28] - 2026-11-18
 
 ### Features
