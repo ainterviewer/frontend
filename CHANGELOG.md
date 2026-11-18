@@ -4,6 +4,26 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.27] - 2026-11-18
+
+### Features
+
+- (admin) Default new invitations to expire in 4 weeks
+- (conditions) Let a question carry several conditions
+- (interview) Show timed messages marked as a modal in a pop-up
+- (admin) Take EC2 instances out of rotation from the AWS page
+
+### Bug Fixes
+
+- (sidebar) Use a thin, muted scrollbar on the dark sidebar
+- (auth) Fit the login circle to the window, falling back to a card
+- (admin) Keep the user detail panel within the visible table width
+- (admin) Keep invitation expiry times when editing an invitation
+
+### Internal
+
+- (sidebar) Ignore hidden items in groups and the active match
+
 ## [0.9.26] - 2026-11-17
 
 ### Features
