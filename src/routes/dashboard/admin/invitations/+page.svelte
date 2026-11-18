@@ -154,6 +154,12 @@
 		}
 	}
 
+	/** `date` as a `datetime-local` input value, which is in local time. */
+	function toDateTimeLocal(date: Date): string {
+		const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+		return local.toISOString().slice(0, 16);
+	}
+
 	function resetForm() {
 		newTitle = '';
 		newAlias = '';
@@ -184,8 +190,7 @@
 		newDemoLifetimeLimit = invitation.user_demo_lifetime_limit ?? null;
 
 		if (invitation.expires_at) {
-			const d = new Date(invitation.expires_at);
-			newExpiresAt = d.toISOString().slice(0, 16);
+			newExpiresAt = toDateTimeLocal(new Date(invitation.expires_at));
 		} else {
 			newExpiresAt = '';
 		}
@@ -198,8 +203,7 @@
 			newUserExpiresMinutes = 0;
 		} else if (typeof invitation.user_expires === 'string') {
 			userExpiresMode = 'absolute';
-			const d = new Date(invitation.user_expires);
-			newUserExpires = d.toISOString().slice(0, 16);
+			newUserExpires = toDateTimeLocal(new Date(invitation.user_expires));
 			newUserExpiresDays = 0;
 			newUserExpiresHours = 0;
 			newUserExpiresMinutes = 0;
