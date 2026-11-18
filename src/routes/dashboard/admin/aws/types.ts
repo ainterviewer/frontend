@@ -16,6 +16,11 @@ export interface Instance {
 	};
 	connections: number;
 	idle_time: number;
+	// Tagged `Proxy=disabled`: out of rotation for maintenance. The proxy routes
+	// nothing to it and never starts or stops it on its own; manual start and
+	// stop still work. Optional so an older proxy that doesn't report it reads
+	// as enabled.
+	disabled?: boolean;
 }
 
 /** The tunable settings of one pool. Field names match the proxy's own. */

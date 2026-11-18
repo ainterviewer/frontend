@@ -220,10 +220,16 @@
 		);
 	}
 
+	// The proxy's start-all and stop-all skip disabled instances, so a
+	// selection that includes one goes instance by instance instead -- it was
+	// picked on purpose, and the bulk call would quietly leave it out.
+	const canUseBulk = () =>
+		table.getIsAllRowsSelected() && !selectedInstances.some((i) => i.disabled);
+
 	async function startSelected() {
 		if (selectedIds.length === 0) return;
 
-		if (table.getIsAllRowsSelected()) {
+		if (canUseBulk()) {
 			const { error: startError } = await Admin.proxyToEc2ManagerPost({
 				path: { full_path: 'instances/start-all' }
 			});
@@ -253,7 +259,7 @@
 	async function stopSelected() {
 		if (selectedIds.length === 0) return;
 
-		if (table.getIsAllRowsSelected()) {
+		if (canUseBulk()) {
 			const { error: stopError } = await Admin.proxyToEc2ManagerPost({
 				path: { full_path: 'instances/stop-all' }
 			});
@@ -278,6 +284,40 @@
 		await getInstanceStatus();
 		table.resetRowSelection(true);
 		toast.success('Instances stopping');
+	}
+
+	/**
+	 * Take the selected instances out of rotation, or put them back.
+	 *
+	 * Only touches the ones that need it, so a mixed selection does what the
+	 * button says rather than toggling each row.
+	 */
+	async function setDisabled(disabled: boolean) {
+		const ids = selectedInstances.filter((i) => !!i.disabled !== disabled).map((i) => i.id);
+		if (ids.length === 0) return;
+
+		const action = disabled ? 'disable' : 'enable';
+		const results = await Promise.all(
+			ids.map((id) =>
+				Admin.proxyToEc2ManagerPost({
+					path: { full_path: `instances/${action}/${id}` }
+				})
+			)
+		);
+		const failed = results.filter((r) => r.error);
+		if (failed.length > 0) {
+			toastApiError(failed[0].error, `Failed to ${action} ${failed.length} instance(s)`);
+		}
+		await getInstanceStatus();
+		table.resetRowSelection(true);
+		const done = ids.length - failed.length;
+		if (done > 0) {
+			toast.success(
+				disabled
+					? `${done} instance(s) out of rotation. Wait for connections to reach 0 before restarting.`
+					: `${done} instance(s) back in rotation`
+			);
+		}
 	}
 
 	function getStatusColor(status: string) {
@@ -403,6 +443,9 @@
 	});
 
 	const selectedIds = $derived(table.getSelectedRowIds());
+	const selectedInstances = $derived(instances.filter((i) => selectedIds.includes(i.id)));
+	const anySelectedEnabled = $derived(selectedInstances.some((i) => !i.disabled));
+	const anySelectedDisabled = $derived(selectedInstances.some((i) => i.disabled));
 
 	const columnLabels: Record<string, string> = {
 		name: 'Instance name',
@@ -483,6 +526,28 @@
 			<i class="fa-solid fa-stop text-xs"></i>
 			Stop
 		</button>
+		{#if anySelectedEnabled}
+			<button
+				class="flex items-center gap-1.5 rounded px-2 py-0.5 text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+				onclick={() => setDisabled(true)}
+				disabled={isLoading}
+				title="Stop routing requests to it, and never start or stop it automatically"
+			>
+				<i class="fa-solid fa-screwdriver-wrench text-xs"></i>
+				Disable
+			</button>
+		{/if}
+		{#if anySelectedDisabled}
+			<button
+				class="flex items-center gap-1.5 rounded px-2 py-0.5 text-primary hover:bg-secondary/40 disabled:cursor-not-allowed disabled:opacity-40"
+				onclick={() => setDisabled(false)}
+				disabled={isLoading}
+				title="Put it back into rotation"
+			>
+				<i class="fa-solid fa-rotate-left text-xs"></i>
+				Enable
+			</button>
+		{/if}
 	{/snippet}
 
 	{#snippet filters()}
@@ -515,6 +580,15 @@
 			>
 				{instance.state}
 			</span>
+			{#if instance.disabled}
+				<span
+					class="ml-1 inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium whitespace-nowrap text-gray-700 ring-1 ring-gray-400/30 ring-inset"
+					title="Tagged Proxy=disabled: out of rotation. Nothing is routed to it, and it is never started or stopped automatically."
+				>
+					<i class="fa-solid fa-screwdriver-wrench text-[0.65rem]"></i>
+					disabled
+				</span>
+			{/if}
 		{:else if columnId === 'instance_type'}
 			{instance.instance_type}
 		{:else if columnId === 'id'}
