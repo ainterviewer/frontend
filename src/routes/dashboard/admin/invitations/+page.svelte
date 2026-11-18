@@ -154,17 +154,33 @@
 		}
 	}
 
+	/** New invitations start out expiring this long from now. */
+	const INVITATION_LIFETIME_DAYS = 28;
+
 	/** `date` as a `datetime-local` input value, which is in local time. */
 	function toDateTimeLocal(date: Date): string {
 		const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
 		return local.toISOString().slice(0, 16);
 	}
 
+	function defaultExpiresAt(): string {
+		const today = new Date();
+		return toDateTimeLocal(
+			new Date(
+				today.getFullYear(),
+				today.getMonth(),
+				today.getDate() + INVITATION_LIFETIME_DAYS,
+				today.getHours(),
+				today.getMinutes()
+			)
+		);
+	}
+
 	function resetForm() {
 		newTitle = '';
 		newAlias = '';
 		newEmail = '';
-		newExpiresAt = '';
+		newExpiresAt = defaultExpiresAt();
 		newReuseable = true;
 		newUserScope = 'user';
 		newUserExpires = '';
@@ -513,6 +529,7 @@
 					bind:value={newExpiresAt}
 					class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none sm:text-sm"
 				/>
+				<p class="mt-1 text-xs text-gray-500">Leave empty to never expire.</p>
 			</div>
 			<div>
 				<label for="user_scope" class="block text-sm font-medium text-gray-700">User Scope</label>
