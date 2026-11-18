@@ -2,12 +2,14 @@ import { error } from '@sveltejs/kit';
 
 import { Default, Projects } from '$lib/api';
 import { etagOf } from '$lib/content/revision.svelte';
+import { loadContentStatus } from '$lib/content/status';
 
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
 	const { project_id } = params;
 
+	const contentStatus = loadContentStatus(project_id, fetch);
 	const [modelsRes, agentsRes, defaultsRes, securityDefaultsRes] = await Promise.all([
 		Default.getModels({
 			fetch
@@ -47,6 +49,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 	const promptDefaults = defaultsRes.data || {};
 
 	return {
+		contentStatus: await contentStatus,
 		models,
 		agents,
 		promptDefaults,

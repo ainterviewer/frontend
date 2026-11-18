@@ -1,12 +1,14 @@
 import { error } from '@sveltejs/kit';
 
 import { Projects } from '$lib/api';
+import { loadContentStatus } from '$lib/content/status';
 
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { project_id } = params;
 
+	const contentStatus = loadContentStatus(project_id);
 	const [consentRes, projectRes] = await Promise.all([
 		Projects.getLocalizedConsent({
 			path: { project_id }
@@ -23,6 +25,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	return {
 		consent: consentRes.data,
+		contentStatus: await contentStatus,
 		available_languages: projectRes.data?.available_languages ?? [],
 		project_name: projectRes.data?.title ?? ''
 	};

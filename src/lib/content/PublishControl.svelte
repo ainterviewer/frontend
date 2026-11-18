@@ -1,8 +1,9 @@
 <script lang="ts" module>
 	import type { ContentStatus } from '$lib/api/types.gen';
 
-	// The last status seen per project, so the action bar a sub-route mounts
-	// draws it straight away instead of flashing empty until the fetch returns.
+	// The last status seen per project, so the action bar a sub-route whose
+	// load does not hand one over draws it straight away instead of flashing
+	// empty until the fetch returns.
 	// Only ever written in the browser: effects do not run on the server.
 	// Read once, at mount, so a plain record rather than reactive state.
 	const lastStatus: Record<string, ContentStatus> = {};
@@ -50,8 +51,13 @@
 		beside?: Snippet;
 	} = $props();
 
+	// The page's load hands the status over (`loadContentStatus`), so a full
+	// page load draws it from the first paint; else the last seen, else none
+	// until the fetch below returns.
 	// svelte-ignore state_referenced_locally
-	let status = $state<ContentStatus | null>(lastStatus[projectId] ?? null);
+	let status = $state<ContentStatus | null>(
+		(page.data.contentStatus as ContentStatus | null | undefined) ?? lastStatus[projectId] ?? null
+	);
 	let dialogOpen = $state(false);
 	let historyOpen = $state(false);
 	let comparing = $state(false);

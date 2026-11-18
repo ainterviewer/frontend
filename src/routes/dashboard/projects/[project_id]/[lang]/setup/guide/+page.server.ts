@@ -1,12 +1,14 @@
 import { error } from '@sveltejs/kit';
 
 import { Projects } from '$lib/api';
+import { loadContentStatus } from '$lib/content/status';
 
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
 	const { project_id, lang } = params;
 
+	const contentStatus = loadContentStatus(project_id, fetch);
 	const [response, projectRes] = await Promise.all([
 		Projects.getLocalizedGuide({
 			path: { project_id },
@@ -31,6 +33,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 
 	return {
 		guide: response.data,
+		contentStatus: await contentStatus,
 		lang,
 		project_id,
 		project_name: projectRes.data?.title ?? '',
