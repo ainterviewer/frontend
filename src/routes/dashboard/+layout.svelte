@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, type Snippet } from 'svelte';
 
-	import { invalidate } from '$app/navigation';
+	import { afterNavigate, beforeNavigate, invalidate } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
 	import { WhatsNewModal } from '$lib/components/modals';
 	import { sidebar } from '$lib/sidebar.svelte';
@@ -26,6 +26,26 @@
 	 * invalidates it immediately.
 	 */
 	const NOTIFICATION_POLL_MS = 5 * 60 * 1000;
+
+	// Pages scroll <main>, not the window, so SvelteKit's own scroll handling
+	// does nothing for them and <main> keeps its offset across navigations.
+	// Leaving the main dashboard remembers where it was, coming back restores
+	// it, and the page it leads to starts at the top.
+	let main = $state<HTMLElement>();
+	let dashboardScroll = 0;
+	const DASHBOARD = '/dashboard';
+
+	beforeNavigate(({ from, to }) => {
+		if (main && from?.route.id === DASHBOARD && to?.route.id !== DASHBOARD) {
+			dashboardScroll = main.scrollTop;
+		}
+	});
+
+	afterNavigate(({ from, to }) => {
+		if (!main || !from || from.route.id === to?.route.id) return;
+		if (to?.route.id === DASHBOARD) main.scrollTop = dashboardScroll;
+		else if (from.route.id === DASHBOARD) main.scrollTop = 0;
+	});
 
 	onMount(() => {
 		// Only `app:notifications` is invalidated, not the whole load: this must
@@ -63,6 +83,7 @@
 	     and roughly a page heading's worth of room, so the card still ends inside
 	     the viewport. -->
 	<main
+		bind:this={main}
 		style="--table-max-h: calc(100vh - 2.75rem - 5rem - 2.5rem - 3.5rem)"
 		class={[
 			'mt-11 flex h-[calc(100vh-2.75rem)] flex-col items-center overflow-y-auto rounded-b-[10px] border-r-6 border-b-6 border-r-dark border-b-dark bg-light py-10 transition-all duration-500',
