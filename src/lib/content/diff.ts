@@ -133,7 +133,7 @@ const LABELS: Record<string, string> = {
 	text: 'Text',
 	email: 'Contact email',
 	video_file_name: 'Video',
-	with_id: 'Asks for an ID',
+	with_id: 'Shows the ID and contact box',
 	invite: 'Invitation',
 	reminder: 'Reminder',
 	subject: 'Subject',

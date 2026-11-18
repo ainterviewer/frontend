@@ -419,6 +419,7 @@
 						? `/assets/videos/${version.welcome.video_file_name}`
 						: null}
 					email={version.welcome.email}
+					withId={version.welcome.with_id ?? true}
 					lang={language}
 					scroll={false}
 				/>

@@ -429,6 +429,7 @@
 		videoUrl={welcomeData?.video_file_name ? `/assets/videos/${welcomeData.video_file_name}` : null}
 		email={welcomeData?.email ?? null}
 		{interviewId}
+		withId={welcomeData?.with_id ?? true}
 		{lang}
 		onProceed={proceedFromWelcome}
 		animate={false}

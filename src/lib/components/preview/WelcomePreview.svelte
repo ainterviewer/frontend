@@ -9,7 +9,8 @@
 		videoUrl = null,
 		email = null,
 		lang = 'EN',
-		scroll = true
+		scroll = true,
+		withId = true
 	}: {
 		title: string;
 		text: string;
@@ -19,6 +20,8 @@
 		lang?: string;
 		/** Scroll inside a capped height; off where the container scrolls. */
 		scroll?: boolean;
+		/** Show the box with the contact email and the interview's ID (`with_id`). */
+		withId?: boolean;
 	} = $props();
 
 	let t = $derived(getUiText(lang).welcome);
@@ -49,27 +52,29 @@
 			{/if}
 		</div>
 
-		<hr class="my-4 border-gray-200" />
+		{#if withId}
+			<hr class="my-4 border-gray-200" />
 
-		<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-			<p class="mb-2">
-				{withdraw[0]}{#if email}<a
-						href="mailto:{email}"
-						class="font-medium text-primary hover:underline">{email}</a
-					>{:else}<span class="text-gray-400">[contact email]</span>{/if}{withdraw[1]}
-			</p>
+			<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+				<p class="mb-2">
+					{withdraw[0]}{#if email}<a
+							href="mailto:{email}"
+							class="font-medium text-primary hover:underline">{email}</a
+						>{:else}<span class="text-gray-400">[contact email]</span>{/if}{withdraw[1]}
+				</p>
 
-			<div
-				class="my-2 flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
-			>
-				<code class="font-mono text-sm text-gray-700">&lt;interview-id&gt;</code>
-				<i class="fa-solid fa-fingerprint text-gray-400"></i>
+				<div
+					class="my-2 flex w-fit items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
+				>
+					<code class="font-mono text-sm text-gray-700">&lt;interview-id&gt;</code>
+					<i class="fa-solid fa-fingerprint text-gray-400"></i>
+				</div>
+
+				<p class="text-xs text-gray-500">
+					{t.store_code}
+				</p>
 			</div>
-
-			<p class="text-xs text-gray-500">
-				{t.store_code}
-			</p>
-		</div>
+		{/if}
 
 		<div class="mt-6">
 			<button

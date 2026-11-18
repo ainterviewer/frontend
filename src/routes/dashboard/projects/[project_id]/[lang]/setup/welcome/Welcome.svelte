@@ -170,7 +170,13 @@
 		consent: () => editingConsent(projectId, languages),
 		welcome: () =>
 			title || text || welcome.email || welcome.video_file_name
-				? { title, text, email: welcome.email, video_file_name: welcome.video_file_name ?? null }
+				? {
+						title,
+						text,
+						email: welcome.email,
+						video_file_name: welcome.video_file_name ?? null,
+						with_id: welcome.with_id
+					}
 				: null
 	};
 
@@ -364,6 +370,23 @@
 							Participants can contact this email to withdraw consent or modify their data.
 						</p>
 					</div>
+
+					<label class="flex items-start gap-3">
+						<input
+							type="checkbox"
+							bind:checked={welcome.with_id}
+							class="mt-0.5 h-4 w-4 cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
+						/>
+						<span>
+							<span class="block text-sm font-medium text-gray-700">
+								Show the contact email and interview ID
+							</span>
+							<span class="mt-0.5 block text-xs text-gray-500">
+								The box below the message telling participants how to withdraw, with the ID that
+								names their interview. Turn it off only if they learn both another way.
+							</span>
+						</span>
+					</label>
 				</fieldset>
 
 				<!-- Actions -->
@@ -397,6 +420,7 @@
 						{text}
 						videoUrl={videoPreviewUrl}
 						email={welcome.email}
+						withId={welcome.with_id}
 						lang={language}
 					/>
 				</div>
@@ -439,6 +463,7 @@
 	{text}
 	videoUrl={videoPreviewUrl}
 	email={welcome.email}
+	withId={welcome.with_id}
 	lang={language}
 	onProceed={() => (showFullscreenModal = false)}
 	onClose={() => (showFullscreenModal = false)}

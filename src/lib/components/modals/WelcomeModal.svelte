@@ -10,6 +10,8 @@
 		videoUrl?: string | null;
 		email?: string | null;
 		interviewId?: string | null;
+		/** Show the box with the contact email and the interview's ID (`with_id`). */
+		withId?: boolean;
 		/** The project language the fixed text is shown in. */
 		lang?: string;
 		buttonText?: string;
@@ -26,6 +28,7 @@
 		videoUrl = null,
 		email = null,
 		interviewId = null,
+		withId = true,
 		lang = 'EN',
 		buttonText,
 		onProceed,
@@ -121,7 +124,7 @@
 					{/if}
 				</div>
 
-				{#if email}
+				{#if email && withId}
 					<hr class="my-6 border-gray-200" />
 					<div class="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
 						<p class="mb-2">
