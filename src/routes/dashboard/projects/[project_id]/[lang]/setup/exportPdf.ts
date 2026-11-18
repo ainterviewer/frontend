@@ -1,8 +1,8 @@
 import type { Consent, Image, InterviewGuide, TimedMessage, Welcome } from '$lib/api/types.gen';
 import { resolveConditionTarget } from '$lib/guide/conditions';
 import type {
-	RenderedCondition as LocalCondition,
-	RenderedConditionSet as LocalConditionSet,
+	RenderedCondition,
+	RenderedConditionBlock,
 	RenderedQuestion as GuideQuestion,
 	RenderedSection as GuideSection
 } from '$lib/guide/types';
@@ -176,17 +176,18 @@ function buildSurveyItemContent(item: SurveyItem): PdfNode[] {
 }
 
 function buildConditionsContent(
-	conditions: LocalConditionSet,
+	conditions: RenderedCondition[],
 	sections: GuideSection[],
 	questions: Record<string, GuideQuestion[]>
 ): PdfNode[] {
 	const content: PdfNode[] = [];
 
-	content.push(label(`Conditions (Action: ${formatAction(conditions.action)})`));
-
-	for (const cond of conditions.conditions) {
-		const condText = buildConditionText(cond, sections, questions);
-		content.push({ text: condText, fontSize: 9, margin: [12, 0, 0, 2] });
+	for (const condition of conditions) {
+		content.push(label(`Condition (Action: ${formatAction(condition.action)})`));
+		for (const block of condition.blocks) {
+			const blockText = buildBlockText(block, sections, questions);
+			content.push({ text: blockText, fontSize: 9, margin: [12, 0, 0, 2] });
+		}
 	}
 
 	return content;
@@ -196,12 +197,12 @@ function formatAction(action: string): string {
 	return action.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function buildConditionText(
-	cond: LocalCondition,
+function buildBlockText(
+	block: RenderedConditionBlock,
 	sections: GuideSection[],
 	questions: Record<string, GuideQuestion[]>
 ): string {
-	const { question_context, evaluation, negated, trigger_type, combine_next } = cond;
+	const { question_context, evaluation, negated, trigger_type, combine_next } = block;
 	const { sectionIndex: sectionIdx, questionIndex: questionIdx } = resolveConditionTarget(
 		question_context,
 		sections,
@@ -345,7 +346,7 @@ function buildQuestionContent(
 	}
 
 	// Conditions (gated by toggle)
-	if (toggles.conditions && q.conditions && q.conditions.conditions.length > 0) {
+	if (toggles.conditions && q.conditions.length > 0) {
 		const condContent = buildConditionsContent(q.conditions, sections, questions);
 		for (const c of condContent) {
 			content.push(indentNode(c));

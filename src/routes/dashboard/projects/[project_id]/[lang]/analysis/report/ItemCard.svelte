@@ -56,7 +56,7 @@
 	// What had to hold for this question to be asked, and what its own answer
 	// decides. Both are stated on the card, because a card whose cohort was
 	// chosen by another answer cannot be compared with the one beside it.
-	let condition = $derived(
+	let conditions = $derived(
 		summarizeConditions(item.conditions, { section: item.section, question: item.main_question })
 	);
 	let gateText = $derived(gates.length > 0 ? describeGates(gates) : null);
@@ -71,30 +71,36 @@
 
 	const formatPercent = format('.0%');
 
-	// A rule read off this question's own answer routed nobody past the
+	// A condition read off this question's own answer routed nobody past the
 	// question -- it is read *from* the answer -- so the cohort share beside it
 	// would always be "100% were asked". How often it fired is the thing it
 	// actually decided, counted over the evaluations that reached a verdict.
 	//
 	// Absent rather than zero when the backend cannot attribute the firings:
-	// interviews that ran before the evaluation recorded which question carried
-	// the rule are only countable where no neighbouring question could have
-	// written the same row.
-	let conditionEvaluated = $derived(item.n_condition_evaluated ?? 0);
-	let conditionFired = $derived(item.n_condition_fired ?? 0);
+	// some interviews that ran before the evaluation recorded which question
+	// carried the condition cannot be tied to one.
+	let firings = $derived(
+		new Map((item.condition_firings ?? []).map((counts) => [counts.condition_id, counts]))
+	);
 
-	let conditionTrailing = $derived.by(() => {
-		if (!condition) return null;
+	// Whether the question was put is the question's, not one condition's: the
+	// share is stated once, beside the first condition that decides it.
+	let firstGating = $derived(conditions.findIndex(({ summary }) => !summary.outcome));
 
-		if (condition.outcome) {
-			if (conditionEvaluated <= 0) return null;
-			return `${formatPercent(conditionFired / conditionEvaluated)} (${conditionFired}) ${condition.outcome}`;
+	function conditionTrailing(
+		{ id, summary }: (typeof conditions)[number],
+		index: number
+	): string | null {
+		if (summary.outcome) {
+			const counts = id === undefined ? undefined : firings.get(id);
+			if (!counts || counts.n_evaluated <= 0) return null;
+			return `${formatPercent(counts.n_fired / counts.n_evaluated)} (${counts.n_fired}) ${summary.outcome}`;
 		}
 
-		if (notAsked <= 0) return null;
+		if (index !== firstGating || notAsked <= 0) return null;
 		const share = conditionCohort > 0 ? formatPercent(item.n_asked / conditionCohort) : '—';
 		return `${share} (${item.n_asked}) were asked`;
-	});
+	}
 
 	let unit = $derived(item.kind === 'text' ? 'words' : 'value');
 
@@ -193,17 +199,17 @@
 		</span>
 	</div>
 
-	{#if condition || gateText}
+	{#if conditions.length > 0 || gateText}
 		<div class="flex flex-col gap-1">
-			{#if condition}
+			{#each conditions as condition, index (condition.id ?? index)}
 				<ConditionNote
 					icon="fa-solid fa-code-branch"
-					text={condition.text}
-					numbers={condition.refs.map((ref) => questionNumber(ref.section, ref.question))}
+					text={condition.summary.text}
+					numbers={condition.summary.refs.map((ref) => questionNumber(ref.section, ref.question))}
 					titleFor={questionTitleFor}
-					trailing={conditionTrailing}
+					trailing={conditionTrailing(condition, index)}
 				/>
-			{/if}
+			{/each}
 			{#if gateText}
 				<ConditionNote
 					icon="fa-solid fa-arrow-turn-down"

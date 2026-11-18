@@ -78,7 +78,7 @@ function normalizeQuestion(q: LocalizedQuestion): GuideQuestion {
 		alternative_main_questions: q.alternative_main_questions ?? [],
 		image: normalizeImage(q.image),
 		survey_item: normalizeSurveyItem(q.survey_item),
-		conditions: null,
+		conditions: [],
 		max_probes_n: q.max_probes_n === undefined ? (q.survey_item ? 0 : 3) : q.max_probes_n,
 		max_probes_time: q.max_probes_time ?? null,
 		can_answer: q.can_answer ?? true,
@@ -263,6 +263,6 @@ export function localizeRenderedQuestion(
 		survey_item,
 		image,
 		// The assistant has no ids to point a condition at.
-		conditions: null
+		conditions: []
 	});
 }

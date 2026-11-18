@@ -20,7 +20,7 @@
 
 <!-- Add buttons for Image/Survey/Condition -->
 <div data-tour={dataTour ? 'question-extras' : undefined} class="space-y-4">
-	{#if !question.image || !question.survey_item || !question.conditions}
+	{#if !question.image || !question.survey_item || question.conditions.length === 0}
 		<div class="flex flex-wrap gap-4">
 			{#if !question.image}
 				<button
@@ -38,7 +38,7 @@
 					<i class="fa-solid fa-square-poll-horizontal text-indigo-500"></i> Add Survey Item
 				</button>
 			{/if}
-			{#if !question.conditions}
+			{#if question.conditions.length === 0}
 				<button
 					class="flex items-center gap-2 rounded border border-gray-400 px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
 					onclick={onAddCondition}

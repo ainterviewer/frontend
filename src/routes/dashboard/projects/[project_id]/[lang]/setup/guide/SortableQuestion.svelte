@@ -4,6 +4,7 @@
 	import { slide } from 'svelte/transition';
 
 	import { onReveal } from '$lib/collab/reveal';
+	import { newCondition } from '$lib/guide/conditions';
 	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
 
 	import { dragState } from './dragState.svelte';
@@ -110,34 +111,9 @@
 	}
 
 	function addCondition() {
-		// Default the target to the very first question, which is always at or
-		// before the current one (and always exists, since this question does).
-		const firstSection = allSections[0];
-		const defaultSectionId = firstSection?.id ?? sectionId;
-		const defaultQuestionId = firstSection
-			? (allQuestions[firstSection.id]?.[0]?.id ?? question.id)
-			: question.id;
-		question.conditions = {
-			action: 'skip_question',
-			conditions: [
-				{
-					trigger_type: 'match',
-					negated: false,
-					evaluation: [
-						{
-							option_id: null,
-							trigger_value: '',
-							comparison_operator: '=='
-						}
-					],
-					question_context: {
-						sectionId: defaultSectionId,
-						questionId: defaultQuestionId,
-						part: 'main'
-					}
-				}
-			]
-		};
+		question.conditions.push(
+			newCondition(allSections, allQuestions, { sectionId, questionId: question.id })
+		);
 		expandedCondition = true;
 	}
 </script>
@@ -234,7 +210,7 @@
 		</div>
 
 		<!-- Accordion Panels for Image/Survey/Condition -->
-		{#if question.image || question.survey_item || question.conditions}
+		{#if question.image || question.survey_item || question.conditions.length > 0}
 			<div class="flex flex-wrap gap-2 pt-2">
 				<QuestionImagePanel {question} bind:expanded={expandedImage} />
 				<QuestionSurveyPanel {question} bind:expanded={expandedSurvey} />

@@ -1091,9 +1091,36 @@ export type ComponentChange = {
 /**
  * Condition
  *
- * Create a condition that must be met to ask a question
+ * Blocks combined into one verdict, and the action taken when it is True.
+ * A question may carry several conditions, each with its own action (see
+ * `Question.conditions`).
  */
 export type Condition = {
+    /**
+     * Id
+     *
+     * Stable identity of the condition, shared by every translation of it. Recorded with each evaluation, so its firings can be counted.
+     */
+    id?: string;
+    /**
+     * Blocks
+     */
+    blocks: Array<ConditionBlock>;
+    action: ConditionAction;
+};
+
+/**
+ * ConditionAction
+ */
+export type ConditionAction = 'end_interview' | 'skip_section' | 'skip_question' | 'skip_probes';
+
+/**
+ * ConditionBlock
+ *
+ * One part of a condition: the answer to one question, checked by its
+ * evaluations.
+ */
+export type ConditionBlock = {
     question_context: QuestionContext;
     /**
      * Evaluation
@@ -1107,15 +1134,10 @@ export type Condition = {
     /**
      * Combine Next
      *
-     * Operator to combine this condition's result with the next. None for the last condition.
+     * Operator to combine this block's result with the next. None for the last block.
      */
     combine_next?: 'AND' | 'OR' | null;
 };
-
-/**
- * ConditionAction
- */
-export type ConditionAction = 'end_interview' | 'skip_section' | 'skip_question' | 'skip_probes';
 
 /**
  * ConditionEvaluation
@@ -1168,20 +1190,30 @@ export type ConditionEvaluation = {
 };
 
 /**
+ * ConditionFirings
+ *
+ * How often one condition on a question was evaluated, and how often it
+ * was met and its action taken.
+ */
+export type ConditionFirings = {
+    /**
+     * Condition Id
+     */
+    condition_id: string;
+    /**
+     * N Evaluated
+     */
+    n_evaluated: number;
+    /**
+     * N Fired
+     */
+    n_fired: number;
+};
+
+/**
  * ConditionTrigger
  */
 export type ConditionTrigger = 'match' | 'classification';
-
-/**
- * Conditions
- */
-export type Conditions = {
-    /**
-     * Conditions
-     */
-    conditions: Array<Condition>;
-    action: ConditionAction;
-};
 
 /**
  * ConfirmEmailChangeRequest
@@ -3759,7 +3791,10 @@ export type ItemDistribution = {
     } & DatetimeItem) | ({
         type: 'time';
     } & TimeItem) | null;
-    conditions?: Conditions | null;
+    /**
+     * Conditions
+     */
+    conditions?: Array<Condition>;
     /**
      * N Asked
      */
@@ -3777,13 +3812,9 @@ export type ItemDistribution = {
      */
     n_not_asked_by_condition?: number;
     /**
-     * N Condition Evaluated
+     * Condition Firings
      */
-    n_condition_evaluated?: number;
-    /**
-     * N Condition Fired
-     */
-    n_condition_fired?: number;
+    condition_firings?: Array<ConditionFirings>;
     /**
      * Counts
      */
@@ -3995,6 +4026,21 @@ export type LocalizedCheckboxItem = {
  * LocalizedCondition
  */
 export type LocalizedCondition = {
+    /**
+     * Id
+     */
+    id?: string;
+    /**
+     * Blocks
+     */
+    blocks: Array<LocalizedConditionBlock>;
+    action: ConditionAction;
+};
+
+/**
+ * LocalizedConditionBlock
+ */
+export type LocalizedConditionBlock = {
     question_context: QuestionContext;
     /**
      * Evaluation
@@ -4043,17 +4089,6 @@ export type LocalizedConditionEvaluation = {
      * Combine Next
      */
     combine_next?: 'AND' | 'OR' | null;
-};
-
-/**
- * LocalizedConditions
- */
-export type LocalizedConditions = {
-    /**
-     * Conditions
-     */
-    conditions: Array<LocalizedCondition>;
-    action: ConditionAction;
 };
 
 /**
@@ -4296,7 +4331,10 @@ export type LocalizedQuestion = {
      * User Image
      */
     user_image?: boolean;
-    conditions?: LocalizedConditions | null;
+    /**
+     * Conditions
+     */
+    conditions?: Array<LocalizedCondition>;
     probing_context?: ProbingContext | null;
 };
 
@@ -5838,7 +5876,12 @@ export type Question = {
      * Whether the user should be able to upload an image as a response
      */
     user_image?: boolean;
-    conditions?: Conditions | null;
+    /**
+     * Conditions
+     *
+     * The question's conditions, each with its own action. A condition reading this question's own answer is checked once it is answered; every other condition before the question is asked. When several fire at once, the strongest action is taken.
+     */
+    conditions?: Array<Condition>;
     probing_context?: ProbingContext | null;
     /**
      * The index of the question in the interview, ie (section, question) = (2, 2) (for 3rd section 3rd question). Used to keep track of questions initial position after shuffling.
@@ -5849,7 +5892,7 @@ export type Question = {
 /**
  * QuestionContext
  *
- * The question a condition reads its answer from.
+ * The question a condition block reads its answer from.
  *
  * `question_id` is the source of truth. `question_index` is its position,
  * which the interview loop reads; the guide derives it from the id whenever

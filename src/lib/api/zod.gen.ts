@@ -503,6 +503,18 @@ export const zConditionEvaluation = z.object({
 });
 
 /**
+ * ConditionFirings
+ *
+ * How often one condition on a question was evaluated, and how often it
+ * was met and its action taken.
+ */
+export const zConditionFirings = z.object({
+    condition_id: z.uuid(),
+    n_evaluated: z.int(),
+    n_fired: z.int()
+});
+
+/**
  * ConditionTrigger
  */
 export const zConditionTrigger = z.enum(['match', 'classification']);
@@ -2422,7 +2434,7 @@ export const zQuestionIndex = z.tuple([z.int(), z.int()]);
 /**
  * QuestionContext
  *
- * The question a condition reads its answer from.
+ * The question a condition block reads its answer from.
  *
  * `question_id` is the source of truth. `question_index` is its position,
  * which the interview loop reads; the guide derives it from the id whenever
@@ -2439,11 +2451,12 @@ export const zQuestionContext = z.object({
 });
 
 /**
- * Condition
+ * ConditionBlock
  *
- * Create a condition that must be met to ask a question
+ * One part of a condition: the answer to one question, checked by its
+ * evaluations.
  */
-export const zCondition = z.object({
+export const zConditionBlock = z.object({
     question_context: zQuestionContext,
     evaluation: z.array(zConditionEvaluation),
     negated: z.boolean().optional().default(false),
@@ -2452,17 +2465,22 @@ export const zCondition = z.object({
 });
 
 /**
- * Conditions
+ * Condition
+ *
+ * Blocks combined into one verdict, and the action taken when it is True.
+ * A question may carry several conditions, each with its own action (see
+ * `Question.conditions`).
  */
-export const zConditions = z.object({
-    conditions: z.array(zCondition),
+export const zCondition = z.object({
+    id: z.uuid().optional(),
+    blocks: z.array(zConditionBlock),
     action: zConditionAction
 });
 
 /**
- * LocalizedCondition
+ * LocalizedConditionBlock
  */
-export const zLocalizedCondition = z.object({
+export const zLocalizedConditionBlock = z.object({
     question_context: zQuestionContext,
     evaluation: z.array(zLocalizedConditionEvaluation),
     negated: z.boolean().optional().default(false),
@@ -2471,10 +2489,11 @@ export const zLocalizedCondition = z.object({
 });
 
 /**
- * LocalizedConditions
+ * LocalizedCondition
  */
-export const zLocalizedConditions = z.object({
-    conditions: z.array(zLocalizedCondition),
+export const zLocalizedCondition = z.object({
+    id: z.uuid().optional(),
+    blocks: z.array(zLocalizedConditionBlock),
     action: zConditionAction
 });
 
@@ -3319,13 +3338,12 @@ export const zItemDistribution = z.object({
         zDatetimeItem,
         zTimeItem
     ]).nullable(),
-    conditions: zConditions.nullish(),
+    conditions: z.array(zCondition).optional().default([]),
     n_asked: z.int(),
     n_answered: z.int(),
     n_skipped: z.int(),
     n_not_asked_by_condition: z.int().optional().default(0),
-    n_condition_evaluated: z.int().optional().default(0),
-    n_condition_fired: z.int().optional().default(0),
+    condition_firings: z.array(zConditionFirings).optional().default([]),
     counts: z.array(zCategoryCount),
     buckets: z.array(zDistributionBucket),
     stats: zNumericStats.nullable(),
@@ -3384,7 +3402,7 @@ export const zLocalizedQuestion = z.object({
     references: z.array(zReference).nullish(),
     image: zLocalizedImage.nullish(),
     user_image: z.boolean().optional().default(false),
-    conditions: zLocalizedConditions.nullish(),
+    conditions: z.array(zLocalizedCondition).optional(),
     probing_context: zProbingContext.nullish()
 });
 
@@ -3518,7 +3536,7 @@ export const zQuestion = z.object({
     references: z.array(zReference).nullish(),
     image: zImage.nullish(),
     user_image: z.boolean().optional().default(false),
-    conditions: zConditions.nullish(),
+    conditions: z.array(zCondition).optional(),
     probing_context: zProbingContext.nullish(),
     index: zQuestionIndex.nullish()
 });

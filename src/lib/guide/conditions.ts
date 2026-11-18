@@ -1,11 +1,17 @@
 import type {
+	LocalizedCondition,
 	LocalizedConditionEvaluation,
-	LocalizedConditions,
 	LocalizedOption,
 	QuestionContext
 } from '$lib/api/types.gen';
 
-import type { GuideQuestion, GuideSection, LocalConditionSet, LocalQuestionContext } from './types';
+import type {
+	GuideQuestion,
+	GuideSection,
+	LocalCondition,
+	LocalConditionBlock,
+	LocalQuestionContext
+} from './types';
 
 // Resolves an id-based condition target to where it currently lives. The stored
 // `sectionId` is only a hint: question ids are unique across the whole guide, so
@@ -55,6 +61,39 @@ export function resolveConditionTarget<Q extends { id: string }>(
 	return miss;
 }
 
+// A new block reads the guide's first question, which is always at or before
+// the question it is added to; `fallback` (that question) when the guide has
+// none yet.
+export function newConditionBlock(
+	sections: { id: string }[],
+	questionsMap: Record<string, { id: string }[]>,
+	fallback: { sectionId: string; questionId: string }
+): LocalConditionBlock {
+	const first = sections[0];
+	const questionId = first ? questionsMap[first.id]?.[0]?.id : undefined;
+	return {
+		trigger_type: 'match',
+		negated: false,
+		evaluation: [{ option_id: null, trigger_value: '', comparison_operator: '==' }],
+		question_context: questionId
+			? { sectionId: first.id, questionId, part: 'main' }
+			: { ...fallback, part: 'main' }
+	};
+}
+
+// A new condition: skip the question, on one new block.
+export function newCondition(
+	sections: { id: string }[],
+	questionsMap: Record<string, { id: string }[]>,
+	fallback: { sectionId: string; questionId: string }
+): LocalCondition {
+	return {
+		id: crypto.randomUUID(),
+		action: 'skip_question',
+		blocks: [newConditionBlock(sections, questionsMap, fallback)]
+	};
+}
+
 // The editor's target in the API's shape: the question's id with its current
 // position. The server derives the position from the id anyway.
 export function locateContext<Q extends { id: string }>(
@@ -75,17 +114,16 @@ export function locateContext<Q extends { id: string }>(
 // Converts the API's condition targets into the editor's, adding the section
 // each target question currently sits in as the lookup hint. A target missing
 // from the guide keeps its id but no section, which validation then flags.
-// Returns null for questions without conditions.
 export function localizeConditions(
-	apiConditions: LocalizedConditions | null | undefined,
+	apiConditions: LocalizedCondition[] | undefined,
 	sections: GuideSection[],
 	questionsMap: Record<string, GuideQuestion[]>
-): LocalConditionSet | null {
-	if (!apiConditions) return null;
-	return {
-		action: apiConditions.action,
-		conditions: apiConditions.conditions.map((cond) => {
-			const { question_context, ...rest } = cond;
+): LocalCondition[] {
+	return (apiConditions ?? []).map((condition) => ({
+		...condition,
+		id: condition.id ?? crypto.randomUUID(),
+		blocks: condition.blocks.map((block) => {
+			const { question_context, ...rest } = block;
 			const target = resolveConditionTarget(
 				{ sectionId: '', questionId: question_context.question_id },
 				sections,
@@ -100,7 +138,7 @@ export function localizeConditions(
 				}
 			};
 		})
-	};
+	}));
 }
 
 // The options a condition reading `item` names one of: a radio, checkbox or
@@ -145,15 +183,14 @@ export function isOrdinalItem(target: GuideQuestion | null | undefined): boolean
 // Inverse of localizeConditions, for saving. A missing target is blocked
 // earlier by validateGuideConditions.
 export function delocalizeConditions(
-	localConditions: LocalConditionSet | null | undefined,
+	localConditions: LocalCondition[] | undefined,
 	sections: GuideSection[],
 	questionsMap: Record<string, GuideQuestion[]>
-): LocalizedConditions | null {
-	if (!localConditions) return null;
-	return {
-		action: localConditions.action,
-		conditions: localConditions.conditions.map((cond) => {
-			const { question_context, evaluation, ...rest } = cond;
+): LocalizedCondition[] {
+	return (localConditions ?? []).map((condition) => ({
+		...condition,
+		blocks: condition.blocks.map((block) => {
+			const { question_context, evaluation, ...rest } = block;
 			const target = resolveConditionTarget(question_context, sections, questionsMap);
 			return {
 				...rest,
@@ -161,7 +198,7 @@ export function delocalizeConditions(
 				question_context: locateContext(question_context, sections, questionsMap)
 			};
 		})
-	};
+	}));
 }
 
 // A condition may only reference a question that appears at or before the
@@ -187,13 +224,13 @@ export function isConditionTargetValid(
 	return true;
 }
 
-// Whether some respondents are never asked the question a condition reads,
-// because a condition takes it out first: its own rule reading an earlier
-// question, or a rule on an earlier question of its section that skips the
-// section. For those respondents the condition is unknown -- the action fires
-// only if the rest of the rule decides it without that answer, and an
-// undecided rule does not fire. A rule reading only its own question is
-// checked after that question is answered, so it never leaves it unanswered.
+// Whether some respondents are never asked the question a condition block
+// reads, because a condition takes it out first: one of its own reading an
+// earlier question, or one on an earlier question of its section that skips
+// the section. For those respondents the block is unknown -- the action fires
+// only if the rest of the condition decides it without that answer, and an
+// undecided condition does not fire. A condition reading only its own question
+// is checked after that question is answered, so it never leaves it unanswered.
 // A respondent skipping the question (`can_skip`) has the same effect but is
 // left out here: it is on by default and would flag every condition there is.
 export function mayGoUnasked(
@@ -204,18 +241,21 @@ export function mayGoUnasked(
 	const target = resolveConditionTarget(ctx, sections, questionsMap);
 	if (!target.question) return false;
 
-	const readsAnother = (question: GuideQuestion) =>
-		(question.conditions?.conditions ?? []).some(
-			(c) => c.question_context.questionId !== question.id
-		);
-	const { action } = target.question.conditions ?? {};
-	if ((action === 'skip_question' || action === 'skip_section') && readsAnother(target.question)) {
-		return true;
-	}
+	const question = target.question;
+	const skipsBeforeAsking = question.conditions.some(
+		(condition) =>
+			(condition.action === 'skip_question' || condition.action === 'skip_section') &&
+			condition.blocks.some((block) => block.question_context.questionId !== question.id)
+	);
+	if (skipsBeforeAsking) return true;
 
 	return questionsMap[target.sectionId]
 		.slice(0, target.questionIndex)
-		.some((q) => q.conditions?.action === 'skip_section' && q.conditions.conditions.length > 0);
+		.some((q) =>
+			q.conditions.some(
+				(condition) => condition.action === 'skip_section' && condition.blocks.length > 0
+			)
+		);
 }
 
 // A condition on a choice question has to name one of its options. One whose
@@ -240,14 +280,13 @@ export function validateGuideConditions(
 	sections.forEach((section, sIdx) => {
 		const questions = questionsMap[section.id] || [];
 		questions.forEach((question, qIdx) => {
-			const conditions = question.conditions?.conditions;
-			if (!conditions) return;
-			const hasInvalid = conditions.some((cond) => {
-				if (!isConditionTargetValid(sIdx, qIdx, cond.question_context, sections, questionsMap)) {
+			const blocks = question.conditions.flatMap((condition) => condition.blocks);
+			const hasInvalid = blocks.some((block) => {
+				if (!isConditionTargetValid(sIdx, qIdx, block.question_context, sections, questionsMap)) {
 					return true;
 				}
-				const target = resolveConditionTarget(cond.question_context, sections, questionsMap);
-				return cond.evaluation.some((e) => !isConditionOptionValid(e, target.question));
+				const target = resolveConditionTarget(block.question_context, sections, questionsMap);
+				return block.evaluation.some((e) => !isConditionOptionValid(e, target.question));
 			});
 			if (hasInvalid) invalidQuestionIds.push(question.id);
 		});

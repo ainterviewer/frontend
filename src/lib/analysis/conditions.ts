@@ -1,7 +1,7 @@
 import type {
 	Condition,
+	ConditionBlock,
 	ConditionEvaluation,
-	Conditions,
 	InterviewGuide,
 	ItemDistribution
 } from '$lib/api/types.gen';
@@ -62,7 +62,7 @@ export type ConditionSummary = {
 };
 
 /** What one question's conditions do to the questions they gate. */
-export type Gate = ConditionRef & { action: Conditions['action'] };
+export type Gate = ConditionRef & { action: Condition['action'] };
 
 export function questionKey(section: number, question: number): string {
 	return `${section}-${question}`;
@@ -73,7 +73,7 @@ export function questionNumber(section: number, question: number): string {
 	return `${section + 1}.${question + 1}`;
 }
 
-const ACTION_PREFIX: Record<Conditions['action'], string> = {
+const ACTION_PREFIX: Record<Condition['action'], string> = {
 	skip_question: 'Asked when',
 	skip_probes: 'Probed when',
 	skip_section: 'Section asked when',
@@ -87,7 +87,7 @@ const ACTION_PREFIX: Record<Conditions['action'], string> = {
  * the question has already been put by the time the rule can be evaluated, so
  * the only thing left for it to decide is how much further the interview goes.
  */
-const SELF_ACTION_PREFIX: Record<Conditions['action'], string> = {
+const SELF_ACTION_PREFIX: Record<Condition['action'], string> = {
 	skip_question: 'Moves on when',
 	skip_probes: 'Not probed further when',
 	skip_section: 'Section ends when',
@@ -100,7 +100,7 @@ const SELF_ACTION_PREFIX: Record<Conditions['action'], string> = {
  * Past tense and agreeing with the prefix above, so the line reads as one
  * sentence: "Moves on when this answer is about X · 14% (12) moved on".
  */
-const SELF_ACTION_OUTCOME: Record<Conditions['action'], string> = {
+const SELF_ACTION_OUTCOME: Record<Condition['action'], string> = {
 	skip_question: 'moved on',
 	skip_probes: 'stopped the probes',
 	skip_section: 'ended the section',
@@ -114,7 +114,7 @@ const SELF_ACTION_OUTCOME: Record<Conditions['action'], string> = {
  * statement about whether this question was put, and "Interview continues
  * when" is not what the author wrote down.
  */
-const ACTION_NEGATES: Record<Conditions['action'], boolean> = {
+const ACTION_NEGATES: Record<Condition['action'], boolean> = {
 	skip_question: true,
 	skip_probes: true,
 	skip_section: true,
@@ -124,7 +124,7 @@ const ACTION_NEGATES: Record<Conditions['action'], boolean> = {
 // "Skips" is also what a participant does mid-interview, and the answer rate
 // bar beside this line already counts those; the gating verb is kept clear of
 // it.
-const ACTION_GATE_VERB: Record<Conditions['action'], string> = {
+const ACTION_GATE_VERB: Record<Condition['action'], string> = {
 	skip_question: 'gates',
 	skip_probes: 'gates the probes on',
 	skip_section: 'gates the section of',
@@ -169,83 +169,108 @@ function negateOperator(operator: 'AND' | 'OR' | null | undefined): 'AND' | 'OR'
 	return (operator ?? 'AND') === 'AND' ? 'OR' : 'AND';
 }
 
-/** Whether a condition reads the answer to the question that carries it. */
-function readsSelf(condition: Condition, self: ConditionRef | undefined): boolean {
+/** Whether a block reads the answer to the question that carries it. */
+function readsSelf(block: ConditionBlock, self: ConditionRef | undefined): boolean {
 	return (
 		self !== undefined &&
-		condition.question_context.question_index[0] === self.section &&
-		condition.question_context.question_index[1] === self.question
+		block.question_context.question_index[0] === self.section &&
+		block.question_context.question_index[1] === self.question
 	);
 }
 
-function describeCondition(
-	condition: Condition,
+function describeBlock(
+	block: ConditionBlock,
 	negate: boolean,
 	self: ConditionRef | undefined
 ): string {
-	const classifying = condition.trigger_type === 'classification';
+	const classifying = block.trigger_type === 'classification';
 	// A number that links back to the card the reader is on is a dead end, and
 	// reads as a different question besides.
-	const target = readsSelf(condition, self)
+	const target = readsSelf(block, self)
 		? 'this answer'
 		: questionNumber(
-				condition.question_context.question_index[0],
-				condition.question_context.question_index[1]
+				block.question_context.question_index[0],
+				block.question_context.question_index[1]
 			);
 
-	// The condition's own polarity, read from whichever side the prefix states.
-	const negated = negate ? !condition.negated : condition.negated;
+	// The block's own polarity, read from whichever side the prefix states.
+	const negated = negate ? !block.negated : block.negated;
 
 	const verb = classifying ? (negated ? 'is not about' : 'is about') : negated ? 'is not' : 'is';
 
 	const values = join(
-		condition.evaluation.map((evaluation) => describeEvaluation(evaluation, classifying)),
-		condition.evaluation.map((evaluation) => evaluation.combine_next)
+		block.evaluation.map((evaluation) => describeEvaluation(evaluation, classifying)),
+		block.evaluation.map((evaluation) => evaluation.combine_next)
 	);
 
 	return `${target} ${verb} ${values}`;
 }
 
 /**
- * The rule on a question, or `null` when it has none to state.
+ * One condition on a question, or `null` when it has nothing to state.
  *
- * `self` is the question carrying the rule, when the caller knows it; passing
- * it is what lets a rule read off the question's own answer be told apart from
- * one read off somebody else's.
+ * `self` is the question carrying the condition, when the caller knows it;
+ * passing it is what lets a condition read off the question's own answer be
+ * told apart from one read off somebody else's.
  */
-export function summarizeConditions(
-	conditions: Conditions | null | undefined,
+export function summarizeCondition(
+	condition: Condition,
 	self?: ConditionRef
 ): ConditionSummary | null {
-	if (!conditions || conditions.conditions.length === 0) return null;
+	if (condition.blocks.length === 0) return null;
 
-	// Only a rule that reads nothing *but* its own answer gets the forward
+	// Only a condition that reads nothing *but* its own answer gets the forward
 	// wording: one that also reads another question still decides whether this
 	// one was put, and the reader needs it said that way.
-	const selfOnly = conditions.conditions.every((condition) => readsSelf(condition, self));
-	const negate = !selfOnly && (ACTION_NEGATES[conditions.action] ?? false);
+	const selfOnly = condition.blocks.every((block) => readsSelf(block, self));
+	const negate = !selfOnly && (ACTION_NEGATES[condition.action] ?? false);
 
 	const text = join(
-		conditions.conditions.map((condition) => describeCondition(condition, negate, self)),
-		conditions.conditions.map((condition) =>
-			negate ? negateOperator(condition.combine_next) : condition.combine_next
+		condition.blocks.map((block) => describeBlock(block, negate, self)),
+		condition.blocks.map((block) =>
+			negate ? negateOperator(block.combine_next) : block.combine_next
 		)
 	);
 
 	const prefix = selfOnly
-		? (SELF_ACTION_PREFIX[conditions.action] ?? 'Applies when')
-		: (ACTION_PREFIX[conditions.action] ?? 'Applies when');
+		? (SELF_ACTION_PREFIX[condition.action] ?? 'Applies when')
+		: (ACTION_PREFIX[condition.action] ?? 'Applies when');
 
 	return {
 		text: `${prefix} ${text}`,
 		// Self-references are spelled "this answer" and have no number to link.
-		refs: conditions.conditions
-			.filter((condition) => !readsSelf(condition, self))
-			.map((condition) => ({
-				section: condition.question_context.question_index[0],
-				question: condition.question_context.question_index[1]
+		refs: condition.blocks
+			.filter((block) => !readsSelf(block, self))
+			.map((block) => ({
+				section: block.question_context.question_index[0],
+				question: block.question_context.question_index[1]
 			})),
-		outcome: selfOnly ? (SELF_ACTION_OUTCOME[conditions.action] ?? 'applied') : null
+		outcome: selfOnly ? (SELF_ACTION_OUTCOME[condition.action] ?? 'applied') : null
+	};
+}
+
+/** Every condition on a question, each with its id and summary. */
+export function summarizeConditions(
+	conditions: Condition[] | undefined,
+	self?: ConditionRef
+): { id: string | undefined; summary: ConditionSummary }[] {
+	return (conditions ?? []).flatMap((condition) => {
+		const summary = summarizeCondition(condition, self);
+		return summary ? [{ id: condition.id, summary }] : [];
+	});
+}
+
+/**
+ * A question's conditions as one summary, a sentence each, for the places
+ * that state them in a single line. Only a lone condition keeps its outcome.
+ */
+export function combineSummaries(summaries: ConditionSummary[]): ConditionSummary | null {
+	if (summaries.length === 0) return null;
+	if (summaries.length === 1) return summaries[0];
+	return {
+		text: summaries.map((summary) => summary.text).join('; '),
+		refs: summaries.flatMap((summary) => summary.refs),
+		outcome: null
 	};
 }
 
@@ -259,30 +284,35 @@ export function buildGateMap(items: ItemDistribution[]): Map<string, Gate[]> {
 	const gates = new Map<string, Gate[]>();
 
 	for (const item of items) {
-		const conditions = item.conditions;
-		if (!conditions) continue;
+		for (const condition of item.conditions ?? []) {
+			for (const block of condition.blocks) {
+				// A question gating itself is not a relationship between two cards;
+				// it is one card's own condition, and its summary already states it.
+				if (readsSelf(block, { section: item.section, question: item.main_question })) continue;
 
-		for (const condition of conditions.conditions) {
-			// A question gating itself is not a relationship between two cards;
-			// it is one card's own rule, and its summary already states it.
-			if (readsSelf(condition, { section: item.section, question: item.main_question })) continue;
+				const key = questionKey(
+					block.question_context.question_index[0],
+					block.question_context.question_index[1]
+				);
+				const gate: Gate = {
+					section: item.section,
+					question: item.main_question,
+					action: condition.action
+				};
 
-			const key = questionKey(
-				condition.question_context.question_index[0],
-				condition.question_context.question_index[1]
-			);
-			const gate: Gate = {
-				section: item.section,
-				question: item.main_question,
-				action: conditions.action
-			};
-
-			const existing = gates.get(key);
-			// A question can appear in several of another's conditions ("A and
-			// A" is authorable); it is one relationship either way.
-			if (!existing) gates.set(key, [gate]);
-			else if (!existing.some((g) => g.section === gate.section && g.question === gate.question))
-				existing.push(gate);
+				const existing = gates.get(key);
+				// A question can appear in several blocks of another's conditions
+				// ("A and A" is authorable); it is one relationship per action
+				// either way.
+				if (!existing) gates.set(key, [gate]);
+				else if (
+					!existing.some(
+						(g) =>
+							g.section === gate.section && g.question === gate.question && g.action === gate.action
+					)
+				)
+					existing.push(gate);
+			}
 		}
 	}
 
@@ -293,7 +323,7 @@ export function buildGateMap(items: ItemDistribution[]): Map<string, Gate[]> {
 export function describeGates(gates: Gate[]): string {
 	// Grouped by what the answer does, so a question that both skips one
 	// question and ends the interview says both rather than lumping them.
-	const byAction = new Map<Conditions['action'], string[]>();
+	const byAction = new Map<Condition['action'], string[]>();
 	for (const gate of gates) {
 		const numbers = byAction.get(gate.action) ?? [];
 		numbers.push(questionNumber(gate.section, gate.question));
@@ -323,10 +353,12 @@ export function guideConditions(
 
 	guide.question_sections?.forEach((section, sectionIndex) => {
 		section.questions?.forEach((question, questionIndex) => {
-			const summary = summarizeConditions(question.conditions, {
-				section: sectionIndex,
-				question: questionIndex
-			});
+			const summary = combineSummaries(
+				summarizeConditions(question.conditions, {
+					section: sectionIndex,
+					question: questionIndex
+				}).map(({ summary }) => summary)
+			);
 			if (summary) summaries.set(questionKey(sectionIndex, questionIndex), summary);
 		});
 	});

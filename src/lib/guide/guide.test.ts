@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { LocalizedInterviewGuide } from '$lib/api/types.gen';
 import { zLocalizedQuestion } from '$lib/api/zod.gen';
 
-import { mayGoUnasked, validateGuideConditions } from './conditions';
+import { mayGoUnasked, newCondition, validateGuideConditions } from './conditions';
 import { countUntranslated, isUntranslated, pick, QUESTION_TEXT_FIELDS } from './localized';
 import { localGuide, localizeRenderedQuestion, mapToLocal, newQuestion } from './normalize';
 import { renderLocal } from './render';
@@ -17,6 +17,7 @@ const GATED = 'aaaaaaaa-0000-4000-8000-000000000002';
 const SECTION = 'aaaaaaaa-0000-4000-8000-000000000003';
 const NEVER = 'aaaaaaaa-0000-4000-8000-000000000004';
 const OFTEN = 'aaaaaaaa-0000-4000-8000-000000000005';
+const CONDITION = 'aaaaaaaa-0000-4000-8000-000000000006';
 
 function guide(): LocalizedInterviewGuide {
 	return {
@@ -48,16 +49,19 @@ function guide(): LocalizedInterviewGuide {
 						id: GATED,
 						main_question: { EN: 'Why?' },
 						probes: [{ EN: 'Tell me more', DA: 'Fortæl mere' }],
-						conditions: {
-							action: 'skip_question',
-							conditions: [
-								{
-									question_context: { question_id: RADIO, question_index: [0, 0], part: 'main' },
-									trigger_type: 'match',
-									evaluation: [{ option_id: NEVER, comparison_operator: '==' }]
-								}
-							]
-						}
+						conditions: [
+							{
+								id: CONDITION,
+								action: 'skip_question',
+								blocks: [
+									{
+										question_context: { question_id: RADIO, question_index: [0, 0], part: 'main' },
+										trigger_type: 'match',
+										evaluation: [{ option_id: NEVER, comparison_operator: '==' }]
+									}
+								]
+							}
+						]
 					}
 				]
 			}
@@ -93,7 +97,7 @@ describe('mapToLocal / localGuide', () => {
 		const { top, sections, questions } = mapToLocal(guide());
 		const [, gated] = localGuide(top, sections, questions).question_sections![0].questions!;
 
-		const condition = gated.conditions!.conditions[0];
+		const condition = gated.conditions![0].blocks[0];
 		expect(condition.question_context).toMatchObject({
 			question_id: RADIO,
 			question_index: [0, 0]
@@ -107,10 +111,41 @@ describe('mapToLocal / localGuide', () => {
 
 		const [, gated] = localGuide(top, sections, questions).question_sections![0].questions!;
 
-		expect(gated.conditions!.conditions[0].evaluation[0]).toMatchObject({
+		expect(gated.conditions![0].blocks[0].evaluation[0]).toMatchObject({
 			option_id: null,
 			trigger_value: ''
 		});
+	});
+});
+
+describe('several conditions on a question', () => {
+	function withTwoConditions() {
+		const { top, sections, questions } = mapToLocal(guide());
+		const gated = questions[SECTION][1];
+		gated.conditions.push(
+			newCondition(sections, questions, { sectionId: SECTION, questionId: GATED })
+		);
+		gated.conditions[1].action = 'skip_probes';
+		return { top, sections, questions, gated };
+	}
+
+	it('keeps each with its own action and id on save', () => {
+		const { top, sections, questions, gated } = withTwoConditions();
+		const [, sent] = localGuide(top, sections, questions).question_sections![0].questions!;
+
+		expect(sent.conditions!.map((c) => [c.id, c.action])).toEqual([
+			[CONDITION, 'skip_question'],
+			[gated.conditions[1].id, 'skip_probes']
+		]);
+		// A new block reads the guide's first question.
+		expect(sent.conditions![1].blocks[0].question_context.question_id).toBe(RADIO);
+	});
+
+	it('validates the blocks of every one', () => {
+		const { sections, questions, gated } = withTwoConditions();
+		gated.conditions[1].blocks[0].evaluation[0].option_id = 'gone';
+
+		expect(validateGuideConditions(sections, questions).invalidQuestionIds).toEqual([GATED]);
 	});
 });
 
@@ -135,8 +170,8 @@ describe('renderLocal', () => {
 		]) {
 			const { guide: rendered } = renderLocal(top, sections, questions, [language, 'EN']);
 			const gated = rendered.question_sections![0].questions![1];
-			expect(gated.conditions!.conditions[0].evaluation[0].trigger_value).toBe(never);
-			expect(gated.conditions!.conditions[0].question_context.question_id).toBe(RADIO);
+			expect(gated.conditions![0].blocks[0].evaluation[0].trigger_value).toBe(never);
+			expect(gated.conditions![0].blocks[0].question_context.question_id).toBe(RADIO);
 		}
 	});
 });
@@ -152,7 +187,7 @@ function likertGuide(operator: '==' | '<' | '<=' | '>' | '>=', type = 'likert') 
 			type
 		} as typeof scale.survey_item;
 	}
-	gated.conditions!.conditions[0].evaluation[0].comparison_operator = operator;
+	gated.conditions[0].blocks[0].evaluation[0].comparison_operator = operator;
 	return { top, sections, questions };
 }
 
@@ -161,7 +196,7 @@ describe('Likert order comparisons', () => {
 		const { top, sections, questions } = likertGuide('>=');
 		const { guide: rendered } = renderLocal(top, sections, questions, ['DA', 'EN']);
 		const evaluation =
-			rendered.question_sections![0].questions![1].conditions!.conditions[0].evaluation[0];
+			rendered.question_sections![0].questions![1].conditions![0].blocks[0].evaluation[0];
 
 		expect(evaluation).toMatchObject({
 			trigger_value: 'Aldrig',
@@ -174,7 +209,7 @@ describe('Likert order comparisons', () => {
 		const { top, sections, questions } = likertGuide('==');
 		const { guide: rendered } = renderLocal(top, sections, questions, ['EN']);
 		const evaluation =
-			rendered.question_sections![0].questions![1].conditions!.conditions[0].evaluation[0];
+			rendered.question_sections![0].questions![1].conditions![0].blocks[0].evaluation[0];
 
 		expect(evaluation.scale).toBeNull();
 	});
@@ -183,7 +218,7 @@ describe('Likert order comparisons', () => {
 		const { top, sections, questions } = likertGuide('>');
 		const [, gated] = localGuide(top, sections, questions).question_sections![0].questions!;
 
-		expect(gated.conditions!.conditions[0].evaluation[0]).toMatchObject({
+		expect(gated.conditions![0].blocks[0].evaluation[0]).toMatchObject({
 			option_id: NEVER,
 			comparison_operator: '>'
 		});
@@ -193,7 +228,7 @@ describe('Likert order comparisons', () => {
 		const { top, sections, questions } = likertGuide('>', 'radio');
 		const [, gated] = localGuide(top, sections, questions).question_sections![0].questions!;
 
-		expect(gated.conditions!.conditions[0].evaluation[0]).toMatchObject({
+		expect(gated.conditions![0].blocks[0].evaluation[0]).toMatchObject({
 			option_id: NEVER,
 			comparison_operator: '=='
 		});
@@ -233,15 +268,15 @@ describe('mayGoUnasked', () => {
 	it('ignores a rule reading only its own question', () => {
 		const { sections, questions } = mapToLocal(guide());
 		const gated = questions[SECTION][1];
-		gated.conditions!.conditions[0].question_context.questionId = GATED;
+		gated.conditions[0].blocks[0].question_context.questionId = GATED;
 		expect(mayGoUnasked(reads(GATED), sections, questions)).toBe(false);
 	});
 
 	it('flags a question an earlier rule can skip the section past', () => {
 		const { sections, questions } = mapToLocal(guide());
 		const [radio, gated] = questions[SECTION];
-		radio.conditions = { ...gated.conditions!, action: 'skip_section' };
-		gated.conditions = null;
+		radio.conditions = [{ ...gated.conditions[0], action: 'skip_section' }];
+		gated.conditions = [];
 		expect(mayGoUnasked(reads(GATED), sections, questions)).toBe(true);
 	});
 });
@@ -271,7 +306,7 @@ describe('localizeRenderedQuestion', () => {
 		const options = q.survey_item && 'options' in q.survey_item ? q.survey_item.options : [];
 		expect(options.map((o) => o.text)).toEqual([{ DA: 'Ofte' }, { DA: 'Aldrig' }]);
 		expect(new Set(options.map((o) => o.id)).size).toBe(2);
-		expect(q.conditions).toBeNull();
+		expect(q.conditions).toEqual([]);
 	});
 });
 

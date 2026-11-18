@@ -1,5 +1,5 @@
 import type {
-	Conditions,
+	Condition,
 	InterviewGuide,
 	LocalizedInterviewGuide,
 	Question as ApiQuestion
@@ -17,8 +17,8 @@ import type {
 	GuideQuestion,
 	GuideSection,
 	GuideTop,
-	LocalConditionSet,
-	RenderedConditionSet,
+	LocalCondition,
+	RenderedCondition,
 	RenderedQuestion,
 	RenderedSection
 } from './types';
@@ -58,23 +58,22 @@ export function renderSurveyItem(
 // comparing a Likert option by order also carries the scale, the item's options
 // in order, which the answer is compared on.
 function renderConditions(
-	conditions: LocalConditionSet | null | undefined,
+	conditions: LocalCondition[],
 	sections: GuideSection[],
 	questionsMap: Record<string, GuideQuestion[]>,
 	languages: string[]
-): RenderedConditionSet | null {
-	if (!conditions) return null;
-	return {
-		action: conditions.action,
-		conditions: conditions.conditions.map((cond) => {
-			const target = resolveConditionTarget(cond.question_context, sections, questionsMap);
+): RenderedCondition[] {
+	return conditions.map((condition) => ({
+		...condition,
+		blocks: condition.blocks.map((block) => {
+			const target = resolveConditionTarget(block.question_context, sections, questionsMap);
 			const options = conditionOptions(target.question?.survey_item) ?? [];
 			const scale = isOrdinalItem(target.question)
 				? options.map((o) => pick(o.text, languages))
 				: null;
 			return {
-				...cond,
-				evaluation: cond.evaluation.map(({ option_id, trigger_value, ...rest }) => ({
+				...block,
+				evaluation: block.evaluation.map(({ option_id, trigger_value, ...rest }) => ({
 					...rest,
 					trigger_value: option_id
 						? pick(options.find((o) => o.id === option_id)?.text, languages)
@@ -83,23 +82,22 @@ function renderConditions(
 				}))
 			};
 		})
-	};
+	}));
 }
 
 // The same conditions with their targets in the API's shape.
 function apiConditions(
-	rendered: RenderedConditionSet | null | undefined,
+	rendered: RenderedCondition[],
 	sections: GuideSection[],
 	questionsMap: Record<string, GuideQuestion[]>
-): Conditions | null {
-	if (!rendered) return null;
-	return {
-		action: rendered.action,
-		conditions: rendered.conditions.map((cond) => ({
-			...cond,
-			question_context: locateContext(cond.question_context, sections, questionsMap)
+): Condition[] {
+	return rendered.map((condition) => ({
+		...condition,
+		blocks: condition.blocks.map((block) => ({
+			...block,
+			question_context: locateContext(block.question_context, sections, questionsMap)
 		}))
-	};
+	}));
 }
 
 function renderQuestion(

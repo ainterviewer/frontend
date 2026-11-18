@@ -1,9 +1,9 @@
 import type {
 	Condition,
-	Conditions,
+	ConditionBlock,
 	GeneratedQuestions,
 	LocalizedCondition,
-	LocalizedConditions,
+	LocalizedConditionBlock,
 	LocalizedImage,
 	LocalizedQuestion,
 	LocalizedQuestionSection,
@@ -20,7 +20,7 @@ import type {
 // language. See ./localized for the helpers, and the backend's CLAUDE.md
 // ("Project languages and content") for why.
 
-// While editing, a condition points at its target by the question's id, with
+// While editing, a condition block points at its target by the question's id, with
 // the section it was last seen in as a lookup hint, rather than by position, so
 // reordering keeps a condition aimed at the same target. The position the API
 // also carries is re-derived at the boundary (see localizeConditions /
@@ -30,12 +30,15 @@ export type LocalQuestionContext = Omit<QuestionContext, 'question_index' | 'que
 	questionId: string;
 };
 
-export type LocalCondition = Omit<LocalizedCondition, 'question_context'> & {
+export type LocalConditionBlock = Omit<LocalizedConditionBlock, 'question_context'> & {
 	question_context: LocalQuestionContext;
 };
 
-export type LocalConditionSet = Omit<LocalizedConditions, 'conditions'> & {
-	conditions: LocalCondition[];
+// A question carries any number of conditions, each with its own action and
+// blocks. The id is always present in the editor, so a condition can be keyed.
+export type LocalCondition = Omit<LocalizedCondition, 'id' | 'blocks'> & {
+	id: string;
+	blocks: LocalConditionBlock[];
 };
 
 // Text fields the editor binds to are always present, never null, so a field
@@ -55,7 +58,7 @@ export type GuideQuestion = Omit<
 	description: LocalizedText;
 	probes: LocalizedText[];
 	image?: GuideImage | null;
-	conditions?: LocalConditionSet | null;
+	conditions: LocalCondition[];
 };
 
 export type GuideSection = Omit<
@@ -87,17 +90,17 @@ export type GuideTop = {
 
 // One language's rendering of the editor state, in the shape the PDF export
 // and the assistant read: plain strings, conditions still id-based.
-export type RenderedCondition = Omit<Condition, 'question_context'> & {
+export type RenderedConditionBlock = Omit<ConditionBlock, 'question_context'> & {
 	question_context: LocalQuestionContext;
 };
 
-export type RenderedConditionSet = Omit<Conditions, 'conditions'> & {
-	conditions: RenderedCondition[];
+export type RenderedCondition = Omit<Condition, 'blocks'> & {
+	blocks: RenderedConditionBlock[];
 };
 
 export type RenderedQuestion = Omit<ApiQuestion, 'conditions'> & {
 	id: string;
-	conditions?: RenderedConditionSet | null;
+	conditions: RenderedCondition[];
 };
 
 export type RenderedSection = Omit<
