@@ -142,8 +142,18 @@
 				activeDropdown = null;
 			}
 		};
+		// ...and on Escape.
+		const handleKeydown = (e: KeyboardEvent) => {
+			if (e.key === 'Escape' && activeDropdown) {
+				activeDropdown = null;
+			}
+		};
 		window.addEventListener('click', handleClickOutside);
-		return () => window.removeEventListener('click', handleClickOutside);
+		window.addEventListener('keydown', handleKeydown);
+		return () => {
+			window.removeEventListener('click', handleClickOutside);
+			window.removeEventListener('keydown', handleKeydown);
+		};
 	});
 
 	async function setFolderArchived(folder: FolderWithProjectsPublic, archived: boolean) {
