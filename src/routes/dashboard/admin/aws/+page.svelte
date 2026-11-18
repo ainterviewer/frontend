@@ -634,31 +634,35 @@
 				{instance.service}
 			</span>
 		{:else if columnId === 'state'}
-			<span
-				class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {getStatusColor(
-					instance.state
-				)}"
-			>
-				{instance.state}
-			</span>
-			{#if instance.disabled}
+			<!-- Wrapping onto lines of their own in a narrow column, the pills
+			     keep apart and line up on the left. -->
+			<div class="flex flex-wrap items-center gap-1">
 				<span
-					class="ml-1 inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium whitespace-nowrap text-gray-700 ring-1 ring-gray-400/30 ring-inset"
-					title="Tagged Proxy=disabled: out of rotation. Nothing is routed to it, and it is never started or stopped automatically."
+					class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {getStatusColor(
+						instance.state
+					)}"
 				>
-					<i class="fa-solid fa-screwdriver-wrench text-[0.65rem]"></i>
-					disabled
+					{instance.state}
 				</span>
-			{/if}
-			{#if startFailures[instance.id]}
-				<span
-					class="ml-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-medium whitespace-nowrap text-red-700 ring-1 ring-red-600/20 ring-inset"
-					title={startFailures[instance.id]}
-				>
-					<i class="fa-solid fa-triangle-exclamation text-[0.65rem]"></i>
-					start failed
-				</span>
-			{/if}
+				{#if instance.disabled}
+					<span
+						class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium whitespace-nowrap text-gray-700 ring-1 ring-gray-400/30 ring-inset"
+						title="Tagged Proxy=disabled: out of rotation. Nothing is routed to it, and it is never started or stopped automatically."
+					>
+						<i class="fa-solid fa-screwdriver-wrench text-[0.65rem]"></i>
+						disabled
+					</span>
+				{/if}
+				{#if startFailures[instance.id]}
+					<span
+						class="inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-medium whitespace-nowrap text-red-700 ring-1 ring-red-600/20 ring-inset"
+						title={startFailures[instance.id]}
+					>
+						<i class="fa-solid fa-triangle-exclamation text-[0.65rem]"></i>
+						start failed
+					</span>
+				{/if}
+			</div>
 		{:else if columnId === 'instance_type'}
 			{instance.instance_type}
 		{:else if columnId === 'id'}
