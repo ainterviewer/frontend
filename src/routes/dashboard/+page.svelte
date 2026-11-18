@@ -293,8 +293,9 @@
 <h1 class="page-title mb-8 text-5xl">
 	Welcome to <span
 		class="bg-linear-to-r from-dark to-primary bg-clip-text font-['Noto_Sans_Variable'] font-semibold text-transparent"
-		>AInterviewer</span
 	>
+		AInterviewer
+	</span>
 </h1>
 
 <p class="mb-8 text-gray-600">
@@ -533,9 +534,9 @@
 					</div>
 					<div class="flex items-center justify-between border-t border-gray-200 px-4 py-2">
 						<p class={['text-sm text-gray-500', faded && 'opacity-60']}>
-							Status: <span class="{getStatusColor(project.status)} font-medium"
-								>{project.status || 'N/A'}</span
-							>
+							Status: <span class="{getStatusColor(project.status)} font-medium">
+								{project.status || 'N/A'}
+							</span>
 						</p>
 						<div class="dropdown-container relative">
 							<button

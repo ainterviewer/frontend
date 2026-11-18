@@ -204,10 +204,10 @@
 	{onClose}
 >
 	{#snippet description()}
-		Everyone here can open every project in "<span class="font-semibold text-gray-700"
-			>{folder.title}</span
-		>", with their role's permissions. People you add get an emailed invitation and join once they
-		accept it.
+		Everyone here can open every project in "<span class="font-semibold text-gray-700">
+			{folder.title}
+		</span>", with their role's permissions. People you add get an emailed invitation and join once
+		they accept it.
 	{/snippet}
 
 	<CollaboratorEditor
@@ -232,8 +232,10 @@
 					<button
 						type="button"
 						class="cursor-pointer text-primary underline underline-offset-2 hover:no-underline"
-						onclick={() => resendInvite(row)}>Resend</button
+						onclick={() => resendInvite(row)}
 					>
+						Resend
+					</button>
 				{/if}
 			{:else if !row.userId}
 				Invited when you save

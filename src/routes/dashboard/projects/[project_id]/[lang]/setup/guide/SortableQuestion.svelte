@@ -159,9 +159,9 @@
 	<!-- Header with Drag Handle and Actions -->
 	<div class="mb-2 flex items-center justify-between">
 		<div class="flex items-center gap-2">
-			<span class="font-bold text-black"
-				>{heading ?? `Question ${sectionIndex + 1}.${index + 1}`}</span
-			>
+			<span class="font-bold text-black">
+				{heading ?? `Question ${sectionIndex + 1}.${index + 1}`}
+			</span>
 			<div
 				class="cursor-grab rounded p-1 text-gray-800 outline-none hover:bg-white/50"
 				title="Move Question"

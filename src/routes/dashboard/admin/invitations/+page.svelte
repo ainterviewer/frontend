@@ -687,14 +687,17 @@
 			{#snippet cell(columnId, row)}
 				{@const invitation = row.original}
 				{#if columnId === 'title'}
-					{#if invitation.title}{invitation.title}{:else}<span class="text-gray-300">&ndash;</span
-						>{/if}
+					{#if invitation.title}{invitation.title}{:else}<span class="text-gray-300">
+							&ndash;
+						</span>{/if}
 				{:else if columnId === 'alias'}
-					{#if invitation.alias}{invitation.alias}{:else}<span class="text-gray-300">&ndash;</span
-						>{/if}
+					{#if invitation.alias}{invitation.alias}{:else}<span class="text-gray-300">
+							&ndash;
+						</span>{/if}
 				{:else if columnId === 'email'}
-					{#if invitation.email}{invitation.email}{:else}<span class="text-gray-300">&ndash;</span
-						>{/if}
+					{#if invitation.email}{invitation.email}{:else}<span class="text-gray-300">
+							&ndash;
+						</span>{/if}
 				{:else if columnId === 'uses'}
 					{invitation.uses ?? 0}
 				{:else if columnId === 'user_scope'}

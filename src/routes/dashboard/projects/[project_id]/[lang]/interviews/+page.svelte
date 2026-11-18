@@ -562,9 +562,9 @@
 		{:else if columnId === 'created_at'}
 			<span title={formatDateFull(interview.created_at)}>{formatDate(interview.created_at)}</span>
 		{:else if columnId === 'last_updated'}
-			<span title={formatDateFull(interview.last_updated)}
-				>{formatDate(interview.last_updated)}</span
-			>
+			<span title={formatDateFull(interview.last_updated)}>
+				{formatDate(interview.last_updated)}
+			</span>
 		{:else if columnId === 'n_messages'}
 			{interview.n_messages}
 		{:else if columnId === 'n_reports'}

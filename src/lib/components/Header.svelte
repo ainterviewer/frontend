@@ -210,8 +210,10 @@
 										data-tour="header-profile"
 										href={resolve('/dashboard/settings/profile')}
 										class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary"
-										role="menuitem">Your profile</a
+										role="menuitem"
 									>
+										Your profile
+									</a>
 									<!--
 										Always present, with or without a count — a menu whose entries
 										come and go cannot be navigated from memory, and "What's new"
@@ -293,9 +295,9 @@
 	outgrow at three digits.
 -->
 {#snippet reportRow(label: string, count: number, tag?: string)}
-	<span class="whitespace-nowrap"
-		>{label}{#if tag}<span class="ml-1.5 text-xs text-gray-400">{tag}</span>{/if}</span
-	>
+	<span class="whitespace-nowrap">
+		{label}{#if tag}<span class="ml-1.5 text-xs text-gray-400">{tag}</span>{/if}
+	</span>
 	{#if count > 0}
 		<span class="ml-3 text-sm font-semibold text-orange-500">{count}</span>
 	{/if}

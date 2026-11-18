@@ -113,9 +113,9 @@
 		<ol class="flex flex-col gap-1.5">
 			{#each entries as _, index (index)}
 				<li class="flex items-center gap-2">
-					<span class="w-5 shrink-0 text-right text-xs font-medium text-gray-500 tabular-nums"
-						>{index + 1}.</span
-					>
+					<span class="w-5 shrink-0 text-right text-xs font-medium text-gray-500 tabular-nums">
+						{index + 1}.
+					</span>
 					<input
 						bind:this={fields[index]}
 						bind:value={entries[index]}

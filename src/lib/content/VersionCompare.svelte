@@ -173,11 +173,14 @@
 				class={[
 					'rounded-sm bg-green-100 text-green-900 no-underline',
 					blocks && part.block && 'block px-0.5'
-				]}>{part.text}</ins
-			>{:else if part.kind === 'removed'}<del
+				]}
+			>
+				{part.text}
+			</ins>{:else if part.kind === 'removed'}<del
 				class={['rounded-sm bg-red-100 text-red-800', blocks && part.block && 'block px-0.5']}
-				>{part.text}</del
-			>{:else}{part.text}{/if}{/each}
+			>
+				{part.text}
+			</del>{:else}{part.text}{/if}{/each}
 {/snippet}
 
 <!-- A list's items, a bullet each. -->
@@ -229,12 +232,15 @@
 	{:else if c.status === 'same'}
 		{c.after}
 	{:else}
-		{#if c.before !== null}<del class="rounded-sm bg-red-100 px-0.5 text-red-800">{c.before}</del
-			>{/if}{#if c.before !== null && c.after !== null}<i
+		{#if c.before !== null}<del class="rounded-sm bg-red-100 px-0.5 text-red-800">
+				{c.before}
+			</del>{/if}{#if c.before !== null && c.after !== null}<i
 				class="fa-solid fa-arrow-right mx-1.5 text-[10px] text-gray-400"
 			></i>{/if}{#if c.after !== null}<ins
-				class="rounded-sm bg-green-100 px-0.5 text-green-900 no-underline">{c.after}</ins
-			>{/if}
+				class="rounded-sm bg-green-100 px-0.5 text-green-900 no-underline"
+			>
+				{c.after}
+			</ins>{/if}
 	{/if}
 {/snippet}
 
@@ -354,8 +360,9 @@
 							{#if count}
 								<span
 									class="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-800 tabular-nums"
-									>{count}</span
 								>
+									{count}
+								</span>
 							{/if}
 						</button>
 					{/each}
@@ -455,8 +462,10 @@
 													]}
 												>
 													{#if main}{@render value(main, pd)}{:else}<span
-															class="text-gray-400 italic">No question text</span
-														>{/if}
+															class="text-gray-400 italic"
+														>
+															No question text
+														</span>{/if}
 												</div>
 												<span class="flex shrink-0 gap-1">
 													{@render badge(question.status, question.moved, question.fromSection)}

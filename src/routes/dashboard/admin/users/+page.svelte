@@ -382,12 +382,13 @@
 				{user.two_factor_enabled ? 'On' : 'Off'}
 			</span>
 		{:else if columnId === 'invitation_title'}
-			{#if user.invitation_title}{user.invitation_title}{:else}<span class="text-gray-300"
-					>&ndash;</span
-				>{/if}
+			{#if user.invitation_title}{user.invitation_title}{:else}<span class="text-gray-300">
+					&ndash;
+				</span>{/if}
 		{:else if columnId === 'organization'}
-			{#if user.organization}{user.organization}{:else}<span class="text-gray-300">&ndash;</span
-				>{/if}
+			{#if user.organization}{user.organization}{:else}<span class="text-gray-300">
+					&ndash;
+				</span>{/if}
 		{:else if columnId === 'expires_at'}
 			{#if user.expires_at}
 				<span

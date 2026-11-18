@@ -100,8 +100,9 @@
 								{#if run.run.interviewer_model && isTestOnly(models, run.run.interviewer_model)}
 									<span
 										class="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[0.65rem] font-medium text-amber-800"
-										>Test only</span
 									>
+										Test only
+									</span>
 								{/if}
 							</div>
 							<dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -163,8 +164,9 @@
 												{#if turn.role === 'assistant' && turn.sub_question}
 													<span
 														class="mb-0.5 block text-[0.65rem] font-medium text-gray-400 uppercase"
-														>Follow-up</span
 													>
+														Follow-up
+													</span>
 												{/if}
 												{turn.content}
 											</li>

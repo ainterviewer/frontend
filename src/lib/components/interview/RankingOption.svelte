@@ -70,9 +70,9 @@
 	>
 		{rank ?? '–'}
 	</span>
-	<span class="min-w-0 flex-1 text-sm leading-snug font-medium break-words text-gray-800"
-		>{text}</span
-	>
+	<span class="min-w-0 flex-1 text-sm leading-snug font-medium break-words text-gray-800">
+		{text}
+	</span>
 	{#if !locked}
 		<span class="flex shrink-0 flex-col">
 			<button

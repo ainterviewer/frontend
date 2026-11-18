@@ -52,9 +52,9 @@
 
 <!-- Alternative Main Questions -->
 <div class="hidden">
-	<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase"
-		>Alternative Phrasings</span
-	>
+	<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase">
+		Alternative Phrasings
+	</span>
 	{#if question.alternative_main_questions}
 		<div class="mb-2 space-y-2">
 			{#each question.alternative_main_questions as alternative, aqIdx (aqIdx)}
@@ -67,8 +67,10 @@
 					<button
 						class="px-2 text-gray-400 hover:text-red-500"
 						onclick={() => question.alternative_main_questions?.splice(aqIdx, 1)}
-						aria-label="Remove alternative question"><i class="fa-solid fa-trash"></i></button
+						aria-label="Remove alternative question"
 					>
+						<i class="fa-solid fa-trash"></i>
+					</button>
 				</div>
 			{/each}
 		</div>
@@ -86,11 +88,11 @@
 
 <!-- Probes -->
 <div data-tour={dataTour ? 'probes' : undefined}>
-	<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase"
-		>Suggested Follow-up Probes <HoverInfo
+	<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase">
+		Suggested Follow-up Probes <HoverInfo
 			text="Ideas the AInterviewer can draw on when it writes follow-up probes. Based on the conversation so far, it may use a suggestion as is, rephrase it, or ask something else entirely. Only used when Max Probes or Max Time is set, and those limits cap how many probes are asked."
-		/></span
-	>
+		/>
+	</span>
 	{#if question.probes}
 		<div class="mb-2 space-y-2">
 			{#each question.probes as probe, pIdx (pIdx)}
@@ -121,8 +123,10 @@
 					<button
 						class="px-2 text-gray-400 hover:text-red-500"
 						onclick={() => question.probes?.splice(pIdx, 1)}
-						aria-label="Remove probe"><i class="fa-solid fa-trash"></i></button
+						aria-label="Remove probe"
 					>
+						<i class="fa-solid fa-trash"></i>
+					</button>
 				</div>
 			{/each}
 		</div>

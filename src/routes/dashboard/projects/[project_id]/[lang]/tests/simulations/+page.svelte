@@ -241,8 +241,10 @@
 			<div class="flex justify-end gap-2 border-t border-gray-100 bg-gray-50 p-4">
 				<button
 					onclick={() => (isModalOpen = false)}
-					class="rounded px-4 py-2 font-medium text-gray-700 hover:bg-gray-200">Cancel</button
+					class="rounded px-4 py-2 font-medium text-gray-700 hover:bg-gray-200"
 				>
+					Cancel
+				</button>
 				<button
 					onclick={createTest}
 					disabled={!newTestName || isCreating}

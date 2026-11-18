@@ -122,8 +122,9 @@
 					</div>
 				</fieldset>
 
-				<label for="editor-link-url" class="mt-5 block text-sm font-medium text-gray-700">URL</label
-				>
+				<label for="editor-link-url" class="mt-5 block text-sm font-medium text-gray-700">
+					URL
+				</label>
 				{#if mode === 'custom'}
 					<input
 						bind:this={input}

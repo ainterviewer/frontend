@@ -294,19 +294,24 @@
 											: 'Optional: click to make required'}
 										aria-label="Toggle required"
 										aria-pressed={gridRow.required !== false}
-										><i class="fa-solid fa-asterisk"></i></button
 									>
+										<i class="fa-solid fa-asterisk"></i>
+									</button>
 									<button
 										class="px-1 text-gray-400 hover:text-red-500"
 										onclick={() => surveyItem.rows.splice(rIdx, 1)}
-										title="Remove row"><i class="fa-solid fa-trash"></i></button
+										title="Remove row"
 									>
+										<i class="fa-solid fa-trash"></i>
+									</button>
 								</div>
 							{/each}
 							<button
 								class="mt-1 text-sm font-medium text-primary hover:underline"
-								onclick={() => surveyItem.rows.push(row())}>+ Add Row</button
+								onclick={() => surveyItem.rows.push(row())}
 							>
+								+ Add Row
+							</button>
 						</div>
 						<label
 							class="mt-2 flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
@@ -326,9 +331,9 @@
 				{/if}
 				{#if surveyItem.type === 'radio' || surveyItem.type === 'checkbox' || surveyItem.type === 'likert' || surveyItem.type === 'likert_grid' || surveyItem.type === 'ranking'}
 					<div>
-						<span class="mb-2 block text-gray-500"
-							>{surveyItem.type === 'likert_grid' ? 'Scale' : 'Options'}</span
-						>
+						<span class="mb-2 block text-gray-500">
+							{surveyItem.type === 'likert_grid' ? 'Scale' : 'Options'}
+						</span>
 						<div class="space-y-1">
 							{#each surveyItem.options as surveyOption, oIdx (surveyOption.id ?? oIdx)}
 								<div
@@ -358,14 +363,18 @@
 									<button
 										class="px-1 text-gray-400 hover:text-red-500"
 										onclick={() => surveyItem.options.splice(oIdx, 1)}
-										title="Remove Survey Option"><i class="fa-solid fa-trash"></i></button
+										title="Remove Survey Option"
 									>
+										<i class="fa-solid fa-trash"></i>
+									</button>
 								</div>
 							{/each}
 							<button
 								class="mt-1 text-sm font-medium text-primary hover:underline"
-								onclick={() => surveyItem.options.push(option())}>+ Add Option</button
+								onclick={() => surveyItem.options.push(option())}
 							>
+								+ Add Option
+							</button>
 						</div>
 					</div>
 				{/if}

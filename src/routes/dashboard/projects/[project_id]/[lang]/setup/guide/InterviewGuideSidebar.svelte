@@ -148,8 +148,9 @@
 		href="#{id}"
 		aria-current={activeId === id ? 'location' : undefined}
 		class="block rounded-md px-3 py-2 font-medium text-gray-600 transition-colors hover:bg-gray-100 aria-[current=location]:bg-primary/10 aria-[current=location]:text-primary"
-		>{label}</a
 	>
+		{label}
+	</a>
 {/snippet}
 
 <!-- Sidebar has its own DragDropProvider, independent of the main guide's context -->

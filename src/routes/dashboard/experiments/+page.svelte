@@ -561,9 +561,9 @@
 			</div>
 			<div class="space-y-4 p-6">
 				<div>
-					<label for="experiment-name" class="mb-1 block text-sm font-medium text-gray-700"
-						>Experiment Title</label
-					>
+					<label for="experiment-name" class="mb-1 block text-sm font-medium text-gray-700">
+						Experiment Title
+					</label>
 					<input
 						type="text"
 						id="experiment-name"
@@ -731,17 +731,17 @@
 			</div>
 			<div class="space-y-4 p-6">
 				<div class="text-gray-600">
-					Are you sure you want to delete <span class="font-bold text-gray-900"
-						>{selectedExperiment?.title || selectedExperiment?.id}</span
-					>?
+					Are you sure you want to delete <span class="font-bold text-gray-900">
+						{selectedExperiment?.title || selectedExperiment?.id}
+					</span>?
 					<br />
 					This action cannot be undone.
 				</div>
 				<div>
 					<label for="delete-confirm" class="mb-1 block text-sm font-medium text-gray-700">
-						To confirm, type "<span class="font-mono font-bold"
-							>{selectedExperiment?.title || selectedExperiment?.id}</span
-						>" below:
+						To confirm, type "<span class="font-mono font-bold">
+							{selectedExperiment?.title || selectedExperiment?.id}
+						</span>" below:
 					</label>
 					<input
 						type="text"

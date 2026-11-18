@@ -679,8 +679,10 @@
 			</span>
 		{:else if columnId === 'server_model'}
 			{#if instance.server.models?.[0]?.name}{instance.server.models[0].name}{:else}<span
-					class="text-gray-300">&ndash;</span
-				>{/if}
+					class="text-gray-300"
+				>
+					&ndash;
+				</span>{/if}
 		{:else if columnId === 'connections'}
 			{instance.connections}
 		{:else if columnId === 'idle_time'}
@@ -776,9 +778,9 @@
 		>
 			<div class="flex items-center justify-between gap-4 py-3 first:pt-0">
 				<div class="min-w-0">
-					<label for="min-instances" class="block text-sm font-medium text-gray-900"
-						>Minimum instances</label
-					>
+					<label for="min-instances" class="block text-sm font-medium text-gray-900">
+						Minimum instances
+					</label>
 					<p class="mt-0.5 text-xs text-gray-500">
 						Kept running even when idle, outside the downtime window.
 					</p>
@@ -809,9 +811,9 @@
 
 			<div class="flex items-center justify-between gap-4 py-3">
 				<div class="min-w-0">
-					<label for="start-check" class="block text-sm font-medium text-gray-900"
-						>Start check</label
-					>
+					<label for="start-check" class="block text-sm font-medium text-gray-900">
+						Start check
+					</label>
 					<p class="mt-0.5 text-xs text-gray-500">
 						Start another instance when the pool runs out of capacity.
 					</p>
@@ -858,9 +860,9 @@
 			<div class="py-3 last:pb-0">
 				<div class="flex items-center justify-between gap-4">
 					<div class="min-w-0">
-						<label for="downtime-check" class="block text-sm font-medium text-gray-900"
-							>Downtime window</label
-						>
+						<label for="downtime-check" class="block text-sm font-medium text-gray-900">
+							Downtime window
+						</label>
 						<p class="mt-0.5 text-xs text-gray-500">
 							Instances may be stopped in this window, minimum or not.
 						</p>

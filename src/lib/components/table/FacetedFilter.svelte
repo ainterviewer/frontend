@@ -146,9 +146,9 @@
 												{/if}
 											</span>
 											<span class="flex-1">{choice.label}</span>
-											<span class="text-xs text-gray-400 tabular-nums"
-												>{counts.get(choice.value) ?? 0}</span
-											>
+											<span class="text-xs text-gray-400 tabular-nums">
+												{counts.get(choice.value) ?? 0}
+											</span>
 										</Command.Item>
 									{/each}
 								</Command.List>

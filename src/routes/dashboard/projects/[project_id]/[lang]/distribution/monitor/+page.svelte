@@ -443,12 +443,12 @@
 					<div class="mt-2 h-9 w-32 animate-pulse rounded bg-surface-200"></div>
 				{:else}
 					<div class="mt-2 flex items-baseline gap-2">
-						<span class="text-3xl font-bold"
-							>{formatNumber(Math.round(totalInterviews.current))}</span
-						>
-						<span class="text-sm text-gray-500"
-							>({stats?.interviews_by_status.find((s) => s.status === 'active')?.count ?? 0} active)</span
-						>
+						<span class="text-3xl font-bold">
+							{formatNumber(Math.round(totalInterviews.current))}
+						</span>
+						<span class="text-sm text-gray-500">
+							({stats?.interviews_by_status.find((s) => s.status === 'active')?.count ?? 0} active)
+						</span>
 					</div>
 				{/if}
 			</div>

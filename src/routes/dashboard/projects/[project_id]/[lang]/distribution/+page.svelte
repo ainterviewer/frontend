@@ -111,8 +111,10 @@
 					href={resolve('/dashboard/projects/[project_id]/[lang]/setup/guide', {
 						project_id: projectId,
 						lang
-					})}>Publish it from the interview guide</a
-				>.
+					})}
+				>
+					Publish it from the interview guide
+				</a>.
 			</p>
 		</div>
 	{/if}
@@ -140,8 +142,10 @@
 							href={resolve('/dashboard/projects/[project_id]/[lang]/setup', {
 								project_id: projectId,
 								lang
-							})}>Edit parameters in Setup</a
-						>.
+							})}
+						>
+							Edit parameters in Setup
+						</a>.
 					</p>
 					<div class="grid gap-3 sm:grid-cols-2">
 						{#each linkParams as param (param.name)}
@@ -152,8 +156,10 @@
 										? undefined
 										: `link-param-${param.name}`}
 									class="mb-1 block font-mono text-xs text-gray-600"
-									class:required={param.required && param.default == null}>{param.name}</label
+									class:required={param.required && param.default == null}
 								>
+									{param.name}
+								</label>
 								{#if param.type === 'enum' || param.type === 'bool'}
 									<Select
 										bind:value={
@@ -284,16 +290,20 @@
 				href={resolve('/dashboard/projects/[project_id]/[lang]/distribution/participants', {
 					project_id: projectId,
 					lang
-				})}>Participants</a
+				})}
 			>
+				Participants
+			</a>
 			and send them an invitation from
 			<a
 				class="underline"
 				href={resolve('/dashboard/projects/[project_id]/[lang]/distribution/email', {
 					project_id: projectId,
 					lang
-				})}>Email</a
-			>.
+				})}
+			>
+				Email
+			</a>.
 		</p>
 	{/if}
 </div>

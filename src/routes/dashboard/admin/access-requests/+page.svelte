@@ -261,9 +261,9 @@
 		{:else if columnId === 'email'}
 			{request.email}
 		{:else if columnId === 'organization'}
-			{#if request.organization}{request.organization}{:else}<span class="text-gray-300"
-					>&ndash;</span
-				>{/if}
+			{#if request.organization}{request.organization}{:else}<span class="text-gray-300">
+					&ndash;
+				</span>{/if}
 		{:else if columnId === 'status'}
 			<span
 				class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize

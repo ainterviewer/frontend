@@ -81,8 +81,9 @@
 		<div class="space-y-6">
 			<!-- Title -->
 			<div>
-				<label for="project-title" class="mb-1 block text-sm font-medium text-gray-700">Title</label
-				>
+				<label for="project-title" class="mb-1 block text-sm font-medium text-gray-700">
+					Title
+				</label>
 				<div class="flex gap-4">
 					<input
 						id="project-title"
@@ -106,9 +107,9 @@
 
 			<!-- Language -->
 			<div>
-				<label for="default-language" class="mb-1 block text-sm font-medium text-gray-700"
-					>Default Language</label
-				>
+				<label for="default-language" class="mb-1 block text-sm font-medium text-gray-700">
+					Default Language
+				</label>
 				<div class="max-w-md">
 					<select
 						id="default-language"

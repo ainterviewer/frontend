@@ -365,9 +365,10 @@
 																		<option
 																			value={option.id}
 																			disabled={selectedIds.includes(option.id)}
-																			>{pick(option.text, guideStore.languages) ||
-																				`Option ${oIdx + 1}`}</option
 																		>
+																			{pick(option.text, guideStore.languages) ||
+																				`Option ${oIdx + 1}`}
+																		</option>
 																	{/each}
 																</select>
 															{:else}

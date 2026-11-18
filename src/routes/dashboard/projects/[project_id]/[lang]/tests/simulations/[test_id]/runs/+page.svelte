@@ -318,9 +318,9 @@
 			     input instead of pushing the limits away. -->
 			<div class="flex flex-wrap items-start gap-y-3">
 				<div class="w-64">
-					<label for="n-interviews" class="mb-1 block text-sm font-medium text-gray-700"
-						>Number of synthetic interviews</label
-					>
+					<label for="n-interviews" class="mb-1 block text-sm font-medium text-gray-700">
+						Number of synthetic interviews
+					</label>
 					<input
 						id="n-interviews"
 						type="number"
@@ -361,8 +361,8 @@
 											: 'text-gray-800'}"
 									>
 										{item.used}<span class="text-sm font-normal text-gray-500">
-											/ {item.limit}</span
-										>
+											/ {item.limit}
+										</span>
 									</dd>
 								</div>
 							{/each}
@@ -406,9 +406,9 @@
 			{/if}
 			{#if data.models && data.models.length > 0}
 				<div class="w-96 max-w-full">
-					<label for="answering-model" class="mb-1 block text-sm font-medium text-gray-700"
-						>Answering model</label
-					>
+					<label for="answering-model" class="mb-1 block text-sm font-medium text-gray-700">
+						Answering model
+					</label>
 					<p class="mb-2 text-xs text-gray-500">Plays the synthetic interviewees.</p>
 					<ModelPicker
 						id="answering-model"
@@ -419,9 +419,9 @@
 				</div>
 
 				<div class="w-96 max-w-full">
-					<label for="interviewer-models" class="mb-1 block text-sm font-medium text-gray-700"
-						>Interviewer models</label
-					>
+					<label for="interviewer-models" class="mb-1 block text-sm font-medium text-gray-700">
+						Interviewer models
+					</label>
 					<p class="mb-2 text-xs text-gray-500">
 						Leave empty to use the project's agent models. Choose several to compare them: each runs
 						its own interviews with the same synthetic interviewees.
@@ -439,9 +439,9 @@
 			{/if}
 
 			<div>
-				<label for="interview-language" class="mb-1 block text-sm font-medium text-gray-700"
-					>Interview language</label
-				>
+				<label for="interview-language" class="mb-1 block text-sm font-medium text-gray-700">
+					Interview language
+				</label>
 				<select
 					id="interview-language"
 					bind:value={language}
@@ -517,9 +517,9 @@
 						<span class="text-gray-400">The project's</span>
 					{/if}
 				{:else if columnId === 'answering_model'}
-					{#if testRun.answering_model}{testRun.answering_model}{:else}<span class="text-gray-300"
-							>&ndash;</span
-						>{/if}
+					{#if testRun.answering_model}{testRun.answering_model}{:else}<span class="text-gray-300">
+							&ndash;
+						</span>{/if}
 				{:else if columnId === 'status'}
 					<span
 						class="rounded-full px-2 py-0.5 text-xs font-semibold {getStatusClass(testRun.status)}"

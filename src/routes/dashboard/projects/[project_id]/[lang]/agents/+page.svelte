@@ -308,9 +308,9 @@
 		{:else}
 			<div class="w-fit space-y-8">
 				<div>
-					<label for="all-models-advanced" class="mb-1 block text-sm font-medium text-gray-700"
-						>Set all agent models at once</label
-					>
+					<label for="all-models-advanced" class="mb-1 block text-sm font-medium text-gray-700">
+						Set all agent models at once
+					</label>
 					<ModelPicker
 						id="all-models-advanced"
 						{models}
@@ -326,9 +326,9 @@
 					<h4 class="mb-4 font-medium text-gray-700">Probing Agent</h4>
 					<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 						<div>
-							<label for="probing-model" class="mb-1 block text-sm font-medium text-gray-700"
-								>Model</label
-							>
+							<label for="probing-model" class="mb-1 block text-sm font-medium text-gray-700">
+								Model
+							</label>
 							<ModelPicker
 								id="probing-model"
 								{models}
@@ -337,9 +337,9 @@
 							/>
 						</div>
 						<div>
-							<label for="probing-temperature" class="mb-1 block text-sm font-medium text-gray-700"
-								>Temperature</label
-							>
+							<label for="probing-temperature" class="mb-1 block text-sm font-medium text-gray-700">
+								Temperature
+							</label>
 							<input
 								id="probing-temperature"
 								type="number"
@@ -358,9 +358,12 @@
 					<h4 class="mb-4 font-medium text-gray-700">Classification Agent</h4>
 					<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 						<div>
-							<label for="classification-model" class="mb-1 block text-sm font-medium text-gray-700"
-								>Model</label
+							<label
+								for="classification-model"
+								class="mb-1 block text-sm font-medium text-gray-700"
 							>
+								Model
+							</label>
 							<ModelPicker
 								id="classification-model"
 								{models}
@@ -371,8 +374,10 @@
 						<div>
 							<label
 								for="classification-temperature"
-								class="mb-1 block text-sm font-medium text-gray-700">Temperature</label
+								class="mb-1 block text-sm font-medium text-gray-700"
 							>
+								Temperature
+							</label>
 							<input
 								id="classification-temperature"
 								type="number"
@@ -391,9 +396,9 @@
 					<h4 class="mb-4 font-medium text-gray-700">Reformulation Agent</h4>
 					<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 						<div>
-							<label for="reformulation-model" class="mb-1 block text-sm font-medium text-gray-700"
-								>Model</label
-							>
+							<label for="reformulation-model" class="mb-1 block text-sm font-medium text-gray-700">
+								Model
+							</label>
 							<ModelPicker
 								id="reformulation-model"
 								{models}
@@ -404,8 +409,10 @@
 						<div>
 							<label
 								for="reformulation-temperature"
-								class="mb-1 block text-sm font-medium text-gray-700">Temperature</label
+								class="mb-1 block text-sm font-medium text-gray-700"
 							>
+								Temperature
+							</label>
 							<input
 								id="reformulation-temperature"
 								type="number"
@@ -424,9 +431,9 @@
 					<h4 class="mb-4 font-medium text-gray-700">Guide Agent</h4>
 					<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 						<div>
-							<label for="guide-model" class="mb-1 block text-sm font-medium text-gray-700"
-								>Model</label
-							>
+							<label for="guide-model" class="mb-1 block text-sm font-medium text-gray-700">
+								Model
+							</label>
 							<ModelPicker
 								id="guide-model"
 								{models}
@@ -435,9 +442,9 @@
 							/>
 						</div>
 						<div>
-							<label for="guide-temperature" class="mb-1 block text-sm font-medium text-gray-700"
-								>Temperature</label
-							>
+							<label for="guide-temperature" class="mb-1 block text-sm font-medium text-gray-700">
+								Temperature
+							</label>
 							<input
 								id="guide-temperature"
 								type="number"
@@ -473,8 +480,10 @@
 					<button
 						type="button"
 						class="text-sm text-blue-600 hover:underline"
-						onclick={() => (personaText = promptDefaults.persona ?? '')}>Reset to default</button
+						onclick={() => (personaText = promptDefaults.persona ?? '')}
 					>
+						Reset to default
+					</button>
 				</div>
 				<p class="mb-2 text-sm text-gray-500">
 					Who the interviewer is and the role they play. Sets the tone for every probe.
@@ -491,15 +500,16 @@
 			<!-- Question qualities -->
 			<div>
 				<div class="mb-2 flex items-center justify-between">
-					<label for="slot-qualities" class="block font-medium text-gray-700"
-						>Question qualities</label
-					>
+					<label for="slot-qualities" class="block font-medium text-gray-700">
+						Question qualities
+					</label>
 					<button
 						type="button"
 						class="text-sm text-blue-600 hover:underline"
 						onclick={() => (qualitiesText = joinLines(promptDefaults.question_qualities))}
-						>Reset to default</button
 					>
+						Reset to default
+					</button>
 				</div>
 				<p class="mb-2 text-sm text-gray-500">
 					Qualities every question should have. One per line.
@@ -516,15 +526,16 @@
 			<!-- Guidelines -->
 			<div>
 				<div class="mb-2 flex items-center justify-between">
-					<label for="slot-guidelines" class="block font-medium text-gray-700"
-						>Additional guidelines</label
-					>
+					<label for="slot-guidelines" class="block font-medium text-gray-700">
+						Additional guidelines
+					</label>
 					<button
 						type="button"
 						class="text-sm text-blue-600 hover:underline"
 						onclick={() => (guidelinesText = joinLines(promptDefaults.guidelines))}
-						>Reset to default</button
 					>
+						Reset to default
+					</button>
 				</div>
 				<p class="mb-2 text-sm text-gray-500">
 					General guidance for how the interviewer behaves. One per line.
@@ -541,15 +552,16 @@
 			<!-- Instructions -->
 			<div>
 				<div class="mb-2 flex items-center justify-between">
-					<label for="slot-instructions" class="block font-medium text-gray-700"
-						>Probing instructions</label
-					>
+					<label for="slot-instructions" class="block font-medium text-gray-700">
+						Probing instructions
+					</label>
 					<button
 						type="button"
 						class="text-sm text-blue-600 hover:underline"
 						onclick={() => (instructionsText = joinLines(promptDefaults.instructions))}
-						>Reset to default</button
 					>
+						Reset to default
+					</button>
 				</div>
 				<p class="mb-2 text-sm text-gray-500">
 					Step-by-step instructions used when generating each follow-up question. One per line.
@@ -566,14 +578,16 @@
 			<!-- Few-shot examples -->
 			<div>
 				<div class="mb-2 flex items-center justify-between">
-					<label for="slot-examples" class="block font-medium text-gray-700"
-						>Example probes (optional)</label
-					>
+					<label for="slot-examples" class="block font-medium text-gray-700">
+						Example probes (optional)
+					</label>
 					<button
 						type="button"
 						class="text-sm text-blue-600 hover:underline"
-						onclick={() => (examplesText = '')}>Clear</button
+						onclick={() => (examplesText = '')}
 					>
+						Clear
+					</button>
 				</div>
 				<p class="mb-2 text-sm text-gray-500">
 					Examples of good probing questions to guide the model. One per line. Leave empty for none.
@@ -592,9 +606,9 @@
 			<div class="mb-2 flex items-center justify-between">
 				<h4 class="font-medium text-gray-700">Rendered prompt preview</h4>
 				{#if previewLoading}
-					<span class="text-sm text-gray-400"
-						><i class="fas fa-spinner fa-spin"></i> Rendering…</span
-					>
+					<span class="text-sm text-gray-400">
+						<i class="fas fa-spinner fa-spin"></i> Rendering…
+					</span>
 				{/if}
 			</div>
 			<p class="mb-4 text-sm text-gray-500">

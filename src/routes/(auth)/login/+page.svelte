@@ -249,8 +249,9 @@
 					<button
 						onclick={() => (showModal = true)}
 						class="font-medium text-primary transition-colors hover:text-primary/80"
-						>Request access</button
 					>
+						Request access
+					</button>
 				</p>
 			{:else if step === 'twoFactor'}
 				<form onsubmit={handleVerifyCode} class="space-y-6">

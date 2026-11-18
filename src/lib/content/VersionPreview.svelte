@@ -120,13 +120,14 @@
 	     sanitizeMarkup, as in the chat and the report. Block-scoped: the
 	     line-scoped directive does not survive the formatter here. -->
 	<!-- eslint-disable svelte/no-at-html-tags -->
-	<span class={['whitespace-pre-wrap', cls, { 'text-gray-500': t.fallback }]}
-		>{@html sanitizeMarkup(t.value)}</span
-	>{#if t.fallback && t.value}<span
+	<span class={['whitespace-pre-wrap', cls, { 'text-gray-500': t.fallback }]}>
+		{@html sanitizeMarkup(t.value)}
+	</span>{#if t.fallback && t.value}<span
 			class="ml-1.5 rounded bg-amber-50 px-1 py-0.5 align-middle text-[10px] font-medium text-amber-700"
 			title="Not translated: respondents get the {languageName(version.default_language)} text"
-			>untranslated</span
-		>{/if}
+		>
+			untranslated
+		</span>{/if}
 {/snippet}
 
 {#snippet untranslatedNote(texts: (LocalizedText | null | undefined)[])}
@@ -142,8 +143,9 @@
 	{#if hasText(value)}
 		<section class="rounded-lg border border-gray-200 bg-white p-4">
 			<h4 class="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-				{title}{#if note}<span class="ml-2 font-normal tracking-normal normal-case">{note}</span
-					>{/if}
+				{title}{#if note}<span class="ml-2 font-normal tracking-normal normal-case">
+						{note}
+					</span>{/if}
 			</h4>
 			<p class="mt-1.5 text-sm text-gray-800">{@render text(value)}</p>
 		</section>
@@ -262,9 +264,9 @@
 							<div class="flex items-center gap-2">
 								<h4 class="text-sm font-semibold text-gray-900">Section {s + 1}</h4>
 								{#if section.shuffle}
-									<span class="text-xs text-gray-500"
-										><i class="fa-solid fa-shuffle"></i> shuffled</span
-									>
+									<span class="text-xs text-gray-500">
+										<i class="fa-solid fa-shuffle"></i> shuffled
+									</span>
 								{/if}
 							</div>
 							{#if hasText(section.description)}

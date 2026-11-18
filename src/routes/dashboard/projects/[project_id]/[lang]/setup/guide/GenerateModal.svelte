@@ -109,12 +109,14 @@
 				<p class="mt-2 text-xs text-gray-400">
 					Tip: press <kbd
 						class="rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 font-mono text-[11px] text-gray-600"
-						>⌘</kbd
 					>
+						⌘
+					</kbd>
 					<kbd
 						class="rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 font-mono text-[11px] text-gray-600"
-						>Enter</kbd
-					> to generate
+					>
+						Enter
+					</kbd> to generate
 				</p>
 			</div>
 

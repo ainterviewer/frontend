@@ -60,9 +60,9 @@
 	{#if mode === 'advanced'}
 		<div class="mt-6 grid w-fit grid-cols-1 gap-6 md:grid-cols-2">
 			<div>
-				<label for="security-model" class="mb-1 block text-sm font-medium text-gray-700"
-					>Model</label
-				>
+				<label for="security-model" class="mb-1 block text-sm font-medium text-gray-700">
+					Model
+				</label>
 				<ModelPicker
 					id="security-model"
 					{models}
@@ -71,9 +71,9 @@
 				/>
 			</div>
 			<div>
-				<label for="security-temperature" class="mb-1 block text-sm font-medium text-gray-700"
-					>Temperature</label
-				>
+				<label for="security-temperature" class="mb-1 block text-sm font-medium text-gray-700">
+					Temperature
+				</label>
 				<input
 					id="security-temperature"
 					type="number"
@@ -91,9 +91,9 @@
 		<div class="mt-8">
 			<div class="mb-3 flex items-center justify-between">
 				<h4 class="font-medium text-gray-700">Decisions</h4>
-				<button type="button" class="text-sm text-blue-600 hover:underline" onclick={resetPolicy}
-					>Reset to default</button
-				>
+				<button type="button" class="text-sm text-blue-600 hover:underline" onclick={resetPolicy}>
+					Reset to default
+				</button>
 			</div>
 
 			<div class="space-y-4" class:opacity-60={!security.include}>
@@ -103,9 +103,9 @@
 						<legend class="sr-only">Decision {decision.name}</legend>
 						<div class="grid grid-cols-1 gap-4 md:grid-cols-[1fr_8rem_16rem]">
 							<div>
-								<label for="decision-{i}-name" class="mb-1 block text-sm font-medium text-gray-700"
-									>Key</label
-								>
+								<label for="decision-{i}-name" class="mb-1 block text-sm font-medium text-gray-700">
+									Key
+								</label>
 								<input
 									id="decision-{i}-name"
 									bind:value={decision.name}
@@ -116,8 +116,10 @@
 							<div>
 								<label
 									for="decision-{i}-threshold"
-									class="mb-1 block text-sm font-medium text-gray-700">Threshold</label
+									class="mb-1 block text-sm font-medium text-gray-700"
 								>
+									Threshold
+								</label>
 								<input
 									id="decision-{i}-threshold"
 									type="number"
@@ -131,8 +133,10 @@
 							<div>
 								<label
 									for="decision-{i}-action"
-									class="mb-1 block text-sm font-medium text-gray-700">Action</label
+									class="mb-1 block text-sm font-medium text-gray-700"
 								>
+									Action
+								</label>
 								<select id="decision-{i}-action" bind:value={decision.action} class={inputClass}>
 									{#each Object.entries(ACTION_LABELS) as [action, label] (action)}
 										<option value={action as SecurityAction}>{label}</option>
@@ -144,8 +148,10 @@
 						<div class="mt-4">
 							<label
 								for="decision-{i}-description"
-								class="mb-1 block text-sm font-medium text-gray-700">Question for the model</label
+								class="mb-1 block text-sm font-medium text-gray-700"
 							>
+								Question for the model
+							</label>
 							<textarea
 								id="decision-{i}-description"
 								bind:value={decision.description}
@@ -157,8 +163,9 @@
 							<label
 								for="decision-{i}-action-text"
 								class="mb-1 block text-sm font-medium text-gray-700"
-								>Message to the respondent</label
 							>
+								Message to the respondent
+							</label>
 							<textarea
 								id="decision-{i}-action-text"
 								bind:value={decision.action_text}
@@ -178,8 +185,10 @@
 							<button
 								type="button"
 								class="text-sm text-red-600 hover:underline"
-								onclick={() => removeDecision(i)}>Remove</button
+								onclick={() => removeDecision(i)}
 							>
+								Remove
+							</button>
 						</div>
 
 						{#if problems}

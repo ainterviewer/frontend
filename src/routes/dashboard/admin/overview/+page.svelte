@@ -301,8 +301,9 @@
 		<section class="rounded-lg border border-gray-200 bg-white p-4">
 			<h2 class="mb-2 text-base font-semibold text-dark">
 				Daily active users
-				{#if period === 'week'}<span class="text-sm font-normal text-gray-500">weekly average</span
-					>{/if}
+				{#if period === 'week'}<span class="text-sm font-normal text-gray-500">
+						weekly average
+					</span>{/if}
 			</h2>
 			<TimeSeriesChart rows={activeRows} series={visibleScopes} kind="bar" label="users" {period} />
 		</section>

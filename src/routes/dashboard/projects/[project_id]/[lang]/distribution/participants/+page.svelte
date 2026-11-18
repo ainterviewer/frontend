@@ -706,9 +706,9 @@
 				</span>
 			{:else}<span class="text-gray-300">&ndash;</span>{/if}
 		{:else if columnId === 'latest_interview_status'}
-			{#if p.latest_interview_status}{p.latest_interview_status}{:else}<span class="text-gray-300"
-					>&ndash;</span
-				>{/if}
+			{#if p.latest_interview_status}{p.latest_interview_status}{:else}<span class="text-gray-300">
+					&ndash;
+				</span>{/if}
 		{:else if columnId === 'actions'}
 			{#if editing}
 				<button

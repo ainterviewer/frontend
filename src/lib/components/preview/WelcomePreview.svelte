@@ -59,8 +59,10 @@
 				<p class="mb-2">
 					{withdraw[0]}{#if email}<a
 							href="mailto:{email}"
-							class="font-medium text-primary hover:underline">{email}</a
-						>{:else}<span class="text-gray-400">[contact email]</span>{/if}{withdraw[1]}
+							class="font-medium text-primary hover:underline"
+						>
+							{email}
+						</a>{:else}<span class="text-gray-400">[contact email]</span>{/if}{withdraw[1]}
 				</p>
 
 				<div

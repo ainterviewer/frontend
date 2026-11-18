@@ -42,14 +42,16 @@
 		{#each parts as part, index (index)}{#if linkable.has(part)}<HoverInfo
 					text={titleFor(part) ?? ''}
 					asChild
-					>{#snippet children({ props })}<a
+				>
+					{#snippet children({ props })}<a
 							{...props}
 							href="#q-{part.replace('.', '-')}"
 							class="font-medium tabular-nums underline decoration-amber-300 underline-offset-2 hover:decoration-amber-600"
-							>{part}</a
-						>{/snippet}</HoverInfo
-				>{:else}{part}{/if}{/each}{#if trailing}<span class="ml-1.5 text-gray-500"
-				>· {trailing}</span
-			>{/if}
+						>
+							{part}
+						</a>{/snippet}
+				</HoverInfo>{:else}{part}{/if}{/each}{#if trailing}<span class="ml-1.5 text-gray-500">
+				· {trailing}
+			</span>{/if}
 	</span>
 </div>

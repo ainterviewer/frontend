@@ -133,9 +133,9 @@
 					<tbody>
 						{#each syntax as row (row.example)}
 							<tr>
-								<td class="py-0.5 pr-3 align-top font-mono whitespace-nowrap text-gray-900"
-									>{row.example}</td
-								>
+								<td class="py-0.5 pr-3 align-top font-mono whitespace-nowrap text-gray-900">
+									{row.example}
+								</td>
 								<td class="py-0.5 align-top text-gray-500">{row.means}</td>
 							</tr>
 						{/each}
@@ -149,8 +149,9 @@
 					that matched.
 					<mark
 						class="rounded-sm bg-red-200/90 px-0.5 text-gray-900 line-through decoration-red-700/50"
-						>red</mark
 					>
+						red
+					</mark>
 					is one you excluded with <span class="font-mono">-</span>, showing up somewhere the search
 					did not look — in a question when you are searching answers, or in another turn of the
 					same Q&amp;A pair. It is not why the chunk is here.

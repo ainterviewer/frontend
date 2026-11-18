@@ -134,10 +134,10 @@
 	{#if coverage.length > 0}
 		<span class="flex flex-wrap items-center gap-x-3 gap-y-1">
 			{#each coverage as entry (entry.label)}
-				<span
-					><span class="font-medium text-gray-700">{formatNumber(entry.count)}</span>
-					{entry.label}</span
-				>
+				<span>
+					<span class="font-medium text-gray-700">{formatNumber(entry.count)}</span>
+					{entry.label}
+				</span>
 			{/each}
 			<span class="flex items-center gap-1">
 				embedded

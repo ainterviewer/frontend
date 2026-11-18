@@ -132,15 +132,15 @@
 								href="mailto:{email}"
 								class="font-medium text-primary! hover:underline hover:brightness-80"
 							>
-								{email}</a
-							>{withdraw[1]}
+								{email}
+							</a>{withdraw[1]}
 						</p>
 						<div
 							class="my-2 flex w-fit max-w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
 						>
-							<code class="min-w-0 font-mono text-sm break-normal text-gray-700"
-								>{interviewId || '<interview-id>'}</code
-							>
+							<code class="min-w-0 font-mono text-sm break-normal text-gray-700">
+								{interviewId || '<interview-id>'}
+							</code>
 							<i class="fa-solid fa-fingerprint shrink-0 text-gray-400"></i>
 						</div>
 						<p class="text-xs text-gray-500">

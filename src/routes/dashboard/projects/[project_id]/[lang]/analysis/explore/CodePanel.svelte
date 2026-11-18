@@ -518,8 +518,9 @@
 		<span
 			id="axis-{label}"
 			class="w-12 shrink-0 text-[0.625rem] font-medium tracking-wide text-gray-400 uppercase"
-			>{label}</span
 		>
+			{label}
+		</span>
 		<div
 			role="group"
 			aria-labelledby="axis-{label}"
@@ -765,8 +766,10 @@
 					This project has no codes yet. Add one here{#if codebookHref}, or flesh it out in the
 						<a
 							href={codebookHref}
-							class="font-medium text-primary underline-offset-2 hover:underline">codebook</a
-						>{/if}.
+							class="font-medium text-primary underline-offset-2 hover:underline"
+						>
+							codebook
+						</a>{/if}.
 				</p>
 			{:else}
 				{#each rootRows as row (row.id)}

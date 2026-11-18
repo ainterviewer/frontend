@@ -29,6 +29,8 @@
 {:else}
 	<span
 		class="text-gray-300"
-		title="Ran before guide versions were kept, or its snapshot has been deleted">&ndash;</span
+		title="Ran before guide versions were kept, or its snapshot has been deleted"
 	>
+		&ndash;
+	</span>
 {/if}

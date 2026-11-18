@@ -96,8 +96,9 @@
 											<span class="min-w-0 flex-1">
 												<span class="block truncate">{displayName(target.code.name)}</span>
 												{#if target.path}
-													<span class="block truncate text-[11px] text-gray-400">{target.path}</span
-													>
+													<span class="block truncate text-[11px] text-gray-400">
+														{target.path}
+													</span>
 												{/if}
 											</span>
 										</Command.Item>

@@ -377,10 +377,10 @@
 									class="mt-0.5 rounded border-gray-300 text-primary focus:ring-blue-500"
 								/>
 								<span class="min-w-0">
-									<span class="block text-sm font-medium text-gray-700"
-										>{toggle.label}
-										{#if toggle.is_preview_feature}<PreviewBadge />{/if}</span
-									>
+									<span class="block text-sm font-medium text-gray-700">
+										{toggle.label}
+										{#if toggle.is_preview_feature}<PreviewBadge />{/if}
+									</span>
 									<span class="block text-xs text-gray-500">{toggle.description}</span>
 									{#if toggle.key === 'with_audio' && speechTestOnly}
 										<span class="mt-1 block text-xs text-amber-800">
@@ -398,9 +398,9 @@
 
 				{#if hasPreviewFeatures}
 					<div class="mt-5">
-						<span class="block text-sm font-medium text-gray-700"
-							>Probing strategy <PreviewBadge /></span
-						>
+						<span class="block text-sm font-medium text-gray-700">
+							Probing strategy <PreviewBadge />
+						</span>
 						<p class="mb-2 text-xs text-gray-500">
 							Select which probing strategies are available for this interview.
 						</p>
@@ -482,9 +482,12 @@
 								<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
 									<!-- Name -->
 									<div>
-										<label for="param-name-{i}" class="mb-1 block text-xs font-medium text-gray-600"
-											>Name *</label
+										<label
+											for="param-name-{i}"
+											class="mb-1 block text-xs font-medium text-gray-600"
 										>
+											Name *
+										</label>
 										<input
 											id="param-name-{i}"
 											type="text"
@@ -497,9 +500,12 @@
 
 									<!-- Type -->
 									<div>
-										<label for="param-type-{i}" class="mb-1 block text-xs font-medium text-gray-600"
-											>Type</label
+										<label
+											for="param-type-{i}"
+											class="mb-1 block text-xs font-medium text-gray-600"
 										>
+											Type
+										</label>
 										<select
 											id="param-type-{i}"
 											bind:value={param.type}
@@ -517,8 +523,10 @@
 									<div>
 										<label
 											for="param-default-{i}"
-											class="mb-1 block text-xs font-medium text-gray-600">Default</label
+											class="mb-1 block text-xs font-medium text-gray-600"
 										>
+											Default
+										</label>
 										<input
 											id="param-default-{i}"
 											type="text"
@@ -534,9 +542,12 @@
 
 									<!-- Description -->
 									<div class="sm:col-span-2">
-										<label for="param-desc-{i}" class="mb-1 block text-xs font-medium text-gray-600"
-											>Description</label
+										<label
+											for="param-desc-{i}"
+											class="mb-1 block text-xs font-medium text-gray-600"
 										>
+											Description
+										</label>
 										<input
 											id="param-desc-{i}"
 											type="text"
@@ -569,8 +580,9 @@
 										<label
 											for="param-options-{i}"
 											class="mb-1 block text-xs font-medium text-gray-600"
-											>Options (comma-separated)</label
 										>
+											Options (comma-separated)
+										</label>
 										<input
 											id="param-options-{i}"
 											type="text"
@@ -635,8 +647,10 @@
 						<div>
 							<label
 								for="redirect-{outcome.key}"
-								class="mb-1 block text-xs font-medium text-gray-600">{outcome.label}</label
+								class="mb-1 block text-xs font-medium text-gray-600"
 							>
+								{outcome.label}
+							</label>
 							<input
 								id="redirect-{outcome.key}"
 								type="url"
@@ -653,9 +667,9 @@
 					{/each}
 
 					<div class="max-w-xs">
-						<label for="redirect-delay" class="mb-1 block text-xs font-medium text-gray-600"
-							>Delay (seconds)</label
-						>
+						<label for="redirect-delay" class="mb-1 block text-xs font-medium text-gray-600">
+							Delay (seconds)
+						</label>
 						<input
 							id="redirect-delay"
 							type="number"

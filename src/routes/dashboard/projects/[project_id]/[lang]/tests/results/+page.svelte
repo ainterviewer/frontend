@@ -563,8 +563,9 @@
 				</span>
 			{/if}
 		{:else if columnId === 'test_name'}
-			{#if interview.test_name}{interview.test_name}{:else}<span class="text-gray-300">&ndash;</span
-				>{/if}
+			{#if interview.test_name}{interview.test_name}{:else}<span class="text-gray-300">
+					&ndash;
+				</span>{/if}
 		{:else if columnId === 'language'}
 			{interview.language}
 		{:else if columnId === 'version_no'}

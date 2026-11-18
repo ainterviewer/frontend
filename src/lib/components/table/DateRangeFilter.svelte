@@ -81,9 +81,9 @@
 						<div {...props} transition:fly={{ duration: 150, y: -5 }}>
 							<div class="flex flex-col gap-3">
 								<label class="flex flex-col gap-1">
-									<span class="text-xs font-semibold tracking-wide text-gray-500 uppercase"
-										>From</span
-									>
+									<span class="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+										From
+									</span>
 									<input
 										type="date"
 										class={dateInput}
@@ -93,8 +93,9 @@
 									/>
 								</label>
 								<label class="flex flex-col gap-1">
-									<span class="text-xs font-semibold tracking-wide text-gray-500 uppercase">To</span
-									>
+									<span class="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+										To
+									</span>
 									<input
 										type="date"
 										class={dateInput}

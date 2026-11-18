@@ -124,8 +124,9 @@ respondents' answers may be sent to them (`test_only`, see
 {#snippet testOnlyBadge()}
 	<span
 		class="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[0.65rem] font-medium text-amber-800"
-		>Test only</span
 	>
+		Test only
+	</span>
 {/snippet}
 
 <Popover.Root bind:open {onOpenChange}>

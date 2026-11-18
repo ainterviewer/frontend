@@ -276,8 +276,9 @@
 						expanded ? 'block' : 'hidden',
 						active && "font-bold after:ml-2 after:content-['<']"
 					].join(' ')}
-					>{item.label}{#if item.previewFeature}<PreviewBadge compact class="ml-2" />{/if}</span
 				>
+					{item.label}{#if item.previewFeature}<PreviewBadge compact class="ml-2" />{/if}
+				</span>
 			{/if}
 		</a>
 

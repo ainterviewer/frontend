@@ -84,8 +84,9 @@
 				<div class="space-y-6">
 					<div class="rounded-md bg-green-50 p-4">
 						<h3 class="text-sm font-medium text-green-800">
-							We've sent a verification link to <span class="font-semibold">{registeredEmail}</span
-							>. Click the link in that email to activate your account, then sign in.
+							We've sent a verification link to <span class="font-semibold">
+								{registeredEmail}
+							</span>. Click the link in that email to activate your account, then sign in.
 						</h3>
 					</div>
 
@@ -293,8 +294,10 @@
 					Already have an account?
 					<a
 						href={resolve('/login')}
-						class="font-medium text-primary transition-colors hover:text-primary/80">Sign in</a
+						class="font-medium text-primary transition-colors hover:text-primary/80"
 					>
+						Sign in
+					</a>
 				</p>
 			{/if}
 		</div>

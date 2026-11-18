@@ -420,9 +420,9 @@
 
 			{#if surveyItem.type === 'slider'}
 				<div class="w-full px-2">
-					<output class="block text-center text-sm font-semibold text-gray-800"
-						>{sliderValue}</output
-					>
+					<output class="block text-center text-sm font-semibold text-gray-800">
+						{sliderValue}
+					</output>
 					<input
 						type="range"
 						min={sliderMin}
@@ -455,9 +455,9 @@
 				<!-- The track runs from the middle of the first label's column to
 				     the middle of the last's, so each point sits over its label. -->
 				<div class="w-full px-2">
-					<output class="block min-h-5 text-center text-sm font-semibold text-primary"
-						>{likertOptions[sliderValue] ?? ''}</output
-					>
+					<output class="block min-h-5 text-center text-sm font-semibold text-primary">
+						{likertOptions[sliderValue] ?? ''}
+					</output>
 					<input
 						type="range"
 						min="0"
@@ -483,9 +483,9 @@
 						aria-hidden="true"
 					>
 						{#each likertOptions as opt, i (i)}
-							<span class="text-center {i === sliderValue ? 'font-bold text-primary' : ''}"
-								>{opt}</span
-							>
+							<span class="text-center {i === sliderValue ? 'font-bold text-primary' : ''}">
+								{opt}
+							</span>
 						{/each}
 					</div>
 					<div
@@ -527,10 +527,9 @@
 								/>
 								{#if tick === opt}
 									<!-- A break allowed after a slash; see `labelWords`. -->
-									<span class="max-w-full"
-										>{#each opt.split('/') as part, k (k)}{#if k > 0}/<wbr
-												/>{/if}{part}{/each}</span
-									>
+									<span class="max-w-full">
+										{#each opt.split('/') as part, k (k)}{#if k > 0}/<wbr />{/if}{part}{/each}
+									</span>
 								{:else}
 									<span class="max-w-full {stack.column}">{tick}</span>
 									<span class="max-w-full {stack.row}">{opt}</span>

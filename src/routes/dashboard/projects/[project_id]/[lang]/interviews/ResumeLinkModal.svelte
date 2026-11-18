@@ -153,8 +153,9 @@
 							Resume link
 						</h3>
 						<p class="mt-1 text-sm text-gray-500">
-							Lets {#if pid}<span class="font-mono font-medium text-gray-700">{pid}</span
-								>{:else}this respondent{/if} finish this interview in any browser.
+							Lets {#if pid}<span class="font-mono font-medium text-gray-700">
+									{pid}
+								</span>{:else}this respondent{/if} finish this interview in any browser.
 						</p>
 					</div>
 				</div>

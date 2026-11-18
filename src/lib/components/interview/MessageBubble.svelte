@@ -455,8 +455,10 @@
 							<time
 								class="text-[0.625rem] tabular-nums opacity-60"
 								datetime={time}
-								title={formatDateFull(time)}>{sentAt}</time
+								title={formatDateFull(time)}
 							>
+								{sentAt}
+							</time>
 						{/if}
 					</span>
 				</div>
@@ -491,8 +493,10 @@
 							{@html piece.html}
 						{:else if piece.mark}<mark
 								class={MARK_STYLE[piece.mark].className}
-								title={MARK_STYLE[piece.mark].title}>{piece.value}</mark
-							>{:else}{piece.value}{/if}{/each}
+								title={MARK_STYLE[piece.mark].title}
+							>
+								{piece.value}
+							</mark>{:else}{piece.value}{/if}{/each}
 				</span>
 			{/if}
 			{#if surveyItem}

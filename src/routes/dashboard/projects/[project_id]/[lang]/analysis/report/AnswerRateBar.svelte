@@ -77,8 +77,8 @@
 	     the same x. -->
 	<span class="shrink-0 text-xs text-gray-500 tabular-nums {compact ? 'w-20 text-right' : ''}">
 		{formatPercent(rate)}
-		<span class="text-gray-400"
-			>({answered}){#if !compact}&nbsp;answered{/if}</span
-		>
+		<span class="text-gray-400">
+			({answered}){#if !compact}&nbsp;answered{/if}
+		</span>
 	</span>
 </div>

@@ -93,8 +93,9 @@
 							</span>
 
 							{#if code.kind === 'group'}
-								<span class="shrink-0 text-[10px] tracking-wide text-gray-400 uppercase">Group</span
-								>
+								<span class="shrink-0 text-[10px] tracking-wide text-gray-400 uppercase">
+									Group
+								</span>
 							{:else if code.kind === 'score'}
 								<span class="shrink-0 text-xs text-gray-400">{scoreRangeLabel(code)}</span>
 							{/if}
