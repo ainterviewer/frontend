@@ -24,6 +24,10 @@
 	let instances: Instance[] = $state([]);
 	let isLoading = $state(false);
 	let error = $state('');
+	// Why the last manual start of an instance failed, by instance id, shown on
+	// its row so the reason outlives the toast. Cleared when a start succeeds
+	// or the instance is seen to leave `stopped` by any other route.
+	let startFailures = $state<Record<string, string>>({});
 
 	// HTML time inputs use "HH:MM"; the backend uses "HH:MM:SS".
 	const toInputTime = (t: string) => t.slice(0, 5);
@@ -192,6 +196,10 @@
 			return;
 		}
 		instances = response.data as Instance[];
+		const stopped = new Set(instances.filter((i) => i.state === 'stopped').map((i) => i.id));
+		startFailures = Object.fromEntries(
+			Object.entries(startFailures).filter(([id]) => stopped.has(id))
+		);
 	}
 
 	async function updateSettings() {
@@ -226,34 +234,87 @@
 	const canUseBulk = () =>
 		table.getIsAllRowsSelected() && !selectedInstances.some((i) => i.disabled);
 
+	// A failed start stays open until dismissed: AWS running out of capacity
+	// is easy to miss in a toast that closes itself after a few seconds. One
+	// toast for the last start, under a fixed id, so trying again replaces it
+	// rather than stacking another beside it.
+	const START_TOAST = 'ec2-start';
+	const PERSISTENT = { id: START_TOAST, duration: Number.POSITIVE_INFINITY };
+
+	const instancesCount = (n: number) => `${n} instance${n === 1 ? '' : 's'}`;
+	const instanceName = (id: string) => instances.find((i) => i.id === id)?.name || id;
+
+	/**
+	 * Report a start: the instances that failed, each with its reason, in a
+	 * toast that stays until dismissed; else the count started. Run after the
+	 * table is refreshed, so the names are current.
+	 */
+	function reportStart(attempted: number, failures: Record<string, string>) {
+		const failed = Object.keys(failures).length;
+		const started = attempted - failed;
+		if (failed === 0) {
+			// The duration too: a toast updated under its id keeps the old one's.
+			toast.success(`Starting ${instancesCount(started)}`, { id: START_TOAST, duration: 4000 });
+			return;
+		}
+		const lines = Object.entries(failures).map(([id, reason]) => `${instanceName(id)}: ${reason}`);
+		if (started > 0)
+			lines.push(`The other ${started === 1 ? 'one is' : `${started} are`} starting.`);
+		toast.error(
+			failed === attempted
+				? `Failed to start ${instancesCount(failed)}`
+				: `Failed to start ${failed} of ${instancesCount(attempted)}`,
+			{ ...PERSISTENT, description: lines.join('\n'), descriptionClass: 'whitespace-pre-line' }
+		);
+	}
+
 	async function startSelected() {
 		if (selectedIds.length === 0) return;
+		const ids = [...selectedIds];
+		const failures: Record<string, string> = {};
 
 		if (canUseBulk()) {
 			const { error: startError } = await Admin.proxyToEc2ManagerPost({
 				path: { full_path: 'instances/start-all' }
 			});
+			await getInstanceStatus();
 			if (startError) {
-				toastApiError(startError, 'Failed to start instances');
-				return;
+				// Start-all fails as one: the reason goes to every instance it
+				// left stopped.
+				const reason = errorDetail(startError, 'Failed to start');
+				for (const instance of instances) {
+					if (ids.includes(instance.id) && instance.state === 'stopped') {
+						failures[instance.id] = reason;
+					}
+				}
+				if (Object.keys(failures).length === 0) {
+					toastApiError(startError, 'Failed to start instances', PERSISTENT);
+					return;
+				}
 			}
 		} else {
 			const results = await Promise.all(
-				selectedIds.map((id) =>
+				ids.map((id) =>
 					Admin.proxyToEc2ManagerPost({
 						path: { full_path: `instances/start/${id}` }
 					})
 				)
 			);
-			const failed = results.filter((r) => r.error);
-			if (failed.length > 0) {
-				toastApiError(failed[0].error, `Failed to start ${failed.length} instance(s)`);
-				return;
-			}
+			ids.forEach((id, index) => {
+				const startError = results[index].error;
+				if (startError) {
+					console.error(`Failed to start ${id}`, startError);
+					failures[id] = errorDetail(startError, 'Failed to start');
+				}
+			});
+			await getInstanceStatus();
 		}
-		await getInstanceStatus();
-		table.resetRowSelection(true);
-		toast.success('Instances starting');
+
+		const kept = { ...startFailures };
+		for (const id of ids) delete kept[id];
+		startFailures = { ...kept, ...failures };
+		reportStart(ids.length, failures);
+		if (Object.keys(failures).length < ids.length) table.resetRowSelection(true);
 	}
 
 	async function stopSelected() {
@@ -587,6 +648,15 @@
 				>
 					<i class="fa-solid fa-screwdriver-wrench text-[0.65rem]"></i>
 					disabled
+				</span>
+			{/if}
+			{#if startFailures[instance.id]}
+				<span
+					class="ml-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-medium whitespace-nowrap text-red-700 ring-1 ring-red-600/20 ring-inset"
+					title={startFailures[instance.id]}
+				>
+					<i class="fa-solid fa-triangle-exclamation text-[0.65rem]"></i>
+					start failed
 				</span>
 			{/if}
 		{:else if columnId === 'instance_type'}
