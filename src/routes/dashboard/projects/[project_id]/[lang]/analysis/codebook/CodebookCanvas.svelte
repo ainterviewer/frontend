@@ -57,8 +57,10 @@
 	 * Shared by every fit -- the one at mount, the refits below, and the
 	 * Controls' fit button, which takes its own options and would otherwise fill
 	 * the pane again on the first click.
+	 *
+	 * A percentage: since Svelte Flow 2 a bare number is read as pixels.
 	 */
-	const FIT_OPTIONS = { padding: 0.12, maxZoom: 1 };
+	const FIT_OPTIONS = { padding: '5%', maxZoom: 1 } as const;
 
 	/**
 	 * Refit the viewport when the tree asks for it.
@@ -132,7 +134,9 @@
 <!-- deleteKey is [] rather than null: Svelte Flow turns null into an empty
      key, which @svelte-put/shortcut warns about on every keypress. An empty
      list registers no trigger at all. Deletion goes through the workspace's
-     own keydown handler, which knows to undo it. -->
+     own keydown handler, which knows to undo it.
+     forceColorMode: Svelte Flow 2 follows the system color scheme by default,
+     and the app (and the nodes drawn on this canvas) are light only. -->
 <SvelteFlow
 	bind:nodes={tree.nodes}
 	bind:edges={tree.edges}
@@ -145,6 +149,7 @@
 	elevateNodesOnSelect
 	connectionRadius={CONNECTION_RADIUS}
 	deleteKey={[]}
+	forceColorMode="light"
 	proOptions={{ hideAttribution: true }}
 	onnodeclick={({ node }) => (tree.selectedId = node.id)}
 	onpaneclick={() => (tree.selectedId = null)}

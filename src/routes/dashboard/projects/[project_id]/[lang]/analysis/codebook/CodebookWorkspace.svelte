@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '@xyflow/svelte/dist/style.css';
+	import '@xyflow/svelte/style.css';
 
 	import { SvelteFlowProvider } from '@xyflow/svelte';
 	import { toast } from 'svelte-sonner';
