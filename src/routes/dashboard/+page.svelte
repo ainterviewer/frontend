@@ -11,6 +11,7 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
 	import { formatDate, formatDay } from '$lib/utils/datetime';
+	import { openUpwards } from '$lib/utils/openUpwards';
 	import { toastApiError } from '$lib/utils/toast';
 
 	import type { PageData } from './$types';
@@ -431,7 +432,10 @@
 					<i class="fa-solid fa-ellipsis-vertical"></i>
 				</button>
 				{#if activeDropdown === folder.id}
-					<div class="absolute left-0 z-10 mt-2 w-52 rounded-md bg-white py-1 shadow-lg">
+					<div
+						class="absolute left-0 z-10 mt-2 w-52 rounded-md bg-white py-1 shadow-lg"
+						{@attach openUpwards}
+					>
 						<button
 							class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
 							onclick={() => openDialog({ kind: 'rename-folder', folder })}
@@ -542,7 +546,10 @@
 								<i class="fa-solid fa-ellipsis-vertical"></i>
 							</button>
 							{#if activeDropdown === project.id}
-								<div class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg">
+								<div
+									class="absolute right-0 z-10 mt-2 w-48 rounded-md bg-white py-1 shadow-lg"
+									{@attach openUpwards}
+								>
 									<button
 										class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
 										onclick={(e) => {
