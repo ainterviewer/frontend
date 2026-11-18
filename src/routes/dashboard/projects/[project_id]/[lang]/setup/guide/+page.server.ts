@@ -2,14 +2,12 @@ import { error } from '@sveltejs/kit';
 
 import { Projects } from '$lib/api';
 import { getContentDoc } from '$lib/collab/contentDoc';
-import { loadContentStatus } from '$lib/content/status';
 
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
 	const { project_id, lang } = params;
 
-	const contentStatus = loadContentStatus(project_id, fetch);
 	const [response, projectRes] = await Promise.all([
 		// The shared doc, not the saved guide: that is the last valid doc, and
 		// the page would flash it before the doc synced over it.
@@ -34,7 +32,6 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 	return {
 		guide: response.data,
 		docErrors: response.errors,
-		contentStatus: await contentStatus,
 		lang,
 		project_id,
 		project_name: projectRes.data?.title ?? '',

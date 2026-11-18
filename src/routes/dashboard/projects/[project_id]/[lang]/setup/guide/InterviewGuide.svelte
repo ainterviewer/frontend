@@ -696,6 +696,8 @@
 
 			<SetupActionBar
 				{projectId}
+				part="guide"
+				errors={session.errors}
 				{lang}
 				{availableLanguages}
 				{exporting}

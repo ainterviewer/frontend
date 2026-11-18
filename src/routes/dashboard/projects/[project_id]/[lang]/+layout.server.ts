@@ -1,10 +1,17 @@
 import { redirect } from '@sveltejs/kit';
 
+import { loadContentStatus } from '$lib/content/status';
 import { offeredLanguage } from '$lib/utils/languages';
 
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ params, parent, url }) => {
+export const load: LayoutServerLoad = async ({ params, parent, url, fetch }) => {
+	// Fetched again on every navigation in the project, which reading the path
+	// makes this load rerun on: the sidebar marks the parts that are invalid
+	// by it, and a part fixed on one page must not stay marked on the next.
+	void url.pathname;
+	const contentStatus = loadContentStatus(params.project_id, fetch);
+
 	// The dashboard layout has loaded the project already. Without it (the
 	// call failed) there is nothing to check against, and the pages report the
 	// failure themselves.
@@ -20,4 +27,6 @@ export const load: LayoutServerLoad = async ({ params, parent, url }) => {
 		const to = `/${params.project_id}/${lang}`;
 		redirect(307, url.pathname.replace(from, to) + url.search);
 	}
+
+	return { contentStatus: await contentStatus };
 };

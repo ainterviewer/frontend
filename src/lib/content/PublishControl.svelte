@@ -1,14 +1,3 @@
-<script lang="ts" module>
-	import type { ContentStatus } from '$lib/api/types.gen';
-
-	// The last status seen per project, so the action bar a sub-route whose
-	// load does not hand one over draws it straight away instead of flashing
-	// empty until the fetch returns.
-	// Only ever written in the browser: effects do not run on the server.
-	// Read once, at mount, so a plain record rather than reactive state.
-	const lastStatus: Record<string, ContentStatus> = {};
-</script>
-
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -17,12 +6,20 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { Default, Versions } from '$lib/api';
-	import type { ModelOption, ProjectLanguage } from '$lib/api/types.gen';
+	import type {
+		ContentError,
+		ContentStatus,
+		ModelOption,
+		ProjectLanguage
+	} from '$lib/api/types.gen';
+	import { type LivePart, sessionErrors } from '$lib/collab/contentSession.svelte';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import ModelPicker from '$lib/components/ModelPicker.svelte';
 	import { hasErrorCode } from '$lib/utils/errors';
 	import { portal } from '$lib/utils/portal';
 	import { toastApiError } from '$lib/utils/toast';
 
+	import { fixFirst, invalidParts, WOULD } from './invalidParts';
 	import { SPEECH, testOnlyUseLabel } from './models';
 	import { contentRevision, saveWithRevision } from './revision.svelte';
 	import { allowedBumps, type Bump, BUMP_MEANING, maxBump, nextVersion } from './semver';
@@ -35,6 +32,7 @@
 		availableLanguages = [],
 		onBeforePublish,
 		primary = false,
+		live,
 		beside
 	}: {
 		projectId: string;
@@ -47,16 +45,18 @@
 		onBeforePublish?: () => Promise<boolean | void> | boolean | void;
 		/** The page's main action, filled: where nothing else is (no Save). */
 		primary?: boolean;
-		/** Drawn right before the Publish button, after the history. */
-		beside?: Snippet;
+		/** The part the page edits live, with its current errors: they win over
+		 * the status's, which are as last saved. */
+		live?: { part: LivePart; errors: ContentError[] };
+		/** Drawn right before the Publish button, after the history; given the
+		 * parts that are invalid, which no test may run while they are. */
+		beside?: Snippet<[LivePart[]]>;
 	} = $props();
 
-	// The page's load hands the status over (`loadContentStatus`), so a full
-	// page load draws it from the first paint; else the last seen, else none
-	// until the fetch below returns.
-	// svelte-ignore state_referenced_locally
+	// The project layout's load hands the status over (`loadContentStatus`), so
+	// the bar draws it from the first paint, and its own fetch below follows.
 	let status = $state<ContentStatus | null>(
-		(page.data.contentStatus as ContentStatus | null | undefined) ?? lastStatus[projectId] ?? null
+		(page.data.contentStatus as ContentStatus | null | undefined) ?? null
 	);
 	let dialogOpen = $state(false);
 	let historyOpen = $state(false);
@@ -81,7 +81,6 @@
 			path: { project_id: projectId }
 		});
 		status = data ?? null;
-		if (data) lastStatus[projectId] = data;
 		contentRevision.take(projectId, 'content', response);
 	}
 
@@ -93,6 +92,19 @@
 	});
 
 	const missing = $derived(Object.entries(status?.missing ?? {}));
+	// The sidebar works them out alike, short of the page's own errors.
+	const invalid = $derived(
+		invalidParts(status, {
+			...sessionErrors(projectId),
+			...(live && { [live.part]: live.errors })
+		})
+	);
+	// The backend refuses it too; disabled, the button says why up front.
+	const publishBlocked = $derived(fixFirst(invalid, WOULD.publish));
+	// Why Publish is off, if it is for a reason the user should hear.
+	const publishRefused = $derived(
+		isDemo ? 'You cannot publish with your current demo access.' : publishBlocked
+	);
 	// What the draft would send respondents' answers to that is for test
 	// interviews only (app/distribution.py), and the same for what is live:
 	// then no distributed interview can start on it. Agents can be switched
@@ -180,6 +192,13 @@
 
 <svelte:window onkeydown={dialogOpen ? handleKeydown : undefined} />
 
+{#snippet refused()}
+	<span class="flex gap-2">
+		<i class="fas fa-triangle-exclamation mt-0.5 text-red-500" aria-hidden="true"></i>
+		<span>{publishRefused}</span>
+	</span>
+{/snippet}
+
 <div class="flex items-center gap-2">
 	<button
 		data-tour="version-history"
@@ -214,24 +233,34 @@
 			></span>
 		{/if}
 	</button>
-	{@render beside?.()}
-	<button
-		data-tour="publish"
-		type="button"
-		class={[
-			'flex items-center gap-2 rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap disabled:opacity-50 @3xl:px-6',
-			primary ? 'bg-primary text-white shadow-sm hover:bg-dark' : 'text-primary hover:bg-primary/10'
-		]}
-		onclick={openDialog}
-		disabled={publishing || isDemo}
-		title={isDemo
-			? 'You cannot publish with your current demo access'
-			: 'Publish the draft to respondents'}
-		aria-label="Publish"
-	>
-		<i class="fa-solid fa-upload"></i>
-		<span class="hidden @3xl:inline">Publish</span>
-	</button>
+	{@render beside?.(invalid)}
+	<!-- Blocked, it is aria-disabled rather than disabled: a disabled button
+	     gets no hover or focus, so it could not say why it is off. -->
+	<HoverInfo asChild content={publishRefused ? refused : undefined}>
+		{#snippet children({ props })}
+			<button
+				{...props}
+				data-tour="publish"
+				type="button"
+				class={[
+					'flex items-center gap-2 rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 @3xl:px-6',
+					primary
+						? 'bg-primary text-white shadow-sm not-aria-disabled:hover:bg-dark'
+						: 'text-primary not-aria-disabled:hover:bg-primary/10'
+				]}
+				onclick={() => {
+					if (!publishRefused) openDialog();
+				}}
+				disabled={publishing}
+				aria-disabled={!!publishRefused}
+				title={publishRefused ? undefined : 'Publish the draft to respondents'}
+				aria-label={publishRefused ? `Publish: ${publishRefused}` : 'Publish'}
+			>
+				<i class="fa-solid fa-upload"></i>
+				<span class="hidden @3xl:inline">Publish</span>
+			</button>
+		{/snippet}
+	</HoverInfo>
 </div>
 
 {#if dialogOpen && status}

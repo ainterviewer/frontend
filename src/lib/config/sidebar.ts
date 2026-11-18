@@ -1,3 +1,5 @@
+import type { LivePart } from '$lib/collab/contentSession.svelte';
+
 export type SidebarItem = {
 	label?: string;
 	href?: string;
@@ -8,6 +10,8 @@ export type SidebarItem = {
 	project_id?: string;
 	previewFeature?: boolean;
 	dataTour?: string;
+	/** The co-edited part the page edits: marked while it is invalid. */
+	contentPart?: LivePart;
 	/** Tailwind classes for a separator; replaces the default line style. */
 	separatorClass?: string;
 };
@@ -94,17 +98,20 @@ export const projectSidebarItems: SidebarItem[] = [
 			{
 				label: 'Consent',
 				href: '/dashboard/projects/{projectId}/{languageCode}/setup/consent',
-				icon: 'fas fa-file-signature'
+				icon: 'fas fa-file-signature',
+				contentPart: 'consent'
 			},
 			{
 				label: 'Welcome',
 				href: '/dashboard/projects/{projectId}/{languageCode}/setup/welcome',
-				icon: 'fas fa-handshake'
+				icon: 'fas fa-handshake',
+				contentPart: 'welcome'
 			},
 			{
 				label: 'Interview Guide',
 				href: '/dashboard/projects/{projectId}/{languageCode}/setup/guide',
-				icon: 'fas fa-clipboard-question'
+				icon: 'fas fa-clipboard-question',
+				contentPart: 'guide'
 			}
 		]
 	},

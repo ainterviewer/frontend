@@ -1,3 +1,4 @@
+import { SvelteMap } from 'svelte/reactivity';
 import { removeAwarenessStates } from 'y-protocols/awareness';
 import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
@@ -205,10 +206,28 @@ export class ContentSession {
 	}
 }
 
-// eslint-disable-next-line svelte/prefer-svelte-reactivity -- module-level registry of sessions; nothing renders from it
-const sessions = new Map<string, ContentSession>();
+// Reactive: the sidebar reads the sessions' errors (`sessionErrors`).
+const sessions = new SvelteMap<string, ContentSession>();
 
 const sessionKey = (projectId: string, part: LivePart) => `${projectId}/${part}`;
+
+/**
+ * Why each of a project's parts with a session in this tab is invalid, as
+ * that session knows it: as the page that opened it was loaded, then as the
+ * server announces on each save. A session lingers a while after its page
+ * closes (`LINGER_MS`), and the server saves a few seconds after the last
+ * edit, so this is fresher than a status fetched since. Empty on the server,
+ * and for a session the server refused, which knows nothing.
+ */
+export function sessionErrors(projectId: string): Partial<Record<LivePart, ContentError[]>> {
+	const errors: Partial<Record<LivePart, ContentError[]>> = {};
+	for (const session of sessions.values()) {
+		if (session.projectId === projectId && session.status !== 'refused') {
+			errors[session.part] = session.errors;
+		}
+	}
+	return errors;
+}
 
 /**
  * The session for a project's `part`, connecting it if need be. Pair with

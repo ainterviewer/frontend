@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import type { ContentStatus } from '$lib/api/types.gen';
+	import { type LivePart, sessionErrors } from '$lib/collab/contentSession.svelte';
 	import { type SidebarItem } from '$lib/config/sidebar';
+	import { invalidParts, pageName } from '$lib/content/invalidParts';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
 	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
@@ -40,6 +43,22 @@
 
 	// Extract projectId from the current URL
 	let { projectId, languageCode } = $derived(parseProjectRoute(page.url.pathname));
+
+	// The project's invalid parts: as the project layout's load had them, on
+	// every navigation, and as the parts with a session in this tab know them
+	// since (an editor open, or left a moment ago and still saving).
+	let invalid = $derived<LivePart[]>(
+		projectId
+			? invalidParts(
+					page.data.contentStatus as ContentStatus | null | undefined,
+					sessionErrors(projectId)
+				)
+			: []
+	);
+
+	function invalidNote(part: LivePart) {
+		return `The ${pageName(part)} has problems. Until they are fixed, the interview can't be tried, shared or published.`;
+	}
 
 	function getResolvedHref(href?: string) {
 		if (!href) return undefined;
@@ -233,8 +252,20 @@
 					<!-- Fixed-width glyph cell: wide icons centre inside it instead of pushing the
 					     label right, so every label in a level starts at the same x. -->
 					<span class={['flex-none text-center', collapsed && level > 0 ? 'w-4' : 'w-6'].join(' ')}>
-						<i class={[item.icon, collapsed && level > 0 && 'text-xs'].filter(Boolean).join(' ')}
-						></i>
+						<span class="relative inline-block leading-none">
+							<i class={[item.icon, collapsed && level > 0 && 'text-xs'].filter(Boolean).join(' ')}
+							></i>
+							{#if item.contentPart && invalid.includes(item.contentPart)}
+								<!-- On the icon, so it shows collapsed too; outlined in the
+								     sidebar's colour to stand off the glyph under it. -->
+								<i
+									class="fas fa-triangle-exclamation absolute -right-1 -bottom-1 text-[0.55rem] text-red-400 drop-shadow-[0_0_1.5px_var(--color-dark)]"
+									title={invalidNote(item.contentPart)}
+									aria-label={invalidNote(item.contentPart)}
+									role="img"
+								></i>
+							{/if}
+						</span>
 					</span>
 				</span>
 			{/if}

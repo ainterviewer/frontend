@@ -31,6 +31,8 @@
 		dataTour?: string;
 		/** The guide's errors in this question. */
 		errors?: ContentError[];
+		/** Why trying from here may not start, if it may not: the guide is invalid. */
+		tryBlocked?: string;
 	}
 
 	let {
@@ -45,7 +47,8 @@
 		isOverlay = false,
 		source = 'guide',
 		dataTour,
-		errors = []
+		errors = [],
+		tryBlocked
 	}: Props = $props();
 
 	/** Errors in a field shown on the card itself, as its text field's tooltip. */
@@ -183,6 +186,7 @@
 					kind="question"
 					id={question.id}
 					dataTour={dataTour ? 'try-from-here' : undefined}
+					blocked={tryBlocked}
 				/>
 			{/if}
 			<button

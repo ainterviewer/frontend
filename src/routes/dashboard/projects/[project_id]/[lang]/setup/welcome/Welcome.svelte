@@ -357,8 +357,7 @@
 						/>
 						{#if emailInvalid}
 							<p id="welcome-email-error" class="mt-1.5 text-xs text-red-600">
-								Enter a valid email address. Until you do, your changes on this page won't be used
-								in tests or published.
+								Enter a valid email address. Until then, the interview can't be tried or published.
 							</p>
 						{/if}
 						<p class="mt-1.5 text-xs text-gray-500">
@@ -417,6 +416,8 @@
 		<div aria-hidden="true" class="mt-auto h-6"></div>
 		<SetupActionBar
 			{projectId}
+			part="welcome"
+			errors={session.errors}
 			lang={language}
 			{availableLanguages}
 			{exporting}

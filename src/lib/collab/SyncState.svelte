@@ -140,7 +140,7 @@
 				class="z-1001 w-80 rounded-md border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 shadow-md outline-none"
 			>
 				<p class="text-gray-600">
-					Your changes are kept, but they won't be used in tests or published until this is fixed.
+					Your changes are kept, but the interview can't be tried or published until this is fixed.
 				</p>
 				{#if session.errors.length > 0}
 					<ul class="mt-2 space-y-1 border-t border-gray-100 pt-2">

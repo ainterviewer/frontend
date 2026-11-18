@@ -7,7 +7,17 @@
 	import { isDemoRestricted } from '$lib/utils/errors';
 	import { toastApiError } from '$lib/utils/toast';
 
-	let { projectId, dataTour }: { projectId: string; dataTour?: string } = $props();
+	let {
+		projectId,
+		dataTour,
+		blocked
+	}: {
+		projectId: string;
+		dataTour?: string;
+		/** Why no new link may be made, if it may not: a part is invalid. The
+		 * menu still opens, to revoke the links already shared. */
+		blocked?: string;
+	} = $props();
 
 	// The backend refuses demo accounts, and anyone below editor: a link anyone
 	// can open hands out the unpublished draft.
@@ -130,12 +140,18 @@
 			{:else}
 				<button
 					type="button"
-					class="mt-3 w-full rounded-full bg-primary px-4 py-2 font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+					class="mt-3 w-full rounded-full bg-primary px-4 py-2 font-medium text-white not-disabled:hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
 					onclick={createLink}
-					disabled={creating}
+					disabled={creating || !!blocked}
+					aria-describedby={blocked ? 'share-test-blocked' : undefined}
 				>
 					{creating ? 'Creating…' : 'Create and copy link'}
 				</button>
+				{#if blocked}
+					<p id="share-test-blocked" class="mt-2 text-xs text-red-600">
+						{blocked} Links you've already shared still open the old version until then.
+					</p>
+				{/if}
 			{/if}
 
 			<div class="mt-4 border-t border-gray-100 pt-3">

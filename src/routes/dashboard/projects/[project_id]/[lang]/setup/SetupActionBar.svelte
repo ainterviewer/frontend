@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import type { ProjectLanguage } from '$lib/api/types.gen';
+	import type { ContentError, ProjectLanguage } from '$lib/api/types.gen';
+	import type { LivePart } from '$lib/collab/contentSession.svelte';
 	import ActionBar from '$lib/components/ActionBar.svelte';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
+	import { fixFirst, WOULD } from '$lib/content/invalidParts';
 	import PublishControl from '$lib/content/PublishControl.svelte';
 
 	import ShareTestLink from './ShareTestLink.svelte';
@@ -12,6 +15,8 @@
 		lang,
 		availableLanguages = [],
 		exporting = false,
+		part,
+		errors,
 		onBeforePublish,
 		onExportPdf,
 		onExportJson
@@ -20,6 +25,10 @@
 		lang: string;
 		availableLanguages?: ProjectLanguage[];
 		exporting?: boolean;
+		/** The part this page edits live. */
+		part: LivePart;
+		/** Why it is invalid, as it stands now. */
+		errors: ContentError[];
 		/** Run before publishing; `false` stops it. */
 		onBeforePublish?: () => Promise<boolean | void> | boolean | void;
 		onExportPdf?: () => Promise<void> | void;
@@ -38,6 +47,13 @@
 </script>
 
 <svelte:window onclick={closeMenusOnWindowClick} />
+
+{#snippet refused(reason: string)}
+	<span class="flex gap-2">
+		<i class="fas fa-triangle-exclamation mt-0.5 text-red-500" aria-hidden="true"></i>
+		<span>{reason}</span>
+	</span>
+{/snippet}
 
 <ActionBar>
 	<div data-tour="language" class="flex">
@@ -93,21 +109,53 @@
 	</div>
 	<div class="flex">
 		<!-- Try Interview beside Publish: test the draft, then send it out. -->
-		<PublishControl {projectId} {lang} {availableLanguages} {onBeforePublish} primary>
-			{#snippet beside()}
-				<ShareTestLink {projectId} dataTour="share-test" />
-				<a
-					data-tour="try-interview"
-					class="rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 @3xl:px-6"
-					href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
-					target="_blank"
-					rel="opener"
-					title="Try Interview"
-					aria-label="Try Interview"
-				>
-					<i class="fa-solid fa-person-circle-question"></i>
-					<span class="hidden @3xl:inline">Try Interview</span>
-				</a>
+		<PublishControl
+			{projectId}
+			{lang}
+			{availableLanguages}
+			{onBeforePublish}
+			live={{ part, errors }}
+			primary
+		>
+			{#snippet beside(invalid)}
+				{@const tryBlocked = fixFirst(invalid, WOULD.try)}
+				<ShareTestLink {projectId} dataTour="share-test" blocked={fixFirst(invalid, WOULD.share)} />
+				{#if tryBlocked}
+					<!-- Not a link while a part is invalid: a test would run it as it
+					     was before its problems. -->
+					<HoverInfo asChild>
+						{#snippet content()}
+							{@render refused(tryBlocked)}
+						{/snippet}
+						{#snippet children({ props })}
+							<span
+								{...props}
+								data-tour="try-interview"
+								role="link"
+								aria-disabled="true"
+								tabindex="0"
+								class="cursor-not-allowed rounded-full border border-gray-300 px-4 py-2 font-medium whitespace-nowrap text-gray-400 @3xl:px-6"
+								aria-label="Try Interview: {tryBlocked}"
+							>
+								<i class="fa-solid fa-person-circle-question"></i>
+								<span class="hidden @3xl:inline">Try Interview</span>
+							</span>
+						{/snippet}
+					</HoverInfo>
+				{:else}
+					<a
+						data-tour="try-interview"
+						class="rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 @3xl:px-6"
+						href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
+						target="_blank"
+						rel="opener"
+						title="Try Interview"
+						aria-label="Try Interview"
+					>
+						<i class="fa-solid fa-person-circle-question"></i>
+						<span class="hidden @3xl:inline">Try Interview</span>
+					</a>
+				{/if}
 			{/snippet}
 		</PublishControl>
 	</div>

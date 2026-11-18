@@ -5,6 +5,7 @@
 
 	import type { ContentError } from '$lib/api';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { fixFirst, WOULD } from '$lib/content/invalidParts';
 	import { pick } from '$lib/guide/localized';
 	import { newQuestion } from '$lib/guide/normalize';
 	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
@@ -51,6 +52,9 @@
 		isOverlay = false,
 		source = 'guide'
 	}: Props = $props();
+
+	// Trying from here runs the guide as it was before its problems.
+	const tryBlocked = $derived(errors.length ? fixFirst(['guide'], WOULD.try) : undefined);
 
 	const { ref, handleRef, isDragging } = useSortable(
 		untrack(() => ({
@@ -137,7 +141,7 @@
 		</div>
 		<div class="flex items-center gap-1">
 			{#if source === 'guide' && !isOverlay && questions.length > 0}
-				<TryFromHere kind="section" id={section.id} />
+				<TryFromHere kind="section" id={section.id} blocked={tryBlocked} />
 			{/if}
 			<button
 				class="cursor-pointer rounded p-2 text-gray-700 transition hover:text-red-500"
@@ -187,6 +191,7 @@
 				{allSections}
 				{allQuestions}
 				errors={errors.filter((error) => error.question_id === question.id)}
+				{tryBlocked}
 				onRemove={() => removeQuestion(qIdx)}
 			/>
 		{/each}

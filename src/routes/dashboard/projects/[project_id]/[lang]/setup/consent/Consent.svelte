@@ -260,6 +260,8 @@
 		<div aria-hidden="true" class="mt-auto h-6"></div>
 		<SetupActionBar
 			{projectId}
+			part="consent"
+			errors={session.errors}
 			lang={language}
 			{availableLanguages}
 			{exporting}
