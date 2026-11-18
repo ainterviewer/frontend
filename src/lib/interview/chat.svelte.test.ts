@@ -6,6 +6,7 @@ import { render } from 'vitest-browser-svelte';
 
 import type { OutgoingHistoryMessage, OutgoingMessage, SecurityIntervention } from '$lib/api';
 import SecurityInterventionModal from '$lib/components/interview/SecurityInterventionModal.svelte';
+import TimedMessageModal from '$lib/components/interview/TimedMessageModal.svelte';
 
 import { ChatClient } from './chat.svelte';
 
@@ -266,5 +267,56 @@ describe('ChatClient replayed surveys', () => {
 		await chat.processSingleMessage(history('user', 'Tasty', 7));
 
 		expect(chat.messages.at(-1)).toEqual({ type: 'sent', text: 'Tasty', message_id: 7 });
+	});
+});
+
+describe('ChatClient timed messages', () => {
+	function timed(as_modal: boolean): OutgoingMessage {
+		return {
+			type: 'message',
+			content: 'Halfway there',
+			role: 'assistant',
+			message_id: 4,
+			can_answer: false,
+			as_modal
+		};
+	}
+
+	test('one shown as a modal stays out of the chat', async () => {
+		const { chat } = connectedClient();
+
+		await chat.processSingleMessage(timed(true));
+
+		expect(chat.timedNotices).toEqual(['Halfway there']);
+		expect(chat.messages).toEqual([]);
+	});
+
+	test('several shown as modals queue up', async () => {
+		const { chat } = connectedClient();
+
+		await chat.processSingleMessage(timed(true));
+		await chat.processSingleMessage({ ...timed(true), content: 'Almost done' });
+
+		expect(chat.timedNotices).toEqual(['Halfway there', 'Almost done']);
+	});
+
+	test('one not shown as a modal joins the chat', async () => {
+		const { chat } = connectedClient();
+
+		await chat.processSingleMessage(timed(false));
+
+		expect(chat.timedNotices).toEqual([]);
+		expect(chat.messages.map((m) => m.text)).toEqual(['Halfway there']);
+	});
+});
+
+describe('TimedMessageModal', () => {
+	test('shows the message and closes', async () => {
+		const onClose = vi.fn();
+		await render(TimedMessageModal, { text: 'Halfway there', lang: 'EN', onClose });
+
+		await expect.element(page.getByText('Halfway there')).toBeVisible();
+		await page.getByRole('button', { name: 'OK' }).click();
+		expect(onClose).toHaveBeenCalledOnce();
 	});
 });

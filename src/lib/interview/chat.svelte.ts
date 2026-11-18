@@ -184,6 +184,10 @@ export class ChatClient {
 	/** A security intervention the respondent has not closed yet. While it is
 	 *  set, the chat sits behind its modal. */
 	securityIntervention = $state<PendingIntervention | null>(null);
+	/** Timed messages the guide shows in a modal instead of the chat, oldest
+	 *  first; the first is open until the respondent closes it. The interview
+	 *  does not wait on them. */
+	timedNotices = $state<string[]>([]);
 	/** Where the respondent is about to be sent now the interview has ended,
 	 *  and the seconds left before they are. */
 	redirect = $state<{ url: string; remaining: number } | null>(null);
@@ -855,6 +859,13 @@ export class ChatClient {
 					// Unless the respondent has to answer first, the server goes on
 					// straight away -- the next question, or the end of the interview.
 					this.forceTypingIndicator = !data.security_intervention.respondent_override;
+					break;
+				}
+
+				// Never part of the conversation; what it precedes follows.
+				if (data.as_modal) {
+					if (data.content) this.timedNotices.push(data.content);
+					this.forceTypingIndicator = true;
 					break;
 				}
 

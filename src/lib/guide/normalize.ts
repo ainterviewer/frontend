@@ -165,6 +165,7 @@ export function mapToLocal(data: LocalizedInterviewGuide): {
 			alt_outro: data.alt_outro ?? null,
 			timed_messages: (data.timed_messages ?? []).map((tm) => ({
 				...tm,
+				id: tm.id ?? crypto.randomUUID(),
 				message: tm.message ?? {}
 			})),
 			ai_generated_sections: data.ai_generated_sections ?? 0,

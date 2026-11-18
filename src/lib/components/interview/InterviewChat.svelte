@@ -11,6 +11,7 @@
 	import ReportDialog from './ReportDialog.svelte';
 	import SecurityInterventionModal from './SecurityInterventionModal.svelte';
 	import SpeechInput from './SpeechInput.svelte';
+	import TimedMessageModal from './TimedMessageModal.svelte';
 	import { TtsPlayer } from './tts';
 	import TypingIndicator from './TypingIndicator.svelte';
 
@@ -530,6 +531,8 @@
 		onRespond={(choice) => chat.respondToIntervention(choice)}
 		onDismiss={() => chat.dismissIntervention()}
 	/>
+{:else if chat.timedNotices.length}
+	<TimedMessageModal text={chat.timedNotices[0]} {lang} onClose={() => chat.timedNotices.shift()} />
 {/if}
 
 <!-- Input Area -->

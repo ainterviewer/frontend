@@ -36,6 +36,8 @@ export interface UiText {
 		record_audio: string;
 		/** Above the conversation in a test interview, so nobody takes it for the study. */
 		test_banner: string;
+		/** Closes a timed message the guide shows in a modal. */
+		dismiss_notice: string;
 	};
 	/** The interview's connection, and the screens shown when it cannot go on. */
 	connection: {
@@ -130,7 +132,8 @@ const UI: Record<Lang, UiText> = {
 			show_help: 'Show help',
 			end_interview: 'End interview',
 			record_audio: 'Record audio',
-			test_banner: "Test interview — your answers will not be part of the study's results."
+			test_banner: "Test interview — your answers will not be part of the study's results.",
+			dismiss_notice: 'OK'
 		},
 		connection: {
 			reconnecting: 'Reconnecting...',
@@ -209,7 +212,8 @@ const UI: Record<Lang, UiText> = {
 			show_help: 'Vis hjælp',
 			end_interview: 'Afslut interview',
 			record_audio: 'Optag lyd',
-			test_banner: 'Testinterview – dine svar indgår ikke i undersøgelsens resultater.'
+			test_banner: 'Testinterview – dine svar indgår ikke i undersøgelsens resultater.',
+			dismiss_notice: 'OK'
 		},
 		connection: {
 			reconnecting: 'Genopretter forbindelsen...',
@@ -288,7 +292,8 @@ const UI: Record<Lang, UiText> = {
 			show_help: 'Hilfe anzeigen',
 			end_interview: 'Interview beenden',
 			record_audio: 'Audio aufnehmen',
-			test_banner: 'Testinterview – Ihre Antworten fließen nicht in die Ergebnisse der Studie ein.'
+			test_banner: 'Testinterview – Ihre Antworten fließen nicht in die Ergebnisse der Studie ein.',
+			dismiss_notice: 'OK'
 		},
 		connection: {
 			reconnecting: 'Verbindung wird wiederhergestellt...',
@@ -373,7 +378,8 @@ const UI: Record<Lang, UiText> = {
 			end_interview: 'Finalizar la entrevista',
 			record_audio: 'Grabar audio',
 			test_banner:
-				'Entrevista de prueba: tus respuestas no formarán parte de los resultados del estudio.'
+				'Entrevista de prueba: tus respuestas no formarán parte de los resultados del estudio.',
+			dismiss_notice: 'Aceptar'
 		},
 		connection: {
 			reconnecting: 'Reconectando...',
@@ -457,7 +463,8 @@ const UI: Record<Lang, UiText> = {
 			show_help: "Afficher l'aide",
 			end_interview: "Terminer l'entretien",
 			record_audio: 'Enregistrer un message audio',
-			test_banner: "Entretien test : vos réponses ne feront pas partie des résultats de l'étude."
+			test_banner: "Entretien test : vos réponses ne feront pas partie des résultats de l'étude.",
+			dismiss_notice: 'OK'
 		},
 		connection: {
 			reconnecting: 'Reconnexion...',

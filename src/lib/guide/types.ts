@@ -72,7 +72,8 @@ export type GuideSection = Omit<
 	ai_generated_questions: GeneratedQuestions;
 };
 
-export type GuideTimedMessage = Omit<LocalizedTimedMessage, 'message'> & {
+export type GuideTimedMessage = Omit<LocalizedTimedMessage, 'id' | 'message'> & {
+	id: string;
 	message: LocalizedText;
 };
 

@@ -1856,6 +1856,7 @@ export const zLocalizedSliderItem = z.object({
  * `TimedMessage` with its text per language.
  */
 export const zLocalizedTimedMessage = z.object({
+    id: z.uuid().optional(),
     message: zLocalizedText.optional(),
     time: z.int(),
     include_in_history: z.boolean().optional().default(false),
@@ -3455,7 +3456,7 @@ export const zMessagePublic = z.object({
     sub_question: z.int().nullish(),
     is_introduction: z.boolean().optional().default(false),
     outro: z.boolean().optional().default(false),
-    timed: z.boolean().optional().default(false),
+    timed_message_id: z.uuid().nullish(),
     can_answer: z.boolean().optional().default(true),
     include_in_history: z.boolean().optional().default(true),
     attachment: z.string().nullish(),
@@ -3558,6 +3559,7 @@ export const zQuestionSectionQuestion = z.object({
  * A message that is displayed to the interviewee after a certain amount of time
  */
 export const zTimedMessage = z.object({
+    id: z.uuid().optional(),
     message: z.string(),
     time: z.int(),
     include_in_history: z.boolean().optional().default(false),
@@ -4242,7 +4244,8 @@ export const zOutgoingMessage = z.object({
     user_image: z.boolean().optional().default(false),
     progress: z.number().gte(0).lte(100).nullish().default(null),
     is_probe: z.boolean().optional().default(false),
-    question_id: z.uuid().nullish().default(null)
+    question_id: z.uuid().nullish().default(null),
+    as_modal: z.boolean().optional().default(false)
 });
 
 /**

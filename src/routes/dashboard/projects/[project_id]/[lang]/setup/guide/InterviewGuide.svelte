@@ -213,6 +213,7 @@
 
 	function addTimedMessage() {
 		guideStore.top.timed_messages.push({
+			id: crypto.randomUUID(),
 			message: {},
 			time: 0,
 			include_in_history: false,
@@ -607,7 +608,7 @@
 												text="Includes the question in the conversation history. This means that the AInterviewer will have access to the information from this message when asking other questions."
 											></HoverInfo>
 										</div>
-										<div class="flex hidden gap-2">
+										<div class="flex gap-2">
 											<label
 												class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
 											>
@@ -618,8 +619,7 @@
 												/>
 												Show as modal
 											</label>
-											<HoverInfo
-												text="Should the message be shown as a modal (pop-up message) instead of a normal message in the chat interface?"
+											<HoverInfo text="Shows the message in a pop-up instead of in the chat."
 											></HoverInfo>
 										</div>
 									</div>

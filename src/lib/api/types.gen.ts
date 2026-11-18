@@ -4456,6 +4456,10 @@ export type LocalizedText = {
  * `TimedMessage` with its text per language.
  */
 export type LocalizedTimedMessage = {
+    /**
+     * Id
+     */
+    id?: string;
     message?: LocalizedText;
     /**
      * Time
@@ -4692,9 +4696,9 @@ export type MessagePublic = {
      */
     outro?: boolean;
     /**
-     * Timed
+     * Timed Message Id
      */
-    timed?: boolean;
+    timed_message_id?: string | null;
     /**
      * Can Answer
      */
@@ -6926,6 +6930,12 @@ export type TimeItem = {
  */
 export type TimedMessage = {
     /**
+     * Id
+     *
+     * Stable identity of the timed message, shared by every translation of it. Stored with the message once sent, so a resumed interview does not send it again.
+     */
+    id?: string;
+    /**
      * Message
      *
      * The message to display
@@ -7643,6 +7653,10 @@ export type OutgoingMessage = {
      * Question Id
      */
     question_id?: string | null;
+    /**
+     * As Modal
+     */
+    as_modal?: boolean;
 };
 
 /**
