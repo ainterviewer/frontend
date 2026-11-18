@@ -46,7 +46,7 @@
 	<!-- Section header row -->
 	<div
 		class="group/section flex items-center rounded-md transition-colors hover:bg-gray-100
-			{activeId === section.id ? 'bg-primary/10' : ''}"
+			has-[[aria-current=location]]:bg-primary/10"
 	>
 		<div
 			class="cursor-grab px-1.5 py-2 text-gray-300 opacity-0 transition-opacity group-hover/section:opacity-100"
@@ -57,10 +57,11 @@
 		</div>
 		<a
 			href="#{section.id}"
+			aria-current={activeId === section.id ? 'location' : undefined}
 			draggable="false"
 			class="min-w-0 flex-1 py-1.5 text-sm font-medium text-gray-600
 				{ownErrors.length ? '' : 'pr-2'}
-				{activeId === section.id ? 'text-primary' : ''}"
+				aria-[current=location]:text-primary"
 		>
 			Section {sectionIndex + 1}
 			{#if description}

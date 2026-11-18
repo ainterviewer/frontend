@@ -38,7 +38,7 @@
 
 <div
 	class="group/question flex items-center rounded-md transition-colors hover:bg-gray-100
-		{activeId === question.id ? 'bg-primary/10' : ''}
+		has-[[aria-current=location]]:bg-primary/10
 		{isDragging.current ? 'opacity-40' : ''}"
 	{@attach ref}
 >
@@ -51,10 +51,11 @@
 	</div>
 	<a
 		href="#{question.id}"
+		aria-current={activeId === question.id ? 'location' : undefined}
 		draggable="false"
 		class="block min-w-0 flex-1 truncate py-0.5 text-xs text-gray-500 transition-colors
 			{errors.length ? '' : 'pr-2'}
-			{activeId === question.id ? 'text-primary' : ''}"
+			aria-[current=location]:text-primary"
 		title={plainMarkup(mainQuestion) || `Question ${questionIndex + 1}`}
 	>
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->

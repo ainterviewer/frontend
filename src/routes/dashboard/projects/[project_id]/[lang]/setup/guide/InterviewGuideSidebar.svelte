@@ -11,17 +11,21 @@
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
+	import { MARK_HASH_ENTRY } from './outlinePosition';
 	import SidebarSortableSection from './SidebarSortableSection.svelte';
 
 	const guideStore = getGuideStore();
 
 	let {
 		activeId,
+		onjump,
 		localSections,
 		localQuestions,
 		errors
 	}: {
 		activeId: string;
+		/** An entry's link was followed. */
+		onjump?: (id: string) => void;
 		localSections: GuideSection[];
 		localQuestions: Record<string, GuideQuestion[]>;
 		/** Why the guide is invalid, if it is: marked on the lines they are in. */
@@ -58,6 +62,18 @@
 			window.removeEventListener('resize', measure);
 		};
 	});
+
+	// Tells the page which entry's link was followed. Listened for on the
+	// <nav> for every link in it, its sections' and questions' too; a link
+	// followed from the keyboard is clicked as well.
+	function followLinks(nav: HTMLElement) {
+		const followed = (event: MouseEvent) => {
+			const link = (event.target as Element).closest<HTMLAnchorElement>('a[href^="#"]');
+			if (link) onjump?.(decodeURIComponent(link.hash.slice(1)));
+		};
+		nav.addEventListener('click', followed);
+		return () => nav.removeEventListener('click', followed);
+	}
 
 	function arrayMove<T>(arr: T[], from: number, to: number): T[] {
 		const result = arr.slice();
@@ -127,6 +143,15 @@
 	}
 </script>
 
+{#snippet entry(id: string, label: string)}
+	<a
+		href="#{id}"
+		aria-current={activeId === id ? 'location' : undefined}
+		class="block rounded-md px-3 py-2 font-medium text-gray-600 transition-colors hover:bg-gray-100 aria-[current=location]:bg-primary/10 aria-[current=location]:text-primary"
+		>{label}</a
+	>
+{/snippet}
+
 <!-- Sidebar has its own DragDropProvider, independent of the main guide's context -->
 <DragDropProvider {sensors} onDragOver={handleDragOver}>
 	<aside
@@ -134,28 +159,12 @@
 		style="max-height: {maxHeight}"
 		class="sticky top-below-banner mb-5 hidden w-55 shrink-0 space-y-8 overflow-y-auto pr-4 {visibilityClass}"
 	>
-		<nav class="space-y-1">
-			<a
-				href="#framing"
-				class="block rounded-md px-3 py-2 font-medium text-gray-600 transition-colors hover:bg-gray-100 {activeId ===
-				'framing'
-					? 'bg-primary/10 text-primary'
-					: ''}">Framing</a
-			>
-			<a
-				href="#introduction"
-				class="block rounded-md px-3 py-2 font-medium text-gray-600 transition-colors hover:bg-gray-100 {activeId ===
-				'introduction'
-					? 'bg-primary/10 text-primary'
-					: ''}">Introduction</a
-			>
-			<a
-				href="#sections"
-				class="block rounded-md px-3 py-2 font-medium text-gray-600 transition-colors hover:bg-gray-100 {activeId ===
-				'sections'
-					? 'bg-primary/10 text-primary'
-					: ''}">Question sections</a
-			>
+		<!-- The current entry's link carries `aria-current`, which styles it, so
+		     the script below can mark it before hydration. -->
+		<nav class="space-y-1" {@attach followLinks}>
+			{@render entry('framing', 'Framing')}
+			{@render entry('introduction', 'Introduction')}
+			{@render entry('sections', 'Question sections')}
 
 			<div class="ml-3 space-y-1 border-l-2 border-gray-100 pl-4">
 				{#each localSections as section, i (section.id)}
@@ -169,20 +178,10 @@
 				{/each}
 			</div>
 
-			<a
-				href="#outro"
-				class="block rounded-md px-3 py-2 font-medium text-gray-600 transition-colors hover:bg-gray-100 {activeId ===
-				'outro'
-					? 'bg-primary/10 text-primary'
-					: ''}">Outro</a
-			>
-			<a
-				href="#timed_messages"
-				class="block rounded-md px-3 py-2 font-medium text-gray-600 transition-colors hover:bg-gray-100 {activeId ===
-				'timed_messages'
-					? 'bg-primary/10 text-primary'
-					: ''}">Timed Messages</a
-			>
+			{@render entry('outro', 'Outro')}
+			{@render entry('timed_messages', 'Timed Messages')}
 		</nav>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- a constant of ours -->
+		{@html `<script>${MARK_HASH_ENTRY}</` + 'script>'}
 	</aside>
 </DragDropProvider>

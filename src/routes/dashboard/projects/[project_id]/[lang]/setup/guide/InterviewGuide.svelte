@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
+	import { browser } from '$app/environment';
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
 	import type {
@@ -41,6 +42,7 @@
 	import GenerateModal from './GenerateModal.svelte';
 	import InsertHere from './InsertHere.svelte';
 	import InterviewGuideSidebar from './InterviewGuideSidebar.svelte';
+	import { outlineEntryAt, outlineEntryOf, outlineEntryOfHash } from './outlinePosition';
 	import SortableSection from './SortableSection.svelte';
 	import TextField from './TextField.svelte';
 
@@ -153,7 +155,53 @@
 	let showGenerateQuestionModal = $state(false);
 	let generatingQuestionSectionId = $state<string | null>(null);
 
-	let activeId = $state('');
+	// The outline's entries, in page order.
+	function outlineIds(): string[] {
+		return [
+			'framing',
+			'introduction',
+			'sections',
+			...guideStore.localSections.flatMap((s) => [
+				s.id,
+				...(guideStore.localQuestions[s.id] ?? []).map((q) => q.id)
+			]),
+			'outro',
+			'timed_messages'
+		];
+	}
+
+	// The outline's current entry. On a full page load the browser has
+	// scrolled to the entry the `#` names, which `MARK_HASH_ENTRY` has
+	// already marked; the server, which never sees the `#`, marks Framing.
+	let activeId = $state((browser && outlineEntryOfHash(location.hash, outlineIds())) || 'framing');
+	// An entry followed to (a link, the `#` a page loaded with) or worked in
+	// (a field in it focused) stays current until the guide is scrolled from
+	// where that left it: Outro may never reach the reading line, and the
+	// next entry may pass it with the one followed to.
+	let pinnedAt: number | null = null;
+	let jumping = false;
+
+	function scroller(): HTMLElement | null {
+		return document.querySelector('main');
+	}
+
+	function jumpedTo(id: string) {
+		activeId = id;
+		jumping = true;
+		// Once the jump has scrolled: two frames, as scroll events run first.
+		requestAnimationFrame(() =>
+			requestAnimationFrame(() => {
+				jumping = false;
+				pinnedAt = scroller()?.scrollTop ?? null;
+			})
+		);
+	}
+
+	onMount(() => {
+		if (outlineEntryOfHash(location.hash, outlineIds())) {
+			pinnedAt = scroller()?.scrollTop ?? null;
+		}
+	});
 
 	async function handleGenerateGuide(prompt: string): Promise<boolean> {
 		const { data, error } = await Projects.generateGuide({
@@ -316,47 +364,36 @@
 		return exportSetupJson(parts, platformVersion);
 	}
 
+	// Follows the scrolling, re-reading the entries whenever they change.
 	$effect(() => {
-		// Track dependencies so effect re-runs on changes
-		void guideStore.localSections;
-		void guideStore.localQuestions;
-
-		if (observer) observer.disconnect();
-
-		observer = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						activeId = entry.target.id;
-					}
-				});
-			},
-			{
-				rootMargin: '-10% 0px -80% 0px' // Trigger when element is near top
-			}
-		);
-
-		// Observe static elements
-		['framing', 'introduction', 'sections', 'outro', 'timed_messages'].forEach((id) => {
-			const el = document.getElementById(id);
-			if (el) observer.observe(el);
-		});
-
-		// Observe sections and questions
-		guideStore.localSections.forEach((s) => {
-			const el = document.getElementById(s.id);
-			if (el) observer.observe(el);
-			const questions = guideStore.localQuestions[s.id] || [];
-			questions.forEach((q) => {
-				const qEl = document.getElementById(q.id);
-				if (qEl) observer.observe(qEl);
-			});
-		});
-
-		return () => observer.disconnect();
+		const ids = outlineIds();
+		const main = scroller();
+		if (!main) return;
+		const update = () => {
+			if (jumping) return;
+			if (pinnedAt !== null && Math.abs(main.scrollTop - pinnedAt) < 4) return;
+			pinnedAt = null;
+			activeId = outlineEntryAt(main, ids) ?? 'framing';
+		};
+		const onHashChange = () => {
+			const id = outlineEntryOfHash(location.hash, ids);
+			if (id) jumpedTo(id);
+		};
+		const idSet = new Set(ids);
+		// Focusing may scroll the field into view: pinned once that is done.
+		const onFocusIn = (event: FocusEvent) => {
+			const id = outlineEntryOf(event.target as Element, idSet, main);
+			if (id) jumpedTo(id);
+		};
+		main.addEventListener('scroll', update, { passive: true });
+		main.addEventListener('focusin', onFocusIn);
+		window.addEventListener('hashchange', onHashChange);
+		return () => {
+			main.removeEventListener('scroll', update);
+			main.removeEventListener('focusin', onFocusIn);
+			window.removeEventListener('hashchange', onHashChange);
+		};
 	});
-
-	let observer: IntersectionObserver;
 </script>
 
 <svelte:window
@@ -420,6 +457,7 @@
 		<!-- Navigation Sidebar -->
 		<InterviewGuideSidebar
 			{activeId}
+			onjump={jumpedTo}
 			localSections={guideStore.localSections}
 			localQuestions={guideStore.localQuestions}
 			errors={session.errors}
