@@ -10,6 +10,7 @@
 {#key page.params.lang}
 	<Welcome
 		initialData={data.welcome}
+		initialErrors={data.docErrors}
 		availableLanguages={data.available_languages}
 		projectName={data.project_name}
 	/>

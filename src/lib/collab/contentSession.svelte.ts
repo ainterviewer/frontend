@@ -82,6 +82,8 @@ export class ContentSession {
 
 	#users = 0;
 	#savedAt: number | null = null;
+	/** The server has announced its state: `errors` is its from then on. */
+	#heard = false;
 	#linger: ReturnType<typeof setTimeout> | null = null;
 	/** Withdraw this tab's presence as it closes or reloads, rather than
 	 * leaving the others to see it until it times out (30 s). */
@@ -137,6 +139,13 @@ export class ContentSession {
 		provider.connect();
 	}
 
+	/** Why the part is invalid as the page was loaded with it, shown until the
+	 * server says (`getContentDoc`): a page opened on an invalid doc marks its
+	 * problems from the first paint rather than once synced. */
+	seedErrors(errors: ContentError[]) {
+		if (!this.#heard) this.errors = errors;
+	}
+
 	#readAwareness() {
 		const peers: Peer[] = [];
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- a local of this one read, never state
@@ -150,6 +159,7 @@ export class ContentSession {
 				}
 				this.revision = server.revision;
 				this.errors = server.errors ?? [];
+				this.#heard = true;
 				continue;
 			}
 			const user = state.user as PresenceUser | undefined;
@@ -207,20 +217,26 @@ const sessionKey = (projectId: string, part: LivePart) => `${projectId}/${part}`
  * On the server (a full page load renders there first) it is one of its own,
  * never connected and never shared between requests: the page renders what
  * it was loaded with, read-only, as it does before a sync.
+ *
+ * `errors` are the part's as the page was loaded (`getContentDoc`), kept
+ * until the server announces its own.
  */
 export function acquireContentSession(
 	projectId: string,
 	part: LivePart,
-	user: PresenceUser
+	user: PresenceUser,
+	errors?: ContentError[]
 ): ContentSession {
-	if (!browser) return new ContentSession(projectId, part, user);
-	const key = sessionKey(projectId, part);
-	let session = sessions.get(key);
-	if (!session) {
-		session = new ContentSession(projectId, part, user);
-		sessions.set(key, session);
+	let session: ContentSession;
+	if (!browser) session = new ContentSession(projectId, part, user);
+	else {
+		const key = sessionKey(projectId, part);
+		const known = sessions.get(key);
+		session = known ?? new ContentSession(projectId, part, user);
+		if (!known) sessions.set(key, session);
+		session.acquire();
 	}
-	session.acquire();
+	if (errors) session.seedErrors(errors);
 	return session;
 }
 

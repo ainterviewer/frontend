@@ -4,7 +4,12 @@
 
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { ExternalParam, LocalizedInterviewGuide, ProjectLanguage } from '$lib/api/types.gen';
+	import type {
+		ContentError,
+		ExternalParam,
+		LocalizedInterviewGuide,
+		ProjectLanguage
+	} from '$lib/api/types.gen';
 	import { bindGuide } from '$lib/collab/bindGuide.svelte';
 	import CollabPill from '$lib/collab/CollabPill.svelte';
 	import { acquireContentSession, presenceUser } from '$lib/collab/contentSession.svelte';
@@ -20,8 +25,8 @@
 	import { toastApiError } from '$lib/utils/toast';
 
 	import {
-		draftConsent,
-		draftWelcome,
+		editingConsent,
+		editingWelcome,
 		exportSetupJson,
 		exportSetupPdf,
 		type SetupParts,
@@ -44,9 +49,12 @@
 		lang,
 		projectName = '',
 		availableLanguages = [],
-		externalParams = []
+		externalParams = [],
+		initialErrors
 	}: {
 		guide: LocalizedInterviewGuide | null;
+		/** Why the guide is invalid as loaded, until the server says. */
+		initialErrors?: ContentError[];
 		lang: string;
 		projectName?: string;
 		availableLanguages?: ProjectLanguage[];
@@ -86,7 +94,13 @@
 		page.data.user?.scope === 'admin' ||
 		page.data.permissions?.role === 'editor' ||
 		page.data.permissions?.role === 'admin';
-	const session = acquireContentSession(projectId, 'guide', presenceUser(page.data.user));
+	const session = acquireContentSession(
+		projectId,
+		'guide',
+		presenceUser(page.data.user),
+		// svelte-ignore state_referenced_locally
+		initialErrors
+	);
 	onDestroy(() => session.release());
 	const unbind = bindGuide({
 		session,
@@ -286,8 +300,8 @@
 	// The guide from this page, as it stands here, the rest from the server.
 	const parts: SetupParts = {
 		guide: rendered,
-		consent: () => draftConsent(projectId, lang),
-		welcome: () => draftWelcome(projectId, lang)
+		consent: () => editingConsent(projectId, guideStore.languages),
+		welcome: () => editingWelcome(projectId, guideStore.languages)
 	};
 
 	async function handleExportPdf(toggles: PdfToggles) {

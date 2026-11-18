@@ -4,7 +4,7 @@
 
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
-	import type { LocalizedWelcome, ProjectLanguage } from '$lib/api/types.gen';
+	import type { ContentError, LocalizedWelcome, ProjectLanguage } from '$lib/api/types.gen';
 	import { bindFlat } from '$lib/collab/bindFlat.svelte';
 	import CollabPill from '$lib/collab/CollabPill.svelte';
 	import { acquireContentSession, presenceUser } from '$lib/collab/contentSession.svelte';
@@ -15,10 +15,10 @@
 	import { toastApiError } from '$lib/utils/toast';
 
 	import {
-		draftConsent,
+		editingConsent,
+		editingGuide,
 		exportSetupJson,
 		exportSetupPdf,
-		savedGuide,
 		type SetupParts,
 		syncedForPublish,
 		translateMissing
@@ -32,12 +32,15 @@
 		initialData?: LocalizedWelcome | null;
 		availableLanguages?: ProjectLanguage[];
 		projectName?: string;
+		/** Why the part is invalid as loaded, until the server says. */
+		initialErrors?: ContentError[];
 	}
 
 	let {
 		initialData = null,
 		availableLanguages: initialAvailableLanguages = [],
-		projectName = 'Interview Guide'
+		projectName = 'Interview Guide',
+		initialErrors
 	}: Props = $props();
 
 	// The project a page is for never changes under it.
@@ -80,7 +83,13 @@
 		page.data.user?.scope === 'admin' ||
 		page.data.permissions?.role === 'editor' ||
 		page.data.permissions?.role === 'admin';
-	const session = acquireContentSession(projectId, 'welcome', presenceUser(page.data.user));
+	const session = acquireContentSession(
+		projectId,
+		'welcome',
+		presenceUser(page.data.user),
+		// svelte-ignore state_referenced_locally
+		initialErrors
+	);
 	onDestroy(() => session.release());
 	const unbind = bindFlat({
 		session,
@@ -157,8 +166,8 @@
 
 	// The welcome from this page, the rest from the server.
 	const parts: SetupParts = {
-		guide: () => savedGuide(projectId, languages),
-		consent: () => draftConsent(projectId, language),
+		guide: () => editingGuide(projectId, languages),
+		consent: () => editingConsent(projectId, languages),
 		welcome: () =>
 			title || text || welcome.email || welcome.video_file_name
 				? { title, text, email: welcome.email, video_file_name: welcome.video_file_name ?? null }

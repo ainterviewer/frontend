@@ -2,7 +2,7 @@
 	import { onDestroy } from 'svelte';
 
 	import { page } from '$app/state';
-	import type { LocalizedConsent, ProjectLanguage } from '$lib/api/types.gen';
+	import type { ContentError, LocalizedConsent, ProjectLanguage } from '$lib/api/types.gen';
 	import { bindFlat } from '$lib/collab/bindFlat.svelte';
 	import CollabPill from '$lib/collab/CollabPill.svelte';
 	import { acquireContentSession, presenceUser } from '$lib/collab/contentSession.svelte';
@@ -12,10 +12,10 @@
 	import { isUntranslated, pick } from '$lib/guide/localized';
 
 	import {
-		draftWelcome,
+		editingGuide,
+		editingWelcome,
 		exportSetupJson,
 		exportSetupPdf,
-		savedGuide,
 		type SetupParts,
 		syncedForPublish,
 		translateMissing
@@ -29,12 +29,15 @@
 		initialData?: LocalizedConsent | null;
 		availableLanguages?: ProjectLanguage[];
 		projectName?: string;
+		/** Why the part is invalid as loaded, until the server says. */
+		initialErrors?: ContentError[];
 	}
 
 	let {
 		initialData = null,
 		availableLanguages: initialAvailableLanguages = [],
-		projectName = 'Interview Guide'
+		projectName = 'Interview Guide',
+		initialErrors
 	}: Props = $props();
 
 	// The project a page is for never changes under it.
@@ -58,7 +61,13 @@
 		page.data.user?.scope === 'admin' ||
 		page.data.permissions?.role === 'editor' ||
 		page.data.permissions?.role === 'admin';
-	const session = acquireContentSession(projectId, 'consent', presenceUser(page.data.user));
+	const session = acquireContentSession(
+		projectId,
+		'consent',
+		presenceUser(page.data.user),
+		// svelte-ignore state_referenced_locally
+		initialErrors
+	);
 	onDestroy(() => session.release());
 	const unbind = bindFlat({
 		session,
@@ -82,9 +91,9 @@
 
 	// The consent from this page, the rest from the server.
 	const parts: SetupParts = {
-		guide: () => savedGuide(projectId, languages),
+		guide: () => editingGuide(projectId, languages),
 		consent: () => (title || text ? { title, text } : null),
-		welcome: () => draftWelcome(projectId, language)
+		welcome: () => editingWelcome(projectId, languages)
 	};
 
 	let showExportPdfModal = $state(false);

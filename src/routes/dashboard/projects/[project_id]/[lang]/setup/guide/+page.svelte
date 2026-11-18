@@ -264,6 +264,7 @@
 	>
 		<InterviewGuide
 			guide={data.guide}
+			initialErrors={data.docErrors}
 			lang={data.lang}
 			projectName={data.project_name}
 			availableLanguages={data.available_languages}

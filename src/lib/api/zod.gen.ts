@@ -552,6 +552,17 @@ export const zContentError = z.object({
 });
 
 /**
+ * ContentDocPublic
+ *
+ * What editors see of a live part (`ContentRooms.editing`): the doc's
+ * data, which is the part's JSON, valid or not, and why it is not valid.
+ */
+export const zContentDocPublic = z.object({
+    data: z.record(z.string(), z.unknown()),
+    errors: z.array(zContentError).optional()
+});
+
+/**
  * ContentPart
  *
  * A part of a project's content that is edited, and revisioned, on its
@@ -5829,6 +5840,24 @@ export const zUpdateGuideQuery = z.object({
  * Successful Response
  */
 export const zUpdateGuideResponse = zLocalizedInterviewGuide;
+
+export const zGetContentDocPath = z.object({
+    project_id: z.string().nullable(),
+    part: z.enum([
+        'guide',
+        'consent',
+        'welcome'
+    ])
+});
+
+export const zGetContentDocQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetContentDocResponse = zContentDocPublic;
 
 export const zGetGuidePath = z.object({
     project_id: z.string().nullable(),

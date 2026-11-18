@@ -10,6 +10,7 @@
 {#key page.params.lang}
 	<Consent
 		initialData={data.consent}
+		initialErrors={data.docErrors}
 		availableLanguages={data.available_languages}
 		projectName={data.project_name}
 	/>

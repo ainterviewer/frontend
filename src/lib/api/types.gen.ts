@@ -1242,6 +1242,25 @@ export type Consent = {
 };
 
 /**
+ * ContentDocPublic
+ *
+ * What editors see of a live part (`ContentRooms.editing`): the doc's
+ * data, which is the part's JSON, valid or not, and why it is not valid.
+ */
+export type ContentDocPublic = {
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    };
+    /**
+     * Errors
+     */
+    errors?: Array<ContentError>;
+};
+
+/**
  * ContentDraftPublic
  *
  * The draft's content, for comparing a version against it.
@@ -12727,6 +12746,53 @@ export type UpdateGuideResponses = {
 };
 
 export type UpdateGuideResponse = UpdateGuideResponses[keyof UpdateGuideResponses];
+
+export type GetContentDocData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Part
+         */
+        part: 'guide' | 'consent' | 'welcome';
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/content/{part}/doc';
+};
+
+export type GetContentDocErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetContentDocError = GetContentDocErrors[keyof GetContentDocErrors];
+
+export type GetContentDocResponses = {
+    /**
+     * Successful Response
+     */
+    200: ContentDocPublic;
+};
+
+export type GetContentDocResponse = GetContentDocResponses[keyof GetContentDocResponses];
 
 export type GetGuideData = {
     body?: never;

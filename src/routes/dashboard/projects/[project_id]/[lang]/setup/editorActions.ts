@@ -2,7 +2,9 @@ import { toast } from 'svelte-sonner';
 
 import { Projects } from '$lib/api';
 import type { Consent, Welcome } from '$lib/api/types.gen';
+import { getContentDoc } from '$lib/collab/contentDoc';
 import type { ContentSession } from '$lib/collab/contentSession.svelte';
+import { pick } from '$lib/guide/localized';
 import { renderSaved } from '$lib/guide/render';
 import { toastApiError } from '$lib/utils/toast';
 
@@ -10,7 +12,8 @@ import { downloadUnifiedSetupJson } from './exportJson';
 import { downloadGuidePdf, type PdfToggles } from './exportPdf';
 
 // What the three setup editors -- guide, consent, welcome -- do alike. Each
-// edits one part live and reads the other two from the server for an export.
+// edits one part live and reads the other two from the server for an export:
+// their shared docs, which are what editors see, not their last valid saves.
 
 /** The guide as an export renders it. */
 export type RenderedGuide = ReturnType<typeof renderSaved>;
@@ -26,29 +29,43 @@ export interface SetupParts {
 	welcome: () => Welcome | null | Promise<Welcome | null>;
 }
 
-/** The saved guide, rendered for `languages`. */
-export async function savedGuide(projectId: string, languages: string[]): Promise<RenderedGuide> {
-	const { data, error } = await Projects.getLocalizedGuide({ path: { project_id: projectId } });
+/** The guide as editors see it, rendered for `languages`. */
+export async function editingGuide(projectId: string, languages: string[]): Promise<RenderedGuide> {
+	const { data, error } = await getContentDoc(projectId, 'guide');
 	if (error || !data) throw error ?? new Error('No interview guide returned');
 	return renderSaved(data, languages);
 }
 
-/** The draft's consent in `language`, like the part being exported. */
-export async function draftConsent(projectId: string, language: string): Promise<Consent | null> {
-	const { data } = await Projects.getConsent({
-		path: { project_id: projectId, language },
-		query: { draft: true }
-	});
-	return data ?? null;
+/**
+ * The consent as editors see it, in the first of `languages` with text, like
+ * the part being exported; null when there is none.
+ */
+export async function editingConsent(
+	projectId: string,
+	languages: string[]
+): Promise<Consent | null> {
+	const { data } = await getContentDoc(projectId, 'consent');
+	const title = pick(data?.title, languages);
+	const text = pick(data?.text, languages);
+	return title || text ? { title, text } : null;
 }
 
-/** The draft's welcome in `language`, like the part being exported. */
-export async function draftWelcome(projectId: string, language: string): Promise<Welcome | null> {
-	const { data } = await Projects.getWelcome({
-		path: { project_id: projectId, language },
-		query: { draft: true }
-	});
-	return data ?? null;
+/**
+ * The welcome as editors see it, in the first of `languages` with text, like
+ * the part being exported; null when there is none.
+ */
+export async function editingWelcome(
+	projectId: string,
+	languages: string[]
+): Promise<Welcome | null> {
+	const { data } = await getContentDoc(projectId, 'welcome');
+	const title = pick(data?.title, languages);
+	const text = pick(data?.text, languages);
+	const email = data?.email ?? '';
+	const video_file_name = data?.video_file_name ?? null;
+	return title || text || email || video_file_name
+		? { title, text, email, video_file_name, with_id: data?.with_id }
+		: null;
 }
 
 interface ExportMeta {

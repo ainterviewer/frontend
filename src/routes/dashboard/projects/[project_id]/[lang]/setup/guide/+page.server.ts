@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 
 import { Projects } from '$lib/api';
+import { getContentDoc } from '$lib/collab/contentDoc';
 import { loadContentStatus } from '$lib/content/status';
 
 import type { PageServerLoad } from './$types';
@@ -10,10 +11,9 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 
 	const contentStatus = loadContentStatus(project_id, fetch);
 	const [response, projectRes] = await Promise.all([
-		Projects.getLocalizedGuide({
-			path: { project_id },
-			fetch
-		}),
+		// The shared doc, not the saved guide: that is the last valid doc, and
+		// the page would flash it before the doc synced over it.
+		getContentDoc(project_id, 'guide', fetch),
 		Projects.getProject({
 			path: { project_id },
 			fetch
@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 
 	// Never fall back to an empty guide: the editor would open blank, and a save
 	// would write that blank guide over the real one.
-	if (response.error) {
+	if (response.error || !response.data) {
 		console.error('Failed to load guide', response.error);
 		throw error(500, 'Failed to load the interview guide');
 	}
@@ -33,6 +33,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 
 	return {
 		guide: response.data,
+		docErrors: response.errors,
 		contentStatus: await contentStatus,
 		lang,
 		project_id,
