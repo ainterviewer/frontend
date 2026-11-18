@@ -29,12 +29,8 @@ dev:
 build-error-page:
     bun run scripts/build-error-page.ts
 
-release VERSION:
-    npm version {{ VERSION }} --no-git-tag-version
-    just publish
-
 # Bump version and publish (e.g., just bump patch)
-bump TYPE: && publish
+bump TYPE: confirm-clean && publish
     npm version {{ TYPE }} --no-git-tag-version
 
 [doc("Audit every survey item's layout on a computer, a narrow window, a phone and
@@ -96,3 +92,14 @@ publish-docker:
     echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GITHUB_USERNAME}" --password-stdin
 
     docker buildx build "${TAGS[@]}" --push .
+
+# Prompt before releasing over uncommitted (or untracked) changes.
+[private]
+confirm-clean:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -n "$(git status --porcelain)" ]; then
+        git status --short
+        read -rp "There are uncommitted changes. Continue? [y/N] " answer
+        [[ "$answer" =~ ^[Yy]$ ]] || { echo "Aborted." >&2; exit 1; }
+    fi
