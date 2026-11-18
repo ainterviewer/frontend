@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { ContentError } from '$lib/api';
+
 	import type { ContentSession, Peer } from './contentSession.svelte';
 	import PresenceAvatars from './PresenceAvatars.svelte';
 	import SyncState from './SyncState.svelte';
@@ -9,7 +11,16 @@
 	 * clear of the pane's scrollbar, so they stay put however far the page
 	 * scrolls. The same on every page edited live.
 	 */
-	let { session, invalidLabel }: { session: ContentSession; invalidLabel?: string } = $props();
+	let {
+		session,
+		invalidLabel,
+		errors
+	}: {
+		session: ContentSession;
+		invalidLabel?: string;
+		/** The session's errors, unless the page knows them sooner. */
+		errors?: ContentError[];
+	} = $props();
 
 	/**
 	 * To the block someone is in, which their ring already marks. Centred,
@@ -38,6 +49,6 @@
 	<div
 		class="flex h-9 items-center rounded-full border border-gray-200 bg-white/90 px-4 py-1 shadow-md backdrop-blur"
 	>
-		<SyncState {session} {invalidLabel} />
+		<SyncState {session} {invalidLabel} {errors} />
 	</div>
 </div>

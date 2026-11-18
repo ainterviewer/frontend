@@ -1880,7 +1880,7 @@ export const zLocalizedTimedMessage = z.object({
 export const zLocalizedWelcome = z.object({
     title: zLocalizedText.optional(),
     text: zLocalizedText.optional(),
-    email: z.email(),
+    email: z.email().nullish(),
     video_file_name: z.string().nullish(),
     with_id: z.boolean().optional().default(true)
 });
@@ -4126,7 +4126,7 @@ export const zContentVersionPublic = z.object({
 export const zWelcome = z.object({
     title: z.string(),
     text: z.string(),
-    email: z.email(),
+    email: z.email().nullish(),
     video_file_name: z.string().nullish(),
     with_id: z.boolean().optional().default(true)
 });

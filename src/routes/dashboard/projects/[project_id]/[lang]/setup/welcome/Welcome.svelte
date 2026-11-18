@@ -64,7 +64,7 @@
 	let welcome = $state<{
 		title: Record<string, string>;
 		text: Record<string, string>;
-		email: string;
+		email: string | null;
 		with_id: boolean;
 		video_file_name: string | null;
 	}>({ ...DEFAULTS, ...structuredClone(initialData ?? {}) });
@@ -100,9 +100,45 @@
 	});
 	onDestroy(unbind);
 	let editable = $derived(canEdit && session.loaded && session.status !== 'refused');
-	// The only thing the page can leave invalid: the server refuses a welcome
-	// screen without a valid contact email (`_validate_welcome`).
-	let emailInvalid = $derived(session.errors.length > 0);
+	// The one thing the page itself can leave invalid: the server refuses a
+	// welcome screen whose contact email is not one, or is missing while the
+	// contact box shows (`_validate_welcome`). It says so only once it next
+	// saves, seconds later; whether one is missing the page knows at once, so
+	// it says that itself and keeps the server's word for whether one typed
+	// is an address. Any other error is the server's alone, and shown as is.
+	const EMAIL_MISSING: ContentError = {
+		message: 'Enter a contact email address.',
+		fix: 'Or stop showing the contact box.',
+		field: 'email'
+	};
+	let hasContent = $derived(
+		[welcome.title, welcome.text].some((texts) => Object.values(texts ?? {}).some(Boolean)) ||
+			!!welcome.video_file_name
+	);
+	// Nothing written is no welcome screen, which needs no email either: the
+	// field is marked required while the box shows, but missing only then.
+	let emailRequired = $derived(welcome.with_id && hasContent);
+	// While the box is hidden the server neither saves nor checks the email:
+	// none of its email errors can stand then, even one it has not taken back
+	// yet.
+	let emailErrors = $derived(
+		!welcome.with_id
+			? []
+			: welcome.email
+				? session.errors.filter((e) => e.field === 'email' && e.message !== EMAIL_MISSING.message)
+				: emailRequired
+					? [EMAIL_MISSING]
+					: []
+	);
+	let otherErrors = $derived(session.errors.filter((e) => e.field !== 'email'));
+	let errors = $derived([...emailErrors, ...otherErrors]);
+	let emailInvalid = $derived(emailErrors.length > 0);
+	// Only the contact box shows the email, so the field is off while it is
+	// hidden. What it holds is kept for when the box is shown again.
+	let emailOff = $derived(!welcome.with_id);
+	let emailError = $derived(
+		emailErrors.map((e) => [e.message, e.fix].filter(Boolean).join(' ')).join(' ')
+	);
 	let defaultLang = $derived(availableLanguages.find((l) => l.is_default)?.code ?? language);
 	let languages = $derived([language, defaultLang]);
 
@@ -173,7 +209,7 @@
 				? {
 						title,
 						text,
-						email: welcome.email,
+						email: welcome.with_id ? welcome.email : null,
 						video_file_name: welcome.video_file_name ?? null,
 						with_id: welcome.with_id
 					}
@@ -224,7 +260,11 @@
 />
 
 <div class="flex min-h-full flex-col">
-	<CollabPill {session} invalidLabel="Invalid: enter a valid contact email" />
+	<CollabPill
+		{session}
+		{errors}
+		invalidLabel={otherErrors.length ? undefined : 'Invalid: fix the contact email'}
+	/>
 	<div class="mb-6">
 		<h1 class="page-title">Welcome</h1>
 		<p class="mt-2 text-gray-600">
@@ -343,12 +383,17 @@
 					<div>
 						<label
 							for="welcome-email"
-							class="required mb-1.5 block text-sm font-medium text-gray-700"
+							class={[
+								'mb-1.5 block text-sm font-medium text-gray-700',
+								welcome.with_id && 'required',
+								emailOff && 'text-gray-400'
+							]}
 						>
 							Contact Email
 						</label>
 						<input
-							required
+							required={welcome.with_id}
+							disabled={emailOff}
 							autocomplete="email"
 							id="welcome-email"
 							type="email"
@@ -357,17 +402,20 @@
 							aria-invalid={emailInvalid}
 							aria-describedby={emailInvalid ? 'welcome-email-error' : undefined}
 							class={[
-								'block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
+								'block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400',
 								emailInvalid && 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500'
 							]}
 						/>
 						{#if emailInvalid}
 							<p id="welcome-email-error" class="mt-1.5 text-xs text-red-600">
-								Enter a valid email address. Until then, the interview can't be tried or published.
+								{emailError} Until then, the interview can't be tried or published.
 							</p>
 						{/if}
 						<p class="mt-1.5 text-xs text-gray-500">
 							Participants can contact this email to withdraw consent or modify their data.
+							{#if !welcome.with_id}
+								Not used while the contact box is hidden.
+							{/if}
 						</p>
 					</div>
 
@@ -441,7 +489,7 @@
 		<SetupActionBar
 			{projectId}
 			part="welcome"
-			errors={session.errors}
+			{errors}
 			lang={language}
 			{availableLanguages}
 			{exporting}

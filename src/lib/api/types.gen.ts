@@ -4503,7 +4503,7 @@ export type LocalizedWelcome = {
     /**
      * Email
      */
-    email: string;
+    email?: string | null;
     /**
      * Video File Name
      */
@@ -7450,7 +7450,7 @@ export type Welcome = {
     /**
      * Email
      */
-    email: string;
+    email?: string | null;
     /**
      * Video File Name
      */

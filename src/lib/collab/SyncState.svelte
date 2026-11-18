@@ -21,13 +21,18 @@
 	 */
 	let {
 		session,
-		invalidLabel = 'Invalid: fix the errors'
+		invalidLabel = 'Invalid: fix the errors',
+		errors: pageErrors
 	}: {
 		session: ContentSession;
+		/** The session's errors, unless the page knows them sooner. */
+		errors?: ContentError[];
 		/** What to say while what editors wrote is invalid; the reasons are
 		 * in the panel it opens. */
 		invalidLabel?: string;
 	} = $props();
+
+	let errors = $derived(pageErrors ?? session.errors);
 
 	type Quiet = 'saving' | 'saved';
 
@@ -63,11 +68,7 @@
 	}
 
 	let quiet = $derived<Quiet | null>(
-		session.status !== 'synced' || session.errors.length > 0
-			? null
-			: session.unsaved
-				? 'saving'
-				: 'saved'
+		session.status !== 'synced' || errors.length > 0 ? null : session.unsaved ? 'saving' : 'saved'
 	);
 </script>
 
@@ -142,9 +143,9 @@
 				<p class="text-gray-600">
 					Your changes are kept, but the interview can't be tried or published until this is fixed.
 				</p>
-				{#if session.errors.length > 0}
+				{#if errors.length > 0}
 					<ul class="mt-2 space-y-1 border-t border-gray-100 pt-2">
-						{#each session.errors as error, i (i)}
+						{#each errors as error, i (i)}
 							<li>
 								{#if target(error)}
 									<button

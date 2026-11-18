@@ -61,10 +61,13 @@ export async function editingWelcome(
 	const { data } = await getContentDoc(projectId, 'welcome');
 	const title = pick(data?.title, languages);
 	const text = pick(data?.text, languages);
-	const email = data?.email ?? '';
+	const with_id = data?.with_id ?? true;
+	// Only the contact box shows the email: while it is hidden, the doc keeps
+	// it for later, but it is not part of the welcome (`_validate_welcome`).
+	const email = with_id ? (data?.email ?? null) : null;
 	const video_file_name = data?.video_file_name ?? null;
 	return title || text || email || video_file_name
-		? { title, text, email, video_file_name, with_id: data?.with_id }
+		? { title, text, email, video_file_name, with_id }
 		: null;
 }
 
