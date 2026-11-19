@@ -77,6 +77,11 @@
 	[role='button']:not(:disabled) {
 		cursor: pointer;
 	}
+	/* Every textarea scrolls inside a light field; a class can still
+	   override it, utilities winning over the base layer. */
+	textarea {
+		@apply scrollbar-light;
+	}
 }
 
 /* Icons  */
