@@ -158,7 +158,7 @@
 	<aside
 		bind:this={asideEl}
 		style="max-height: {maxHeight}"
-		class="sticky top-below-banner mb-5 hidden w-55 shrink-0 space-y-8 overflow-y-auto pr-4 {visibilityClass}"
+		class="sticky top-below-banner mb-5 hidden w-55 shrink-0 scrollbar-light space-y-8 overflow-y-auto pr-4 {visibilityClass}"
 	>
 		<!-- The current entry's link carries `aria-current`, which styles it, so
 		     the script below can mark it before hydration. -->

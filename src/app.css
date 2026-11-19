@@ -44,13 +44,19 @@
    the form it actually holds. */
 @custom-variant roomy (@media (min-width: 720px) and (min-height: 720px));
 
-/* A thin, muted scrollbar for scroll areas on a dark background. The page's
-   `color-scheme: light` (below) otherwise gives them the light native one,
-   which Chromium on Linux and Windows draws ~15px wide with arrow buttons.
-   The standard properties drop the arrows in Chromium 121+ and Firefox. */
+/* Thin, muted scrollbars for inner scroll areas, on a dark or a light
+   background. Otherwise they get the native one, which Chromium on Linux and
+   Windows draws ~15px wide with arrow buttons (light, too, under the page's
+   `color-scheme: light` below). The standard properties drop the arrows in
+   Chromium 121+ and Firefox. */
 @utility scrollbar-dark {
 	scrollbar-width: thin;
 	scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+}
+
+@utility scrollbar-light {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-gray-300) transparent;
 }
 
 /* Base  */
