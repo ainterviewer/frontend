@@ -416,7 +416,7 @@
 						{/if}
 					</div>
 					{#if surveyItem.top_n != null && surveyItem.top_n > surveyItem.options.length}
-						<p class="text-xs text-amber-700">
+						<p class="text-xs text-amber-600">
 							There are only {surveyItem.options.length} options, so all of them are ranked.
 						</p>
 					{/if}

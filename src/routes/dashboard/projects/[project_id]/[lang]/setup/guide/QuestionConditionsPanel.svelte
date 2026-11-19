@@ -253,7 +253,7 @@
 									</label>
 
 									{#if targetValid && referencedQuestion?.id !== question.id && mayGoUnasked(block.question_context, allSections, allQuestions)}
-										<p class="flex items-start gap-1.5 text-xs text-amber-700">
+										<p class="flex items-start gap-1.5 text-xs text-amber-600">
 											<i class="fa-solid fa-circle-info mt-0.5"></i>
 											<span>
 												That question has conditions of its own, so some respondents are never asked

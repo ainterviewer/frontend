@@ -57,7 +57,7 @@
 				'fas mt-0.5',
 				tone === 'error'
 					? 'fa-triangle-exclamation text-red-500'
-					: 'fa-circle-exclamation text-amber-500'
+					: 'fa-circle-exclamation text-amber-600'
 			]}
 			aria-hidden="true"
 		></i>

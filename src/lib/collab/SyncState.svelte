@@ -104,7 +104,7 @@
 		{#snippet children({ props })}
 			<span
 				{...props}
-				class="flex h-4 cursor-default items-center gap-1.5 text-xs leading-none text-amber-700"
+				class="flex h-4 cursor-default items-center gap-1.5 text-xs leading-none text-amber-600"
 			>
 				<i class="fas fa-plug-circle-xmark w-3 text-center"></i>
 				Offline, reconnecting…
@@ -147,7 +147,7 @@
 		<Popover.Trigger
 			class={[
 				'flex h-4 cursor-pointer items-center gap-1.5 text-xs leading-none',
-				onlySkipped ? 'text-amber-700 hover:text-amber-800' : 'text-red-600 hover:text-red-700'
+				onlySkipped ? 'text-amber-600 hover:text-amber-700' : 'text-red-600 hover:text-red-700'
 			]}
 		>
 			<i
@@ -217,7 +217,7 @@
 {/snippet}
 
 {#snippet problem(error: ContentError)}
-	<i class={['fas fa-circle-exclamation mt-0.5', error.skipped ? 'text-amber-500' : 'text-red-500']}
+	<i class={['fas fa-circle-exclamation mt-0.5', error.skipped ? 'text-amber-600' : 'text-red-500']}
 	></i>
 	<span>
 		<span class="block font-medium text-gray-900">{error.message}</span>

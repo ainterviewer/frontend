@@ -21,7 +21,7 @@
 		type="button"
 		class={[
 			'mr-1 shrink-0 cursor-pointer px-1 text-xs',
-			onlySkipped ? 'text-amber-500 hover:text-amber-700' : 'text-red-500 hover:text-red-700'
+			onlySkipped ? 'text-amber-600 hover:text-amber-700' : 'text-red-500 hover:text-red-700'
 		]}
 		{title}
 		aria-label={title}
