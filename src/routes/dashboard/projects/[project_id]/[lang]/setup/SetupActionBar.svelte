@@ -48,9 +48,19 @@
 
 <svelte:window onclick={closeMenusOnWindowClick} />
 
-{#snippet refused(reason: string)}
+<!-- A red triangle: the action is refused. An amber circle: it goes ahead
+     without the skipped parts, marked as the status pill and sidebar mark them. -->
+{#snippet hoverReason(reason: string, tone: 'error' | 'warning')}
 	<span class="flex gap-2">
-		<i class="fas fa-triangle-exclamation mt-0.5 text-red-500" aria-hidden="true"></i>
+		<i
+			class={[
+				'fas mt-0.5',
+				tone === 'error'
+					? 'fa-triangle-exclamation text-red-500'
+					: 'fa-circle-exclamation text-amber-500'
+			]}
+			aria-hidden="true"
+		></i>
 		<span>{reason}</span>
 	</span>
 {/snippet}
@@ -120,13 +130,16 @@
 			{#snippet beside(invalid, skipped)}
 				{@const tryBlocked = fixFirst(invalid, WOULD.try)}
 				{@const skips = testSkips(skipped)}
+				{#snippet skipsWarning()}
+					{@render hoverReason(skips ?? '', 'warning')}
+				{/snippet}
 				<ShareTestLink {projectId} dataTour="share-test" blocked={fixFirst(invalid, WOULD.share)} />
 				{#if tryBlocked}
 					<!-- Not a link while a part is invalid: a test would run it as it
 					     was before its problems. -->
 					<HoverInfo asChild>
 						{#snippet content()}
-							{@render refused(tryBlocked)}
+							{@render hoverReason(tryBlocked, 'error')}
 						{/snippet}
 						{#snippet children({ props })}
 							<span
@@ -146,7 +159,7 @@
 				{:else}
 					<!-- Questions with no text yet are left out of the draft: the test
 					     runs without them, and says so on hover. -->
-					<HoverInfo asChild text={skips}>
+					<HoverInfo asChild content={skips ? skipsWarning : undefined}>
 						{#snippet children({ props })}
 							<a
 								{...props}
