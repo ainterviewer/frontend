@@ -58,6 +58,12 @@ function uncoverFromActionBar(element: Element | undefined) {
 	}
 }
 
+const PROBING_PANEL_TEXT =
+	'After the main question is answered, the AInterviewer may ask follow-up probes. Open this panel to cap them by count, by time, or both, and to suggest probes it can draw on. Probing stops at whichever limit is reached first.';
+
+const PROBING_OFF_TEXT =
+	'After the main question is answered, the AInterviewer may ask follow-up probes. This question has probing off: turn it on with <u>Add Probing</u> in its settings, then cap the probes by count, by time, or both, and suggest probes it can draw on.';
+
 /**
  * The interview guide's guided tour: the whole tour on a first visit, then
  * only the steps added since; nothing if the user opted out of all tours.
@@ -90,7 +96,7 @@ export function startGuideTour() {
 				popover: {
 					title: 'Bulk Settings',
 					description:
-						'Change a setting once and apply it to every question at the same time. Enable just the probing limits or behavior flags you want to update — everything you leave off keeps its per-question value.'
+						'Change a setting once and apply it to every question at the same time. Enable just the probing settings or behavior flags you want to update — everything you leave off keeps its per-question value.'
 				}
 			},
 			{
@@ -139,6 +145,27 @@ export function startGuideTour() {
 				}
 			},
 			{
+				id: 'probing',
+				// The first question's Probing panel, or, if probing is off there and
+				// the card has none, its Settings, where "Add Probing" turns it on.
+				element: () =>
+					(document.querySelector('[data-tour="probing"]') ??
+						document.querySelector('[data-tour="question-settings"]')) as Element,
+				whatsNew: 'probing now has a panel of its own on the question.',
+				popover: {
+					title: 'Probing',
+					description: `<span data-probing-text>${PROBING_PANEL_TEXT}</span>`,
+					onPopoverRender: (popover) => {
+						if (!document.querySelector('[data-tour="probing"]')) {
+							const text = popover.description.querySelector('[data-probing-text]');
+							if (text) text.innerHTML = PROBING_OFF_TEXT;
+						}
+						// A step's own hook replaces the tour-wide one.
+						addSkipOnboardingButton(popover, tour);
+					}
+				}
+			},
+			{
 				id: 'try-from-here',
 				element: '[data-tour="try-from-here"]',
 				popover: {
@@ -153,7 +180,7 @@ export function startGuideTour() {
 				popover: {
 					title: 'Question Settings',
 					description:
-						"Open a question's settings to add follow-up probes, attach media or survey items, set probing limits, and tweak its behavior.",
+						"Open a question's settings to attach media or survey items, add conditions, turn on probing, and tweak its behavior.",
 					onNextClick: () => {
 						// The settings menu element only renders once the settings panel is
 						// open, so open it before advancing to the next step.
@@ -183,25 +210,7 @@ export function startGuideTour() {
 				popover: {
 					title: 'Add Extras',
 					description:
-						'Enrich a question by attaching an image, adding a survey item for structured answers, or setting a condition that controls when the question is shown.'
-				}
-			},
-			{
-				id: 'probes',
-				element: '[data-tour="probes"]',
-				popover: {
-					title: 'Follow-up Probes',
-					description:
-						'Add follow-up questions the AInterviewer can use to dig deeper when an answer needs more detail.'
-				}
-			},
-			{
-				id: 'probing-limits',
-				element: '[data-tour="probing-limits"]',
-				popover: {
-					title: 'Probing Limits',
-					description:
-						'Cap the follow-up probes on this question by count, by time, or both. Probing stops at whichever limit is reached first. With neither set, no probes are asked.'
+						'Enrich a question by attaching an image, adding a survey item for structured answers, setting a condition that controls when the question is shown, or turning on follow-up probing.'
 				}
 			},
 			{

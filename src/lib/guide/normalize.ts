@@ -9,6 +9,7 @@ import type {
 
 import { delocalizeConditions, localizeConditions } from './conditions';
 import { textIn } from './localized';
+import { DEFAULT_MAX_PROBES } from './probing';
 import type { GuideImage, GuideQuestion, GuideSection, GuideTop } from './types';
 
 // Between the server's localized guide and the editor's state. The editor
@@ -78,7 +79,8 @@ function normalizeQuestion(q: LocalizedQuestion): GuideQuestion {
 		image: normalizeImage(q.image),
 		survey_item: normalizeSurveyItem(q.survey_item),
 		conditions: [],
-		max_probes_n: q.max_probes_n === undefined ? (q.survey_item ? 0 : 3) : q.max_probes_n,
+		max_probes_n:
+			q.max_probes_n === undefined ? (q.survey_item ? 0 : DEFAULT_MAX_PROBES) : q.max_probes_n,
 		max_probes_time: q.max_probes_time ?? null,
 		can_answer: q.can_answer ?? true,
 		can_skip: q.can_skip ?? true,

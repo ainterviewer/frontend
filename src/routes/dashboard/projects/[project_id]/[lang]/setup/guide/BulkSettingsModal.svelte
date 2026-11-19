@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
+	import { DEFAULT_MAX_PROBES } from '$lib/guide/probing';
 	import type { GuideQuestion } from '$lib/guide/types';
 
 	let {
@@ -19,7 +20,7 @@
 	// question, but only when `enabled` is checked, so untouched fields keep their
 	// per-question values.
 	let fields = $state<Record<string, FieldState>>({
-		max_probes_n: { enabled: false, value: 3 },
+		max_probes_n: { enabled: false, value: DEFAULT_MAX_PROBES },
 		max_probes_time: { enabled: false, value: null },
 		exclude_from_history: { enabled: false, value: false },
 		create_segue: { enabled: false, value: false },
@@ -30,20 +31,29 @@
 		shuffle: { enabled: false, value: false }
 	});
 
-	const numberFields: { key: string; label: string; info: string }[] = [
+	type Field = { key: string; label: string; info: string };
+
+	// The groups and texts follow the question card: probing in its own group,
+	// as in the Probing panel, and the rest as its behavior flags.
+	const probingFields: Field[] = [
 		{
 			key: 'max_probes_n',
 			label: 'Max Probes',
-			info: 'Max number of follow-up probes per question.'
+			info: 'The most follow-up probes asked for each question. Set 0 for no probes. Leave empty to limit by time only.'
 		},
 		{
 			key: 'max_probes_time',
 			label: 'Max Time (seconds)',
-			info: 'Max time to spend probing each question, in seconds. 0 turns probing off; leave empty for no time limit.'
+			info: "How long probing may go on, counted from the interviewee's answer to the main question. Set 0 for no probes. Leave empty for no time limit."
+		},
+		{
+			key: 'check_if_exhausted',
+			label: 'Check if exhausted',
+			info: 'Checks during probing if the question has been exhausted, based on the provided context.'
 		}
 	];
 
-	const boolFields: { key: string; label: string; info: string }[] = [
+	const behaviorFields: Field[] = [
 		{
 			key: 'exclude_from_history',
 			label: 'Exclude from history',
@@ -60,14 +70,9 @@
 			info: 'Checks if the question has already been answered. If it has, the main question will be reformulated to take the previous answers into account.'
 		},
 		{
-			key: 'check_if_exhausted',
-			label: 'Check if exhausted',
-			info: 'Checks during probing if the question has been exhausted, based on the provided context.'
-		},
-		{
 			key: 'can_answer',
 			label: 'Can answer',
-			info: 'If the user can answer; use to send multiple messages in a row while not allowing the user to answer in between.'
+			info: "Turn off to show this as a message the interviewee can't reply to, then move straight on to the next question. Use it to send several messages in a row."
 		},
 		{
 			key: 'can_skip',
@@ -163,79 +168,8 @@
 
 			<!-- Body -->
 			<div class="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 pb-2">
-				<!-- Probing Limits -->
-				<div>
-					<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase">
-						Probing Limits
-					</span>
-					<div class="divide-y divide-gray-100 rounded-lg border border-gray-200">
-						{#each numberFields as f (f.key)}
-							<div class="flex items-center gap-3 px-3 py-2.5">
-								<input
-									id="bulk-{f.key}"
-									type="checkbox"
-									class="rounded border-gray-300 text-primary focus:ring-primary"
-									bind:checked={fields[f.key].enabled}
-								/>
-								<label
-									for="bulk-{f.key}"
-									class="flex flex-1 cursor-pointer items-center gap-1 text-sm text-gray-700"
-									class:text-gray-400={!fields[f.key].enabled}
-								>
-									{f.label}
-									<HoverInfo class="ml-1" iconColor="gray-400" text={f.info} />
-								</label>
-								<input
-									type="number"
-									placeholder="—"
-									min="0"
-									class="w-20 rounded border-gray-200 p-1 text-sm focus:border-primary focus:ring-primary/20 disabled:bg-gray-50 disabled:text-gray-400"
-									disabled={!fields[f.key].enabled}
-									bind:value={fields[f.key].value}
-								/>
-							</div>
-						{/each}
-					</div>
-				</div>
-
-				<!-- Behavior Flags -->
-				<div>
-					<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase">
-						Behavior Flags
-					</span>
-					<div class="divide-y divide-gray-100 rounded-lg border border-gray-200">
-						{#each boolFields as f (f.key)}
-							<div class="flex items-center gap-3 px-3 py-2.5">
-								<input
-									id="bulk-{f.key}"
-									type="checkbox"
-									class="rounded border-gray-300 text-primary focus:ring-primary"
-									bind:checked={fields[f.key].enabled}
-								/>
-								<label
-									for="bulk-{f.key}"
-									class="flex flex-1 cursor-pointer items-center gap-1 text-sm text-gray-700"
-									class:text-gray-400={!fields[f.key].enabled}
-								>
-									{f.label}
-									<HoverInfo class="ml-1" iconColor="gray-400" text={f.info} />
-								</label>
-								<button
-									type="button"
-									class="flex w-16 items-center justify-center rounded-full px-3 py-1 text-xs font-semibold transition-colors disabled:opacity-40"
-									class:bg-primary={fields[f.key].value}
-									class:text-white={fields[f.key].value}
-									class:bg-gray-200={!fields[f.key].value}
-									class:text-gray-600={!fields[f.key].value}
-									disabled={!fields[f.key].enabled}
-									onclick={() => (fields[f.key].value = !fields[f.key].value)}
-								>
-									{fields[f.key].value ? 'On' : 'Off'}
-								</button>
-							</div>
-						{/each}
-					</div>
-				</div>
+				{@render group('Probing', probingFields)}
+				{@render group('Behavior Flags', behaviorFields)}
 			</div>
 
 			<!-- Footer -->
@@ -267,3 +201,55 @@
 		</div>
 	</div>
 {/if}
+
+{#snippet group(title: string, groupFields: Field[])}
+	<div>
+		<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase">
+			{title}
+		</span>
+		<div class="divide-y divide-gray-100 rounded-lg border border-gray-200">
+			{#each groupFields as f (f.key)}
+				{@const field = fields[f.key]}
+				<div class="flex items-center gap-3 px-3 py-2.5">
+					<input
+						id="bulk-{f.key}"
+						type="checkbox"
+						class="rounded border-gray-300 text-primary focus:ring-primary"
+						bind:checked={field.enabled}
+					/>
+					<label
+						for="bulk-{f.key}"
+						class="flex flex-1 cursor-pointer items-center gap-1 text-sm text-gray-700"
+						class:text-gray-400={!field.enabled}
+					>
+						{f.label}
+						<HoverInfo class="ml-1" iconColor="gray-400" text={f.info} />
+					</label>
+					{#if typeof field.value === 'boolean'}
+						<button
+							type="button"
+							class="flex w-16 items-center justify-center rounded-full px-3 py-1 text-xs font-semibold transition-colors disabled:opacity-40"
+							class:bg-primary={field.value}
+							class:text-white={field.value}
+							class:bg-gray-200={!field.value}
+							class:text-gray-600={!field.value}
+							disabled={!field.enabled}
+							onclick={() => (field.value = !field.value)}
+						>
+							{field.value ? 'On' : 'Off'}
+						</button>
+					{:else}
+						<input
+							type="number"
+							placeholder="—"
+							min="0"
+							class="w-20 rounded border-gray-200 p-1 text-sm focus:border-primary focus:ring-primary/20 disabled:bg-gray-50 disabled:text-gray-400"
+							disabled={!field.enabled}
+							bind:value={field.value}
+						/>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	</div>
+{/snippet}

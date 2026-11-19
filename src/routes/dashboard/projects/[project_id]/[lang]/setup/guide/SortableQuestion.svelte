@@ -6,11 +6,13 @@
 	import type { ContentError } from '$lib/api';
 	import { onReveal } from '$lib/collab/reveal';
 	import { newCondition } from '$lib/guide/conditions';
+	import { DEFAULT_MAX_PROBES, probingEnabled } from '$lib/guide/probing';
 	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
 
 	import { dragState } from './dragState.svelte';
 	import QuestionConditionsPanel from './QuestionConditionsPanel.svelte';
 	import QuestionImagePanel from './QuestionImagePanel.svelte';
+	import QuestionProbingPanel from './QuestionProbingPanel.svelte';
 	import QuestionSettingsPanel from './QuestionSettingsPanel.svelte';
 	import QuestionSurveyPanel from './QuestionSurveyPanel.svelte';
 	import TextField from './TextField.svelte';
@@ -64,6 +66,14 @@
 	let expandedImage = $state(false);
 	let expandedSurvey = $state(false);
 	let expandedCondition = $state(false);
+	let expandedProbing = $state(false);
+
+	// Probing is on for new questions, so its panel shows by default. It also
+	// shows while suggestions wait unused, and while open, so that clearing a
+	// limit in it does not pull the panel away mid-edit.
+	const probingShown = $derived(
+		probingEnabled(question) || (question.probes?.length ?? 0) > 0 || expandedProbing
+	);
 
 	let settingsPanel = $state<HTMLDivElement | null>(null);
 
@@ -72,6 +82,7 @@
 		if (field === 'conditions') expandedCondition = true;
 		else if (field === 'survey_item') expandedSurvey = true;
 		else if (field === 'image') expandedImage = true;
+		else if (field?.startsWith('probes') || field?.startsWith('max_probes')) expandedProbing = true;
 	}
 
 	function toggleSettings() {
@@ -131,6 +142,12 @@
 			newCondition(allSections, allQuestions, { sectionId, questionId: question.id })
 		);
 		expandedCondition = true;
+	}
+
+	function addProbing() {
+		if (question.max_probes_time === 0) question.max_probes_time = null;
+		if (!probingEnabled(question)) question.max_probes_n = DEFAULT_MAX_PROBES;
+		expandedProbing = true;
 	}
 </script>
 
@@ -228,7 +245,7 @@
 		</div>
 
 		<!-- Accordion Panels for Image/Survey/Condition -->
-		{#if question.image || question.survey_item || question.conditions.length > 0}
+		{#if question.image || question.survey_item || question.conditions.length > 0 || probingShown}
 			<div class="flex flex-wrap gap-2 pt-2">
 				<QuestionImagePanel {question} bind:expanded={expandedImage} />
 				<QuestionSurveyPanel {question} bind:expanded={expandedSurvey} />
@@ -239,6 +256,12 @@
 					{allSections}
 					{allQuestions}
 					bind:expanded={expandedCondition}
+				/>
+				<QuestionProbingPanel
+					{question}
+					shown={probingShown}
+					dataTour={dataTour ? 'probing' : undefined}
+					bind:expanded={expandedProbing}
 				/>
 			</div>
 		{/if}
@@ -254,9 +277,11 @@
 				<QuestionSettingsPanel
 					{question}
 					{dataTour}
+					{probingShown}
 					onAddImage={addImage}
 					onAddSurvey={addSurvey}
 					onAddCondition={addCondition}
+					onAddProbing={addProbing}
 				/>
 			</div>
 		{/if}
