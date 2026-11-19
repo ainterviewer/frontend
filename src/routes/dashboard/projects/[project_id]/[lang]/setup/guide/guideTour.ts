@@ -201,7 +201,7 @@ export function startGuideTour() {
 				popover: {
 					title: 'Probing Limits',
 					description:
-						'Keep probing in check by capping the number of follow-ups and the time spent on a single question.'
+						'Cap the follow-up probes on this question by count, by time, or both. Probing stops at whichever limit is reached first. With neither set, no probes are asked.'
 				}
 			},
 			{

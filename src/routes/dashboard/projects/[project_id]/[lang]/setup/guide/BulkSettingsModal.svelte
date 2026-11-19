@@ -12,14 +12,15 @@
 		onApply: (changes: Partial<GuideQuestion>) => void;
 	} = $props();
 
-	type FieldState = { enabled: boolean; value: number | boolean };
+	// A number left empty (null) is no limit.
+	type FieldState = { enabled: boolean; value: number | boolean | null };
 
 	// One row per bulk-editable setting. `value` is what gets written to every
 	// question, but only when `enabled` is checked, so untouched fields keep their
 	// per-question values.
 	let fields = $state<Record<string, FieldState>>({
 		max_probes_n: { enabled: false, value: 3 },
-		max_probes_time: { enabled: false, value: 0 },
+		max_probes_time: { enabled: false, value: null },
 		exclude_from_history: { enabled: false, value: false },
 		create_segue: { enabled: false, value: false },
 		check_if_answered: { enabled: false, value: false },
@@ -38,7 +39,7 @@
 		{
 			key: 'max_probes_time',
 			label: 'Max Time (seconds)',
-			info: 'Max time to spend probing each question, in seconds.'
+			info: 'Max time to spend probing each question, in seconds. 0 turns probing off; leave empty for no time limit.'
 		}
 	];
 
@@ -92,7 +93,7 @@
 
 	function handleApply() {
 		if (enabledCount === 0) return;
-		const changes: Record<string, number | boolean> = {};
+		const changes: Record<string, number | boolean | null> = {};
 		for (const [key, f] of Object.entries(fields)) {
 			if (f.enabled) changes[key] = f.value;
 		}
@@ -186,6 +187,7 @@
 								</label>
 								<input
 									type="number"
+									placeholder="—"
 									min="0"
 									class="w-20 rounded border-gray-200 p-1 text-sm focus:border-primary focus:ring-primary/20 disabled:bg-gray-50 disabled:text-gray-400"
 									disabled={!fields[f.key].enabled}
