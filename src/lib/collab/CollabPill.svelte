@@ -14,10 +14,15 @@
 	let {
 		session,
 		invalidLabel,
+		skippedLabel,
+		skippedNote,
 		errors
 	}: {
 		session: ContentSession;
 		invalidLabel?: string;
+		/** See `SyncState`. */
+		skippedLabel?: string;
+		skippedNote?: string;
 		/** The session's errors, unless the page knows them sooner. */
 		errors?: ContentError[];
 	} = $props();
@@ -49,6 +54,6 @@
 	<div
 		class="flex h-9 items-center rounded-full border border-gray-200 bg-white/90 px-4 py-1 shadow-md backdrop-blur"
 	>
-		<SyncState {session} {invalidLabel} {errors} />
+		<SyncState {session} {invalidLabel} {skippedLabel} {skippedNote} {errors} />
 	</div>
 </div>

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { fixFirst, invalidParts, WOULD } from './invalidParts';
+import {
+	fixFirst,
+	invalidParts,
+	skippedErrors,
+	testSkips,
+	WOULD,
+	writeFirst
+} from './invalidParts';
 
 const error = { message: 'Question 1.1 has no text.' };
 
@@ -37,6 +44,40 @@ describe('fixFirst', () => {
 		);
 		expect(fixFirst(['guide', 'consent', 'welcome'], WOULD.try)).toMatch(
 			/consent, welcome page and interview guide first: a test/
+		);
+	});
+});
+
+describe('skipped questions', () => {
+	const skipped = { message: 'Question 1.6 has no text.', skipped: true };
+
+	it('do not make their part invalid', () => {
+		expect(invalidParts({ doc_errors: { guide: [skipped] } })).toEqual([]);
+		expect(invalidParts({ doc_errors: { guide: [skipped, error] } })).toEqual(['guide']);
+	});
+
+	it('are taken from the live errors over the saved ones', () => {
+		expect(skippedErrors({ doc_errors: { guide: [skipped] } })).toEqual({ guide: [skipped] });
+		expect(skippedErrors({ doc_errors: { guide: [skipped] } }, { guide: [] })).toEqual({});
+	});
+
+	it('hold back publishing, and are named to the tester', () => {
+		expect(writeFirst({})).toBeUndefined();
+		expect(writeFirst({ guide: [skipped] })).toBe(
+			'Question 1.6 has no text. Write the question, or delete it, before publishing.'
+		);
+		expect(
+			testSkips({ guide: [skipped, { ...skipped, message: 'Question 2.1 has no text.' }] })
+		).toBe('Question 1.6 has no text. Question 2.1 has no text. The test skips them.');
+	});
+
+	it("word the welcome page's contact email in its own terms", () => {
+		const email = { message: 'Enter a contact email address.', field: 'email', skipped: true };
+		expect(writeFirst({ welcome: [email] })).toBe(
+			'Enter a contact email address on the welcome page, or stop showing the contact box, before publishing.'
+		);
+		expect(testSkips({ welcome: [email] })).toBe(
+			'The welcome page has no valid contact email, so the test shows it without the contact box.'
 		);
 	});
 });

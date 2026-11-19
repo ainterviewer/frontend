@@ -5,7 +5,7 @@
 	import ActionBar from '$lib/components/ActionBar.svelte';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import ProjectLanguagePicker from '$lib/components/projectLanguage/ProjectLanguagePicker.svelte';
-	import { fixFirst, WOULD } from '$lib/content/invalidParts';
+	import { fixFirst, testSkips, WOULD } from '$lib/content/invalidParts';
 	import PublishControl from '$lib/content/PublishControl.svelte';
 
 	import ShareTestLink from './ShareTestLink.svelte';
@@ -117,8 +117,9 @@
 			live={{ part, errors }}
 			primary
 		>
-			{#snippet beside(invalid)}
+			{#snippet beside(invalid, skipped)}
 				{@const tryBlocked = fixFirst(invalid, WOULD.try)}
+				{@const skips = testSkips(skipped)}
 				<ShareTestLink {projectId} dataTour="share-test" blocked={fixFirst(invalid, WOULD.share)} />
 				{#if tryBlocked}
 					<!-- Not a link while a part is invalid: a test would run it as it
@@ -143,18 +144,25 @@
 						{/snippet}
 					</HoverInfo>
 				{:else}
-					<a
-						data-tour="try-interview"
-						class="rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 @3xl:px-6"
-						href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
-						target="_blank"
-						rel="opener"
-						title="Try Interview"
-						aria-label="Try Interview"
-					>
-						<i class="fa-solid fa-person-circle-question"></i>
-						<span class="hidden @3xl:inline">Try Interview</span>
-					</a>
+					<!-- Questions with no text yet are left out of the draft: the test
+					     runs without them, and says so on hover. -->
+					<HoverInfo asChild text={skips}>
+						{#snippet children({ props })}
+							<a
+								{...props}
+								data-tour="try-interview"
+								class="rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 @3xl:px-6"
+								href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
+								target="_blank"
+								rel="opener"
+								title={skips ? undefined : 'Try Interview'}
+								aria-label={skips ? `Try Interview: ${skips}` : 'Try Interview'}
+							>
+								<i class="fa-solid fa-person-circle-question"></i>
+								<span class="hidden @3xl:inline">Try Interview</span>
+							</a>
+						{/snippet}
+					</HoverInfo>
 				{/if}
 			{/snippet}
 		</PublishControl>

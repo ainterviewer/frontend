@@ -3,7 +3,7 @@
 	import type { ContentStatus } from '$lib/api/types.gen';
 	import { type LivePart, sessionErrors } from '$lib/collab/contentSession.svelte';
 	import { type SidebarItem } from '$lib/config/sidebar';
-	import { invalidParts, pageName } from '$lib/content/invalidParts';
+	import { invalidParts, pageName, partErrors, skippedNote } from '$lib/content/invalidParts';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
 	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
@@ -47,12 +47,16 @@
 	// The project's invalid parts: as the project layout's load had them, on
 	// every navigation, and as the parts with a session in this tab know them
 	// since (an editor open, or left a moment ago and still saving).
-	let invalid = $derived<LivePart[]>(
+	let status = $derived(page.data.contentStatus as ContentStatus | null | undefined);
+	let live = $derived(projectId ? sessionErrors(projectId) : {});
+	let invalid = $derived<LivePart[]>(projectId ? invalidParts(status, live) : []);
+	// Parts whose only errors are of what the draft is saved without: they
+	// can be tried, but not published.
+	let unwritten = $derived<LivePart[]>(
 		projectId
-			? invalidParts(
-					page.data.contentStatus as ContentStatus | null | undefined,
-					sessionErrors(projectId)
-				)
+			? (Object.entries(partErrors(status, live)) as [LivePart, unknown[]][])
+					.filter(([part, errors]) => errors.length > 0 && !invalid.includes(part))
+					.map(([part]) => part)
 			: []
 	);
 
@@ -262,6 +266,13 @@
 									class="fas fa-triangle-exclamation absolute -right-1 -bottom-1 text-[0.55rem] text-red-400 drop-shadow-[0_0_1.5px_var(--color-dark)]"
 									title={invalidNote(item.contentPart)}
 									aria-label={invalidNote(item.contentPart)}
+									role="img"
+								></i>
+							{:else if item.contentPart && unwritten.includes(item.contentPart)}
+								<i
+									class="fas fa-circle-exclamation absolute -right-1 -bottom-1 text-[0.55rem] text-amber-400 drop-shadow-[0_0_1.5px_var(--color-dark)]"
+									title={skippedNote(item.contentPart)}
+									aria-label={skippedNote(item.contentPart)}
 									role="img"
 								></i>
 							{/if}

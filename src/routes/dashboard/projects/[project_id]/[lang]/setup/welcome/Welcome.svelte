@@ -106,10 +106,13 @@
 	// saves, seconds later; whether one is missing the page knows at once, so
 	// it says that itself and keeps the server's word for whether one typed
 	// is an address. Any other error is the server's alone, and shown as is.
+	// Either email error only holds back publishing: the draft is saved
+	// without the contact box meanwhile, so tests run on the rest (`skipped`).
 	const EMAIL_MISSING: ContentError = {
 		message: 'Enter a contact email address.',
 		fix: 'Or stop showing the contact box.',
-		field: 'email'
+		field: 'email',
+		skipped: true
 	};
 	let hasContent = $derived(
 		[welcome.title, welcome.text].some((texts) => Object.values(texts ?? {}).some(Boolean)) ||
@@ -264,6 +267,8 @@
 		{session}
 		{errors}
 		invalidLabel={otherErrors.length ? undefined : 'Invalid: fix the contact email'}
+		skippedLabel="No contact email"
+		skippedNote="Tests show the welcome page without the contact box, and the interview can't be published until the email is fixed or the box is turned off."
 	/>
 	<div class="mb-6">
 		<h1 class="page-title">Welcome</h1>

@@ -5,7 +5,7 @@
 
 	import type { ContentError } from '$lib/api';
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { fixFirst, WOULD } from '$lib/content/invalidParts';
+	import { fixFirst, isBlocking, WOULD } from '$lib/content/invalidParts';
 	import { pick } from '$lib/guide/localized';
 	import { newQuestion } from '$lib/guide/normalize';
 	import type { GuideQuestion, GuideSection } from '$lib/guide/types';
@@ -53,8 +53,19 @@
 		source = 'guide'
 	}: Props = $props();
 
-	// Trying from here runs the guide as it was before its problems.
-	const tryBlocked = $derived(errors.length ? fixFirst(['guide'], WOULD.try) : undefined);
+	// Trying from here runs the guide as it was before its problems. Not so
+	// for questions with no text yet: the draft is saved without them.
+	const tryBlocked = $derived(errors.some(isBlocking) ? fixFirst(['guide'], WOULD.try) : undefined);
+	const skippedIds = $derived(
+		new Set(errors.filter((error) => error.skipped).map((error) => error.question_id))
+	);
+	// A test can only start at a question the draft has.
+	const sectionTryBlocked = $derived(
+		tryBlocked ??
+			(questions.length > 0 && questions.every((question) => skippedIds.has(question.id))
+				? 'Write a question in this section first: tests skip questions with no text.'
+				: undefined)
+	);
 
 	const { ref, handleRef, isDragging } = useSortable(
 		untrack(() => ({
@@ -141,7 +152,7 @@
 		</div>
 		<div class="flex items-center gap-1">
 			{#if source === 'guide' && !isOverlay && questions.length > 0}
-				<TryFromHere kind="section" id={section.id} blocked={tryBlocked} />
+				<TryFromHere kind="section" id={section.id} blocked={sectionTryBlocked} />
 			{/if}
 			<button
 				class="cursor-pointer rounded p-2 text-gray-700 transition hover:text-red-500"
@@ -191,7 +202,10 @@
 				{allSections}
 				{allQuestions}
 				errors={errors.filter((error) => error.question_id === question.id)}
-				{tryBlocked}
+				tryBlocked={tryBlocked ??
+					(skippedIds.has(question.id)
+						? 'Write this question first: tests skip questions with no text.'
+						: undefined)}
 				onRemove={() => removeQuestion(qIdx)}
 			/>
 		{/each}

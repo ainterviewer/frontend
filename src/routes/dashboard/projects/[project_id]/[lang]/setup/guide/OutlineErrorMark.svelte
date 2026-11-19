@@ -11,12 +11,18 @@
 	let { id, errors }: { id: string; errors: ContentError[] } = $props();
 
 	let title = $derived(errors.map((error) => error.message).join('\n'));
+	// Amber for a question with no text yet, which tests skip, rather than
+	// keeping the guide from being saved.
+	let onlySkipped = $derived(errors.every((error) => error.skipped));
 </script>
 
 {#if errors.length > 0}
 	<button
 		type="button"
-		class="mr-1 shrink-0 cursor-pointer px-1 text-xs text-red-500 hover:text-red-700"
+		class={[
+			'mr-1 shrink-0 cursor-pointer px-1 text-xs',
+			onlySkipped ? 'text-amber-500 hover:text-amber-700' : 'text-red-500 hover:text-red-700'
+		]}
 		{title}
 		aria-label={title}
 		onclick={() => reveal(id, errors[0].field ?? null)}

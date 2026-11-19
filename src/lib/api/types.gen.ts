@@ -1298,6 +1298,11 @@ export type ContentDraftPublic = {
  * Why what editors wrote in a co-edited part (guide, consent, welcome)
  * is not valid. Guide errors say where they are (`GuideError`); the other
  * parts' leave that empty.
+ *
+ * Most errors keep the part from being saved at all: the draft holds it as
+ * it was before them. A `skipped` one does not -- the draft is saved
+ * without what it is in (a question with no text yet), so tests run on
+ * everything else. Publishing waits on every error, skipped ones too.
  */
 export type ContentError = {
     /**
@@ -1330,6 +1335,12 @@ export type ContentError = {
      * The field of the question (or section) it is in, e.g. `conditions`, if it is in one.
      */
     field?: string | null;
+    /**
+     * Skipped
+     *
+     * The draft is saved without what this error is in, so it only holds back publishing.
+     */
+    skipped?: boolean;
 };
 
 /**

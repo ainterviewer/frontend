@@ -19,7 +19,14 @@
 	import { portal } from '$lib/utils/portal';
 	import { toastApiError } from '$lib/utils/toast';
 
-	import { fixFirst, invalidParts, WOULD } from './invalidParts';
+	import {
+		fixFirst,
+		invalidParts,
+		type Skipped,
+		skippedErrors,
+		WOULD,
+		writeFirst
+	} from './invalidParts';
 	import { SPEECH, testOnlyUseLabel } from './models';
 	import { contentRevision, saveWithRevision } from './revision.svelte';
 	import { allowedBumps, type Bump, BUMP_MEANING, maxBump, nextVersion } from './semver';
@@ -49,8 +56,9 @@
 		 * the status's, which are as last saved. */
 		live?: { part: LivePart; errors: ContentError[] };
 		/** Drawn right before the Publish button, after the history; given the
-		 * parts that are invalid, which no test may run while they are. */
-		beside?: Snippet<[LivePart[]]>;
+		 * parts that are invalid, which no test may run while they are, and the
+		 * errors of what the draft is saved without, which a test leaves out. */
+		beside?: Snippet<[LivePart[], Skipped]>;
 	} = $props();
 
 	// The project layout's load hands the status over (`loadContentStatus`), so
@@ -93,14 +101,14 @@
 
 	const missing = $derived(Object.entries(status?.missing ?? {}));
 	// The sidebar works them out alike, short of the page's own errors.
-	const invalid = $derived(
-		invalidParts(status, {
-			...sessionErrors(projectId),
-			...(live && { [live.part]: live.errors })
-		})
-	);
+	const liveErrors = $derived({
+		...sessionErrors(projectId),
+		...(live && { [live.part]: live.errors })
+	});
+	const invalid = $derived(invalidParts(status, liveErrors));
+	const skipped = $derived(skippedErrors(status, liveErrors));
 	// The backend refuses it too; disabled, the button says why up front.
-	const publishBlocked = $derived(fixFirst(invalid, WOULD.publish));
+	const publishBlocked = $derived(fixFirst(invalid, WOULD.publish) ?? writeFirst(skipped));
 	// Why Publish is off, if it is for a reason the user should hear.
 	const publishRefused = $derived(
 		isDemo ? 'You cannot publish with your current demo access.' : publishBlocked
@@ -233,7 +241,7 @@
 			></span>
 		{/if}
 	</button>
-	{@render beside?.(invalid)}
+	{@render beside?.(invalid, skipped)}
 	<!-- Blocked, it is aria-disabled rather than disabled: a disabled button
 	     gets no hover or focus, so it could not say why it is off. -->
 	<HoverInfo asChild content={publishRefused ? refused : undefined}>

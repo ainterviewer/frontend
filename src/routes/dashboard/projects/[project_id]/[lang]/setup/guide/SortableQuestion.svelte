@@ -31,7 +31,8 @@
 		dataTour?: string;
 		/** The guide's errors in this question. */
 		errors?: ContentError[];
-		/** Why trying from here may not start, if it may not: the guide is invalid. */
+		/** Why trying from here may not start, if it may not: the guide is
+		 * invalid, or the draft is saved without this question (it has no text). */
 		tryBlocked?: string;
 	}
 

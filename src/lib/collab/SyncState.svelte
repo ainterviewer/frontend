@@ -12,7 +12,9 @@
 	 * always; loud only when the reader has to know: the connection is gone (their
 	 * changes exist only in this tab until it comes back) or what is written is
 	 * invalid. Invalid is not unsaved: the edits are kept, but tests and
-	 * publishing go on using the last valid version until it is fixed.
+	 * publishing go on using the last valid version until it is fixed. Questions
+	 * with no text yet are milder: the draft is saved without them (their
+	 * errors are `skipped`), so only publishing waits on them.
 	 *
 	 * One `flex` row of fixed height, the icon in a column of its own. "Saved"
 	 * and "Saving", which alternate as people type, sit in one grid cell, so the
@@ -22,6 +24,8 @@
 	let {
 		session,
 		invalidLabel = 'Invalid: fix the errors',
+		skippedLabel,
+		skippedNote = "Tests skip questions with no text yet, and the interview can't be published until they are written or deleted.",
 		errors: pageErrors
 	}: {
 		session: ContentSession;
@@ -30,9 +34,16 @@
 		/** What to say while what editors wrote is invalid; the reasons are
 		 * in the panel it opens. */
 		invalidLabel?: string;
+		/** What to say while the only errors are of what the draft is saved
+		 * without (`skipped`); by default, questions with no text. */
+		skippedLabel?: string;
+		/** What that leaves out of tests, in the panel it opens. */
+		skippedNote?: string;
 	} = $props();
 
 	let errors = $derived(pageErrors ?? session.errors);
+	// Only questions with no text yet: saved, and testable, without them.
+	let onlySkipped = $derived(errors.length > 0 && errors.every((error) => error.skipped));
 
 	type Quiet = 'saving' | 'saved';
 
@@ -67,8 +78,14 @@
 		reveal(id, error.field ?? null);
 	}
 
+	// Questions with no text don't keep the rest from saving, so saving
+	// shows through them, the warning beside it.
 	let quiet = $derived<Quiet | null>(
-		session.status !== 'synced' || errors.length > 0 ? null : session.unsaved ? 'saving' : 'saved'
+		session.status !== 'synced' || (errors.length > 0 && !onlySkipped)
+			? null
+			: session.unsaved
+				? 'saving'
+				: 'saved'
 	);
 </script>
 
@@ -100,28 +117,51 @@
 		Connecting
 	</span>
 {:else if quiet}
-	<span class={['flex h-4 items-center gap-1.5 text-xs leading-none', COLORS[quiet]]}>
-		<i class="fas {ICONS[quiet]} w-3 text-center"></i>
-		<span class="grid">
-			{#each QUIET as { state, label } (state)}
-				<span
-					class={['col-start-1 row-start-1 whitespace-nowrap', state !== quiet && 'invisible']}
-					aria-hidden={state !== quiet}
-				>
-					{label}
-				</span>
-			{/each}
+	<span class="flex h-4 items-center gap-2">
+		<span class={['flex h-4 items-center gap-1.5 text-xs leading-none', COLORS[quiet]]}>
+			<i class="fas {ICONS[quiet]} w-3 text-center"></i>
+			<span class="grid">
+				{#each QUIET as { state, label } (state)}
+					<span
+						class={['col-start-1 row-start-1 whitespace-nowrap', state !== quiet && 'invisible']}
+						aria-hidden={state !== quiet}
+					>
+						{label}
+					</span>
+				{/each}
+			</span>
 		</span>
+		{#if onlySkipped}
+			<span class="h-3 w-px bg-gray-200" aria-hidden="true"></span>
+			{@render problems()}
+		{/if}
 	</span>
 {:else}
+	{@render problems()}
+{/if}
+
+{#snippet problems()}
 	<!-- A popover, not a tooltip: the errors are links to where they are, and
 	     a tooltip closes as the pointer heads for them. -->
 	<Popover.Root bind:open={errorsOpen}>
 		<Popover.Trigger
-			class="flex h-4 cursor-pointer items-center gap-1.5 text-xs leading-none text-red-600 hover:text-red-700"
+			class={[
+				'flex h-4 cursor-pointer items-center gap-1.5 text-xs leading-none',
+				onlySkipped ? 'text-amber-700 hover:text-amber-800' : 'text-red-600 hover:text-red-700'
+			]}
 		>
-			<i class="fas fa-triangle-exclamation w-3 text-center"></i>
-			{invalidLabel}
+			<i
+				class={[
+					'fas w-3 text-center',
+					onlySkipped ? 'fa-circle-exclamation' : 'fa-triangle-exclamation'
+				]}
+			></i>
+			{#if onlySkipped}
+				{skippedLabel ??
+					`${errors.length === 1 ? 'A question has' : `${errors.length} questions have`} no text`}
+			{:else}
+				{invalidLabel}
+			{/if}
 			<i
 				class={[
 					'fas fa-chevron-down text-[0.6rem] transition-transform',
@@ -141,7 +181,12 @@
 				class="z-1001 w-80 rounded-md border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 shadow-md outline-none"
 			>
 				<p class="text-gray-600">
-					Your changes are kept, but the interview can't be tried or published until this is fixed.
+					{#if onlySkipped}
+						{skippedNote}
+					{:else}
+						Your changes are kept, but the interview can't be tried or published until this is
+						fixed.
+					{/if}
 				</p>
 				{#if errors.length > 0}
 					<ul class="mt-2 space-y-1 border-t border-gray-100 pt-2">
@@ -169,10 +214,11 @@
 			</Popover.Content>
 		</Popover.Portal>
 	</Popover.Root>
-{/if}
+{/snippet}
 
 {#snippet problem(error: ContentError)}
-	<i class="fas fa-circle-exclamation mt-0.5 text-red-500"></i>
+	<i class={['fas fa-circle-exclamation mt-0.5', error.skipped ? 'text-amber-500' : 'text-red-500']}
+	></i>
 	<span>
 		<span class="block font-medium text-gray-900">{error.message}</span>
 		{#if error.fix}

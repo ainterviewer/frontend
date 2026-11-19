@@ -542,13 +542,19 @@ export const zConsent = z.object({
  * Why what editors wrote in a co-edited part (guide, consent, welcome)
  * is not valid. Guide errors say where they are (`GuideError`); the other
  * parts' leave that empty.
+ *
+ * Most errors keep the part from being saved at all: the draft holds it as
+ * it was before them. A `skipped` one does not -- the draft is saved
+ * without what it is in (a question with no text yet), so tests run on
+ * everything else. Publishing waits on every error, skipped ones too.
  */
 export const zContentError = z.object({
     message: z.string(),
     fix: z.string().nullish(),
     question_id: z.uuid().nullish(),
     section_id: z.uuid().nullish(),
-    field: z.string().nullish()
+    field: z.string().nullish(),
+    skipped: z.boolean().optional().default(false)
 });
 
 /**
