@@ -144,7 +144,10 @@ git -C ../backend worktree add -b feat/my-change \
   proxy, the websockets (`backendWsUrl`, `src/lib/utils/urls.ts`) and
   `just generate-sdk` all follow it, so the SDK comes from that change's API.
   `OPENAPI_URL` still overrides the SDK's source on its own. Give the dev
-  server its own port too: `bun run dev --port 5175`.
+  server its own port too: `bun run dev --port 5175`. The backend worktree
+  needs its own `.env` (copied from the main checkout) and its own copy of
+  the database, or it fails at startup: see "Running the app needs a
+  database of its own" in the backend's AGENTS.md.
 - **Landing.** `main` stays checked out in the main checkout, and git does not
   let two worktrees check out the same branch, so rebase in the worktree
   (`git rebase main`), then fast-forward from the main checkout
