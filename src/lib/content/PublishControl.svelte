@@ -222,9 +222,9 @@
 	>
 		<i class="fa-solid fa-clock-rotate-left"></i>
 		{#if status?.published}
-			<span class="hidden @3xl:inline">v{status.published.semver}</span>
+			<span class="hidden @5xl:inline">v{status.published.semver}</span>
 		{:else if status}
-			<span class="hidden @3xl:inline">Not published</span>
+			<span class="hidden @5xl:inline">Not published</span>
 		{/if}
 		{#if liveTestOnly.length}
 			<span
@@ -251,7 +251,7 @@
 				data-tour="publish"
 				type="button"
 				class={[
-					'flex items-center gap-2 rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 @3xl:px-6',
+					'flex items-center gap-2 rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 @5xl:px-6',
 					primary
 						? 'bg-primary text-white shadow-sm not-aria-disabled:hover:bg-dark'
 						: 'text-primary not-aria-disabled:hover:bg-primary/10'
@@ -265,7 +265,7 @@
 				aria-label={publishRefused ? `Publish: ${publishRefused}` : 'Publish'}
 			>
 				<i class="fa-solid fa-upload"></i>
-				<span class="hidden @3xl:inline">Publish</span>
+				<span class="hidden @5xl:inline">Publish</span>
 			</button>
 		{/snippet}
 	</HoverInfo>

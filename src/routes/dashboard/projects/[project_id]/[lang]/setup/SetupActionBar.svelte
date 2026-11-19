@@ -72,7 +72,7 @@
 	<div data-tour="export" class="export-pdf-menu relative">
 		<button
 			type="button"
-			class="rounded-full bg-gray-100 px-4 py-2 font-medium whitespace-nowrap text-gray-700 hover:bg-gray-200 disabled:opacity-50 @3xl:px-6"
+			class="rounded-full bg-gray-100 px-4 py-2 font-medium whitespace-nowrap text-gray-700 hover:bg-gray-200 disabled:opacity-50 @5xl:px-6"
 			onclick={() => {
 				if (!canExport) return;
 				showExportMenu = !showExportMenu;
@@ -82,7 +82,7 @@
 			aria-label="Export"
 		>
 			<i class="fa-solid fa-file-export"></i>
-			<span class="hidden @3xl:inline">{exporting ? 'Exporting...' : 'Export'}</span>
+			<span class="hidden @5xl:inline">{exporting ? 'Exporting...' : 'Export'}</span>
 		</button>
 		{#if showExportMenu}
 			<div
@@ -148,11 +148,11 @@
 								role="link"
 								aria-disabled="true"
 								tabindex="0"
-								class="cursor-not-allowed rounded-full border border-gray-300 px-4 py-2 font-medium whitespace-nowrap text-gray-400 @3xl:px-6"
+								class="cursor-not-allowed rounded-full border border-gray-300 px-4 py-2 font-medium whitespace-nowrap text-gray-400 @5xl:px-6"
 								aria-label="Try Interview: {tryBlocked}"
 							>
 								<i class="fa-solid fa-person-circle-question"></i>
-								<span class="hidden @3xl:inline">Try Interview</span>
+								<span class="hidden @5xl:inline">Try Interview</span>
 							</span>
 						{/snippet}
 					</HoverInfo>
@@ -164,7 +164,7 @@
 							<a
 								{...props}
 								data-tour="try-interview"
-								class="rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 @3xl:px-6"
+								class="rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 @5xl:px-6"
 								href={resolve(`/interview?id=${projectId}&interview_type=manual_test&lang=${lang}`)}
 								target="_blank"
 								rel="opener"
@@ -172,7 +172,7 @@
 								aria-label={skips ? `Try Interview: ${skips}` : 'Try Interview'}
 							>
 								<i class="fa-solid fa-person-circle-question"></i>
-								<span class="hidden @3xl:inline">Try Interview</span>
+								<span class="hidden @5xl:inline">Try Interview</span>
 							</a>
 						{/snippet}
 					</HoverInfo>

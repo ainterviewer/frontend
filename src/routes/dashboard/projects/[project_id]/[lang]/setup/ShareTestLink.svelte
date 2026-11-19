@@ -93,7 +93,7 @@
 <div class="share-test-menu relative" data-tour={dataTour}>
 	<button
 		type="button"
-		class="rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50 @3xl:px-6"
+		class="rounded-full border border-primary px-4 py-2 font-medium whitespace-nowrap text-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50 @5xl:px-6"
 		onclick={() => (open = !open)}
 		disabled={!!disabledReason}
 		title={disabledReason ?? 'Share a test link'}
@@ -101,7 +101,7 @@
 		aria-expanded={open}
 	>
 		<i class="fa-solid fa-share-nodes"></i>
-		<span class="hidden @3xl:inline">Share test</span>
+		<span class="hidden @5xl:inline">Share test</span>
 	</button>
 
 	{#if open}
