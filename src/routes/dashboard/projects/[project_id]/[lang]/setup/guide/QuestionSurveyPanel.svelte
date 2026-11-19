@@ -268,14 +268,16 @@
 									role="listitem"
 								>
 									<div
-										class="cursor-grab rounded p-1 text-gray-400 outline-none hover:bg-gray-100 hover:text-gray-600"
-										title="Reorder row"
+										data-reorder-handle
+										class="cursor-grab rounded p-1 text-gray-400 outline-none hover:bg-gray-100 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-primary/40"
+										title="Drag, or focus and press ↑/↓, to reorder"
 										draggable="true"
 										ondragstart={(e) => rowReorder.dragStart(e, rIdx)}
 										ondragend={rowReorder.dragEnd}
+										onkeydown={(e) => rowReorder.keydown(e, rIdx)}
 										role="button"
-										tabindex="-1"
-										aria-label="Reorder row"
+										tabindex="0"
+										aria-label="Reorder row, use the up and down arrow keys"
 									>
 										<i class="fa-solid fa-grip-vertical"></i>
 									</div>
@@ -344,14 +346,16 @@
 									role="listitem"
 								>
 									<div
-										class="cursor-grab rounded p-1 text-gray-400 outline-none hover:bg-gray-100 hover:text-gray-600"
-										title="Reorder option"
+										data-reorder-handle
+										class="cursor-grab rounded p-1 text-gray-400 outline-none hover:bg-gray-100 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-primary/40"
+										title="Drag, or focus and press ↑/↓, to reorder"
 										draggable="true"
 										ondragstart={(e) => optionReorder.dragStart(e, oIdx)}
 										ondragend={optionReorder.dragEnd}
+										onkeydown={(e) => optionReorder.keydown(e, oIdx)}
 										role="button"
-										tabindex="-1"
-										aria-label="Reorder option"
+										tabindex="0"
+										aria-label="Reorder option, use the up and down arrow keys"
 									>
 										<i class="fa-solid fa-grip-vertical"></i>
 									</div>

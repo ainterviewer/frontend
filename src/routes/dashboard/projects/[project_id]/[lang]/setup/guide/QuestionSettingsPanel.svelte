@@ -104,14 +104,16 @@
 					role="listitem"
 				>
 					<div
-						class="cursor-grab rounded p-1 text-gray-600 outline-none hover:text-gray-800"
-						title="Reorder probe"
+						data-reorder-handle
+						class="cursor-grab rounded p-1 text-gray-600 outline-none hover:text-gray-800 focus-visible:ring-2 focus-visible:ring-primary/40"
+						title="Drag, or focus and press ↑/↓, to reorder"
 						draggable="true"
 						ondragstart={(e) => probeReorder.dragStart(e, pIdx)}
 						ondragend={probeReorder.dragEnd}
+						onkeydown={(e) => probeReorder.keydown(e, pIdx)}
 						role="button"
-						tabindex="-1"
-						aria-label="Reorder probe"
+						tabindex="0"
+						aria-label="Reorder probe, use the up and down arrow keys"
 					>
 						<i class="fa-solid fa-grip-vertical"></i>
 					</div>
