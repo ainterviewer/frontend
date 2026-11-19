@@ -5812,7 +5812,7 @@ export type Question = {
     /**
      * Max Probes Time
      *
-     * Max time to spend on probing, in seconds.
+     * Max time to spend on probing, in seconds. 0 turns probing off.
      */
     max_probes_time?: number | null;
     /**

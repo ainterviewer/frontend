@@ -3395,7 +3395,7 @@ export const zLocalizedQuestion = z.object({
     description: zLocalizedText.nullish(),
     probes: z.array(zLocalizedText).nullish(),
     max_probes_n: z.int().gte(0).nullish().default(3),
-    max_probes_time: z.number().gt(0).nullish(),
+    max_probes_time: z.number().gte(0).nullish(),
     survey_item: z.discriminatedUnion('type', [
         zLocalizedRadioItem,
         zLocalizedCheckboxItem,
@@ -3527,7 +3527,7 @@ export const zQuestion = z.object({
     main_question: z.string(),
     probes: z.array(z.string()).nullish(),
     max_probes_n: z.int().gte(0).nullish().default(3),
-    max_probes_time: z.number().gt(0).nullish(),
+    max_probes_time: z.number().gte(0).nullish(),
     survey_item: z.discriminatedUnion('type', [
         zRadioItem,
         zCheckboxItem,
