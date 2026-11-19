@@ -3394,7 +3394,6 @@ export const zLocalizedQuestion = z.object({
     main_question: zLocalizedText.optional(),
     description: zLocalizedText.nullish(),
     probes: z.array(zLocalizedText).nullish(),
-    alternative_main_questions: z.array(zLocalizedText).nullish(),
     max_probes_n: z.int().gte(0).nullish().default(3),
     max_probes_time: z.number().gt(0).nullish(),
     survey_item: z.discriminatedUnion('type', [
@@ -3544,7 +3543,6 @@ export const zQuestion = z.object({
     ]).nullish(),
     can_answer: z.boolean().optional().default(true),
     id: z.uuid().optional(),
-    alternative_main_questions: z.array(z.string()).nullish(),
     check_if_answered: z.boolean().optional().default(false),
     check_if_exhausted: z.boolean().optional().default(false),
     can_skip: z.boolean().optional().default(true),

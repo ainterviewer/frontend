@@ -53,7 +53,6 @@ export const QUESTION_TEXT_FIELDS = [
 	'main_question',
 	'description',
 	'probes',
-	'alternative_main_questions',
 	'survey_item',
 	'image'
 ] as const;
@@ -61,7 +60,6 @@ export const QUESTION_TEXT_FIELDS = [
 // Every piece of text a question holds, in every field of QUESTION_TEXT_FIELDS.
 export function questionTexts(q: GuideQuestion): LocalizedText[] {
 	const texts = [q.main_question, q.description, ...q.probes];
-	texts.push(...(q.alternative_main_questions ?? []));
 	for (const option of surveyItemOptions(q.survey_item) ?? []) texts.push(option.text ?? {});
 	if (q.survey_item?.type === 'likert_grid') {
 		for (const row of q.survey_item.rows) texts.push(row.text ?? {});

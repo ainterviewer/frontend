@@ -13,8 +13,8 @@ import type { LocalizedInterviewGuide } from '$lib/api/types.gen';
 //   id, each
 //   entry carrying an `order` key (fractional indexing); questions are flat,
 //   with a `section_id`, so a move never loses a concurrent edit;
-// - probes, alternative wordings and timed messages are `Y.Array`s, matched
-//   by content when a write changes them (`align`);
+// - probes and timed messages are `Y.Array`s, matched by content when a
+//   write changes them (`align`);
 // - every other value is JSON *text* -- never a bare number, which Yjs would
 //   hand the server back as a float.
 //
@@ -29,7 +29,7 @@ export const SECTION_ID = 'section_id';
 const GUIDE_TEXTS = ['framing', 'introduction', 'outro', 'alt_outro'];
 const SECTION_TEXTS = ['description'];
 const QUESTION_TEXTS = ['main_question', 'description'];
-const QUESTION_TEXT_LISTS = ['probes', 'alternative_main_questions'];
+const QUESTION_TEXT_LISTS = ['probes'];
 const SURVEY_TEXTS = ['min_label', 'max_label'];
 /** A survey item's lists of things with ids: a choice's options, a grid's rows. */
 const SURVEY_KEYED = ['options', 'rows'];
@@ -490,6 +490,9 @@ function readQuestion(id: string, entry: Y.Map<unknown>): Json {
 	const data = readEntity(entry, QUESTION_TEXTS);
 	delete data[ORDER];
 	delete data[SECTION_ID];
+	// Removed from the guide; docs written before still hold it (empty),
+	// until the next write of the question drops it.
+	delete data.alternative_main_questions;
 	if (data.survey_item instanceof Y.Map) {
 		const survey = readEntity(data.survey_item, SURVEY_TEXTS);
 		for (const key of SURVEY_KEYED) {

@@ -289,9 +289,6 @@ function buildQuestionContent(
 	toggles: PdfToggles
 ): PdfNode[] {
 	const content: PdfNode[] = [];
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const qAny = q as any;
-
 	// Question header
 	content.push({
 		text: `Q${qIdx + 1}: ${q.main_question}`,
@@ -309,14 +306,6 @@ function buildQuestionContent(
 			color: '#666',
 			margin: [8, 0, 0, 4]
 		});
-	}
-
-	// Alternative main questions (not in generated types but used at runtime)
-	if (qAny.alternative_main_questions && qAny.alternative_main_questions.length > 0) {
-		content.push(indentNode(label('Alternative Phrasings')));
-		for (const alt of qAny.alternative_main_questions) {
-			content.push({ text: `- ${alt}`, fontSize: 9, margin: [16, 0, 0, 1] });
-		}
 	}
 
 	// Probes (always visible per requirements)

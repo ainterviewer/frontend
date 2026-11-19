@@ -96,7 +96,6 @@ const LABELS: Record<string, string> = {
 	shuffle: 'Shuffled',
 	main_question: 'Question',
 	probes: 'Probes',
-	alternative_main_questions: 'Alternative phrasings',
 	max_probes_n: 'Max probes',
 	max_probes_time: 'Max probing time',
 	survey_item: 'Survey',

@@ -75,7 +75,6 @@ function normalizeQuestion(q: LocalizedQuestion): GuideQuestion {
 		main_question: q.main_question ?? {},
 		description: q.description ?? {},
 		probes: q.probes ?? [],
-		alternative_main_questions: q.alternative_main_questions ?? [],
 		image: normalizeImage(q.image),
 		survey_item: normalizeSurveyItem(q.survey_item),
 		conditions: [],
@@ -258,9 +257,6 @@ export function localizeRenderedQuestion(
 		main_question: textIn(language, q.main_question),
 		description: textIn(language, q.description),
 		probes: (q.probes ?? []).map((p) => textIn(language, p)),
-		alternative_main_questions: (q.alternative_main_questions ?? []).map((a) =>
-			textIn(language, a)
-		),
 		survey_item,
 		image,
 		// The assistant has no ids to point a condition at.

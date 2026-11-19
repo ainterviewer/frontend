@@ -72,42 +72,6 @@
 	{/if}
 </div>
 
-<!-- Alternative Main Questions -->
-<div class="hidden">
-	<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase">
-		Alternative Phrasings
-	</span>
-	{#if question.alternative_main_questions}
-		<div class="mb-2 space-y-2">
-			{#each question.alternative_main_questions as alternative, aqIdx (aqIdx)}
-				<div class="flex gap-2">
-					<TextField
-						class="flex-1 rounded border-gray-200 p-2 text-sm shadow-sm focus:border-primary focus:ring-primary/20"
-						text={alternative}
-						placeholder="Another way to ask this..."
-					/>
-					<button
-						class="px-2 text-gray-400 hover:text-red-500"
-						onclick={() => question.alternative_main_questions?.splice(aqIdx, 1)}
-						aria-label="Remove alternative question"
-					>
-						<i class="fa-solid fa-trash"></i>
-					</button>
-				</div>
-			{/each}
-		</div>
-	{/if}
-	<button
-		class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/5 hover:text-primary/80"
-		onclick={() => {
-			if (!question.alternative_main_questions) question.alternative_main_questions = [];
-			question.alternative_main_questions.push({});
-		}}
-	>
-		<i class="fa-solid fa-plus"></i> Add Alternative
-	</button>
-</div>
-
 <!-- Probes -->
 <div data-tour={dataTour ? 'probes' : undefined}>
 	<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase">

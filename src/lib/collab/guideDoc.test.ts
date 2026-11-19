@@ -137,6 +137,18 @@ describe('guide doc', () => {
 		expect(questionIds(merged)).toEqual([[Q3, Q1, Q2], []]);
 		expect(merged.question_sections![0].questions![0].main_question).toEqual({ EN: 'And then?' });
 	});
+
+	it('drops the removed alternative wordings a doc written before still holds', () => {
+		const doc = seeded();
+		const q2 = roots(doc).questions.get(Q2) as Y.Map<unknown>;
+		q2.set('alternative_main_questions', new Y.Array());
+		const read = readGuide(doc);
+		expect(read.question_sections![0].questions![1]).not.toHaveProperty(
+			'alternative_main_questions'
+		);
+		applyGuide(doc, read, ['EN', 'DA']);
+		expect(q2.has('alternative_main_questions')).toBe(false);
+	});
 });
 
 describe('lists', () => {

@@ -111,7 +111,6 @@ function renderQuestion(
 		main_question: pick(q.main_question, languages),
 		description: pick(q.description, languages) || null,
 		probes: q.probes.map((p) => pick(p, languages)),
-		alternative_main_questions: (q.alternative_main_questions ?? []).map((a) => pick(a, languages)),
 		survey_item: renderSurveyItem(q.survey_item, languages),
 		image: q.image
 			? {

@@ -4287,10 +4287,6 @@ export type LocalizedQuestion = {
      */
     probes?: Array<LocalizedText> | null;
     /**
-     * Alternative Main Questions
-     */
-    alternative_main_questions?: Array<LocalizedText> | null;
-    /**
      * Max Probes N
      */
     max_probes_n?: number | null;
@@ -5857,12 +5853,6 @@ export type Question = {
      * Stable identity of the question. Survives reordering and is shared by every translation of it; conditions and references point at it.
      */
     id?: string;
-    /**
-     * Alternative Main Questions
-     *
-     * List of alternative formulations of the main question, will be chosen at random.
-     */
-    alternative_main_questions?: Array<string> | null;
     /**
      * Check If Answered
      *
