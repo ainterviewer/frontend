@@ -4,6 +4,27 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.31] - 2026-11-19
+
+### Features
+
+- (setup) Show a warning icon when Try Interview skips questions
+- (setup) Reorder probes, survey options and grid rows from the keyboard
+- (setup) Explain probing limits in the question settings
+- (setup) Move probing into its own panel on the question
+
+### Bug Fixes
+
+- (setup) Use a thin scrollbar in the guide outline
+- (setup) Show the guide's warnings in one shade of amber
+- Use thin scrollbars in text fields
+- (setup) Keep the action bar from overflowing when the page is narrow
+
+### Internal
+
+- (setup) Remove alternative phrasings
+- (sdk) Regenerate for a max_probes_time of 0
+
 ## [0.9.30] - 2026-11-19
 
 ### Features
