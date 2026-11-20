@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.33] - 2026-11-20
+
+### Bug Fixes
+
+- (whats-new) Carry the last-seen marker across the version rename
+
+### Internal
+
+- (sdk) Regenerate for documentation of conditions with exclusive
+- (sdk) Regenerate for the YYYY.MM-NN platform_version pattern
+
 ## [0.9.32] - 2026-11-20
 
 ### Features
