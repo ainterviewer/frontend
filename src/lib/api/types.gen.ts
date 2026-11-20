@@ -1119,6 +1119,10 @@ export type ConditionAction = 'end_interview' | 'skip_section' | 'skip_question'
  *
  * One part of a condition: the answer to one question, checked by its
  * evaluations.
+ *
+ * A checkbox answer is read as the options ticked, and an option matches
+ * when it is one of them, whatever else was ticked. `exclusive` narrows
+ * that to "and nothing else".
  */
 export type ConditionBlock = {
     question_context: QuestionContext;
