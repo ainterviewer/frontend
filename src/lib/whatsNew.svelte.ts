@@ -40,6 +40,23 @@ export function unseenVersions(
 }
 
 /**
+ * The stored last-seen marker, in the current version spelling.
+ *
+ * Platform versions were renamed from YYYY.MM.N to YYYY.MM-NN (2026.11.13 →
+ * 2026.11-13). A marker written before that would match no release, so
+ * `isUnseen` would light the dot for everyone and `unseenVersions` would flag
+ * the whole list as new.
+ * NOTE: This can be removed in the future, when the new
+ * versions have been in effect so long that almost everyone will have those in
+ * their localStorage instead of the legacy version.
+ */
+export function migrateLastSeen(stored: string | null): string | null {
+	const legacy = stored?.match(/^(\d{4})\.(\d{2})\.(\d+)$/);
+	if (!legacy) return stored;
+	return `${legacy[1]}.${legacy[2]}-${legacy[3].padStart(2, '0')}`;
+}
+
+/**
  * Open/closed state for the "What's new" dialog, plus the marker for which
  * release the user has already looked at.
  *
@@ -72,7 +89,7 @@ class WhatsNewState {
 	 */
 	hydrate() {
 		if (typeof localStorage === 'undefined') return;
-		this.lastSeen = localStorage.getItem(LAST_SEEN_KEY);
+		this.lastSeen = migrateLastSeen(localStorage.getItem(LAST_SEEN_KEY));
 		this.hydrated = true;
 	}
 
