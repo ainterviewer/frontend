@@ -75,10 +75,12 @@
 		if (!readonly || !answer) return;
 		if (surveyItem.type === 'slider') {
 			sliderValue = Number(answer);
+			sliderTouched = true;
 		} else if (surveyItem.type === 'likert') {
 			if (surveyItem.ui === 'slider') {
 				const idx = surveyItem.options.indexOf(answer);
 				if (idx >= 0) sliderValue = idx;
+				sliderTouched = idx >= 0;
 			} else {
 				radioValue = answer;
 			}
@@ -253,7 +255,7 @@
 	let hasAnswer = $derived.by(() => {
 		if (surveyItem.type === 'slider') return sliderTouched;
 		if (surveyItem.type === 'likert') {
-			if (surveyItem.ui === 'slider') return true;
+			if (surveyItem.ui === 'slider') return sliderTouched;
 			return radioValue !== '';
 		}
 		if (surveyItem.type === 'radio')
@@ -455,8 +457,10 @@
 				<!-- The track runs from the middle of the first label's column to
 				     the middle of the last's, so each point sits over its label. -->
 				<div class="w-full px-2">
+					<!-- Nothing is named as chosen until the respondent moves the
+					     thumb: its starting point is not an answer. -->
 					<output class="block min-h-5 text-center text-sm font-semibold text-primary">
-						{likertOptions[sliderValue] ?? ''}
+						{sliderTouched ? (likertOptions[sliderValue] ?? '') : ''}
 					</output>
 					<input
 						type="range"
@@ -464,6 +468,8 @@
 						max={likertOptions.length - 1}
 						step="1"
 						bind:value={sliderValue}
+						onpointerdown={touchSlider}
+						oninput={touchSlider}
 						disabled={disabled && !readonly}
 						aria-valuetext={likertOptions[sliderValue]}
 						class="mt-2 mb-4 cursor-pointer accent-primary disabled:cursor-not-allowed"
@@ -483,7 +489,11 @@
 						aria-hidden="true"
 					>
 						{#each likertOptions as opt, i (i)}
-							<span class="text-center {i === sliderValue ? 'font-bold text-primary' : ''}">
+							<span
+								class="text-center {sliderTouched && i === sliderValue
+									? 'font-bold text-primary'
+									: ''}"
+							>
 								{opt}
 							</span>
 						{/each}

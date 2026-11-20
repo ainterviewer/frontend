@@ -245,6 +245,24 @@ describe('slider', () => {
 		expect(given).toBe('3');
 	});
 
+	test('a likert slider only answers after interaction', async () => {
+		let given: unknown;
+		const screen = await render(SurveyItem, {
+			type: 'likert',
+			ui: 'slider',
+			options: ['Disagree', 'Neutral', 'Agree'],
+			onAnswer: (value: unknown) => (given = value)
+		});
+		await expect.element(screen.getByRole('status')).toHaveTextContent('');
+		const submit = screen.getByRole('button');
+		await expect.element(submit).toBeDisabled();
+		await screen.getByRole('slider').click();
+		await expect.element(screen.getByRole('status')).toHaveTextContent('Neutral');
+		await expect.element(submit).toBeEnabled();
+		await submit.click();
+		expect(given).toBe('Neutral');
+	});
+
 	test('a slider with a minimum label has a neutral thumb', async () => {
 		const screen = await render(SurveyItem, {
 			type: 'slider',
