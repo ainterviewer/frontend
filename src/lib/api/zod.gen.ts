@@ -2627,7 +2627,7 @@ export const zReleaseNotes = z.object({
  * PlatformManifest
  */
 export const zPlatformManifest = z.object({
-    platform_version: z.string(),
+    platform_version: z.string().regex(/^\d{4}\.\d{2}-\d{2,}$/),
     core_lib: z.string(),
     backend: z.string(),
     frontend: z.string(),
