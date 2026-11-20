@@ -19,6 +19,27 @@ export function newsworthyVersion(releases: PlatformRelease[] | undefined) {
 }
 
 /**
+ * Versions of the releases the user had not seen when the dialog opened.
+ *
+ * `releases` is newest first, so these are the ones above the version the user
+ * last opened the dialog for. A maintenance release above it counts as unseen
+ * too. If that version has dropped off the end of the capped list, everything
+ * listed is newer than it.
+ *
+ * Empty when there is no marker: on a first visit every release is unseen, and
+ * flagging all of them tells the user nothing.
+ */
+export function unseenVersions(
+	releases: PlatformRelease[] | undefined,
+	seen: string | null
+): string[] {
+	if (!releases || !seen) return [];
+	const seenIndex = releases.findIndex((release) => release.platform_version === seen);
+	const unseen = seenIndex === -1 ? releases : releases.slice(0, seenIndex);
+	return unseen.map((release) => release.platform_version);
+}
+
+/**
  * Open/closed state for the "What's new" dialog, plus the marker for which
  * release the user has already looked at.
  *
@@ -30,6 +51,14 @@ class WhatsNewState {
 
 	/** Newest platform version the user has already seen, or null. */
 	lastSeen = $state<string | null>(null);
+
+	/**
+	 * What `lastSeen` held when the dialog was last opened.
+	 *
+	 * Opening the dialog moves the marker to the newest release, so the dialog
+	 * reads this snapshot to tell which releases were new to the user.
+	 */
+	seenBeforeOpen = $state<string | null>(null);
 
 	/** Whether the stored marker has been read yet. */
 	hydrated = $state(false);
@@ -62,6 +91,7 @@ class WhatsNewState {
 	/** Opening the dialog is what marks the release as seen. */
 	open(latestVersion?: string | null) {
 		this.isOpen = true;
+		this.seenBeforeOpen = this.lastSeen;
 		if (latestVersion) this.markSeen(latestVersion);
 	}
 

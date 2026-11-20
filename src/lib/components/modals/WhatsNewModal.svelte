@@ -3,9 +3,26 @@
 
 	import type { PlatformRelease } from '$lib/api';
 	import { formatDay } from '$lib/utils/datetime';
-	import { whatsNew } from '$lib/whatsNew.svelte';
+	import { unseenVersions, whatsNew } from '$lib/whatsNew.svelte';
 
 	let { releases = [], docsUrl }: { releases?: PlatformRelease[]; docsUrl?: string } = $props();
+
+	let unseen = $derived(unseenVersions(releases, whatsNew.seenBeforeOpen));
+
+	let unseenChanges = $derived(
+		releases
+			.filter((release) => unseen.includes(release.platform_version))
+			.reduce((count, release) => count + release.highlights.length, 0)
+	);
+
+	/** Where the releases the user had already seen start, for the divider. */
+	let firstSeenIndex = $derived(
+		unseen.length === 0
+			? -1
+			: releases.findIndex((release) => !unseen.includes(release.platform_version))
+	);
+
+	const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
 
 	const KIND_LABELS = {
 		new: 'New',
@@ -50,7 +67,19 @@
 			transition:fly={{ y: 20, duration: 300 }}
 		>
 			<div class="flex items-start justify-between border-b border-dark/10 px-6 py-4">
-				<h2 id="whats-new-title" class="text-lg font-semibold text-dark">What's new</h2>
+				<div>
+					<h2 id="whats-new-title" class="text-lg font-semibold text-dark">What's new</h2>
+					{#if unseen.length > 0}
+						<p class="m-0 mt-0.5 text-sm text-dark/60">
+							<!-- A run of maintenance releases has no changes to count, but it
+							     is still news that the platform moved on. -->
+							{unseenChanges > 0
+								? `${plural(unseenChanges, 'change')} in ${plural(unseen.length, 'release')}`
+								: plural(unseen.length, 'release')}
+							since your last visit
+						</p>
+					{/if}
+				</div>
 				<button
 					type="button"
 					class="rounded-md bg-light text-dark/50 hover:text-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
@@ -62,10 +91,29 @@
 			</div>
 
 			<div class="overflow-y-auto px-6 py-5">
-				{#each releases as release (release.platform_version)}
+				{#each releases as release, releaseIndex (release.platform_version)}
+					{@const isUnseen = unseen.includes(release.platform_version)}
+					{#if releaseIndex === firstSeenIndex}
+						<div
+							class="mb-6 flex items-center gap-3 text-[0.625rem] font-medium tracking-wide text-dark/35 uppercase"
+						>
+							<span class="h-px flex-1 bg-dark/10"></span>
+							Seen before
+							<span class="h-px flex-1 bg-dark/10"></span>
+						</div>
+					{/if}
 					<section class="mb-6 last:mb-0">
 						<h3 class="mb-3 flex items-baseline justify-between gap-3">
-							<span class="text-xs font-semibold tracking-wide text-dark/50 uppercase">
+							<span
+								class={[
+									'flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase',
+									isUnseen ? 'text-primary' : 'text-dark/50'
+								]}
+							>
+								{#if isUnseen}
+									<span class="size-1.5 rounded-full bg-primary" aria-hidden="true"></span>
+									<span class="sr-only">New since your last visit:</span>
+								{/if}
 								{formatDay(release.released_at, 'long')}
 							</span>
 							<span class="text-[0.625rem] font-medium tracking-wide text-dark/35">
