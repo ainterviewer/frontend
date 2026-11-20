@@ -1623,6 +1623,7 @@ export const zInterviewSummaryPublic = z.object({
     test_name: z.string().nullish(),
     start_question_id: z.string().nullish(),
     via_share_link: z.boolean().optional().default(false),
+    redirects_on_completion: z.boolean().optional().default(false),
     pid: z.string().nullish(),
     version_no: z.int().nullish(),
     semver: z.string().nullish(),
@@ -3193,6 +3194,15 @@ export const zRunComparisonResponse = z.object({
 export const zTestShareLinkResponse = z.object({
     url: z.string(),
     expires_at: z.iso.datetime()
+});
+
+/**
+ * TestShareRequest
+ *
+ * What a new shared test link does.
+ */
+export const zTestShareRequest = z.object({
+    redirect: z.boolean().optional().default(false)
 });
 
 /**
@@ -6300,6 +6310,11 @@ export const zRevokeTestShareLinksQuery = z.object({
  * Successful Response
  */
 export const zRevokeTestShareLinksResponse = z.void();
+
+/**
+ * Body
+ */
+export const zCreateTestShareLinkBody = zTestShareRequest.nullable();
 
 export const zCreateTestShareLinkPath = z.object({
     project_id: z.string().nullable()

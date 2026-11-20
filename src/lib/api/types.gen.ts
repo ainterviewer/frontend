@@ -3500,6 +3500,10 @@ export type InterviewSummaryPublic = {
      */
     via_share_link?: boolean;
     /**
+     * Redirects On Completion
+     */
+    redirects_on_completion?: boolean;
+    /**
      * Pid
      */
     pid?: string | null;
@@ -6896,6 +6900,18 @@ export type TestShareLinkResponse = {
      * Expires At
      */
     expires_at: string;
+};
+
+/**
+ * TestShareRequest
+ *
+ * What a new shared test link does.
+ */
+export type TestShareRequest = {
+    /**
+     * Redirect
+     */
+    redirect?: boolean;
 };
 
 /**
@@ -14209,7 +14225,10 @@ export type RevokeTestShareLinksResponses = {
 export type RevokeTestShareLinksResponse = RevokeTestShareLinksResponses[keyof RevokeTestShareLinksResponses];
 
 export type CreateTestShareLinkData = {
-    body?: never;
+    /**
+     * Body
+     */
+    body?: TestShareRequest | null;
     path: {
         /**
          * Project Id

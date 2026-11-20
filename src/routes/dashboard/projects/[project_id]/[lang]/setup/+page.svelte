@@ -638,8 +638,9 @@
 				<p class="mt-1 mb-4 text-sm text-gray-600">
 					Send respondents on to another page when their interview ends, such as the return links a
 					survey panel gives you. Use <code class="rounded bg-gray-100 px-1">{'{{ name }}'}</code> to
-					put an external parameter's value in the URL. Only distributed interviews are redirected, never
-					tests, and changes apply at once, to interviews already running too.
+					put an external parameter's value in the URL. Distributed interviews are redirected, and tests
+					only when started from a shared test link set to follow these redirects. Changes apply at once,
+					to interviews already running too.
 				</p>
 
 				<div class="space-y-3">

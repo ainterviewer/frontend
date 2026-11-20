@@ -2589,6 +2589,10 @@ export class Projects {
      * A link that lets anyone try the project's draft as a manual test,
      * without an account: for piloting the guide before publishing it.
      *
+     * With `redirect`, its interviews end on the project's completion
+     * redirects, as distributed ones do, so a panel's return links can be
+     * piloted too.
+     *
      * Not for demo accounts, nor on a project a demo account owns: those may
      * not distribute, and a link anyone can open would be distributing.
      */
@@ -2600,7 +2604,11 @@ export class Projects {
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/test_share',
-            ...options
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
         });
     }
     

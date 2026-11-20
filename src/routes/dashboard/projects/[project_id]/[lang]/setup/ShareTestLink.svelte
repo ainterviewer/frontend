@@ -3,6 +3,7 @@
 
 	import { page } from '$app/state';
 	import { Projects } from '$lib/api';
+	import HoverInfo from '$lib/components/HoverInfo.svelte';
 	import { formatDate } from '$lib/utils/datetime';
 	import { isDemoRestricted } from '$lib/utils/errors';
 	import { toastApiError } from '$lib/utils/toast';
@@ -41,7 +42,11 @@
 	let revoking = $state(false);
 	// The link made while this menu was open. The backend keeps no list of
 	// links to show again, only what revokes them all; a new one is a click.
-	let link = $state<{ url: string; expires_at: string } | null>(null);
+	let link = $state<{ url: string; expires_at: string; redirect: boolean } | null>(null);
+	// Whether the next link sends people on through the project's completion
+	// redirects when they finish, as the live study does: for piloting a
+	// panel's return links. Fixed into the link when it is made.
+	let redirect = $state(false);
 
 	function closeOnWindowClick(e: MouseEvent) {
 		if (open && !(e.target as HTMLElement)?.closest('.share-test-menu')) open = false;
@@ -60,7 +65,8 @@
 	async function createLink() {
 		creating = true;
 		const { data, error } = await Projects.createTestShareLink({
-			path: { project_id: projectId }
+			path: { project_id: projectId },
+			body: { redirect }
 		});
 		creating = false;
 		if (error || !data) {
@@ -71,7 +77,7 @@
 			}
 			return;
 		}
-		link = data;
+		link = { ...data, redirect };
 		await copy(data.url);
 	}
 
@@ -136,8 +142,31 @@
 						<i class="fa-solid fa-copy"></i>
 					</button>
 				</div>
-				<p class="mt-1 text-xs text-gray-500">Valid until {formatDate(link.expires_at)}.</p>
+				<p class="mt-1 text-xs text-gray-500">
+					Valid until {formatDate(link.expires_at)}.
+					{#if link.redirect}Follows the completion redirects.{/if}
+				</p>
+				<button
+					type="button"
+					class="mt-2 text-xs font-medium text-primary hover:underline"
+					onclick={() => (link = null)}
+				>
+					Make another link
+				</button>
 			{:else}
+				<div class="mt-4 mb-2 flex items-center gap-2 text-gray-700">
+					<label class="flex cursor-pointer items-center gap-2">
+						<input
+							type="checkbox"
+							class="rounded border-gray-300 text-primary focus:ring-primary"
+							bind:checked={redirect}
+						/>
+						Follow completion redirects
+					</label>
+					<HoverInfo
+						text="When they finish, send people on to the project's completion redirects, as the live study does. A panel will count it as a real submission. Add any link parameters the redirects use to the link yourself."
+					/>
+				</div>
 				<button
 					type="button"
 					class="mt-3 w-full rounded-full bg-primary px-4 py-2 font-medium text-white not-disabled:hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
