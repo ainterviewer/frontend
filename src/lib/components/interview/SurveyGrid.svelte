@@ -149,10 +149,27 @@
 {#snippet label(text: string)}{#each text.split('/') as part, k (k)}{#if k > 0}/<wbr
 			/>{/if}{part}{/each}{/snippet}
 
+<!-- The statement with its marker, the required star or the clear button,
+     kept on one line with the last word: on its own the marker wraps
+     below the text whenever the statement fills its column. -->
+{#snippet statement(row: GridRow, answered: boolean)}
+	{@const text = row.text.trimEnd()}
+	{@const cut = text.lastIndexOf(' ') + 1}
+	{text.slice(0, cut)}<span class="whitespace-nowrap">
+		{text.slice(cut)}{#if row.required !== false}<span
+				class="ml-1 text-red-500"
+				title={t.required}
+				aria-label={t.required}
+			>
+				*
+			</span>{:else if answered && !locked}{@render clearButton(row)}{/if}
+	</span>
+{/snippet}
+
 {#snippet clearButton(row: GridRow)}
 	<button
 		type="button"
-		class="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full align-middle text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:outline-none"
+		class="-my-1 ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full align-middle text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:outline-none"
 		onclick={() => clear(row)}
 		title={t.clear}
 		aria-label="{t.clear}: {row.text}"
@@ -212,12 +229,7 @@
 									? 'border-primary bg-white'
 									: 'border-transparent bg-white group-hover:bg-gray-50'}"
 							>
-								{row.text}
-								{#if row.required !== false}
-									<span class="text-red-500" title={t.required} aria-label={t.required}>*</span>
-								{:else if answered && !locked}
-									{@render clearButton(row)}
-								{/if}
+								{@render statement(row, answered)}
 							</th>
 							{#each options as option, o (o)}
 								<td
@@ -263,12 +275,7 @@
 					aria-label={row.text}
 				>
 					<p class="px-1 text-sm leading-snug font-medium text-gray-800">
-						{row.text}
-						{#if row.required !== false}
-							<span class="text-red-500" title={t.required} aria-label={t.required}>*</span>
-						{:else if answered && !locked}
-							{@render clearButton(row)}
-						{/if}
+						{@render statement(row, answered)}
 					</p>
 					<div class="w-full items-stretch {card.list}">
 						{#each options as option, o (o)}
