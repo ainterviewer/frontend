@@ -158,12 +158,12 @@
 		class="flex cursor-pointer items-center gap-2 rounded-md border-none bg-transparent px-2 py-1 text-xs text-light hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
 		aria-label="Switch project"
 	>
-		<span class="max-w-60 truncate">{title}</span>
+		<span class="max-w-[min(36rem,40vw)] truncate" {title}>{title}</span>
 		<i class="fa-solid fa-chevron-down text-[0.6rem] opacity-70"></i>
 	</Popover.Trigger>
 	<Popover.Portal>
 		<Popover.Content
-			class="z-2000 w-80 overflow-hidden rounded-md border border-gray-200 bg-white text-gray-900 shadow-lg focus:outline-none"
+			class="z-2000 w-md max-w-[calc(100vw-1rem)] overflow-hidden rounded-md border border-gray-200 bg-white text-gray-900 shadow-lg focus:outline-none"
 			sideOffset={8}
 			align="start"
 			forceMount
@@ -230,7 +230,7 @@
 														<i class="fa-solid fa-check"></i>
 													{/if}
 												</span>
-												<span class="truncate">{project.title}</span>
+												<span class="truncate" title={project.title}>{project.title}</span>
 											</a>
 										{/each}
 									{/each}
