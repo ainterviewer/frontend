@@ -4,6 +4,12 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.34] - 2026-11-20
+
+### Features
+
+- (header) Widen the project picker and its title
+
 ## [0.9.33] - 2026-11-20
 
 ### Bug Fixes
