@@ -3,6 +3,7 @@
 		conditionOptions,
 		isConditionOptionValid,
 		isConditionTargetValid,
+		isMultiChoiceItem,
 		isOrdinalItem,
 		mayGoUnasked,
 		newCondition,
@@ -194,7 +195,8 @@
 								referencedQuestion?.survey_item?.type === 'time' ||
 								referencedQuestion?.survey_item?.type === 'slider'}
 							{@const isOrdinal = isOrdinalItem(referencedQuestion)}
-							{@const allowsAnd = referencedQuestion?.survey_item?.type === 'checkbox' || isOrdinal}
+							{@const isMultiChoice = isMultiChoiceItem(referencedQuestion)}
+							{@const allowsAnd = isMultiChoice || isOrdinal}
 							{@const hasSurveyOptions = conditionOptions(referencedQuestion?.survey_item)?.length}
 							{@const targetValid =
 								isBlockValid(block.question_context) && !hasMissingOption(block)}
@@ -447,6 +449,30 @@
 											</div>
 										{/each}
 									</div>
+
+									{#if isMultiChoice}
+										<!-- A checkbox answer may tick several options: the block matches
+										     the ones it names among them, or only them. -->
+										<div>
+											<label
+												class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 transition-colors hover:text-primary"
+											>
+												<input
+													type="checkbox"
+													class="rounded border-gray-300 text-primary focus:ring-primary"
+													bind:checked={block.exclusive}
+												/>
+												…and nothing else
+											</label>
+											<p class="mt-1 ml-6 text-xs text-gray-500">
+												{#if block.exclusive}
+													Met only when no other option was ticked, a written-in "Other" included.
+												{:else}
+													Met whatever else was ticked alongside.
+												{/if}
+											</p>
+										</div>
+									{/if}
 								</div>
 							</div>
 

@@ -74,6 +74,7 @@ export function newConditionBlock(
 	return {
 		trigger_type: 'match',
 		negated: false,
+		exclusive: false,
 		evaluation: [{ option_id: null, trigger_value: '', comparison_operator: '==' }],
 		question_context: questionId
 			? { sectionId: first.id, questionId, part: 'main' }
@@ -180,6 +181,13 @@ export function isOrdinalItem(target: GuideQuestion | null | undefined): boolean
 	return target?.survey_item?.type === 'likert';
 }
 
+// A checkbox answer may tick several options, so a block reading one can ask
+// for the options it names "and nothing else" (`exclusive`) as well as for
+// them being among those ticked.
+export function isMultiChoiceItem(target: GuideQuestion | null | undefined): boolean {
+	return target?.survey_item?.type === 'checkbox';
+}
+
 // Inverse of localizeConditions, for saving. A missing target is blocked
 // earlier by validateGuideConditions.
 export function delocalizeConditions(
@@ -194,6 +202,8 @@ export function delocalizeConditions(
 			const target = resolveConditionTarget(question_context, sections, questionsMap);
 			return {
 				...rest,
+				// Left behind by a target that was a checkbox; nothing else reads it.
+				exclusive: (rest.exclusive ?? false) && isMultiChoiceItem(target.question),
 				evaluation: evaluation.map((e) => evaluationFor(e, target.question)),
 				question_context: locateContext(question_context, sections, questionsMap)
 			};

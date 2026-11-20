@@ -352,3 +352,44 @@ describe('newQuestion / normalize defaults', () => {
 		expect(q.max_probes_n).toBe(0);
 	});
 });
+
+// The guide's first question as a checkbox, with the gated question's block
+// reading it "and nothing else".
+function exclusiveGuide(type = 'checkbox') {
+	const { top, sections, questions } = mapToLocal(guide());
+	const [pets, gated] = questions[SECTION];
+	if (pets.survey_item && 'options' in pets.survey_item) {
+		pets.survey_item = { ...pets.survey_item, type } as typeof pets.survey_item;
+	}
+	gated.conditions[0].blocks[0].exclusive = true;
+	return { top, sections, questions };
+}
+
+describe('exclusive checkbox blocks', () => {
+	it('are kept on save and in the rendering', () => {
+		const { top, sections, questions } = exclusiveGuide();
+		const [, saved] = localGuide(top, sections, questions).question_sections![0].questions!;
+		const { guide: rendered } = renderLocal(top, sections, questions, ['EN']);
+
+		expect(saved.conditions![0].blocks[0].exclusive).toBe(true);
+		expect(rendered.question_sections![0].questions![1].conditions![0].blocks[0].exclusive).toBe(
+			true
+		);
+	});
+
+	it('are dropped when the target is no longer a checkbox', () => {
+		const { top, sections, questions } = exclusiveGuide('radio');
+		const [, saved] = localGuide(top, sections, questions).question_sections![0].questions!;
+		const { guide: rendered } = renderLocal(top, sections, questions, ['EN']);
+
+		expect(saved.conditions![0].blocks[0].exclusive).toBe(false);
+		expect(rendered.question_sections![0].questions![1].conditions![0].blocks[0].exclusive).toBe(
+			false
+		);
+	});
+
+	it('start off', () => {
+		const condition = newCondition([], {}, { sectionId: SECTION, questionId: GATED });
+		expect(condition.blocks[0].exclusive).toBe(false);
+	});
+});

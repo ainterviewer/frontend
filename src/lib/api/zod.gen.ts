@@ -2478,6 +2478,7 @@ export const zConditionBlock = z.object({
     question_context: zQuestionContext,
     evaluation: z.array(zConditionEvaluation),
     negated: z.boolean().optional().default(false),
+    exclusive: z.boolean().optional().default(false),
     trigger_type: zConditionTrigger.optional().default('match'),
     combine_next: z.enum(['AND', 'OR']).nullish()
 });
@@ -2502,6 +2503,7 @@ export const zLocalizedConditionBlock = z.object({
     question_context: zQuestionContext,
     evaluation: z.array(zLocalizedConditionEvaluation),
     negated: z.boolean().optional().default(false),
+    exclusive: z.boolean().optional().default(false),
     trigger_type: zConditionTrigger.optional().default('match'),
     combine_next: z.enum(['AND', 'OR']).nullish()
 });

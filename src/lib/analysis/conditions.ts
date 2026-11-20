@@ -196,7 +196,19 @@ function describeBlock(
 	// The block's own polarity, read from whichever side the prefix states.
 	const negated = negate ? !block.negated : block.negated;
 
-	const verb = classifying ? (negated ? 'is not about' : 'is about') : negated ? 'is not' : 'is';
+	// An exclusive block (a checkbox answer ticking the options named and
+	// nothing else) says so in its verb: `is only "Dog" AND "Cat"`.
+	const verb = classifying
+		? negated
+			? 'is not about'
+			: 'is about'
+		: block.exclusive
+			? negated
+				? 'is not only'
+				: 'is only'
+			: negated
+				? 'is not'
+				: 'is';
 
 	const values = join(
 		block.evaluation.map((evaluation) => describeEvaluation(evaluation, classifying)),

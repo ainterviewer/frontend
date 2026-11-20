@@ -7,6 +7,7 @@ import type {
 
 import {
 	conditionOptions,
+	isMultiChoiceItem,
 	isOrdinalItem,
 	locateContext,
 	resolveConditionTarget
@@ -73,6 +74,7 @@ function renderConditions(
 				: null;
 			return {
 				...block,
+				exclusive: (block.exclusive ?? false) && isMultiChoiceItem(target.question),
 				evaluation: block.evaluation.map(({ option_id, trigger_value, ...rest }) => ({
 					...rest,
 					trigger_value: option_id

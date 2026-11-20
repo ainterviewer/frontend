@@ -76,3 +76,31 @@ describe('buildGateMap', () => {
 		expect(gates.map((gate) => gate.action)).toEqual(['skip_section', 'skip_probes']);
 	});
 });
+
+describe('exclusive blocks', () => {
+	const pets = (negated: boolean): Condition => ({
+		id: 'pets',
+		action: 'end_interview',
+		blocks: [
+			{
+				...block(0, 0, 'Dog'),
+				evaluation: [
+					{ trigger_value: 'Dog', comparison_operator: '==', combine_next: 'AND' },
+					{ trigger_value: 'Cat', comparison_operator: '==' }
+				],
+				exclusive: true,
+				negated
+			}
+		]
+	});
+
+	it('say “only”', () => {
+		const [{ summary }] = summarizeConditions([pets(false)], { section: 0, question: 1 });
+		expect(summary.text).toBe('Interview ends when 1.1 is only “Dog” and “Cat”');
+	});
+
+	it('say "not only" when negated', () => {
+		const [{ summary }] = summarizeConditions([pets(true)], { section: 0, question: 1 });
+		expect(summary.text).toBe('Interview ends when 1.1 is not only “Dog” and “Cat”');
+	});
+});

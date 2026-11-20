@@ -1130,6 +1130,12 @@ export type ConditionBlock = {
      * Negated
      */
     negated?: boolean;
+    /**
+     * Exclusive
+     *
+     * For a checkbox answer: also require that nothing was ticked besides the options this block matches with '=='. Ignored for any other answer.
+     */
+    exclusive?: boolean;
     trigger_type?: ConditionTrigger;
     /**
      * Combine Next
@@ -4080,6 +4086,12 @@ export type LocalizedConditionBlock = {
      * Negated
      */
     negated?: boolean;
+    /**
+     * Exclusive
+     *
+     * For a checkbox answer: also require that nothing was ticked besides the options this block names. See `ConditionBlock.exclusive`.
+     */
+    exclusive?: boolean;
     trigger_type?: ConditionTrigger;
     /**
      * Combine Next

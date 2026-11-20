@@ -202,7 +202,7 @@ function buildBlockText(
 	sections: GuideSection[],
 	questions: Record<string, GuideQuestion[]>
 ): string {
-	const { question_context, evaluation, negated, trigger_type, combine_next } = block;
+	const { question_context, evaluation, negated, exclusive, trigger_type, combine_next } = block;
 	const { sectionIndex: sectionIdx, questionIndex: questionIdx } = resolveConditionTarget(
 		question_context,
 		sections,
@@ -225,7 +225,7 @@ function buildBlockText(
 		})
 		.join(' ');
 
-	let text = `${trigger}${neg}: ${ref} ${evals}`;
+	let text = `${trigger}${neg}: ${ref} ${exclusive ? `(${evals}, nothing else)` : evals}`;
 	if (combine_next) text += ` ${combine_next}`;
 	return text;
 }
