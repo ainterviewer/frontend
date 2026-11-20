@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.35] - 2026-11-20
+
+### Features
+
+- (tests) Let shared test links follow completion redirects
+
+### Bug Fixes
+
+- (survey) Require touching a Likert slider before sending
+- (survey) Keep a grid row's clear button beside its statement
+
 ## [0.9.34] - 2026-11-20
 
 ### Features
