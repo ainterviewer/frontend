@@ -109,6 +109,20 @@ export interface UiText {
 	};
 }
 
+/**
+ * An Arabic count with its noun: the dual has its own form, 3–10 take the
+ * plural and the rest the singular (`n` given as digits throughout).
+ */
+function arCount(
+	n: number,
+	forms: { one: string; two: string; few: string; many: string }
+): string {
+	if (n === 1) return forms.one;
+	if (n === 2) return forms.two;
+	const m = n % 100;
+	return `${n} ${m >= 3 && m <= 10 ? forms.few : forms.many}`;
+}
+
 const UI: Record<Lang, UiText> = {
 	EN: {
 		welcome: {
@@ -524,6 +538,179 @@ const UI: Record<Lang, UiText> = {
 			moveDown: 'Descendre',
 			notRanked: 'Non classé',
 			submit: 'Envoyer le classement'
+		}
+	},
+	AR: {
+		welcome: {
+			withdraw:
+				'إذا كنت ترغب في سحب موافقتك أو تغيير إجاباتك، يُرجى التواصل مع {email} مع الإشارة إلى الرمز التالي:',
+			store_code:
+				'تقع على عاتقك مسؤولية حفظ هذا الرمز في مكان آمن قبل بدء المقابلة. فهو الطريقة الوحيدة التي تمكّننا من التعرّف على بياناتك وتعديلها أو حذفها.',
+			start: 'بدء المقابلة',
+			video_unsupported: 'لا يمكن لمتصفحك تشغيل هذا الفيديو.'
+		},
+		consent: { accept: 'قبول', decline: 'رفض' },
+		chat: {
+			send: 'إرسال',
+			send_title: (shortcut) => `إرسال الرسالة (${shortcut})`,
+			skip: 'تخطي',
+			skip_title: 'تخطي هذا السؤال',
+			upload_image: 'رفع صورة',
+			image_upload_failed: 'تعذّر رفع الصورة.',
+			read_aloud: 'قراءة الأسئلة بصوت عالٍ',
+			stop_reading_aloud: 'إيقاف قراءة الأسئلة بصوت عالٍ',
+			show_help: 'عرض المساعدة',
+			end_interview: 'إنهاء المقابلة',
+			record_audio: 'تسجيل صوتي',
+			test_banner: 'مقابلة تجريبية — لن تُحتسب إجاباتك ضمن نتائج الدراسة.',
+			dismiss_notice: 'حسنًا'
+		},
+		connection: {
+			reconnecting: 'جارٍ إعادة الاتصال...',
+			lost: 'انقطع الاتصال. تعذّرت إعادة الاتصال.',
+			retry: 'إعادة المحاولة',
+			unavailable_title: 'لا يمكن متابعة المقابلة',
+			unavailable_text:
+				'هناك مشكلة من جانبنا تمنع إجراء المقابلة. تم حفظ إجاباتك حتى الآن. يُرجى المحاولة مرة أخرى لاحقًا، أو التواصل مع الشخص الذي شارك هذه المقابلة معك.',
+			expired_title: 'انتهت صلاحية جلستك',
+			expired_text:
+				'تعذّر علينا استئناف مقابلتك — قد يحدث ذلك إذا مرّ وقت طويل أو إذا حذف متصفحك بياناته. لا يمكنك متابعة هذه المقابلة من حيث توقفت.',
+			start_over: 'بدء مقابلة جديدة',
+			busy: 'خدمة المقابلات مشغولة حاليًا. ستتم إعادة المحاولة بعد قليل…',
+			redirecting: (s) =>
+				`سيتم تحويلك خلال ${arCount(s, { one: 'ثانية واحدة', two: 'ثانيتين', few: 'ثوانٍ', many: 'ثانية' })}.`,
+			continue_now: 'المتابعة الآن'
+		},
+		speech: {
+			discard: 'حذف التسجيل',
+			send: 'إرسال التسجيل',
+			could_not_start: 'تعذّر بدء التسجيل.',
+			transcribing: 'جارٍ تحويل الصوت إلى نص...',
+			recording: 'جارٍ التسجيل',
+			transcription_unavailable: 'تحويل الصوت إلى نص غير متاح'
+		},
+		survey: {
+			pickValue: 'اختيار قيمة',
+			chooseOne: 'اختيار خيار واحد',
+			enterNumber: 'إدخال رقم',
+			pickDate: 'اختيار تاريخ',
+			pickDateTime: 'اختيار التاريخ والوقت',
+			pickTime: 'اختيار وقت',
+			selectMultiple: 'اختيار عدة خيارات',
+			other: 'أخرى',
+			pleaseSpecify: 'يُرجى التحديد...',
+			mustBeAtLeast: 'يجب ألا تقل القيمة عن',
+			mustBeAtMost: 'يجب ألا تزيد القيمة عن',
+			pleaseProvideValue: 'يُرجى إدخال قيمة'
+		},
+		grid: {
+			rateEach: 'يُرجى تقييم كل عبارة',
+			required: 'مطلوب',
+			submit: 'إرسال الإجابات',
+			clear: 'مسح'
+		},
+		list: {
+			legend: 'يُرجى كتابة إجاباتك',
+			legendExactly: (n) =>
+				`يُرجى تقديم ${arCount(n, { one: 'إجابة واحدة', two: 'إجابتين', few: 'إجابات', many: 'إجابة' })}`,
+			entry: (n) => `الإجابة ${n}`,
+			add: 'إضافة إجابة أخرى',
+			remove: 'إزالة',
+			submit: 'إرسال الإجابات'
+		},
+		ranking: {
+			legend: 'يُرجى الترتيب بالسحب',
+			legendTop: (n) =>
+				`يُرجى سحب أهم ${arCount(n, { one: 'خيار واحد', two: 'خيارين', few: 'خيارات', many: 'خيار' })} إلى الأعلى`,
+			moveUp: 'نقل للأعلى',
+			moveDown: 'نقل للأسفل',
+			notRanked: 'غير مرتّب',
+			submit: 'إرسال الترتيب'
+		}
+	},
+	SW: {
+		welcome: {
+			withdraw:
+				'Ikiwa ungependa kuondoa ridhaa yako au kubadilisha majibu yako, tafadhali wasiliana na {email} ukitaja msimbo ufuatao:',
+			store_code:
+				'Ni jukumu lako kuhifadhi msimbo huu mahali salama kabla ya kuanza mahojiano. Ndiyo njia pekee ya sisi kutambua na kubadilisha au kufuta data yako.',
+			start: 'Anza mahojiano',
+			video_unsupported: 'Kivinjari chako hakiwezi kucheza video hii.'
+		},
+		consent: { accept: 'Kubali', decline: 'Kataa' },
+		chat: {
+			send: 'Tuma',
+			send_title: (shortcut) => `Tuma ujumbe (${shortcut})`,
+			skip: 'Ruka',
+			skip_title: 'Ruka swali hili',
+			upload_image: 'Pakia picha',
+			image_upload_failed: 'Picha haikuweza kupakiwa.',
+			read_aloud: 'Soma maswali kwa sauti',
+			stop_reading_aloud: 'Acha kusoma maswali kwa sauti',
+			show_help: 'Onyesha msaada',
+			end_interview: 'Maliza mahojiano',
+			record_audio: 'Rekodi sauti',
+			test_banner: 'Mahojiano ya majaribio — majibu yako hayatakuwa sehemu ya matokeo ya utafiti.',
+			dismiss_notice: 'Sawa'
+		},
+		connection: {
+			reconnecting: 'Inaunganisha upya...',
+			lost: 'Muunganisho umepotea. Imeshindwa kuunganisha upya.',
+			retry: 'Jaribu tena',
+			unavailable_title: 'Mahojiano hayawezi kuendelea',
+			unavailable_text:
+				'Tatizo upande wetu linazuia mahojiano kuendelea. Majibu yako hadi sasa yamehifadhiwa. Tafadhali jaribu tena baadaye, au wasiliana na mtu aliyekutumia mahojiano haya.',
+			expired_title: 'Muda wa kipindi chako umeisha',
+			expired_text:
+				'Hatukuweza kuendeleza mahojiano yako — hili linaweza kutokea ikiwa muda mrefu umepita au ikiwa kivinjari chako kimefuta data yake. Huwezi kuendelea na mahojiano haya pale ulipoishia.',
+			start_over: 'Anza mahojiano mapya',
+			busy: 'Huduma ya mahojiano ina shughuli nyingi. Inajaribu tena baada ya muda mfupi…',
+			redirecting: (s) => `Utaelekezwa baada ya sekunde ${s}.`,
+			continue_now: 'Endelea sasa'
+		},
+		speech: {
+			discard: 'Futa rekodi',
+			send: 'Tuma rekodi',
+			could_not_start: 'Imeshindwa kuanza kurekodi.',
+			transcribing: 'Inanukuu...',
+			recording: 'Inarekodi',
+			transcription_unavailable: 'Unukuzi haupatikani'
+		},
+		survey: {
+			pickValue: 'Chagua thamani',
+			chooseOne: 'Chagua kimoja',
+			enterNumber: 'Weka namba',
+			pickDate: 'Chagua tarehe',
+			pickDateTime: 'Chagua tarehe na saa',
+			pickTime: 'Chagua saa',
+			selectMultiple: 'Chagua zaidi ya kimoja',
+			other: 'Nyingine',
+			pleaseSpecify: 'Tafadhali fafanua...',
+			mustBeAtLeast: 'Lazima iwe angalau',
+			mustBeAtMost: 'Lazima isizidi',
+			pleaseProvideValue: 'Tafadhali weka thamani'
+		},
+		grid: {
+			rateEach: 'Kadiria kila kauli',
+			required: 'Inahitajika',
+			submit: 'Tuma majibu',
+			clear: 'Futa'
+		},
+		list: {
+			legend: 'Andika majibu yako',
+			legendExactly: (n) => (n === 1 ? 'Toa jibu 1' : `Toa majibu ${n}`),
+			entry: (n) => `Jibu ${n}`,
+			add: 'Ongeza jingine',
+			remove: 'Ondoa',
+			submit: 'Tuma majibu'
+		},
+		ranking: {
+			legend: 'Buruta ili kupanga',
+			legendTop: (n) => `Buruta chaguo zako ${n} bora hadi juu`,
+			moveUp: 'Sogeza juu',
+			moveDown: 'Sogeza chini',
+			notRanked: 'Hazijapangwa',
+			submit: 'Tuma mpangilio'
 		}
 	}
 };

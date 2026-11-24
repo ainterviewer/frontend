@@ -162,6 +162,55 @@ const REPORT: Record<Lang, ReportText> = {
 		skip_confirm: 'Passer la question',
 		skip_decline: 'Y répondre quand même',
 		close: 'Fermer'
+	},
+	AR: {
+		trigger_label: 'الإبلاغ عن هذا السؤال',
+		title: 'الإبلاغ عن هذا السؤال',
+		intro: 'يُرجى إخبار فريق البحث بالمشكلة في هذا السؤال. سيُقرأ بلاغك إلى جانب المقابلة.',
+		reasons: {
+			inappropriate: 'غير لائق',
+			offensive: 'مسيء',
+			irrelevant: 'غير ذي صلة',
+			other: 'سبب آخر'
+		},
+		comment_label: 'هل تودّ إضافة شيء؟ (اختياري)',
+		comment_placeholder: 'أخبرنا المزيد عن المشكلة في هذا السؤال…',
+		comment_required_hint: 'يُرجى إخبارنا باختصار بالمشكلة.',
+		cancel: 'إلغاء',
+		submit: 'إبلاغ',
+		submitting: 'جارٍ الإبلاغ…',
+		error: 'تعذّر إرسال بلاغك. يُرجى المحاولة مرة أخرى.',
+		thanks_title: 'شكرًا لك',
+		thanks_text: 'تم تسجيل بلاغك وستتم مراجعته.',
+		skip_prompt: 'هل تودّ تخطي هذا السؤال؟',
+		skip_confirm: 'تخطي السؤال',
+		skip_decline: 'الإجابة عنه على أي حال',
+		close: 'إغلاق'
+	},
+	SW: {
+		trigger_label: 'Ripoti swali hili',
+		title: 'Ripoti swali hili',
+		intro:
+			'Waeleze timu ya utafiti tatizo la swali hili. Ripoti yako itasomwa pamoja na mahojiano.',
+		reasons: {
+			inappropriate: 'Lisilofaa',
+			offensive: 'La kuudhi',
+			irrelevant: 'Lisilohusika',
+			other: 'Sababu nyingine'
+		},
+		comment_label: 'Je, kuna chochote ungependa kuongeza? (si lazima)',
+		comment_placeholder: 'Tueleze zaidi kuhusu tatizo la swali hili…',
+		comment_required_hint: 'Tafadhali tueleze kwa ufupi tatizo ni nini.',
+		cancel: 'Ghairi',
+		submit: 'Ripoti',
+		submitting: 'Inaripoti…',
+		error: 'Ripoti yako haikuweza kutumwa. Tafadhali jaribu tena.',
+		thanks_title: 'Asante',
+		thanks_text: 'Ripoti yako imehifadhiwa na itakaguliwa.',
+		skip_prompt: 'Je, ungependa kuruka swali hili?',
+		skip_confirm: 'Ruka swali',
+		skip_decline: 'Lijibu hata hivyo',
+		close: 'Funga'
 	}
 };
 

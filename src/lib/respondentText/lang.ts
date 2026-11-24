@@ -4,7 +4,7 @@
 // around its own content -- buttons, the welcome screen's notice, survey
 // controls -- exists only in these. Any other language gets English.
 
-export const LANGS = ['EN', 'DA', 'DE', 'ES', 'FR'] as const;
+export const LANGS = ['EN', 'DA', 'DE', 'ES', 'FR', 'AR', 'SW'] as const;
 
 export type Lang = (typeof LANGS)[number];
 

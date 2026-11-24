@@ -89,6 +89,34 @@ const TEXT: Record<Lang, SecurityText> = {
 			skip_section: 'Rester sur ce thème',
 			skip_probes: 'Rester sur cette question'
 		}
+	},
+	AR: {
+		title: 'فحص الأمان',
+		acknowledge: 'حسنًا',
+		accept: {
+			end_interview: 'إنهاء المقابلة',
+			skip_section: 'الانتقال إلى الموضوع التالي',
+			skip_probes: 'الانتقال إلى السؤال التالي'
+		},
+		override: {
+			end_interview: 'متابعة المقابلة',
+			skip_section: 'الاستمرار في هذا الموضوع',
+			skip_probes: 'الاستمرار في الإجابة عن هذا السؤال'
+		}
+	},
+	SW: {
+		title: 'Ukaguzi wa usalama',
+		acknowledge: 'Sawa',
+		accept: {
+			end_interview: 'Maliza mahojiano',
+			skip_section: 'Endelea kwenye mada inayofuata',
+			skip_probes: 'Endelea kwenye swali linalofuata'
+		},
+		override: {
+			end_interview: 'Endelea na mahojiano',
+			skip_section: 'Endelea na mada hii',
+			skip_probes: 'Endelea kujibu swali hili'
+		}
 	}
 };
 

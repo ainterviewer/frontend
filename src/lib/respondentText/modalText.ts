@@ -67,6 +67,16 @@ const MODEL_SECTION: Record<
 		base: "Pour mener cet entretien, nous utilisons un grand modèle de langage qui génère des questions à partir de nos instructions et de la conversation en cours. De tels modèles dépendent également des données sur lesquelles ils ont été initialement entraînés ainsi que de l'architecture spécifique employée.",
 		intro: (noun) => `Pour cet entretien, nous avons choisi ${noun} :`,
 		noun: ['le modèle de langage suivant', 'les modèles de langage suivants']
+	},
+	AR: {
+		base: 'لإجراء هذه المقابلة نستخدم نموذجًا لغويًا كبيرًا يولّد الأسئلة بناءً على تعليماتنا وعلى المحادثة الجارية. وتعتمد هذه النماذج أيضًا على البيانات التي دُرّبت عليها في الأصل وعلى البنية المحددة المستخدمة.',
+		intro: (noun) => `لهذه المقابلة اخترنا ${noun}:`,
+		noun: ['النموذج اللغوي التالي', 'النماذج اللغوية التالية']
+	},
+	SW: {
+		base: 'Ili kuendesha mahojiano haya tunatumia modeli kubwa ya lugha inayotunga maswali kulingana na maelekezo yetu na mazungumzo yanayoendelea. Modeli kama hizi pia hutegemea data zilizotumika kuzifunza awali pamoja na muundo mahususi uliotumika.',
+		intro: (noun) => `Kwa mahojiano haya tumechagua ${noun}:`,
+		noun: ['modeli ya lugha ifuatayo', 'modeli za lugha zifuatazo']
 	}
 };
 
@@ -89,7 +99,11 @@ const CONTACT: Record<Lang, (email: string) => string> = {
 	ES: (email) =>
 		`<p>Si tienes preguntas, correcciones o inquietudes sobre el entrevistador de IA, ponte en contacto con nosotros en <a href="mailto:${email}">${email}</a>.</p>`,
 	FR: (email) =>
-		`<p>Si vous avez des questions, des corrections ou des préoccupations concernant l'intervieweur IA, veuillez nous contacter à <a href="mailto:${email}">${email}</a>.</p>`
+		`<p>Si vous avez des questions, des corrections ou des préoccupations concernant l'intervieweur IA, veuillez nous contacter à <a href="mailto:${email}">${email}</a>.</p>`,
+	AR: (email) =>
+		`<p>إذا كانت لديك أي أسئلة أو تصحيحات أو مخاوف بشأن المحاور بالذكاء الاصطناعي، يُرجى التواصل معنا عبر <a href="mailto:${email}">${email}</a>.</p>`,
+	SW: (email) =>
+		`<p>Ikiwa una maswali, masahihisho au wasiwasi wowote kuhusu mhoji wa AI, tafadhali wasiliana nasi kupitia <a href="mailto:${email}">${email}</a>.</p>`
 };
 
 // Per-language modal copy. `help_text` receives the model section and the
@@ -184,6 +198,42 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 			"<p>Si vous quittez maintenant, vous ne pourrez plus reprendre l'entretien ultérieurement.</p>"
 		].join(''),
 		exit_button: 'Quitter'
+	}),
+	AR: (modelHtml, contactHtml) => ({
+		help_title: 'المساعدة',
+		help_text: [
+			'<p>يمكنك الإجابة عن كل سؤال بكتابة إجابتك في مربع النص ثم الضغط على زر «إرسال»، أو باستخدام اختصار لوحة المفاتيح الظاهر بجانبه.</p>',
+			'<p>إذا أردت تخطي سؤال، فمرّر مؤشر الفأرة فوق سؤال المحاور (أو اضغط عليه في الهاتف أو الجهاز اللوحي) ثم انقر على زر «تخطي» الذي يظهر.</p>',
+			'<p>إذا بدا لك سؤال غير لائق أو مسيء أو غير ذي صلة، يمكنك الإبلاغ عنه: مرّر المؤشر فوق السؤال أو اضغط عليه، ثم انقر على زر العلم. يمكنك إخبارنا بالمشكلة، وبعد ذلك ستُتاح لك إمكانية تخطيه.</p>',
+			'<p>يمكنك إيقاف المقابلة مؤقتًا ومتابعتها في وقت لاحق — تُحفظ إجاباتك تلقائيًا. إذا أردت إنهاء المقابلة نهائيًا، فانقر على زر الخروج في الزاوية السفلية اليسرى.</p>',
+			modelHtml,
+			contactHtml
+		].join(''),
+		exit_title: 'الخروج من المقابلة',
+		exit_text: [
+			'<p>هل أنت متأكد من رغبتك في الخروج من المقابلة؟</p>',
+			'<p>تم حفظ إجاباتك حتى الآن.</p>',
+			'<p>إذا خرجت الآن، فلن تتمكن من متابعة المقابلة في وقت لاحق.</p>'
+		].join(''),
+		exit_button: 'خروج'
+	}),
+	SW: (modelHtml, contactHtml) => ({
+		help_title: 'Msaada',
+		help_text: [
+			'<p>Unajibu kila swali kwa kuandika jibu lako kwenye kisanduku cha maandishi na kubonyeza kitufe cha "Tuma", au kwa kutumia njia ya mkato ya kibodi inayoonyeshwa kando yake.</p>',
+			'<p>Ikiwa ungependa kuruka swali, peleka kiashiria cha kipanya juu ya swali la mhoji (au liguse kwenye simu au kompyuta kibao) kisha bofya kitufe cha "Ruka" kinachotokea.</p>',
+			'<p>Ikiwa swali linaonekana kuwa lisilofaa, la kuudhi au lisilohusika, unaweza kuliripoti: peleka kiashiria juu ya swali au uliguse, kisha bofya kitufe cha bendera. Unaweza kutueleza tatizo ni nini, kisha utapewa nafasi ya kuliruka.</p>',
+			'<p>Unaweza kusitisha mahojiano na kuendelea baadaye — majibu yako huhifadhiwa kiotomatiki. Ikiwa unataka kumaliza mahojiano kabisa, bofya kitufe cha kutoka kilicho kwenye kona ya chini kushoto.</p>',
+			modelHtml,
+			contactHtml
+		].join(''),
+		exit_title: 'Toka kwenye mahojiano',
+		exit_text: [
+			'<p>Je, una uhakika unataka kutoka kwenye mahojiano?</p>',
+			'<p>Majibu yako hadi sasa yameshahifadhiwa.</p>',
+			'<p>Ukitoka sasa, hutaweza tena kuendelea na mahojiano baadaye.</p>'
+		].join(''),
+		exit_button: 'Toka'
 	})
 };
 
