@@ -109,7 +109,7 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		exit_text: [
 			'<p>Are you sure you want to exit the interview?</p>',
 			'<p>Your answers so far have already been recorded.</p>',
-			'<p>Choosing to exit the interview will disable the possibility of continuing the interview at a later time.</p>'
+			'<p>If you exit now, you will no longer be able to continue the interview at a later time.</p>'
 		].join(''),
 		exit_button: 'Exit'
 	}),
@@ -119,23 +119,23 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 			'<p>Du svarer på hvert spørgsmål ved at skrive dit svar i tekstboksen og trykke på "Send"-knappen eller ved at bruge den viste tastaturgenvej.</p>',
 			'<p>Hvis du ønsker at springe et spørgsmål over, holder du musen over interviewerens spørgsmål (eller trykker på det på en telefon eller tablet) og klikker på "Spring over"-knappen, der kommer frem.</p>',
 			'<p>Hvis et spørgsmål virker upassende, krænkende eller irrelevant, kan du rapportere det: hold musen over spørgsmålet eller tryk på det, og klik på flag-knappen. Du kan fortælle os, hvad der er galt, og derefter får du tilbudt at springe spørgsmålet over.</p>',
-			'<p>Du kan sætte interviewet på pause og fortsætte på et senere tidspunkt — dine svar gemmes automatisk. Hvis du ønsker at afslutte interviewet permanent, kan du klikke på exit-knappen i nederste venstre hjørne.</p>',
+			'<p>Du kan sætte interviewet på pause og fortsætte på et senere tidspunkt — dine svar gemmes automatisk. Hvis du ønsker at afslutte interviewet permanent, kan du klikke på afslut-knappen i nederste venstre hjørne.</p>',
 			modelHtml,
 			contactHtml
 		].join(''),
 		exit_title: 'Afslut interview',
 		exit_text: [
 			'<p>Er du sikker på, at du vil afslutte interviewet?</p>',
-			'<p>De svar du har afgivet indtil videre er allerede gemte.</p>',
-			'<p>Hvis du afslutter interviewet vil det ikke være muligt at fortsætte interviewet på et senere tidspunkt.</p>'
+			'<p>De svar, du har givet indtil nu, er allerede gemt.</p>',
+			'<p>Hvis du afslutter nu, vil det ikke længere være muligt at fortsætte interviewet på et senere tidspunkt.</p>'
 		].join(''),
 		exit_button: 'Afslut'
 	}),
 	DE: (modelHtml, contactHtml) => ({
 		help_title: 'Hilfe',
 		help_text: [
-			'<p>Sie beantworten jede Frage, indem Sie Ihre Antwort in das Textfeld eingeben und auf die Schaltfläche „Senden" klicken oder das daneben angezeigte Tastaturkürzel verwenden.</p>',
-			'<p>Wenn Sie eine Frage überspringen möchten, bewegen Sie den Mauszeiger über die Frage des Interviewers (oder tippen Sie auf einem Smartphone oder Tablet darauf) und klicken Sie auf die erscheinende Schaltfläche „Überspringen".</p>',
+			'<p>Sie beantworten jede Frage, indem Sie Ihre Antwort in das Textfeld eingeben und auf die Schaltfläche „Senden“ klicken oder das daneben angezeigte Tastaturkürzel verwenden.</p>',
+			'<p>Wenn Sie eine Frage überspringen möchten, bewegen Sie den Mauszeiger über die Frage des Interviewers (oder tippen Sie auf einem Smartphone oder Tablet darauf) und klicken Sie auf die erscheinende Schaltfläche „Überspringen“.</p>',
 			'<p>Wenn eine Frage unangemessen, beleidigend oder irrelevant erscheint, können Sie sie melden: bewegen Sie den Mauszeiger über die Frage oder tippen Sie darauf, und klicken Sie auf die Flaggen-Schaltfläche. Sie können uns mitteilen, was falsch ist, und erhalten anschließend die Möglichkeit, die Frage zu überspringen.</p>',
 			'<p>Sie können das Interview pausieren und zu einem späteren Zeitpunkt fortsetzen – Ihre Antworten werden automatisch gespeichert. Wenn Sie das Interview endgültig beenden möchten, klicken Sie auf die Beenden-Schaltfläche unten links.</p>',
 			modelHtml,
@@ -145,7 +145,7 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		exit_text: [
 			'<p>Sind Sie sicher, dass Sie das Interview beenden möchten?</p>',
 			'<p>Ihre bisherigen Antworten wurden bereits gespeichert.</p>',
-			'<p>Wenn Sie das Interview beenden, wird die Möglichkeit deaktiviert, das Interview zu einem späteren Zeitpunkt fortzusetzen.</p>'
+			'<p>Wenn Sie jetzt beenden, können Sie das Interview zu einem späteren Zeitpunkt nicht mehr fortsetzen.</p>'
 		].join(''),
 		exit_button: 'Beenden'
 	}),
@@ -163,7 +163,7 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		exit_text: [
 			'<p>¿Seguro que quieres salir de la entrevista?</p>',
 			'<p>Tus respuestas hasta ahora ya se han guardado.</p>',
-			'<p>Salir de la entrevista desactivará la posibilidad de continuarla más adelante.</p>'
+			'<p>Si sales ahora, ya no podrás continuar la entrevista más adelante.</p>'
 		].join(''),
 		exit_button: 'Salir'
 	}),
@@ -179,9 +179,9 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		].join(''),
 		exit_title: "Quitter l'entretien",
 		exit_text: [
-			"<p>Êtes-vous sûr de vouloir quitter l'entretien ?</p>",
+			"<p>Voulez-vous vraiment quitter l'entretien ?</p>",
 			'<p>Vos réponses jusqu’à présent ont déjà été enregistrées.</p>',
-			"<p>Quitter l'entretien désactivera la possibilité de le reprendre ultérieurement.</p>"
+			"<p>Si vous quittez maintenant, vous ne pourrez plus reprendre l'entretien ultérieurement.</p>"
 		].join(''),
 		exit_button: 'Quitter'
 	})

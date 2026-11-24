@@ -243,7 +243,7 @@ const UI: Record<Lang, UiText> = {
 			chooseOne: 'Vælg én',
 			enterNumber: 'Indtast et tal',
 			pickDate: 'Vælg en dato',
-			pickDateTime: 'Vælg dato og tid',
+			pickDateTime: 'Vælg dato og klokkeslæt',
 			pickTime: 'Vælg et tidspunkt',
 			selectMultiple: 'Vælg flere',
 			other: 'Andet',
@@ -262,7 +262,7 @@ const UI: Record<Lang, UiText> = {
 			submit: 'Send svar'
 		},
 		ranking: {
-			legend: 'Træk i rækkefølge',
+			legend: 'Sortér ved at trække',
 			legendTop: (n) => `Træk dine ${n} foretrukne øverst`,
 			moveUp: 'Flyt op',
 			moveDown: 'Flyt ned',
@@ -340,7 +340,7 @@ const UI: Record<Lang, UiText> = {
 		},
 		list: {
 			legend: 'Geben Sie Ihre Antworten ein',
-			legendExactly: (n) => `Geben Sie ${n} Antworten`,
+			legendExactly: (n) => `Geben Sie ${n} Antworten an`,
 			entry: (n) => `Antwort ${n}`,
 			add: 'Weitere hinzufügen',
 			remove: 'Entfernen',
