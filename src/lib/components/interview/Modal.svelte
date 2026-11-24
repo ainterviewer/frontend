@@ -1,43 +1,89 @@
 <script lang="ts">
-	let { show = false, title, onClose, children } = $props();
+	import type { Snippet } from 'svelte';
 
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape' && show) {
-			onClose?.();
-		}
+	/**
+	 * A modal dialog in the interview: help, exit, and the report form.
+	 *
+	 * A native `<dialog>` opened with `showModal()`, because that is what a
+	 * modal needs from the browser and cannot get from a `div`: focus moves in
+	 * when it opens and back to the control that opened it when it closes, the
+	 * page underneath is inert (Tab cannot wander into the chat behind it, and
+	 * a screen reader does not read it), and Escape closes it.
+	 *
+	 * `show` is the caller's, and the dialog follows it. A dialog the browser
+	 * closes itself, on Escape, reports that through `onClose` so the caller's
+	 * `show` follows back.
+	 */
+
+	let {
+		show = false,
+		title,
+		onClose,
+		children
+	}: {
+		show?: boolean;
+		title: string;
+		onClose?: () => void;
+		children: Snippet;
+	} = $props();
+
+	let dialog: HTMLDialogElement | undefined = $state();
+	const titleId = $props.id();
+
+	$effect(() => {
+		if (!dialog) return;
+		if (show && !dialog.open) dialog.showModal();
+		else if (!show && dialog.open) dialog.close();
+	});
+
+	/**
+	 * A click on the backdrop closes the dialog.
+	 *
+	 * The backdrop belongs to the dialog element, so a click on it targets the
+	 * dialog, but so does one on the dialog's own padding. Compared against the
+	 * box instead, so only a click outside it counts.
+	 */
+	function onBackdropClick(event: MouseEvent) {
+		if (!dialog || event.target !== dialog) return;
+		const box = dialog.getBoundingClientRect();
+		const inside =
+			event.clientX >= box.left &&
+			event.clientX <= box.right &&
+			event.clientY >= box.top &&
+			event.clientY <= box.bottom;
+		if (!inside) onClose?.();
 	}
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
-{#if show}
-	<div
-		class="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all"
-		role="dialog"
-		aria-modal="true"
-	>
-		<button
-			class="absolute inset-0 h-full w-full cursor-default focus:outline-none"
-			onclick={onClose}
-			aria-label="Close modal"
-			type="button"
-		></button>
+<!-- Capped at the viewport, with the body scrolling under a fixed header: a
+     long modal (the help text, on a phone) would otherwise grow past the
+     screen and lose its close button off the top. The backdrop click has its
+     keyboard counterpart in Escape, which the browser handles. -->
+<dialog
+	bind:this={dialog}
+	aria-labelledby={titleId}
+	class="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl flex-col overflow-hidden rounded-2xl bg-white py-6 shadow-2xl ring-1 ring-black/5 backdrop:bg-black/50 backdrop:backdrop-blur-sm open:flex"
+	onclick={onBackdropClick}
+	onclose={() => {
+		if (show) onClose?.();
+	}}
+>
+	{#if show}
 		<div
-			class="relative z-10 w-full max-w-2xl overflow-hidden rounded-2xl bg-white py-6 shadow-2xl ring-1 ring-black/5"
+			class="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 pb-5 sm:px-10"
 		>
-			<div class="flex items-center justify-between border-b border-gray-100 px-10 pb-5">
-				<h2 class="text-lg font-semibold text-gray-900">{title}</h2>
-				<button
-					class="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-500"
-					onclick={onClose}
-					aria-label="Close modal"
-				>
-					<i class="fa-solid fa-xmark text-lg"></i>
-				</button>
-			</div>
-			<div class="px-10 pt-5">
-				{@render children()}
-			</div>
+			<h2 id={titleId} class="text-lg font-semibold text-gray-900">{title}</h2>
+			<button
+				type="button"
+				class="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-500"
+				onclick={onClose}
+				aria-label="Close modal"
+			>
+				<i class="fa-solid fa-xmark text-lg"></i>
+			</button>
 		</div>
-	</div>
-{/if}
+		<div class="min-h-0 overflow-y-auto overscroll-contain px-5 pt-5 sm:px-10">
+			{@render children()}
+		</div>
+	{/if}
+</dialog>
