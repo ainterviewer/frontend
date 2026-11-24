@@ -185,7 +185,9 @@
 		readonly?: boolean;
 		lang?: string;
 		onSurveyAnswer?: (answer: unknown) => void;
-		/** Feedback, skip — whatever this caller puts beside the bubble. */
+		/** Feedback, skip — whatever this caller puts beside the bubble. Rendered
+		 *  in a `relative` box sized to the bubble, under it in the flow; to sit
+		 *  beside it instead, position absolutely (`left-full`). */
 		controls?: Snippet;
 		/** Audio, or anything else that belongs inside the bubble under the text. */
 		media?: Snippet;
@@ -397,18 +399,28 @@
 			? 'items-start justify-start'
 			: 'flex-col items-end justify-end'} {skipped ? 'opacity-50' : ''}"
 	>
+		<!-- The bubble and its controls, anchored together. The width cap lives
+		     here rather than on the bubble so `controls` can position against the
+		     bubble's own edge: beside it as an overlay that takes no width (a
+		     control appearing on hover must not rewrap the question under the
+		     reader's eyes), or under it where there is no room beside it. -->
 		<div
-			class="relative inline-block rounded-xl break-words hyphens-auto
-				{compact ? 'max-w-[90%] text-[0.8125rem]' : 'max-w-[90%] text-sm sm:max-w-[80%]'}
-				{interviewer
-				? `rounded-bl-sm bg-[#eee] text-gray-900 ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`
-				: bare
-					? ''
-					: `rounded-br-sm bg-primary text-on-primary ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`}"
-			{lang}
+			class="relative flex max-w-[90%] flex-col {compact ? '' : 'sm:max-w-[80%]'} {interviewer
+				? 'items-start'
+				: 'items-end'}"
 		>
-			{#if label || (badge && !surveyItem) || sentAt}
-				<!-- One header line for everything that says what this message *is*,
+			<div
+				class="relative inline-block max-w-full rounded-xl break-words hyphens-auto
+				{compact ? 'text-[0.8125rem]' : 'text-sm'}
+				{interviewer
+					? `rounded-bl-sm bg-[#eee] text-gray-900 ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`
+					: bare
+						? ''
+						: `rounded-br-sm bg-primary text-on-primary ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`}"
+				{lang}
+			>
+				{#if label || (badge && !surveyItem) || sentAt}
+					<!-- One header line for everything that says what this message *is*,
 				     rather than what it says: the guide number, and whether the
 				     answer under it was a click. Both are labels on the same thing,
 				     and stacking them cost a line of height on every survey bubble
@@ -431,101 +443,102 @@
 
 				     The time is on this line too: it says when, not what, and a
 				     line of its own under the text cost every bubble a row. -->
-				<div class="mb-1 flex flex-wrap items-center gap-1.5">
-					{#if label}
-						<span class="text-xs font-bold opacity-60">{label}</span>
-					{/if}
-					<!-- The badge and the time share the far edge: `ml-auto` on the
+					<div class="mb-1 flex flex-wrap items-center gap-1.5">
+						{#if label}
+							<span class="text-xs font-bold opacity-60">{label}</span>
+						{/if}
+						<!-- The badge and the time share the far edge: `ml-auto` on the
 					     group, so either one alone still sits right. -->
-					<span class="ml-auto flex items-center gap-1.5">
-						{#if badge && !surveyItem}
-							<!-- Sentence case, not the shout it used to be. "RADIO" was the
+						<span class="ml-auto flex items-center gap-1.5">
+							{#if badge && !surveyItem}
+								<!-- Sentence case, not the shout it used to be. "RADIO" was the
 							     wire's word set in caps and letter-spaced, which made the
 							     one thing on the line that is not English the widest thing
 							     on it. "Single choice" is longer as a string and narrower on
 							     the card, and it is what the badge was always trying to say. -->
-							<span
-								class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.625rem] font-medium ring-1 {badgeTone}"
-							>
-								<i class="{badge.icon} text-[0.6875rem]"></i>
-								{badge.label}
-							</span>
-						{/if}
-						{#if sentAt}
-							<time
-								class="text-[0.625rem] tabular-nums opacity-60"
-								datetime={time}
-								title={formatDateFull(time)}
-							>
-								{sentAt}
-							</time>
-						{/if}
-					</span>
-				</div>
-			{/if}
-			{#if image}
-				<img
-					src={image.data}
-					alt={image.alt || 'Image'}
-					class="max-h-[350px] max-w-full rounded-[5px] sm:max-h-[40vh]"
-				/>
-			{/if}
-			{@render media?.()}
-			{#if pieces.length}
-				<!-- Tailwind's preflight strips link styling, and sanitised markup is
+								<span
+									class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.625rem] font-medium ring-1 {badgeTone}"
+								>
+									<i class="{badge.icon} text-[0.6875rem]"></i>
+									{badge.label}
+								</span>
+							{/if}
+							{#if sentAt}
+								<time
+									class="text-[0.625rem] tabular-nums opacity-60"
+									datetime={time}
+									title={formatDateFull(time)}
+								>
+									{sentAt}
+								</time>
+							{/if}
+						</span>
+					</div>
+				{/if}
+				{#if image}
+					<img
+						src={image.data}
+						alt={image.alt || 'Image'}
+						class="max-h-[350px] max-w-full rounded-[5px] sm:max-h-[40vh]"
+					/>
+				{/if}
+				{@render media?.()}
+				{#if pieces.length}
+					<!-- Tailwind's preflight strips link styling, and sanitised markup is
 				     outside the reach of scoped CSS, so style anchors from here. -->
-				<span
-					class="whitespace-pre-wrap [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2"
-				>
-					{#each pieces as piece, index (index)}{#if piece.kind === 'token'}<span
-								class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium {piece
-									.config.color}"
-							>
-								<i class={piece.config.icon}></i>
-								{piece.config.label}
-							</span>{:else if piece.kind === 'html'}
-							<!-- Guide markup, marks and all, as one sanitised string — see
+					<span
+						class="whitespace-pre-wrap [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2"
+					>
+						{#each pieces as piece, index (index)}{#if piece.kind === 'token'}<span
+									class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium {piece
+										.config.color}"
+								>
+									<i class={piece.config.icon}></i>
+									{piece.config.label}
+								</span>{:else if piece.kind === 'html'}
+								<!-- Guide markup, marks and all, as one sanitised string — see
 							     `expand` above. Formatted loosely, the way this branch has
 							     always been written on the transcript page: Svelte trims
 							     whitespace at a block boundary, so the newlines do not become
 							     spaces in the sentence. -->
-							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-							{@html piece.html}
-						{:else if piece.mark}<mark
-								class={MARK_STYLE[piece.mark].className}
-								title={MARK_STYLE[piece.mark].title}
-							>
-								{piece.value}
-							</mark>{:else}{piece.value}{/if}{/each}
-				</span>
-			{/if}
-			{#if surveyItem}
-				<div class="whitespace-normal">
-					<SurveyItem
-						{...surveyItem}
-						{lang}
-						{readonly}
-						{answer}
-						onAnswer={(given: unknown) => onSurveyAnswer?.(given)}
-					/>
-				</div>
-			{/if}
-			{#if condition}
-				<!-- Under the question rather than beside it: it is a footnote on
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+								{@html piece.html}
+							{:else if piece.mark}<mark
+									class={MARK_STYLE[piece.mark].className}
+									title={MARK_STYLE[piece.mark].title}
+								>
+									{piece.value}
+								</mark>{:else}{piece.value}{/if}{/each}
+					</span>
+				{/if}
+				{#if surveyItem}
+					<div class="whitespace-normal">
+						<SurveyItem
+							{...surveyItem}
+							{lang}
+							{readonly}
+							{answer}
+							onAnswer={(given: unknown) => onSurveyAnswer?.(given)}
+						/>
+					</div>
+				{/if}
+				{#if condition}
+					<!-- Under the question rather than beside it: it is a footnote on
 				     what was asked, and amber with a branch icon because that is
 				     what a condition looks like in the guide editor and on the
 				     report page. Inside the bubble so a faded, skipped question
 				     carries its own explanation rather than leaving a bright line
 				     under a grey box. -->
-				<div
-					class="mt-1.5 flex items-start gap-1.5 border-t border-black/5 pt-1.5 text-[0.6875rem] whitespace-normal text-amber-700"
-				>
-					<i class="fa-solid fa-code-branch mt-0.5 shrink-0 text-[0.625rem] text-amber-500"></i>
-					<span class="min-w-0">{condition}</span>
-				</div>
-			{/if}
-		</div>
+					<div
+						class="mt-1.5 flex items-start gap-1.5 border-t border-black/5 pt-1.5 text-[0.6875rem] whitespace-normal text-amber-700"
+					>
+						<i class="fa-solid fa-code-branch mt-0.5 shrink-0 text-[0.625rem] text-amber-500"></i>
+						<span class="min-w-0">{condition}</span>
+					</div>
+				{/if}
+			</div>
 
-		{@render controls?.()}
+			{@render controls?.()}
+		</div>
 	</div>
 {/if}

@@ -99,8 +99,8 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		help_title: 'Help',
 		help_text: [
 			'<p>You answer each question by typing your response in the text box and pressing the "Send" button, or by using the keyboard shortcut shown next to it.</p>',
-			'<p>If you would like to skip a question, hover your mouse over the interviewer\'s question and click the "Skip" button that appears.</p>',
-			'<p>If a question seems inappropriate, offensive or irrelevant, you can report it: hover over the question and click the flag button. You can tell us what is wrong, and you will then be offered the chance to skip it.</p>',
+			'<p>If you would like to skip a question, hover over the interviewer\'s question (or tap it on a phone or tablet) and click the "Skip" button that appears.</p>',
+			'<p>If a question seems inappropriate, offensive or irrelevant, you can report it: hover over or tap the question and click the flag button. You can tell us what is wrong, and you will then be offered the chance to skip it.</p>',
 			'<p>You can pause the interview and continue at a later time — your answers are saved automatically. If you want to end the interview permanently, click the exit button in the bottom left-hand corner.</p>',
 			modelHtml,
 			contactHtml
@@ -117,8 +117,8 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		help_title: 'Hjælp',
 		help_text: [
 			'<p>Du svarer på hvert spørgsmål ved at skrive dit svar i tekstboksen og trykke på "Send"-knappen eller ved at bruge den viste tastaturgenvej.</p>',
-			'<p>Hvis du ønsker at springe et spørgsmål over, holder du musen over interviewerens spørgsmål og klikker på "Spring over"-knappen, der kommer frem.</p>',
-			'<p>Hvis et spørgsmål virker upassende, krænkende eller irrelevant, kan du rapportere det: hold musen over spørgsmålet og klik på flag-knappen. Du kan fortælle os, hvad der er galt, og derefter får du tilbudt at springe spørgsmålet over.</p>',
+			'<p>Hvis du ønsker at springe et spørgsmål over, holder du musen over interviewerens spørgsmål (eller trykker på det på en telefon eller tablet) og klikker på "Spring over"-knappen, der kommer frem.</p>',
+			'<p>Hvis et spørgsmål virker upassende, krænkende eller irrelevant, kan du rapportere det: hold musen over spørgsmålet eller tryk på det, og klik på flag-knappen. Du kan fortælle os, hvad der er galt, og derefter får du tilbudt at springe spørgsmålet over.</p>',
 			'<p>Du kan sætte interviewet på pause og fortsætte på et senere tidspunkt — dine svar gemmes automatisk. Hvis du ønsker at afslutte interviewet permanent, kan du klikke på exit-knappen i nederste venstre hjørne.</p>',
 			modelHtml,
 			contactHtml
@@ -127,7 +127,7 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		exit_text: [
 			'<p>Er du sikker på, at du vil afslutte interviewet?</p>',
 			'<p>De svar du har afgivet indtil videre er allerede gemte.</p>',
-			'<p>Hvis du afslutter interviewet vil det deaktivere muligheden for at fortsætte interviewet på et senere tidspunkt.</p>'
+			'<p>Hvis du afslutter interviewet vil det ikke være muligt at fortsætte interviewet på et senere tidspunkt.</p>'
 		].join(''),
 		exit_button: 'Afslut'
 	}),
@@ -135,8 +135,8 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		help_title: 'Hilfe',
 		help_text: [
 			'<p>Sie beantworten jede Frage, indem Sie Ihre Antwort in das Textfeld eingeben und auf die Schaltfläche „Senden" klicken oder das daneben angezeigte Tastaturkürzel verwenden.</p>',
-			'<p>Wenn Sie eine Frage überspringen möchten, bewegen Sie den Mauszeiger über die Frage des Interviewers und klicken Sie auf die erscheinende Schaltfläche „Überspringen".</p>',
-			'<p>Wenn eine Frage unangemessen, beleidigend oder irrelevant erscheint, können Sie sie melden: bewegen Sie den Mauszeiger über die Frage und klicken Sie auf die Flaggen-Schaltfläche. Sie können uns mitteilen, was falsch ist, und erhalten anschließend die Möglichkeit, die Frage zu überspringen.</p>',
+			'<p>Wenn Sie eine Frage überspringen möchten, bewegen Sie den Mauszeiger über die Frage des Interviewers (oder tippen Sie auf einem Smartphone oder Tablet darauf) und klicken Sie auf die erscheinende Schaltfläche „Überspringen".</p>',
+			'<p>Wenn eine Frage unangemessen, beleidigend oder irrelevant erscheint, können Sie sie melden: bewegen Sie den Mauszeiger über die Frage oder tippen Sie darauf, und klicken Sie auf die Flaggen-Schaltfläche. Sie können uns mitteilen, was falsch ist, und erhalten anschließend die Möglichkeit, die Frage zu überspringen.</p>',
 			'<p>Sie können das Interview pausieren und zu einem späteren Zeitpunkt fortsetzen – Ihre Antworten werden automatisch gespeichert. Wenn Sie das Interview endgültig beenden möchten, klicken Sie auf die Beenden-Schaltfläche unten links.</p>',
 			modelHtml,
 			contactHtml
@@ -153,8 +153,8 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		help_title: 'Ayuda',
 		help_text: [
 			'<p>Respondes a cada pregunta escribiendo tu respuesta en el cuadro de texto y pulsando el botón «Enviar», o utilizando el atajo de teclado que se muestra al lado.</p>',
-			'<p>Si deseas omitir una pregunta, coloca el cursor sobre la pregunta del entrevistador y haz clic en el botón «Omitir» que aparece.</p>',
-			'<p>Si una pregunta te parece inapropiada, ofensiva o irrelevante, puedes denunciarla: coloca el cursor sobre la pregunta y haz clic en el botón de la bandera. Podrás contarnos qué le pasa y después se te ofrecerá la posibilidad de omitirla.</p>',
+			'<p>Si deseas omitir una pregunta, coloca el cursor sobre la pregunta del entrevistador (o tócala en un móvil o tableta) y haz clic en el botón «Omitir» que aparece.</p>',
+			'<p>Si una pregunta te parece inapropiada, ofensiva o irrelevante, puedes denunciarla: coloca el cursor sobre la pregunta o tócala y haz clic en el botón de la bandera. Podrás contarnos qué le pasa y después se te ofrecerá la posibilidad de omitirla.</p>',
 			'<p>Puedes pausar la entrevista y continuar más tarde: tus respuestas se guardan automáticamente. Si quieres finalizar la entrevista de forma permanente, haz clic en el botón de salida en la esquina inferior izquierda.</p>',
 			modelHtml,
 			contactHtml
@@ -171,8 +171,8 @@ const MODAL: Record<Lang, (modelHtml: string, contactHtml: string) => ModalText>
 		help_title: 'Aide',
 		help_text: [
 			'<p>Vous répondez à chaque question en saisissant votre réponse dans la zone de texte et en cliquant sur le bouton « Envoyer », ou en utilisant le raccourci clavier affiché à côté.</p>',
-			"<p>Si vous souhaitez passer une question, survolez la question de l'intervieweur avec la souris et cliquez sur le bouton « Passer » qui apparaît.</p>",
-			'<p>Si une question vous semble inappropriée, offensante ou hors sujet, vous pouvez la signaler : survolez la question et cliquez sur le bouton en forme de drapeau. Vous pourrez nous dire ce qui ne va pas, puis il vous sera proposé de passer la question.</p>',
+			"<p>Si vous souhaitez passer une question, survolez la question de l'intervieweur avec la souris (ou touchez-la sur un téléphone ou une tablette) et cliquez sur le bouton « Passer » qui apparaît.</p>",
+			'<p>Si une question vous semble inappropriée, offensante ou hors sujet, vous pouvez la signaler : survolez la question ou touchez-la, puis cliquez sur le bouton en forme de drapeau. Vous pourrez nous dire ce qui ne va pas, puis il vous sera proposé de passer la question.</p>',
 			"<p>Vous pouvez mettre l'entretien en pause et le reprendre ultérieurement — vos réponses sont enregistrées automatiquement. Si vous souhaitez mettre fin définitivement à l'entretien, cliquez sur le bouton de sortie en bas à gauche.</p>",
 			modelHtml,
 			contactHtml
