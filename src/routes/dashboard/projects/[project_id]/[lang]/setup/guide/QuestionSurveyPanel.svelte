@@ -6,6 +6,7 @@
 	import { pick, surveyItemOptions } from '$lib/guide/localized';
 	import { renderSurveyItem } from '$lib/guide/render';
 	import type { GuideQuestion } from '$lib/guide/types';
+	import { textDir } from '$lib/respondentText';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { describeListBounds } from '$lib/survey/list';
 
@@ -708,7 +709,8 @@
 						</div>
 					</div>
 					<!-- Laid out like the respondent's chat: the question from the
-					     interviewer on the left, the item to answer on the right. -->
+					     interviewer at the start, the item to answer at the end: right to left
+					     in a language written that way. -->
 					{#if previewQuestion}
 						<div class="mb-3">
 							<MessageBubble
@@ -727,9 +729,9 @@
 					     A pane narrower than the bubble would squeeze the labels
 					     into breaks a respondent never sees, so the bubble keeps
 					     its width and the whole preview is scaled down instead. -->
-					<div class="w-full" bind:clientWidth={previewPaneWidth}>
+					<div class="w-full" dir={textDir(guideStore.lang)} bind:clientWidth={previewPaneWidth}>
 						<div
-							class="ml-auto text-sm break-words hyphens-auto {previewItem.type === 'likert_grid' ||
+							class="ms-auto text-sm break-words hyphens-auto {previewItem.type === 'likert_grid' ||
 							previewItem.type === 'list'
 								? 'w-full'
 								: 'w-fit'} {previewPhone ? 'max-w-76' : 'max-w-120'}"

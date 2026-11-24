@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 
 	import type { CustomToken } from '$lib/api';
+	import { textDir } from '$lib/respondentText';
 	import { badgeForType } from '$lib/survey/itemTypes';
 	import { formatDateFull, formatTime } from '$lib/utils/datetime';
 	import { type MarkRange, sanitizeMarkup } from '$lib/utils/sanitize';
@@ -381,11 +382,21 @@
 
 	let sentAt = $derived(formatTime(time));
 
+	/**
+	 * The language's own direction, so a transcript in a right-to-left language
+	 * puts the interviewer on the right wherever it is shown, not only in the
+	 * interview, whose whole page is right to left.
+	 */
+	let dir = $derived(lang ? textDir(lang) : undefined);
+
 	let gutter = $derived(compact ? '' : 'mb-[15px] px-[10px] sm:px-[50px]');
 </script>
 
 {#if standalone}
-	<div class="flex w-full {JUSTIFY[standalone.justify]} {gutter} {skipped ? 'opacity-50' : ''}">
+	<div
+		{dir}
+		class="flex w-full {JUSTIFY[standalone.justify]} {gutter} {skipped ? 'opacity-50' : ''}"
+	>
 		<div
 			class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium {standalone.color}"
 		>
@@ -395,6 +406,7 @@
 	</div>
 {:else}
 	<div
+		{dir}
 		class="group relative flex w-full {gutter} {interviewer
 			? 'items-start justify-start'
 			: 'flex-col items-end justify-end'} {skipped ? 'opacity-50' : ''}"

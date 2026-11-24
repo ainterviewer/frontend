@@ -351,8 +351,8 @@
 									{#if msg.audio_file}
 										<div
 											class="mt-1 flex {msg.type === 'received'
-												? 'ml-2.5 sm:ml-[50px]'
-												: 'mr-2.5 justify-end sm:mr-[50px]'}"
+												? 'ms-2.5 sm:ms-[50px]'
+												: 'me-2.5 justify-end sm:me-[50px]'}"
 										>
 											<AudioPlayer
 												src="/api/projects/{data.project_id}/interviews/{data.interview_id}/audio/{msg.audio_file}"

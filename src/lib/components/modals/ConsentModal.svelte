@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
 
-	import { getUiText } from '$lib/respondentText';
+	import { getUiText, textDir } from '$lib/respondentText';
 
 	interface Props {
 		show: boolean;
@@ -77,6 +77,8 @@
 		{/if}
 
 		<div
+			lang={lang.toLowerCase()}
+			dir={textDir(lang)}
 			class="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl"
 			in:fly={{ y: 20, duration: 300 }}
 			out:fly={{ y: 20, duration: animate ? 300 : 0 }}

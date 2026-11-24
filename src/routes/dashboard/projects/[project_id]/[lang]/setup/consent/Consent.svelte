@@ -10,6 +10,7 @@
 	import { ConsentModal } from '$lib/components/modals';
 	import ConsentPreview from '$lib/components/preview/ConsentPreview.svelte';
 	import { isUntranslated, pick } from '$lib/guide/localized';
+	import { isolate, textDir } from '$lib/respondentText';
 
 	import {
 		editingGuide,
@@ -180,11 +181,12 @@
 							autocomplete="off"
 							id="consent-title"
 							lang={language}
+							dir={textDir(language)}
 							spellcheck="true"
 							bind:value={consent.title[language]}
-							placeholder={isUntranslated(consent.title, language)
-								? title
-								: 'e.g., Consent to Participate'}
+							placeholder={isolate(
+								isUntranslated(consent.title, language) ? title : 'e.g., Consent to Participate'
+							)}
 							class={[
 								'block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
 								isUntranslated(consent.title, language) && 'border-amber-400 bg-amber-50'
@@ -200,11 +202,14 @@
 							autocomplete="off"
 							id="consent-text"
 							lang={language}
+							dir={textDir(language)}
 							spellcheck="true"
 							bind:value={consent.text[language]}
-							placeholder={isUntranslated(consent.text, language)
-								? text
-								: 'Write the consent information that participants must agree to before starting the interview...'}
+							placeholder={isolate(
+								isUntranslated(consent.text, language)
+									? text
+									: 'Write the consent information that participants must agree to before starting the interview...'
+							)}
 							rows="12"
 							class={[
 								'block w-full resize-y rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',

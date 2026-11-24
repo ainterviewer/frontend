@@ -326,7 +326,12 @@
 										The chunk you came from
 									</p>
 								{/if}
-								<ChunkTranscript turns={group.turns} {conditions} compact={false} />
+								<ChunkTranscript
+									turns={group.turns}
+									{conditions}
+									compact={false}
+									lang={hit?.language}
+								/>
 							</div>
 						{/each}
 					</div>

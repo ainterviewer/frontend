@@ -8,6 +8,7 @@
 	import MessageCommentThread from '$lib/components/analysis/MessageCommentThread.svelte';
 	import InterviewMessage from '$lib/components/interview/InterviewMessage.svelte';
 	import type { Message } from '$lib/components/interview/types';
+	import { textDir } from '$lib/respondentText';
 	import type { CommentSurface } from '$lib/stores/commentSurface.svelte';
 	import type { MessageComments } from '$lib/stores/messageComments.svelte';
 	import { authorName } from '$lib/utils/coding';
@@ -142,7 +143,10 @@
 	{@render beforeMessage?.()}
 
 	<div class="flex items-start gap-2">
-		<div class="min-w-0 flex-1">
+		<!-- In the transcript's direction: the message and what hangs under it
+		     swap sides in a right-to-left language. The comment button and the
+		     margin beside it are the dashboard's, and stay where they are. -->
+		<div class="min-w-0 flex-1" dir={textDir(lang)}>
 			<InterviewMessage
 				{message}
 				{lang}
@@ -157,8 +161,8 @@
 			<!-- What this message is coded as, and the way in -->
 			<div
 				class="mt-1 flex flex-wrap items-center gap-1.5 {isFromInterviewer
-					? 'ml-2.5 sm:ml-[50px]'
-					: 'mr-2.5 justify-end sm:mr-[50px]'}"
+					? 'ms-2.5 sm:ms-[50px]'
+					: 'me-2.5 justify-end sm:me-[50px]'}"
 			>
 				{#if !isFromInterviewer}
 					{@render codeBadge()}

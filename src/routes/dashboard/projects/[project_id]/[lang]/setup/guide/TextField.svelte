@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { LocalizedText } from '$lib/api/types.gen';
 	import { isUntranslated, pick } from '$lib/guide/localized';
+	import { isolate, textDir } from '$lib/respondentText';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 
 	// One piece of text in the language being edited. `text` is the shared
@@ -41,10 +42,11 @@
 		{id}
 		autocomplete="off"
 		class={[className, error ? 'invalid' : untranslated && 'untranslated']}
-		placeholder={hint}
+		placeholder={isolate(hint)}
 		{title}
 		aria-invalid={error ? true : undefined}
 		lang={guideStore.lang}
+		dir={textDir(guideStore.lang)}
 		spellcheck="true"
 		bind:value={text[guideStore.lang]}></textarea>
 {:else}
@@ -52,10 +54,11 @@
 		{id}
 		autocomplete="off"
 		class={[className, error ? 'invalid' : untranslated && 'untranslated']}
-		placeholder={hint}
+		placeholder={isolate(hint)}
 		{title}
 		aria-invalid={error ? true : undefined}
 		lang={guideStore.lang}
+		dir={textDir(guideStore.lang)}
 		spellcheck="true"
 		bind:value={text[guideStore.lang]}
 	/>

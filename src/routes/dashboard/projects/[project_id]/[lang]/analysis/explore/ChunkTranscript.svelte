@@ -4,6 +4,7 @@
 	import CodingChips from '$lib/components/analysis/CodingChips.svelte';
 	import MessageBubble from '$lib/components/interview/MessageBubble.svelte';
 	import type { SurveyItemUnion } from '$lib/components/interview/types';
+	import { textDir } from '$lib/respondentText';
 	import { isSpan } from '$lib/utils/coding';
 	import { selectionWithin } from '$lib/utils/textSelection';
 
@@ -12,7 +13,8 @@
 	let {
 		turns,
 		conditions = new Map(),
-		compact = true
+		compact = true,
+		lang
 	}: {
 		/**
 		 * A chunk's turns, or a whole interview's.
@@ -41,6 +43,9 @@
 		 * it would be two things to learn.
 		 */
 		compact?: boolean;
+		/** The interview's language: the survey controls are shown in it, and
+		 *  a right-to-left one reads right to left. */
+		lang?: string;
 	} = $props();
 
 	/**
@@ -208,7 +213,11 @@
 <div class="flex flex-col {compact ? 'gap-1.5' : ''}">
 	{#each turns as turn, index (index)}
 		{@const marks = coding?.codingsFor(turn.id) ?? []}
-		<div role="group" oncontextmenu={(event) => openMenu(event, turn)}>
+		<div
+			role="group"
+			dir={lang ? textDir(lang) : undefined}
+			oncontextmenu={(event) => openMenu(event, turn)}
+		>
 			<MessageBubble
 				interviewer={turn.role !== 'respondent'}
 				text={body(turn)}
@@ -223,6 +232,7 @@
 				condition={notes[index]}
 				skipped={isTranscript(turn) ? (turn.skipped ?? false) : false}
 				{compact}
+				{lang}
 			/>
 			{#if marks.length > 0}
 				<!-- Under the bubble and on the bubble's own side, so a turn's codes

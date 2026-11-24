@@ -33,3 +33,17 @@ const RTL_CODES = new Set(['AR', 'DV', 'FA', 'HE', 'PS', 'SD', 'UG', 'UR', 'YI']
 export function textDir(code: string | null | undefined): 'ltr' | 'rtl' {
 	return RTL_CODES.has(code?.toUpperCase() ?? '') ? 'rtl' : 'ltr';
 }
+
+/**
+ * Text set apart in the direction of its own first strong letter, by the
+ * Unicode isolate marks around it.
+ *
+ * For a placeholder in another language than its field: an English hint in a
+ * right-to-left field would otherwise be laid out right to left, its trailing
+ * "?" or "…" jumping to the front. CSS cannot do this for a placeholder in
+ * every browser (Firefox ignores `unicode-bidi` on `::placeholder`). The marks
+ * are invisible, and a placeholder is never submitted.
+ */
+export function isolate(text: string): string {
+	return text ? `⁨${text}⁩` : text;
+}

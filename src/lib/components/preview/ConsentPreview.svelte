@@ -1,7 +1,7 @@
 <script lang="ts">
 	// The consent dialog as participants see it, drawn inline: the consent
 	// page's live preview and the version history's preview of a saved one.
-	import { getUiText } from '$lib/respondentText';
+	import { getUiText, textDir } from '$lib/respondentText';
 
 	let {
 		title,
@@ -20,7 +20,11 @@
 	let t = $derived(getUiText(lang).consent);
 </script>
 
-<div class="preview overflow-hidden rounded-lg border border-gray-300 bg-white shadow-xl">
+<div
+	lang={lang.toLowerCase()}
+	dir={textDir(lang)}
+	class="preview overflow-hidden rounded-lg border border-gray-300 bg-white shadow-xl"
+>
 	<div class={['p-6', scroll && 'max-h-[500px] overflow-y-auto']}>
 		<h2 class="mb-4 text-xl font-bold text-gray-900">
 			{title || 'Consent Title'}

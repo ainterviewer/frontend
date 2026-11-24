@@ -80,7 +80,7 @@
 	     it is standing in for. A truncated *turn* would still be the wrong
 	     trade -- what arrives is fewer turns, each of them entire. -->
 	{#if turns.length > 0}
-		<ChunkTranscript {turns} {conditions} />
+		<ChunkTranscript {turns} {conditions} lang={hit.language} />
 		<!-- A window says so, in the same breath as the way out of it. The
 		     alternative was six turns presented as an interview, which reads as
 		     a very short conversation rather than as the opening of a long one

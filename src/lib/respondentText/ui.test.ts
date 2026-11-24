@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { LANGS, textDir, toLang } from './lang';
+import { isolate, LANGS, textDir, toLang } from './lang';
 import { getUiText, splitWithdraw } from './ui';
 
 describe('toLang', () => {
@@ -58,5 +58,15 @@ describe('textDir', () => {
 
 	it.each(['EN', 'SW', 'KU', '', null, undefined])('reads %s left to right', (code) => {
 		expect(textDir(code)).toBe('ltr');
+	});
+});
+
+describe('isolate', () => {
+	it('wraps text in first-strong isolate marks', () => {
+		expect(isolate('How did you get it?')).toBe('⁨How did you get it?⁩');
+	});
+
+	it('leaves an empty placeholder empty', () => {
+		expect(isolate('')).toBe('');
 	});
 });

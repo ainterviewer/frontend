@@ -1,7 +1,7 @@
 <script lang="ts">
 	// The welcome screen as participants see it, drawn inline: the welcome
 	// page's live preview and the version history's preview of a saved one.
-	import { getUiText, splitWithdraw } from '$lib/respondentText';
+	import { getUiText, splitWithdraw, textDir } from '$lib/respondentText';
 
 	let {
 		title,
@@ -28,7 +28,11 @@
 	let withdraw = $derived(splitWithdraw(t.withdraw));
 </script>
 
-<div class="preview overflow-hidden rounded-lg border border-gray-300 bg-white shadow-xl">
+<div
+	lang={lang.toLowerCase()}
+	dir={textDir(lang)}
+	class="preview overflow-hidden rounded-lg border border-gray-300 bg-white shadow-xl"
+>
 	<div class={['p-6', scroll && 'max-h-[600px] overflow-y-auto']}>
 		<h2 class="mb-4 text-xl font-bold text-gray-900">
 			{title || 'Welcome Title'}

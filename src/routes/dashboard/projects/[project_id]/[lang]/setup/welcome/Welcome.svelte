@@ -12,6 +12,7 @@
 	import { WelcomeModal } from '$lib/components/modals';
 	import WelcomePreview from '$lib/components/preview/WelcomePreview.svelte';
 	import { isUntranslated, pick } from '$lib/guide/localized';
+	import { isolate, textDir } from '$lib/respondentText';
 	import { toastApiError } from '$lib/utils/toast';
 
 	import {
@@ -311,11 +312,14 @@
 							autocomplete="off"
 							id="welcome-title"
 							lang={language}
+							dir={textDir(language)}
 							spellcheck="true"
 							bind:value={welcome.title[language]}
-							placeholder={isUntranslated(welcome.title, language)
-								? title
-								: 'e.g., Thank you for participating!'}
+							placeholder={isolate(
+								isUntranslated(welcome.title, language)
+									? title
+									: 'e.g., Thank you for participating!'
+							)}
 							class={[
 								'block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
 								isUntranslated(welcome.title, language) && 'border-amber-400 bg-amber-50'
@@ -373,11 +377,14 @@
 							autocomplete="off"
 							id="welcome-text"
 							lang={language}
+							dir={textDir(language)}
 							spellcheck="true"
 							bind:value={welcome.text[language]}
-							placeholder={isUntranslated(welcome.text, language)
-								? text
-								: 'Write your welcome message here. This will be shown to participants before they start the interview...'}
+							placeholder={isolate(
+								isUntranslated(welcome.text, language)
+									? text
+									: 'Write your welcome message here. This will be shown to participants before they start the interview...'
+							)}
 							rows="8"
 							class={[
 								'block w-full resize-y rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:ring-primary focus:outline-none',
