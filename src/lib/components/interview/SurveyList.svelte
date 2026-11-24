@@ -113,7 +113,7 @@
 		<ol class="flex flex-col gap-1.5">
 			{#each entries as _, index (index)}
 				<li class="flex items-center gap-2">
-					<span class="w-5 shrink-0 text-right text-xs font-medium text-gray-500 tabular-nums">
+					<span class="w-5 shrink-0 text-end text-xs font-medium text-gray-500 tabular-nums">
 						{index + 1}.
 					</span>
 					<input
@@ -121,6 +121,7 @@
 						bind:value={entries[index]}
 						id="list-{uid}-{index}"
 						type="text"
+						dir={entries[index] ? 'auto' : undefined}
 						class="min-w-0 flex-1 rounded-lg border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-primary/20 disabled:bg-gray-50 disabled:text-gray-700"
 						placeholder={t.entry(index + 1)}
 						aria-label={t.entry(index + 1)}
@@ -145,10 +146,10 @@
 		{#if canAdd && !locked}
 			<button
 				type="button"
-				class="mt-2 ml-7 rounded-md px-2 py-1 text-sm font-medium text-primary transition-colors hover:bg-white/60 focus:ring-2 focus:ring-primary focus:outline-none"
+				class="ms-7 mt-2 rounded-md px-2 py-1 text-sm font-medium text-primary transition-colors hover:bg-white/60 focus:ring-2 focus:ring-primary focus:outline-none"
 				onclick={add}
 			>
-				<i class="fa-solid fa-plus mr-1 text-xs" aria-hidden="true"></i>
+				<i class="fa-solid fa-plus me-1 text-xs" aria-hidden="true"></i>
 				{t.add}
 			</button>
 		{/if}
@@ -163,7 +164,7 @@
 				aria-label={t.submit}
 				title={t.submit}
 			>
-				<i class="fa-solid fa-arrow-right"></i>
+				<i class="fa-solid fa-arrow-right rtl:-scale-x-100"></i>
 			</button>
 		</div>
 	{/if}

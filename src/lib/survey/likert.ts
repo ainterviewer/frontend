@@ -23,7 +23,7 @@ export interface LikertAnchor {
 	/** First and last column the anchor may use, inclusive, 0-based. */
 	from: number;
 	to: number;
-	align: 'left' | 'center' | 'right';
+	align: 'start' | 'center' | 'end';
 }
 
 export interface LikertLayout {
@@ -63,7 +63,7 @@ export function likertLayout(options: readonly string[]): LikertLayout {
 
 	const n = options.length;
 	const last = n - 1;
-	const alignOf = (i: number) => (i === 0 ? 'left' : i === last ? 'right' : 'center');
+	const alignOf = (i: number) => (i === 0 ? 'start' : i === last ? 'end' : 'center');
 
 	// A centred anchor takes the same number of columns on either side of its
 	// own, sharing each gap to a neighbouring anchor evenly. An anchor on an
@@ -80,20 +80,20 @@ export function likertLayout(options: readonly string[]): LikertLayout {
 		const text = parsed[i].text!;
 		if (align === 'center') return { index: i, text, from: i - half[k], to: i + half[k], align };
 
-		const neighbour = align === 'left' ? k + 1 : k - 1;
+		const neighbour = align === 'start' ? k + 1 : k - 1;
 		const j = indices[neighbour];
 		if (j === undefined) {
 			return { index: i, text, from: 0, to: last, align };
 		}
 		if (alignOf(j) === 'center') {
-			return align === 'left'
+			return align === 'start'
 				? { index: i, text, from: 0, to: j - half[neighbour] - 1, align }
 				: { index: i, text, from: j + half[neighbour] + 1, to: last, align };
 		}
 		// Both ends anchored and nothing between: split down the middle, the
 		// odd column going to the left.
 		const split = Math.ceil(n / 2);
-		return align === 'left'
+		return align === 'start'
 			? { index: i, text, from: 0, to: split - 1, align }
 			: { index: i, text, from: split, to: last, align };
 	});

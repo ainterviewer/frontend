@@ -22,8 +22,8 @@ describe('likertLayout', () => {
 			ticks: range(10),
 			narrow: true,
 			anchors: [
-				{ index: 0, text: 'Slet ikke bekymret', from: 0, to: 4, align: 'left' },
-				{ index: 9, text: 'Meget bekymret', from: 5, to: 9, align: 'right' }
+				{ index: 0, text: 'Slet ikke bekymret', from: 0, to: 4, align: 'start' },
+				{ index: 9, text: 'Meget bekymret', from: 5, to: 9, align: 'end' }
 			]
 		});
 	});
@@ -39,15 +39,15 @@ describe('likertLayout', () => {
 	it('centres a middle anchor and shares the gaps either side', () => {
 		const { anchors } = likertLayout(['1) Bad', '2', '3', '4 - Neutral', '5', '6', '7: Good']);
 		expect(anchors).toEqual([
-			{ index: 0, text: 'Bad', from: 0, to: 1, align: 'left' },
+			{ index: 0, text: 'Bad', from: 0, to: 1, align: 'start' },
 			{ index: 3, text: 'Neutral', from: 2, to: 4, align: 'center' },
-			{ index: 6, text: 'Good', from: 5, to: 6, align: 'right' }
+			{ index: 6, text: 'Good', from: 5, to: 6, align: 'end' }
 		]);
 	});
 
 	it('lets a lone anchor use the whole row', () => {
 		expect(likertLayout(['0 = None', '1', '2']).anchors).toEqual([
-			{ index: 0, text: 'None', from: 0, to: 2, align: 'left' }
+			{ index: 0, text: 'None', from: 0, to: 2, align: 'start' }
 		]);
 	});
 
@@ -70,9 +70,9 @@ describe('likertLayout', () => {
 			ticks: Array(11).fill(''),
 			narrow: true,
 			anchors: [
-				{ index: 0, text: 'Meget uenig', from: 0, to: 2, align: 'left' },
+				{ index: 0, text: 'Meget uenig', from: 0, to: 2, align: 'start' },
 				{ index: 5, text: 'Hverken/eller', from: 3, to: 7, align: 'center' },
-				{ index: 10, text: 'Meget enig', from: 8, to: 10, align: 'right' }
+				{ index: 10, text: 'Meget enig', from: 8, to: 10, align: 'end' }
 			]
 		});
 		expect(likertLayout(['Disagree', '2', '3', '4', 'Agree'])).toMatchObject({

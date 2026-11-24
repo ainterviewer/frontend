@@ -14,6 +14,6 @@
 >
 	<span>{label}</span>
 	<i
-		class="fa-solid fa-chevron-right text-[10px] transition-transform group-hover/skip:translate-x-0.5"
+		class="fa-solid fa-chevron-right text-[10px] transition-transform group-hover/skip:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover/skip:-translate-x-0.5"
 	></i>
 </button>

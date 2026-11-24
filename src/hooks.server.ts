@@ -3,6 +3,7 @@ import { error, type Handle, redirect } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
 import { client } from '$lib/api/client.gen';
+import { textDir } from '$lib/respondentText';
 import { clearAuthCookies, currentAccessToken } from '$lib/server/auth';
 import { loginUrl } from '$lib/utils/urls';
 
@@ -139,5 +140,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	return resolve(event);
+	// Read when the page is rendered, after its load has set the language.
+	return resolve(event, {
+		transformPageChunk: ({ html }) => {
+			// The whole tag, so a page's own text can never be matched.
+			const code = event.locals.contentLang;
+			return html.replace(
+				'<html lang="%lang%" dir="%dir%">',
+				`<html lang="${code?.toLowerCase() ?? 'en'}" dir="${textDir(code)}">`
+			);
+		}
+	});
 };

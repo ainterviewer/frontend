@@ -152,7 +152,7 @@
 				aria-label={t.submit}
 				title={t.submit}
 			>
-				<i class="fa-solid fa-arrow-right"></i>
+				<i class="fa-solid fa-arrow-right rtl:-scale-x-100"></i>
 			</button>
 		</div>
 	{/if}

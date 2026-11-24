@@ -125,6 +125,7 @@
 			<span class="text-sm font-medium text-gray-700">{text.comment_label}</span>
 			<textarea
 				bind:value={comment}
+				dir={comment ? 'auto' : undefined}
 				rows="3"
 				maxlength="2000"
 				placeholder={text.comment_placeholder}

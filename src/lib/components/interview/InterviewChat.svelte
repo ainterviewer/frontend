@@ -425,10 +425,10 @@
 <!-- Reconnection Indicator -->
 {#if !chat.reconnectFailed && chat.isReconnecting && chat.messages.length > 0}
 	<div
-		class="fixed top-2 right-1/2 z-50 flex translate-x-[50%] items-center rounded-full bg-gray-900/90 px-4 py-2 text-sm font-medium text-white shadow-xl backdrop-blur-md transition-all lg:right-4 lg:translate-x-0"
+		class="fixed top-2 right-1/2 z-50 flex translate-x-[50%] items-center rounded-full bg-gray-900/90 px-4 py-2 text-sm font-medium text-white shadow-xl backdrop-blur-md transition-all lg:right-4 lg:translate-x-0 lg:rtl:right-auto lg:rtl:left-4"
 	>
 		<div
-			class="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"
+			class="me-2 h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"
 		></div>
 		{connectionText.reconnecting}
 	</div>
@@ -474,7 +474,7 @@
 <!-- Reconnection Failure -->
 {#if chat.reconnectFailed}
 	<div
-		class="fixed top-2 right-1/2 z-50 flex translate-x-[50%] items-center gap-3 rounded-lg bg-red-600/95 px-4 py-2 text-sm font-medium text-white shadow-xl backdrop-blur-md lg:right-4 lg:translate-x-0"
+		class="fixed top-2 right-1/2 z-50 flex translate-x-[50%] items-center gap-3 rounded-lg bg-red-600/95 px-4 py-2 text-sm font-medium text-white shadow-xl backdrop-blur-md lg:right-4 lg:translate-x-0 lg:rtl:right-auto lg:rtl:left-4"
 	>
 		<span>{connectionText.lost}</span>
 		<button
@@ -541,8 +541,8 @@
 		onsubmit={handleSubmit}
 		class="flex w-full flex-row items-center justify-center px-4 sm:px-0"
 	>
-		<!-- Controls Left -->
-		<div class="mr-2 flex flex-col gap-1.75">
+		<!-- Controls, at the start -->
+		<div class="me-2 flex flex-col gap-1.75">
 			{#if imageUpload}
 				<button
 					type="button"
@@ -594,6 +594,9 @@
 		</div>
 
 		<!-- Textarea / speech indicator while recording -->
+		<!-- A reply takes the direction of its own words once it has some; empty,
+		     the field follows the page, so it starts on the right in Arabic.
+		     (`dir="auto"` with no letters to go by falls back to left to right.) -->
 		{#if isRecording}
 			<SpeechInput {lang} onTranscript={handleTranscript} onCancel={() => (isRecording = false)} />
 		{:else}
@@ -604,6 +607,7 @@
 				rows="1"
 				placeholder="Aa"
 				{lang}
+				dir={messageInput ? 'auto' : undefined}
 				class="
 					w-full resize-none rounded border border-gray-300 p-2.5 shadow-sm transition-all
 					focus:border-primary focus:ring-1 focus:ring-primary/50 focus:outline-none
@@ -617,7 +621,7 @@
 		{/if}
 
 		<!-- Send Button -->
-		<div class="ml-1.5 flex flex-col">
+		<div class="ms-1.5 flex flex-col">
 			<button
 				type="submit"
 				disabled={!chat.inputEnabled || !messageInput.trim()}
@@ -631,7 +635,8 @@
 			>
 				{chatText.send}
 			</button>
-			<div class="mt-1 hidden text-center text-xs text-gray-400 sm:block">
+			<!-- Left to right in any language: a key combination, not words. -->
+			<div dir="ltr" class="mt-1 hidden text-center text-xs text-gray-400 sm:block">
 				<span class="font-sans">{isMac ? '⌘' : 'ctrl'}</span>+<span class="font-bold">↵</span>
 			</div>
 			<div class="flex" class:hidden={!interviewConfig.with_audio}>

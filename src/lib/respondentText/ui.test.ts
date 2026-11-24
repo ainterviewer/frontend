@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { LANGS, toLang } from './lang';
+import { LANGS, textDir, toLang } from './lang';
 import { getUiText, splitWithdraw } from './ui';
 
 describe('toLang', () => {
@@ -48,5 +48,15 @@ describe('reviewed UI copy', () => {
 		expect(getUiText('DE').grid.rateEach).toBe('Bewerten Sie jede Aussage');
 		expect(getUiText('FR').survey.selectMultiple).toBe('Sélectionnez plusieurs options');
 		expect(getUiText('FR').grid.rateEach).toBe('Évaluez chaque élément');
+	});
+});
+
+describe('textDir', () => {
+	it.each(['AR', 'fa', 'HE', 'UR'])('reads %s right to left', (code) => {
+		expect(textDir(code)).toBe('rtl');
+	});
+
+	it.each(['EN', 'SW', 'KU', '', null, undefined])('reads %s left to right', (code) => {
+		expect(textDir(code)).toBe('ltr');
 	});
 });

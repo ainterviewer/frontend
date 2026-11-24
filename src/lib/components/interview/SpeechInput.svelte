@@ -151,6 +151,6 @@
 		disabled={isTranscribing || failed}
 		title={t.send}
 	>
-		<i class="fas fa-paper-plane"></i>
+		<i class="fas fa-paper-plane rtl:-scale-x-100"></i>
 	</button>
 </div>

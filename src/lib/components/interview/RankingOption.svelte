@@ -48,7 +48,7 @@
 
 <li
 	{@attach ref}
-	class="flex items-center gap-2 rounded-xl border-l-4 bg-white py-1.5 pr-1.5 pl-1 shadow-sm transition-colors {rank !=
+	class="flex items-center gap-2 rounded-xl border-s-4 bg-white py-1.5 ps-1 pe-1.5 shadow-sm transition-colors {rank !=
 	null
 		? 'border-primary'
 		: 'border-transparent'} {isDragging.current ? 'opacity-60 shadow-md' : ''}"

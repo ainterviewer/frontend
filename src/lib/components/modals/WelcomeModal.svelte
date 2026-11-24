@@ -82,7 +82,7 @@
 			out:fly={{ y: 20, duration: animate ? 300 : 0 }}
 		>
 			{#if isPreview && onClose}
-				<div class="absolute top-0 right-0 z-10 pt-4 pr-4">
+				<div class="absolute inset-e-0 top-0 z-10 pe-4 pt-4">
 					<button
 						type="button"
 						class="rounded-md bg-white text-gray-400 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"

@@ -186,14 +186,14 @@
 		never: { list: 'grid', option: COLUMN, column: '', row: 'hidden', anchors: '' },
 		sm: {
 			list: 'grid max-sm:flex max-sm:flex-col max-sm:gap-1',
-			option: `${COLUMN} max-sm:w-full max-sm:flex-row max-sm:gap-3 max-sm:py-1.5 max-sm:border max-sm:border-gray-200 max-sm:bg-white max-sm:px-3 max-sm:text-left max-sm:text-sm max-sm:shadow-sm`,
+			option: `${COLUMN} max-sm:w-full max-sm:flex-row max-sm:gap-3 max-sm:py-1.5 max-sm:border max-sm:border-gray-200 max-sm:bg-white max-sm:px-3 max-sm:text-start max-sm:text-sm max-sm:shadow-sm`,
 			column: 'max-sm:hidden',
 			row: 'hidden max-sm:inline',
 			anchors: 'max-sm:hidden'
 		},
 		md: {
 			list: 'grid max-md:flex max-md:flex-col max-md:gap-1',
-			option: `${COLUMN} max-md:w-full max-md:flex-row max-md:gap-3 max-md:py-1.5 max-md:border max-md:border-gray-200 max-md:bg-white max-md:px-3 max-md:text-left max-md:text-sm max-md:shadow-sm`,
+			option: `${COLUMN} max-md:w-full max-md:flex-row max-md:gap-3 max-md:py-1.5 max-md:border max-md:border-gray-200 max-md:bg-white max-md:px-3 max-md:text-start max-md:text-sm max-md:shadow-sm`,
 			column: 'max-md:hidden',
 			row: 'hidden max-md:inline',
 			anchors: 'max-md:hidden'
@@ -201,7 +201,7 @@
 		always: {
 			list: 'flex flex-col gap-1',
 			option:
-				'flex-row items-center gap-3 border border-gray-200 bg-white px-3 py-1.5 text-left text-sm shadow-sm',
+				'flex-row items-center gap-3 border border-gray-200 bg-white px-3 py-1.5 text-start text-sm shadow-sm',
 			column: 'hidden',
 			row: '',
 			anchors: 'hidden'
@@ -449,8 +449,8 @@
 					<div
 						class="flex justify-between gap-4 text-xs font-medium break-words text-gray-600 [hyphenate-limit-chars:7_3_3]"
 					>
-						<span class="max-w-[45%] text-left">{surveyItem.min_label ?? sliderMin}</span>
-						<span class="max-w-[45%] text-right">{surveyItem.max_label ?? sliderMax}</span>
+						<span class="max-w-[45%] text-start">{surveyItem.min_label ?? sliderMin}</span>
+						<span class="max-w-[45%] text-end">{surveyItem.max_label ?? sliderMax}</span>
 					</div>
 				</div>
 			{:else if surveyItem.type === 'likert' && surveyItem.ui === 'slider'}
@@ -502,8 +502,8 @@
 						class="justify-between gap-4 text-xs font-medium break-words text-gray-600 {sliderLabels.ends}"
 						aria-hidden="true"
 					>
-						<span class="max-w-[45%] text-left">{likertOptions[0]}</span>
-						<span class="max-w-[45%] text-right">{likertOptions.at(-1)}</span>
+						<span class="max-w-[45%] text-start">{likertOptions[0]}</span>
+						<span class="max-w-[45%] text-end">{likertOptions.at(-1)}</span>
 					</div>
 				</div>
 			{:else if surveyItem.type === 'likert'}
@@ -567,10 +567,10 @@
 								></span>
 								<label
 									for="{groupName}-{anchor.index}"
-									class="mt-1 min-w-min text-balance {anchor.align === 'left'
-										? 'max-w-[6em] justify-self-start text-left'
-										: anchor.align === 'right'
-											? 'max-w-[6em] justify-self-end text-right'
+									class="mt-1 min-w-min text-balance {anchor.align === 'start'
+										? 'max-w-[6em] justify-self-start text-start'
+										: anchor.align === 'end'
+											? 'max-w-[6em] justify-self-end text-end'
 											: 'max-w-[8em] justify-self-center text-center'} {disabled
 										? ''
 										: 'cursor-pointer'}"
@@ -656,7 +656,7 @@
 								checked={isChecked(opt.value)}
 								onchange={() => toggleOption(opt.value)}
 								disabled={disabled && !readonly}
-								class="mr-3 h-4 w-4 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
+								class="me-3 h-4 w-4 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
 							/>
 							{opt.label}
 						</label>
@@ -683,7 +683,7 @@
 								checked={otherSelected}
 								onchange={selectOther}
 								disabled={disabled && !readonly}
-								class="mr-3 h-4 w-4 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
+								class="me-3 h-4 w-4 border-gray-300 bg-white text-primary checked:border-primary checked:bg-primary focus:ring-primary disabled:text-gray-400"
 							/>
 							{t.other}
 						</label>
@@ -692,6 +692,7 @@
 						<div class="w-full">
 							<input
 								type="text"
+								dir={otherText ? 'auto' : undefined}
 								bind:value={otherText}
 								disabled={disabled && !readonly}
 								class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60 {roomy}"
@@ -711,7 +712,7 @@
 					disabled={!hasAnswer}
 					aria-label="Submit answer"
 				>
-					<i class="fa-solid fa-arrow-right"></i>
+					<i class="fa-solid fa-arrow-right rtl:-scale-x-100"></i>
 				</button>
 			</div>
 		{/if}

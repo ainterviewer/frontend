@@ -17,7 +17,10 @@
 	}
 </script>
 
+<!-- Left to right whatever the page: a recording plays forward in time, and
+     media controls are not mirrored in right-to-left layouts. -->
 <div
+	dir="ltr"
 	class="inline-flex max-w-full items-center gap-2.5 rounded-full border border-gray-200 bg-white py-1 pr-3 pl-1 shadow-sm"
 >
 	<audio {src} preload="metadata" bind:paused bind:currentTime bind:duration class="hidden"></audio>

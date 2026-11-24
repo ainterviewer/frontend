@@ -122,8 +122,8 @@
 			     the edge they sit beside on a wider screen. -->
 				<div
 					class="mt-2 items-center gap-2 self-end whitespace-nowrap sm:absolute sm:top-1/2 sm:mt-0 sm:-translate-y-1/2 {isReceived
-						? 'sm:left-full sm:ml-2'
-						: 'sm:right-full sm:mr-2'} {showFeedbackIndicator || showReportIndicator || revealed
+						? 'sm:inset-s-full sm:ms-2'
+						: 'sm:inset-e-full sm:me-2'} {showFeedbackIndicator || showReportIndicator || revealed
 						? 'flex'
 						: CONCEALED}"
 				>

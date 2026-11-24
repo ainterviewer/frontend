@@ -29,7 +29,7 @@ function resumableInterviewId(token: string | undefined, project_id: string): st
 	}
 }
 
-export const load: PageServerLoad = async ({ url, cookies, request }) => {
+export const load: PageServerLoad = async ({ url, cookies, request, locals }) => {
 	const project_id = url.searchParams.get('id');
 
 	if (!project_id) {
@@ -123,6 +123,9 @@ export const load: PageServerLoad = async ({ url, cookies, request }) => {
 	// the project doesn't have.
 	const languageUnresolved = !langParam || !requested;
 	const availableLanguages = languageUnresolved && languages.length > 1 ? languages : [];
+	// For `<html lang dir>` on the first paint (`hooks.server.ts`); the page
+	// keeps them in step when the respondent picks another language.
+	locals.contentLang = lang;
 
 	// Which interview this browser already holds a session for, read out of the
 	// httponly `interview_token` cookie the browser sends with this request.

@@ -8,16 +8,16 @@
 	<div class="relative h-3 w-full overflow-hidden rounded-full bg-gray-100">
 		<!-- Background Gradient -->
 		<div
-			class="absolute top-0 left-0 h-full w-full bg-linear-to-r from-primary to-dark opacity-90"
+			class="absolute inset-s-0 top-0 h-full w-full bg-linear-to-r from-primary to-dark opacity-90 rtl:bg-linear-to-l"
 		></div>
 
 		<!-- Cover (reveals gradient as it shrinks) -->
 		<div
-			class="absolute top-0 right-0 h-full bg-gray-100 transition-[width] duration-700 ease-out"
+			class="absolute inset-e-0 top-0 h-full bg-gray-100 transition-[width] duration-700 ease-out"
 			style="width: {100 - percentage}%"
 		></div>
 	</div>
-	<div class="w-8 text-right text-[10px] font-medium text-gray-400">
+	<div class="w-8 text-end text-[10px] font-medium text-gray-400">
 		{percentage}%
 	</div>
 </div>

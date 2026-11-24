@@ -80,14 +80,14 @@
 		never: { list: 'flex', option: CARD_COLUMN, column: '', row: 'hidden', anchors: '' },
 		sm: {
 			list: 'flex max-sm:flex-col max-sm:gap-0.5 max-sm:pt-1.5',
-			option: `${CARD_COLUMN} max-sm:flex-none max-sm:flex-row max-sm:gap-3 max-sm:py-1.5 max-sm:border max-sm:border-gray-200 max-sm:px-3 max-sm:text-left max-sm:text-sm`,
+			option: `${CARD_COLUMN} max-sm:flex-none max-sm:flex-row max-sm:gap-3 max-sm:py-1.5 max-sm:border max-sm:border-gray-200 max-sm:px-3 max-sm:text-start max-sm:text-sm`,
 			column: 'max-sm:hidden',
 			row: 'hidden max-sm:inline',
 			anchors: 'max-sm:hidden'
 		},
 		md: {
 			list: 'flex max-md:flex-col max-md:gap-0.5 max-md:pt-1.5',
-			option: `${CARD_COLUMN} max-md:flex-none max-md:flex-row max-md:gap-3 max-md:py-1.5 max-md:border max-md:border-gray-200 max-md:px-3 max-md:text-left max-md:text-sm`,
+			option: `${CARD_COLUMN} max-md:flex-none max-md:flex-row max-md:gap-3 max-md:py-1.5 max-md:border max-md:border-gray-200 max-md:px-3 max-md:text-start max-md:text-sm`,
 			column: 'max-md:hidden',
 			row: 'hidden max-md:inline',
 			anchors: 'max-md:hidden'
@@ -95,7 +95,7 @@
 		always: {
 			list: 'flex flex-col gap-0.5 pt-1.5',
 			option:
-				'flex-none flex-row items-center gap-3 border border-gray-200 px-3 py-1.5 text-left text-sm',
+				'flex-none flex-row items-center gap-3 border border-gray-200 px-3 py-1.5 text-start text-sm',
 			column: 'hidden',
 			row: '',
 			anchors: 'hidden'
@@ -157,7 +157,7 @@
 	{@const cut = text.lastIndexOf(' ') + 1}
 	{text.slice(0, cut)}<span class="whitespace-nowrap">
 		{text.slice(cut)}{#if row.required !== false}<span
-				class="ml-1 text-red-500"
+				class="ms-1 text-red-500"
 				title={t.required}
 				aria-label={t.required}
 			>
@@ -169,7 +169,7 @@
 {#snippet clearButton(row: GridRow)}
 	<button
 		type="button"
-		class="-my-1 ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full align-middle text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:outline-none"
+		class="-my-1 ms-1 inline-flex h-5 w-5 items-center justify-center rounded-full align-middle text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:outline-none"
 		onclick={() => clear(row)}
 		title={t.clear}
 		aria-label="{t.clear}: {row.text}"
@@ -225,7 +225,7 @@
 						<tr class="group">
 							<th
 								scope="row"
-								class="rounded-l-xl border-l-4 py-3 pr-2 pl-3 text-left leading-snug font-medium break-words [hyphens:manual] text-gray-800 transition-colors {answered
+								class="rounded-s-xl border-s-4 py-3 ps-3 pe-2 text-start leading-snug font-medium break-words [hyphens:manual] text-gray-800 transition-colors {answered
 									? 'border-primary bg-white'
 									: 'border-transparent bg-white group-hover:bg-gray-50'}"
 							>
@@ -233,7 +233,7 @@
 							</th>
 							{#each options as option, o (o)}
 								<td
-									class="p-0 text-center transition-colors last:rounded-r-xl {answered
+									class="p-0 text-center transition-colors last:rounded-e-xl {answered
 										? 'bg-white'
 										: 'bg-white group-hover:bg-gray-50'}"
 								>
@@ -268,7 +268,7 @@
 			{#each shownRows as row, r (row.id ?? r)}
 				{@const answered = !!chosen[row.id ?? '']}
 				<div
-					class="rounded-xl border-l-4 bg-white px-2 pt-2.5 pb-1 transition-colors {answered
+					class="rounded-xl border-s-4 bg-white px-2 pt-2.5 pb-1 transition-colors {answered
 						? 'border-primary'
 						: 'border-transparent'}"
 					role="radiogroup"
@@ -319,10 +319,10 @@
 								></span>
 								<label
 									for="grid-m-{uid}-{r}-{anchor.index}"
-									class="mt-0.5 min-w-min cursor-pointer text-balance {anchor.align === 'left'
-										? 'max-w-[6em] justify-self-start text-left'
-										: anchor.align === 'right'
-											? 'max-w-[6em] justify-self-end text-right'
+									class="mt-0.5 min-w-min cursor-pointer text-balance {anchor.align === 'start'
+										? 'max-w-[6em] justify-self-start text-start'
+										: anchor.align === 'end'
+											? 'max-w-[6em] justify-self-end text-end'
 											: 'max-w-[8em] justify-self-center text-center'}"
 									style:grid-row="2"
 									style:grid-column="{anchor.from + 1} / {anchor.to + 2}"
@@ -346,7 +346,7 @@
 				aria-label={t.submit}
 				title={t.submit}
 			>
-				<i class="fa-solid fa-arrow-right"></i>
+				<i class="fa-solid fa-arrow-right rtl:-scale-x-100"></i>
 			</button>
 		</div>
 	{/if}

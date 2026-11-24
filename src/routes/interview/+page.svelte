@@ -11,7 +11,7 @@
 		parseInterviewIdFromToken,
 		type StartPoint
 	} from '$lib/interview/chat.svelte';
-	import { getModalText } from '$lib/respondentText';
+	import { getModalText, textDir } from '$lib/respondentText';
 
 	interface PageData {
 		project_id: string;
@@ -55,6 +55,20 @@
 	// interpolated with the underlying model(s) returned by the interview config.
 	const models = $derived(data.interviewModels ?? []);
 	const modalText = $derived(getModalText(lang, models, data.contactEmail));
+
+	// `<html lang dir>` follow the interview's language, so a right-to-left one
+	// lays out the page, its dialogs included, right to left. The server sets
+	// them for the first paint (`hooks.server.ts`); this keeps them in step when
+	// the respondent picks another language.
+	$effect(() => {
+		const root = document.documentElement;
+		root.lang = lang.toLowerCase();
+		root.dir = textDir(lang);
+		return () => {
+			root.lang = 'en';
+			root.dir = 'ltr';
+		};
+	});
 
 	// Chat client - initialized after consent/interview creation
 	let chat = $state<ChatClient | null>(null);

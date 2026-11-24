@@ -82,7 +82,7 @@
 			out:fly={{ y: 20, duration: animate ? 300 : 0 }}
 		>
 			{#if isPreview && onClose}
-				<div class="absolute top-0 right-0 z-10 pt-4 pr-4">
+				<div class="absolute inset-e-0 top-0 z-10 pe-4 pt-4">
 					<button
 						type="button"
 						class="rounded-md bg-white text-gray-400 hover:text-gray-600 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
@@ -120,7 +120,7 @@
 						class="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none disabled:opacity-50"
 					>
 						{#if accepting}
-							<i class="fa-solid fa-spinner fa-spin mr-2"></i>
+							<i class="fa-solid fa-spinner fa-spin me-2"></i>
 						{/if}
 						{t.accept}
 					</button>

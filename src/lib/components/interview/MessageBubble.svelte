@@ -187,7 +187,7 @@
 		onSurveyAnswer?: (answer: unknown) => void;
 		/** Feedback, skip — whatever this caller puts beside the bubble. Rendered
 		 *  in a `relative` box sized to the bubble, under it in the flow; to sit
-		 *  beside it instead, position absolutely (`left-full`). */
+		 *  beside it instead, position absolutely (`inset-s-full`). */
 		controls?: Snippet;
 		/** Audio, or anything else that belongs inside the bubble under the text. */
 		media?: Snippet;
@@ -413,10 +413,10 @@
 				class="relative inline-block max-w-full rounded-xl break-words hyphens-auto
 				{compact ? 'text-[0.8125rem]' : 'text-sm'}
 				{interviewer
-					? `rounded-bl-sm bg-[#eee] text-gray-900 ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`
+					? `rounded-es-sm bg-[#eee] text-gray-900 ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`
 					: bare
 						? ''
-						: `rounded-br-sm bg-primary text-on-primary ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`}"
+						: `rounded-ee-sm bg-primary text-on-primary ${compact ? 'px-2.5 py-1.5' : 'p-2.5'}`}"
 				{lang}
 			>
 				{#if label || (badge && !surveyItem) || sentAt}
@@ -437,8 +437,8 @@
 				     Pushed to the far edge rather than set beside the number: the
 				     number is read down a column as the reader scans the guide
 				     order, and a badge butted against it shifts with the digits —
-				     `3.1` and `3.2.1` are different widths. `ml-auto` rather than
-				     `justify-between` on the row, so it stays right on a bubble
+				     `3.1` and `3.2.1` are different widths. `ms-auto` rather than
+				     `justify-between` on the row, so it stays at the end on a bubble
 				     with no number to sit opposite.
 
 				     The time is on this line too: it says when, not what, and a
@@ -447,9 +447,9 @@
 						{#if label}
 							<span class="text-xs font-bold opacity-60">{label}</span>
 						{/if}
-						<!-- The badge and the time share the far edge: `ml-auto` on the
-					     group, so either one alone still sits right. -->
-						<span class="ml-auto flex items-center gap-1.5">
+						<!-- The badge and the time share the far edge: `ms-auto` on the
+					     group, so either one alone still sits at the end. -->
+						<span class="ms-auto flex items-center gap-1.5">
 							{#if badge && !surveyItem}
 								<!-- Sentence case, not the shout it used to be. "RADIO" was the
 							     wire's word set in caps and letter-spaced, which made the
@@ -485,8 +485,11 @@
 				{@render media?.()}
 				{#if pieces.length}
 					<!-- Tailwind's preflight strips link styling, and sanitised markup is
-				     outside the reach of scoped CSS, so style anchors from here. -->
+				     outside the reach of scoped CSS, so style anchors from here.
+				     A reply takes the direction of its own words: one typed in English
+				     in an Arabic interview still reads left to right. -->
 					<span
+						dir={interviewer ? undefined : 'auto'}
 						class="whitespace-pre-wrap [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2"
 					>
 						{#each pieces as piece, index (index)}{#if piece.kind === 'token'}<span

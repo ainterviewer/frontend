@@ -244,7 +244,7 @@
 					disabled={!hasRecordedContent || isTranscribing}
 					title="Send recording"
 				>
-					<i class="fas fa-paper-plane text-xl text-white"></i>
+					<i class="fas fa-paper-plane text-xl text-white rtl:-scale-x-100"></i>
 				</button>
 			</div>
 		</div>
