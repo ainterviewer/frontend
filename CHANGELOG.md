@@ -4,6 +4,20 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.36] - 2026-11-24
+
+### Features
+
+- (interview) Add Arabic and Swahili respondent text
+- (interview) Lay out right-to-left languages right to left
+- Show right-to-left content right to left in the dashboard
+
+### Bug Fixes
+
+- (interview) Keep the question still when its controls appear
+- (interview) Keep long dialogs on screen and focus inside them
+- (interview) Reword awkward respondent text
+
 ## [0.9.35] - 2026-11-20
 
 ### Features
