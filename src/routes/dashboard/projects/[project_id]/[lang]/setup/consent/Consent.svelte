@@ -1,16 +1,29 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
 	import { page } from '$app/state';
-	import type { ContentError, LocalizedConsent, ProjectLanguage } from '$lib/api/types.gen';
+	import { Projects } from '$lib/api';
+	import type {
+		ConsentAttachmentPublic,
+		ContentError,
+		LocalizedConsent,
+		ProjectLanguage
+	} from '$lib/api/types.gen';
 	import { bindFlat } from '$lib/collab/bindFlat.svelte';
 	import CollabPill from '$lib/collab/CollabPill.svelte';
 	import { acquireContentSession, presenceUser } from '$lib/collab/contentSession.svelte';
 	import { presence } from '$lib/collab/presence.svelte';
 	import { ConsentModal } from '$lib/components/modals';
 	import ConsentPreview from '$lib/components/preview/ConsentPreview.svelte';
+	import {
+		editorAttachmentLink,
+		editorAttachmentLinks,
+		formatBytes
+	} from '$lib/consentAttachments';
 	import { isUntranslated, pick } from '$lib/guide/localized';
 	import { isolate, textDir } from '$lib/respondentText';
+	import { toastApiError } from '$lib/utils/toast';
 
 	import {
 		editingGuide,
@@ -127,6 +140,80 @@
 		await translateMissing(projectId, language, languageName);
 		translating = false;
 	}
+
+	// The consent's PDFs. Stored per language outside the versioned content,
+	// so they reach respondents without a publish. A language without any
+	// gets the default language's, as a set.
+	let ownAttachments = $state<ConsentAttachmentPublic[]>([]);
+	let defaultAttachments = $state<ConsentAttachmentPublic[]>([]);
+	let attachmentsLoading = $state(true);
+	// Set when a list could not be loaded, so an error never reads as "No PDFs".
+	let attachmentsError = $state(false);
+	let uploadingAttachments = $state(false);
+	let deletingAttachment = $state<string | null>(null);
+	let attachmentInput = $state<HTMLInputElement>();
+	let usesDefaultAttachments = $derived(
+		language !== defaultLang && ownAttachments.length === 0 && defaultAttachments.length > 0
+	);
+	let previewAttachments = $derived(
+		usesDefaultAttachments
+			? editorAttachmentLinks(projectId, defaultLang, defaultAttachments)
+			: editorAttachmentLinks(projectId, language, ownAttachments)
+	);
+
+	async function listAttachments(lang: string): Promise<ConsentAttachmentPublic[]> {
+		const res = await Projects.listConsentAttachments({
+			path: { project_id: projectId, language: lang }
+		});
+		if (res.error) {
+			attachmentsError = true;
+			return [];
+		}
+		return res.data ?? [];
+	}
+
+	// The page is keyed on the language, so this runs once per language.
+	onMount(async () => {
+		const [own, fallback] = await Promise.all([
+			listAttachments(language),
+			language === defaultLang ? Promise.resolve([]) : listAttachments(defaultLang)
+		]);
+		ownAttachments = own;
+		defaultAttachments = fallback;
+		attachmentsLoading = false;
+	});
+
+	async function uploadAttachments(files: FileList) {
+		if (!files.length) return;
+		uploadingAttachments = true;
+		const res = await Projects.uploadConsentAttachments({
+			path: { project_id: projectId, language },
+			body: { files: Array.from(files) }
+		});
+		uploadingAttachments = false;
+		if (attachmentInput) attachmentInput.value = '';
+		if (res.error) {
+			toastApiError(res.error, 'Failed to upload the PDF');
+			return;
+		}
+		ownAttachments = res.data ?? [];
+		attachmentsError = false;
+		toast.success(`Uploaded ${files.length} PDF${files.length === 1 ? '' : 's'}`);
+	}
+
+	async function deleteAttachment(filename: string) {
+		deletingAttachment = filename;
+		const res = await Projects.deleteConsentAttachment({
+			path: { project_id: projectId, language, filename }
+		});
+		deletingAttachment = null;
+		if (res.error) {
+			toastApiError(res.error, 'Failed to remove the PDF');
+			return;
+		}
+		ownAttachments = res.data ?? [];
+		attachmentsError = false;
+	}
 </script>
 
 <svelte:window
@@ -221,6 +308,89 @@
 					</div>
 				</fieldset>
 
+				<!-- Attachments: files, not part of the co-edited doc -->
+				<div class="mt-5">
+					<div class="mb-1.5 flex items-center justify-between">
+						<span class="text-sm font-medium text-gray-700">Attachments</span>
+						{#if canEdit}
+							<input
+								bind:this={attachmentInput}
+								type="file"
+								accept=".pdf,application/pdf"
+								multiple
+								class="hidden"
+								onchange={(e) => {
+									const files = e.currentTarget.files;
+									if (files) uploadAttachments(files);
+								}}
+								disabled={uploadingAttachments}
+							/>
+							<button
+								type="button"
+								class="inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-1 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
+								onclick={() => attachmentInput?.click()}
+								disabled={uploadingAttachments}
+							>
+								<i class="fa-solid fa-paperclip"></i>
+								{uploadingAttachments ? 'Uploading...' : 'Add PDF'}
+							</button>
+						{/if}
+					</div>
+					{#if ownAttachments.length}
+						<ul class="divide-y divide-gray-100 rounded-md border border-gray-200">
+							{#each ownAttachments as attachment (attachment.filename)}
+								<li class="flex items-center justify-between px-3 py-1.5">
+									<!-- eslint-disable svelte/no-navigation-without-resolve -- a backend file, not a route -->
+									<a
+										href={editorAttachmentLink(projectId, language, attachment).href}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="flex min-w-0 items-center gap-2 text-sm text-gray-800 hover:underline"
+									>
+										<i class="fa-solid fa-file-pdf text-blue-800" aria-hidden="true"></i>
+										<span class="truncate">{attachment.label}</span>
+										<span class="shrink-0 text-xs text-gray-400">
+											{formatBytes(attachment.size)}
+										</span>
+									</a>
+									<!-- eslint-enable svelte/no-navigation-without-resolve -->
+									{#if canEdit}
+										<button
+											type="button"
+											class="ml-3 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+											onclick={() => deleteAttachment(attachment.filename)}
+											disabled={deletingAttachment === attachment.filename}
+											title="Remove PDF"
+											aria-label="Remove {attachment.label}"
+										>
+											<i class="fa-solid fa-trash text-xs"></i>
+										</button>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					{:else if attachmentsError}
+						<p class="text-sm text-red-600">
+							<i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>
+							The PDFs could not be loaded. Reload the page to try again.
+						</p>
+					{:else if !attachmentsLoading}
+						<p class="text-sm text-gray-500">
+							{#if usesDefaultAttachments}
+								No PDFs in {languageName}, so respondents get the {defaultLanguageName}
+								ones. Add a PDF here to give {languageName} its own.
+							{:else}
+								No PDFs. Add PDFs, such as an information sheet, to show them as links under the
+								consent message.
+							{/if}
+						</p>
+					{/if}
+					<p class="mt-1.5 text-xs text-gray-500">
+						PDFs only, up to 10 MB each. The file name is the link's text. Changes reach respondents
+						right away, without publishing.
+					</p>
+				</div>
+
 				<!-- Actions -->
 				<div class="mt-6 flex items-center gap-3 border-t border-gray-100 pt-5">
 					<button
@@ -247,7 +417,7 @@
 
 				<!-- Modal Preview Container -->
 				<div class="rounded-lg border border-gray-200 bg-gray-100 p-4 shadow-inner">
-					<ConsentPreview {title} {text} lang={language} />
+					<ConsentPreview {title} {text} attachments={previewAttachments} lang={language} />
 				</div>
 
 				<p class="mt-3 text-center text-xs text-gray-500">
@@ -286,6 +456,7 @@
 	show={showFullscreenModal}
 	{title}
 	{text}
+	attachments={previewAttachments}
 	lang={language}
 	onAccept={() => (showFullscreenModal = false)}
 	onDecline={() => (showFullscreenModal = false)}

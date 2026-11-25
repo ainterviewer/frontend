@@ -1,12 +1,16 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
 
+	import ConsentAttachmentLinks from '$lib/components/ConsentAttachmentLinks.svelte';
+	import type { ConsentAttachmentLink } from '$lib/consentAttachments';
 	import { getUiText, textDir } from '$lib/respondentText';
 
 	interface Props {
 		show: boolean;
 		title: string;
 		text: string;
+		/** PDFs shown as links under the text. */
+		attachments?: ConsentAttachmentLink[];
 		onAccept: () => void;
 		onDecline: () => void;
 		accepting?: boolean;
@@ -21,6 +25,7 @@
 		show = false,
 		title,
 		text,
+		attachments = [],
 		onAccept,
 		onDecline,
 		accepting = false,
@@ -115,6 +120,7 @@
 						<span class="text-gray-400 italic">No consent message configured yet.</span>
 					{/if}
 				</div>
+				<ConsentAttachmentLinks {attachments} />
 				<div class="mt-8 flex gap-3">
 					<button
 						onclick={handleAccept}
@@ -140,7 +146,7 @@
 {/if}
 
 <style>
-	#consent-modal :global(a) {
+	#consent-modal :global(a:not(.consent-attachment)) {
 		color: #2563eb;
 		text-decoration: underline;
 		font-weight: 500;
@@ -148,11 +154,11 @@
 			color 0.2s ease,
 			text-decoration-color 0.2s ease;
 	}
-	#consent-modal :global(a):hover {
+	#consent-modal :global(a:not(.consent-attachment)):hover {
 		color: #1547b0;
 		cursor: pointer;
 	}
-	#consent-modal :global(a):active {
+	#consent-modal :global(a:not(.consent-attachment)):active {
 		color: #0f2d6e;
 	}
 </style>

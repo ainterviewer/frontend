@@ -1,16 +1,21 @@
 <script lang="ts">
 	// The consent dialog as participants see it, drawn inline: the consent
 	// page's live preview and the version history's preview of a saved one.
+	import ConsentAttachmentLinks from '$lib/components/ConsentAttachmentLinks.svelte';
+	import type { ConsentAttachmentLink } from '$lib/consentAttachments';
 	import { getUiText, textDir } from '$lib/respondentText';
 
 	let {
 		title,
 		text,
+		attachments = [],
 		lang = 'EN',
 		scroll = true
 	}: {
 		title: string;
 		text: string;
+		/** PDFs shown as links under the text. */
+		attachments?: ConsentAttachmentLink[];
 		/** The project language the fixed text is shown in. */
 		lang?: string;
 		/** Scroll inside a capped height; off where the container scrolls. */
@@ -37,6 +42,7 @@
 				<span class="text-gray-400 italic"> Your consent message will appear here... </span>
 			{/if}
 		</div>
+		<ConsentAttachmentLinks {attachments} />
 		<div class="mt-6 flex gap-3">
 			<button
 				class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm"
@@ -55,7 +61,7 @@
 </div>
 
 <style>
-	.preview :global(a) {
+	.preview :global(a:not(.consent-attachment)) {
 		color: #2563eb;
 		text-decoration: underline;
 		font-weight: 500;
@@ -63,11 +69,11 @@
 			color 0.2s ease,
 			text-decoration-color 0.2s ease;
 	}
-	.preview :global(a):hover {
+	.preview :global(a:not(.consent-attachment)):hover {
 		color: #1547b0;
 		cursor: pointer;
 	}
-	.preview :global(a):active {
+	.preview :global(a:not(.consent-attachment)):active {
 		color: #0f2d6e;
 	}
 </style>

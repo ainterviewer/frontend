@@ -389,6 +389,16 @@ export type BodyUploadAudio = {
 };
 
 /**
+ * Body_upload_consent_attachments
+ */
+export type BodyUploadConsentAttachments = {
+    /**
+     * Files
+     */
+    files: Array<Blob | File>;
+};
+
+/**
  * Body_upload_image
  */
 export type BodyUploadImage = {
@@ -1249,6 +1259,31 @@ export type Consent = {
      * Text
      */
     text: string;
+};
+
+/**
+ * ConsentAttachmentPublic
+ *
+ * A PDF shown with the consent, as a link (`app/api/dashboard/consent_attachments.py`).
+ *
+ * Stored on disk per language, outside the versioned content, so it has no
+ * fields beyond what the file itself says.
+ */
+export type ConsentAttachmentPublic = {
+    /**
+     * Filename
+     */
+    filename: string;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Label
+     *
+     * The link's text: the file name without its extension.
+     */
+    readonly label: string;
 };
 
 /**
@@ -7778,6 +7813,25 @@ export type ComparisonInterviewWritable = {
 };
 
 /**
+ * ConsentAttachmentPublic
+ *
+ * A PDF shown with the consent, as a link (`app/api/dashboard/consent_attachments.py`).
+ *
+ * Stored on disk per language, outside the versioned content, so it has no
+ * fields beyond what the file itself says.
+ */
+export type ConsentAttachmentPublicWritable = {
+    /**
+     * Filename
+     */
+    filename: string;
+    /**
+     * Size
+     */
+    size: number;
+};
+
+/**
  * DemoBudget
  *
  * A demo user's synthetic-interview budgets and how much of each is spent.
@@ -10041,6 +10095,316 @@ export type SendChatResponses = {
      */
     200: unknown;
 };
+
+export type ListConsentAttachmentsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/consent-attachments';
+};
+
+export type ListConsentAttachmentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type ListConsentAttachmentsError = ListConsentAttachmentsErrors[keyof ListConsentAttachmentsErrors];
+
+export type ListConsentAttachmentsResponses = {
+    /**
+     * Response List Consent Attachments
+     *
+     * Successful Response
+     */
+    200: Array<ConsentAttachmentPublic>;
+};
+
+export type ListConsentAttachmentsResponse = ListConsentAttachmentsResponses[keyof ListConsentAttachmentsResponses];
+
+export type UploadConsentAttachmentsData = {
+    body: BodyUploadConsentAttachments;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/consent-attachments';
+};
+
+export type UploadConsentAttachmentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type UploadConsentAttachmentsError = UploadConsentAttachmentsErrors[keyof UploadConsentAttachmentsErrors];
+
+export type UploadConsentAttachmentsResponses = {
+    /**
+     * Response Upload Consent Attachments
+     *
+     * Successful Response
+     */
+    200: Array<ConsentAttachmentPublic>;
+};
+
+export type UploadConsentAttachmentsResponse = UploadConsentAttachmentsResponses[keyof UploadConsentAttachmentsResponses];
+
+export type DeleteConsentAttachmentData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+        /**
+         * Filename
+         */
+        filename: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/consent-attachments/{filename}';
+};
+
+export type DeleteConsentAttachmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type DeleteConsentAttachmentError = DeleteConsentAttachmentErrors[keyof DeleteConsentAttachmentErrors];
+
+export type DeleteConsentAttachmentResponses = {
+    /**
+     * Response Delete Consent Attachment
+     *
+     * Successful Response
+     */
+    200: Array<ConsentAttachmentPublic>;
+};
+
+export type DeleteConsentAttachmentResponse = DeleteConsentAttachmentResponses[keyof DeleteConsentAttachmentResponses];
+
+export type DownloadConsentAttachmentData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Language
+         */
+        language: string;
+        /**
+         * Filename
+         */
+        filename: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/{language}/consent-attachments/{filename}';
+};
+
+export type DownloadConsentAttachmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type DownloadConsentAttachmentError = DownloadConsentAttachmentErrors[keyof DownloadConsentAttachmentErrors];
+
+export type DownloadConsentAttachmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type DownloadConsentAttachmentResponse = DownloadConsentAttachmentResponses[keyof DownloadConsentAttachmentResponses];
+
+export type GetRespondentConsentAttachmentsData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Language
+         */
+        language: string;
+    };
+    query?: {
+        /**
+         * Draft
+         */
+        draft?: boolean;
+        /**
+         * Share
+         */
+        share?: string | null;
+    };
+    url: '/api/projects/{project_id}/guide/consent/{language}/attachments';
+};
+
+export type GetRespondentConsentAttachmentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetRespondentConsentAttachmentsError = GetRespondentConsentAttachmentsErrors[keyof GetRespondentConsentAttachmentsErrors];
+
+export type GetRespondentConsentAttachmentsResponses = {
+    /**
+     * Response Get Respondent Consent Attachments
+     *
+     * Successful Response
+     */
+    200: Array<ConsentAttachmentPublic>;
+};
+
+export type GetRespondentConsentAttachmentsResponse = GetRespondentConsentAttachmentsResponses[keyof GetRespondentConsentAttachmentsResponses];
+
+export type GetRespondentConsentAttachmentData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Language
+         */
+        language: string;
+        /**
+         * Filename
+         */
+        filename: string;
+    };
+    query?: {
+        /**
+         * Draft
+         */
+        draft?: boolean;
+        /**
+         * Share
+         */
+        share?: string | null;
+    };
+    url: '/api/projects/{project_id}/guide/consent/{language}/attachments/{filename}';
+};
+
+export type GetRespondentConsentAttachmentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetRespondentConsentAttachmentError = GetRespondentConsentAttachmentErrors[keyof GetRespondentConsentAttachmentErrors];
+
+export type GetRespondentConsentAttachmentResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type GetRespondentConsentAttachmentResponse = GetRespondentConsentAttachmentResponses[keyof GetRespondentConsentAttachmentResponses];
 
 export type GetExperimentsData = {
     body?: never;

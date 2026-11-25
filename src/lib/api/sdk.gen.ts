@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AcceptCollaboratorInviteData, AcceptCollaboratorInviteErrors, AcceptCollaboratorInviteResponses, AddIntervieweeData, AddIntervieweeErrors, AddIntervieweeResponses, AddMessageCodingData, AddMessageCodingErrors, AddMessageCodingResponses, AddMessageCommentData, AddMessageCommentErrors, AddMessageCommentResponses, AddParticipantData, AddParticipantErrors, AddParticipantResponses, AddParticipantsData, AddParticipantsErrors, AddParticipantsResponses, AddProjectLanguageData, AddProjectLanguageErrors, AddProjectLanguageResponses, BrowseEmbeddingsData, BrowseEmbeddingsErrors, BrowseEmbeddingsResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CheckProjectOwnerData, CheckProjectOwnerErrors, CheckProjectOwnerResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ClusterEmbeddingsData, ClusterEmbeddingsErrors, ClusterEmbeddingsResponses, CompareTestRunsData, CompareTestRunsErrors, CompareTestRunsResponses, ConfirmEmailChangeData, ConfirmEmailChangeErrors, ConfirmEmailChangeResponses, CreateCollaboratorInviteData, CreateCollaboratorInviteErrors, CreateCollaboratorInviteResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateInterviewResumeLinkData, CreateInterviewResumeLinkErrors, CreateInterviewResumeLinkResponses, CreateInvitationData, CreateInvitationErrors, CreateInvitationResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, CreateTestShareLinkData, CreateTestShareLinkErrors, CreateTestShareLinkResponses, DeclineCollaboratorInviteData, DeclineCollaboratorInviteErrors, DeclineCollaboratorInviteResponses, DeleteAccessRequestsData, DeleteAccessRequestsErrors, DeleteAccessRequestsResponses, DeleteCollaboratorInviteData, DeleteCollaboratorInviteErrors, DeleteCollaboratorInviteResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteInvitationsData, DeleteInvitationsErrors, DeleteInvitationsResponses, DeleteMeData, DeleteMeErrors, DeleteMeResponses, DeleteMessageCodingData, DeleteMessageCodingErrors, DeleteMessageCodingResponses, DeleteMessageCommentData, DeleteMessageCommentErrors, DeleteMessageCommentResponses, DeleteParticipantData, DeleteParticipantEmailAttachmentData, DeleteParticipantEmailAttachmentErrors, DeleteParticipantEmailAttachmentResponses, DeleteParticipantErrors, DeleteParticipantReminderEmailAttachmentData, DeleteParticipantReminderEmailAttachmentErrors, DeleteParticipantReminderEmailAttachmentResponses, DeleteParticipantResponses, DeleteParticipantsData, DeleteParticipantsErrors, DeleteParticipantsResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, DeleteTestSetupData, DeleteTestSetupErrors, DeleteTestSetupResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, DownloadParticipantEmailAttachmentData, DownloadParticipantEmailAttachmentErrors, DownloadParticipantEmailAttachmentResponses, DownloadParticipantReminderEmailAttachmentData, DownloadParticipantReminderEmailAttachmentErrors, DownloadParticipantReminderEmailAttachmentResponses, EditFolderData, EditFolderErrors, EditFolderResponses, EnterExperimentData, EnterExperimentErrors, EnterExperimentResponses, ExitData, ExitErrors, ExitResponses, ExportEmailBundleData, ExportEmailBundleErrors, ExportEmailBundleResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, ExportParticipantsData, ExportParticipantsErrors, ExportParticipantsResponses, FindEmbeddingsLikeCodeData, FindEmbeddingsLikeCodeErrors, FindEmbeddingsLikeCodeResponses, FindSimilarEmbeddingsData, FindSimilarEmbeddingsErrors, FindSimilarEmbeddingsResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateGuideSectionData, GenerateGuideSectionErrors, GenerateGuideSectionResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GenerateSectionQuestionData, GenerateSectionQuestionErrors, GenerateSectionQuestionResponses, GetAccessRequestsData, GetAccessRequestsErrors, GetAccessRequestsResponses, GetAdminStatsData, GetAdminStatsErrors, GetAdminStatsResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetChatData, GetChatErrors, GetChatResponses, GetCodebookData, GetCodebookErrors, GetCodebookResponses, GetCodeCountsData, GetCodeCountsErrors, GetCodeCountsResponses, GetCodingsForMessagesData, GetCodingsForMessagesErrors, GetCodingsForMessagesResponses, GetCollaboratorInvitesData, GetCollaboratorInvitesErrors, GetCollaboratorInvitesResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetContentDocData, GetContentDocErrors, GetContentDocResponses, GetContentDraftData, GetContentDraftErrors, GetContentDraftResponses, GetContentStatusData, GetContentStatusErrors, GetContentStatusResponses, GetContentVersionData, GetContentVersionErrors, GetContentVersionResponses, GetDemoLimitDefaultsData, GetDemoLimitDefaultsErrors, GetDemoLimitDefaultsResponses, GetEmbeddingStatusData, GetEmbeddingStatusErrors, GetEmbeddingStatusResponses, GetExperimentsData, GetExperimentsErrors, GetExperimentsResponses, GetFilteredMessagesCountData, GetFilteredMessagesCountErrors, GetFilteredMessagesCountResponses, GetFilteredMessagesData, GetFilteredMessagesErrors, GetFilteredMessagesResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFixedPersonasData, GetFixedPersonasErrors, GetFixedPersonasResponses, GetFoldersData, GetFoldersErrors, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInstanceData, GetInstanceErrors, GetInstanceResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewAudioData, GetInterviewAudioErrors, GetInterviewAudioResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetIntervieweeData, GetIntervieweeErrors, GetIntervieweeResponses, GetInterviewMessagesData, GetInterviewMessagesErrors, GetInterviewMessagesResponses, GetInterviewModelsData, GetInterviewModelsErrors, GetInterviewModelsResponses, GetInterviewResumeLinkData, GetInterviewResumeLinkErrors, GetInterviewResumeLinkResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetInvitationsData, GetInvitationsErrors, GetInvitationsResponses, GetLanguagesData, GetLanguagesErrors, GetLanguagesResponses, GetLocalizedConsentData, GetLocalizedConsentErrors, GetLocalizedConsentResponses, GetLocalizedGuideData, GetLocalizedGuideErrors, GetLocalizedGuideResponses, GetLocalizedWelcomeData, GetLocalizedWelcomeErrors, GetLocalizedWelcomeResponses, GetMessageCodingsData, GetMessageCodingsErrors, GetMessageCodingsResponses, GetMessageCommentsData, GetMessageCommentsErrors, GetMessageCommentsResponses, GetMessageContextAfterData, GetMessageContextAfterErrors, GetMessageContextAfterResponses, GetMessageContextBeforeData, GetMessageContextBeforeErrors, GetMessageContextBeforeResponses, GetMessageData, GetMessageErrors, GetMessageResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetMyDemoBudgetData, GetMyDemoBudgetErrors, GetMyDemoBudgetResponses, GetMyReportsData, GetMyReportsErrors, GetMyReportsResponses, GetNotificationsData, GetNotificationsErrors, GetNotificationsResponses, GetParticipantData, GetParticipantEmailTemplateData, GetParticipantEmailTemplateErrors, GetParticipantEmailTemplateResponses, GetParticipantErrors, GetParticipantReminderEmailTemplateData, GetParticipantReminderEmailTemplateErrors, GetParticipantReminderEmailTemplateResponses, GetParticipantResponses, GetParticipantsData, GetParticipantsErrors, GetParticipantsResponses, GetProjectData, GetProjectErrors, GetProjectItemDistributionsData, GetProjectItemDistributionsErrors, GetProjectItemDistributionsResponses, GetProjectLanguagesData, GetProjectLanguagesErrors, GetProjectLanguagesResponses, GetProjectMonitoringStatsData, GetProjectMonitoringStatsErrors, GetProjectMonitoringStatsResponses, GetProjectPermissionsData, GetProjectPermissionsErrors, GetProjectPermissionsResponses, GetProjectReportsData, GetProjectReportsErrors, GetProjectReportsResponses, GetProjectResponses, GetPromptDefaultsData, GetPromptDefaultsErrors, GetPromptDefaultsResponses, GetReportsData, GetReportsErrors, GetReportsResponses, GetSecurityPolicyDefaultsData, GetSecurityPolicyDefaultsErrors, GetSecurityPolicyDefaultsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetUserDemoBudgetData, GetUserDemoBudgetErrors, GetUserDemoBudgetResponses, GetUsersData, GetUsersErrors, GetUsersResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthErrors, HealthResponses, InspectCollaboratorInviteData, InspectCollaboratorInviteErrors, InspectCollaboratorInviteResponses, LeaveFolderData, LeaveFolderErrors, LeaveFolderResponses, ListContentVersionsData, ListContentVersionsErrors, ListContentVersionsResponses, ListParticipantEmailAttachmentsData, ListParticipantEmailAttachmentsErrors, ListParticipantEmailAttachmentsResponses, ListParticipantReminderEmailAttachmentsData, ListParticipantReminderEmailAttachmentsErrors, ListParticipantReminderEmailAttachmentsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutEverywhereData, LogoutEverywhereErrors, LogoutEverywhereResponses, LogoutResponses, MarkProjectReportsReadData, MarkProjectReportsReadErrors, MarkProjectReportsReadResponses, MarkReportsReadData, MarkReportsReadErrors, MarkReportsReadResponses, MeData, MeErrors, MeResponses, MoveProjectData, MoveProjectErrors, MoveProjectResponses, NewsletterSubscribeData, NewsletterSubscribeErrors, NewsletterSubscribeResponses, NewsletterUnsubscribeData, NewsletterUnsubscribeErrors, NewsletterUnsubscribeResponses, OptOutData, OptOutErrors, OptOutResponses, PlatformVersionData, PlatformVersionErrors, PlatformVersionResponses, PreviewProbingPromptsData, PreviewProbingPromptsErrors, PreviewProbingPromptsResponses, ProcessAccessRequestsData, ProcessAccessRequestsErrors, ProcessAccessRequestsResponses, ProxyToEc2ManagerDeleteData, ProxyToEc2ManagerDeleteErrors, ProxyToEc2ManagerDeleteResponses, ProxyToEc2ManagerGetData, ProxyToEc2ManagerGetErrors, ProxyToEc2ManagerGetResponses, ProxyToEc2ManagerPatchData, ProxyToEc2ManagerPatchErrors, ProxyToEc2ManagerPatchResponses, ProxyToEc2ManagerPostData, ProxyToEc2ManagerPostErrors, ProxyToEc2ManagerPostResponses, ProxyToEc2ManagerPutData, ProxyToEc2ManagerPutErrors, ProxyToEc2ManagerPutResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, ReadCodeFacetsData, ReadCodeFacetsErrors, ReadCodeFacetsResponses, ReadInterviewTranscriptData, ReadInterviewTranscriptErrors, ReadInterviewTranscriptResponses, ReadSurveyFacetsData, ReadSurveyFacetsErrors, ReadSurveyFacetsResponses, RedeemInterviewResumeLinkData, RedeemInterviewResumeLinkErrors, RedeemInterviewResumeLinkResponses, RefreshData, RefreshErrors, RefreshResponses, RegisterData, RegisterErrors, RegisterResponses, ReleasesData, ReleasesErrors, ReleasesResponses, RemoveCollaboratorData, RemoveCollaboratorErrors, RemoveCollaboratorResponses, RemoveProjectLanguageData, RemoveProjectLanguageErrors, RemoveProjectLanguageResponses, ReplaceRedirectsData, ReplaceRedirectsErrors, ReplaceRedirectsResponses, ReportMessageData, ReportMessageErrors, ReportMessageResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, ResendVerificationData, ResendVerificationErrors, ResendVerificationResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResetSessionData, ResetSessionErrors, ResetSessionResponses, ResolveProjectReportsData, ResolveProjectReportsErrors, ResolveProjectReportsResponses, ResolveReportsData, ResolveReportsErrors, ResolveReportsResponses, RestoreContentVersionData, RestoreContentVersionErrors, RestoreContentVersionResponses, RevokeInterviewResumeLinkData, RevokeInterviewResumeLinkErrors, RevokeInterviewResumeLinkResponses, RevokeTestShareLinksData, RevokeTestShareLinksErrors, RevokeTestShareLinksResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SaveCodebookData, SaveCodebookErrors, SaveCodebookResponses, SaveContentVersionData, SaveContentVersionErrors, SaveContentVersionResponses, SearchEmbeddingsData, SearchEmbeddingsErrors, SearchEmbeddingsResponses, SendChatData, SendChatErrors, SendChatResponses, SendParticipantEmailsData, SendParticipantEmailsErrors, SendParticipantEmailsResponses, SendParticipantReminderEmailsData, SendParticipantReminderEmailsErrors, SendParticipantReminderEmailsResponses, SetDefaultLanguageData, SetDefaultLanguageErrors, SetDefaultLanguageResponses, SetFolderArchivedData, SetFolderArchivedErrors, SetFolderArchivedResponses, SetLanguageInProgressData, SetLanguageInProgressErrors, SetLanguageInProgressResponses, SetParticipantEmailTemplateData, SetParticipantEmailTemplateErrors, SetParticipantEmailTemplateResponses, SetParticipantReminderEmailTemplateData, SetParticipantReminderEmailTemplateErrors, SetParticipantReminderEmailTemplateResponses, SetProjectArchivedData, SetProjectArchivedErrors, SetProjectArchivedResponses, SetProjectExperimentOnlyData, SetProjectExperimentOnlyErrors, SetProjectExperimentOnlyResponses, SynthesizeSpeechData, SynthesizeSpeechErrors, SynthesizeSpeechResponses, TranslateMissingData, TranslateMissingErrors, TranslateMissingResponses, TriggerEmbeddingBackfillData, TriggerEmbeddingBackfillErrors, TriggerEmbeddingBackfillResponses, UpdateAdminNoteData, UpdateAdminNoteErrors, UpdateAdminNoteResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateCollaboratorRoleData, UpdateCollaboratorRoleErrors, UpdateCollaboratorRoleResponses, UpdateConsentData, UpdateConsentErrors, UpdateConsentResponses, UpdateExperimentData, UpdateExperimentErrors, UpdateExperimentResponses, UpdateExternalParamsData, UpdateExternalParamsErrors, UpdateExternalParamsResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateFixedPersonasData, UpdateFixedPersonasErrors, UpdateFixedPersonasResponses, UpdateGuideData, UpdateGuideErrors, UpdateGuideResponses, UpdateInvitationData, UpdateInvitationErrors, UpdateInvitationResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateMessageCodingData, UpdateMessageCodingErrors, UpdateMessageCodingResponses, UpdateMessageCommentData, UpdateMessageCommentErrors, UpdateMessageCommentResponses, UpdateMyEmailData, UpdateMyEmailErrors, UpdateMyEmailResponses, UpdateMyPasswordData, UpdateMyPasswordErrors, UpdateMyPasswordResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UpdateWelcomeData, UpdateWelcomeErrors, UpdateWelcomeResponses, UploadAudioData, UploadAudioErrors, UploadAudioResponses, UploadImageData, UploadImageErrors, UploadImageResponses, UploadInterviewImageData, UploadInterviewImageErrors, UploadInterviewImageResponses, UploadParticipantEmailAttachmentsData, UploadParticipantEmailAttachmentsErrors, UploadParticipantEmailAttachmentsResponses, UploadParticipantReminderEmailAttachmentsData, UploadParticipantReminderEmailAttachmentsErrors, UploadParticipantReminderEmailAttachmentsResponses, UploadParticipantsData, UploadParticipantsErrors, UploadParticipantsResponses, UploadWelcomeVideoData, UploadWelcomeVideoErrors, UploadWelcomeVideoResponses, ValidateInterviewParamsData, ValidateInterviewParamsErrors, ValidateInterviewParamsResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses, VerifyLoginCodeData, VerifyLoginCodeErrors, VerifyLoginCodeResponses, VersionData, VersionErrors, VersionResponses } from './types.gen';
+import type { AcceptCollaboratorInviteData, AcceptCollaboratorInviteErrors, AcceptCollaboratorInviteResponses, AddIntervieweeData, AddIntervieweeErrors, AddIntervieweeResponses, AddMessageCodingData, AddMessageCodingErrors, AddMessageCodingResponses, AddMessageCommentData, AddMessageCommentErrors, AddMessageCommentResponses, AddParticipantData, AddParticipantErrors, AddParticipantResponses, AddParticipantsData, AddParticipantsErrors, AddParticipantsResponses, AddProjectLanguageData, AddProjectLanguageErrors, AddProjectLanguageResponses, BrowseEmbeddingsData, BrowseEmbeddingsErrors, BrowseEmbeddingsResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CheckProjectOwnerData, CheckProjectOwnerErrors, CheckProjectOwnerResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ClusterEmbeddingsData, ClusterEmbeddingsErrors, ClusterEmbeddingsResponses, CompareTestRunsData, CompareTestRunsErrors, CompareTestRunsResponses, ConfirmEmailChangeData, ConfirmEmailChangeErrors, ConfirmEmailChangeResponses, CreateCollaboratorInviteData, CreateCollaboratorInviteErrors, CreateCollaboratorInviteResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateInterviewResumeLinkData, CreateInterviewResumeLinkErrors, CreateInterviewResumeLinkResponses, CreateInvitationData, CreateInvitationErrors, CreateInvitationResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, CreateTestShareLinkData, CreateTestShareLinkErrors, CreateTestShareLinkResponses, DeclineCollaboratorInviteData, DeclineCollaboratorInviteErrors, DeclineCollaboratorInviteResponses, DeleteAccessRequestsData, DeleteAccessRequestsErrors, DeleteAccessRequestsResponses, DeleteCollaboratorInviteData, DeleteCollaboratorInviteErrors, DeleteCollaboratorInviteResponses, DeleteConsentAttachmentData, DeleteConsentAttachmentErrors, DeleteConsentAttachmentResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteInvitationsData, DeleteInvitationsErrors, DeleteInvitationsResponses, DeleteMeData, DeleteMeErrors, DeleteMeResponses, DeleteMessageCodingData, DeleteMessageCodingErrors, DeleteMessageCodingResponses, DeleteMessageCommentData, DeleteMessageCommentErrors, DeleteMessageCommentResponses, DeleteParticipantData, DeleteParticipantEmailAttachmentData, DeleteParticipantEmailAttachmentErrors, DeleteParticipantEmailAttachmentResponses, DeleteParticipantErrors, DeleteParticipantReminderEmailAttachmentData, DeleteParticipantReminderEmailAttachmentErrors, DeleteParticipantReminderEmailAttachmentResponses, DeleteParticipantResponses, DeleteParticipantsData, DeleteParticipantsErrors, DeleteParticipantsResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, DeleteTestSetupData, DeleteTestSetupErrors, DeleteTestSetupResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, DownloadConsentAttachmentData, DownloadConsentAttachmentErrors, DownloadConsentAttachmentResponses, DownloadParticipantEmailAttachmentData, DownloadParticipantEmailAttachmentErrors, DownloadParticipantEmailAttachmentResponses, DownloadParticipantReminderEmailAttachmentData, DownloadParticipantReminderEmailAttachmentErrors, DownloadParticipantReminderEmailAttachmentResponses, EditFolderData, EditFolderErrors, EditFolderResponses, EnterExperimentData, EnterExperimentErrors, EnterExperimentResponses, ExitData, ExitErrors, ExitResponses, ExportEmailBundleData, ExportEmailBundleErrors, ExportEmailBundleResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, ExportParticipantsData, ExportParticipantsErrors, ExportParticipantsResponses, FindEmbeddingsLikeCodeData, FindEmbeddingsLikeCodeErrors, FindEmbeddingsLikeCodeResponses, FindSimilarEmbeddingsData, FindSimilarEmbeddingsErrors, FindSimilarEmbeddingsResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateGuideSectionData, GenerateGuideSectionErrors, GenerateGuideSectionResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GenerateSectionQuestionData, GenerateSectionQuestionErrors, GenerateSectionQuestionResponses, GetAccessRequestsData, GetAccessRequestsErrors, GetAccessRequestsResponses, GetAdminStatsData, GetAdminStatsErrors, GetAdminStatsResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetChatData, GetChatErrors, GetChatResponses, GetCodebookData, GetCodebookErrors, GetCodebookResponses, GetCodeCountsData, GetCodeCountsErrors, GetCodeCountsResponses, GetCodingsForMessagesData, GetCodingsForMessagesErrors, GetCodingsForMessagesResponses, GetCollaboratorInvitesData, GetCollaboratorInvitesErrors, GetCollaboratorInvitesResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetContentDocData, GetContentDocErrors, GetContentDocResponses, GetContentDraftData, GetContentDraftErrors, GetContentDraftResponses, GetContentStatusData, GetContentStatusErrors, GetContentStatusResponses, GetContentVersionData, GetContentVersionErrors, GetContentVersionResponses, GetDemoLimitDefaultsData, GetDemoLimitDefaultsErrors, GetDemoLimitDefaultsResponses, GetEmbeddingStatusData, GetEmbeddingStatusErrors, GetEmbeddingStatusResponses, GetExperimentsData, GetExperimentsErrors, GetExperimentsResponses, GetFilteredMessagesCountData, GetFilteredMessagesCountErrors, GetFilteredMessagesCountResponses, GetFilteredMessagesData, GetFilteredMessagesErrors, GetFilteredMessagesResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFixedPersonasData, GetFixedPersonasErrors, GetFixedPersonasResponses, GetFoldersData, GetFoldersErrors, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInstanceData, GetInstanceErrors, GetInstanceResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewAudioData, GetInterviewAudioErrors, GetInterviewAudioResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetIntervieweeData, GetIntervieweeErrors, GetIntervieweeResponses, GetInterviewMessagesData, GetInterviewMessagesErrors, GetInterviewMessagesResponses, GetInterviewModelsData, GetInterviewModelsErrors, GetInterviewModelsResponses, GetInterviewResumeLinkData, GetInterviewResumeLinkErrors, GetInterviewResumeLinkResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetInvitationsData, GetInvitationsErrors, GetInvitationsResponses, GetLanguagesData, GetLanguagesErrors, GetLanguagesResponses, GetLocalizedConsentData, GetLocalizedConsentErrors, GetLocalizedConsentResponses, GetLocalizedGuideData, GetLocalizedGuideErrors, GetLocalizedGuideResponses, GetLocalizedWelcomeData, GetLocalizedWelcomeErrors, GetLocalizedWelcomeResponses, GetMessageCodingsData, GetMessageCodingsErrors, GetMessageCodingsResponses, GetMessageCommentsData, GetMessageCommentsErrors, GetMessageCommentsResponses, GetMessageContextAfterData, GetMessageContextAfterErrors, GetMessageContextAfterResponses, GetMessageContextBeforeData, GetMessageContextBeforeErrors, GetMessageContextBeforeResponses, GetMessageData, GetMessageErrors, GetMessageResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetMyDemoBudgetData, GetMyDemoBudgetErrors, GetMyDemoBudgetResponses, GetMyReportsData, GetMyReportsErrors, GetMyReportsResponses, GetNotificationsData, GetNotificationsErrors, GetNotificationsResponses, GetParticipantData, GetParticipantEmailTemplateData, GetParticipantEmailTemplateErrors, GetParticipantEmailTemplateResponses, GetParticipantErrors, GetParticipantReminderEmailTemplateData, GetParticipantReminderEmailTemplateErrors, GetParticipantReminderEmailTemplateResponses, GetParticipantResponses, GetParticipantsData, GetParticipantsErrors, GetParticipantsResponses, GetProjectData, GetProjectErrors, GetProjectItemDistributionsData, GetProjectItemDistributionsErrors, GetProjectItemDistributionsResponses, GetProjectLanguagesData, GetProjectLanguagesErrors, GetProjectLanguagesResponses, GetProjectMonitoringStatsData, GetProjectMonitoringStatsErrors, GetProjectMonitoringStatsResponses, GetProjectPermissionsData, GetProjectPermissionsErrors, GetProjectPermissionsResponses, GetProjectReportsData, GetProjectReportsErrors, GetProjectReportsResponses, GetProjectResponses, GetPromptDefaultsData, GetPromptDefaultsErrors, GetPromptDefaultsResponses, GetReportsData, GetReportsErrors, GetReportsResponses, GetRespondentConsentAttachmentData, GetRespondentConsentAttachmentErrors, GetRespondentConsentAttachmentResponses, GetRespondentConsentAttachmentsData, GetRespondentConsentAttachmentsErrors, GetRespondentConsentAttachmentsResponses, GetSecurityPolicyDefaultsData, GetSecurityPolicyDefaultsErrors, GetSecurityPolicyDefaultsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetUserDemoBudgetData, GetUserDemoBudgetErrors, GetUserDemoBudgetResponses, GetUsersData, GetUsersErrors, GetUsersResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthErrors, HealthResponses, InspectCollaboratorInviteData, InspectCollaboratorInviteErrors, InspectCollaboratorInviteResponses, LeaveFolderData, LeaveFolderErrors, LeaveFolderResponses, ListConsentAttachmentsData, ListConsentAttachmentsErrors, ListConsentAttachmentsResponses, ListContentVersionsData, ListContentVersionsErrors, ListContentVersionsResponses, ListParticipantEmailAttachmentsData, ListParticipantEmailAttachmentsErrors, ListParticipantEmailAttachmentsResponses, ListParticipantReminderEmailAttachmentsData, ListParticipantReminderEmailAttachmentsErrors, ListParticipantReminderEmailAttachmentsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutEverywhereData, LogoutEverywhereErrors, LogoutEverywhereResponses, LogoutResponses, MarkProjectReportsReadData, MarkProjectReportsReadErrors, MarkProjectReportsReadResponses, MarkReportsReadData, MarkReportsReadErrors, MarkReportsReadResponses, MeData, MeErrors, MeResponses, MoveProjectData, MoveProjectErrors, MoveProjectResponses, NewsletterSubscribeData, NewsletterSubscribeErrors, NewsletterSubscribeResponses, NewsletterUnsubscribeData, NewsletterUnsubscribeErrors, NewsletterUnsubscribeResponses, OptOutData, OptOutErrors, OptOutResponses, PlatformVersionData, PlatformVersionErrors, PlatformVersionResponses, PreviewProbingPromptsData, PreviewProbingPromptsErrors, PreviewProbingPromptsResponses, ProcessAccessRequestsData, ProcessAccessRequestsErrors, ProcessAccessRequestsResponses, ProxyToEc2ManagerDeleteData, ProxyToEc2ManagerDeleteErrors, ProxyToEc2ManagerDeleteResponses, ProxyToEc2ManagerGetData, ProxyToEc2ManagerGetErrors, ProxyToEc2ManagerGetResponses, ProxyToEc2ManagerPatchData, ProxyToEc2ManagerPatchErrors, ProxyToEc2ManagerPatchResponses, ProxyToEc2ManagerPostData, ProxyToEc2ManagerPostErrors, ProxyToEc2ManagerPostResponses, ProxyToEc2ManagerPutData, ProxyToEc2ManagerPutErrors, ProxyToEc2ManagerPutResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, ReadCodeFacetsData, ReadCodeFacetsErrors, ReadCodeFacetsResponses, ReadInterviewTranscriptData, ReadInterviewTranscriptErrors, ReadInterviewTranscriptResponses, ReadSurveyFacetsData, ReadSurveyFacetsErrors, ReadSurveyFacetsResponses, RedeemInterviewResumeLinkData, RedeemInterviewResumeLinkErrors, RedeemInterviewResumeLinkResponses, RefreshData, RefreshErrors, RefreshResponses, RegisterData, RegisterErrors, RegisterResponses, ReleasesData, ReleasesErrors, ReleasesResponses, RemoveCollaboratorData, RemoveCollaboratorErrors, RemoveCollaboratorResponses, RemoveProjectLanguageData, RemoveProjectLanguageErrors, RemoveProjectLanguageResponses, ReplaceRedirectsData, ReplaceRedirectsErrors, ReplaceRedirectsResponses, ReportMessageData, ReportMessageErrors, ReportMessageResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, ResendVerificationData, ResendVerificationErrors, ResendVerificationResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResetSessionData, ResetSessionErrors, ResetSessionResponses, ResolveProjectReportsData, ResolveProjectReportsErrors, ResolveProjectReportsResponses, ResolveReportsData, ResolveReportsErrors, ResolveReportsResponses, RestoreContentVersionData, RestoreContentVersionErrors, RestoreContentVersionResponses, RevokeInterviewResumeLinkData, RevokeInterviewResumeLinkErrors, RevokeInterviewResumeLinkResponses, RevokeTestShareLinksData, RevokeTestShareLinksErrors, RevokeTestShareLinksResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SaveCodebookData, SaveCodebookErrors, SaveCodebookResponses, SaveContentVersionData, SaveContentVersionErrors, SaveContentVersionResponses, SearchEmbeddingsData, SearchEmbeddingsErrors, SearchEmbeddingsResponses, SendChatData, SendChatErrors, SendChatResponses, SendParticipantEmailsData, SendParticipantEmailsErrors, SendParticipantEmailsResponses, SendParticipantReminderEmailsData, SendParticipantReminderEmailsErrors, SendParticipantReminderEmailsResponses, SetDefaultLanguageData, SetDefaultLanguageErrors, SetDefaultLanguageResponses, SetFolderArchivedData, SetFolderArchivedErrors, SetFolderArchivedResponses, SetLanguageInProgressData, SetLanguageInProgressErrors, SetLanguageInProgressResponses, SetParticipantEmailTemplateData, SetParticipantEmailTemplateErrors, SetParticipantEmailTemplateResponses, SetParticipantReminderEmailTemplateData, SetParticipantReminderEmailTemplateErrors, SetParticipantReminderEmailTemplateResponses, SetProjectArchivedData, SetProjectArchivedErrors, SetProjectArchivedResponses, SetProjectExperimentOnlyData, SetProjectExperimentOnlyErrors, SetProjectExperimentOnlyResponses, SynthesizeSpeechData, SynthesizeSpeechErrors, SynthesizeSpeechResponses, TranslateMissingData, TranslateMissingErrors, TranslateMissingResponses, TriggerEmbeddingBackfillData, TriggerEmbeddingBackfillErrors, TriggerEmbeddingBackfillResponses, UpdateAdminNoteData, UpdateAdminNoteErrors, UpdateAdminNoteResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateCollaboratorRoleData, UpdateCollaboratorRoleErrors, UpdateCollaboratorRoleResponses, UpdateConsentData, UpdateConsentErrors, UpdateConsentResponses, UpdateExperimentData, UpdateExperimentErrors, UpdateExperimentResponses, UpdateExternalParamsData, UpdateExternalParamsErrors, UpdateExternalParamsResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateFixedPersonasData, UpdateFixedPersonasErrors, UpdateFixedPersonasResponses, UpdateGuideData, UpdateGuideErrors, UpdateGuideResponses, UpdateInvitationData, UpdateInvitationErrors, UpdateInvitationResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateMessageCodingData, UpdateMessageCodingErrors, UpdateMessageCodingResponses, UpdateMessageCommentData, UpdateMessageCommentErrors, UpdateMessageCommentResponses, UpdateMyEmailData, UpdateMyEmailErrors, UpdateMyEmailResponses, UpdateMyPasswordData, UpdateMyPasswordErrors, UpdateMyPasswordResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UpdateWelcomeData, UpdateWelcomeErrors, UpdateWelcomeResponses, UploadAudioData, UploadAudioErrors, UploadAudioResponses, UploadConsentAttachmentsData, UploadConsentAttachmentsErrors, UploadConsentAttachmentsResponses, UploadImageData, UploadImageErrors, UploadImageResponses, UploadInterviewImageData, UploadInterviewImageErrors, UploadInterviewImageResponses, UploadParticipantEmailAttachmentsData, UploadParticipantEmailAttachmentsErrors, UploadParticipantEmailAttachmentsResponses, UploadParticipantReminderEmailAttachmentsData, UploadParticipantReminderEmailAttachmentsErrors, UploadParticipantReminderEmailAttachmentsResponses, UploadParticipantsData, UploadParticipantsErrors, UploadParticipantsResponses, UploadWelcomeVideoData, UploadWelcomeVideoErrors, UploadWelcomeVideoResponses, ValidateInterviewParamsData, ValidateInterviewParamsErrors, ValidateInterviewParamsResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses, VerifyLoginCodeData, VerifyLoginCodeErrors, VerifyLoginCodeResponses, VersionData, VersionErrors, VersionResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -798,868 +798,113 @@ export class Assistance {
     }
 }
 
-export class Experiments {
-    /**
-     * Get Experiments
-     */
-    public static getExperiments<ThrowOnError extends boolean = false>(options?: Options<GetExperimentsData, ThrowOnError>): RequestResult<GetExperimentsResponses, GetExperimentsErrors, ThrowOnError> {
-        return (options?.client ?? client).get<GetExperimentsResponses, GetExperimentsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/experiments',
-            ...options
-        });
-    }
-    
-    /**
-     * Create Experiment
-     */
-    public static createExperiment<ThrowOnError extends boolean = false>(options: Options<CreateExperimentData, ThrowOnError>): RequestResult<CreateExperimentResponses, CreateExperimentErrors, ThrowOnError> {
-        return (options.client ?? client).post<CreateExperimentResponses, CreateExperimentErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/experiments',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Delete Experiment
-     *
-     * `clear_experiment_only` lets the experiment's projects take respondents
-     * from their own links again, unless another experiment still uses them.
-     */
-    public static deleteExperiment<ThrowOnError extends boolean = false>(options: Options<DeleteExperimentData, ThrowOnError>): RequestResult<DeleteExperimentResponses, DeleteExperimentErrors, ThrowOnError> {
-        return (options.client ?? client).delete<DeleteExperimentResponses, DeleteExperimentErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/experiments/{experiment_id}',
-            ...options
-        });
-    }
-    
-    /**
-     * Update Experiment
-     *
-     * Replace the experiment's settings. A project respondents were already
-     * given cannot be removed, as their assignments would no longer count; a
-     * weight of zero closes it to new respondents instead.
-     *
-     * Linking a project, or changing its `experiment_only`, takes the editor
-     * role on it as creating does; changing a kept project's weight or target
-     * only takes owning the experiment, as deleting it does.
-     */
-    public static updateExperiment<ThrowOnError extends boolean = false>(options: Options<UpdateExperimentData, ThrowOnError>): RequestResult<UpdateExperimentResponses, UpdateExperimentErrors, ThrowOnError> {
-        return (options.client ?? client).put<UpdateExperimentResponses, UpdateExperimentErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/experiments/{experiment_id}',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Generate Experiment Qr
-     */
-    public static generateExperimentQr<ThrowOnError extends boolean = false>(options: Options<GenerateExperimentQrData, ThrowOnError>): RequestResult<GenerateExperimentQrResponses, GenerateExperimentQrErrors, ThrowOnError> {
-        return (options.client ?? client).get<GenerateExperimentQrResponses, GenerateExperimentQrErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/experiments/{experiment_id}/qr.png',
-            ...options
-        });
-    }
-}
-
-export class Folders {
-    /**
-     * Get Folders
-     *
-     * Get project folders
-     */
-    public static getFolders<ThrowOnError extends boolean = false>(options?: Options<GetFoldersData, ThrowOnError>): RequestResult<GetFoldersResponses, GetFoldersErrors, ThrowOnError> {
-        return (options?.client ?? client).get<GetFoldersResponses, GetFoldersErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders',
-            ...options
-        });
-    }
-    
-    /**
-     * Create Folder
-     *
-     * Create new project folder
-     */
-    public static createFolder<ThrowOnError extends boolean = false>(options: Options<CreateFolderData, ThrowOnError>): RequestResult<CreateFolderResponses, CreateFolderErrors, ThrowOnError> {
-        return (options.client ?? client).post<CreateFolderResponses, CreateFolderErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Delete Folder
-     *
-     * Delete folder
-     */
-    public static deleteFolder<ThrowOnError extends boolean = false>(options: Options<DeleteFolderData, ThrowOnError>): RequestResult<DeleteFolderResponses, DeleteFolderErrors, ThrowOnError> {
-        return (options.client ?? client).delete<DeleteFolderResponses, DeleteFolderErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}',
-            ...options
-        });
-    }
-    
-    /**
-     * Edit Folder
-     *
-     * Delete folder
-     */
-    public static editFolder<ThrowOnError extends boolean = false>(options: Options<EditFolderData, ThrowOnError>): RequestResult<EditFolderResponses, EditFolderErrors, ThrowOnError> {
-        return (options.client ?? client).patch<EditFolderResponses, EditFolderErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Set Folder Archived
-     *
-     * Archive or unarchive a folder
-     */
-    public static setFolderArchived<ThrowOnError extends boolean = false>(options: Options<SetFolderArchivedData, ThrowOnError>): RequestResult<SetFolderArchivedResponses, SetFolderArchivedErrors, ThrowOnError> {
-        return (options.client ?? client).patch<SetFolderArchivedResponses, SetFolderArchivedErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}/archive',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Remove Collaborator
-     *
-     * 403 `role_above_own` for someone above the caller's role, 409
-     * `last_admin` for the folder's only admin.
-     */
-    public static removeCollaborator<ThrowOnError extends boolean = false>(options: Options<RemoveCollaboratorData, ThrowOnError>): RequestResult<RemoveCollaboratorResponses, RemoveCollaboratorErrors, ThrowOnError> {
-        return (options.client ?? client).delete<RemoveCollaboratorResponses, RemoveCollaboratorErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}/collaborators',
-            ...options
-        });
-    }
-    
-    /**
-     * Get Collaborators
-     */
-    public static getCollaborators<ThrowOnError extends boolean = false>(options: Options<GetCollaboratorsData, ThrowOnError>): RequestResult<GetCollaboratorsResponses, GetCollaboratorsErrors, ThrowOnError> {
-        return (options.client ?? client).get<GetCollaboratorsResponses, GetCollaboratorsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}/collaborators',
-            ...options
-        });
-    }
-    
-    /**
-     * Update Collaborator Role
-     *
-     * Neither the collaborator's current role nor the new one may be above
-     * the caller's (403 `role_above_own`); 409 `last_admin` for demoting the
-     * folder's only admin.
-     */
-    public static updateCollaboratorRole<ThrowOnError extends boolean = false>(options: Options<UpdateCollaboratorRoleData, ThrowOnError>): RequestResult<UpdateCollaboratorRoleResponses, UpdateCollaboratorRoleErrors, ThrowOnError> {
-        return (options.client ?? client).patch<UpdateCollaboratorRoleResponses, UpdateCollaboratorRoleErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}/collaborators',
-            ...options
-        });
-    }
-    
-    /**
-     * Get Collaborator Invites
-     *
-     * The folder's pending invites, expired ones included.
-     */
-    public static getCollaboratorInvites<ThrowOnError extends boolean = false>(options: Options<GetCollaboratorInvitesData, ThrowOnError>): RequestResult<GetCollaboratorInvitesResponses, GetCollaboratorInvitesErrors, ThrowOnError> {
-        return (options.client ?? client).get<GetCollaboratorInvitesResponses, GetCollaboratorInvitesErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}/invites',
-            ...options
-        });
-    }
-    
-    /**
-     * Create Collaborator Invite
-     *
-     * Invite someone by email, or resend their pending invite with this role.
-     *
-     * Answers the same whether or not the email has an account, and the invite
-     * is listed as pending either way until its recipient accepts, so the form
-     * cannot be used to find out who is a user. 409 `already_collaborator` if
-     * they already collaborate on the folder, 403 `role_above_own` for a role
-     * above the caller's.
-     */
-    public static createCollaboratorInvite<ThrowOnError extends boolean = false>(options: Options<CreateCollaboratorInviteData, ThrowOnError>): RequestResult<CreateCollaboratorInviteResponses, CreateCollaboratorInviteErrors, ThrowOnError> {
-        return (options.client ?? client).post<CreateCollaboratorInviteResponses, CreateCollaboratorInviteErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}/invites',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Delete Collaborator Invite
-     *
-     * Revoke a pending invite; its link stops working. 403 `role_above_own`
-     * for an invite above the caller's role.
-     */
-    public static deleteCollaboratorInvite<ThrowOnError extends boolean = false>(options: Options<DeleteCollaboratorInviteData, ThrowOnError>): RequestResult<DeleteCollaboratorInviteResponses, DeleteCollaboratorInviteErrors, ThrowOnError> {
-        return (options.client ?? client).delete<DeleteCollaboratorInviteResponses, DeleteCollaboratorInviteErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}/invites/{invite_id}',
-            ...options
-        });
-    }
-    
-    /**
-     * Inspect Collaborator Invite
-     *
-     * What an invite link offers, for its recipient to accept or decline.
-     * 404 `invite_invalid`, 410 `invite_expired`.
-     */
-    public static inspectCollaboratorInvite<ThrowOnError extends boolean = false>(options: Options<InspectCollaboratorInviteData, ThrowOnError>): RequestResult<InspectCollaboratorInviteResponses, InspectCollaboratorInviteErrors, ThrowOnError> {
-        return (options.client ?? client).post<InspectCollaboratorInviteResponses, InspectCollaboratorInviteErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/collaborator-invites/inspect',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Accept Collaborator Invite
-     *
-     * Join the folder with the invite's role. The link is the proof, so any
-     * signed-in account holding it may accept.
-     */
-    public static acceptCollaboratorInvite<ThrowOnError extends boolean = false>(options: Options<AcceptCollaboratorInviteData, ThrowOnError>): RequestResult<AcceptCollaboratorInviteResponses, AcceptCollaboratorInviteErrors, ThrowOnError> {
-        return (options.client ?? client).post<AcceptCollaboratorInviteResponses, AcceptCollaboratorInviteErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/collaborator-invites/accept',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Decline Collaborator Invite
-     */
-    public static declineCollaboratorInvite<ThrowOnError extends boolean = false>(options: Options<DeclineCollaboratorInviteData, ThrowOnError>): RequestResult<DeclineCollaboratorInviteResponses, DeclineCollaboratorInviteErrors, ThrowOnError> {
-        return (options.client ?? client).post<DeclineCollaboratorInviteResponses, DeclineCollaboratorInviteErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/collaborator-invites/decline',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Leave Folder
-     *
-     * Stop collaborating on the folder. Any role may; 409 `last_admin` for
-     * its only admin, who has to make someone else admin first.
-     */
-    public static leaveFolder<ThrowOnError extends boolean = false>(options: Options<LeaveFolderData, ThrowOnError>): RequestResult<LeaveFolderResponses, LeaveFolderErrors, ThrowOnError> {
-        return (options.client ?? client).post<LeaveFolderResponses, LeaveFolderErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}/leave',
-            ...options
-        });
-    }
-    
-    /**
-     * Create Project
-     *
-     * Create a new project
-     */
-    public static createProject<ThrowOnError extends boolean = false>(options: Options<CreateProjectData, ThrowOnError>): RequestResult<CreateProjectResponses, CreateProjectErrors, ThrowOnError> {
-        return (options.client ?? client).post<CreateProjectResponses, CreateProjectErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/folders/{folder_id}/projects',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-}
-
-export class Participants {
-    /**
-     * Delete Participants
-     */
-    public static deleteParticipants<ThrowOnError extends boolean = false>(options: Options<DeleteParticipantsData, ThrowOnError>): RequestResult<DeleteParticipantsResponses, DeleteParticipantsErrors, ThrowOnError> {
-        return (options.client ?? client).delete<DeleteParticipantsResponses, DeleteParticipantsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Get Participants
-     *
-     * One page of participants, with the filter options that fit the query.
-     *
-     * `search` matches name, email and pid. `statuses` matches the status of each
-     * participant's most recent interview.
-     */
-    public static getParticipants<ThrowOnError extends boolean = false>(options: Options<GetParticipantsData, ThrowOnError>): RequestResult<GetParticipantsResponses, GetParticipantsErrors, ThrowOnError> {
-        return (options.client ?? client).get<GetParticipantsResponses, GetParticipantsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants',
-            ...options
-        });
-    }
-    
-    /**
-     * Add Participant
-     */
-    public static addParticipant<ThrowOnError extends boolean = false>(options: Options<AddParticipantData, ThrowOnError>): RequestResult<AddParticipantResponses, AddParticipantErrors, ThrowOnError> {
-        return (options.client ?? client).post<AddParticipantResponses, AddParticipantErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Delete Participant
-     */
-    public static deleteParticipant<ThrowOnError extends boolean = false>(options: Options<DeleteParticipantData, ThrowOnError>): RequestResult<DeleteParticipantResponses, DeleteParticipantErrors, ThrowOnError> {
-        return (options.client ?? client).delete<DeleteParticipantResponses, DeleteParticipantErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants/{participant_id}',
-            ...options
-        });
-    }
-    
-    /**
-     * Get Participant
-     */
-    public static getParticipant<ThrowOnError extends boolean = false>(options: Options<GetParticipantData, ThrowOnError>): RequestResult<GetParticipantResponses, GetParticipantErrors, ThrowOnError> {
-        return (options.client ?? client).get<GetParticipantResponses, GetParticipantErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants/{participant_id}',
-            ...options
-        });
-    }
-    
-    /**
-     * Update Participant
-     */
-    public static updateParticipant<ThrowOnError extends boolean = false>(options: Options<UpdateParticipantData, ThrowOnError>): RequestResult<UpdateParticipantResponses, UpdateParticipantErrors, ThrowOnError> {
-        return (options.client ?? client).patch<UpdateParticipantResponses, UpdateParticipantErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants/{participant_id}',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Export Participants
-     *
-     * Export the selected participants as CSV. `filters` exports every
-     * participant matching them; empty filters, the whole project.
-     */
-    public static exportParticipants<ThrowOnError extends boolean = false>(options: Options<ExportParticipantsData, ThrowOnError>): RequestResult<ExportParticipantsResponses, ExportParticipantsErrors, ThrowOnError> {
-        return (options.client ?? client).post<ExportParticipantsResponses, ExportParticipantsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants/export',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Export Email Bundle
-     *
-     * Export a self-contained zip with participants, templates and attachments.
-     *
-     * Intended for offline sending via the KU mail script when the server can't
-     * reach the KU SMTP gateway directly.
-     */
-    public static exportEmailBundle<ThrowOnError extends boolean = false>(options: Options<ExportEmailBundleData, ThrowOnError>): RequestResult<ExportEmailBundleResponses, ExportEmailBundleErrors, ThrowOnError> {
-        return (options.client ?? client).get<ExportEmailBundleResponses, ExportEmailBundleErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/email-bundle',
-            ...options
-        });
-    }
-    
-    /**
-     * Add Participants
-     */
-    public static addParticipants<ThrowOnError extends boolean = false>(options: Options<AddParticipantsData, ThrowOnError>): RequestResult<AddParticipantsResponses, AddParticipantsErrors, ThrowOnError> {
-        return (options.client ?? client).post<AddParticipantsResponses, AddParticipantsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants/bulk',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Upload Participants
-     */
-    public static uploadParticipants<ThrowOnError extends boolean = false>(options: Options<UploadParticipantsData, ThrowOnError>): RequestResult<UploadParticipantsResponses, UploadParticipantsErrors, ThrowOnError> {
-        return (options.client ?? client).post<UploadParticipantsResponses, UploadParticipantsErrors, ThrowOnError>({
-            ...formDataBodySerializer,
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants/upload',
-            ...options,
-            headers: {
-                'Content-Type': null,
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Get Participant Email Template
-     *
-     * The draft's template; `ETag` is the emails' revision.
-     */
-    public static getParticipantEmailTemplate<ThrowOnError extends boolean = false>(options: Options<GetParticipantEmailTemplateData, ThrowOnError>): RequestResult<GetParticipantEmailTemplateResponses, GetParticipantEmailTemplateErrors, ThrowOnError> {
-        return (options.client ?? client).get<GetParticipantEmailTemplateResponses, GetParticipantEmailTemplateErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-email-template',
-            ...options
-        });
-    }
-    
-    /**
-     * Set Participant Email Template
-     *
-     * Save the draft's template; it is sent once published. A 412 if the
-     * emails changed since `If-Match`'s revision.
-     */
-    public static setParticipantEmailTemplate<ThrowOnError extends boolean = false>(options: Options<SetParticipantEmailTemplateData, ThrowOnError>): RequestResult<SetParticipantEmailTemplateResponses, SetParticipantEmailTemplateErrors, ThrowOnError> {
-        return (options.client ?? client).put<SetParticipantEmailTemplateResponses, SetParticipantEmailTemplateErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-email-template',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * List Participant Email Attachments
-     */
-    public static listParticipantEmailAttachments<ThrowOnError extends boolean = false>(options: Options<ListParticipantEmailAttachmentsData, ThrowOnError>): RequestResult<ListParticipantEmailAttachmentsResponses, ListParticipantEmailAttachmentsErrors, ThrowOnError> {
-        return (options.client ?? client).get<ListParticipantEmailAttachmentsResponses, ListParticipantEmailAttachmentsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-email-attachments',
-            ...options
-        });
-    }
-    
-    /**
-     * Upload Participant Email Attachments
-     */
-    public static uploadParticipantEmailAttachments<ThrowOnError extends boolean = false>(options: Options<UploadParticipantEmailAttachmentsData, ThrowOnError>): RequestResult<UploadParticipantEmailAttachmentsResponses, UploadParticipantEmailAttachmentsErrors, ThrowOnError> {
-        return (options.client ?? client).post<UploadParticipantEmailAttachmentsResponses, UploadParticipantEmailAttachmentsErrors, ThrowOnError>({
-            ...formDataBodySerializer,
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-email-attachments',
-            ...options,
-            headers: {
-                'Content-Type': null,
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Delete Participant Email Attachment
-     */
-    public static deleteParticipantEmailAttachment<ThrowOnError extends boolean = false>(options: Options<DeleteParticipantEmailAttachmentData, ThrowOnError>): RequestResult<DeleteParticipantEmailAttachmentResponses, DeleteParticipantEmailAttachmentErrors, ThrowOnError> {
-        return (options.client ?? client).delete<DeleteParticipantEmailAttachmentResponses, DeleteParticipantEmailAttachmentErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-email-attachments/{filename}',
-            ...options
-        });
-    }
-    
-    /**
-     * Download Participant Email Attachment
-     */
-    public static downloadParticipantEmailAttachment<ThrowOnError extends boolean = false>(options: Options<DownloadParticipantEmailAttachmentData, ThrowOnError>): RequestResult<DownloadParticipantEmailAttachmentResponses, DownloadParticipantEmailAttachmentErrors, ThrowOnError> {
-        return (options.client ?? client).get<DownloadParticipantEmailAttachmentResponses, DownloadParticipantEmailAttachmentErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-email-attachments/{filename}',
-            ...options
-        });
-    }
-    
-    /**
-     * Send Participant Emails
-     */
-    public static sendParticipantEmails<ThrowOnError extends boolean = false>(options: Options<SendParticipantEmailsData, ThrowOnError>): RequestResult<SendParticipantEmailsResponses, SendParticipantEmailsErrors, ThrowOnError> {
-        return (options.client ?? client).post<SendParticipantEmailsResponses, SendParticipantEmailsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants/send-email',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Get Participant Reminder Email Template
-     *
-     * The draft's template; `ETag` is the emails' revision.
-     */
-    public static getParticipantReminderEmailTemplate<ThrowOnError extends boolean = false>(options: Options<GetParticipantReminderEmailTemplateData, ThrowOnError>): RequestResult<GetParticipantReminderEmailTemplateResponses, GetParticipantReminderEmailTemplateErrors, ThrowOnError> {
-        return (options.client ?? client).get<GetParticipantReminderEmailTemplateResponses, GetParticipantReminderEmailTemplateErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-reminder-email-template',
-            ...options
-        });
-    }
-    
-    /**
-     * Set Participant Reminder Email Template
-     *
-     * Save the draft's template; it is sent once published. A 412 if the
-     * emails changed since `If-Match`'s revision.
-     */
-    public static setParticipantReminderEmailTemplate<ThrowOnError extends boolean = false>(options: Options<SetParticipantReminderEmailTemplateData, ThrowOnError>): RequestResult<SetParticipantReminderEmailTemplateResponses, SetParticipantReminderEmailTemplateErrors, ThrowOnError> {
-        return (options.client ?? client).put<SetParticipantReminderEmailTemplateResponses, SetParticipantReminderEmailTemplateErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-reminder-email-template',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * List Participant Reminder Email Attachments
-     */
-    public static listParticipantReminderEmailAttachments<ThrowOnError extends boolean = false>(options: Options<ListParticipantReminderEmailAttachmentsData, ThrowOnError>): RequestResult<ListParticipantReminderEmailAttachmentsResponses, ListParticipantReminderEmailAttachmentsErrors, ThrowOnError> {
-        return (options.client ?? client).get<ListParticipantReminderEmailAttachmentsResponses, ListParticipantReminderEmailAttachmentsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments',
-            ...options
-        });
-    }
-    
-    /**
-     * Upload Participant Reminder Email Attachments
-     */
-    public static uploadParticipantReminderEmailAttachments<ThrowOnError extends boolean = false>(options: Options<UploadParticipantReminderEmailAttachmentsData, ThrowOnError>): RequestResult<UploadParticipantReminderEmailAttachmentsResponses, UploadParticipantReminderEmailAttachmentsErrors, ThrowOnError> {
-        return (options.client ?? client).post<UploadParticipantReminderEmailAttachmentsResponses, UploadParticipantReminderEmailAttachmentsErrors, ThrowOnError>({
-            ...formDataBodySerializer,
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments',
-            ...options,
-            headers: {
-                'Content-Type': null,
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Delete Participant Reminder Email Attachment
-     */
-    public static deleteParticipantReminderEmailAttachment<ThrowOnError extends boolean = false>(options: Options<DeleteParticipantReminderEmailAttachmentData, ThrowOnError>): RequestResult<DeleteParticipantReminderEmailAttachmentResponses, DeleteParticipantReminderEmailAttachmentErrors, ThrowOnError> {
-        return (options.client ?? client).delete<DeleteParticipantReminderEmailAttachmentResponses, DeleteParticipantReminderEmailAttachmentErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments/{filename}',
-            ...options
-        });
-    }
-    
-    /**
-     * Download Participant Reminder Email Attachment
-     */
-    public static downloadParticipantReminderEmailAttachment<ThrowOnError extends boolean = false>(options: Options<DownloadParticipantReminderEmailAttachmentData, ThrowOnError>): RequestResult<DownloadParticipantReminderEmailAttachmentResponses, DownloadParticipantReminderEmailAttachmentErrors, ThrowOnError> {
-        return (options.client ?? client).get<DownloadParticipantReminderEmailAttachmentResponses, DownloadParticipantReminderEmailAttachmentErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments/{filename}',
-            ...options
-        });
-    }
-    
-    /**
-     * Send Participant Reminder Emails
-     */
-    public static sendParticipantReminderEmails<ThrowOnError extends boolean = false>(options: Options<SendParticipantReminderEmailsData, ThrowOnError>): RequestResult<SendParticipantReminderEmailsResponses, SendParticipantReminderEmailsErrors, ThrowOnError> {
-        return (options.client ?? client).post<SendParticipantReminderEmailsResponses, SendParticipantReminderEmailsErrors, ThrowOnError>({
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/projects/{project_id}/participants/send-reminder-email',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Opt Out
-     */
-    public static optOut<ThrowOnError extends boolean = false>(options: Options<OptOutData, ThrowOnError>): RequestResult<OptOutResponses, OptOutErrors, ThrowOnError> {
-        return (options.client ?? client).post<OptOutResponses, OptOutErrors, ThrowOnError>({
-            url: '/api/participants/opt-out/{opt_out_token}',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-}
-
 export class Projects {
+    /**
+     * List Consent Attachments
+     *
+     * `language`'s own consent PDFs, without the default's fallback.
+     */
+    public static listConsentAttachments<ThrowOnError extends boolean = false>(options: Options<ListConsentAttachmentsData, ThrowOnError>): RequestResult<ListConsentAttachmentsResponses, ListConsentAttachmentsErrors, ThrowOnError> {
+        return (options.client ?? client).get<ListConsentAttachmentsResponses, ListConsentAttachmentsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/consent-attachments',
+            ...options
+        });
+    }
+    
+    /**
+     * Upload Consent Attachments
+     *
+     * Add PDFs to `language`'s consent; one with the name of an existing
+     * file replaces it. Respondents see them at once: they are not versioned.
+     */
+    public static uploadConsentAttachments<ThrowOnError extends boolean = false>(options: Options<UploadConsentAttachmentsData, ThrowOnError>): RequestResult<UploadConsentAttachmentsResponses, UploadConsentAttachmentsErrors, ThrowOnError> {
+        return (options.client ?? client).post<UploadConsentAttachmentsResponses, UploadConsentAttachmentsErrors, ThrowOnError>({
+            ...formDataBodySerializer,
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/consent-attachments',
+            ...options,
+            headers: {
+                'Content-Type': null,
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Consent Attachment
+     */
+    public static deleteConsentAttachment<ThrowOnError extends boolean = false>(options: Options<DeleteConsentAttachmentData, ThrowOnError>): RequestResult<DeleteConsentAttachmentResponses, DeleteConsentAttachmentErrors, ThrowOnError> {
+        return (options.client ?? client).delete<DeleteConsentAttachmentResponses, DeleteConsentAttachmentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/consent-attachments/{filename}',
+            ...options
+        });
+    }
+    
+    /**
+     * Download Consent Attachment
+     */
+    public static downloadConsentAttachment<ThrowOnError extends boolean = false>(options: Options<DownloadConsentAttachmentData, ThrowOnError>): RequestResult<DownloadConsentAttachmentResponses, DownloadConsentAttachmentErrors, ThrowOnError> {
+        return (options.client ?? client).get<DownloadConsentAttachmentResponses, DownloadConsentAttachmentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/consent-attachments/{filename}',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Respondent Consent Attachments
+     *
+     * The consent PDFs respondents in `language` get: its own, or the
+     * default language's when it has none.
+     */
+    public static getRespondentConsentAttachments<ThrowOnError extends boolean = false>(options: Options<GetRespondentConsentAttachmentsData, ThrowOnError>): RequestResult<GetRespondentConsentAttachmentsResponses, GetRespondentConsentAttachmentsErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetRespondentConsentAttachmentsResponses, GetRespondentConsentAttachmentsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/guide/consent/{language}/attachments',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Respondent Consent Attachment
+     *
+     * One of the PDFs `get_respondent_consent_attachments` lists, to open
+     * in the browser.
+     */
+    public static getRespondentConsentAttachment<ThrowOnError extends boolean = false>(options: Options<GetRespondentConsentAttachmentData, ThrowOnError>): RequestResult<GetRespondentConsentAttachmentResponses, GetRespondentConsentAttachmentErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetRespondentConsentAttachmentResponses, GetRespondentConsentAttachmentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/guide/consent/{language}/attachments/{filename}',
+            ...options
+        });
+    }
+    
     /**
      * Delete Project
      */
@@ -2698,6 +1943,867 @@ export class Projects {
      */
     public static checkProjectOwner<ThrowOnError extends boolean = false>(options: Options<CheckProjectOwnerData, ThrowOnError>): RequestResult<CheckProjectOwnerResponses, CheckProjectOwnerErrors, ThrowOnError> {
         return (options.client ?? client).post<CheckProjectOwnerResponses, CheckProjectOwnerErrors, ThrowOnError>({ url: '/api/projects/{project_id}/owner', ...options });
+    }
+}
+
+export class Experiments {
+    /**
+     * Get Experiments
+     */
+    public static getExperiments<ThrowOnError extends boolean = false>(options?: Options<GetExperimentsData, ThrowOnError>): RequestResult<GetExperimentsResponses, GetExperimentsErrors, ThrowOnError> {
+        return (options?.client ?? client).get<GetExperimentsResponses, GetExperimentsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/experiments',
+            ...options
+        });
+    }
+    
+    /**
+     * Create Experiment
+     */
+    public static createExperiment<ThrowOnError extends boolean = false>(options: Options<CreateExperimentData, ThrowOnError>): RequestResult<CreateExperimentResponses, CreateExperimentErrors, ThrowOnError> {
+        return (options.client ?? client).post<CreateExperimentResponses, CreateExperimentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/experiments',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Experiment
+     *
+     * `clear_experiment_only` lets the experiment's projects take respondents
+     * from their own links again, unless another experiment still uses them.
+     */
+    public static deleteExperiment<ThrowOnError extends boolean = false>(options: Options<DeleteExperimentData, ThrowOnError>): RequestResult<DeleteExperimentResponses, DeleteExperimentErrors, ThrowOnError> {
+        return (options.client ?? client).delete<DeleteExperimentResponses, DeleteExperimentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/experiments/{experiment_id}',
+            ...options
+        });
+    }
+    
+    /**
+     * Update Experiment
+     *
+     * Replace the experiment's settings. A project respondents were already
+     * given cannot be removed, as their assignments would no longer count; a
+     * weight of zero closes it to new respondents instead.
+     *
+     * Linking a project, or changing its `experiment_only`, takes the editor
+     * role on it as creating does; changing a kept project's weight or target
+     * only takes owning the experiment, as deleting it does.
+     */
+    public static updateExperiment<ThrowOnError extends boolean = false>(options: Options<UpdateExperimentData, ThrowOnError>): RequestResult<UpdateExperimentResponses, UpdateExperimentErrors, ThrowOnError> {
+        return (options.client ?? client).put<UpdateExperimentResponses, UpdateExperimentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/experiments/{experiment_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Generate Experiment Qr
+     */
+    public static generateExperimentQr<ThrowOnError extends boolean = false>(options: Options<GenerateExperimentQrData, ThrowOnError>): RequestResult<GenerateExperimentQrResponses, GenerateExperimentQrErrors, ThrowOnError> {
+        return (options.client ?? client).get<GenerateExperimentQrResponses, GenerateExperimentQrErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/experiments/{experiment_id}/qr.png',
+            ...options
+        });
+    }
+}
+
+export class Folders {
+    /**
+     * Get Folders
+     *
+     * Get project folders
+     */
+    public static getFolders<ThrowOnError extends boolean = false>(options?: Options<GetFoldersData, ThrowOnError>): RequestResult<GetFoldersResponses, GetFoldersErrors, ThrowOnError> {
+        return (options?.client ?? client).get<GetFoldersResponses, GetFoldersErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders',
+            ...options
+        });
+    }
+    
+    /**
+     * Create Folder
+     *
+     * Create new project folder
+     */
+    public static createFolder<ThrowOnError extends boolean = false>(options: Options<CreateFolderData, ThrowOnError>): RequestResult<CreateFolderResponses, CreateFolderErrors, ThrowOnError> {
+        return (options.client ?? client).post<CreateFolderResponses, CreateFolderErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Folder
+     *
+     * Delete folder
+     */
+    public static deleteFolder<ThrowOnError extends boolean = false>(options: Options<DeleteFolderData, ThrowOnError>): RequestResult<DeleteFolderResponses, DeleteFolderErrors, ThrowOnError> {
+        return (options.client ?? client).delete<DeleteFolderResponses, DeleteFolderErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}',
+            ...options
+        });
+    }
+    
+    /**
+     * Edit Folder
+     *
+     * Delete folder
+     */
+    public static editFolder<ThrowOnError extends boolean = false>(options: Options<EditFolderData, ThrowOnError>): RequestResult<EditFolderResponses, EditFolderErrors, ThrowOnError> {
+        return (options.client ?? client).patch<EditFolderResponses, EditFolderErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Set Folder Archived
+     *
+     * Archive or unarchive a folder
+     */
+    public static setFolderArchived<ThrowOnError extends boolean = false>(options: Options<SetFolderArchivedData, ThrowOnError>): RequestResult<SetFolderArchivedResponses, SetFolderArchivedErrors, ThrowOnError> {
+        return (options.client ?? client).patch<SetFolderArchivedResponses, SetFolderArchivedErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/archive',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Remove Collaborator
+     *
+     * 403 `role_above_own` for someone above the caller's role, 409
+     * `last_admin` for the folder's only admin.
+     */
+    public static removeCollaborator<ThrowOnError extends boolean = false>(options: Options<RemoveCollaboratorData, ThrowOnError>): RequestResult<RemoveCollaboratorResponses, RemoveCollaboratorErrors, ThrowOnError> {
+        return (options.client ?? client).delete<RemoveCollaboratorResponses, RemoveCollaboratorErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/collaborators',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Collaborators
+     */
+    public static getCollaborators<ThrowOnError extends boolean = false>(options: Options<GetCollaboratorsData, ThrowOnError>): RequestResult<GetCollaboratorsResponses, GetCollaboratorsErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetCollaboratorsResponses, GetCollaboratorsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/collaborators',
+            ...options
+        });
+    }
+    
+    /**
+     * Update Collaborator Role
+     *
+     * Neither the collaborator's current role nor the new one may be above
+     * the caller's (403 `role_above_own`); 409 `last_admin` for demoting the
+     * folder's only admin.
+     */
+    public static updateCollaboratorRole<ThrowOnError extends boolean = false>(options: Options<UpdateCollaboratorRoleData, ThrowOnError>): RequestResult<UpdateCollaboratorRoleResponses, UpdateCollaboratorRoleErrors, ThrowOnError> {
+        return (options.client ?? client).patch<UpdateCollaboratorRoleResponses, UpdateCollaboratorRoleErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/collaborators',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Collaborator Invites
+     *
+     * The folder's pending invites, expired ones included.
+     */
+    public static getCollaboratorInvites<ThrowOnError extends boolean = false>(options: Options<GetCollaboratorInvitesData, ThrowOnError>): RequestResult<GetCollaboratorInvitesResponses, GetCollaboratorInvitesErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetCollaboratorInvitesResponses, GetCollaboratorInvitesErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/invites',
+            ...options
+        });
+    }
+    
+    /**
+     * Create Collaborator Invite
+     *
+     * Invite someone by email, or resend their pending invite with this role.
+     *
+     * Answers the same whether or not the email has an account, and the invite
+     * is listed as pending either way until its recipient accepts, so the form
+     * cannot be used to find out who is a user. 409 `already_collaborator` if
+     * they already collaborate on the folder, 403 `role_above_own` for a role
+     * above the caller's.
+     */
+    public static createCollaboratorInvite<ThrowOnError extends boolean = false>(options: Options<CreateCollaboratorInviteData, ThrowOnError>): RequestResult<CreateCollaboratorInviteResponses, CreateCollaboratorInviteErrors, ThrowOnError> {
+        return (options.client ?? client).post<CreateCollaboratorInviteResponses, CreateCollaboratorInviteErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/invites',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Collaborator Invite
+     *
+     * Revoke a pending invite; its link stops working. 403 `role_above_own`
+     * for an invite above the caller's role.
+     */
+    public static deleteCollaboratorInvite<ThrowOnError extends boolean = false>(options: Options<DeleteCollaboratorInviteData, ThrowOnError>): RequestResult<DeleteCollaboratorInviteResponses, DeleteCollaboratorInviteErrors, ThrowOnError> {
+        return (options.client ?? client).delete<DeleteCollaboratorInviteResponses, DeleteCollaboratorInviteErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/invites/{invite_id}',
+            ...options
+        });
+    }
+    
+    /**
+     * Inspect Collaborator Invite
+     *
+     * What an invite link offers, for its recipient to accept or decline.
+     * 404 `invite_invalid`, 410 `invite_expired`.
+     */
+    public static inspectCollaboratorInvite<ThrowOnError extends boolean = false>(options: Options<InspectCollaboratorInviteData, ThrowOnError>): RequestResult<InspectCollaboratorInviteResponses, InspectCollaboratorInviteErrors, ThrowOnError> {
+        return (options.client ?? client).post<InspectCollaboratorInviteResponses, InspectCollaboratorInviteErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/collaborator-invites/inspect',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Accept Collaborator Invite
+     *
+     * Join the folder with the invite's role. The link is the proof, so any
+     * signed-in account holding it may accept.
+     */
+    public static acceptCollaboratorInvite<ThrowOnError extends boolean = false>(options: Options<AcceptCollaboratorInviteData, ThrowOnError>): RequestResult<AcceptCollaboratorInviteResponses, AcceptCollaboratorInviteErrors, ThrowOnError> {
+        return (options.client ?? client).post<AcceptCollaboratorInviteResponses, AcceptCollaboratorInviteErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/collaborator-invites/accept',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Decline Collaborator Invite
+     */
+    public static declineCollaboratorInvite<ThrowOnError extends boolean = false>(options: Options<DeclineCollaboratorInviteData, ThrowOnError>): RequestResult<DeclineCollaboratorInviteResponses, DeclineCollaboratorInviteErrors, ThrowOnError> {
+        return (options.client ?? client).post<DeclineCollaboratorInviteResponses, DeclineCollaboratorInviteErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/collaborator-invites/decline',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Leave Folder
+     *
+     * Stop collaborating on the folder. Any role may; 409 `last_admin` for
+     * its only admin, who has to make someone else admin first.
+     */
+    public static leaveFolder<ThrowOnError extends boolean = false>(options: Options<LeaveFolderData, ThrowOnError>): RequestResult<LeaveFolderResponses, LeaveFolderErrors, ThrowOnError> {
+        return (options.client ?? client).post<LeaveFolderResponses, LeaveFolderErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/leave',
+            ...options
+        });
+    }
+    
+    /**
+     * Create Project
+     *
+     * Create a new project
+     */
+    public static createProject<ThrowOnError extends boolean = false>(options: Options<CreateProjectData, ThrowOnError>): RequestResult<CreateProjectResponses, CreateProjectErrors, ThrowOnError> {
+        return (options.client ?? client).post<CreateProjectResponses, CreateProjectErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/folders/{folder_id}/projects',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class Participants {
+    /**
+     * Delete Participants
+     */
+    public static deleteParticipants<ThrowOnError extends boolean = false>(options: Options<DeleteParticipantsData, ThrowOnError>): RequestResult<DeleteParticipantsResponses, DeleteParticipantsErrors, ThrowOnError> {
+        return (options.client ?? client).delete<DeleteParticipantsResponses, DeleteParticipantsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Get Participants
+     *
+     * One page of participants, with the filter options that fit the query.
+     *
+     * `search` matches name, email and pid. `statuses` matches the status of each
+     * participant's most recent interview.
+     */
+    public static getParticipants<ThrowOnError extends boolean = false>(options: Options<GetParticipantsData, ThrowOnError>): RequestResult<GetParticipantsResponses, GetParticipantsErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetParticipantsResponses, GetParticipantsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants',
+            ...options
+        });
+    }
+    
+    /**
+     * Add Participant
+     */
+    public static addParticipant<ThrowOnError extends boolean = false>(options: Options<AddParticipantData, ThrowOnError>): RequestResult<AddParticipantResponses, AddParticipantErrors, ThrowOnError> {
+        return (options.client ?? client).post<AddParticipantResponses, AddParticipantErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Participant
+     */
+    public static deleteParticipant<ThrowOnError extends boolean = false>(options: Options<DeleteParticipantData, ThrowOnError>): RequestResult<DeleteParticipantResponses, DeleteParticipantErrors, ThrowOnError> {
+        return (options.client ?? client).delete<DeleteParticipantResponses, DeleteParticipantErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants/{participant_id}',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Participant
+     */
+    public static getParticipant<ThrowOnError extends boolean = false>(options: Options<GetParticipantData, ThrowOnError>): RequestResult<GetParticipantResponses, GetParticipantErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetParticipantResponses, GetParticipantErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants/{participant_id}',
+            ...options
+        });
+    }
+    
+    /**
+     * Update Participant
+     */
+    public static updateParticipant<ThrowOnError extends boolean = false>(options: Options<UpdateParticipantData, ThrowOnError>): RequestResult<UpdateParticipantResponses, UpdateParticipantErrors, ThrowOnError> {
+        return (options.client ?? client).patch<UpdateParticipantResponses, UpdateParticipantErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants/{participant_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Export Participants
+     *
+     * Export the selected participants as CSV. `filters` exports every
+     * participant matching them; empty filters, the whole project.
+     */
+    public static exportParticipants<ThrowOnError extends boolean = false>(options: Options<ExportParticipantsData, ThrowOnError>): RequestResult<ExportParticipantsResponses, ExportParticipantsErrors, ThrowOnError> {
+        return (options.client ?? client).post<ExportParticipantsResponses, ExportParticipantsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants/export',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Export Email Bundle
+     *
+     * Export a self-contained zip with participants, templates and attachments.
+     *
+     * Intended for offline sending via the KU mail script when the server can't
+     * reach the KU SMTP gateway directly.
+     */
+    public static exportEmailBundle<ThrowOnError extends boolean = false>(options: Options<ExportEmailBundleData, ThrowOnError>): RequestResult<ExportEmailBundleResponses, ExportEmailBundleErrors, ThrowOnError> {
+        return (options.client ?? client).get<ExportEmailBundleResponses, ExportEmailBundleErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/email-bundle',
+            ...options
+        });
+    }
+    
+    /**
+     * Add Participants
+     */
+    public static addParticipants<ThrowOnError extends boolean = false>(options: Options<AddParticipantsData, ThrowOnError>): RequestResult<AddParticipantsResponses, AddParticipantsErrors, ThrowOnError> {
+        return (options.client ?? client).post<AddParticipantsResponses, AddParticipantsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants/bulk',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Upload Participants
+     */
+    public static uploadParticipants<ThrowOnError extends boolean = false>(options: Options<UploadParticipantsData, ThrowOnError>): RequestResult<UploadParticipantsResponses, UploadParticipantsErrors, ThrowOnError> {
+        return (options.client ?? client).post<UploadParticipantsResponses, UploadParticipantsErrors, ThrowOnError>({
+            ...formDataBodySerializer,
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants/upload',
+            ...options,
+            headers: {
+                'Content-Type': null,
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Get Participant Email Template
+     *
+     * The draft's template; `ETag` is the emails' revision.
+     */
+    public static getParticipantEmailTemplate<ThrowOnError extends boolean = false>(options: Options<GetParticipantEmailTemplateData, ThrowOnError>): RequestResult<GetParticipantEmailTemplateResponses, GetParticipantEmailTemplateErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetParticipantEmailTemplateResponses, GetParticipantEmailTemplateErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-email-template',
+            ...options
+        });
+    }
+    
+    /**
+     * Set Participant Email Template
+     *
+     * Save the draft's template; it is sent once published. A 412 if the
+     * emails changed since `If-Match`'s revision.
+     */
+    public static setParticipantEmailTemplate<ThrowOnError extends boolean = false>(options: Options<SetParticipantEmailTemplateData, ThrowOnError>): RequestResult<SetParticipantEmailTemplateResponses, SetParticipantEmailTemplateErrors, ThrowOnError> {
+        return (options.client ?? client).put<SetParticipantEmailTemplateResponses, SetParticipantEmailTemplateErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-email-template',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * List Participant Email Attachments
+     */
+    public static listParticipantEmailAttachments<ThrowOnError extends boolean = false>(options: Options<ListParticipantEmailAttachmentsData, ThrowOnError>): RequestResult<ListParticipantEmailAttachmentsResponses, ListParticipantEmailAttachmentsErrors, ThrowOnError> {
+        return (options.client ?? client).get<ListParticipantEmailAttachmentsResponses, ListParticipantEmailAttachmentsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-email-attachments',
+            ...options
+        });
+    }
+    
+    /**
+     * Upload Participant Email Attachments
+     */
+    public static uploadParticipantEmailAttachments<ThrowOnError extends boolean = false>(options: Options<UploadParticipantEmailAttachmentsData, ThrowOnError>): RequestResult<UploadParticipantEmailAttachmentsResponses, UploadParticipantEmailAttachmentsErrors, ThrowOnError> {
+        return (options.client ?? client).post<UploadParticipantEmailAttachmentsResponses, UploadParticipantEmailAttachmentsErrors, ThrowOnError>({
+            ...formDataBodySerializer,
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-email-attachments',
+            ...options,
+            headers: {
+                'Content-Type': null,
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Participant Email Attachment
+     */
+    public static deleteParticipantEmailAttachment<ThrowOnError extends boolean = false>(options: Options<DeleteParticipantEmailAttachmentData, ThrowOnError>): RequestResult<DeleteParticipantEmailAttachmentResponses, DeleteParticipantEmailAttachmentErrors, ThrowOnError> {
+        return (options.client ?? client).delete<DeleteParticipantEmailAttachmentResponses, DeleteParticipantEmailAttachmentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-email-attachments/{filename}',
+            ...options
+        });
+    }
+    
+    /**
+     * Download Participant Email Attachment
+     */
+    public static downloadParticipantEmailAttachment<ThrowOnError extends boolean = false>(options: Options<DownloadParticipantEmailAttachmentData, ThrowOnError>): RequestResult<DownloadParticipantEmailAttachmentResponses, DownloadParticipantEmailAttachmentErrors, ThrowOnError> {
+        return (options.client ?? client).get<DownloadParticipantEmailAttachmentResponses, DownloadParticipantEmailAttachmentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-email-attachments/{filename}',
+            ...options
+        });
+    }
+    
+    /**
+     * Send Participant Emails
+     */
+    public static sendParticipantEmails<ThrowOnError extends boolean = false>(options: Options<SendParticipantEmailsData, ThrowOnError>): RequestResult<SendParticipantEmailsResponses, SendParticipantEmailsErrors, ThrowOnError> {
+        return (options.client ?? client).post<SendParticipantEmailsResponses, SendParticipantEmailsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants/send-email',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Get Participant Reminder Email Template
+     *
+     * The draft's template; `ETag` is the emails' revision.
+     */
+    public static getParticipantReminderEmailTemplate<ThrowOnError extends boolean = false>(options: Options<GetParticipantReminderEmailTemplateData, ThrowOnError>): RequestResult<GetParticipantReminderEmailTemplateResponses, GetParticipantReminderEmailTemplateErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetParticipantReminderEmailTemplateResponses, GetParticipantReminderEmailTemplateErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-reminder-email-template',
+            ...options
+        });
+    }
+    
+    /**
+     * Set Participant Reminder Email Template
+     *
+     * Save the draft's template; it is sent once published. A 412 if the
+     * emails changed since `If-Match`'s revision.
+     */
+    public static setParticipantReminderEmailTemplate<ThrowOnError extends boolean = false>(options: Options<SetParticipantReminderEmailTemplateData, ThrowOnError>): RequestResult<SetParticipantReminderEmailTemplateResponses, SetParticipantReminderEmailTemplateErrors, ThrowOnError> {
+        return (options.client ?? client).put<SetParticipantReminderEmailTemplateResponses, SetParticipantReminderEmailTemplateErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-reminder-email-template',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * List Participant Reminder Email Attachments
+     */
+    public static listParticipantReminderEmailAttachments<ThrowOnError extends boolean = false>(options: Options<ListParticipantReminderEmailAttachmentsData, ThrowOnError>): RequestResult<ListParticipantReminderEmailAttachmentsResponses, ListParticipantReminderEmailAttachmentsErrors, ThrowOnError> {
+        return (options.client ?? client).get<ListParticipantReminderEmailAttachmentsResponses, ListParticipantReminderEmailAttachmentsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments',
+            ...options
+        });
+    }
+    
+    /**
+     * Upload Participant Reminder Email Attachments
+     */
+    public static uploadParticipantReminderEmailAttachments<ThrowOnError extends boolean = false>(options: Options<UploadParticipantReminderEmailAttachmentsData, ThrowOnError>): RequestResult<UploadParticipantReminderEmailAttachmentsResponses, UploadParticipantReminderEmailAttachmentsErrors, ThrowOnError> {
+        return (options.client ?? client).post<UploadParticipantReminderEmailAttachmentsResponses, UploadParticipantReminderEmailAttachmentsErrors, ThrowOnError>({
+            ...formDataBodySerializer,
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments',
+            ...options,
+            headers: {
+                'Content-Type': null,
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Participant Reminder Email Attachment
+     */
+    public static deleteParticipantReminderEmailAttachment<ThrowOnError extends boolean = false>(options: Options<DeleteParticipantReminderEmailAttachmentData, ThrowOnError>): RequestResult<DeleteParticipantReminderEmailAttachmentResponses, DeleteParticipantReminderEmailAttachmentErrors, ThrowOnError> {
+        return (options.client ?? client).delete<DeleteParticipantReminderEmailAttachmentResponses, DeleteParticipantReminderEmailAttachmentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments/{filename}',
+            ...options
+        });
+    }
+    
+    /**
+     * Download Participant Reminder Email Attachment
+     */
+    public static downloadParticipantReminderEmailAttachment<ThrowOnError extends boolean = false>(options: Options<DownloadParticipantReminderEmailAttachmentData, ThrowOnError>): RequestResult<DownloadParticipantReminderEmailAttachmentResponses, DownloadParticipantReminderEmailAttachmentErrors, ThrowOnError> {
+        return (options.client ?? client).get<DownloadParticipantReminderEmailAttachmentResponses, DownloadParticipantReminderEmailAttachmentErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/{language}/participant-reminder-email-attachments/{filename}',
+            ...options
+        });
+    }
+    
+    /**
+     * Send Participant Reminder Emails
+     */
+    public static sendParticipantReminderEmails<ThrowOnError extends boolean = false>(options: Options<SendParticipantReminderEmailsData, ThrowOnError>): RequestResult<SendParticipantReminderEmailsResponses, SendParticipantReminderEmailsErrors, ThrowOnError> {
+        return (options.client ?? client).post<SendParticipantReminderEmailsResponses, SendParticipantReminderEmailsErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/participants/send-reminder-email',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Opt Out
+     */
+    public static optOut<ThrowOnError extends boolean = false>(options: Options<OptOutData, ThrowOnError>): RequestResult<OptOutResponses, OptOutErrors, ThrowOnError> {
+        return (options.client ?? client).post<OptOutResponses, OptOutErrors, ThrowOnError>({
+            url: '/api/participants/opt-out/{opt_out_token}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
     }
 }
 

@@ -129,6 +129,13 @@ export const zBodyUploadAudio = z.object({
 });
 
 /**
+ * Body_upload_consent_attachments
+ */
+export const zBodyUploadConsentAttachments = z.object({
+    files: z.array(z.string())
+});
+
+/**
  * Body_upload_image
  */
 export const zBodyUploadImage = z.object({
@@ -534,6 +541,20 @@ export const zConfirmEmailChangeRequest = z.object({
 export const zConsent = z.object({
     title: z.string(),
     text: z.string()
+});
+
+/**
+ * ConsentAttachmentPublic
+ *
+ * A PDF shown with the consent, as a link (`app/api/dashboard/consent_attachments.py`).
+ *
+ * Stored on disk per language, outside the versioned content, so it has no
+ * fields beyond what the file itself says.
+ */
+export const zConsentAttachmentPublic = z.object({
+    filename: z.string(),
+    size: z.int(),
+    label: z.string().readonly()
 });
 
 /**
@@ -4321,6 +4342,19 @@ export const zCommunicationTraitOutputWritable = z.object({
 });
 
 /**
+ * ConsentAttachmentPublic
+ *
+ * A PDF shown with the consent, as a link (`app/api/dashboard/consent_attachments.py`).
+ *
+ * Stored on disk per language, outside the versioned content, so it has no
+ * fields beyond what the file itself says.
+ */
+export const zConsentAttachmentPublicWritable = z.object({
+    filename: z.string(),
+    size: z.int()
+});
+
+/**
  * DemoBudgetItem
  */
 export const zDemoBudgetItemWritable = z.object({
@@ -5054,6 +5088,105 @@ export const zSendChatPath = z.object({
 export const zSendChatQuery = z.object({
     folder_id: z.string().nullish()
 });
+
+export const zListConsentAttachmentsPath = z.object({
+    project_id: z.string().nullable(),
+    language: z.string().length(2)
+});
+
+export const zListConsentAttachmentsQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Response List Consent Attachments
+ *
+ * Successful Response
+ */
+export const zListConsentAttachmentsResponse = z.array(zConsentAttachmentPublic);
+
+export const zUploadConsentAttachmentsBody = zBodyUploadConsentAttachments;
+
+export const zUploadConsentAttachmentsPath = z.object({
+    project_id: z.string().nullable(),
+    language: z.string().length(2)
+});
+
+export const zUploadConsentAttachmentsQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Response Upload Consent Attachments
+ *
+ * Successful Response
+ */
+export const zUploadConsentAttachmentsResponse = z.array(zConsentAttachmentPublic);
+
+export const zDeleteConsentAttachmentPath = z.object({
+    project_id: z.string().nullable(),
+    language: z.string().length(2),
+    filename: z.string()
+});
+
+export const zDeleteConsentAttachmentQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Response Delete Consent Attachment
+ *
+ * Successful Response
+ */
+export const zDeleteConsentAttachmentResponse = z.array(zConsentAttachmentPublic);
+
+export const zDownloadConsentAttachmentPath = z.object({
+    project_id: z.string().nullable(),
+    language: z.string().length(2),
+    filename: z.string()
+});
+
+export const zDownloadConsentAttachmentQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zDownloadConsentAttachmentResponse = z.string();
+
+export const zGetRespondentConsentAttachmentsPath = z.object({
+    project_id: z.string(),
+    language: z.string().length(2)
+});
+
+export const zGetRespondentConsentAttachmentsQuery = z.object({
+    draft: z.boolean().optional().default(false),
+    share: z.string().nullish()
+});
+
+/**
+ * Response Get Respondent Consent Attachments
+ *
+ * Successful Response
+ */
+export const zGetRespondentConsentAttachmentsResponse = z.array(zConsentAttachmentPublic);
+
+export const zGetRespondentConsentAttachmentPath = z.object({
+    project_id: z.string(),
+    language: z.string().length(2),
+    filename: z.string()
+});
+
+export const zGetRespondentConsentAttachmentQuery = z.object({
+    draft: z.boolean().optional().default(false),
+    share: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetRespondentConsentAttachmentResponse = z.string();
 
 /**
  * Response Get Experiments

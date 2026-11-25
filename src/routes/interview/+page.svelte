@@ -5,6 +5,7 @@
 	import { type Consent, Projects } from '$lib/api';
 	import InterviewChat from '$lib/components/interview/InterviewChat.svelte';
 	import { ConsentModal, LanguagePickerModal, WelcomeModal } from '$lib/components/modals';
+	import { type ConsentAttachmentLink, respondentAttachmentLinks } from '$lib/consentAttachments';
 	import {
 		ChatClient,
 		createInterview,
@@ -87,6 +88,7 @@
 	// Consent flow state
 	let showConsent = $state(false);
 	let consentData = $state<Consent | null>(null);
+	let consentAttachments = $state<ConsentAttachmentLink[]>([]);
 	let isInitializing = $state(true);
 	let consentAccepting = $state(false);
 	// The load function validates the link's params against the project's
@@ -229,6 +231,20 @@
 		}
 	}
 
+	/** The consent's PDFs. Not being able to list them is no reason to keep
+	 *  the respondent from the consent: they are links beside its text. */
+	async function loadConsentAttachments(): Promise<ConsentAttachmentLink[]> {
+		const { data: attachments, error } = await Projects.getRespondentConsentAttachments({
+			path: { project_id: projectId, language: lang },
+			query: contentQuery
+		});
+		if (error) {
+			console.error('Error loading consent attachments', error);
+			return [];
+		}
+		return respondentAttachmentLinks(projectId, lang, attachments ?? [], contentQuery);
+	}
+
 	async function loadConsent() {
 		const { data: consent, error: consentError } = await Projects.getConsent({
 			path: {
@@ -250,6 +266,7 @@
 		}
 
 		if (consent && consent.title && consent.text) {
+			consentAttachments = await loadConsentAttachments();
 			consentData = consent;
 			showConsent = true;
 			isInitializing = false;
@@ -429,6 +446,7 @@
 		show={showConsent && !!consentData}
 		title={consentData?.title ?? ''}
 		text={consentData?.text ?? ''}
+		attachments={consentAttachments}
 		onAccept={acceptConsent}
 		onDecline={declineConsent}
 		accepting={consentAccepting}
