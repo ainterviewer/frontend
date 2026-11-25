@@ -2,6 +2,7 @@
 	import { toast } from 'svelte-sonner';
 
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { Projects } from '$lib/api';
 	import { toastApiError } from '$lib/utils/toast';
 
@@ -104,6 +105,19 @@
 					</button>
 				</div>
 			</div>
+
+			{#if data.copiedFrom}
+				<p class="text-sm text-gray-600">
+					<i class="fa-regular fa-copy mr-1 text-gray-400"></i>
+					Copied from
+					<a
+						href={resolve('/dashboard/projects/[project_id]', { project_id: data.copiedFrom.id })}
+						class="text-primary hover:underline"
+					>
+						{data.copiedFrom.title}
+					</a>{#if data.copiedFrom.version}, {data.copiedFrom.version}{/if}
+				</p>
+			{/if}
 
 			<!-- Language -->
 			<div>

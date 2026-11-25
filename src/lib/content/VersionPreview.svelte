@@ -19,6 +19,8 @@
 		projectId,
 		lang,
 		availableLanguages = [],
+		copying = false,
+		onCopy,
 		onClose
 	}: {
 		version: ContentVersionPublic;
@@ -27,6 +29,10 @@
 		lang: string;
 		/** For language names; codes are shown for any it does not list. */
 		availableLanguages?: ProjectLanguage[];
+		/** A copy into a new project is under way. */
+		copying?: boolean;
+		/** Start a new project from this version; no button without it. */
+		onCopy?: () => void;
 		onClose: () => void;
 	} = $props();
 
@@ -194,14 +200,28 @@
 							: ''}{version.label ? ` · ${version.label}` : ''}
 					</p>
 				</div>
-				<button
-					type="button"
-					class="rounded-full p-2 text-gray-500 hover:bg-gray-100"
-					onclick={onClose}
-					aria-label="Close"
-				>
-					<i class="fa-solid fa-xmark"></i>
-				</button>
+				<div class="flex shrink-0 items-center gap-1">
+					{#if onCopy}
+						<button
+							type="button"
+							class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-primary hover:bg-gray-100 disabled:opacity-50"
+							title="Start a new project from this version. Its history starts afresh."
+							disabled={copying}
+							onclick={onCopy}
+						>
+							<i class="fa-regular fa-copy text-xs"></i>
+							Copy to new project
+						</button>
+					{/if}
+					<button
+						type="button"
+						class="rounded-full p-2 text-gray-500 hover:bg-gray-100"
+						onclick={onClose}
+						aria-label="Close"
+					>
+						<i class="fa-solid fa-xmark"></i>
+					</button>
+				</div>
 			</div>
 
 			<div class="mt-3 flex flex-wrap items-end justify-between gap-2">

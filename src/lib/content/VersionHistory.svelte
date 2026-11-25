@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { Versions } from '$lib/api';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { Projects, Versions } from '$lib/api';
 	import type {
 		ContentVersionPublic,
 		ContentVersionSummaryPublic,
 		ProjectLanguage
 	} from '$lib/api/types.gen';
 	import { hasErrorCode } from '$lib/utils/errors';
+	import { openUpwards } from '$lib/utils/openUpwards';
 	import { portal } from '$lib/utils/portal';
 	import { toastApiError } from '$lib/utils/toast';
 
@@ -41,6 +44,8 @@
 	let preview = $state<ContentVersionPublic | null>(null);
 	/** The version being compared with the draft. */
 	let comparing = $state<string | null>(null);
+	/** The version whose actions menu is open. */
+	let menu = $state<string | null>(null);
 
 	async function load(offset = 0) {
 		loading = true;
@@ -89,6 +94,7 @@
 	}
 
 	async function restore(version: ContentVersionSummaryPublic) {
+		menu = null;
 		const name = version.semver ? `version ${version.semver}` : `snapshot #${version.version_no}`;
 		if (
 			!confirm(
@@ -112,6 +118,30 @@
 		location.reload();
 	}
 
+	/** The version being copied into a new project. */
+	let copying = $state<string | null>(null);
+
+	async function copyToProject(version: { id: string }) {
+		menu = null;
+		copying = version.id;
+		const { data, error } = await Projects.cloneProject({
+			path: { project_id: projectId },
+			body: { version_id: version.id }
+		});
+		copying = null;
+		if (error || !data) {
+			toastApiError(error, 'Failed to copy the project');
+			return;
+		}
+		toast.success(`Copied into "${data.title}"`, {
+			description: 'A new project, unpublished, with its own history.',
+			action: {
+				label: 'Open',
+				onClick: () => goto(resolve('/dashboard/projects/[project_id]', { project_id: data.id }))
+			}
+		});
+	}
+
 	function formatDate(iso: string) {
 		return new Date(iso).toLocaleString(undefined, {
 			dateStyle: 'medium',
@@ -120,8 +150,14 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
+		if (e.key !== 'Escape') return;
+		if (menu) menu = null;
 		// The preview and the comparison close themselves on Escape.
-		if (e.key === 'Escape' && !preview && !comparing) open = false;
+		else if (!preview && !comparing) open = false;
+	}
+
+	function handleClick(e: MouseEvent) {
+		if (menu && !(e.target as Element).closest('.version-menu')) menu = null;
 	}
 
 	// On opening, and again when a save here moves the draft: the list may
@@ -132,7 +168,10 @@
 	});
 </script>
 
-<svelte:window onkeydown={open ? handleKeydown : undefined} />
+<svelte:window
+	onkeydown={open ? handleKeydown : undefined}
+	onclick={open ? handleClick : undefined}
+/>
 
 {#if open}
 	<!-- Portalled, like everything opened from the action bar: its
@@ -229,7 +268,7 @@
 								? ` · ${version.created_by_name}`
 								: ''}
 						</p>
-						<div class="mt-1 flex gap-3 text-sm">
+						<div class="mt-1 flex items-center gap-3 text-sm">
 							<button
 								type="button"
 								class="text-primary hover:underline"
@@ -253,15 +292,51 @@
 								>
 									Compare with draft
 								</button>
+							{/if}
+							<!-- What changes something -- the draft, or a new project --
+							     is a click further in than looking. -->
+							<div class="version-menu relative {version.matches_draft ? '' : 'ml-auto'}">
 								<button
 									type="button"
-									class="ml-auto text-gray-500 hover:text-gray-800 hover:underline"
-									onclick={() => restore(version)}
+									class="rounded-full px-2 py-0.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+									aria-label="More actions"
+									aria-haspopup="menu"
+									aria-expanded={menu === version.id}
+									onclick={() => (menu = menu === version.id ? null : version.id)}
 								>
-									<i class="fa-solid fa-rotate-left mr-0.5 text-xs"></i>
-									Restore to draft
+									<i class="fa-solid fa-ellipsis"></i>
 								</button>
-							{/if}
+								{#if menu === version.id}
+									<div
+										class="absolute right-0 z-10 mt-1 w-52 rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5"
+										role="menu"
+										{@attach openUpwards}
+									>
+										{#if !version.matches_draft}
+											<button
+												type="button"
+												role="menuitem"
+												class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+												onclick={() => restore(version)}
+											>
+												<i class="fa-solid fa-rotate-left w-4 text-xs text-gray-400"></i>
+												Restore to draft
+											</button>
+										{/if}
+										<button
+											type="button"
+											role="menuitem"
+											class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+											title="Start a new project from this version. Its history starts afresh."
+											disabled={copying !== null}
+											onclick={() => copyToProject(version)}
+										>
+											<i class="fa-regular fa-copy w-4 text-xs text-gray-400"></i>
+											Copy to new project
+										</button>
+									</div>
+								{/if}
+							</div>
 						</div>
 					</li>
 				{:else}
@@ -291,6 +366,8 @@
 		{projectId}
 		{lang}
 		{availableLanguages}
+		copying={copying !== null}
+		onCopy={() => preview && copyToProject(preview)}
 		onClose={() => (preview = null)}
 	/>
 {/if}
