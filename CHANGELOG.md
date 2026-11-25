@@ -4,6 +4,17 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.37] - 2026-11-25
+
+### Features
+
+- (consent) Attach PDFs to the consent
+
+### Bug Fixes
+
+- (interview) Remove stray edges from the progress bar
+- (interview) Don't lose or open early on a reconnect
+
 ## [0.9.36] - 2026-11-24
 
 ### Features
