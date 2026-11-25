@@ -4,6 +4,21 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.38] - 2026-11-25
+
+### Features
+
+- (projects) Copy a project from a version of its content
+
+### Bug Fixes
+
+- (guide) Show guide images in the editor preview and the PDF export
+- (consent) Style attachment cards apart from text links
+
+### Internal
+
+- (api) Regenerate the SDK for copying a project from a version
+
 ## [0.9.37] - 2026-11-25
 
 ### Features
