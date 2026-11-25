@@ -2346,6 +2346,13 @@ export const zInterviewConfig = z.object({
 });
 
 /**
+ * ProjectCloneRequest
+ */
+export const zProjectCloneRequest = z.object({
+    version_id: z.string().nullish()
+});
+
+/**
  * ProjectCreate
  */
 export const zProjectCreate = z.object({
@@ -4023,6 +4030,8 @@ export const zProjectPublic = z.object({
     external_params: z.array(zExternalParam).nullish(),
     redirects: zCompletionRedirects.nullish(),
     owner_id: z.string(),
+    cloned_from_project_id: z.string().nullish(),
+    cloned_from_version_id: z.string().nullish(),
     n_interviews: z.int().nullish(),
     available_languages: z.array(zProjectLanguage).nullish(),
     owner: zUserPublic
@@ -5821,6 +5830,11 @@ export const zGetProjectQuery = z.object({
  * Successful Response
  */
 export const zGetProjectResponse = zProjectPublic;
+
+/**
+ * Body
+ */
+export const zCloneProjectBody = zProjectCloneRequest.nullable();
 
 export const zCloneProjectPath = z.object({
     project_id: z.string().nullable()

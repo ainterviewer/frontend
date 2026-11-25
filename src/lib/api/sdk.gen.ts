@@ -956,6 +956,10 @@ export class Projects {
     
     /**
      * Clone Project
+     *
+     * Copy the project's content and test setups into a new, unpublished
+     * project. From the draft, or from `version_id`, one of its versions. The
+     * copy's history starts afresh: none of the source's versions go with it.
      */
     public static cloneProject<ThrowOnError extends boolean = false>(options: Options<CloneProjectData, ThrowOnError>): RequestResult<CloneProjectResponses, CloneProjectErrors, ThrowOnError> {
         return (options.client ?? client).post<CloneProjectResponses, CloneProjectErrors, ThrowOnError>({
@@ -965,7 +969,11 @@ export class Projects {
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/clone',
-            ...options
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
         });
     }
     

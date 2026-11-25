@@ -5643,6 +5643,16 @@ export type ProbingPromptSlots = {
 export type ProbingStrategy = 'standard' | 'dice_master_to_one_probe' | 'dice_ensemble_to_master_probe' | 'dice_master_to_ensemble_to_one_probe';
 
 /**
+ * ProjectCloneRequest
+ */
+export type ProjectCloneRequest = {
+    /**
+     * Version Id
+     */
+    version_id?: string | null;
+};
+
+/**
  * ProjectContentPublic
  *
  * A project's guide, consent and welcome with their text per language.
@@ -5765,6 +5775,14 @@ export type ProjectPublic = {
      * Owner Id
      */
     owner_id: string;
+    /**
+     * Cloned From Project Id
+     */
+    cloned_from_project_id?: string | null;
+    /**
+     * Cloned From Version Id
+     */
+    cloned_from_version_id?: string | null;
     /**
      * N Interviews
      */
@@ -12602,7 +12620,10 @@ export type GetProjectResponses = {
 export type GetProjectResponse = GetProjectResponses[keyof GetProjectResponses];
 
 export type CloneProjectData = {
-    body?: never;
+    /**
+     * Body
+     */
+    body?: ProjectCloneRequest | null;
     path: {
         /**
          * Project Id
