@@ -21,7 +21,7 @@
 						target="_blank"
 						rel="noopener noreferrer"
 						title={attachment.label}
-						class="consent-attachment group flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:border-primary hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
+						class="consent-attachment group flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:border-blue-600 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:outline-none"
 					>
 						<span
 							class="flex size-10 shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-800"
@@ -31,7 +31,7 @@
 						</span>
 						<span class="min-w-0 flex-1">
 							<span
-								class="block truncate text-sm font-medium text-gray-900 group-hover:text-primary"
+								class="block truncate text-sm font-medium text-gray-900 group-hover:text-blue-600"
 							>
 								{attachment.label}
 							</span>
@@ -40,7 +40,7 @@
 							</span>
 						</span>
 						<i
-							class="fa-solid fa-arrow-up-right-from-square shrink-0 text-xs text-gray-400 group-hover:text-primary"
+							class="fa-solid fa-arrow-up-right-from-square shrink-0 text-xs text-gray-400 group-hover:text-blue-600"
 							aria-hidden="true"
 						></i>
 					</a>

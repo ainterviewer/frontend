@@ -481,7 +481,8 @@
 {/if}
 
 <style>
-	:global(a) {
+	/* The consent's attachment cards style themselves. */
+	:global(a:not(.consent-attachment)) {
 		color: #2563eb;
 		text-decoration: underline;
 		font-weight: 500;
@@ -497,7 +498,7 @@
 		}
 	}
 
-	:global(a):visited {
+	:global(a:not(.consent-attachment)):visited {
 		color: #5203fc;
 
 		&:hover {
