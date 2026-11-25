@@ -6,6 +6,7 @@ import type {
 	RenderedQuestion as GuideQuestion,
 	RenderedSection as GuideSection
 } from '$lib/guide/types';
+import { projectImageUrl } from '$lib/guideImages';
 import { describeListBounds } from '$lib/survey/list';
 import { formatDay } from '$lib/utils/datetime';
 
@@ -50,6 +51,9 @@ export interface ExportOptions {
 	toggles: PdfToggles;
 	consent?: Consent | null;
 	welcome?: Welcome | null;
+	/** The guide's images as data URLs, by name: pdfmake embeds no URL. An
+	 *  image missing here is described without the picture. */
+	images?: Record<string, string>;
 }
 
 function heading(text: string, level: 1 | 2 | 3 | 4): PdfNode {
@@ -230,7 +234,7 @@ function buildBlockText(
 	return text;
 }
 
-function buildImageContent(image: Image): PdfNode[] {
+function buildImageContent(image: Image, images: Record<string, string>): PdfNode[] {
 	const content: PdfNode[] = [];
 
 	content.push(label('Image'));
@@ -255,19 +259,13 @@ function buildImageContent(image: Image): PdfNode[] {
 		});
 	}
 
-	if (typeof image.data === 'string') {
-		try {
-			const dataUri = image.data.startsWith('data:')
-				? image.data
-				: `data:image/png;base64,${image.data}`;
-			content.push({
-				image: dataUri,
-				width: 300,
-				margin: [12, 4, 0, 4]
-			});
-		} catch {
-			// Skip image embedding if data is invalid
-		}
+	const dataUri = images[image.name];
+	if (dataUri) {
+		content.push({
+			image: dataUri,
+			width: 300,
+			margin: [12, 4, 0, 4]
+		});
 	}
 
 	return content;
@@ -286,7 +284,8 @@ function buildQuestionContent(
 	qIdx: number,
 	sections: GuideSection[],
 	questions: Record<string, GuideQuestion[]>,
-	toggles: PdfToggles
+	toggles: PdfToggles,
+	images: Record<string, string>
 ): PdfNode[] {
 	const content: PdfNode[] = [];
 	// Question header
@@ -344,7 +343,7 @@ function buildQuestionContent(
 
 	// Image (always visible per requirements)
 	if (q.image) {
-		const imgContent = buildImageContent(q.image);
+		const imgContent = buildImageContent(q.image, images);
 		for (const c of imgContent) {
 			content.push(c);
 		}
@@ -447,8 +446,17 @@ function buildTimedMessageContent(tm: TimedMessage, idx: number, toggles: PdfTog
 }
 
 export function exportGuidePdf(options: ExportOptions): PdfNode {
-	const { guide, sections, questions, projectName, platformVersion, toggles, consent, welcome } =
-		options;
+	const {
+		guide,
+		sections,
+		questions,
+		projectName,
+		platformVersion,
+		toggles,
+		consent,
+		welcome,
+		images = {}
+	} = options;
 
 	const content: PdfNode[] = [];
 
@@ -562,7 +570,8 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 					qIdx,
 					sections,
 					questions,
-					toggles
+					toggles,
+					images
 				);
 				// Wrap question in a bordered box
 				content.push({
@@ -676,6 +685,46 @@ export function exportGuidePdf(options: ExportOptions): PdfNode {
 			margin: [0, 10, 0, 0]
 		})
 	};
+}
+
+/** The formats pdfmake can embed. */
+const PDF_IMAGE_TYPES = new Set(['image/png', 'image/jpeg']);
+
+/** The guide's images as data URLs, by name, for those pdfmake can embed.
+ *  One that fails to load is left out, and described without the picture. */
+export async function loadGuideImages(
+	projectId: string,
+	questions: Record<string, GuideQuestion[]>
+): Promise<Record<string, string>> {
+	const names = new Set(
+		Object.values(questions)
+			.flat()
+			.map((q) => q.image?.name)
+			.filter((name): name is string => !!name)
+	);
+	const loaded = await Promise.all(
+		[...names].map(async (name) => {
+			try {
+				const response = await fetch(projectImageUrl(projectId, name));
+				if (!response.ok) return null;
+				const blob = await response.blob();
+				if (!PDF_IMAGE_TYPES.has(blob.type)) return null;
+				return [name, await asDataUrl(blob)] as const;
+			} catch {
+				return null;
+			}
+		})
+	);
+	return Object.fromEntries(loaded.filter((entry) => entry !== null));
+}
+
+function asDataUrl(blob: Blob): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(reader.result as string);
+		reader.onerror = () => reject(reader.error);
+		reader.readAsDataURL(blob);
+	});
 }
 
 export async function downloadGuidePdf(options: ExportOptions) {

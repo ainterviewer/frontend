@@ -3,6 +3,7 @@
 	import { Projects } from '$lib/api';
 	import { pick } from '$lib/guide/localized';
 	import type { GuideQuestion } from '$lib/guide/types';
+	import { projectImageUrl } from '$lib/guideImages';
 	import { getGuideStore } from '$lib/stores/guideStore.svelte';
 	import { toastApiError } from '$lib/utils/toast';
 
@@ -42,7 +43,6 @@
 		preview = URL.createObjectURL(file);
 		question.image = {
 			...(question.image ?? { description: {}, alt: {}, primer: {} }),
-			data: null,
 			name
 		};
 	}
@@ -51,8 +51,12 @@
 		if (preview) URL.revokeObjectURL(preview);
 	});
 
+	// Otherwise the stored file, which every editor of the guide can load.
 	let shown = $derived(
-		preview ?? (typeof question.image?.data === 'string' ? question.image.data : null)
+		preview ??
+			(question.image?.name
+				? projectImageUrl(page.params.project_id ?? '', question.image.name)
+				: null)
 	);
 </script>
 

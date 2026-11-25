@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { type ConditionSummary, questionKey } from '$lib/analysis/conditions';
 	import type { EmbeddingTurn, TranscriptTurn } from '$lib/api/types.gen';
 	import CodingChips from '$lib/components/analysis/CodingChips.svelte';
 	import MessageBubble from '$lib/components/interview/MessageBubble.svelte';
 	import type { SurveyItemUnion } from '$lib/components/interview/types';
+	import { projectImageUrl } from '$lib/guideImages';
 	import { textDir } from '$lib/respondentText';
 	import { isSpan } from '$lib/utils/coding';
 	import { selectionWithin } from '$lib/utils/textSelection';
@@ -127,13 +129,16 @@
 	/**
 	 * The attached image, in the shape the bubble draws.
 	 *
-	 * `data` is nullable on the wire — an image row whose payload was never
-	 * stored — and an `<img>` with no source is a broken icon where the reader
-	 * expects a picture, so a missing one is simply no image.
+	 * An image comes by name and loads from the project's images; one with no
+	 * name would be a broken icon where the reader expects a picture, so it is
+	 * simply no image.
 	 */
-	function picture(turn: EmbeddingTurn | TranscriptTurn): { data: string; alt?: string } | null {
-		if (!isTranscript(turn) || !turn.image?.data) return null;
-		return { data: turn.image.data, alt: turn.image.alt };
+	function picture(turn: EmbeddingTurn | TranscriptTurn): { src: string; alt?: string } | null {
+		if (!isTranscript(turn) || !turn.image?.name) return null;
+		return {
+			src: projectImageUrl(page.params.project_id ?? '', turn.image.name),
+			alt: turn.image.alt
+		};
 	}
 
 	/**

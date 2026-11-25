@@ -2958,10 +2958,6 @@ export type Image = {
      */
     name: string;
     /**
-     * Data
-     */
-    data: string | null;
-    /**
      * Primer
      *
      * A primer to show the interviewee before showing the image
@@ -4218,10 +4214,6 @@ export type LocalizedImage = {
      * The filename
      */
     name: string;
-    /**
-     * Data
-     */
-    data?: string | null;
     primer?: LocalizedText | null;
     description?: LocalizedText;
     alt?: LocalizedText;
@@ -10405,6 +10397,91 @@ export type GetRespondentConsentAttachmentResponses = {
 };
 
 export type GetRespondentConsentAttachmentResponse = GetRespondentConsentAttachmentResponses[keyof GetRespondentConsentAttachmentResponses];
+
+export type GetInterviewImageData = {
+    body?: never;
+    path: {
+        /**
+         * Name
+         */
+        name: string;
+    };
+    query?: never;
+    url: '/api/interview/images/{name}';
+};
+
+export type GetInterviewImageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetInterviewImageError = GetInterviewImageErrors[keyof GetInterviewImageErrors];
+
+export type GetInterviewImageResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type GetInterviewImageResponse = GetInterviewImageResponses[keyof GetInterviewImageResponses];
+
+export type GetProjectImageData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string | null;
+        /**
+         * Name
+         */
+        name: string;
+    };
+    query?: {
+        /**
+         * Folder Id
+         */
+        folder_id?: string | null;
+    };
+    url: '/api/projects/{project_id}/images/{name}';
+};
+
+export type GetProjectImageErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Client error
+     */
+    '4XX': ApiError;
+    /**
+     * Server error
+     */
+    '5XX': ApiError;
+};
+
+export type GetProjectImageError = GetProjectImageErrors[keyof GetProjectImageErrors];
+
+export type GetProjectImageResponses = {
+    /**
+     * Successful Response
+     */
+    200: Blob | File;
+};
+
+export type GetProjectImageResponse = GetProjectImageResponses[keyof GetProjectImageResponses];
 
 export type GetExperimentsData = {
     body?: never;

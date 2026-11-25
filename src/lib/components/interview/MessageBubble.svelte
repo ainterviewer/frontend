@@ -116,7 +116,7 @@
 		text?: string;
 		/** The guide number, `3.2`, when the message has a place in one. */
 		label?: string | null;
-		image?: { data: string; alt?: string } | null;
+		image?: { src: string; alt?: string } | null;
 		/**
 		 * The survey item in full, so the option set renders with the choice
 		 * marked. An identical "Agree" from forty respondents is a click, and a
@@ -489,7 +489,7 @@
 				{/if}
 				{#if image}
 					<img
-						src={image.data}
+						src={image.src}
 						alt={image.alt || 'Image'}
 						class="max-h-[350px] max-w-full rounded-[5px] sm:max-h-[40vh]"
 					/>

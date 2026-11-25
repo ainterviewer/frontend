@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AcceptCollaboratorInviteData, AcceptCollaboratorInviteErrors, AcceptCollaboratorInviteResponses, AddIntervieweeData, AddIntervieweeErrors, AddIntervieweeResponses, AddMessageCodingData, AddMessageCodingErrors, AddMessageCodingResponses, AddMessageCommentData, AddMessageCommentErrors, AddMessageCommentResponses, AddParticipantData, AddParticipantErrors, AddParticipantResponses, AddParticipantsData, AddParticipantsErrors, AddParticipantsResponses, AddProjectLanguageData, AddProjectLanguageErrors, AddProjectLanguageResponses, BrowseEmbeddingsData, BrowseEmbeddingsErrors, BrowseEmbeddingsResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CheckProjectOwnerData, CheckProjectOwnerErrors, CheckProjectOwnerResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ClusterEmbeddingsData, ClusterEmbeddingsErrors, ClusterEmbeddingsResponses, CompareTestRunsData, CompareTestRunsErrors, CompareTestRunsResponses, ConfirmEmailChangeData, ConfirmEmailChangeErrors, ConfirmEmailChangeResponses, CreateCollaboratorInviteData, CreateCollaboratorInviteErrors, CreateCollaboratorInviteResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateInterviewResumeLinkData, CreateInterviewResumeLinkErrors, CreateInterviewResumeLinkResponses, CreateInvitationData, CreateInvitationErrors, CreateInvitationResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, CreateTestShareLinkData, CreateTestShareLinkErrors, CreateTestShareLinkResponses, DeclineCollaboratorInviteData, DeclineCollaboratorInviteErrors, DeclineCollaboratorInviteResponses, DeleteAccessRequestsData, DeleteAccessRequestsErrors, DeleteAccessRequestsResponses, DeleteCollaboratorInviteData, DeleteCollaboratorInviteErrors, DeleteCollaboratorInviteResponses, DeleteConsentAttachmentData, DeleteConsentAttachmentErrors, DeleteConsentAttachmentResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteInvitationsData, DeleteInvitationsErrors, DeleteInvitationsResponses, DeleteMeData, DeleteMeErrors, DeleteMeResponses, DeleteMessageCodingData, DeleteMessageCodingErrors, DeleteMessageCodingResponses, DeleteMessageCommentData, DeleteMessageCommentErrors, DeleteMessageCommentResponses, DeleteParticipantData, DeleteParticipantEmailAttachmentData, DeleteParticipantEmailAttachmentErrors, DeleteParticipantEmailAttachmentResponses, DeleteParticipantErrors, DeleteParticipantReminderEmailAttachmentData, DeleteParticipantReminderEmailAttachmentErrors, DeleteParticipantReminderEmailAttachmentResponses, DeleteParticipantResponses, DeleteParticipantsData, DeleteParticipantsErrors, DeleteParticipantsResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, DeleteTestSetupData, DeleteTestSetupErrors, DeleteTestSetupResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, DownloadConsentAttachmentData, DownloadConsentAttachmentErrors, DownloadConsentAttachmentResponses, DownloadParticipantEmailAttachmentData, DownloadParticipantEmailAttachmentErrors, DownloadParticipantEmailAttachmentResponses, DownloadParticipantReminderEmailAttachmentData, DownloadParticipantReminderEmailAttachmentErrors, DownloadParticipantReminderEmailAttachmentResponses, EditFolderData, EditFolderErrors, EditFolderResponses, EnterExperimentData, EnterExperimentErrors, EnterExperimentResponses, ExitData, ExitErrors, ExitResponses, ExportEmailBundleData, ExportEmailBundleErrors, ExportEmailBundleResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, ExportParticipantsData, ExportParticipantsErrors, ExportParticipantsResponses, FindEmbeddingsLikeCodeData, FindEmbeddingsLikeCodeErrors, FindEmbeddingsLikeCodeResponses, FindSimilarEmbeddingsData, FindSimilarEmbeddingsErrors, FindSimilarEmbeddingsResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateGuideSectionData, GenerateGuideSectionErrors, GenerateGuideSectionResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GenerateSectionQuestionData, GenerateSectionQuestionErrors, GenerateSectionQuestionResponses, GetAccessRequestsData, GetAccessRequestsErrors, GetAccessRequestsResponses, GetAdminStatsData, GetAdminStatsErrors, GetAdminStatsResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetChatData, GetChatErrors, GetChatResponses, GetCodebookData, GetCodebookErrors, GetCodebookResponses, GetCodeCountsData, GetCodeCountsErrors, GetCodeCountsResponses, GetCodingsForMessagesData, GetCodingsForMessagesErrors, GetCodingsForMessagesResponses, GetCollaboratorInvitesData, GetCollaboratorInvitesErrors, GetCollaboratorInvitesResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetContentDocData, GetContentDocErrors, GetContentDocResponses, GetContentDraftData, GetContentDraftErrors, GetContentDraftResponses, GetContentStatusData, GetContentStatusErrors, GetContentStatusResponses, GetContentVersionData, GetContentVersionErrors, GetContentVersionResponses, GetDemoLimitDefaultsData, GetDemoLimitDefaultsErrors, GetDemoLimitDefaultsResponses, GetEmbeddingStatusData, GetEmbeddingStatusErrors, GetEmbeddingStatusResponses, GetExperimentsData, GetExperimentsErrors, GetExperimentsResponses, GetFilteredMessagesCountData, GetFilteredMessagesCountErrors, GetFilteredMessagesCountResponses, GetFilteredMessagesData, GetFilteredMessagesErrors, GetFilteredMessagesResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFixedPersonasData, GetFixedPersonasErrors, GetFixedPersonasResponses, GetFoldersData, GetFoldersErrors, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInstanceData, GetInstanceErrors, GetInstanceResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewAudioData, GetInterviewAudioErrors, GetInterviewAudioResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetIntervieweeData, GetIntervieweeErrors, GetIntervieweeResponses, GetInterviewMessagesData, GetInterviewMessagesErrors, GetInterviewMessagesResponses, GetInterviewModelsData, GetInterviewModelsErrors, GetInterviewModelsResponses, GetInterviewResumeLinkData, GetInterviewResumeLinkErrors, GetInterviewResumeLinkResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetInvitationsData, GetInvitationsErrors, GetInvitationsResponses, GetLanguagesData, GetLanguagesErrors, GetLanguagesResponses, GetLocalizedConsentData, GetLocalizedConsentErrors, GetLocalizedConsentResponses, GetLocalizedGuideData, GetLocalizedGuideErrors, GetLocalizedGuideResponses, GetLocalizedWelcomeData, GetLocalizedWelcomeErrors, GetLocalizedWelcomeResponses, GetMessageCodingsData, GetMessageCodingsErrors, GetMessageCodingsResponses, GetMessageCommentsData, GetMessageCommentsErrors, GetMessageCommentsResponses, GetMessageContextAfterData, GetMessageContextAfterErrors, GetMessageContextAfterResponses, GetMessageContextBeforeData, GetMessageContextBeforeErrors, GetMessageContextBeforeResponses, GetMessageData, GetMessageErrors, GetMessageResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetMyDemoBudgetData, GetMyDemoBudgetErrors, GetMyDemoBudgetResponses, GetMyReportsData, GetMyReportsErrors, GetMyReportsResponses, GetNotificationsData, GetNotificationsErrors, GetNotificationsResponses, GetParticipantData, GetParticipantEmailTemplateData, GetParticipantEmailTemplateErrors, GetParticipantEmailTemplateResponses, GetParticipantErrors, GetParticipantReminderEmailTemplateData, GetParticipantReminderEmailTemplateErrors, GetParticipantReminderEmailTemplateResponses, GetParticipantResponses, GetParticipantsData, GetParticipantsErrors, GetParticipantsResponses, GetProjectData, GetProjectErrors, GetProjectItemDistributionsData, GetProjectItemDistributionsErrors, GetProjectItemDistributionsResponses, GetProjectLanguagesData, GetProjectLanguagesErrors, GetProjectLanguagesResponses, GetProjectMonitoringStatsData, GetProjectMonitoringStatsErrors, GetProjectMonitoringStatsResponses, GetProjectPermissionsData, GetProjectPermissionsErrors, GetProjectPermissionsResponses, GetProjectReportsData, GetProjectReportsErrors, GetProjectReportsResponses, GetProjectResponses, GetPromptDefaultsData, GetPromptDefaultsErrors, GetPromptDefaultsResponses, GetReportsData, GetReportsErrors, GetReportsResponses, GetRespondentConsentAttachmentData, GetRespondentConsentAttachmentErrors, GetRespondentConsentAttachmentResponses, GetRespondentConsentAttachmentsData, GetRespondentConsentAttachmentsErrors, GetRespondentConsentAttachmentsResponses, GetSecurityPolicyDefaultsData, GetSecurityPolicyDefaultsErrors, GetSecurityPolicyDefaultsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetUserDemoBudgetData, GetUserDemoBudgetErrors, GetUserDemoBudgetResponses, GetUsersData, GetUsersErrors, GetUsersResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthErrors, HealthResponses, InspectCollaboratorInviteData, InspectCollaboratorInviteErrors, InspectCollaboratorInviteResponses, LeaveFolderData, LeaveFolderErrors, LeaveFolderResponses, ListConsentAttachmentsData, ListConsentAttachmentsErrors, ListConsentAttachmentsResponses, ListContentVersionsData, ListContentVersionsErrors, ListContentVersionsResponses, ListParticipantEmailAttachmentsData, ListParticipantEmailAttachmentsErrors, ListParticipantEmailAttachmentsResponses, ListParticipantReminderEmailAttachmentsData, ListParticipantReminderEmailAttachmentsErrors, ListParticipantReminderEmailAttachmentsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutEverywhereData, LogoutEverywhereErrors, LogoutEverywhereResponses, LogoutResponses, MarkProjectReportsReadData, MarkProjectReportsReadErrors, MarkProjectReportsReadResponses, MarkReportsReadData, MarkReportsReadErrors, MarkReportsReadResponses, MeData, MeErrors, MeResponses, MoveProjectData, MoveProjectErrors, MoveProjectResponses, NewsletterSubscribeData, NewsletterSubscribeErrors, NewsletterSubscribeResponses, NewsletterUnsubscribeData, NewsletterUnsubscribeErrors, NewsletterUnsubscribeResponses, OptOutData, OptOutErrors, OptOutResponses, PlatformVersionData, PlatformVersionErrors, PlatformVersionResponses, PreviewProbingPromptsData, PreviewProbingPromptsErrors, PreviewProbingPromptsResponses, ProcessAccessRequestsData, ProcessAccessRequestsErrors, ProcessAccessRequestsResponses, ProxyToEc2ManagerDeleteData, ProxyToEc2ManagerDeleteErrors, ProxyToEc2ManagerDeleteResponses, ProxyToEc2ManagerGetData, ProxyToEc2ManagerGetErrors, ProxyToEc2ManagerGetResponses, ProxyToEc2ManagerPatchData, ProxyToEc2ManagerPatchErrors, ProxyToEc2ManagerPatchResponses, ProxyToEc2ManagerPostData, ProxyToEc2ManagerPostErrors, ProxyToEc2ManagerPostResponses, ProxyToEc2ManagerPutData, ProxyToEc2ManagerPutErrors, ProxyToEc2ManagerPutResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, ReadCodeFacetsData, ReadCodeFacetsErrors, ReadCodeFacetsResponses, ReadInterviewTranscriptData, ReadInterviewTranscriptErrors, ReadInterviewTranscriptResponses, ReadSurveyFacetsData, ReadSurveyFacetsErrors, ReadSurveyFacetsResponses, RedeemInterviewResumeLinkData, RedeemInterviewResumeLinkErrors, RedeemInterviewResumeLinkResponses, RefreshData, RefreshErrors, RefreshResponses, RegisterData, RegisterErrors, RegisterResponses, ReleasesData, ReleasesErrors, ReleasesResponses, RemoveCollaboratorData, RemoveCollaboratorErrors, RemoveCollaboratorResponses, RemoveProjectLanguageData, RemoveProjectLanguageErrors, RemoveProjectLanguageResponses, ReplaceRedirectsData, ReplaceRedirectsErrors, ReplaceRedirectsResponses, ReportMessageData, ReportMessageErrors, ReportMessageResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, ResendVerificationData, ResendVerificationErrors, ResendVerificationResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResetSessionData, ResetSessionErrors, ResetSessionResponses, ResolveProjectReportsData, ResolveProjectReportsErrors, ResolveProjectReportsResponses, ResolveReportsData, ResolveReportsErrors, ResolveReportsResponses, RestoreContentVersionData, RestoreContentVersionErrors, RestoreContentVersionResponses, RevokeInterviewResumeLinkData, RevokeInterviewResumeLinkErrors, RevokeInterviewResumeLinkResponses, RevokeTestShareLinksData, RevokeTestShareLinksErrors, RevokeTestShareLinksResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SaveCodebookData, SaveCodebookErrors, SaveCodebookResponses, SaveContentVersionData, SaveContentVersionErrors, SaveContentVersionResponses, SearchEmbeddingsData, SearchEmbeddingsErrors, SearchEmbeddingsResponses, SendChatData, SendChatErrors, SendChatResponses, SendParticipantEmailsData, SendParticipantEmailsErrors, SendParticipantEmailsResponses, SendParticipantReminderEmailsData, SendParticipantReminderEmailsErrors, SendParticipantReminderEmailsResponses, SetDefaultLanguageData, SetDefaultLanguageErrors, SetDefaultLanguageResponses, SetFolderArchivedData, SetFolderArchivedErrors, SetFolderArchivedResponses, SetLanguageInProgressData, SetLanguageInProgressErrors, SetLanguageInProgressResponses, SetParticipantEmailTemplateData, SetParticipantEmailTemplateErrors, SetParticipantEmailTemplateResponses, SetParticipantReminderEmailTemplateData, SetParticipantReminderEmailTemplateErrors, SetParticipantReminderEmailTemplateResponses, SetProjectArchivedData, SetProjectArchivedErrors, SetProjectArchivedResponses, SetProjectExperimentOnlyData, SetProjectExperimentOnlyErrors, SetProjectExperimentOnlyResponses, SynthesizeSpeechData, SynthesizeSpeechErrors, SynthesizeSpeechResponses, TranslateMissingData, TranslateMissingErrors, TranslateMissingResponses, TriggerEmbeddingBackfillData, TriggerEmbeddingBackfillErrors, TriggerEmbeddingBackfillResponses, UpdateAdminNoteData, UpdateAdminNoteErrors, UpdateAdminNoteResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateCollaboratorRoleData, UpdateCollaboratorRoleErrors, UpdateCollaboratorRoleResponses, UpdateConsentData, UpdateConsentErrors, UpdateConsentResponses, UpdateExperimentData, UpdateExperimentErrors, UpdateExperimentResponses, UpdateExternalParamsData, UpdateExternalParamsErrors, UpdateExternalParamsResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateFixedPersonasData, UpdateFixedPersonasErrors, UpdateFixedPersonasResponses, UpdateGuideData, UpdateGuideErrors, UpdateGuideResponses, UpdateInvitationData, UpdateInvitationErrors, UpdateInvitationResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateMessageCodingData, UpdateMessageCodingErrors, UpdateMessageCodingResponses, UpdateMessageCommentData, UpdateMessageCommentErrors, UpdateMessageCommentResponses, UpdateMyEmailData, UpdateMyEmailErrors, UpdateMyEmailResponses, UpdateMyPasswordData, UpdateMyPasswordErrors, UpdateMyPasswordResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UpdateWelcomeData, UpdateWelcomeErrors, UpdateWelcomeResponses, UploadAudioData, UploadAudioErrors, UploadAudioResponses, UploadConsentAttachmentsData, UploadConsentAttachmentsErrors, UploadConsentAttachmentsResponses, UploadImageData, UploadImageErrors, UploadImageResponses, UploadInterviewImageData, UploadInterviewImageErrors, UploadInterviewImageResponses, UploadParticipantEmailAttachmentsData, UploadParticipantEmailAttachmentsErrors, UploadParticipantEmailAttachmentsResponses, UploadParticipantReminderEmailAttachmentsData, UploadParticipantReminderEmailAttachmentsErrors, UploadParticipantReminderEmailAttachmentsResponses, UploadParticipantsData, UploadParticipantsErrors, UploadParticipantsResponses, UploadWelcomeVideoData, UploadWelcomeVideoErrors, UploadWelcomeVideoResponses, ValidateInterviewParamsData, ValidateInterviewParamsErrors, ValidateInterviewParamsResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses, VerifyLoginCodeData, VerifyLoginCodeErrors, VerifyLoginCodeResponses, VersionData, VersionErrors, VersionResponses } from './types.gen';
+import type { AcceptCollaboratorInviteData, AcceptCollaboratorInviteErrors, AcceptCollaboratorInviteResponses, AddIntervieweeData, AddIntervieweeErrors, AddIntervieweeResponses, AddMessageCodingData, AddMessageCodingErrors, AddMessageCodingResponses, AddMessageCommentData, AddMessageCommentErrors, AddMessageCommentResponses, AddParticipantData, AddParticipantErrors, AddParticipantResponses, AddParticipantsData, AddParticipantsErrors, AddParticipantsResponses, AddProjectLanguageData, AddProjectLanguageErrors, AddProjectLanguageResponses, BrowseEmbeddingsData, BrowseEmbeddingsErrors, BrowseEmbeddingsResponses, ChangeProjectStatusData, ChangeProjectStatusErrors, ChangeProjectStatusResponses, ChangeProjectTitleData, ChangeProjectTitleErrors, ChangeProjectTitleResponses, CheckProjectOwnerData, CheckProjectOwnerErrors, CheckProjectOwnerResponses, CloneProjectData, CloneProjectErrors, CloneProjectResponses, ClusterEmbeddingsData, ClusterEmbeddingsErrors, ClusterEmbeddingsResponses, CompareTestRunsData, CompareTestRunsErrors, CompareTestRunsResponses, ConfirmEmailChangeData, ConfirmEmailChangeErrors, ConfirmEmailChangeResponses, CreateCollaboratorInviteData, CreateCollaboratorInviteErrors, CreateCollaboratorInviteResponses, CreateExperimentData, CreateExperimentErrors, CreateExperimentResponses, CreateFolderData, CreateFolderErrors, CreateFolderResponses, CreateInterviewAgentsData, CreateInterviewAgentsErrors, CreateInterviewAgentsResponses, CreateInterviewConfigData, CreateInterviewConfigErrors, CreateInterviewConfigResponses, CreateInterviewData, CreateInterviewErrors, CreateInterviewResponses, CreateInterviewResumeLinkData, CreateInterviewResumeLinkErrors, CreateInterviewResumeLinkResponses, CreateInvitationData, CreateInvitationErrors, CreateInvitationResponses, CreateProjectData, CreateProjectErrors, CreateProjectResponses, CreateTestSetupData, CreateTestSetupErrors, CreateTestSetupResponses, CreateTestShareLinkData, CreateTestShareLinkErrors, CreateTestShareLinkResponses, DeclineCollaboratorInviteData, DeclineCollaboratorInviteErrors, DeclineCollaboratorInviteResponses, DeleteAccessRequestsData, DeleteAccessRequestsErrors, DeleteAccessRequestsResponses, DeleteCollaboratorInviteData, DeleteCollaboratorInviteErrors, DeleteCollaboratorInviteResponses, DeleteConsentAttachmentData, DeleteConsentAttachmentErrors, DeleteConsentAttachmentResponses, DeleteExperimentData, DeleteExperimentErrors, DeleteExperimentResponses, DeleteFolderData, DeleteFolderErrors, DeleteFolderResponses, DeleteInterviewsData, DeleteInterviewsErrors, DeleteInterviewsResponses, DeleteInvitationsData, DeleteInvitationsErrors, DeleteInvitationsResponses, DeleteMeData, DeleteMeErrors, DeleteMeResponses, DeleteMessageCodingData, DeleteMessageCodingErrors, DeleteMessageCodingResponses, DeleteMessageCommentData, DeleteMessageCommentErrors, DeleteMessageCommentResponses, DeleteParticipantData, DeleteParticipantEmailAttachmentData, DeleteParticipantEmailAttachmentErrors, DeleteParticipantEmailAttachmentResponses, DeleteParticipantErrors, DeleteParticipantReminderEmailAttachmentData, DeleteParticipantReminderEmailAttachmentErrors, DeleteParticipantReminderEmailAttachmentResponses, DeleteParticipantResponses, DeleteParticipantsData, DeleteParticipantsErrors, DeleteParticipantsResponses, DeleteProjectData, DeleteProjectErrors, DeleteProjectResponses, DeleteTestSetupData, DeleteTestSetupErrors, DeleteTestSetupResponses, DeleteUserData, DeleteUserErrors, DeleteUserResponses, DownloadConsentAttachmentData, DownloadConsentAttachmentErrors, DownloadConsentAttachmentResponses, DownloadParticipantEmailAttachmentData, DownloadParticipantEmailAttachmentErrors, DownloadParticipantEmailAttachmentResponses, DownloadParticipantReminderEmailAttachmentData, DownloadParticipantReminderEmailAttachmentErrors, DownloadParticipantReminderEmailAttachmentResponses, EditFolderData, EditFolderErrors, EditFolderResponses, EnterExperimentData, EnterExperimentErrors, EnterExperimentResponses, ExitData, ExitErrors, ExitResponses, ExportEmailBundleData, ExportEmailBundleErrors, ExportEmailBundleResponses, ExportMessagesData, ExportMessagesErrors, ExportMessagesResponses, ExportParticipantsData, ExportParticipantsErrors, ExportParticipantsResponses, FindEmbeddingsLikeCodeData, FindEmbeddingsLikeCodeErrors, FindEmbeddingsLikeCodeResponses, FindSimilarEmbeddingsData, FindSimilarEmbeddingsErrors, FindSimilarEmbeddingsResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GenerateExperimentQrData, GenerateExperimentQrErrors, GenerateExperimentQrResponses, GenerateGuideData, GenerateGuideErrors, GenerateGuideResponses, GenerateGuideSectionData, GenerateGuideSectionErrors, GenerateGuideSectionResponses, GenerateProjectQrData, GenerateProjectQrErrors, GenerateProjectQrResponses, GenerateSectionQuestionData, GenerateSectionQuestionErrors, GenerateSectionQuestionResponses, GetAccessRequestsData, GetAccessRequestsErrors, GetAccessRequestsResponses, GetAdminStatsData, GetAdminStatsErrors, GetAdminStatsResponses, GetBackgroundInfoData, GetBackgroundInfoErrors, GetBackgroundInfoResponses, GetChatData, GetChatErrors, GetChatResponses, GetCodebookData, GetCodebookErrors, GetCodebookResponses, GetCodeCountsData, GetCodeCountsErrors, GetCodeCountsResponses, GetCodingsForMessagesData, GetCodingsForMessagesErrors, GetCodingsForMessagesResponses, GetCollaboratorInvitesData, GetCollaboratorInvitesErrors, GetCollaboratorInvitesResponses, GetCollaboratorsData, GetCollaboratorsErrors, GetCollaboratorsResponses, GetConsentData, GetConsentErrors, GetConsentResponses, GetContentDocData, GetContentDocErrors, GetContentDocResponses, GetContentDraftData, GetContentDraftErrors, GetContentDraftResponses, GetContentStatusData, GetContentStatusErrors, GetContentStatusResponses, GetContentVersionData, GetContentVersionErrors, GetContentVersionResponses, GetDemoLimitDefaultsData, GetDemoLimitDefaultsErrors, GetDemoLimitDefaultsResponses, GetEmbeddingStatusData, GetEmbeddingStatusErrors, GetEmbeddingStatusResponses, GetExperimentsData, GetExperimentsErrors, GetExperimentsResponses, GetFilteredMessagesCountData, GetFilteredMessagesCountErrors, GetFilteredMessagesCountResponses, GetFilteredMessagesData, GetFilteredMessagesErrors, GetFilteredMessagesResponses, GetFixedAnswersData, GetFixedAnswersErrors, GetFixedAnswersResponses, GetFixedPersonasData, GetFixedPersonasErrors, GetFixedPersonasResponses, GetFoldersData, GetFoldersErrors, GetFoldersResponses, GetGuideData, GetGuideErrors, GetGuideResponses, GetInstanceData, GetInstanceErrors, GetInstanceResponses, GetInterviewAgentsData, GetInterviewAgentsErrors, GetInterviewAgentsResponses, GetInterviewAudioData, GetInterviewAudioErrors, GetInterviewAudioResponses, GetInterviewConfigData, GetInterviewConfigErrors, GetInterviewConfigResponses, GetIntervieweeData, GetIntervieweeErrors, GetIntervieweeResponses, GetInterviewImageData, GetInterviewImageErrors, GetInterviewImageResponses, GetInterviewMessagesData, GetInterviewMessagesErrors, GetInterviewMessagesResponses, GetInterviewModelsData, GetInterviewModelsErrors, GetInterviewModelsResponses, GetInterviewResumeLinkData, GetInterviewResumeLinkErrors, GetInterviewResumeLinkResponses, GetInterviewsData, GetInterviewsErrors, GetInterviewsResponses, GetInvitationsData, GetInvitationsErrors, GetInvitationsResponses, GetLanguagesData, GetLanguagesErrors, GetLanguagesResponses, GetLocalizedConsentData, GetLocalizedConsentErrors, GetLocalizedConsentResponses, GetLocalizedGuideData, GetLocalizedGuideErrors, GetLocalizedGuideResponses, GetLocalizedWelcomeData, GetLocalizedWelcomeErrors, GetLocalizedWelcomeResponses, GetMessageCodingsData, GetMessageCodingsErrors, GetMessageCodingsResponses, GetMessageCommentsData, GetMessageCommentsErrors, GetMessageCommentsResponses, GetMessageContextAfterData, GetMessageContextAfterErrors, GetMessageContextAfterResponses, GetMessageContextBeforeData, GetMessageContextBeforeErrors, GetMessageContextBeforeResponses, GetMessageData, GetMessageErrors, GetMessageResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetMyDemoBudgetData, GetMyDemoBudgetErrors, GetMyDemoBudgetResponses, GetMyReportsData, GetMyReportsErrors, GetMyReportsResponses, GetNotificationsData, GetNotificationsErrors, GetNotificationsResponses, GetParticipantData, GetParticipantEmailTemplateData, GetParticipantEmailTemplateErrors, GetParticipantEmailTemplateResponses, GetParticipantErrors, GetParticipantReminderEmailTemplateData, GetParticipantReminderEmailTemplateErrors, GetParticipantReminderEmailTemplateResponses, GetParticipantResponses, GetParticipantsData, GetParticipantsErrors, GetParticipantsResponses, GetProjectData, GetProjectErrors, GetProjectImageData, GetProjectImageErrors, GetProjectImageResponses, GetProjectItemDistributionsData, GetProjectItemDistributionsErrors, GetProjectItemDistributionsResponses, GetProjectLanguagesData, GetProjectLanguagesErrors, GetProjectLanguagesResponses, GetProjectMonitoringStatsData, GetProjectMonitoringStatsErrors, GetProjectMonitoringStatsResponses, GetProjectPermissionsData, GetProjectPermissionsErrors, GetProjectPermissionsResponses, GetProjectReportsData, GetProjectReportsErrors, GetProjectReportsResponses, GetProjectResponses, GetPromptDefaultsData, GetPromptDefaultsErrors, GetPromptDefaultsResponses, GetReportsData, GetReportsErrors, GetReportsResponses, GetRespondentConsentAttachmentData, GetRespondentConsentAttachmentErrors, GetRespondentConsentAttachmentResponses, GetRespondentConsentAttachmentsData, GetRespondentConsentAttachmentsErrors, GetRespondentConsentAttachmentsResponses, GetSecurityPolicyDefaultsData, GetSecurityPolicyDefaultsErrors, GetSecurityPolicyDefaultsResponses, GetTestSetupsData, GetTestSetupsErrors, GetTestSetupsResponses, GetTestStatusData, GetTestStatusErrors, GetTestStatusResponses, GetUserDemoBudgetData, GetUserDemoBudgetErrors, GetUserDemoBudgetResponses, GetUsersData, GetUsersErrors, GetUsersResponses, GetWelcomeData, GetWelcomeErrors, GetWelcomeResponses, HealthData, HealthErrors, HealthResponses, InspectCollaboratorInviteData, InspectCollaboratorInviteErrors, InspectCollaboratorInviteResponses, LeaveFolderData, LeaveFolderErrors, LeaveFolderResponses, ListConsentAttachmentsData, ListConsentAttachmentsErrors, ListConsentAttachmentsResponses, ListContentVersionsData, ListContentVersionsErrors, ListContentVersionsResponses, ListParticipantEmailAttachmentsData, ListParticipantEmailAttachmentsErrors, ListParticipantEmailAttachmentsResponses, ListParticipantReminderEmailAttachmentsData, ListParticipantReminderEmailAttachmentsErrors, ListParticipantReminderEmailAttachmentsResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutErrors, LogoutEverywhereData, LogoutEverywhereErrors, LogoutEverywhereResponses, LogoutResponses, MarkProjectReportsReadData, MarkProjectReportsReadErrors, MarkProjectReportsReadResponses, MarkReportsReadData, MarkReportsReadErrors, MarkReportsReadResponses, MeData, MeErrors, MeResponses, MoveProjectData, MoveProjectErrors, MoveProjectResponses, NewsletterSubscribeData, NewsletterSubscribeErrors, NewsletterSubscribeResponses, NewsletterUnsubscribeData, NewsletterUnsubscribeErrors, NewsletterUnsubscribeResponses, OptOutData, OptOutErrors, OptOutResponses, PlatformVersionData, PlatformVersionErrors, PlatformVersionResponses, PreviewProbingPromptsData, PreviewProbingPromptsErrors, PreviewProbingPromptsResponses, ProcessAccessRequestsData, ProcessAccessRequestsErrors, ProcessAccessRequestsResponses, ProxyToEc2ManagerDeleteData, ProxyToEc2ManagerDeleteErrors, ProxyToEc2ManagerDeleteResponses, ProxyToEc2ManagerGetData, ProxyToEc2ManagerGetErrors, ProxyToEc2ManagerGetResponses, ProxyToEc2ManagerPatchData, ProxyToEc2ManagerPatchErrors, ProxyToEc2ManagerPatchResponses, ProxyToEc2ManagerPostData, ProxyToEc2ManagerPostErrors, ProxyToEc2ManagerPostResponses, ProxyToEc2ManagerPutData, ProxyToEc2ManagerPutErrors, ProxyToEc2ManagerPutResponses, PutFeedbackData, PutFeedbackErrors, PutFeedbackResponses, ReadCodeFacetsData, ReadCodeFacetsErrors, ReadCodeFacetsResponses, ReadInterviewTranscriptData, ReadInterviewTranscriptErrors, ReadInterviewTranscriptResponses, ReadSurveyFacetsData, ReadSurveyFacetsErrors, ReadSurveyFacetsResponses, RedeemInterviewResumeLinkData, RedeemInterviewResumeLinkErrors, RedeemInterviewResumeLinkResponses, RefreshData, RefreshErrors, RefreshResponses, RegisterData, RegisterErrors, RegisterResponses, ReleasesData, ReleasesErrors, ReleasesResponses, RemoveCollaboratorData, RemoveCollaboratorErrors, RemoveCollaboratorResponses, RemoveProjectLanguageData, RemoveProjectLanguageErrors, RemoveProjectLanguageResponses, ReplaceRedirectsData, ReplaceRedirectsErrors, ReplaceRedirectsResponses, ReportMessageData, ReportMessageErrors, ReportMessageResponses, RequestAccessData, RequestAccessErrors, RequestAccessResponses, ResendVerificationData, ResendVerificationErrors, ResendVerificationResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResetSessionData, ResetSessionErrors, ResetSessionResponses, ResolveProjectReportsData, ResolveProjectReportsErrors, ResolveProjectReportsResponses, ResolveReportsData, ResolveReportsErrors, ResolveReportsResponses, RestoreContentVersionData, RestoreContentVersionErrors, RestoreContentVersionResponses, RevokeInterviewResumeLinkData, RevokeInterviewResumeLinkErrors, RevokeInterviewResumeLinkResponses, RevokeTestShareLinksData, RevokeTestShareLinksErrors, RevokeTestShareLinksResponses, RunSyntheticTestData, RunSyntheticTestErrors, RunSyntheticTestResponses, SaveCodebookData, SaveCodebookErrors, SaveCodebookResponses, SaveContentVersionData, SaveContentVersionErrors, SaveContentVersionResponses, SearchEmbeddingsData, SearchEmbeddingsErrors, SearchEmbeddingsResponses, SendChatData, SendChatErrors, SendChatResponses, SendParticipantEmailsData, SendParticipantEmailsErrors, SendParticipantEmailsResponses, SendParticipantReminderEmailsData, SendParticipantReminderEmailsErrors, SendParticipantReminderEmailsResponses, SetDefaultLanguageData, SetDefaultLanguageErrors, SetDefaultLanguageResponses, SetFolderArchivedData, SetFolderArchivedErrors, SetFolderArchivedResponses, SetLanguageInProgressData, SetLanguageInProgressErrors, SetLanguageInProgressResponses, SetParticipantEmailTemplateData, SetParticipantEmailTemplateErrors, SetParticipantEmailTemplateResponses, SetParticipantReminderEmailTemplateData, SetParticipantReminderEmailTemplateErrors, SetParticipantReminderEmailTemplateResponses, SetProjectArchivedData, SetProjectArchivedErrors, SetProjectArchivedResponses, SetProjectExperimentOnlyData, SetProjectExperimentOnlyErrors, SetProjectExperimentOnlyResponses, SynthesizeSpeechData, SynthesizeSpeechErrors, SynthesizeSpeechResponses, TranslateMissingData, TranslateMissingErrors, TranslateMissingResponses, TriggerEmbeddingBackfillData, TriggerEmbeddingBackfillErrors, TriggerEmbeddingBackfillResponses, UpdateAdminNoteData, UpdateAdminNoteErrors, UpdateAdminNoteResponses, UpdateBackgroundInfoData, UpdateBackgroundInfoErrors, UpdateBackgroundInfoResponses, UpdateCollaboratorRoleData, UpdateCollaboratorRoleErrors, UpdateCollaboratorRoleResponses, UpdateConsentData, UpdateConsentErrors, UpdateConsentResponses, UpdateExperimentData, UpdateExperimentErrors, UpdateExperimentResponses, UpdateExternalParamsData, UpdateExternalParamsErrors, UpdateExternalParamsResponses, UpdateFixedAnswersData, UpdateFixedAnswersErrors, UpdateFixedAnswersResponses, UpdateFixedPersonasData, UpdateFixedPersonasErrors, UpdateFixedPersonasResponses, UpdateGuideData, UpdateGuideErrors, UpdateGuideResponses, UpdateInvitationData, UpdateInvitationErrors, UpdateInvitationResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateMessageCodingData, UpdateMessageCodingErrors, UpdateMessageCodingResponses, UpdateMessageCommentData, UpdateMessageCommentErrors, UpdateMessageCommentResponses, UpdateMyEmailData, UpdateMyEmailErrors, UpdateMyEmailResponses, UpdateMyPasswordData, UpdateMyPasswordErrors, UpdateMyPasswordResponses, UpdateParticipantData, UpdateParticipantErrors, UpdateParticipantResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UpdateWelcomeData, UpdateWelcomeErrors, UpdateWelcomeResponses, UploadAudioData, UploadAudioErrors, UploadAudioResponses, UploadConsentAttachmentsData, UploadConsentAttachmentsErrors, UploadConsentAttachmentsResponses, UploadImageData, UploadImageErrors, UploadImageResponses, UploadInterviewImageData, UploadInterviewImageErrors, UploadInterviewImageResponses, UploadParticipantEmailAttachmentsData, UploadParticipantEmailAttachmentsErrors, UploadParticipantEmailAttachmentsResponses, UploadParticipantReminderEmailAttachmentsData, UploadParticipantReminderEmailAttachmentsErrors, UploadParticipantReminderEmailAttachmentsResponses, UploadParticipantsData, UploadParticipantsErrors, UploadParticipantsResponses, UploadWelcomeVideoData, UploadWelcomeVideoErrors, UploadWelcomeVideoResponses, ValidateInterviewParamsData, ValidateInterviewParamsErrors, ValidateInterviewParamsResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses, VerifyLoginCodeData, VerifyLoginCodeErrors, VerifyLoginCodeResponses, VersionData, VersionErrors, VersionResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -901,6 +901,23 @@ export class Projects {
                     type: 'apiKey'
                 }],
             url: '/api/projects/{project_id}/guide/consent/{language}/attachments/{filename}',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Project Image
+     *
+     * One of the project's guide images, by name.
+     */
+    public static getProjectImage<ThrowOnError extends boolean = false>(options: Options<GetProjectImageData, ThrowOnError>): RequestResult<GetProjectImageResponses, GetProjectImageErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetProjectImageResponses, GetProjectImageErrors, ThrowOnError>({
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/projects/{project_id}/images/{name}',
             ...options
         });
     }
@@ -1943,6 +1960,206 @@ export class Projects {
      */
     public static checkProjectOwner<ThrowOnError extends boolean = false>(options: Options<CheckProjectOwnerData, ThrowOnError>): RequestResult<CheckProjectOwnerResponses, CheckProjectOwnerErrors, ThrowOnError> {
         return (options.client ?? client).post<CheckProjectOwnerResponses, CheckProjectOwnerErrors, ThrowOnError>({ url: '/api/projects/{project_id}/owner', ...options });
+    }
+}
+
+export class Interviews {
+    /**
+     * Get Interview Image
+     *
+     * An image of the respondent's own interview guide, by name.
+     */
+    public static getInterviewImage<ThrowOnError extends boolean = false>(options: Options<GetInterviewImageData, ThrowOnError>): RequestResult<GetInterviewImageResponses, GetInterviewImageErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetInterviewImageResponses, GetInterviewImageErrors, ThrowOnError>({ url: '/api/interview/images/{name}', ...options });
+    }
+    
+    /**
+     * Validate Interview Params
+     *
+     * Check that a distributed interview could start from this link without
+     * creating one: the link's query params against the project's schema, and
+     * that the published version is open to respondents (`not_distributable`,
+     * see app/distribution.py).
+     *
+     * `create_interview` runs the same checks; this only moves the feedback
+     * earlier, it does not replace them.
+     */
+    public static validateInterviewParams<ThrowOnError extends boolean = false>(options: Options<ValidateInterviewParamsData, ThrowOnError>): RequestResult<ValidateInterviewParamsResponses, ValidateInterviewParamsErrors, ThrowOnError> {
+        return (options.client ?? client).post<ValidateInterviewParamsResponses, ValidateInterviewParamsErrors, ThrowOnError>({
+            url: '/api/projects/{project_id}/external_params/validate',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Enter Experiment
+     *
+     * Give this respondent a project of the experiment, and set their browser
+     * up to take part in it.
+     *
+     * Public: the experiment's link is handed out to respondents, who hold no
+     * account. The project is decided here and held in `experiment_assignment`,
+     * never taken from a link, so a respondent cannot pick one. A respondent
+     * keeps their assignment while its project is open -- a known participant
+     * (`pid`) for good, anyone else for as long as their `respondent` cookie
+     * lasts, the lifetime of an interview they could resume.
+     *
+     * The interview cookie is pointed at the assignment's own interview when this
+     * browser started one that is not finished, so it resumes; otherwise an
+     * interview cookie for the same project is cleared, so the page starts a new
+     * interview instead of resuming one from another experiment or link.
+     */
+    public static enterExperiment<ThrowOnError extends boolean = false>(options: Options<EnterExperimentData, ThrowOnError>): RequestResult<EnterExperimentResponses, EnterExperimentErrors, ThrowOnError> {
+        return (options.client ?? client).post<EnterExperimentResponses, EnterExperimentErrors, ThrowOnError>({
+            url: '/api/experiments/{experiment_id}/enter',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Create Interview
+     */
+    public static createInterview<ThrowOnError extends boolean = false>(options: Options<CreateInterviewData, ThrowOnError>): RequestResult<CreateInterviewResponses, CreateInterviewErrors, ThrowOnError> {
+        return (options.client ?? client).post<CreateInterviewResponses, CreateInterviewErrors, ThrowOnError>({
+            url: '/api/projects/{project_id}/{lang}/interviews',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Redeem Interview Resume Link
+     *
+     * Spend a one-time resume link and hand back an interview session.
+     *
+     * Unauthenticated by design: the token *is* the credential, which is why it
+     * is high-entropy, single-use, expiring and revocable.
+     *
+     * Every failure is the same opaque 404. Saying which of "unknown", "already
+     * used" or "expired" applied would confirm to someone probing tokens that a
+     * guess had once been real.
+     */
+    public static redeemInterviewResumeLink<ThrowOnError extends boolean = false>(options: Options<RedeemInterviewResumeLinkData, ThrowOnError>): RequestResult<RedeemInterviewResumeLinkResponses, RedeemInterviewResumeLinkErrors, ThrowOnError> {
+        return (options.client ?? client).post<RedeemInterviewResumeLinkResponses, RedeemInterviewResumeLinkErrors, ThrowOnError>({ url: '/api/interviews/resume/{resume_token}', ...options });
+    }
+    
+    /**
+     * Put Feedback
+     *
+     * Record a respondent's thumbs up/down on one interviewer message.
+     *
+     * Authenticated with the participant's interview token, like the speech and
+     * transcription endpoints, and scoped the same way: the interview and project
+     * come from the token, and the message is looked up inside them. Previously
+     * both ids were taken from the request body under a user-account token, so
+     * any account could write feedback onto any interview's message given its id
+     * -- and a respondent, holding no account at all, could not use it.
+     */
+    public static putFeedback<ThrowOnError extends boolean = false>(options: Options<PutFeedbackData, ThrowOnError>): RequestResult<PutFeedbackResponses, PutFeedbackErrors, ThrowOnError> {
+        return (options.client ?? client).patch<PutFeedbackResponses, PutFeedbackErrors, ThrowOnError>({
+            url: '/api/feedback',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Report Message
+     *
+     * Record a respondent's report of one interviewer message.
+     *
+     * Scoped exactly as `put_feedback`: the interview and project come from the
+     * interview token, never from the body, so a report can only ever land on a
+     * message of the caller's own transcript. The respondent holds no account,
+     * which is why this is the interview credential and not an account token.
+     *
+     * A POST rather than a PATCH because reports accumulate -- see
+     * `InterviewRepository.create_message_report`.
+     */
+    public static reportMessage<ThrowOnError extends boolean = false>(options: Options<ReportMessageData, ThrowOnError>): RequestResult<ReportMessageResponses, ReportMessageErrors, ThrowOnError> {
+        return (options.client ?? client).post<ReportMessageResponses, ReportMessageErrors, ThrowOnError>({
+            url: '/api/report-question',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Upload Interview Image
+     */
+    public static uploadInterviewImage<ThrowOnError extends boolean = false>(options: Options<UploadInterviewImageData, ThrowOnError>): RequestResult<UploadInterviewImageResponses, UploadInterviewImageErrors, ThrowOnError> {
+        return (options.client ?? client).post<UploadInterviewImageResponses, UploadInterviewImageErrors, ThrowOnError>({
+            ...formDataBodySerializer,
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/image',
+            ...options,
+            headers: {
+                'Content-Type': null,
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Upload Audio
+     */
+    public static uploadAudio<ThrowOnError extends boolean = false>(options: Options<UploadAudioData, ThrowOnError>): RequestResult<UploadAudioResponses, UploadAudioErrors, ThrowOnError> {
+        return (options.client ?? client).post<UploadAudioResponses, UploadAudioErrors, ThrowOnError>({
+            ...formDataBodySerializer,
+            security: [{
+                    in: 'cookie',
+                    name: 'access_token',
+                    type: 'apiKey'
+                }],
+            url: '/api/audio',
+            ...options,
+            headers: {
+                'Content-Type': null,
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Synthesize Speech
+     *
+     * Synthesize speech for an interviewer message, streaming the MP3 back as
+     * it is generated.
+     *
+     * Authenticated with the participant's interview token cookie, like the
+     * transcription endpoint. The text is looked up by message id within the
+     * token's interview, so participants can't synthesize arbitrary text.
+     */
+    public static synthesizeSpeech<ThrowOnError extends boolean = false>(options: Options<SynthesizeSpeechData, ThrowOnError>): RequestResult<SynthesizeSpeechResponses, SynthesizeSpeechErrors, ThrowOnError> {
+        return (options.client ?? client).post<SynthesizeSpeechResponses, SynthesizeSpeechErrors, ThrowOnError>({
+            url: '/api/speech',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
     }
 }
 
@@ -3229,197 +3446,6 @@ export class Versions {
                 }],
             url: '/api/projects/{project_id}/versions/{version_id}/restore',
             ...options
-        });
-    }
-}
-
-export class Interviews {
-    /**
-     * Validate Interview Params
-     *
-     * Check that a distributed interview could start from this link without
-     * creating one: the link's query params against the project's schema, and
-     * that the published version is open to respondents (`not_distributable`,
-     * see app/distribution.py).
-     *
-     * `create_interview` runs the same checks; this only moves the feedback
-     * earlier, it does not replace them.
-     */
-    public static validateInterviewParams<ThrowOnError extends boolean = false>(options: Options<ValidateInterviewParamsData, ThrowOnError>): RequestResult<ValidateInterviewParamsResponses, ValidateInterviewParamsErrors, ThrowOnError> {
-        return (options.client ?? client).post<ValidateInterviewParamsResponses, ValidateInterviewParamsErrors, ThrowOnError>({
-            url: '/api/projects/{project_id}/external_params/validate',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Enter Experiment
-     *
-     * Give this respondent a project of the experiment, and set their browser
-     * up to take part in it.
-     *
-     * Public: the experiment's link is handed out to respondents, who hold no
-     * account. The project is decided here and held in `experiment_assignment`,
-     * never taken from a link, so a respondent cannot pick one. A respondent
-     * keeps their assignment while its project is open -- a known participant
-     * (`pid`) for good, anyone else for as long as their `respondent` cookie
-     * lasts, the lifetime of an interview they could resume.
-     *
-     * The interview cookie is pointed at the assignment's own interview when this
-     * browser started one that is not finished, so it resumes; otherwise an
-     * interview cookie for the same project is cleared, so the page starts a new
-     * interview instead of resuming one from another experiment or link.
-     */
-    public static enterExperiment<ThrowOnError extends boolean = false>(options: Options<EnterExperimentData, ThrowOnError>): RequestResult<EnterExperimentResponses, EnterExperimentErrors, ThrowOnError> {
-        return (options.client ?? client).post<EnterExperimentResponses, EnterExperimentErrors, ThrowOnError>({
-            url: '/api/experiments/{experiment_id}/enter',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Create Interview
-     */
-    public static createInterview<ThrowOnError extends boolean = false>(options: Options<CreateInterviewData, ThrowOnError>): RequestResult<CreateInterviewResponses, CreateInterviewErrors, ThrowOnError> {
-        return (options.client ?? client).post<CreateInterviewResponses, CreateInterviewErrors, ThrowOnError>({
-            url: '/api/projects/{project_id}/{lang}/interviews',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Redeem Interview Resume Link
-     *
-     * Spend a one-time resume link and hand back an interview session.
-     *
-     * Unauthenticated by design: the token *is* the credential, which is why it
-     * is high-entropy, single-use, expiring and revocable.
-     *
-     * Every failure is the same opaque 404. Saying which of "unknown", "already
-     * used" or "expired" applied would confirm to someone probing tokens that a
-     * guess had once been real.
-     */
-    public static redeemInterviewResumeLink<ThrowOnError extends boolean = false>(options: Options<RedeemInterviewResumeLinkData, ThrowOnError>): RequestResult<RedeemInterviewResumeLinkResponses, RedeemInterviewResumeLinkErrors, ThrowOnError> {
-        return (options.client ?? client).post<RedeemInterviewResumeLinkResponses, RedeemInterviewResumeLinkErrors, ThrowOnError>({ url: '/api/interviews/resume/{resume_token}', ...options });
-    }
-    
-    /**
-     * Put Feedback
-     *
-     * Record a respondent's thumbs up/down on one interviewer message.
-     *
-     * Authenticated with the participant's interview token, like the speech and
-     * transcription endpoints, and scoped the same way: the interview and project
-     * come from the token, and the message is looked up inside them. Previously
-     * both ids were taken from the request body under a user-account token, so
-     * any account could write feedback onto any interview's message given its id
-     * -- and a respondent, holding no account at all, could not use it.
-     */
-    public static putFeedback<ThrowOnError extends boolean = false>(options: Options<PutFeedbackData, ThrowOnError>): RequestResult<PutFeedbackResponses, PutFeedbackErrors, ThrowOnError> {
-        return (options.client ?? client).patch<PutFeedbackResponses, PutFeedbackErrors, ThrowOnError>({
-            url: '/api/feedback',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Report Message
-     *
-     * Record a respondent's report of one interviewer message.
-     *
-     * Scoped exactly as `put_feedback`: the interview and project come from the
-     * interview token, never from the body, so a report can only ever land on a
-     * message of the caller's own transcript. The respondent holds no account,
-     * which is why this is the interview credential and not an account token.
-     *
-     * A POST rather than a PATCH because reports accumulate -- see
-     * `InterviewRepository.create_message_report`.
-     */
-    public static reportMessage<ThrowOnError extends boolean = false>(options: Options<ReportMessageData, ThrowOnError>): RequestResult<ReportMessageResponses, ReportMessageErrors, ThrowOnError> {
-        return (options.client ?? client).post<ReportMessageResponses, ReportMessageErrors, ThrowOnError>({
-            url: '/api/report-question',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Upload Interview Image
-     */
-    public static uploadInterviewImage<ThrowOnError extends boolean = false>(options: Options<UploadInterviewImageData, ThrowOnError>): RequestResult<UploadInterviewImageResponses, UploadInterviewImageErrors, ThrowOnError> {
-        return (options.client ?? client).post<UploadInterviewImageResponses, UploadInterviewImageErrors, ThrowOnError>({
-            ...formDataBodySerializer,
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/image',
-            ...options,
-            headers: {
-                'Content-Type': null,
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Upload Audio
-     */
-    public static uploadAudio<ThrowOnError extends boolean = false>(options: Options<UploadAudioData, ThrowOnError>): RequestResult<UploadAudioResponses, UploadAudioErrors, ThrowOnError> {
-        return (options.client ?? client).post<UploadAudioResponses, UploadAudioErrors, ThrowOnError>({
-            ...formDataBodySerializer,
-            security: [{
-                    in: 'cookie',
-                    name: 'access_token',
-                    type: 'apiKey'
-                }],
-            url: '/api/audio',
-            ...options,
-            headers: {
-                'Content-Type': null,
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Synthesize Speech
-     *
-     * Synthesize speech for an interviewer message, streaming the MP3 back as
-     * it is generated.
-     *
-     * Authenticated with the participant's interview token cookie, like the
-     * transcription endpoint. The text is looked up by message id within the
-     * token's interview, so participants can't synthesize arbitrary text.
-     */
-    public static synthesizeSpeech<ThrowOnError extends boolean = false>(options: Options<SynthesizeSpeechData, ThrowOnError>): RequestResult<SynthesizeSpeechResponses, SynthesizeSpeechErrors, ThrowOnError> {
-        return (options.client ?? client).post<SynthesizeSpeechResponses, SynthesizeSpeechErrors, ThrowOnError>({
-            url: '/api/speech',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
         });
     }
 }

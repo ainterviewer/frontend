@@ -1172,7 +1172,6 @@ export const zImage = z.object({
         'video'
     ]).optional().default('image'),
     name: z.string(),
-    data: z.string().nullable(),
     primer: z.string().nullish(),
     description: z.string(),
     alt: z.string()
@@ -1797,7 +1796,6 @@ export const zLocalizedImage = z.object({
         'video'
     ]).optional().default('image'),
     name: z.string(),
-    data: z.string().nullish(),
     primer: zLocalizedText.nullish(),
     description: zLocalizedText.optional(),
     alt: zLocalizedText.optional()
@@ -5187,6 +5185,29 @@ export const zGetRespondentConsentAttachmentQuery = z.object({
  * Successful Response
  */
 export const zGetRespondentConsentAttachmentResponse = z.string();
+
+export const zGetInterviewImagePath = z.object({
+    name: z.string()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetInterviewImageResponse = z.string();
+
+export const zGetProjectImagePath = z.object({
+    project_id: z.string().nullable(),
+    name: z.string()
+});
+
+export const zGetProjectImageQuery = z.object({
+    folder_id: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetProjectImageResponse = z.string();
 
 /**
  * Response Get Experiments

@@ -224,7 +224,7 @@
 
 	async function handleExportPdf(toggles: PdfToggles) {
 		exporting = true;
-		if (await exportSetupPdf(parts, toggles, { projectName, platformVersion })) {
+		if (await exportSetupPdf(parts, toggles, { projectId, projectName, platformVersion })) {
 			showExportPdfModal = false;
 		}
 		exporting = false;

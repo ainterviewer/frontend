@@ -9,7 +9,7 @@ import { renderSaved } from '$lib/guide/render';
 import { toastApiError } from '$lib/utils/toast';
 
 import { downloadUnifiedSetupJson } from './exportJson';
-import { downloadGuidePdf, type PdfToggles } from './exportPdf';
+import { downloadGuidePdf, loadGuideImages, type PdfToggles } from './exportPdf';
 
 // What the three setup editors -- guide, consent, welcome -- do alike. Each
 // edits one part live and reads the other two from the server for an export:
@@ -72,6 +72,7 @@ export async function editingWelcome(
 }
 
 interface ExportMeta {
+	projectId: string;
 	projectName: string;
 	platformVersion: string | null;
 }
@@ -80,7 +81,7 @@ interface ExportMeta {
 export async function exportSetupPdf(
 	parts: SetupParts,
 	toggles: PdfToggles,
-	{ projectName, platformVersion }: ExportMeta
+	{ projectId, projectName, platformVersion }: ExportMeta
 ): Promise<boolean> {
 	try {
 		const [{ guide, sections, questions }, consent, welcome] = await Promise.all([
@@ -96,7 +97,8 @@ export async function exportSetupPdf(
 			platformVersion,
 			toggles,
 			consent,
-			welcome
+			welcome,
+			images: await loadGuideImages(projectId, questions)
 		});
 		return true;
 	} catch (e) {

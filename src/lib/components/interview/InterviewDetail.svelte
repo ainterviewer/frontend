@@ -4,7 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { guideConditions, questionKey } from '$lib/analysis/conditions';
-	import { type Image, type MessagePublic } from '$lib/api';
+	import { type MessagePublic } from '$lib/api';
 	import type { InterviewGuide } from '$lib/api/types.gen';
 	import type { Code } from '$lib/coding/codingTree';
 	import CodedMessage from '$lib/components/analysis/CodedMessage.svelte';
@@ -15,6 +15,7 @@
 	import { securityFields } from '$lib/components/interview/security';
 	import SecurityEvent from '$lib/components/interview/SecurityEvent.svelte';
 	import type { Message } from '$lib/components/interview/types';
+	import { transcriptImage } from '$lib/guideImages';
 	import { CommentSurface } from '$lib/stores/commentSurface.svelte';
 	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
 	import { MessageComments } from '$lib/stores/messageComments.svelte';
@@ -131,32 +132,7 @@
 			if (msg.role === 'user') type = 'sent';
 			else if (msg.role === 'assistant') type = 'received';
 
-			// Handle image
-			let image: { data: string; alt?: string; primer?: string } | undefined = undefined;
-			if (msg.image) {
-				if (Array.isArray(msg.image)) {
-					if (msg.image.length > 0) {
-						// Assuming first image if array
-						const img = msg.image[0];
-						if (typeof img.data === 'string') {
-							image = {
-								data: img.data,
-								alt: img.alt,
-								primer: img.primer || undefined
-							};
-						}
-					}
-				} else {
-					const img = msg.image as Image;
-					if (typeof img.data === 'string') {
-						image = {
-							data: img.data,
-							alt: img.alt,
-							primer: img.primer || undefined
-						};
-					}
-				}
-			}
+			const image = transcriptImage(data.project_id, msg.image);
 
 			// Construct question label
 			let question_label: string | undefined = undefined;

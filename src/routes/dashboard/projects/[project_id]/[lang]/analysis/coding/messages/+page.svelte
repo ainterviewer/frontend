@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Analysis, type Image, type MessagePublic, Projects } from '$lib/api';
+	import { Analysis, type MessagePublic, Projects } from '$lib/api';
 	import type { InterviewGuide } from '$lib/api/types.gen';
 	import { displayName, isApplicable, outlineOf } from '$lib/coding/codingTree';
 	import { codebookFor } from '$lib/coding/store.svelte';
@@ -13,6 +13,7 @@
 	import { securityFields } from '$lib/components/interview/security';
 	import SecurityEvent from '$lib/components/interview/SecurityEvent.svelte';
 	import type { Message } from '$lib/components/interview/types';
+	import { transcriptImage } from '$lib/guideImages';
 	import { CommentSurface } from '$lib/stores/commentSurface.svelte';
 	import { MessageCodings } from '$lib/stores/messageCodings.svelte';
 	import { MessageComments } from '$lib/stores/messageComments.svelte';
@@ -108,17 +109,7 @@
 		if (msg.role === 'user') type = 'sent';
 		else if (msg.role === 'assistant') type = 'received';
 
-		let image: { data: string; alt?: string; primer?: string } | undefined;
-		if (msg.image) {
-			const imgSource = Array.isArray(msg.image) ? msg.image[0] : (msg.image as Image);
-			if (typeof imgSource?.data === 'string') {
-				image = {
-					data: imgSource.data,
-					alt: imgSource.alt,
-					primer: imgSource.primer || undefined
-				};
-			}
-		}
+		const image = transcriptImage(projectId, msg.image);
 
 		let question_label: string | undefined;
 		if (msg.section !== undefined && msg.section !== null) {

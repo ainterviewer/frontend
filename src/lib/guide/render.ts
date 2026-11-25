@@ -117,7 +117,6 @@ function renderQuestion(
 		image: q.image
 			? {
 					...q.image,
-					data: q.image.data ?? null,
 					description: pick(q.image.description, languages),
 					alt: pick(q.image.alt, languages),
 					primer: pick(q.image.primer, languages) || null

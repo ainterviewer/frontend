@@ -128,7 +128,7 @@
 	);
 
 	function addImage() {
-		question.image = { description: {}, alt: {}, primer: {}, name: '', data: null };
+		question.image = { description: {}, alt: {}, primer: {}, name: '' };
 		expandedImage = true;
 	}
 

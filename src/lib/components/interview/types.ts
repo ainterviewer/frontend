@@ -44,7 +44,7 @@ export interface Message {
 	 *  two are one turn, and in that beat the list ends on what looks like an
 	 *  ordinary typed-answer question — see `surveyActive` in `InterviewChat`. */
 	survey_prompt?: boolean;
-	image?: { data: string; alt?: string; primer?: string };
+	image?: { src: string; alt?: string; primer?: string };
 	audio?: { blob: Blob; duration: number };
 	/** Server-side recording a transcribed voice message came from. */
 	audio_file?: string | null;

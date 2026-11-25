@@ -19,6 +19,7 @@ import {
 	type SurveyItemUnion,
 	WS_UNAUTHORIZED
 } from '$lib/components/interview/types';
+import { interviewImageUrl } from '$lib/guideImages';
 import { getUiText } from '$lib/respondentText';
 import { hasErrorCode } from '$lib/utils/errors';
 import { backendWsUrl } from '$lib/utils/urls';
@@ -40,11 +41,11 @@ type ServerMessage =
 type RedirectFrame = { type: 'redirect'; url: string; delay_seconds: number };
 
 // The server schema allows a list of images, but interview messages carry at
-// most one. Over the WebSocket the image data is always a base64/URL string.
+// most one. It comes by name; the browser loads it from the interview's images.
 function toMessageImage(image: OutgoingMessage['image']): Message['image'] {
 	const img = Array.isArray(image) ? image[0] : image;
-	if (!img) return undefined;
-	return { data: img.data as string, primer: img.primer ?? undefined };
+	if (!img?.name) return undefined;
+	return { src: interviewImageUrl(img.name), alt: img.alt, primer: img.primer ?? undefined };
 }
 
 /**
@@ -609,7 +610,7 @@ export class ChatClient {
 		reader.onload = (e) => {
 			this.messages.push({
 				type: 'sent',
-				image: { data: e.target?.result as string, alt: 'Uploaded image' },
+				image: { src: e.target?.result as string, alt: 'Uploaded image' },
 				message_id: Date.now()
 			});
 		};
