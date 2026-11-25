@@ -185,7 +185,7 @@
 		 */
 		readonly?: boolean;
 		lang?: string;
-		onSurveyAnswer?: (answer: unknown) => void;
+		onSurveyAnswer?: (answer: unknown) => boolean | void;
 		/** Feedback, skip — whatever this caller puts beside the bubble. Rendered
 		 *  in a `relative` box sized to the bubble, under it in the flow; to sit
 		 *  beside it instead, position absolutely (`inset-s-full`). */

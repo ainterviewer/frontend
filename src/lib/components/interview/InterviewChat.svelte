@@ -39,7 +39,6 @@
 		exitButtonText
 	}: Props = $props();
 
-	let messageInput = $state('');
 	let scroller: HTMLDivElement | undefined = $state();
 	let messagesContainer: HTMLDivElement | undefined = $state();
 	let textarea: HTMLTextAreaElement | undefined = $state();
@@ -242,9 +241,10 @@
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
-		if (!messageInput.trim()) return;
-		chat.sendMessage(messageInput.trim());
-		messageInput = '';
+		if (!chat.draft.trim()) return;
+		// Not sent while reconnecting: keep the text for the respondent to send.
+		if (!chat.sendMessage(chat.draft.trim())) return;
+		chat.draft = '';
 		if (textarea) {
 			textarea.style.height = 'auto';
 		}
@@ -329,7 +329,9 @@
 		isRecording = false;
 		const text = transcript.trim();
 		if (text) {
-			chat.sendMessage(text, audioFilename);
+			// The connection dropped while recording: put the words in the field
+			// to send once it is back, rather than lose them.
+			if (!chat.sendMessage(text, audioFilename)) chat.draft = text;
 		} else {
 			// The recording is persisted server-side, but no transcript came back.
 			chat.messages.push({
@@ -548,7 +550,7 @@
 					type="button"
 					class="flex h-7.5 w-7.5 items-center justify-center bg-center bg-no-repeat p-0 transition-colors hover:bg-gray-100 disabled:opacity-50"
 					onclick={triggerCamera}
-					disabled={!chat.inputEnabled}
+					disabled={!chat.canSend}
 					title={chatText.upload_image}
 				>
 					<i class="fa-regular fa-image text-lg text-gray-600"></i>
@@ -602,12 +604,12 @@
 		{:else}
 			<textarea
 				bind:this={textarea}
-				bind:value={messageInput}
+				bind:value={chat.draft}
 				disabled={!chat.inputEnabled}
 				rows="1"
 				placeholder="Aa"
 				{lang}
-				dir={messageInput ? 'auto' : undefined}
+				dir={chat.draft ? 'auto' : undefined}
 				class="
 					w-full resize-none rounded border border-gray-300 p-2.5 shadow-sm transition-all
 					focus:border-primary focus:ring-1 focus:ring-primary/50 focus:outline-none
@@ -624,7 +626,7 @@
 		<div class="ms-1.5 flex flex-col">
 			<button
 				type="submit"
-				disabled={!chat.inputEnabled || !messageInput.trim()}
+				disabled={!chat.canSend || !chat.draft.trim()}
 				id="send-message"
 				class="
 					mt-3.75 cursor-pointer rounded bg-primary px-3 py-1.5 text-sm text-white transition-colors
@@ -648,7 +650,7 @@
 					disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-white
           "
 					onclick={() => (isRecording = true)}
-					disabled={!chat.inputEnabled || isRecording}
+					disabled={!chat.canSend || isRecording}
 					title={chatText.record_audio}
 				>
 					<i class="fas fa-microphone-lines text-lg"></i>

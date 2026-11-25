@@ -27,7 +27,7 @@
 		phone = false,
 		...surveyItem
 	}: SurveyItemUnion & {
-		onAnswer?: (value: unknown) => void;
+		onAnswer?: (value: unknown) => boolean | void;
 		readonly?: boolean;
 		/** Interactive but never submitted: the guide editor's live preview. */
 		preview?: boolean;
@@ -339,8 +339,9 @@
 			return;
 		}
 
+		// `false`: not sent (the connection is down), so leave it open.
+		if (onAnswer?.(answer.join(CHECKBOX_SEPARATOR)) === false) return;
 		submitted = true;
-		onAnswer?.(answer.join(CHECKBOX_SEPARATOR));
 	}
 
 	function touchSlider() {

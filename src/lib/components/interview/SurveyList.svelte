@@ -42,7 +42,7 @@
 		lang?: string;
 		/** Lay out as on a phone whatever the screen: the editor's phone preview. */
 		phone?: boolean;
-		onAnswer?: (answer: string) => void;
+		onAnswer?: (answer: string) => boolean | void;
 	} = $props();
 
 	let t = $derived(getUiText(lang).list);
@@ -93,8 +93,9 @@
 
 	function submit() {
 		if (locked || !complete) return;
+		// `false`: not sent (the connection is down), so leave it open.
+		if (onAnswer?.(encodeListAnswer(entries)) === false) return;
 		submitted = true;
-		onAnswer?.(encodeListAnswer(entries));
 	}
 </script>
 

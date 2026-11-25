@@ -50,7 +50,7 @@
 		lang?: string;
 		/** Lay out as on a phone whatever the screen: the editor's phone preview. */
 		phone?: boolean;
-		onAnswer?: (answer: string) => void;
+		onAnswer?: (answer: string) => boolean | void;
 	} = $props();
 
 	let t = $derived(getUiText(lang).ranking);
@@ -97,8 +97,9 @@
 
 	function submit() {
 		if (locked) return;
+		// `false`: not sent (the connection is down), so leave it open.
+		if (onAnswer?.(encodeRankingAnswer(options, order, count)) === false) return;
 		submitted = true;
-		onAnswer?.(encodeRankingAnswer(options, order, count));
 	}
 </script>
 

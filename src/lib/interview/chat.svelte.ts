@@ -1,3 +1,5 @@
+import { tick } from 'svelte';
+
 import { browser } from '$app/environment';
 import {
 	Auth,
@@ -168,6 +170,9 @@ export class ChatClient {
 	isConnecting = $state(false);
 	isInitialized = $state(false);
 	inputEnabled = $state(false);
+	/** What the respondent is typing. Here rather than in the view, so an
+	 *  answer lost in a dropped connection can be put back for them. */
+	draft = $state('');
 	forceTypingIndicator = $state(false);
 	progress = $state(0);
 	reconnectEnabled = $state(true);
@@ -208,6 +213,11 @@ export class ChatClient {
 		if (last.survey_item) return false;
 		return true;
 	});
+	/** Whether an answer can go out now. `inputEnabled` says whose turn it is;
+	 *  this also needs the socket open. A message sent while reconnecting would
+	 *  be dropped, so the respondent's answer stays where it is until then. */
+	canSend = $derived(this.inputEnabled && this.isConnected);
+
 	reconnectAttempts = 0;
 	maxReconnectAttempts = 5;
 	reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -291,17 +301,11 @@ export class ChatClient {
 				// forever with no backoff. Only surviving HEALTHY_CONNECTION_MS,
 				// or completing a turn, clears the budget.
 				this.markHealthyLater();
-				this.inputEnabled = false; // Initial state often disabled until server speaks
-
-				// Send initialized if needed or just handle open
-				if (!this.isInitialized) {
-					// Maybe add "Connected" system message?
-				} else {
-					this.inputEnabled = true;
-				}
-
-				// Original code calls handleOpen which adds system message "Connected"
-				// But in Svelte we might just show connection status via UI
+				// Closed until the server says it is the respondent's turn, on a
+				// reconnect too: the server resends the message it waits on them to
+				// answer (`resume_message` in the backend), and sends nothing while
+				// it is replying -- which may be to an answer sent before the drop.
+				this.inputEnabled = false;
 			};
 
 			this.ws.onmessage = (event) => {
@@ -597,6 +601,8 @@ export class ChatClient {
 			console.error('Missing session info');
 			return;
 		}
+		// The upload is announced over the socket, so it would be lost unsent.
+		if (!this.isConnected) return;
 
 		// Optimistic preview
 		const reader = new FileReader();
@@ -675,8 +681,9 @@ export class ChatClient {
 		this.isConnected = false;
 	}
 
-	sendMessage(text: string, audioFilename: string | null = null) {
-		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+	/** Returns whether the message went out; it does not while reconnecting. */
+	sendMessage(text: string, audioFilename: string | null = null): boolean {
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return false;
 
 		// A transcribed voice message references its server-side recording.
 		const msg: ReceivedData = audioFilename
@@ -698,10 +705,11 @@ export class ChatClient {
 		if (this.role === 'respondent') {
 			this.inputEnabled = false;
 		}
+		return true;
 	}
 
-	sendSkip() {
-		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+	sendSkip(): boolean {
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return false;
 		this.ws.send(JSON.stringify({ type: 'message', content: SKIP_QUESTION }));
 
 		this.markHealthy();
@@ -723,6 +731,7 @@ export class ChatClient {
 		if (this.role === 'respondent') {
 			this.inputEnabled = false;
 		}
+		return true;
 	}
 
 	/** Answer an intervention the respondent may override. The interview waits
@@ -783,11 +792,10 @@ export class ChatClient {
 		});
 	}
 
-	sendSurveyResponse(response: unknown, originalMessageId: string | number) {
-		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-			console.error('Cannot send survey response');
-			return;
-		}
+	/** Returns whether the answer went out. While reconnecting it does not,
+	 *  and the survey stays open for the respondent to submit again. */
+	sendSurveyResponse(response: unknown, originalMessageId: string | number): boolean {
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return false;
 
 		this.ws.send(
 			JSON.stringify({
@@ -816,6 +824,7 @@ export class ChatClient {
 		// No new message is pushed here, but a server reply is pending — force
 		// the indicator on until the server speaks.
 		this.forceTypingIndicator = true;
+		return true;
 	}
 
 	// Message Queue Processing
@@ -853,7 +862,17 @@ export class ChatClient {
 
 		switch (data.type) {
 			case 'message':
+				if (await this.resumeQuestion(data)) break;
+
 				if (data.security_intervention) {
+					if (this.securityIntervention?.text === data.content) {
+						// Still open: resent on a reconnect.
+						break;
+					}
+					// Answered, but the answer was lost in a dropped connection: the
+					// modal opens again, so the note its closing left goes.
+					const last = this.messages[this.messages.length - 1];
+					if (last?.type === 'system' && last.text === data.content) this.messages.pop();
 					this.securityIntervention = { ...data.security_intervention, text: data.content };
 					this.inputEnabled = false;
 					// Unless the respondent has to answer first, the server goes on
@@ -1014,6 +1033,54 @@ export class ChatClient {
 				}
 				break;
 		}
+	}
+
+	/**
+	 * The message the interview waits on, resent by the server on a reconnect,
+	 * when the chat already shows it. Not drawn again; whatever the respondent
+	 * sent after it never arrived, so it is taken back -- typed text into the
+	 * field, a survey reopened -- and the turn is theirs again. Returns false for
+	 * a message the chat does not have, which is drawn as usual.
+	 */
+	private async resumeQuestion(data: OutgoingMessage): Promise<boolean> {
+		if (data.message_id == null || data.security_intervention) return false;
+		const id = String(data.message_id);
+		const ownsId = (m: Message) => m.type !== 'system' && String(m.message_id) === id;
+
+		const start = this.messages.findIndex(
+			(m) => ownsId(m) && (m.type === 'received' || m.survey_item)
+		);
+		if (start === -1) return false;
+		// The question's own entries: its text, image and survey item.
+		let end = start;
+		while (end < this.messages.length && ownsId(this.messages[end])) end++;
+
+		const after = this.messages.slice(end);
+		const lost = after.filter((m) => m.type === 'sent');
+		const notes = after.filter((m) => m.type === 'system');
+
+		const typed = lost.findLast((m) => m.text && m.text !== SKIP_QUESTION)?.text;
+		if (typed && !this.draft.trim()) this.draft = typed;
+
+		const surveyIndex = this.messages.findIndex((m, i) => i >= start && i < end && m.survey_item);
+		const survey = surveyIndex === -1 ? null : this.messages[surveyIndex];
+		if (survey?.answered && survey.survey_item) {
+			// The survey keeps its submitted state in its own component, so it is
+			// drawn afresh: gone for a render, then back unanswered.
+			const item = survey.survey_item;
+			this.messages.splice(surveyIndex);
+			await tick();
+			this.messages.push(
+				{ type: 'sent', survey_item: item, message_id: data.message_id, can_skip: data.can_skip },
+				...notes
+			);
+		} else {
+			this.messages.splice(end, Infinity, ...notes);
+		}
+
+		// A survey takes its answer in the survey, not the field.
+		this.inputEnabled = !data.survey_item && data.can_answer !== false;
+		return true;
 	}
 
 	async addMessage(msg: Message) {

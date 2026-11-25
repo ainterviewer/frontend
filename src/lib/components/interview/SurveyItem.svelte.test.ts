@@ -234,7 +234,9 @@ describe('slider', () => {
 			min: 1,
 			max: 5,
 			step: 1,
-			onAnswer: (value: unknown) => (given = value)
+			onAnswer: (value: unknown) => {
+				given = value;
+			}
 		});
 		await expect.element(screen.getByRole('status')).toHaveTextContent('3');
 		const submit = screen.getByRole('button');
@@ -245,13 +247,40 @@ describe('slider', () => {
 		expect(given).toBe('3');
 	});
 
+	test('an answer the chat could not send leaves the survey open', async () => {
+		// The chat refuses while reconnecting; the respondent submits again.
+		let connected = false;
+		const given: unknown[] = [];
+		const screen = await render(SurveyItem, {
+			type: 'slider',
+			min: 1,
+			max: 5,
+			step: 1,
+			onAnswer: (value: unknown) => {
+				if (!connected) return false;
+				given.push(value);
+			}
+		});
+		await screen.getByRole('slider').click();
+		const submit = screen.getByRole('button');
+		await submit.click();
+		expect(given).toEqual([]);
+		await expect.element(submit).toBeEnabled();
+		connected = true;
+		await submit.click();
+		expect(given).toEqual(['3']);
+		await expect.element(submit).not.toBeInTheDocument();
+	});
+
 	test('a likert slider only answers after interaction', async () => {
 		let given: unknown;
 		const screen = await render(SurveyItem, {
 			type: 'likert',
 			ui: 'slider',
 			options: ['Disagree', 'Neutral', 'Agree'],
-			onAnswer: (value: unknown) => (given = value)
+			onAnswer: (value: unknown) => {
+				given = value;
+			}
 		});
 		await expect.element(screen.getByRole('status')).toHaveTextContent('');
 		const submit = screen.getByRole('button');

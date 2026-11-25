@@ -320,3 +320,127 @@ describe('TimedMessageModal', () => {
 		expect(onClose).toHaveBeenCalledOnce();
 	});
 });
+
+/** Sockets the client opened, while `WebSocket` is stubbed with `FakeSocket`. */
+const sockets: { onopen: () => void }[] = [];
+class FakeSocket {
+	static OPEN = 1;
+	readyState = 1;
+	onopen = () => {};
+	send = vi.fn();
+	close() {}
+	constructor() {
+		sockets.push(this);
+	}
+}
+
+describe('ChatClient reconnecting', () => {
+	// What the server resends on a reconnect while it waits on the respondent.
+	const question: OutgoingMessage = {
+		type: 'message',
+		content: 'Why?',
+		role: 'assistant',
+		message_id: 2,
+		can_answer: true
+	};
+	const survey: OutgoingMessage = {
+		type: 'message',
+		content: 'Rate:',
+		role: 'assistant',
+		message_id: 4,
+		can_answer: true,
+		survey_item: { type: 'radio', options: ['Bad', 'Good'] }
+	};
+
+	test('input stays closed on reopening, however it was before the drop', async () => {
+		sockets.length = 0;
+		vi.stubGlobal('WebSocket', FakeSocket);
+		try {
+			const chat = new ChatClient('project', 'respondent');
+			chat.interview_id = 'interview';
+			chat.isInitialized = true;
+			chat.inputEnabled = true;
+
+			chat.connect();
+			sockets[0].onopen();
+
+			// The server opens it again, if it waits on the respondent.
+			expect(chat.inputEnabled).toBe(false);
+			chat.disconnect();
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	test('a question already shown opens input again, and is not drawn twice', async () => {
+		const { chat } = connectedClient();
+		await chat.processSingleMessage(question);
+		chat.inputEnabled = false;
+
+		await chat.processSingleMessage(question);
+
+		expect(chat.messages.map((m) => m.text)).toEqual(['Why?']);
+		expect(chat.inputEnabled).toBe(true);
+	});
+
+	test('an answer that never arrived is taken back into the field', async () => {
+		const { chat } = connectedClient();
+		await chat.processSingleMessage(question);
+		chat.sendMessage('Because');
+		chat.messages.push({ type: 'system', text: 'A note' });
+
+		await chat.processSingleMessage(question);
+
+		expect(chat.messages.map((m) => m.text)).toEqual(['Why?', 'A note']);
+		expect(chat.draft).toBe('Because');
+		expect(chat.inputEnabled).toBe(true);
+		expect(chat.showTypingIndicator).toBe(false);
+	});
+
+	test('a question missed in the drop is drawn', async () => {
+		const { chat } = connectedClient();
+		await chat.processSingleMessage(question);
+		chat.sendMessage('Because');
+
+		await chat.processSingleMessage({ ...question, content: 'And then?', message_id: 3 });
+
+		expect(chat.messages.map((m) => m.text)).toEqual(['Why?', 'Because', 'And then?']);
+		expect(chat.draft).toBe('');
+		expect(chat.inputEnabled).toBe(true);
+	});
+
+	test('a survey whose answer never arrived opens again', async () => {
+		const { chat } = connectedClient();
+		await chat.processSingleMessage(survey);
+		chat.sendSurveyResponse('Good', 4);
+
+		await chat.processSingleMessage(survey);
+
+		const items = chat.messages.filter((m) => m.survey_item);
+		expect(items).toHaveLength(1);
+		expect(items[0].answered).toBeFalsy();
+		expect(chat.inputEnabled).toBe(false);
+		expect(chat.showTypingIndicator).toBe(false);
+	});
+
+	test('an intervention still open is left as it is', async () => {
+		const { chat } = connectedClient();
+		await chat.processSingleMessage(intervention(true));
+
+		await chat.processSingleMessage(intervention(true));
+
+		expect(chat.securityIntervention?.text).toBe(TEXT);
+		expect(chat.messages).toEqual([]);
+	});
+
+	test('an intervention whose answer never arrived opens again, without its note', async () => {
+		const { chat } = connectedClient();
+		await chat.processSingleMessage(intervention(true));
+		chat.respondToIntervention('override');
+
+		await chat.processSingleMessage(intervention(true));
+
+		expect(chat.securityIntervention?.text).toBe(TEXT);
+		expect(chat.messages).toEqual([]);
+	});
+});
