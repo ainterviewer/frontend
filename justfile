@@ -24,7 +24,7 @@ generate-sdk:
 dev:
     bun run dev --open
 
-[doc("Compile the static fallback error page (e.g. 502) for nginx to serve when the app is down. Renders the shared ErrorPage.svelte to a self-contained HTML file in deploy/setup/nginx/.")]
+[doc("Compile the static fallback error page (e.g. 502) for nginx to serve when the app is down. Renders the shared ErrorPage.svelte to a self-contained HTML file in platform/setup/nginx/.")]
 [group("Frontend")]
 build-error-page:
     bun run scripts/build-error-page.ts

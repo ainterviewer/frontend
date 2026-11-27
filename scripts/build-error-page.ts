@@ -8,7 +8,7 @@ import { build } from 'vite';
 const here = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(here, '..');
 const tmpDir = resolve(here, '.tmp');
-const outDir = resolve(projectRoot, '../deploy/setup/nginx');
+const outDir = resolve(projectRoot, '../platform/setup/nginx');
 
 await build({
 	configFile: false,
