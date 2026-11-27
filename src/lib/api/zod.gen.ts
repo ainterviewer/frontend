@@ -2301,6 +2301,24 @@ export const zPreviewFeature = z.enum([
 ]);
 
 /**
+ * ProbeSteering
+ *
+ * How closely the probes follow a question's suggested probes.
+ *
+ * - loose: the model may use a suggestion, paraphrased, or ask its own.
+ * - reword: every probe is one of the suggestions, reworded to fit the
+ * conversation -- it may build on the respondent's last answer.
+ * - strict: every probe is one of the suggestions, asked as written.
+ *
+ * Under reword and strict, probing ends once no suggestion is left to ask.
+ */
+export const zProbeSteering = z.enum([
+    'loose',
+    'reword',
+    'strict'
+]);
+
+/**
  * ProbingContext
  */
 export const zProbingContext = z.enum(['section', 'question']);
@@ -3485,7 +3503,8 @@ export const zLocalizedQuestion = z.object({
     image: zLocalizedImage.nullish(),
     user_image: z.boolean().optional().default(false),
     conditions: z.array(zLocalizedCondition).optional(),
-    probing_context: zProbingContext.nullish()
+    probing_context: zProbingContext.nullish(),
+    probe_steering: zProbeSteering.optional().default('loose')
 });
 
 /**
@@ -3563,6 +3582,7 @@ export const zMessagePublic = z.object({
     ]).nullish(),
     skipped_by_condition: z.boolean().optional().default(false),
     security_intervention: zSecurityIntervention.nullish(),
+    suggested_probe: z.string().nullish(),
     id: z.string(),
     codings: z.array(zCodingPublic).optional().default([]),
     comments: z.array(zMessageCommentPublic).optional().default([]),
@@ -3619,6 +3639,7 @@ export const zQuestion = z.object({
     user_image: z.boolean().optional().default(false),
     conditions: z.array(zCondition).optional(),
     probing_context: zProbingContext.nullish(),
+    probe_steering: zProbeSteering.optional().default('loose'),
     index: zQuestionIndex.nullish()
 });
 

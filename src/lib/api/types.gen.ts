@@ -4421,6 +4421,7 @@ export type LocalizedQuestion = {
      */
     conditions?: Array<LocalizedCondition>;
     probing_context?: ProbingContext | null;
+    probe_steering?: ProbeSteering;
 };
 
 /**
@@ -4840,6 +4841,10 @@ export type MessagePublic = {
      */
     skipped_by_condition?: boolean;
     security_intervention?: SecurityIntervention | null;
+    /**
+     * Suggested Probe
+     */
+    suggested_probe?: string | null;
     /**
      * Id
      */
@@ -5588,6 +5593,20 @@ export type PlatformRelease = {
 export type PreviewFeature = 'participants' | 'codebook' | 'report' | 'audio' | 'probing' | 'safety';
 
 /**
+ * ProbeSteering
+ *
+ * How closely the probes follow a question's suggested probes.
+ *
+ * - loose: the model may use a suggestion, paraphrased, or ask its own.
+ * - reword: every probe is one of the suggestions, reworded to fit the
+ * conversation -- it may build on the respondent's last answer.
+ * - strict: every probe is one of the suggestions, asked as written.
+ *
+ * Under reword and strict, probing ends once no suggestion is left to ask.
+ */
+export type ProbeSteering = 'loose' | 'reword' | 'strict';
+
+/**
  * ProbingAgentConfig
  */
 export type ProbingAgentConfig = {
@@ -5997,6 +6016,10 @@ export type Question = {
      */
     conditions?: Array<Condition>;
     probing_context?: ProbingContext | null;
+    /**
+     * How closely the probes follow the suggested probes: 'loose' may use one, 'reword' always asks one reworded to fit the conversation, 'strict' always asks one as written. Under 'reword' and 'strict', probing ends once every suggestion has been asked or answered; without suggestions they probe as 'loose'.
+     */
+    probe_steering?: ProbeSteering;
     /**
      * The index of the question in the interview, ie (section, question) = (2, 2) (for 3rd section 3rd question). Used to keep track of questions initial position after shuffling.
      */
