@@ -1146,7 +1146,7 @@ export const zHighlight = z.object({
     ]),
     title: z.string(),
     body: z.string().nullish(),
-    audience: z.enum(['all', 'preview']).optional().default('all')
+    feature: z.string().nullish()
 });
 
 /**
@@ -2281,6 +2281,26 @@ export const zPlatformRelease = z.object({
 });
 
 /**
+ * PreviewFeature
+ *
+ * An unfinished feature a user can be given early access to.
+ *
+ * A value is also the feature's `Preview:` / `Graduates:` commit trailer
+ * (see AGENTS.md), so one feature has one name across lib, backend and
+ * frontend. Graduating a feature removes its member along with its gates;
+ * the name may stay behind in user rows and tokens, which
+ * `PreviewFeatureList` ignores, so that needs no migration.
+ */
+export const zPreviewFeature = z.enum([
+    'participants',
+    'codebook',
+    'report',
+    'audio',
+    'probing',
+    'safety'
+]);
+
+/**
  * ProbingContext
  */
 export const zProbingContext = z.enum(['section', 'question']);
@@ -3320,7 +3340,8 @@ export const zInvitationCreate = z.object({
     access_request_id: z.string().nullish(),
     user_demo_concurrent_limit: z.int().gte(0).nullish(),
     user_demo_daily_limit: z.int().gte(0).nullish(),
-    user_demo_lifetime_limit: z.int().gte(0).nullish()
+    user_demo_lifetime_limit: z.int().gte(0).nullish(),
+    user_preview_features: z.array(zPreviewFeature).optional().default([])
 });
 
 /**
@@ -3340,6 +3361,7 @@ export const zInvitationPublic = z.object({
     user_demo_concurrent_limit: z.int().gte(0).nullish(),
     user_demo_daily_limit: z.int().gte(0).nullish(),
     user_demo_lifetime_limit: z.int().gte(0).nullish(),
+    user_preview_features: z.array(zPreviewFeature).optional().default([]),
     id: z.string(),
     email: z.string().nullable(),
     uses: z.int().optional().default(0),
@@ -3362,7 +3384,8 @@ export const zInvitationUpdate = z.object({
     alias: z.string().nullish(),
     user_demo_concurrent_limit: z.int().gte(0).nullish(),
     user_demo_daily_limit: z.int().gte(0).nullish(),
-    user_demo_lifetime_limit: z.int().gte(0).nullish()
+    user_demo_lifetime_limit: z.int().gte(0).nullish(),
+    user_preview_features: z.array(zPreviewFeature).optional()
 });
 
 /**
@@ -3922,7 +3945,7 @@ export const zUserAdminPublic = z.object({
     id: z.string(),
     invitation_title: z.string().nullish(),
     expires_at: z.iso.datetime().nullish(),
-    with_preview_features: z.boolean(),
+    preview_features: z.array(zPreviewFeature),
     organization: z.string().nullish(),
     access_request_message: z.string().nullish(),
     admin_note: z.string().nullish(),
@@ -3938,7 +3961,7 @@ export const zUserAdminPublic = z.object({
  */
 export const zUserAdminUpdate = z.object({
     scope: zScope.optional(),
-    with_preview_features: z.boolean().optional(),
+    preview_features: z.array(zPreviewFeature).optional(),
     organization: z.string().nullish(),
     expires_at: z.iso.datetime().nullish(),
     two_factor_enabled: z.boolean().optional(),
@@ -3977,7 +4000,7 @@ export const zUserPublic = z.object({
     id: z.string(),
     invitation_title: z.string().nullish(),
     expires_at: z.iso.datetime().nullish(),
-    with_preview_features: z.boolean(),
+    preview_features: z.array(zPreviewFeature),
     organization: z.string().nullish()
 });
 
@@ -4185,7 +4208,7 @@ export const zWelcome = z.object({
 export const zAuthToken = z.object({
     user_id: z.string(),
     scope: zScope,
-    preview_features: z.boolean().optional().default(false)
+    preview_features: z.array(zPreviewFeature).optional().default([])
 });
 
 /**
@@ -4446,6 +4469,7 @@ export const zInvitationPublicWritable = z.object({
     user_demo_concurrent_limit: z.int().gte(0).nullish(),
     user_demo_daily_limit: z.int().gte(0).nullish(),
     user_demo_lifetime_limit: z.int().gte(0).nullish(),
+    user_preview_features: z.array(zPreviewFeature).optional().default([]),
     id: z.string(),
     email: z.string().nullable(),
     uses: z.int().optional().default(0)

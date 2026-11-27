@@ -4288,9 +4288,11 @@ export class Default {
      * stay out of it. A release that has not been curated yet (`highlights` is
      * None) is omitted rather than shown empty.
      *
-     * Highlights about preview features are served only to callers whose token
-     * carries `preview_features`. A release announcing nothing else then reaches
-     * everyone else as curated-but-empty, the same as a maintenance release.
+     * A highlight naming a preview feature is served only to callers whose
+     * token carries that feature. One naming a feature that has graduated since,
+     * or `LEGACY_PREVIEW`, goes to callers with any. A release announcing nothing else then
+     * reaches everyone else as curated-but-empty, the same as a maintenance
+     * release.
      */
     public static releases<ThrowOnError extends boolean = false>(options?: Options<ReleasesData, ThrowOnError>): RequestResult<ReleasesResponses, ReleasesErrors, ThrowOnError> {
         return (options?.client ?? client).get<ReleasesResponses, ReleasesErrors, ThrowOnError>({

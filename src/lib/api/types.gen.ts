@@ -2916,9 +2916,9 @@ export type Highlight = {
      */
     body?: string | null;
     /**
-     * Audience
+     * Feature
      */
-    audience?: 'all' | 'preview';
+    feature?: string | null;
 };
 
 /**
@@ -3707,6 +3707,10 @@ export type InvitationCreate = {
      * User Demo Lifetime Limit
      */
     user_demo_lifetime_limit?: number | null;
+    /**
+     * User Preview Features
+     */
+    user_preview_features?: Array<PreviewFeature>;
 };
 
 /**
@@ -3750,6 +3754,10 @@ export type InvitationPublic = {
      * User Demo Lifetime Limit
      */
     user_demo_lifetime_limit?: number | null;
+    /**
+     * User Preview Features
+     */
+    user_preview_features?: Array<PreviewFeature>;
     /**
      * Id
      */
@@ -3809,6 +3817,10 @@ export type InvitationUpdate = {
      * User Demo Lifetime Limit
      */
     user_demo_lifetime_limit?: number | null;
+    /**
+     * User Preview Features
+     */
+    user_preview_features?: Array<PreviewFeature>;
 };
 
 /**
@@ -5563,6 +5575,19 @@ export type PlatformRelease = {
 };
 
 /**
+ * PreviewFeature
+ *
+ * An unfinished feature a user can be given early access to.
+ *
+ * A value is also the feature's `Preview:` / `Graduates:` commit trailer
+ * (see AGENTS.md), so one feature has one name across lib, backend and
+ * frontend. Graduating a feature removes its member along with its gates;
+ * the name may stay behind in user rows and tokens, which
+ * `PreviewFeatureList` ignores, so that needs no migration.
+ */
+export type PreviewFeature = 'participants' | 'codebook' | 'report' | 'audio' | 'probing' | 'safety';
+
+/**
  * ProbingAgentConfig
  */
 export type ProbingAgentConfig = {
@@ -7260,9 +7285,9 @@ export type UserAdminPublic = {
      */
     expires_at?: string | null;
     /**
-     * With Preview Features
+     * Preview Features
      */
-    with_preview_features: boolean;
+    preview_features: Array<PreviewFeature>;
     /**
      * Organization
      */
@@ -7303,9 +7328,9 @@ export type UserAdminPublic = {
 export type UserAdminUpdate = {
     scope?: Scope;
     /**
-     * With Preview Features
+     * Preview Features
      */
-    with_preview_features?: boolean;
+    preview_features?: Array<PreviewFeature>;
     /**
      * Organization
      */
@@ -7396,9 +7421,9 @@ export type UserPublic = {
      */
     expires_at?: string | null;
     /**
-     * With Preview Features
+     * Preview Features
      */
-    with_preview_features: boolean;
+    preview_features: Array<PreviewFeature>;
     /**
      * Organization
      */
@@ -7551,7 +7576,7 @@ export type AuthToken = {
     /**
      * Preview Features
      */
-    preview_features?: boolean;
+    preview_features?: Array<PreviewFeature>;
 };
 
 /**
@@ -7975,6 +8000,10 @@ export type InvitationPublicWritable = {
      * User Demo Lifetime Limit
      */
     user_demo_lifetime_limit?: number | null;
+    /**
+     * User Preview Features
+     */
+    user_preview_features?: Array<PreviewFeature>;
     /**
      * Id
      */
