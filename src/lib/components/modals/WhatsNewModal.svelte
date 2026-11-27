@@ -139,9 +139,9 @@
 									<div class="min-w-0">
 										<p class="m-0 text-sm font-medium text-dark">
 											{highlight.title}
-											<!-- Only served to users with preview features, who should still
-											     know it isn't something their colleagues can see. -->
-											{#if highlight.audience === 'preview'}
+											<!-- Only served to users with this preview feature, who should
+											     still know it isn't something their colleagues can see. -->
+											{#if highlight.feature}
 												<span
 													class="ml-1 rounded-full bg-dark/5 px-1.5 py-0.5 align-middle text-[0.625rem] font-medium tracking-wide text-dark/50 uppercase"
 												>

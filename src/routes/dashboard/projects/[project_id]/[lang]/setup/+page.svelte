@@ -11,8 +11,10 @@
 		InterviewConfig,
 		ProbingStrategy
 	} from '$lib/api/types.gen';
+	import type { PreviewFeature } from '$lib/api/types.gen';
 	import PreviewBadge from '$lib/components/PreviewBadge.svelte';
 	import { contentRevision, saveWithRevision } from '$lib/content/revision.svelte';
+	import { hasPreview } from '$lib/preview';
 	import { hasErrorCode } from '$lib/utils/errors';
 	import { toastApiError } from '$lib/utils/toast';
 
@@ -22,7 +24,7 @@
 
 	let projectId = $derived(page.params.project_id as string);
 	let lang = $derived(page.params.lang);
-	let hasPreviewFeatures = $derived(!!page.data.user?.with_preview_features);
+	let user = $derived(page.data.user);
 	// Speech goes somewhere this deployment allows in test interviews only:
 	// with audio on, the project cannot be published (app/distribution.py).
 	let speechTestOnly = $derived(!!page.data.instance?.speech_test_only);
@@ -46,7 +48,7 @@
 		key: 'with_consent' | 'with_welcome' | 'with_audio';
 		label: string;
 		description: string;
-		is_preview_feature?: boolean;
+		preview_feature?: PreviewFeature;
 	}[] = [
 		{
 			key: 'with_consent',
@@ -63,7 +65,7 @@
 			label: 'Allow audio answers',
 			description:
 				'Let respondents record answers as audio messages, which are transcribed before being sent to the AInterviewer.',
-			is_preview_feature: true
+			preview_feature: 'audio'
 		}
 	];
 
@@ -369,7 +371,7 @@
 
 				<div class="space-y-3">
 					{#each configToggles as toggle (toggle.key)}
-						{#if toggle.is_preview_feature && !hasPreviewFeatures}{:else}
+						{#if toggle.preview_feature && !hasPreview(user, toggle.preview_feature)}{:else}
 							<label class="flex items-start gap-3">
 								<input
 									type="checkbox"
@@ -379,7 +381,7 @@
 								<span class="min-w-0">
 									<span class="block text-sm font-medium text-gray-700">
 										{toggle.label}
-										{#if toggle.is_preview_feature}<PreviewBadge />{/if}
+										{#if toggle.preview_feature}<PreviewBadge />{/if}
 									</span>
 									<span class="block text-xs text-gray-500">{toggle.description}</span>
 									{#if toggle.key === 'with_audio' && speechTestOnly}
@@ -396,7 +398,7 @@
 					{/each}
 				</div>
 
-				{#if hasPreviewFeatures}
+				{#if hasPreview(user, 'probing')}
 					<div class="mt-5">
 						<span class="block text-sm font-medium text-gray-700">
 							Probing strategy <PreviewBadge />

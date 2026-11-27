@@ -4,8 +4,15 @@
 	import { toast } from 'svelte-sonner';
 
 	import { invalidateAll } from '$app/navigation';
-	import { Admin, type DemoBudget, type Scope, type UserAdminPublic } from '$lib/api';
+	import {
+		Admin,
+		type DemoBudget,
+		type PreviewFeature,
+		type Scope,
+		type UserAdminPublic
+	} from '$lib/api';
 	import DemoLimitFields from '$lib/components/DemoLimitFields.svelte';
+	import PreviewFeaturePicker from '$lib/components/PreviewFeaturePicker.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
@@ -15,6 +22,7 @@
 		sortableText,
 		sortableTime
 	} from '$lib/components/table/features';
+	import { sameFeatures } from '$lib/preview';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 	import { toastApiError } from '$lib/utils/toast';
 
@@ -30,7 +38,7 @@
 
 	type UserEdit = {
 		scope: Scope;
-		with_preview_features: boolean;
+		preview_features: PreviewFeature[];
 		organization: string;
 		expires_at: string;
 		two_factor_enabled: boolean;
@@ -63,7 +71,7 @@
 		if (!edits[user.id]) {
 			edits[user.id] = {
 				scope: (user.scope as Scope) ?? 'user',
-				with_preview_features: user.with_preview_features ?? false,
+				preview_features: [...(user.preview_features ?? [])],
 				organization: user.organization ?? '',
 				expires_at: isoToLocalInput(user.expires_at),
 				two_factor_enabled: user.two_factor_enabled ?? false,
@@ -80,7 +88,7 @@
 		if (!e) return false;
 		return (
 			e.scope !== ((user.scope as Scope) ?? 'user') ||
-			e.with_preview_features !== (user.with_preview_features ?? false) ||
+			!sameFeatures(e.preview_features, user.preview_features ?? []) ||
 			e.organization !== (user.organization ?? '') ||
 			e.expires_at !== isoToLocalInput(user.expires_at) ||
 			e.two_factor_enabled !== (user.two_factor_enabled ?? false) ||
@@ -129,7 +137,7 @@
 			const response = await Admin.updateUser({
 				body: {
 					scope: e.scope,
-					with_preview_features: e.with_preview_features,
+					preview_features: e.preview_features,
 					organization: e.organization.trim() || null,
 					expires_at: localInputToIso(e.expires_at),
 					two_factor_enabled: e.two_factor_enabled,
@@ -490,17 +498,17 @@
 							onclick={(e) => e.stopPropagation()}
 						/>
 					</label>
-				</div>
-				<div class="mt-5 mb-1 flex flex-wrap gap-x-6 gap-y-2">
-					<label class="flex items-center gap-2 text-sm">
-						<input
-							type="checkbox"
-							class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-							bind:checked={edit.with_preview_features}
-							onclick={(e) => e.stopPropagation()}
+					<div class="block text-sm">
+						<label for="preview-features-{user.id}" class="text-xs font-medium text-gray-600">
+							Preview features
+						</label>
+						<PreviewFeaturePicker
+							id="preview-features-{user.id}"
+							bind:value={edit.preview_features}
 						/>
-						<span class="text-xs font-medium text-gray-600">Preview features enabled</span>
-					</label>
+					</div>
+				</div>
+				<div class="mt-4 mb-1 flex flex-wrap gap-x-6 gap-y-2">
 					<label class="flex items-center gap-2 text-sm">
 						<input
 							type="checkbox"

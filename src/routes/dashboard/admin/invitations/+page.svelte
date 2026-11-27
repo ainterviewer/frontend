@@ -8,11 +8,13 @@
 		InvitationCreate,
 		InvitationPublic,
 		InvitationUpdate,
+		PreviewFeature,
 		Scope,
 		TimeDelta
 	} from '$lib/api';
 	import { Admin } from '$lib/api/sdk.gen';
 	import DemoLimitFields from '$lib/components/DemoLimitFields.svelte';
+	import PreviewFeaturePicker from '$lib/components/PreviewFeaturePicker.svelte';
 	import DataTable from '$lib/components/table/DataTable.svelte';
 	import FacetedFilter from '$lib/components/table/FacetedFilter.svelte';
 	import {
@@ -50,6 +52,7 @@
 	let newDemoConcurrentLimit = $state<number | null>(null);
 	let newDemoDailyLimit = $state<number | null>(null);
 	let newDemoLifetimeLimit = $state<number | null>(null);
+	let newPreviewFeatures = $state<PreviewFeature[]>([]);
 
 	let reusableInvitations = $derived(invitations.filter((invitation) => invitation.reuseable));
 	let singleUseInvitations = $derived(invitations.filter((invitation) => !invitation.reuseable));
@@ -136,7 +139,8 @@
 				user_expires: userExpires,
 				user_demo_concurrent_limit: newDemoConcurrentLimit,
 				user_demo_daily_limit: newDemoDailyLimit,
-				user_demo_lifetime_limit: newDemoLifetimeLimit
+				user_demo_lifetime_limit: newDemoLifetimeLimit,
+				user_preview_features: newPreviewFeatures
 			};
 
 			const response = await Admin.createInvitation({ body });
@@ -191,6 +195,7 @@
 		newDemoConcurrentLimit = null;
 		newDemoDailyLimit = null;
 		newDemoLifetimeLimit = null;
+		newPreviewFeatures = [];
 		editingInvitation = null;
 	}
 
@@ -204,6 +209,7 @@
 		newDemoConcurrentLimit = invitation.user_demo_concurrent_limit ?? null;
 		newDemoDailyLimit = invitation.user_demo_daily_limit ?? null;
 		newDemoLifetimeLimit = invitation.user_demo_lifetime_limit ?? null;
+		newPreviewFeatures = [...(invitation.user_preview_features ?? [])];
 
 		if (invitation.expires_at) {
 			newExpiresAt = toDateTimeLocal(new Date(invitation.expires_at));
@@ -263,6 +269,7 @@
 				user_demo_concurrent_limit: newDemoConcurrentLimit,
 				user_demo_daily_limit: newDemoDailyLimit,
 				user_demo_lifetime_limit: newDemoLifetimeLimit,
+				user_preview_features: newPreviewFeatures,
 				email: !newReuseable ? newEmail || null : undefined
 			};
 
@@ -542,6 +549,16 @@
 					<option value="user">User</option>
 					<option value="demo">Demo</option>
 				</select>
+			</div>
+			<div>
+				<label for="user_preview_features" class="block text-sm font-medium text-gray-700">
+					User Preview Features
+				</label>
+				<PreviewFeaturePicker
+					id="user_preview_features"
+					bind:value={newPreviewFeatures}
+					triggerClass="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm sm:text-sm"
+				/>
 			</div>
 			{#if newUserScope === 'demo'}
 				<div class="sm:col-span-2">

@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import type { ExternalParam } from '$lib/api/types.gen';
 	import Select from '$lib/components/Select.svelte';
+	import { hasPreview } from '$lib/preview';
 
 	import type { PageData } from './$types';
 
@@ -13,7 +14,7 @@
 	const projectId = $derived(page.params.project_id as string);
 	const lang = $derived(page.params.lang ?? 'en');
 	const isDemo = $derived(page.data.user?.scope === 'demo');
-	const hasPreviewFeatures = $derived(!!page.data.user?.with_preview_features);
+	const hasParticipants = $derived(hasPreview(page.data.user, 'participants'));
 
 	/** Picking no language leaves it to the respondent, who is then asked
 	 * whenever the project offers more than one. */
@@ -282,7 +283,7 @@
 		</section>
 	</div>
 
-	{#if hasPreviewFeatures}
+	{#if hasParticipants}
 		<p class="mt-6 text-sm text-gray-600">
 			Inviting specific people? Add them under
 			<a

@@ -8,6 +8,7 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { projectSidebarItems } from '$lib/config/sidebar';
 	import { addSkipOnboardingButton, PREVIEW_BADGE, tourSteps } from '$lib/onboarding';
+	import { hasPreview } from '$lib/preview';
 
 	let { children } = $props();
 
@@ -26,7 +27,13 @@
 	function startOnboarding() {
 		// The safety check and Analysis are preview features; only mention them
 		// to those who have them.
-		const previewFeatures = !!page.data.user?.with_preview_features;
+		const user = page.data.user;
+		const safetyCheck = hasPreview(user, 'safety');
+		const codebook = hasPreview(user, 'codebook');
+		const report = hasPreview(user, 'report');
+		const analysis = codebook
+			? `<u>Explore</u> your transcripts by wording or by meaning, build a <u>codebook</u>, and <u>code</u> the answers with it${report ? ', and see the result in a <u>report</u>' : ''}.`
+			: 'See the answers to your interview summarised in a <u>report</u>.';
 		const steps = tourSteps(
 			'project',
 			[
@@ -45,7 +52,7 @@
 					popover: {
 						title: 'Agents',
 						description: `In the <u>agents</u> tab, you can modify the AI agent(s) configuration and behavior.${
-							previewFeatures
+							safetyCheck
 								? ` You can also set up a <u>safety check</u> ${PREVIEW_BADGE} that reads every answer and shows the respondent a message when one of your rules applies.`
 								: ''
 						} Changes are saved as you make them.`
@@ -75,22 +82,21 @@
 					popover: {
 						title: 'Interview Data',
 						description: `A table of your collected <u>interview data</u>, with the ability to view or export them. Interviews with messages respondents reported${
-							previewFeatures ? ` or the safety check ${PREVIEW_BADGE} acted on` : ''
+							safetyCheck ? ` or the safety check ${PREVIEW_BADGE} acted on` : ''
 						} are marked with a flag, and you can filter by it.`
 					}
 				},
 				// Analysis is a preview feature: the sidebar only shows it to those
 				// who have them, so only they are toured through it. Left out, the
 				// step is not marked seen, and comes up as new once they do.
-				...(previewFeatures
+				...(codebook || report
 					? [
 							{
 								id: 'analysis',
 								element: '[data-tour="analysis"]',
 								popover: {
 									title: `Analysis ${PREVIEW_BADGE}`,
-									description:
-										'<u>Explore</u> your transcripts by wording or by meaning, build a <u>codebook</u>, <u>code</u> the answers with it, and see the result in a <u>report</u>.'
+									description: analysis
 								}
 							}
 						]

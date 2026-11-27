@@ -10,6 +10,7 @@
 	import Select from '$lib/components/Select.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { mainSidebarItems } from '$lib/config/sidebar';
+	import { hasPreview } from '$lib/preview';
 	import { formatDate, formatDay } from '$lib/utils/datetime';
 	import { openUpwards } from '$lib/utils/openUpwards';
 	import { toastApiError } from '$lib/utils/toast';
@@ -134,7 +135,7 @@
 	onMount(() => {
 		// The whole tour on a first visit, then only steps added since; nothing
 		// if the user opted out of all tours.
-		startDashboardTour(!!page.data.user?.with_preview_features);
+		startDashboardTour(hasPreview(page.data.user, 'safety'));
 
 		// Close dropdowns when clicking outside
 		const handleClickOutside = (e: MouseEvent) => {

@@ -16,6 +16,7 @@
 	import { isTestOnly, testOnlyUseLabel } from '$lib/content/models';
 	import PublishControl from '$lib/content/PublishControl.svelte';
 	import { contentRevision } from '$lib/content/revision.svelte';
+	import { hasPreview } from '$lib/preview';
 
 	import type { PageData } from './$types';
 	import { policyErrors } from './securityPolicy';
@@ -23,7 +24,7 @@
 
 	let { data }: { data: PageData } = $props();
 	let user = $derived(page.data.user);
-	let hasPreviewFeatures = $derived(!!user?.with_preview_features);
+	let hasSafetyCheck = $derived(hasPreview(user, 'safety'));
 
 	let mode = $state<'basic' | 'advanced'>('basic');
 	let agents = $state<AgentConfigs>(untrack(() => data.agents));
@@ -645,7 +646,7 @@
 		{/if}
 	</section>
 
-	{#if agents.security && hasPreviewFeatures}
+	{#if agents.security && hasSafetyCheck}
 		<SecuritySettings
 			bind:security={agents.security}
 			{models}

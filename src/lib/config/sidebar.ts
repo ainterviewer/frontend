@@ -1,3 +1,4 @@
+import type { PreviewFeature } from '$lib/api/types.gen';
 import type { LivePart } from '$lib/collab/contentSession.svelte';
 
 export type SidebarItem = {
@@ -8,7 +9,8 @@ export type SidebarItem = {
 	type?: 'link' | 'separator';
 	requiresAdmin?: boolean;
 	project_id?: string;
-	previewFeature?: boolean;
+	/** Shown only to users with this preview feature, or with a list, any of them. */
+	previewFeature?: PreviewFeature | PreviewFeature[];
 	dataTour?: string;
 	/** The co-edited part the page edits: marked while it is invalid. */
 	contentPart?: LivePart;
@@ -150,13 +152,13 @@ export const projectSidebarItems: SidebarItem[] = [
 				label: 'Participants',
 				href: '/dashboard/projects/{projectId}/{languageCode}/distribution/participants',
 				icon: 'fa-solid fa-person-circle-question',
-				previewFeature: true
+				previewFeature: 'participants'
 			},
 			{
 				label: 'Email',
 				href: '/dashboard/projects/{projectId}/{languageCode}/distribution/email',
 				icon: 'fa-solid fa-envelope-open-text',
-				previewFeature: true
+				previewFeature: 'participants'
 			},
 			{
 				label: 'Monitor',
@@ -176,28 +178,32 @@ export const projectSidebarItems: SidebarItem[] = [
 		label: 'Analysis',
 		href: '/dashboard/projects/{projectId}/{languageCode}/analysis',
 		icon: 'fas fa-chart-pie',
-		previewFeature: true,
+		previewFeature: ['codebook', 'report'],
 		dataTour: 'analysis',
 		children: [
 			{
 				label: 'Explore',
 				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/explore',
-				icon: 'fas fa-compass'
+				icon: 'fas fa-compass',
+				previewFeature: 'codebook'
 			},
 			{
 				label: 'Codebook',
 				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/codebook',
-				icon: 'fas fa-sitemap'
+				icon: 'fas fa-sitemap',
+				previewFeature: 'codebook'
 			},
 			{
 				label: 'Coding',
 				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/coding',
-				icon: 'fas fa-tags'
+				icon: 'fas fa-tags',
+				previewFeature: 'codebook'
 			},
 			{
 				label: 'Report',
 				href: '/dashboard/projects/{projectId}/{languageCode}/analysis/report',
-				icon: 'fas fa-magnifying-glass-chart'
+				icon: 'fas fa-magnifying-glass-chart',
+				previewFeature: 'report'
 			}
 		]
 	},

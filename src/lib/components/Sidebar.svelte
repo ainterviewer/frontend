@@ -4,6 +4,7 @@
 	import { type LivePart, sessionErrors } from '$lib/collab/contentSession.svelte';
 	import { type SidebarItem } from '$lib/config/sidebar';
 	import { invalidParts, pageName, partErrors, skippedNote } from '$lib/content/invalidParts';
+	import { hasPreview } from '$lib/preview';
 	import { sidebar } from '$lib/sidebar.svelte';
 	import { parseProjectRoute } from '$lib/utils/urls';
 	import { newsworthyVersion, whatsNew } from '$lib/whatsNew.svelte';
@@ -18,11 +19,10 @@
 	let user = $derived(page.data.user);
 	let docsUrl = $derived(page.data.instance?.docs_url);
 	let isAdmin = $derived(user?.scope === 'admin');
-	let hasPreviewFeatures = $derived(!!user?.with_preview_features);
 
 	function canShow(item: SidebarItem) {
 		if (item.requiresAdmin && !isAdmin) return false;
-		if (item.previewFeature && !hasPreviewFeatures) return false;
+		if (item.previewFeature && !hasPreview(user, item.previewFeature)) return false;
 		return true;
 	}
 
@@ -217,7 +217,7 @@
 	{/if}
 </div>
 
-{#snippet listItem(item: SidebarItem, level = 0, isLast = false)}
+{#snippet listItem(item: SidebarItem, level = 0, isLast = false, underPreview = false)}
 	{@const active = isActive(item.href)}
 	{@const visibleChildren = item.children?.filter(canShow) ?? []}
 	{@const hasChildren = visibleChildren.length > 0}
@@ -288,7 +288,10 @@
 						active && "font-bold after:ml-2 after:content-['<']"
 					].join(' ')}
 				>
-					{item.label}{#if item.previewFeature}<PreviewBadge compact class="ml-2" />{/if}
+					{item.label}{#if item.previewFeature && !underPreview}<PreviewBadge
+							compact
+							class="ml-2"
+						/>{/if}
 				</span>
 			{/if}
 		</a>
@@ -296,7 +299,12 @@
 		{#if hasChildren}
 			<ul class="m-0 list-none p-0">
 				{#each visibleChildren as child, i (child.label || child.href || child)}
-					{@render listItem(child, level + 1, i === visibleChildren.length - 1)}
+					{@render listItem(
+						child,
+						level + 1,
+						i === visibleChildren.length - 1,
+						underPreview || !!item.previewFeature
+					)}
 				{/each}
 			</ul>
 		{/if}
