@@ -127,6 +127,7 @@ const LABELS: Record<string, string> = {
 	user_image: 'Respondent uploads an image',
 	conditions: 'Conditions',
 	probing_context: 'Probing context',
+	probe_steering: 'Use of suggested probes',
 	// Consent, welcome, emails
 	title: 'Title',
 	text: 'Text',

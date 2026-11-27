@@ -1,5 +1,6 @@
 import type { Consent, Image, InterviewGuide, TimedMessage, Welcome } from '$lib/api/types.gen';
 import { resolveConditionTarget } from '$lib/guide/conditions';
+import { probeSteering } from '$lib/guide/probing';
 import type {
 	RenderedCondition,
 	RenderedConditionBlock,
@@ -373,6 +374,8 @@ function buildQuestionContent(
 		if (q.check_if_exhausted) settings.push('Check if exhausted');
 		if (q.user_image) settings.push('User can upload image');
 		if (q.probing_context) settings.push(`Probing context: ${q.probing_context}`);
+		if (q.probe_steering && q.probe_steering !== 'loose')
+			settings.push(`Suggested probes: ${probeSteering(q.probe_steering).label.toLowerCase()}`);
 
 		if (settings.length > 0) {
 			content.push(indentNode(label('Settings')));

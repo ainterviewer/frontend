@@ -1,6 +1,11 @@
 <script lang="ts">
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { probingEnabled, probingSummary } from '$lib/guide/probing';
+	import {
+		PROBE_STEERING,
+		probeSteering,
+		probingEnabled,
+		probingSummary
+	} from '$lib/guide/probing';
 	import type { GuideQuestion } from '$lib/guide/types';
 
 	import AccordionPanel from './AccordionPanel.svelte';
@@ -25,6 +30,7 @@
 	const summary = $derived(probingSummary(question));
 	const probeCount = $derived(question.probes?.length ?? 0);
 	const unusedProbes = $derived(!enabled && probeCount > 0);
+	const steering = $derived(probeSteering(question.probe_steering));
 </script>
 
 {#if shown}
@@ -63,7 +69,7 @@
 							{summary}
 							{#if probeCount > 0}
 								· {probeCount}
-								{probeCount === 1 ? 'suggestion' : 'suggestions'}
+								{probeCount === 1 ? 'suggestion' : 'suggestions'}{#if steering.short}, {steering.short}{/if}
 							{/if}
 						</div>
 					{/if}
@@ -76,7 +82,7 @@
 					<span class="mb-2 block text-xs font-bold tracking-wider text-gray-700 uppercase">
 						Suggested Follow-up Probes <HoverInfo
 							iconColor="gray-500"
-							text="Ideas the AInterviewer can draw on when it writes follow-up probes. Based on the conversation so far, it may use a suggestion as is, rephrase it, or ask something else entirely. The limits above cap how many probes are asked."
+							text="Follow-up questions for the AInterviewer to ask. <u>Use of suggestions</u> sets how closely it keeps to them, and the limits below cap how many probes are asked."
 						/>
 					</span>
 					{#if question.probes}
@@ -127,6 +133,34 @@
 					>
 						<i class="fa-solid fa-plus"></i> Add Probe
 					</button>
+
+					<div class="mt-3">
+						<div class="flex flex-wrap items-center gap-3">
+							<span class="flex items-center gap-2 text-sm text-gray-700">
+								<label for="probe-steering-{question.id}">Use of suggestions</label>
+								<HoverInfo
+									iconColor="gray-500"
+									text="How closely the follow-up probes keep to the suggestions above. Without any suggestions, probes are written freely whatever is chosen here."
+								/>
+							</span>
+							<select
+								id="probe-steering-{question.id}"
+								class="rounded border-gray-200 bg-gray-50 py-1.5 pr-8 pl-2 text-sm focus:border-primary focus:ring-primary/20"
+								bind:value={question.probe_steering}
+							>
+								{#each PROBE_STEERING as option (option.value)}
+									<option value={option.value}>{option.label}</option>
+								{/each}
+							</select>
+						</div>
+						<p class="mt-1 text-xs text-gray-500">{steering.info}</p>
+						{#if steering.value !== 'loose' && probeCount === 0}
+							<p class="mt-1 flex items-start gap-1.5 text-xs text-amber-600">
+								<i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+								<span>No suggestions yet, so probes are written freely until you add one.</span>
+							</p>
+						{/if}
+					</div>
 				</div>
 
 				<!-- Probing Limits -->
@@ -170,14 +204,16 @@
 						/>
 					</div>
 					<p class="text-xs text-gray-500">{summary}</p>
-					<FlagToggle
-						label="Check if exhausted"
-						info="Checks during probing if the question has been exhausted, based on the provided context."
-						inactiveReason={enabled
-							? undefined
-							: 'no follow-up probes are asked. Set Max Probes or Max Time to enable probing.'}
-						bind:checked={question.check_if_exhausted}
-					/>
+					<div class="pt-3">
+						<FlagToggle
+							label="Check if exhausted"
+							info="Checks during probing if the question has been exhausted, based on the provided context."
+							inactiveReason={enabled
+								? undefined
+								: 'no follow-up probes are asked. Set Max Probes or Max Time to enable probing.'}
+							bind:checked={question.check_if_exhausted}
+						/>
+					</div>
 				</div>
 			</div>
 		</AccordionPanel>

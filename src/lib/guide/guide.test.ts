@@ -329,7 +329,8 @@ describe('the editor knows every question field', () => {
 		'references',
 		'user_image',
 		'conditions',
-		'probing_context'
+		'probing_context',
+		'probe_steering'
 	];
 
 	it('is text or shared', () => {
@@ -342,6 +343,10 @@ describe('the editor knows every question field', () => {
 describe('newQuestion / normalize defaults', () => {
 	it('probes three times by default', () => {
 		expect(newQuestion().max_probes_n).toBe(3);
+	});
+
+	it('draws on the suggested probes loosely by default', () => {
+		expect(newQuestion().probe_steering).toBe('loose');
 	});
 
 	it('does not probe a survey item, as the library does', () => {

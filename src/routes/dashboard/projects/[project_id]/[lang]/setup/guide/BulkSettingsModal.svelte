@@ -1,6 +1,6 @@
 <script lang="ts">
 	import HoverInfo from '$lib/components/HoverInfo.svelte';
-	import { DEFAULT_MAX_PROBES } from '$lib/guide/probing';
+	import { DEFAULT_MAX_PROBES, PROBE_STEERING } from '$lib/guide/probing';
 	import type { GuideQuestion } from '$lib/guide/types';
 
 	let {
@@ -14,7 +14,7 @@
 	} = $props();
 
 	// A number left empty (null) is no limit.
-	type FieldState = { enabled: boolean; value: number | boolean | null };
+	type FieldState = { enabled: boolean; value: number | boolean | string | null };
 
 	// One row per bulk-editable setting. `value` is what gets written to every
 	// question, but only when `enabled` is checked, so untouched fields keep their
@@ -26,6 +26,7 @@
 		create_segue: { enabled: false, value: false },
 		check_if_answered: { enabled: false, value: false },
 		check_if_exhausted: { enabled: false, value: false },
+		probe_steering: { enabled: false, value: 'loose' },
 		can_answer: { enabled: false, value: true },
 		can_skip: { enabled: false, value: true },
 		shuffle: { enabled: false, value: false }
@@ -50,6 +51,11 @@
 			key: 'check_if_exhausted',
 			label: 'Check if exhausted',
 			info: 'Checks during probing if the question has been exhausted, based on the provided context.'
+		},
+		{
+			key: 'probe_steering',
+			label: 'Use of suggestions',
+			info: 'How closely the follow-up probes keep to the suggested probes. Without any suggestions, probes are written freely whatever is chosen here.'
 		}
 	];
 
@@ -98,7 +104,7 @@
 
 	function handleApply() {
 		if (enabledCount === 0) return;
-		const changes: Record<string, number | boolean | null> = {};
+		const changes: Record<string, number | boolean | string | null> = {};
 		for (const [key, f] of Object.entries(fields)) {
 			if (f.enabled) changes[key] = f.value;
 		}
@@ -238,6 +244,17 @@
 						>
 							{field.value ? 'On' : 'Off'}
 						</button>
+					{:else if typeof field.value === 'string'}
+						<select
+							class="rounded border-gray-200 py-1 pr-8 pl-2 text-sm focus:border-primary focus:ring-primary/20 disabled:bg-gray-50 disabled:text-gray-400"
+							aria-label={f.label}
+							disabled={!field.enabled}
+							bind:value={field.value}
+						>
+							{#each PROBE_STEERING as option (option.value)}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
 					{:else}
 						<input
 							type="number"

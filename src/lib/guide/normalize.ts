@@ -86,6 +86,7 @@ function normalizeQuestion(q: LocalizedQuestion): GuideQuestion {
 		can_skip: q.can_skip ?? true,
 		check_if_answered: q.check_if_answered ?? false,
 		check_if_exhausted: q.check_if_exhausted ?? false,
+		probe_steering: q.probe_steering ?? 'loose',
 		create_segue: q.create_segue ?? false,
 		exclude_from_history: q.exclude_from_history ?? false,
 		user_image: q.user_image ?? false,
