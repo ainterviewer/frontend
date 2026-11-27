@@ -22,7 +22,7 @@
 		sortableText,
 		sortableTime
 	} from '$lib/components/table/features';
-	import { sameFeatures } from '$lib/preview';
+	import { PREVIEW_FEATURES, sameFeatures } from '$lib/preview';
 	import { formatDate, formatDateFull } from '$lib/utils/datetime';
 	import { toastApiError } from '$lib/utils/toast';
 
@@ -252,6 +252,18 @@
 			sortFn: 'basic',
 			filterFn: matchesSelection
 		}),
+		helper.accessor((u) => u.preview_features?.length ?? 0, {
+			id: 'preview_features',
+			header: 'Preview',
+			sortFn: 'basic',
+			// Keeps a user holding any of the selected features.
+			filterFn: (row, _columnId, filterValue) => {
+				const selected = filterValue as string[] | undefined;
+				if (!selected?.length) return true;
+				return (row.original.preview_features ?? []).some((f) => selected.includes(f));
+			},
+			meta: { class: 'tabular-nums' }
+		}),
 		helper.accessor((u) => sortableText(u.invitation_title), {
 			id: 'invitation_title',
 			header: 'Invitation',
@@ -305,11 +317,25 @@
 		}
 	});
 
+	const previewLabel = (feature: PreviewFeature) =>
+		PREVIEW_FEATURES.find((f) => f.value === feature)?.label ?? feature;
+
+	// The column's value is a count, so its own facets would count counts.
+	const previewCounts = $derived(
+		Object.fromEntries(
+			PREVIEW_FEATURES.map(({ value }) => [
+				value,
+				users.filter((u) => u.preview_features?.includes(value)).length
+			])
+		)
+	);
+
 	const columnLabels: Record<string, string> = {
 		name: 'Name',
 		email: 'Email',
 		scope: 'Role',
 		two_factor_enabled: '2FA',
+		preview_features: 'Preview features',
 		invitation_title: 'Invitation',
 		organization: 'Organization',
 		expires_at: 'Expires',
@@ -357,6 +383,14 @@
 				]}
 			/>
 		{/if}
+		{#if table.getColumn('preview_features')}
+			<FacetedFilter
+				title="Preview"
+				column={table.getColumn('preview_features')!}
+				options={PREVIEW_FEATURES}
+				counts={previewCounts}
+			/>
+		{/if}
 	{/snippet}
 
 	{#snippet cell(columnId, row)}
@@ -389,6 +423,15 @@
 			>
 				{user.two_factor_enabled ? 'On' : 'Off'}
 			</span>
+		{:else if columnId === 'preview_features'}
+			{#if user.preview_features?.length}
+				<span
+					class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+					title={user.preview_features.map(previewLabel).join('\n')}
+				>
+					{user.preview_features.length}
+				</span>
+			{:else}<span class="text-gray-300">&ndash;</span>{/if}
 		{:else if columnId === 'invitation_title'}
 			{#if user.invitation_title}{user.invitation_title}{:else}<span class="text-gray-300">
 					&ndash;
