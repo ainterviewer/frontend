@@ -4,6 +4,16 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.39] - 2026-11-27
+
+### Features
+
+- (admin) Give preview features out one by one
+
+### Internal
+
+- (api) Regenerate the SDK for per-feature preview access
+
 ## [0.9.38] - 2026-11-25
 
 ### Features
