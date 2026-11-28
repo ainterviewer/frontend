@@ -1991,6 +1991,9 @@ export class Interviews {
      *
      * `create_interview` runs the same checks; this only moves the feedback
      * earlier, it does not replace them.
+     *
+     * Also starts the self-hosted model booting, when the published version
+     * runs on it (`app/services/inference_warmup.py`).
      */
     public static validateInterviewParams<ThrowOnError extends boolean = false>(options: Options<ValidateInterviewParamsData, ThrowOnError>): RequestResult<ValidateInterviewParamsResponses, ValidateInterviewParamsErrors, ThrowOnError> {
         return (options.client ?? client).post<ValidateInterviewParamsResponses, ValidateInterviewParamsErrors, ThrowOnError>({

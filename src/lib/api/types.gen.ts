@@ -2381,7 +2381,7 @@ export type EmbeddingTurn = {
  * Only errors a client handles differently carry one. Values are part of
  * the API -- the frontend matches on them -- so rename none without it.
  */
-export type ErrorCode = 'internal' | 'not_published' | 'cannot_publish' | 'not_distributable' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'test_share_invalid' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'already_collaborator' | 'role_above_own' | 'last_admin' | 'preview_features_required' | 'demo_restricted';
+export type ErrorCode = 'internal' | 'model_unavailable' | 'not_published' | 'cannot_publish' | 'not_distributable' | 'stale_revision' | 'revision_required' | 'project_language' | 'section_not_found' | 'invalid_link_params' | 'test_share_invalid' | 'invalid_codebook' | 'invalid_coding' | 'invalid_comment_thread' | 'invalid_keyword_query' | 'alias_taken' | 'email_taken' | 'email_not_verified' | 'account_expired' | 'email_send_failed' | 'email_link_invalid' | 'invite_required' | 'invite_invalid' | 'invite_expired' | 'already_collaborator' | 'role_above_own' | 'last_admin' | 'preview_features_required' | 'demo_restricted';
 
 /**
  * ExperimentAllocation

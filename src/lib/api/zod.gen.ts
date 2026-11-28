@@ -836,6 +836,7 @@ export const zCodeFacets = z.object({
  */
 export const zErrorCode = z.enum([
     'internal',
+    'model_unavailable',
     'not_published',
     'cannot_publish',
     'not_distributable',
