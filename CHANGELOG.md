@@ -4,6 +4,22 @@ Generated from [Conventional Commits](https://www.conventionalcommits.org) by
 [git-cliff](https://git-cliff.org). Releases older than the earliest entry below
 predate this changelog — see `git log` for their history.
 
+## [0.9.41] - 2026-11-28
+
+### Features
+
+- (setup) Choose how closely probes keep to the suggested probes
+
+### Bug Fixes
+
+- (interview) Say the interview is getting ready instead of reconnecting
+- (interview) Show a moving wave while the interview gets ready
+
+### Internal
+
+- (api) Regenerate the SDK for probe steering
+- (api) Regenerate the SDK for the model_unavailable error code
+
 ## [0.9.40] - 2026-11-27
 
 ### Features
