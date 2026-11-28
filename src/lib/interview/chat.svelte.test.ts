@@ -7,6 +7,7 @@ import { render } from 'vitest-browser-svelte';
 import type { OutgoingHistoryMessage, OutgoingMessage, SecurityIntervention } from '$lib/api';
 import SecurityInterventionModal from '$lib/components/interview/SecurityInterventionModal.svelte';
 import TimedMessageModal from '$lib/components/interview/TimedMessageModal.svelte';
+import WaitingNotice from '$lib/components/interview/WaitingNotice.svelte';
 
 import { ChatClient } from './chat.svelte';
 
@@ -160,7 +161,6 @@ describe('ChatClient opening message', () => {
 });
 
 describe('ChatClient waiting on the model', () => {
-	const notices = (chat: ChatClient) => chat.messages.filter((m) => m.type === 'system');
 	const question = (content: string) =>
 		({
 			type: 'message',
@@ -172,17 +172,16 @@ describe('ChatClient waiting on the model', () => {
 
 	test('a model starting up is said at once, with about how long', async () => {
 		const { chat } = connectedClient();
+		chat.messages.push({ type: 'sent', text: 'My car will not start' });
 
 		await chat.processSingleMessage({ type: 'waiting', reason: 'starting', retry_after: 110 });
 
-		expect(notices(chat)).toEqual([
-			{
-				type: 'system',
-				text: 'Getting the interview ready. This takes about 2 minutes, and it will carry on by itself.'
-			}
-		]);
-		// In place of the typing dots, and nothing to send meanwhile.
+		expect(chat.waitingNotice).toBe(
+			'Getting the interview ready. This takes about 2 minutes, and it will carry on by itself.'
+		);
+		// In place of the typing dots, and kept out of the conversation itself.
 		expect(chat.showTypingIndicator).toBe(false);
+		expect(chat.messages.filter((m) => m.type === 'system')).toEqual([]);
 		expect(chat.inputEnabled).toBe(false);
 		// The server waits on this socket: nothing reconnects.
 		expect(chat.isReconnecting).toBe(false);
@@ -194,16 +193,13 @@ describe('ChatClient waiting on the model', () => {
 
 		await chat.processSingleMessage({ type: 'waiting', reason: 'starting', retry_after: 110 });
 		await chat.processSingleMessage({ type: 'waiting', reason: 'starting', retry_after: 10 });
-		expect(notices(chat)).toEqual([
-			{
-				type: 'system',
-				text: 'Getting the interview ready. This takes about a minute, and it will carry on by itself.'
-			}
-		]);
+		expect(chat.waitingNotice).toBe(
+			'Getting the interview ready. This takes about a minute, and it will carry on by itself.'
+		);
 
 		await chat.processSingleMessage(question('How many hours did you work?'));
 
-		expect(notices(chat)).toEqual([]);
+		expect(chat.waitingNotice).toBeNull();
 		expect(chat.messages.at(-1)).toMatchObject({ text: 'How many hours did you work?' });
 	});
 
@@ -211,13 +207,11 @@ describe('ChatClient waiting on the model', () => {
 		const { chat } = connectedClient('DA');
 
 		await chat.processSingleMessage({ type: 'waiting', reason: 'busy', retry_after: 5 });
-		expect(notices(chat)).toEqual([
-			{ type: 'system', text: 'Interviewtjenesten er optaget. Prøver igen om et øjeblik…' }
-		]);
+		expect(chat.waitingNotice).toBe('Interviewtjenesten er optaget. Prøver igen om et øjeblik…');
 
 		await chat.processSingleMessage(question('Hvor mange timer arbejdede du?'));
 
-		expect(notices(chat)).toEqual([]);
+		expect(chat.waitingNotice).toBeNull();
 	});
 
 	test('when waiting will not help, the interview says it cannot continue', async () => {
@@ -227,8 +221,20 @@ describe('ChatClient waiting on the model', () => {
 		await chat.processSingleMessage({ type: 'data', error: 'InferenceError' });
 
 		expect(chat.serviceUnavailable).toBe(true);
-		expect(notices(chat)).toEqual([]);
+		expect(chat.waitingNotice).toBeNull();
 		expect(chat.reconnectEnabled).toBe(false);
+	});
+});
+
+describe('WaitingNotice', () => {
+	test('announces why the reply is late, beside the moving wave', async () => {
+		const text = 'Getting the interview ready.';
+		await render(WaitingNotice, { text });
+
+		await expect.element(page.getByRole('status')).toHaveTextContent(text);
+		// The wave is decoration: hidden from screen readers, read the text.
+		const wave = document.querySelector('[role="status"] [aria-hidden="true"] svg');
+		expect(wave).not.toBeNull();
 	});
 });
 

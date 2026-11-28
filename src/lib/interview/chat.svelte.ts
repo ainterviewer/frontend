@@ -200,6 +200,10 @@ export class ChatClient {
 	/** Where the respondent is about to be sent now the interview has ended,
 	 *  and the seconds left before they are. */
 	redirect = $state<{ url: string; remaining: number } | null>(null);
+	/** Why the reply is late while the server waits on the interview's model,
+	 *  in the interview's language; shown in place of the typing dots until the
+	 *  next message arrives. */
+	waitingNotice = $state<string | null>(null);
 	private redirectTimer: ReturnType<typeof setInterval> | null = null;
 
 	// Show the typing indicator whenever we're waiting on the server. The chat
@@ -211,6 +215,7 @@ export class ChatClient {
 	showTypingIndicator = $derived.by(() => {
 		if (!this.reconnectEnabled || this.reconnectFailed || this.isReconnecting) return false;
 		if (this.sessionExpired || this.serviceUnavailable) return false;
+		if (this.waitingNotice) return false;
 		if (this.forceTypingIndicator) return true;
 		const last = this.messages[this.messages.length - 1];
 		if (!last || last.type !== 'sent') return false;
@@ -231,8 +236,6 @@ export class ChatClient {
 	private connectTimestamps: number[] = [];
 	/** Connections that opened and then closed before they were trusted. */
 	private shortLivedOpens = 0;
-	/** The notice in the chat while the server waits on the model. */
-	private waitingNotice: string | null = null;
 
 	// Context
 	project_id: string;
@@ -435,23 +438,16 @@ export class ChatClient {
 	private handleWaiting(frame: WaitingFrame) {
 		this.inputEnabled = false;
 		this.forceTypingIndicator = false;
-		this.clearWaitingNotice();
 
 		const connection = getUiText(this.lang).connection;
-		const text =
+		this.waitingNotice =
 			frame.reason === 'starting'
 				? connection.starting(Math.max(1, Math.round(frame.retry_after / 60)))
 				: connection.busy;
-		this.waitingNotice = text;
-		this.messages.push({ type: 'system', text });
 	}
 
-	/** Takes back the notice `handleWaiting` left in the chat. */
+	/** Takes down the notice `handleWaiting` put up. */
 	private clearWaitingNotice() {
-		if (this.waitingNotice === null) return;
-		const notice = this.waitingNotice;
-		const index = this.messages.findIndex((m) => m.type === 'system' && m.text === notice);
-		if (index !== -1) this.messages.splice(index, 1);
 		this.waitingNotice = null;
 	}
 

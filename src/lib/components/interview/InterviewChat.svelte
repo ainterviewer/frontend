@@ -14,6 +14,7 @@
 	import TimedMessageModal from './TimedMessageModal.svelte';
 	import { TtsPlayer } from './tts';
 	import TypingIndicator from './TypingIndicator.svelte';
+	import WaitingNotice from './WaitingNotice.svelte';
 
 	interface Props {
 		chat: ChatClient;
@@ -147,7 +148,13 @@
 	let following = false;
 
 	$effect(() => {
-		const _ = [chat.messages.length, chat.showTypingIndicator, surveyUnanswered, !!chat.redirect];
+		const _ = [
+			chat.messages.length,
+			chat.showTypingIndicator,
+			chat.waitingNotice,
+			surveyUnanswered,
+			!!chat.redirect
+		];
 		startFollowing();
 	});
 
@@ -395,6 +402,8 @@
 
 		{#if chat.showTypingIndicator}
 			<TypingIndicator />
+		{:else if chat.waitingNotice}
+			<WaitingNotice text={chat.waitingNotice} />
 		{/if}
 
 		<!--
