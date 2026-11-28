@@ -159,61 +159,76 @@ describe('ChatClient opening message', () => {
 	});
 });
 
-describe('ChatClient transient failures', () => {
-	const BUSY = 'The interview service is busy. Trying again in a moment…';
-	const busyNotices = (chat: ChatClient) =>
-		chat.messages.filter((m) => m.type === 'system' && m.text === BUSY);
+describe('ChatClient waiting on the model', () => {
+	const notices = (chat: ChatClient) => chat.messages.filter((m) => m.type === 'system');
+	const question = (content: string) =>
+		({
+			type: 'message',
+			content,
+			role: 'assistant',
+			message_id: 2,
+			can_answer: true
+		}) as const;
 
-	test('the busy notice goes once the interview resumes', async () => {
-		vi.useFakeTimers();
-		try {
-			const { chat } = connectedClient();
+	test('a model starting up is said at once, with about how long', async () => {
+		const { chat } = connectedClient();
 
-			await chat.processSingleMessage({ type: 'data', error: 'InstanceInitializing' });
-			expect(busyNotices(chat)).toHaveLength(1);
+		await chat.processSingleMessage({ type: 'waiting', reason: 'starting', retry_after: 110 });
 
-			// Another transient failure on the retry keeps it, once.
-			await chat.processSingleMessage({ type: 'data', error: 'InstanceInitializing' });
-			expect(busyNotices(chat)).toHaveLength(1);
-
-			await chat.processSingleMessage({
-				type: 'message',
-				content: 'How many hours did you work?',
-				role: 'assistant',
-				message_id: 2,
-				can_answer: true
-			});
-
-			expect(busyNotices(chat)).toEqual([]);
-			expect(chat.messages.at(-1)).toMatchObject({ text: 'How many hours did you work?' });
-		} finally {
-			vi.useRealTimers();
-		}
+		expect(notices(chat)).toEqual([
+			{
+				type: 'system',
+				text: 'Getting the interview ready. This takes about 2 minutes, and it will carry on by itself.'
+			}
+		]);
+		// In place of the typing dots, and nothing to send meanwhile.
+		expect(chat.showTypingIndicator).toBe(false);
+		expect(chat.inputEnabled).toBe(false);
+		// The server waits on this socket: nothing reconnects.
+		expect(chat.isReconnecting).toBe(false);
+		expect(chat.serviceUnavailable).toBe(false);
 	});
 
-	test('the busy notice is in the interview language, and still goes', async () => {
-		vi.useFakeTimers();
-		try {
-			const { chat } = connectedClient('DA');
-			const notices = () => chat.messages.filter((m) => m.type === 'system');
+	test('a later frame replaces the notice, and the next message takes it down', async () => {
+		const { chat } = connectedClient();
 
-			await chat.processSingleMessage({ type: 'data', error: 'InstanceInitializing' });
-			expect(notices()).toEqual([
-				{ type: 'system', text: 'Interviewtjenesten er optaget. Prøver igen om et øjeblik…' }
-			]);
+		await chat.processSingleMessage({ type: 'waiting', reason: 'starting', retry_after: 110 });
+		await chat.processSingleMessage({ type: 'waiting', reason: 'starting', retry_after: 10 });
+		expect(notices(chat)).toEqual([
+			{
+				type: 'system',
+				text: 'Getting the interview ready. This takes about a minute, and it will carry on by itself.'
+			}
+		]);
 
-			await chat.processSingleMessage({
-				type: 'message',
-				content: 'Hvor mange timer arbejdede du?',
-				role: 'assistant',
-				message_id: 2,
-				can_answer: true
-			});
+		await chat.processSingleMessage(question('How many hours did you work?'));
 
-			expect(notices()).toEqual([]);
-		} finally {
-			vi.useRealTimers();
-		}
+		expect(notices(chat)).toEqual([]);
+		expect(chat.messages.at(-1)).toMatchObject({ text: 'How many hours did you work?' });
+	});
+
+	test('a busy service is said in the interview language, and still goes', async () => {
+		const { chat } = connectedClient('DA');
+
+		await chat.processSingleMessage({ type: 'waiting', reason: 'busy', retry_after: 5 });
+		expect(notices(chat)).toEqual([
+			{ type: 'system', text: 'Interviewtjenesten er optaget. Prøver igen om et øjeblik…' }
+		]);
+
+		await chat.processSingleMessage(question('Hvor mange timer arbejdede du?'));
+
+		expect(notices(chat)).toEqual([]);
+	});
+
+	test('when waiting will not help, the interview says it cannot continue', async () => {
+		const { chat } = connectedClient();
+		await chat.processSingleMessage({ type: 'waiting', reason: 'starting', retry_after: 30 });
+
+		await chat.processSingleMessage({ type: 'data', error: 'InferenceError' });
+
+		expect(chat.serviceUnavailable).toBe(true);
+		expect(notices(chat)).toEqual([]);
+		expect(chat.reconnectEnabled).toBe(false);
 	});
 });
 

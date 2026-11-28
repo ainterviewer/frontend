@@ -49,8 +49,12 @@ export interface UiText {
 		expired_title: string;
 		expired_text: string;
 		start_over: string;
-		/** Posted into the conversation while the server asks us to wait. */
+		/** Posted into the conversation while the interview waits on a busy
+		 *  service; the server tries again by itself. */
 		busy: string;
+		/** Posted into the conversation while the interview's model is
+		 *  starting up, with about how many minutes are left (at least 1). */
+		starting: (minutes: number) => string;
 		/** Shown after the interview while counting down to the redirect. */
 		redirecting: (seconds: number) => string;
 		continue_now: string;
@@ -161,6 +165,8 @@ const UI: Record<Lang, UiText> = {
 				'We could not resume your interview — this can happen if too much time has passed or if your browser cleared its data. You cannot continue this interview from where you left off.',
 			start_over: 'Start a new interview',
 			busy: 'The interview service is busy. Trying again in a moment…',
+			starting: (m) =>
+				`Getting the interview ready. This takes about ${m === 1 ? 'a minute' : `${m} minutes`}, and it will carry on by itself.`,
 			redirecting: (s) => `You will be redirected in ${s} ${s === 1 ? 'second' : 'seconds'}.`,
 			continue_now: 'Continue now'
 		},
@@ -241,6 +247,8 @@ const UI: Record<Lang, UiText> = {
 				'Vi kunne ikke genoptage dit interview — det kan ske, hvis der er gået for lang tid, eller hvis din browser har slettet sine data. Du kan ikke fortsætte interviewet, hvor du slap.',
 			start_over: 'Start et nyt interview',
 			busy: 'Interviewtjenesten er optaget. Prøver igen om et øjeblik…',
+			starting: (m) =>
+				`Interviewet bliver gjort klar. Det tager omkring ${m === 1 ? 'et minut' : `${m} minutter`}, og så fortsætter det af sig selv.`,
 			redirecting: (s) => `Du bliver sendt videre om ${s} ${s === 1 ? 'sekund' : 'sekunder'}.`,
 			continue_now: 'Afslut nu'
 		},
@@ -321,6 +329,8 @@ const UI: Record<Lang, UiText> = {
 				'Wir konnten Ihr Interview nicht fortsetzen – das kann passieren, wenn zu viel Zeit vergangen ist oder Ihr Browser seine Daten gelöscht hat. Sie können dieses Interview nicht an der Stelle fortsetzen, an der Sie aufgehört haben.',
 			start_over: 'Neues Interview starten',
 			busy: 'Der Interviewdienst ist ausgelastet. Neuer Versuch in Kürze…',
+			starting: (m) =>
+				`Das Interview wird vorbereitet. Das dauert etwa ${m === 1 ? 'eine Minute' : `${m} Minuten`}, danach geht es von selbst weiter.`,
 			redirecting: (s) => `Sie werden in ${s} ${s === 1 ? 'Sekunde' : 'Sekunden'} weitergeleitet.`,
 			continue_now: 'Jetzt fortfahren'
 		},
@@ -407,6 +417,8 @@ const UI: Record<Lang, UiText> = {
 				'No hemos podido reanudar tu entrevista: esto puede ocurrir si ha pasado demasiado tiempo o si tu navegador ha borrado sus datos. No puedes continuar esta entrevista desde donde la dejaste.',
 			start_over: 'Comenzar una nueva entrevista',
 			busy: 'El servicio de entrevistas está ocupado. Se volverá a intentar en un momento…',
+			starting: (m) =>
+				`Estamos preparando la entrevista. Tardará ${m === 1 ? 'alrededor de un minuto' : `unos ${m} minutos`} y continuará por sí sola.`,
 			redirecting: (s) => `Te redirigiremos en ${s} ${s === 1 ? 'segundo' : 'segundos'}.`,
 			continue_now: 'Continuar ahora'
 		},
@@ -492,6 +504,8 @@ const UI: Record<Lang, UiText> = {
 				"Nous n'avons pas pu reprendre votre entretien — cela peut arriver si trop de temps s'est écoulé ou si votre navigateur a effacé ses données. Vous ne pouvez pas reprendre cet entretien là où vous l'avez laissé.",
 			start_over: 'Commencer un nouvel entretien',
 			busy: "Le service d'entretien est occupé. Nouvel essai dans un instant…",
+			starting: (m) =>
+				`Nous préparons l'entretien. Cela prend environ ${m === 1 ? 'une minute' : `${m} minutes`}, puis il reprendra de lui-même.`,
 			redirecting: (s) => `Vous allez être redirigé dans ${s} ${s === 1 ? 'seconde' : 'secondes'}.`,
 			continue_now: 'Continuer maintenant'
 		},
@@ -577,6 +591,8 @@ const UI: Record<Lang, UiText> = {
 				'تعذّر علينا استئناف مقابلتك — قد يحدث ذلك إذا مرّ وقت طويل أو إذا حذف متصفحك بياناته. لا يمكنك متابعة هذه المقابلة من حيث توقفت.',
 			start_over: 'بدء مقابلة جديدة',
 			busy: 'خدمة المقابلات مشغولة حاليًا. ستتم إعادة المحاولة بعد قليل…',
+			starting: (m) =>
+				`جارٍ تجهيز المقابلة. يستغرق ذلك نحو ${arCount(m, { one: 'دقيقة واحدة', two: 'دقيقتين', few: 'دقائق', many: 'دقيقة' })}، وستتابع المقابلة تلقائيًا.`,
 			redirecting: (s) =>
 				`سيتم تحويلك خلال ${arCount(s, { one: 'ثانية واحدة', two: 'ثانيتين', few: 'ثوانٍ', many: 'ثانية' })}.`,
 			continue_now: 'المتابعة الآن'
@@ -665,6 +681,8 @@ const UI: Record<Lang, UiText> = {
 				'Hatukuweza kuendeleza mahojiano yako — hili linaweza kutokea ikiwa muda mrefu umepita au ikiwa kivinjari chako kimefuta data yake. Huwezi kuendelea na mahojiano haya pale ulipoishia.',
 			start_over: 'Anza mahojiano mapya',
 			busy: 'Huduma ya mahojiano ina shughuli nyingi. Inajaribu tena baada ya muda mfupi…',
+			starting: (m) =>
+				`Tunaandaa mahojiano. Inachukua takriban dakika ${m}, kisha yataendelea yenyewe.`,
 			redirecting: (s) => `Utaelekezwa baada ya sekunde ${s}.`,
 			continue_now: 'Endelea sasa'
 		},

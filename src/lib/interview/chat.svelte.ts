@@ -32,7 +32,14 @@ type ServerMessage =
 	| OutgoingMessage
 	| OutgoingHistoryMessage
 	| (OutgoingData & { interview_id?: string; project_id?: string })
-	| RedirectFrame;
+	| RedirectFrame
+	| WaitingFrame;
+
+/** Sent the moment the interview's model cannot answer yet -- starting up,
+ *  or busy -- with the seconds until the server tries again by itself, on
+ *  this socket. The backend's own frame (`WaitingFrame` in its
+ *  `app/schemas/interviews.py`), so it is not in the generated client. */
+type WaitingFrame = { type: 'waiting'; reason: 'starting' | 'busy'; retry_after: number };
 
 /** Sent after the end of a distributed interview whose project sends
  *  respondents on, e.g. to a survey panel's return link. The backend's own
@@ -77,16 +84,12 @@ const HEALTHY_CONNECTION_MS = 10_000;
 const RECONNECT_WINDOW_MS = 2 * 60 * 1000;
 const MAX_CONNECTS_PER_WINDOW = 6;
 
-// The server can also say outright that it is temporarily unable to run the
-// interview -- the inference server still starting, a provider rate limit, an
-// upstream timeout. That is worth waiting out rather than reconnecting into
-// immediately, but not forever: after this many waits we stop and say so.
-// One line covering every transient cause, because the respondent can act on
-// none of them and the backend deliberately does not say which it was. Its
-// text is `connection.busy` in `$lib/respondentText`.
-
-const TRANSIENT_RETRY_MS = 30_000;
-const MAX_TRANSIENT_RETRIES = 3;
+// The server can also say it is waiting on the interview's model: an
+// instance starting up, or a provider turning requests away for now. It says
+// so the moment it knows (a `waiting` frame), keeps the socket open, and runs
+// the turn again by itself, so there is nothing to reconnect for; the notice
+// it puts in the chat comes down with the next message. When waiting will not
+// help, or has gone on too long, the server reports an `error` instead.
 
 // Opens that died before reaching HEALTHY_CONNECTION_MS. Two or more of them
 // means the server is accepting us and then failing, which is a broken
@@ -228,8 +231,8 @@ export class ChatClient {
 	private connectTimestamps: number[] = [];
 	/** Connections that opened and then closed before they were trusted. */
 	private shortLivedOpens = 0;
-	/** Waits already spent on a server that reported a transient failure. */
-	private transientRetries = 0;
+	/** The notice in the chat while the server waits on the model. */
+	private waitingNotice: string | null = null;
 
 	// Context
 	project_id: string;
@@ -405,7 +408,6 @@ export class ChatClient {
 	private markHealthy() {
 		this.reconnectAttempts = 0;
 		this.shortLivedOpens = 0;
-		this.transientRetries = 0;
 		this.connectTimestamps = [];
 	}
 
@@ -426,56 +428,31 @@ export class ChatClient {
 		}
 	}
 
-	/** The server told us it cannot run the interview *right now* — it is
-	 *  starting up, rate limited, or waiting on a slow upstream. Reconnecting
-	 *  straight into that only burns the retry budget on a failure we have been
-	 *  told the shape of, so wait a while and try again on our own clock. */
-	private handleTransientFailure() {
-		// Cancels the ordinary backoff the socket's close is about to schedule
-		// (or already has); this path owns the retry from here.
-		this.disableReconnect();
+	/** The server's model cannot answer yet, and the server will try again by
+	 *  itself on this socket. Say why the reply is late -- in place of the
+	 *  typing dots, which would promise a reply that is not coming yet --
+	 *  until the next message arrives. A later frame replaces the notice. */
+	private handleWaiting(frame: WaitingFrame) {
 		this.inputEnabled = false;
 		this.forceTypingIndicator = false;
+		this.clearWaitingNotice();
 
-		if (this.transientRetries >= MAX_TRANSIENT_RETRIES) {
-			this.isReconnecting = false;
-			this.serviceUnavailable = true;
-			return;
-		}
-
-		this.transientRetries++;
-		// A give-up may have already fired on the socket close, before this
-		// frame was processed; the server has since told us to wait, so take
-		// that back.
-		this.serviceUnavailable = false;
-		this.reconnectFailed = false;
-		this.isReconnecting = true;
-
-		const busy = this.transientNoticeText();
-		if (!this.messages.some((m) => m.type === 'system' && m.text === busy)) {
-			this.messages.push({ type: 'system', text: busy });
-		}
-
-		this.reconnectTimeout = setTimeout(() => {
-			this.reconnectEnabled = true;
-			this.reconnectAttempts = 0;
-			this.shortLivedOpens = 0;
-			this.connectTimestamps = [];
-			this.isInitialized = true;
-			this.connect();
-		}, TRANSIENT_RETRY_MS);
+		const connection = getUiText(this.lang).connection;
+		const text =
+			frame.reason === 'starting'
+				? connection.starting(Math.max(1, Math.round(frame.retry_after / 60)))
+				: connection.busy;
+		this.waitingNotice = text;
+		this.messages.push({ type: 'system', text });
 	}
 
-	/** The notice `handleTransientFailure` leaves in the chat, in this interview's language. */
-	private transientNoticeText() {
-		return getUiText(this.lang).connection.busy;
-	}
-
-	/** Takes back the notice `handleTransientFailure` left in the chat. */
-	private clearTransientNotice() {
-		const busy = this.transientNoticeText();
-		const index = this.messages.findIndex((m) => m.type === 'system' && m.text === busy);
+	/** Takes back the notice `handleWaiting` left in the chat. */
+	private clearWaitingNotice() {
+		if (this.waitingNotice === null) return;
+		const notice = this.waitingNotice;
+		const index = this.messages.findIndex((m) => m.type === 'system' && m.text === notice);
 		if (index !== -1) this.messages.splice(index, 1);
+		this.waitingNotice = null;
 	}
 
 	/** The server told us the interview cannot run. Unlike a dropped
@@ -855,10 +832,10 @@ export class ChatClient {
 		this.forceTypingIndicator = false;
 
 		// The interview is running again, so it is no longer waiting on the
-		// service. Only on what the interview says: the socket opening proves
-		// nothing, as the server may answer it with another transient failure.
+		// model. Only on what the interview says: the socket opening proves
+		// nothing, as the server may answer it with another wait.
 		if (data.type === 'message' || data.type === 'history') {
-			this.clearTransientNotice();
+			this.clearWaitingNotice();
 		}
 
 		switch (data.type) {
@@ -990,23 +967,22 @@ export class ChatClient {
 				this.startRedirect(data);
 				break;
 
+			case 'waiting':
+				this.handleWaiting(data);
+				break;
+
 			case 'data':
 				if (data.interview_id) this.interview_id = data.interview_id;
 				if (data.project_id) this.project_id = data.project_id;
 				if (data.progress) this.progress = data.progress;
 
 				if (data.error) {
-					if (data.error === 'InstanceInitializing') {
-						// The backend classifies everything it expects to pass on
-						// its own under this code — a warming inference server, a
-						// rate limit, a slow upstream.
-						this.handleTransientFailure();
-					} else {
-						// Everything else it reports has already been judged
-						// unservable: a retired model, bad credentials, a bug on
-						// our side. Reconnecting would only reproduce it.
-						this.handleServiceFailure();
-					}
+					// Whatever it was, the server has judged it unservable: a
+					// model that is not coming, a wait that went on too long, a
+					// retired model, a bug on our side. Waits it handles itself,
+					// with `waiting` frames, so reconnecting would only repeat it.
+					this.clearWaitingNotice();
+					this.handleServiceFailure();
 				}
 
 				if (data.content === '<|restartinterview|>') {
